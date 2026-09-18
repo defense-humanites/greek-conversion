@@ -25,8 +25,8 @@ matrix records only the six additional entries.
 
 | Preset | Digamma | Yot | Stigma | Koppa | Archaic koppa | Sampi |
 | --- | --- | --- | --- | --- | --- | --- |
-| `ala-lc-ancient` | ? | ? | ? | ? | ? | ? |
-| `ala-lc-modern` | ? | ? | ? | ? | ? | ? |
+| `ala-lc-ancient` | Exact | Outside | Numeral-only | Numeral-only | Exact | Numeral-only |
+| `ala-lc-modern` | Numeral-only | Outside | Numeral-only | Numeral-only | Numeral-only | Numeral-only |
 | `bnf-core` | Exact | Exact | Exact | Exact | Different | Exact |
 | `iso-843-type-1` | Exact | Exact | Undefined | Undefined | Unresolved | Undefined |
 | `perseus` | Outside | Outside | Outside | Outside | Outside | Outside |
@@ -42,10 +42,11 @@ The status terms mean:
   does not agree;
 - **Undefined**: the reference includes the character in its source repertoire
   but does not assign a conversion;
+- **Numeral-only**: the character is documented only when marked as an
+  alphabetic numeral, not as an independently romanized letter;
 - **Outside**: an enumerated profile or mapping omits the character;
 - **Unresolved**: the reference does not distinguish the engine's semantic
-  entry clearly enough;
-- **?**: the available evidence is insufficient for an exact boundary.
+  entry clearly enough.
 
 These statuses do not measure complete preset conformance. Contextual rules,
 diacritics, punctuation, numeral treatment, and other limitations remain
@@ -55,12 +56,21 @@ described in [Preset reference and coverage](presets.md).
 
 ### ALA-LC
 
-The cited Library of Congress PDFs define the ordinary ancient/medieval and
-modern romanization tables, but this audit has not established a reliable,
-machine-verifiable inventory for the six additional engine letters. Their
-status therefore remains unknown. Absence of evidence is not treated as an
-exclusion, and neither ALA-LC preset should yet activate an automatic
-allow-list.
+The ancient/medieval table assigns `w` to digamma and `k` with dot below to
+archaic koppa. It does not assign an independent letter conversion to yot,
+stigma, modern koppa, or sampi. Its numeral table nevertheless accepts
+digamma, stigma, both koppa forms, and sampi when marked as alphabetic
+numerals.
+
+The modern table has no independent additional-letter rows. Its numeral table
+accepts digamma, stigma, both koppa forms, and sampi; yot is absent. Both ALA-LC
+presets select decimal numeral output, so those marked uses are mechanically
+covered.
+
+This boundary is contextual rather than a simple set of semantic letters. A
+`Converter.repertoire` allow-list cannot permit `ϛʹ` while excluding unmarked
+`ϛ`, because both parse to the same `stigma` letter and differ only by their
+numeral mark.
 
 ### BnF
 
@@ -115,8 +125,8 @@ Lunate sigma is not an independent `Letter`; the parser records it as
 - BnF deliberately distinguishes it as `c`; `bnf-core` selects that behavior.
 - The Perseids mapping and TLG quick reference both encode it as `S3` (subject
   to the selected ASCII letter case).
-- The ALA-LC and SBL boundaries remain governed by their ordinary sigma rules
-  until a source establishes a distinct requirement.
+- The ALA-LC and SBL boundaries remain governed by their ordinary sigma rules;
+  their cited tables do not establish a distinct lunate-sigma conversion.
 
 ## Consequence for automatic enforcement
 
@@ -131,15 +141,17 @@ changes:
 2. add a preset-aware converter factory or an explicit helper that turns a
    documented preset repertoire into `createConverter({ repertoire })`.
 
-The second change should initially cover only presets with an exact boundary.
-ALA-LC should remain unrestricted until its additional-letter inventory is
-resolved. ISO 843 requires an explicit product decision for characters that
+The second change should initially cover only presets with an exact,
+context-free boundary. ALA-LC requires a scope rule capable of distinguishing
+marked numeral use from an ordinary letter; a semantic letter allow-list is
+too coarse. ISO 843 requires an explicit product decision for characters that
 are in its source repertoire but lack a prescribed Type 1 conversion.
 
 ## Sources
 
 - [ALA-LC Ancient and Medieval Greek](https://www.loc.gov/catdir/cpso/romanization/greek.pdf)
 - [ALA-LC Modern Greek](https://www.loc.gov/catdir/cpso/romanization/greekm.pdf)
+- [Cataloging Service Bulletin 124 — published ALA-LC Greek tables](https://www.loc.gov/aba/publications/FreeCSB/CSB_124.pdf)
 - [BnF transliteration of Greek](https://kitcat.bnf.fr/consignes-catalogage/translitteration-du-grec)
 - [ISO 843:1997](https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf)
 - [Morpheus documentation](https://github.com/PerseusDL/morpheus/blob/master/doc/morpheus.html)

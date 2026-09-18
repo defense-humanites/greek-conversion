@@ -82,6 +82,8 @@ const PRESET_DEFINITIONS = {
         "Missing rough breathings are not inferred from lexical knowledge or capitalization.",
         "Iota adscript cannot be distinguished mechanically from an ordinary iota.",
         "Omitted diaeresis is recoverable only in the deterministic contextual y/u cases implemented by the parser.",
+        "Stigma, modern koppa, and sampi are documented only as marked numerals; their unmarked engine defaults are outside the ALA-LC table.",
+        "Yot is not part of the cited ALA-LC inventory.",
       ],
     },
     options: {
@@ -109,6 +111,8 @@ const PRESET_DEFINITIONS = {
         "Missing rough breathings are not inferred from lexical knowledge or capitalization.",
         "Iota adscript cannot be distinguished mechanically from an ordinary iota.",
         "Only the documented contextual mu-pi, nu-tau, and gamma-kappa rules are implemented.",
+        "Digamma, stigma, both koppa forms, and sampi are documented only as marked numerals; their unmarked engine defaults are outside the ALA-LC table.",
+        "Yot is not part of the cited ALA-LC inventory.",
       ],
     },
     options: {

@@ -9,7 +9,7 @@ project follows [Semantic Versioning](https://semver.org/).
 
 - Audited the built-in character inventory against every preset reference and
   documented exact matches, known mapping differences, undefined conversions,
-  and unresolved repertoire boundaries.
+  numeral-only characters, and repertoire boundaries.
 
 ### Removed
 
