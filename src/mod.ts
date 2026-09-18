@@ -42,6 +42,7 @@ export type {
   ConversionResult,
 } from "./losses.ts";
 export type {
+  ArchaicKoppaTransliteration,
   BetaCodeCase,
   BetaTransliteration,
   ChiTransliteration,
@@ -76,6 +77,7 @@ export type {
   UpsilonOrthography,
   WhitespaceOrthography,
   XiTransliteration,
+  YotBetaCode,
 } from "./options.ts";
 export { DEFAULT_CONVERSION_OPTIONS } from "./options.ts";
 export {

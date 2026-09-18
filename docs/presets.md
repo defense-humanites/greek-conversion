@@ -167,6 +167,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
 ```json
 {
   "orthography": {
+    "archaicKoppa": "q",
     "coronis": "greek",
     "lunateSigma": "c",
     "upsilon": "y"
@@ -184,7 +185,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
 - BnF-specific keraia transliteration, Cypriot syndyazomeno, and the Iliad/Odyssey numeral exception are not implemented.
 - Iota adscript cannot be distinguished mechanically from an ordinary iota.
 - The BnF circumflex scalar and omission of explicit macron and breve marks are not independently selectable.
-- The BnF assigns q to both documented koppa forms; the engine's archaic-koppa default remains k with dot below.
+- Both documented koppa forms collapse to q in BnF transliteration and therefore cannot be distinguished on reverse conversion.
 
 ### `iso-843-type-1` — ISO 843:1997 — Type 1
 
@@ -332,7 +333,8 @@ Canonical Beta Code together with the TLG characters implemented by the engine.
 ```json
 {
   "orthography": {
-    "betaCodeCase": "uppercase"
+    "betaCodeCase": "uppercase",
+    "yotBetaCode": "#401"
   }
 }
 ```
@@ -340,7 +342,6 @@ Canonical Beta Code together with the TLG characters implemented by the engine.
 **Known limitations:**
 
 - The TLG character inventory contains more than one thousand assignments; only the Greek alphabet and the documented additional characters and punctuation are implemented.
-- TLG assigns #401 to yot, whereas the engine currently uses J; yot output is therefore not TLG-conformant.
 
 <!-- END GENERATED PRESET REFERENCE -->
 

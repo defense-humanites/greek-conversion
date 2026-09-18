@@ -86,6 +86,12 @@ export type LetterCaseOrthography =
 /** Selects the insignificant ASCII letter case used in Beta Code output. */
 export type BetaCodeCase = "lowercase" | "uppercase";
 
+/** Selects the Beta Code spelling emitted for yot. */
+export type YotBetaCode = "j" | "#401";
+
+/** Selects the transliteration emitted for archaic koppa. */
+export type ArchaicKoppaTransliteration = "k-dot-below" | "q";
+
 /** Preserves or removes one semantic class of diacritics. */
 export type DiacriticDisposition = "preserve" | "remove";
 
@@ -172,6 +178,10 @@ export interface OrthographyOptions {
   letterCase?: LetterCaseOrthography;
   /** Insignificant ASCII letter case used only in Beta Code output. Defaults to `"lowercase"`. */
   betaCodeCase?: BetaCodeCase;
+  /** Beta Code spelling of yot. Defaults to `"j"`; TLG uses `"#401"`. */
+  yotBetaCode?: YotBetaCode;
+  /** Archaic-koppa transliteration. Defaults to `"k-dot-below"`; BnF uses `"q"`. */
+  archaicKoppa?: ArchaicKoppaTransliteration;
 }
 
 /** Unicode representation preferences for Greek output. */
@@ -241,6 +251,8 @@ export interface DefaultConversionOptions {
     readonly rho: "contextual";
     readonly letterCase: "preserve";
     readonly betaCodeCase: "lowercase";
+    readonly yotBetaCode: "j";
+    readonly archaicKoppa: "k-dot-below";
   };
   /** Literal default values for Greek Unicode representation. */
   readonly unicode: {
@@ -294,6 +306,8 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         rho: "contextual",
         letterCase: "preserve",
         betaCodeCase: "lowercase",
+        yotBetaCode: "j",
+        archaicKoppa: "k-dot-below",
       }),
       unicode: Object.freeze({
         composition: "composed",

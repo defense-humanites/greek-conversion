@@ -146,11 +146,12 @@ const PRESET_DEFINITIONS = {
         "BnF-specific keraia transliteration, Cypriot syndyazomeno, and the Iliad/Odyssey numeral exception are not implemented.",
         "Iota adscript cannot be distinguished mechanically from an ordinary iota.",
         "The BnF circumflex scalar and omission of explicit macron and breve marks are not independently selectable.",
-        "The BnF assigns q to both documented koppa forms; the engine's archaic-koppa default remains k with dot below.",
+        "Both documented koppa forms collapse to q in BnF transliteration and therefore cannot be distinguished on reverse conversion.",
       ],
     },
     options: {
       orthography: {
+        archaicKoppa: "q",
         coronis: "greek",
         lunateSigma: "c",
         upsilon: "y",
@@ -302,12 +303,12 @@ const PRESET_DEFINITIONS = {
       }],
       limitations: [
         "The TLG character inventory contains more than one thousand assignments; only the Greek alphabet and the documented additional characters and punctuation are implemented.",
-        "TLG assigns #401 to yot, whereas the engine currently uses J; yot output is therefore not TLG-conformant.",
       ],
     },
     options: {
       orthography: {
         betaCodeCase: "uppercase",
+        yotBetaCode: "#401",
       },
     },
   },

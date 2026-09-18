@@ -11,6 +11,13 @@ project follows [Semantic Versioning](https://semver.org/).
   documented exact matches, known mapping differences, undefined conversions,
   numeral-only characters, and repertoire boundaries.
 
+### Fixed
+
+- `bnf-core` now transliterates both koppa forms as `q`, as prescribed by the
+  BnF table.
+- `tlg-core` now emits and recognizes `#401` for yot while the default Beta
+  Code spelling remains `j`.
+
 ### Removed
 
 - The optional `GreekText` facade. Use the functional conversion API for

@@ -117,7 +117,10 @@ export function encodeBetaCode(
     ) {
       base = "s3";
     } else {
-      base = ALPHABET[token.letter].beta;
+      base = token.letter === "yot" &&
+          options.orthography?.yotBetaCode === "#401"
+        ? "#401"
+        : ALPHABET[token.letter].beta;
     }
 
     if (options.orthography?.betaCodeCase === "uppercase") {
@@ -298,6 +301,10 @@ function transliterationBase(
   options: ConversionOptions,
 ): string {
   switch (letter) {
+    case "archaic-koppa":
+      return options.orthography?.archaicKoppa === "q"
+        ? "q"
+        : ALPHABET[letter].tr;
     case "beta":
       return options.orthography?.beta ?? "b";
     case "xi":

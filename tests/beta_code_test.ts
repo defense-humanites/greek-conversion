@@ -33,3 +33,16 @@ Deno.test("separates semantic case from Beta Code ASCII case", () => {
     "*)/ANQRWPOS",
   );
 });
+
+Deno.test("recognizes TLG yot and selects its canonical output", () => {
+  assertNfcEquals(convert("#401", "beta-code", "greek"), "ϳ");
+  assertNfcEquals(convert("ϳ", "greek", "beta-code"), "j");
+  assertNfcEquals(
+    convert("ϳ", "greek", "beta-code", { preset: "tlg-core" }),
+    "#401",
+  );
+  assertNfcEquals(
+    reencode("j #401", "beta-code", { preset: "tlg-core" }),
+    "#401 #401",
+  );
+});

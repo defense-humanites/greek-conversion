@@ -101,6 +101,8 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `diacritics.<class>: "remove"` | Removes only the selected semantic class during rendering | No when that class occurs; unselected classes remain recoverable |
 | `letterCase: "lowercase"`, `"uppercase"`, or `"title"` | Applies deterministic case to recognized Greek graphemes | No when source case changes; unknown literals are untouched |
 | `betaCodeCase: "lowercase"` or `"uppercase"` | Selects the insignificant ASCII case of Beta Code letters without changing `*` markers | Yes; the canonical graphemes are unchanged |
+| `yotBetaCode: "#401"` | Uses the TLG character code instead of `j` for yot | Yes; both spellings parse as yot |
+| `archaicKoppa: "q"` | Uses the same transliteration for both koppa forms | No; `q` parses as modern koppa |
 | `finalSigma: "medial"` | Uses `σ` instead of contextual `ς` in lowercase Greek output | Yes; both are the same canonical sigma letter |
 | `sigma: "standard"` (default) | Replaces a provenanced lunate sigma with the standard Greek or Beta Code glyph | No; `convertDetailed()` reports `removed-glyph-variant` |
 | `sigma: "lunate"` | Uses lunate glyphs for all non-numeral sigma in Greek or Beta Code output | Source letters remain recoverable; stylistically added lunate provenance is not a loss |

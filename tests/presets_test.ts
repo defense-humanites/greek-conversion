@@ -89,7 +89,7 @@ Deno.test("returns detached preset metadata", () => {
     second.references[0].title,
     "TLG Beta Code Quick Reference Guide",
   );
-  assertEquals(second.limitations.length, 2);
+  assertEquals(second.limitations.length, 1);
 });
 
 Deno.test("resolves custom options after nested preset options", () => {
@@ -237,6 +237,28 @@ Deno.test("core presets remain conservative and mixable", () => {
     }),
     "ka᾽gṓ",
   );
+  assertNfcEquals(
+    convert("ϟϙ", "greek", "transliteration", { preset: "bnf-core" }),
+    "qq",
+  );
+  assertNfcEquals(
+    convert("ϳ", "greek", "beta-code", { preset: "tlg-core" }),
+    "#401",
+  );
+  assertNfcEquals(
+    convert("ϙ", "greek", "transliteration", {
+      preset: "bnf-core",
+      orthography: { archaicKoppa: "k-dot-below" },
+    }),
+    "ḳ",
+  );
+  assertNfcEquals(
+    convert("ϳ", "greek", "beta-code", {
+      preset: "tlg-core",
+      orthography: { yotBetaCode: "j" },
+    }),
+    "J",
+  );
 });
 
 Deno.test("Perseus emits lowercase Beta Code", () => {
@@ -259,4 +281,15 @@ Deno.test("convertDetailed reports losses introduced by presets", () => {
     result.losses.map((loss) => loss.code),
     ["removed-diacritic"],
   );
+
+  const bnfKoppa = convertDetailed(
+    "ϙ",
+    "greek",
+    "transliteration",
+    { preset: "bnf-core" },
+  );
+  assertEquals(bnfKoppa.output, "q");
+  assertEquals(bnfKoppa.losses.map((loss) => loss.code), [
+    "unrepresented-grapheme",
+  ]);
 });

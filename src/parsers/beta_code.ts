@@ -108,8 +108,16 @@ function additionalCharacter(
   start: number,
 ):
   | { letter: "stigma" | "koppa" | "archaic-koppa" | "sampi"; length: 2 }
+  | { letter: "yot"; length: 4 }
   | undefined {
   if (chars[start] !== "#") return undefined;
+
+  if (
+    chars[start + 1] === "4" && chars[start + 2] === "0" &&
+    chars[start + 3] === "1"
+  ) {
+    return { letter: "yot", length: 4 };
+  }
 
   switch (chars[start + 1]) {
     case "1":

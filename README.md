@@ -91,6 +91,9 @@ Canonical output follows the
 without changing the represented Greek letter case. The default and Perseus
 preset use lowercase ASCII; `tlg-core` uses uppercase ASCII.
 
+The engine-default yot spelling is `j`. Set `orthography.yotBetaCode` to
+`"#401"`, or use `tlg-core`, for the TLG character code.
+
 ## Choose the right API
 
 | Need | API |
@@ -299,6 +302,10 @@ only the structural representation of inherently long eta and omega. An
 explicit macron alongside a circumflex, such as in `ê̄`, is treated separately
 as a philological mark and is reproduced without changing the identified
 letter.
+
+`archaicKoppa` selects `"k-dot-below"` (the default, rendered `ḳ`) or `"q"`
+for transliteration. The `bnf-core` preset uses `"q"` for both koppa forms, so
+that distinction is intentionally lost on reverse conversion.
 
 ### Control Greek Unicode output
 

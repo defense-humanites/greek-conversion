@@ -27,12 +27,12 @@ matrix records only the six additional entries.
 | --- | --- | --- | --- | --- | --- | --- |
 | `ala-lc-ancient` | Exact | Outside | Numeral-only | Numeral-only | Exact | Numeral-only |
 | `ala-lc-modern` | Numeral-only | Outside | Numeral-only | Numeral-only | Numeral-only | Numeral-only |
-| `bnf-core` | Exact | Exact | Exact | Exact | Different | Exact |
+| `bnf-core` | Exact | Exact | Exact | Exact | Exact | Exact |
 | `iso-843-type-1` | Exact | Exact | Undefined | Undefined | Unresolved | Undefined |
 | `perseus` | Outside | Outside | Outside | Outside | Outside | Outside |
 | `sbl-academic` | Outside | Outside | Outside | Outside | Outside | Outside |
 | `sbl-general` | Outside | Outside | Outside | Outside | Outside | Outside |
-| `tlg-core` | Exact | Different | Exact | Exact | Exact | Exact |
+| `tlg-core` | Exact | Exact | Exact | Exact | Exact | Exact |
 
 The status terms mean:
 
@@ -75,10 +75,9 @@ numeral mark.
 ### BnF
 
 The BnF explicitly documents digamma, yod, Byzantine sigma, stigma, two koppa
-forms, and sampi. Its table assigns `q` to both koppa code points. The engine
-agrees for `koppa` (`ϟ`) but currently renders `archaic-koppa` (`ϙ`) as `k`
-with a dot below. The BnF repertoire is therefore known, but applying it
-automatically would still expose a non-conformant conversion for one entry.
+forms, and sampi. Its table assigns `q` to both koppa code points. The preset
+now selects that spelling for `archaic-koppa` (`ϙ`) as well, deliberately
+collapsing the two source characters in transliteration.
 
 ### ISO 843 Type 1
 
@@ -112,9 +111,9 @@ existing `adapted` coverage label.
 
 The TLG quick reference assigns `V`, `#2`, `#1`, `#3`, and `#5` to digamma,
 stigma, koppa, archaic koppa, and sampi respectively; these agree with the
-engine apart from configurable ASCII case. TLG assigns `#401` to yot, while the
-engine currently emits `J`. The TLG core repertoire contains all six entries,
-but yot must be corrected before it can be described as conformant.
+engine apart from configurable ASCII case. TLG assigns `#401` to yot. The
+preset now selects that spelling, and the parser accepts it alongside the
+engine-default `J` spelling.
 
 ## Lunate sigma
 
@@ -133,15 +132,11 @@ Lunate sigma is not an independent `Letter`; the parser records it as
 No bundled preset currently changes `Converter.repertoire`; metadata therefore
 continues to report `outOfScopeBehavior: "engine-default"`.
 
-Automatic preset enforcement should proceed only after two independent
-changes:
+The remaining implementation step is a preset-aware converter factory or an
+explicit helper that turns a documented preset repertoire into
+`createConverter({ repertoire })`.
 
-1. correct the BnF archaic-koppa and TLG yot mappings without changing the
-   engine-wide defaults required by other profiles;
-2. add a preset-aware converter factory or an explicit helper that turns a
-   documented preset repertoire into `createConverter({ repertoire })`.
-
-The second change should initially cover only presets with an exact,
+This change should initially cover only presets with an exact,
 context-free boundary. ALA-LC requires a scope rule capable of distinguishing
 marked numeral use from an ordinary letter; a semantic letter allow-list is
 too coarse. ISO 843 requires an explicit product decision for characters that
