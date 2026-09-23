@@ -55,6 +55,9 @@ export type GreekAnoTeleiaForm = "canonical" | "middle-dot" | "greek";
 /** Preserves whitespace or collapses each Unicode whitespace run. */
 export type WhitespaceOrthography = "preserve" | "collapse";
 
+/** Selects ASCII or typographic hyphen in transliteration output. */
+export type TransliterationHyphen = "ascii" | "typographic";
+
 /** Selects `b` or modern `v` for beta in transliteration. */
 export type BetaTransliteration = "b" | "v";
 
@@ -160,6 +163,8 @@ export interface OrthographyOptions {
   accentuation?: GreekAccentuation;
   /** Whitespace rendering. Defaults to `"preserve"`. */
   whitespace?: WhitespaceOrthography;
+  /** Transliteration hyphen. Defaults to `"ascii"`. */
+  hyphen?: TransliterationHyphen;
   /** Beta transliteration. Defaults to `"b"`. */
   beta?: BetaTransliteration;
   /** Eta transliteration. Defaults to `"ē"`. */
@@ -207,8 +212,9 @@ export interface ConversionOptions {
   /** Selective diacritic rendering policies. */
   diacritics?: DiacriticOptions;
   /**
-   * Removes every removable diacritic. This shorthand overrides selective
-   * preservation in {@link diacritics}.
+   * Removes removable marks, including breathings in Greek and Beta Code.
+   * In transliteration, the rough breathing's Latin `h` is retained unless
+   * `diacritics.roughBreathing` explicitly requests removal.
    */
   removeDiacritics?: boolean;
 }
@@ -221,7 +227,7 @@ export interface ResolvedConversionOptions {
   unicode: Required<GreekUnicodeOptions>;
   /** Effective disposition of every semantic diacritic class. */
   diacritics: Required<DiacriticOptions>;
-  /** Whether every removable diacritic is suppressed. */
+  /** Whether removable marks are suppressed in the selected output format. */
   removeDiacritics: boolean;
 }
 
@@ -242,6 +248,7 @@ export interface DefaultConversionOptions {
     readonly longVowels: "macron";
     readonly accentuation: "polytonic";
     readonly whitespace: "preserve";
+    readonly hyphen: "ascii";
     readonly beta: "b";
     readonly eta: "ē";
     readonly xi: "x";
@@ -297,6 +304,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         longVowels: "macron",
         accentuation: "polytonic",
         whitespace: "preserve",
+        hyphen: "ascii",
         beta: "b",
         eta: "ē",
         xi: "x",

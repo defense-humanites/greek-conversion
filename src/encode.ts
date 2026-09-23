@@ -16,15 +16,15 @@ import {
   prepareDiacriticsForRendering,
   preservesDiacritic,
 } from "./diacritics.ts";
-import type { Diacritic, Document, Grapheme } from "./model.ts";
+import type { Diacritic, Document, Format, Grapheme } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
 import { applyGreekOrthography } from "./orthography.ts";
 import { encodePunctuation } from "./punctuation.ts";
 import { applyGreekUnicode } from "./unicode.ts";
 
-const marks = (token: Grapheme, options: ConversionOptions) =>
+const marks = (token: Grapheme, options: ConversionOptions, format: Format) =>
   ORDER.filter((mark) =>
-    token.diacritics.has(mark) && preservesDiacritic(mark, options)
+    token.diacritics.has(mark) && preservesDiacritic(mark, options, format)
   );
 
 export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
@@ -32,6 +32,7 @@ export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
   const rendered = prepareDiacriticsForRendering(
     applyGreekOrthography(doc, options),
     options,
+    "greek",
   );
 
   for (let i = 0; i < doc.length; i++) {
@@ -91,7 +92,7 @@ export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
     if (token.uppercase) base = base.toLocaleUpperCase("el");
 
     out += base +
-      marks(token, options).map((mark) => GREEK_FOR[mark]).join("");
+      marks(token, options, "greek").map((mark) => GREEK_FOR[mark]).join("");
   }
 
   return applyGreekUnicode(out, options);
@@ -101,7 +102,7 @@ export function encodeBetaCode(
   doc: Document,
   options: ConversionOptions = {},
 ) {
-  const rendered = prepareDiacriticsForRendering(doc, options);
+  const rendered = prepareDiacriticsForRendering(doc, options, "beta-code");
 
   return rendered.map((token, index) => {
     if (token.kind === "literal") {
@@ -129,7 +130,7 @@ export function encodeBetaCode(
       base = base.toLowerCase();
     }
 
-    const renderedMarks = marks(token, options);
+    const renderedMarks = marks(token, options, "beta-code");
     if (!token.uppercase) {
       return base + renderedMarks.map((mark) => BETA_FOR[mark]).join("");
     }
@@ -148,11 +149,16 @@ export function encodeTransliteration(
   options: ConversionOptions = {},
 ) {
   const uppercaseOutput = options.orthography?.letterCase === "uppercase";
-  const rendered = prepareDiacriticsForRendering(doc, options);
+  const rendered = prepareDiacriticsForRendering(
+    doc,
+    options,
+    "transliteration",
+  );
 
   return rendered.map((token, index) => {
     if (token.kind === "literal") {
-      return encodePunctuation(token.value, "transliteration") ?? token.value;
+      return encodePunctuation(token.value, "transliteration", options) ??
+        token.value;
     }
 
     const modernDigraph = modernDigraphAt(doc, index, options);
@@ -179,7 +185,8 @@ export function encodeTransliteration(
     const breathingToken = breathingIndex === undefined
       ? undefined
       : rendered[breathingIndex];
-    const initialRough = preservesDiacritic("rough", options) &&
+    const initialRough =
+      preservesDiacritic("rough", options, "transliteration") &&
       breathingToken?.kind === "grapheme" &&
       breathingToken.diacritics.has("rough");
     const groupUppercase = initialRough && breathingStart !== undefined &&
@@ -208,7 +215,7 @@ export function encodeTransliteration(
         base += uppercaseOutput ? "H" : "h";
       }
     } else if (
-      preservesDiacritic("rough", options) &&
+      preservesDiacritic("rough", options, "transliteration") &&
       token.diacritics.has("rough") && index !== breathingIndex
     ) {
       if (token.letter === "rho") base += uppercaseOutput ? "H" : "h";
@@ -223,7 +230,7 @@ export function encodeTransliteration(
     ) {
       base += uppercaseOutput ? "H" : "h";
     }
-    const tokenMarks = marks(token, options);
+    const tokenMarks = marks(token, options, "transliteration");
     const transliteratedMarks = tokenMarks
       .filter((mark) => mark !== "coronis")
       .map((mark) => trMark(mark, options))

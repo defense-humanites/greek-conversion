@@ -97,7 +97,7 @@ nu; this changes the accepted spelling contract for transliteration input.
 
 | Option | Effect | Reconstructible from output? |
 | --- | --- | --- |
-| `removeDiacritics: true` | Removes accents, breathings, coronis, diaeresis, explicit quantity, and iota subscript | No |
+| `removeDiacritics: true` | Removes accents, coronis, diaeresis, explicit quantity, and iota subscript; removes breathings in Greek and Beta Code, but retains the rough breathing's `h` in transliteration | No |
 | `diacritics.<class>: "remove"` | Removes only the selected semantic class during rendering | No when that class occurs; unselected classes remain recoverable |
 | `letterCase: "lowercase"`, `"uppercase"`, or `"title"` | Applies deterministic case to recognized Greek graphemes | No when source case changes; unknown literals are untouched |
 | `betaCodeCase: "lowercase"` or `"uppercase"` | Selects the insignificant ASCII case of Beta Code letters without changing `*` markers | Yes; the canonical graphemes are unchanged |
@@ -132,7 +132,10 @@ diacritic policy.
 `removeDiacritics` and the granular `diacritics` policy are applied during
 encoding, after contextual analysis. They therefore cannot manufacture a
 diphthong or enable a consonant contraction by first deleting a blocking mark.
-`removeDiacritics: true` dominates granular `"preserve"` settings. Structural
+`removeDiacritics: true` dominates granular `"preserve"` settings. In
+transliteration, the rough breathing produces a letter (`h`, including in `rh`),
+so it survives this shortcut. An explicit
+`diacritics: { roughBreathing: "remove" }` still suppresses it. Structural
 marks used to distinguish letters remain: `ē/ō`, `c̄/s̄`, and `ḳ` are not
 removable diacritics.
 

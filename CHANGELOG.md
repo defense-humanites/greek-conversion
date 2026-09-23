@@ -5,8 +5,15 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.0-beta.5] - 2026-09-23
+
 ### Changed
 
+- `removeDiacritics` preserves the Latin `h` of rough breathing in
+  transliteration, including `rh`. Greek and Beta Code still remove the mark;
+  explicit `diacritics.roughBreathing: "remove"` suppresses the `h`.
+- Transliteration emits ASCII `-` by default. Set
+  `orthography.hyphen: "typographic"` to request U+2010.
 - Audited the built-in character inventory against every preset reference and
   documented exact matches, known mapping differences, undefined conversions,
   numeral-only characters, and repertoire boundaries.

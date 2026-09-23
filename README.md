@@ -30,10 +30,10 @@ discarded.
 
 ## Installation
 
-The `1.0.0-beta.4` prerelease is ESM-only and targets JSR and npm:
+The `1.0.0-beta.5` prerelease is ESM-only and targets JSR and npm:
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0-beta.4
+deno add jsr:@humanities/greek-conversion@1.0.0-beta.5
 npm install @humanities/greek-conversion@beta
 ```
 
@@ -191,7 +191,10 @@ breathings. Polytonic Greek remains the default.
 
 ### Remove all or selected diacritics
 
-Use the shortcut to remove every non-structural diacritic:
+Use the shortcut to remove marks. In transliteration, it retains the `h` of a
+rough breathing (`ὁδός → hodos`); in Greek and Beta Code, it removes the
+breathing. To suppress the transliterated `h` explicitly, set
+`diacritics: { roughBreathing: "remove" }`.
 
 ```ts
 convert("ἄνθρωπος ᾆ ῑ", "greek", "transliteration", {
@@ -216,6 +219,8 @@ convert("ἄνθρωπος ἅγιος κἀγώ", "greek", "transliteration", {
 
 `removeDiacritics()` exposes the same operation as a standalone helper.
 Structural distinctions such as `η → ē` and `ω → ō` are retained.
+Transliteration uses ASCII `-` by default; set
+`orthography: { hyphen: "typographic" }` to output `‐` instead.
 
 ### Fold Greek letter variants
 

@@ -1,12 +1,12 @@
 import { assertEquals } from "@std/assert";
-import { convert, removeDiacritics } from "../src/mod.ts";
+import { convert, reencode, removeDiacritics } from "../src/mod.ts";
 import { stripDiacritics } from "../src/diacritics.ts";
 import { grapheme, literal } from "../src/model.ts";
 import { assertNfcEquals } from "./assertions.ts";
 
 const WITHOUT_DIACRITICS = { removeDiacritics: true } as const;
 
-Deno.test("removes canonical diacritics from every output format", () => {
+Deno.test("removes marks while retaining transliterated rough breathing", () => {
   const greek = "ἄνθρωπος ᾆ ῑ";
 
   assertNfcEquals(
@@ -19,7 +19,7 @@ Deno.test("removes canonical diacritics from every output format", () => {
   );
   assertNfcEquals(
     convert(greek, "greek", "transliteration", WITHOUT_DIACRITICS),
-    "anthrōpos a i",
+    "hanthrōpos a i",
   );
 });
 
@@ -91,7 +91,40 @@ Deno.test("exposes format-aware diacritic removal as a public helper", () => {
   );
   assertNfcEquals(
     removeDiacritics("hánthrōpos aĩ ī ḳ c̄ s̄", "transliteration"),
-    "anthrōpos ai i ḳ c̄ s̄",
+    "hanthrōpos ai i ḳ c̄ s̄",
+  );
+});
+
+Deno.test("keeps h in transliterated rough breathing and rh", () => {
+  const greek = "ὁδός ὀδός ῥυθμός";
+  const options = { removeDiacritics: true } as const;
+
+  assertNfcEquals(
+    convert(greek, "greek", "greek", options),
+    "οδος οδος ρυθμος",
+  );
+  assertNfcEquals(
+    convert(greek, "greek", "beta-code", options),
+    "odos odos ruqmos",
+  );
+  assertNfcEquals(
+    convert(greek, "greek", "transliteration", options),
+    "hodos odos rhuthmos",
+  );
+  assertNfcEquals(
+    removeDiacritics("hódos odós rhuthmós", "transliteration"),
+    "hodos odos rhuthmos",
+  );
+  assertNfcEquals(
+    reencode("hódos-rhuthmós", "transliteration", options),
+    "hodos-rhuthmos",
+  );
+  assertNfcEquals(
+    convert("ῥυθμός", "greek", "transliteration", {
+      removeDiacritics: true,
+      diacritics: { roughBreathing: "remove" },
+    }),
+    "ruthmos",
   );
 });
 

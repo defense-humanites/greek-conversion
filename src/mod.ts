@@ -73,6 +73,7 @@ export type {
   ResolvedConversionOptions,
   RhoTransliteration,
   SigmaOrthography,
+  TransliterationHyphen,
   UnicodeComposition,
   UpsilonOrthography,
   WhitespaceOrthography,
@@ -96,8 +97,9 @@ export type {
 export { toUnicodeCodePoints } from "./unicode.ts";
 
 /**
- * Removes every removable diacritic and returns the canonical spelling of the
- * selected format.
+ * Removes removable marks and returns the canonical spelling of the selected
+ * format. A rough breathing's `h` remains in transliteration because it is a
+ * letter there; `diacritics.roughBreathing: "remove"` removes it explicitly.
  *
  * Structural distinctions required to identify a letter, such as `η → ē` and
  * `ω → ō`, are retained. Context is analyzed before marks are hidden.

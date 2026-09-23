@@ -1,4 +1,5 @@
 import type { Format } from "./model.ts";
+import type { ConversionOptions } from "./options.ts";
 
 export const EROTIMATIKO = "\u037E";
 export const ANO_TELEIA = "\u0387";
@@ -64,7 +65,7 @@ const OUTPUT: Record<Format, ReadonlyMap<string, string>> = {
     [EROTIMATIKO, "?"],
     [ANO_TELEIA, ";"],
     [ENOTIKON, ENOTIKON],
-    [HYPHEN, HYPHEN],
+    [HYPHEN, "-"],
     [APOSTROPHE, APOSTROPHE],
   ]),
 };
@@ -79,6 +80,11 @@ export function parsePunctuation(
 export function encodePunctuation(
   punctuation: string,
   format: Format,
+  options: ConversionOptions = {},
 ): string | undefined {
+  if (
+    format === "transliteration" && punctuation === HYPHEN &&
+    options.orthography?.hyphen === "typographic"
+  ) return HYPHEN;
   return OUTPUT[format].get(punctuation);
 }

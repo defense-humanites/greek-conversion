@@ -7,12 +7,29 @@ Deno.test("converts Greek punctuation semantically between formats", () => {
   assertNfcEquals(convert(greek, "greek", "beta-code"), "; : ‿ - '");
   assertNfcEquals(
     convert(greek, "greek", "transliteration"),
-    "? ; ‿ ‐ ’",
+    "? ; ‿ - ’",
   );
   assertNfcEquals(convert("; : ‿ - '", "beta-code", "greek"), greek);
   assertNfcEquals(
     convert("? ; ‿ - '", "transliteration", "greek"),
     greek,
+  );
+});
+
+Deno.test("keeps ASCII hyphen in canonical transliteration unless typography is requested", () => {
+  assertNfcEquals(
+    convert("ὁδός-ῥόδος", "greek", "transliteration"),
+    "hodós-rhódos",
+  );
+  assertNfcEquals(
+    convert("hodos‐rhodos", "transliteration", "transliteration"),
+    "hodos-rhodos",
+  );
+  assertNfcEquals(
+    convert("hodos-rhodos", "transliteration", "transliteration", {
+      orthography: { hyphen: "typographic" },
+    }),
+    "hodos‐rhodos",
   );
 });
 

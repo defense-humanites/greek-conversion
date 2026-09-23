@@ -1,12 +1,20 @@
 import { normalizeInitialDiphthongBreathings } from "./context.ts";
-import type { Diacritic, Document, Token } from "./model.ts";
+import type { Diacritic, Document, Format, Token } from "./model.ts";
 import type { ConversionOptions, DiacriticDisposition } from "./options.ts";
 
 export function diacriticDisposition(
   diacritic: Diacritic,
   options: ConversionOptions,
+  format: Format,
 ): DiacriticDisposition {
-  if (options.removeDiacritics) return "remove";
+  if (options.removeDiacritics) {
+    // Rough breathing is rendered as a Latin letter in transliteration.
+    // An explicit request to remove that class still takes precedence.
+    return diacritic === "rough" && format === "transliteration" &&
+        options.diacritics?.roughBreathing !== "remove"
+      ? "preserve"
+      : "remove";
+  }
 
   const policy = options.diacritics;
   switch (diacritic) {
@@ -33,8 +41,9 @@ export function diacriticDisposition(
 export function preservesDiacritic(
   diacritic: Diacritic,
   options: ConversionOptions,
+  format: Format,
 ): boolean {
-  return diacriticDisposition(diacritic, options) === "preserve";
+  return diacriticDisposition(diacritic, options, format) === "preserve";
 }
 
 /** Removes canonical diacritics without mutating the source document. */
@@ -59,10 +68,13 @@ export function stripDiacritics(document: Document): Document {
 export function prepareDiacriticsForRendering(
   document: Document,
   options: ConversionOptions,
+  format: Format,
 ): Document {
   const removesAnyMark = document.some((token) =>
     token.kind === "grapheme" &&
-    [...token.diacritics].some((mark) => !preservesDiacritic(mark, options))
+    [...token.diacritics].some((mark) =>
+      !preservesDiacritic(mark, options, format)
+    )
   );
 
   if (!removesAnyMark) return document;
@@ -72,7 +84,7 @@ export function prepareDiacriticsForRendering(
       ...token,
       diacritics: new Set(
         [...token.diacritics].filter((mark) =>
-          preservesDiacritic(mark, options)
+          preservesDiacritic(mark, options, format)
         ),
       ),
     }
