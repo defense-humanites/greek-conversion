@@ -27,6 +27,107 @@ Deno.test("the default converter preserves the functional contract", () => {
   }
 });
 
+Deno.test("bound presets apply their options and audited scope", () => {
+  const perseus = createConverter({ preset: "perseus" });
+  const perseusResult = perseus.convertDetailed(
+    "Ἄνθρωπος ϝ",
+    "greek",
+    "beta-code",
+  );
+  assertEquals(perseusResult.output, "*)/anqrwpos ϝ");
+  assertEquals(
+    perseusResult.diagnostics.map(({ character }) => character),
+    ["digamma"],
+  );
+
+  const modernAlaLc = createConverter({ preset: "ala-lc-modern" });
+  const alaResult = modernAlaLc.convertDetailed(
+    "ϛ ϛʹ ϳ",
+    "greek",
+    "transliteration",
+  );
+  assertEquals(alaResult.output, "ϛ 6 ϳ");
+  assertEquals(
+    alaResult.diagnostics.map(({ character }) => character),
+    ["stigma", "yot"],
+  );
+});
+
+Deno.test("bound preset scopes match the audited additional-letter matrix", () => {
+  const source = "αϝϳϛϟϙϡ";
+  const cases = [
+    ["ala-lc-ancient", ["yot", "stigma", "koppa", "sampi"]],
+    [
+      "ala-lc-modern",
+      ["digamma", "yot", "stigma", "koppa", "archaic-koppa", "sampi"],
+    ],
+    ["bnf-core", []],
+    ["iso-843-type-1", []],
+    [
+      "perseus",
+      ["digamma", "yot", "stigma", "koppa", "archaic-koppa", "sampi"],
+    ],
+    [
+      "sbl-academic",
+      ["digamma", "yot", "stigma", "koppa", "archaic-koppa", "sampi"],
+    ],
+    [
+      "sbl-general",
+      ["digamma", "yot", "stigma", "koppa", "archaic-koppa", "sampi"],
+    ],
+    ["tlg-core", []],
+  ] as const;
+
+  for (const [preset, expected] of cases) {
+    const result = createConverter({ preset }).convertDetailed(
+      source,
+      "greek",
+      "greek",
+    );
+    assertEquals(
+      result.diagnostics.map(({ character }) => character),
+      expected,
+      preset,
+    );
+  }
+});
+
+Deno.test("bound preset options remain overridable but not replaceable", () => {
+  const converter = createConverter({ preset: "bnf-core" });
+
+  assertEquals(converter.convert("ϙ", "greek", "transliteration"), "q");
+  assertEquals(
+    converter.convert("ϙ", "greek", "transliteration", {
+      orthography: { archaicKoppa: "k-dot-below" },
+    }),
+    "ḳ",
+  );
+
+  let message = "";
+  try {
+    converter.convert("α", "greek", "transliteration", {
+      preset: "perseus",
+    });
+  } catch (error) {
+    message = error instanceof Error ? error.message : String(error);
+  }
+  assertEquals(
+    message,
+    "Converter is bound to preset bnf-core; received perseus.",
+  );
+});
+
+Deno.test("custom characters remain explicit preset extensions", () => {
+  const converter = createConverter({ preset: "perseus", characters: [SAN] });
+  const result = converter.convertDetailed("ϻϝ", "greek", "beta-code");
+
+  assertEquals(result.output, "#9ϝ");
+  assertEquals(
+    result.diagnostics.map(({ character }) => character),
+    ["digamma"],
+  );
+});
+
 Deno.test("aliases receive the semantics of their built-in letter", () => {
   const converter = createConverter({
     aliases: [{

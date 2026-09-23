@@ -9,9 +9,13 @@ import { grapheme, literal } from "./model.ts";
 import type { Document, Format, Letter, Token } from "./model.ts";
 import type {
   ConversionOptions,
+  Preset,
   ResolvedConversionOptions,
 } from "./options.ts";
-import { resolveConversionOptions } from "./presets.ts";
+import {
+  isCharacterInPresetScope,
+  resolveConversionOptions,
+} from "./presets.ts";
 import { parsePunctuation } from "./punctuation.ts";
 
 /** One additional input spelling that resolves to a built-in Greek letter. */
@@ -56,6 +60,8 @@ export interface CharacterRepertoireDefinition {
 
 /** Immutable configuration used to create an isolated converter. */
 export interface ConverterConfiguration extends CharacterRepertoireDefinition {
+  /** Preset options and audited built-in scope bound to every conversion. */
+  preset?: Preset;
   /** Additional spellings of built-in semantic letters. */
   aliases?: readonly CharacterAliasDefinition[];
   /** Opaque characters converted only through their declared direct forms. */
@@ -143,9 +149,15 @@ export class Converter {
   }>;
   readonly #repertoire?: ReadonlySet<string>;
   readonly #excluded: ReadonlySet<string>;
+  readonly #preset?: Preset;
 
   /** Creates an isolated converter from copied and validated definitions. */
   constructor(configuration: ConverterConfiguration = {}) {
+    if (configuration.preset !== undefined) {
+      resolveConversionOptions({ preset: configuration.preset });
+    }
+    this.#preset = configuration.preset;
+
     const characters = normalizeCharacters(configuration.characters ?? []);
     this.#characters = new Map(characters.map((value) => [value.id, value]));
     const sentinels: Array<
@@ -200,7 +212,7 @@ export class Converter {
     to: Format,
     options: ConversionOptions = {},
   ): ConverterConversionResult {
-    const resolved = resolveConversionOptions(options);
+    const resolved = this.#resolveOptions(options);
     const sourceInput = this.#preprocess(input, from, resolved);
     const prepared = this.#prepareSource(sourceInput, from, resolved);
     const encoded = encode(prepared.document, to, resolved);
@@ -224,7 +236,7 @@ export class Converter {
     to: Format,
     options: ConversionOptions,
   ): { output: string } {
-    const resolved = resolveConversionOptions(options);
+    const resolved = this.#resolveOptions(options);
     const preprocessed = this.#preprocess(input, from, resolved);
     const prepared = this.#prepareSource(preprocessed, from, resolved);
     const encoded = encode(prepared.document, to, resolved);
@@ -292,13 +304,16 @@ export class Converter {
 
     const document = parsed.flatMap((token, index): readonly Token[] => {
       if (token.kind === "grapheme") {
-        if (this.#isAllowed(token.letter)) return [token];
+        if (this.#isAllowed(token.letter, parsed, index)) return [token];
         diagnostics.push(scopeDiagnostic(index, token.letter));
         return literalTokens(encode([token], format, options));
       }
 
       const custom = this.#sentinels.get(token.value);
-      if (custom === undefined || this.#isAllowed(custom.character.id)) {
+      if (
+        custom === undefined ||
+        this.#isAllowed(custom.character.id, parsed, index)
+      ) {
         return [token];
       }
 
@@ -327,9 +342,27 @@ export class Converter {
     return output;
   }
 
-  #isAllowed(id: string): boolean {
+  #resolveOptions(options: ConversionOptions): ResolvedConversionOptions {
+    if (
+      this.#preset !== undefined && options.preset !== undefined &&
+      options.preset !== this.#preset
+    ) {
+      throw new RangeError(
+        `Converter is bound to preset ${this.#preset}; received ${options.preset}.`,
+      );
+    }
+    return resolveConversionOptions(
+      this.#preset === undefined
+        ? options
+        : { ...options, preset: this.#preset },
+    );
+  }
+
+  #isAllowed(id: string, document: Document, index: number): boolean {
     return !this.#excluded.has(id) &&
-      (this.#repertoire === undefined || this.#repertoire.has(id));
+      (this.#repertoire === undefined || this.#repertoire.has(id)) &&
+      (this.#preset === undefined ||
+        isCharacterInPresetScope(this.#preset, id, document, index));
   }
 }
 

@@ -5,6 +5,12 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `createConverter({ preset })` binds preset options and enforces audited
+  built-in character boundaries while preserving and reporting out-of-scope
+  input.
+
 ## [1.0.0-beta.5] - 2026-09-23
 
 ### Changed

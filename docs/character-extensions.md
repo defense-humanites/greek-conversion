@@ -110,14 +110,29 @@ that workflow without changing the permissive `convert()` contract.
 
 ## Preset boundary
 
-The registry mechanism deliberately does not assume one standard Greek
-allow-list for every preset. ISO 843 and BnF, for example, explicitly address
-several archaic characters, while the Perseus and TLG repertoires have
-different boundaries. The current evidence and unresolved cases are recorded
-in the [preset repertoire audit](preset-repertoire-audit.md). Preset-specific
-allow-lists should be activated only where that audit establishes an exact
-boundary and a compatible conversion.
+Bind a preset to a converter to apply both its conversion options and every
+scope boundary established by the audit:
+
+```ts
+const perseus = createConverter({ preset: "perseus" });
+
+perseus.convert("Ἄνθρωπος ϝ", "greek", "beta-code");
+// *)/anqrwpos ϝ
+```
+
+Here digamma is recognized but preserved because it is outside the Perseus
+subset. `convertDetailed()` reports it as `out-of-scope-character`. Per-call
+options may refine the bound preset, but selecting another preset is rejected
+because its options would no longer agree with the converter's fixed scope.
+
+ALA-LC boundaries are context-sensitive. For example, a modern ALA-LC-bound
+converter preserves unmarked stigma but accepts `ϛʹ` as the alphabetic numeral
+6. ISO 843 remains unrestricted because its cited source inventory contains
+characters for which Type 1 output is undefined; the audit deliberately does
+not invent a scope policy for them.
 
 Adding an alias or custom character never expands the documented scope of a
-preset. Applications combining a preset with a custom `Converter` are
-responsible for describing that extension as an adapted profile.
+preset. A custom character registered alongside a bound preset is allowed as
+an explicit application extension, but no preset guarantees apply to its
+mapping. `repertoire` and `exclude` can restrict built-in and custom characters
+further; they never override a preset exclusion.

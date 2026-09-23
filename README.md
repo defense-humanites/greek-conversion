@@ -154,6 +154,22 @@ The priority is: library defaults, then preset options, then custom options.
 See the complete [preset configuration table](https://github.com/defense-humanites/greek-conversion/blob/main/docs/presets.md), including the
 precise scope and known limitations of each preset.
 
+For repeated conversion with scope enforcement, bind the preset to a
+converter:
+
+```ts
+const perseus = createConverter({ preset: "perseus" });
+const result = perseus.convertDetailed("ἄνθρωπος ϝ", "greek", "beta-code");
+
+result.output; // a)/nqrwpos ϝ
+result.diagnostics[0].code; // out-of-scope-character
+```
+
+Out-of-scope characters are preserved rather than silently converted. The
+dedicated [character-extension documentation](https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md)
+explains contextual ALA-LC numerals, custom extensions, and further
+restrictions.
+
 ### Inspect effective defaults
 
 Every effective default is available as an immutable, IDE-friendly object:

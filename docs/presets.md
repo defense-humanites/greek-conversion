@@ -45,6 +45,11 @@ cited repertoire. `engine-default` applies the ordinary conversion rules and
 therefore does not enforce the reference as a strict validator; `preserve` and
 `reject` describe profiles that respectively retain or refuse such content.
 
+These values describe presets supplied as ordinary `ConversionOptions`. A
+preset bound through `createConverter({ preset })` additionally enforces every
+scope boundary established by the repertoire audit, preserving excluded
+characters and reporting them through `convertDetailed().diagnostics`.
+
 ## Available presets
 
 The following reference is generated from the same typed registry as the

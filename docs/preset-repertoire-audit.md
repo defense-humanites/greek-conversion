@@ -129,18 +129,17 @@ Lunate sigma is not an independent `Letter`; the parser records it as
 
 ## Consequence for automatic enforcement
 
-No bundled preset currently changes `Converter.repertoire`; metadata therefore
-continues to report `outOfScopeBehavior: "engine-default"`.
+Presets supplied as ordinary `ConversionOptions` continue to report and use
+`outOfScopeBehavior: "engine-default"`. Binding a preset through
+`createConverter({ preset })` opts into the audited boundary: excluded
+characters are preserved and reported separately from information loss.
 
-The remaining implementation step is a preset-aware converter factory or an
-explicit helper that turns a documented preset repertoire into
-`createConverter({ repertoire })`.
-
-This change should initially cover only presets with an exact,
-context-free boundary. ALA-LC requires a scope rule capable of distinguishing
-marked numeral use from an ordinary letter; a semantic letter allow-list is
-too coarse. ISO 843 requires an explicit product decision for characters that
-are in its source repertoire but lack a prescribed Type 1 conversion.
+The bound converter applies contextual ALA-LC rules, so it can accept a marked
+alphabetic numeral while preserving the same semantic letter when unmarked.
+Perseus and both SBL profiles exclude all six additional entries. BnF and TLG
+accept all six. ISO 843 remains unrestricted because its source repertoire
+contains characters without prescribed Type 1 output and does not distinguish
+the engine's two koppa entries clearly enough for stricter enforcement.
 
 ## Sources
 

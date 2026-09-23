@@ -5,6 +5,8 @@ import {
   type Preset,
   type ResolvedConversionOptions,
 } from "./options.ts";
+import { isGreekNumeralContext } from "./context.ts";
+import type { Document, Letter } from "./model.ts";
 
 /** Partial option fields contributed by one registered preset. */
 export type PresetOptions = Omit<ConversionOptions, "preset">;
@@ -52,6 +54,23 @@ interface PresetDefinition {
   metadata: PresetMetadata;
   options: PresetOptions;
 }
+
+const ADDITIONAL_LETTERS = new Set<Letter>([
+  "digamma",
+  "yot",
+  "stigma",
+  "koppa",
+  "archaic-koppa",
+  "sampi",
+]);
+
+const ALA_LC_NUMERAL_ONLY = new Set<Letter>([
+  "digamma",
+  "stigma",
+  "koppa",
+  "archaic-koppa",
+  "sampi",
+]);
 
 const OMIT_NON_ROUGH_DIACRITICS = {
   accents: "remove",
@@ -374,6 +393,35 @@ export function resolveConversionOptions(
 
 function registeredPreset(preset: Preset): PresetOptions {
   return registeredDefinition(preset).options;
+}
+
+/** Returns whether one character occurrence is inside a bound preset's scope. */
+export function isCharacterInPresetScope(
+  preset: Preset,
+  character: string,
+  document: Document,
+  index: number,
+): boolean {
+  if (!ADDITIONAL_LETTERS.has(character as Letter)) return true;
+
+  const letter = character as Letter;
+  switch (preset) {
+    case "ala-lc-ancient":
+      if (letter === "digamma" || letter === "archaic-koppa") return true;
+      return ALA_LC_NUMERAL_ONLY.has(letter) &&
+        isGreekNumeralContext(document, index);
+    case "ala-lc-modern":
+      return ALA_LC_NUMERAL_ONLY.has(letter) &&
+        isGreekNumeralContext(document, index);
+    case "perseus":
+    case "sbl-academic":
+    case "sbl-general":
+      return false;
+    case "bnf-core":
+    case "iso-843-type-1":
+    case "tlg-core":
+      return true;
+  }
 }
 
 function registeredDefinition(preset: Preset): PresetDefinition {
