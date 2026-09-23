@@ -42,7 +42,13 @@ export function parseGreek(input: string): Document {
       letter,
       source !== lower,
       marks,
-      lower === "ϲ" ? "lunate-sigma" : undefined,
+      lower === "ϲ"
+        ? "lunate-sigma"
+        : lower === "ς"
+        ? "final-sigma"
+        : lower === "σ"
+        ? "medial-sigma"
+        : undefined,
     ));
   }
 

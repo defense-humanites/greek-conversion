@@ -86,7 +86,7 @@ Deno.test("bound preset scopes match the audited additional-letter matrix", () =
     );
     assertEquals(
       result.diagnostics.map(({ character }) => character),
-      expected,
+      [...expected],
       preset,
     );
   }

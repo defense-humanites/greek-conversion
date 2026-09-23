@@ -33,7 +33,7 @@ Deno.test("does not create contractions by removing blocking marks", () => {
 
   assertNfcEquals(
     convert("βσ́ τσ́", "greek", "greek", options),
-    "βς τς",
+    "βσ τσ",
   );
 });
 

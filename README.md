@@ -30,10 +30,10 @@ discarded.
 
 ## Installation
 
-The `1.0.0-beta.5` prerelease is ESM-only and targets JSR and npm:
+The `1.0.0-beta.6` prerelease is ESM-only and targets JSR and npm:
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0-beta.5
+deno add jsr:@humanities/greek-conversion@1.0.0-beta.6
 npm install @humanities/greek-conversion@beta
 ```
 
@@ -233,8 +233,11 @@ convert("ἄνθρωπος ἅγιος κἀγώ", "greek", "transliteration", {
 // anthrōpos hagios kagō
 ```
 
-`removeDiacritics()` exposes the same operation as a standalone helper.
+`removeDiacritics()` exposes mark removal as a standalone helper.
 Structural distinctions such as `η → ē` and `ω → ō` are retained.
+With `removeDiacritics: true`, Greek source sigma forms (`σ`, `ς`, `ϲ`) are
+retained by default, including when using `convert()`. Explicit `sigma` and
+`finalSigma` options can still select another spelling.
 Transliteration uses ASCII `-` by default; set
 `orthography: { hyphen: "typographic" }` to output `‐` instead.
 
