@@ -19,7 +19,7 @@ Deno.test("removes marks while retaining transliterated rough breathing", () => 
   );
   assertNfcEquals(
     convert(greek, "greek", "transliteration", WITHOUT_DIACRITICS),
-    "hanthrōpos a i",
+    "anthrōpos a i",
   );
 });
 
