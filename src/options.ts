@@ -17,7 +17,7 @@ export type SigmaOrthography = "standard" | "lunate" | "preserve";
 export type LunateSigmaTransliteration = "s" | "c";
 
 /** Selects contextual final sigma or a uniform medial sigma in Greek output. */
-export type FinalSigmaOrthography = "contextual" | "medial";
+export type FinalSigmaOrthography = "contextual" | "medial" | "preserve";
 
 /** Preserves marked alphabetic numerals or renders valid groups as decimals. */
 export type NumeralOrthography = "alphabetic" | "decimal";
@@ -149,7 +149,7 @@ export interface OrthographyOptions {
   sigma?: SigmaOrthography;
   /** Provenanced lunate sigma transliteration. Defaults to `"s"`. */
   lunateSigma?: LunateSigmaTransliteration;
-  /** Lowercase final sigma policy in Greek output. Defaults to `"contextual"`. */
+  /** Lowercase final sigma policy in Greek output. Defaults to `"contextual"`; `"preserve"` retains source Greek sigma shapes. */
   finalSigma?: FinalSigmaOrthography;
   /** Alphabetic or decimal numeral output. Defaults to `"alphabetic"`. */
   numerals?: NumeralOrthography;
@@ -214,7 +214,8 @@ export interface ConversionOptions {
   /**
    * Removes removable marks, including breathings in Greek and Beta Code.
    * In transliteration, the rough breathing's Latin `h` is retained unless
-   * `diacritics.roughBreathing` explicitly requests removal.
+   * `diacritics.roughBreathing` explicitly requests removal. Greek sigma
+   * glyphs are retained unless a sigma orthographic policy is selected.
    */
   removeDiacritics?: boolean;
 }

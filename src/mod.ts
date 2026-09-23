@@ -102,7 +102,9 @@ export { toUnicodeCodePoints } from "./unicode.ts";
  * letter there; `diacritics.roughBreathing: "remove"` removes it explicitly.
  *
  * Structural distinctions required to identify a letter, such as `η → ē` and
- * `ω → ō`, are retained. Context is analyzed before marks are hidden.
+ * `ω → ō`, are retained. Greek sigma glyphs are retained unless an explicit
+ * orthographic policy overrides them. Context is analyzed before marks are
+ * hidden.
  *
  * @example
  * ```ts
@@ -115,10 +117,11 @@ export function removeDiacritics(
   options: ConversionOptions = {},
 ): string {
   const resolved = resolveConversionOptions(options);
-  return encode(parse(input, format, resolved), format, {
-    ...resolved,
-    removeDiacritics: true,
-  });
+  return encode(
+    parse(input, format, resolved),
+    format,
+    resolveConversionOptions({ ...options, removeDiacritics: true }),
+  );
 }
 
 /**

@@ -48,7 +48,7 @@ export type Diacritic =
   | "breve";
 
 /** Source glyph distinctions retained independently from the Greek letter. */
-export type GlyphVariant = "lunate-sigma";
+export type GlyphVariant = "lunate-sigma" | "final-sigma" | "medial-sigma";
 
 /** One canonical Greek letter with case and semantic diacritics. */
 export interface Grapheme {

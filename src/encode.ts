@@ -54,8 +54,11 @@ export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
       if (contraction.letter === "sigma") {
         if (rendersLunateSigma(contraction, options)) base = "ϲ";
         else if (
-          options.orthography?.finalSigma !== "medial" &&
-          isWordFinal(doc, i + 1)
+          options.orthography?.finalSigma === "preserve"
+            ? contraction.glyphVariant === "final-sigma" ||
+              contraction.glyphVariant === undefined && isWordFinal(doc, i + 1)
+            : options.orthography?.finalSigma !== "medial" &&
+              isWordFinal(doc, i + 1)
         ) base = "ς";
       }
       out += contraction.uppercase ? base.toLocaleUpperCase("el") : base;
@@ -74,8 +77,11 @@ export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
       base = "ϲ";
     } else if (
       token.letter === "sigma" &&
-      options.orthography?.finalSigma !== "medial" &&
-      isWordFinal(doc, i) &&
+      (options.orthography?.finalSigma === "preserve"
+        ? token.glyphVariant === "final-sigma" ||
+          token.glyphVariant === undefined && isWordFinal(doc, i)
+        : options.orthography?.finalSigma !== "medial" &&
+          isWordFinal(doc, i)) &&
       !isGreekNumeralContext(doc, i)
     ) {
       base = "ς";

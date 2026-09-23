@@ -172,7 +172,7 @@ function addTokenLoss(
       }
     }
     if (
-      source.glyphVariant !== undefined &&
+      source.glyphVariant === "lunate-sigma" &&
       source.glyphVariant !== target.glyphVariant
     ) {
       changed = true;
@@ -220,7 +220,7 @@ function preservesToken(source: Token, target: Token): boolean {
   if (source.kind !== "grapheme" || target.kind !== "grapheme") return false;
   return source.letter === target.letter &&
     source.uppercase === target.uppercase &&
-    (source.glyphVariant === undefined ||
+    (source.glyphVariant !== "lunate-sigma" ||
       source.glyphVariant === target.glyphVariant) &&
     [...source.diacritics].every((mark) => target.diacritics.has(mark));
 }

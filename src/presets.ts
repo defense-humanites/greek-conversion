@@ -376,6 +376,9 @@ export function resolveConversionOptions(
   return {
     orthography: {
       ...DEFAULT_CONVERSION_OPTIONS.orthography,
+      ...(merged.removeDiacritics
+        ? { sigma: "preserve" as const, finalSigma: "preserve" as const }
+        : {}),
       ...merged.orthography,
     },
     unicode: {

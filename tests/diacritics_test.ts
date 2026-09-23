@@ -1,5 +1,10 @@
 import { assertEquals } from "@std/assert";
-import { convert, reencode, removeDiacritics } from "../src/mod.ts";
+import {
+  convert,
+  convertDetailed,
+  reencode,
+  removeDiacritics,
+} from "../src/mod.ts";
 import { stripDiacritics } from "../src/diacritics.ts";
 import { grapheme, literal } from "../src/model.ts";
 import { assertNfcEquals } from "./assertions.ts";
@@ -93,6 +98,33 @@ Deno.test("exposes format-aware diacritic removal as a public helper", () => {
     removeDiacritics("hánthrōpos aĩ ī ḳ c̄ s̄", "transliteration"),
     "hanthrōpos ai i ḳ c̄ s̄",
   );
+});
+
+Deno.test("removing Greek diacritics retains all source sigma glyphs", () => {
+  const input = "λόγος λόγοσ ὅϲοϲ ςόσ";
+  assertNfcEquals(
+    removeDiacritics(input, "greek"),
+    "λογος λογοσ οϲοϲ ςοσ",
+  );
+  assertNfcEquals(
+    removeDiacritics(removeDiacritics(input, "greek"), "greek"),
+    "λογος λογοσ οϲοϲ ςοσ",
+  );
+  assertNfcEquals(
+    removeDiacritics("λόγος ὅϲοϲ", "greek", {
+      orthography: { sigma: "standard", finalSigma: "medial" },
+    }),
+    "λογοσ οσοσ",
+  );
+  assertNfcEquals(
+    convert("λόγοσ", "greek", "greek", WITHOUT_DIACRITICS),
+    "λογοσ",
+  );
+  assertNfcEquals(
+    convert("ὅϲοϲ", "greek", "greek", WITHOUT_DIACRITICS),
+    "οϲοϲ",
+  );
+  assertEquals(convertDetailed("λόγοσ", "greek", "greek").losses, []);
 });
 
 Deno.test("keeps h in transliterated rough breathing and rh", () => {
