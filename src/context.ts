@@ -113,6 +113,15 @@ export function isDiphthongAt(document: Document, start: number): boolean {
     !second.diacritics.has("diaeresis");
 }
 
+/** The three upsilon pairs transliterated with u by ISO 843 and BnF. */
+export function isAuEuOuAt(document: Document, start: number): boolean {
+  if (!isDiphthongAt(document, start)) return false;
+  const first = document[start];
+  return first?.kind === "grapheme" &&
+    (first.letter === "alpha" || first.letter === "epsilon" ||
+      first.letter === "omicron");
+}
+
 export function breathingTarget(document: Document, start: number): number {
   return isDiphthongAt(document, start) ? start + 1 : start;
 }

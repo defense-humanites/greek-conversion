@@ -26,7 +26,11 @@ export type NumeralOrthography = "alphabetic" | "decimal";
 export type DentalSigmaOrthography = "preserve" | "assimilate";
 
 /** Selects the transliterated spelling of upsilon. */
-export type UpsilonOrthography = "u" | "y" | "y-with-diphthong-u";
+export type UpsilonOrthography =
+  | "u"
+  | "y"
+  | "y-with-diphthong-u"
+  | "y-with-au-eu-ou";
 
 /**
  * Selects whether structural eta and omega length is shown by macron or
@@ -155,7 +159,7 @@ export interface OrthographyOptions {
   numerals?: NumeralOrthography;
   /** Dental assimilation before sigma. Defaults to `"preserve"`. */
   dentalSigma?: DentalSigmaOrthography;
-  /** Upsilon transliteration. Defaults to `"u"`. */
+  /** Upsilon transliteration. `"y-with-au-eu-ou"` uses u only in the three cited pairs; defaults to `"u"`. */
   upsilon?: UpsilonOrthography;
   /** Structural long-vowel marker: `"macron"` or `"circumflex"`. */
   longVowels?: LongVowelOrthography;

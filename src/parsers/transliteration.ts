@@ -3,6 +3,7 @@ import {
   breathingTarget,
   followsNasalGamma,
   hasQuantity,
+  isAuEuOuAt,
   isDiphthongAt,
   isGreekNumeralContext,
   isVowel,
@@ -160,11 +161,16 @@ export function parseTransliteration(
 
     if (
       letter === "upsilon" &&
-      options.orthography?.upsilon === "y-with-diphthong-u" &&
+      (options.orthography?.upsilon === "y-with-diphthong-u" ||
+        options.orthography?.upsilon === "y-with-au-eu-ou") &&
       source.toLowerCase() === "y"
     ) {
       const candidate = grapheme(letter, false, marks);
-      if (isDiphthongAt([...out, candidate], out.length - 1)) {
+      const document = [...out, candidate];
+      const wouldRenderU = options.orthography.upsilon === "y-with-au-eu-ou"
+        ? isAuEuOuAt(document, out.length - 1)
+        : isDiphthongAt(document, out.length - 1);
+      if (wouldRenderU) {
         marks.add("diaeresis");
       }
     }

@@ -161,7 +161,6 @@ const PRESET_DEFINITIONS = {
       }],
       limitations: [
         "Context-dependent access-point variants such as kappa → c and chi → kh are not selected automatically.",
-        "The BnF au, eu, and ou exceptions cannot be expressed exactly by the engine's uniform upsilon policies.",
         "BnF-specific keraia transliteration, Cypriot syndyazomeno, and the Iliad/Odyssey numeral exception are not implemented.",
         "Iota adscript cannot be distinguished mechanically from an ordinary iota.",
         "The BnF circumflex scalar and omission of explicit macron and breve marks are not independently selectable.",
@@ -173,7 +172,7 @@ const PRESET_DEFINITIONS = {
         archaicKoppa: "q",
         coronis: "greek",
         lunateSigma: "c",
-        upsilon: "y",
+        upsilon: "y-with-au-eu-ou",
       },
       unicode: {
         questionMark: "greek",
@@ -208,7 +207,7 @@ const PRESET_DEFINITIONS = {
         eta: "ī",
         nasalGamma: "literal",
         phi: "f",
-        upsilon: "y",
+        upsilon: "y-with-au-eu-ou",
       },
     },
   },

@@ -170,6 +170,26 @@ Deno.test("applies ISO 843 Type 1 spellings", () => {
   );
 });
 
+Deno.test("ISO and BnF restrict upsilon-u to au, eu, and ou", () => {
+  const greek = "υ αυ ευ ου ηυ υι ωυ αϋ άυ";
+  assertNfcEquals(
+    convert(greek, "greek", "transliteration", {
+      preset: "iso-843-type-1",
+    }),
+    "y au eu ou īy yi ōy aÿ áu",
+  );
+  assertNfcEquals(
+    convert(greek, "greek", "transliteration", { preset: "bnf-core" }),
+    "y au eu ou ēy yi ōy aÿ áu",
+  );
+  for (const preset of ["iso-843-type-1", "bnf-core"] as const) {
+    assertNfcEquals(
+      convert("au eu ou", "transliteration", "transliteration", { preset }),
+      "au eu ou",
+    );
+  }
+});
+
 Deno.test("applies ancient ALA-LC policies without inferring breathings", () => {
   assertNfcEquals(
     convert(

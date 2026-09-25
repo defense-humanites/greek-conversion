@@ -6,6 +6,7 @@ import {
   DEXIA_KERAIA,
   elidedAspirate,
   initialBreathingStart,
+  isAuEuOuAt,
   isDiphthongAt,
   isGreekNumeralContext,
   isNasalGamma,
@@ -332,6 +333,8 @@ function transliterationBase(
     switch (options.orthography?.upsilon) {
       case "y":
         return "y";
+      case "y-with-au-eu-ou":
+        return isAuEuOuAt(document, index - 1) ? "u" : "y";
       case "y-with-diphthong-u":
         return isDiphthongAt(document, index - 1) ||
             isDiphthongAt(document, index)

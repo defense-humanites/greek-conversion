@@ -15,6 +15,13 @@ project follows [Semantic Versioning](https://semver.org/).
   Preservation retains the source glyph; strict mode rejects it. Decimal
   conversion of marked numerals remains available explicitly.
 
+### Fixed
+
+- `bnf-core` and `iso-843-type-1` transliterate `αυ`, `ευ`, and `ου` as
+  `au`, `eu`, and `ou` while retaining `y` for other upsilons. The new
+  `orthography.upsilon: "y-with-au-eu-ou"` setting also preserves those
+  distinctions when parsing transliteration.
+
 ## [1.0.0-beta.6] - 2026-09-23
 
 ### Fixed

@@ -166,6 +166,28 @@ Deno.test("applies the requested upsilon transliteration", () => {
     "y au eu ēu ou ui ōu aÿ",
   );
   assertNfcEquals(
+    convert(greek, "greek", "transliteration", {
+      orthography: { upsilon: "y-with-au-eu-ou" },
+    }),
+    "y au eu ēy ou yi ōy aÿ",
+  );
+  assertNfcEquals(
+    convert("Υ ΑΥ ΕΥ ΟΥ ΗΥ ΑΫ", "greek", "transliteration", {
+      orthography: { upsilon: "y-with-au-eu-ou" },
+    }),
+    "Y AU EU OU ĒY AŸ",
+  );
+  const threePairs = { orthography: { upsilon: "y-with-au-eu-ou" } } as const;
+  const canonical = "au eu ou ēy yi ōy aÿ";
+  assertNfcEquals(
+    convert(canonical, "transliteration", "transliteration", threePairs),
+    canonical,
+  );
+  assertNfcEquals(
+    convert("ay ey oy", "transliteration", "transliteration", threePairs),
+    "aÿ eÿ oÿ",
+  );
+  assertNfcEquals(
     convert("Υ ΑΥ ΑΫ", "greek", "transliteration", {
       orthography: { upsilon: "y-with-diphthong-u" },
     }),

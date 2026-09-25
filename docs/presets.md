@@ -180,7 +180,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
     "archaicKoppa": "q",
     "coronis": "greek",
     "lunateSigma": "c",
-    "upsilon": "y"
+    "upsilon": "y-with-au-eu-ou"
   },
   "unicode": {
     "questionMark": "greek"
@@ -191,7 +191,6 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
 **Known limitations:**
 
 - Context-dependent access-point variants such as kappa → c and chi → kh are not selected automatically.
-- The BnF au, eu, and ou exceptions cannot be expressed exactly by the engine's uniform upsilon policies.
 - BnF-specific keraia transliteration, Cypriot syndyazomeno, and the Iliad/Odyssey numeral exception are not implemented.
 - Iota adscript cannot be distinguished mechanically from an ordinary iota.
 - The BnF circumflex scalar and omission of explicit macron and breve marks are not independently selectable.
@@ -220,7 +219,7 @@ Type 1 transliteration of Greek characters into Latin characters.
     "eta": "ī",
     "nasalGamma": "literal",
     "phi": "f",
-    "upsilon": "y"
+    "upsilon": "y-with-au-eu-ou"
   }
 }
 ```
@@ -392,3 +391,10 @@ The ALA-LC policy omits diaeresis visually. Under contextual `y/u`, the parser
 nevertheless preserves its deterministic provenance: `y` is interpreted as a
 separated upsilon where `u` would form a diphthong. This keeps preset output
 idempotent without lexical inference.
+
+The ISO Type 1 and BnF presets use the narrower
+`orthography.upsilon: "y-with-au-eu-ou"` rule: `αυ`, `ευ`, and `ου` produce
+`au`, `eu`, and `ou`; isolated upsilon and other vowel pairs use `y`. A
+diaeresis prevents the three combinations. When reading unmarked `ay`, `ey`,
+or `oy`, the parser infers a separated upsilon so a second conversion cannot
+silently turn it into `au`, `eu`, or `ou`.
