@@ -47,8 +47,10 @@ therefore does not enforce the reference as a strict validator; `preserve` and
 
 These values describe presets supplied as ordinary `ConversionOptions`. A
 preset bound through `createConverter({ preset })` additionally enforces every
-scope boundary established by the repertoire audit, preserving excluded
-characters and reporting them through `convertDetailed().diagnostics`.
+scope boundary established by the repertoire audit. Its converter preserves
+excluded characters by default and reports them through
+`convertDetailed().diagnostics`. Set `outOfScopeBehavior: "reject"` on the
+converter to throw `CharacterScopeError` with those diagnostics instead.
 
 ## Available presets
 

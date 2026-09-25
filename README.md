@@ -170,6 +170,10 @@ dedicated [character-extension documentation](https://github.com/defense-humanit
 explains contextual ALA-LC numerals, custom extensions, and further
 restrictions.
 
+For strict conversion, set `outOfScopeBehavior: "reject"` when creating the
+converter. Both conversion methods then throw `CharacterScopeError`, whose
+`diagnostics` identify every recognized character outside the repertoire.
+
 ### Inspect effective defaults
 
 Every effective default is available as an immutable, IDE-friendly object:

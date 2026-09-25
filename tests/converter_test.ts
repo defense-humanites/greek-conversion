@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { convert, createConverter } from "../src/mod.ts";
+import { CharacterScopeError, convert, createConverter } from "../src/mod.ts";
 
 const SAN = {
   id: "san",
@@ -50,6 +50,137 @@ Deno.test("bound presets apply their options and audited scope", () => {
   assertEquals(
     alaResult.diagnostics.map(({ character }) => character),
     ["stigma", "yot"],
+  );
+});
+
+Deno.test("rejects all out-of-scope source characters with structured diagnostics", () => {
+  const converter = createConverter({
+    preset: "perseus",
+    outOfScopeBehavior: "reject",
+  });
+
+  for (const detailed of [false, true]) {
+    let error: unknown;
+    try {
+      if (detailed) {
+        converter.convertDetailed("αϝϳ", "greek", "beta-code");
+      } else {
+        converter.convert("αϝϳ", "greek", "beta-code");
+      }
+    } catch (caught) {
+      error = caught;
+    }
+
+    assertEquals(error instanceof CharacterScopeError, true);
+    const rejected = error as CharacterScopeError;
+    assertEquals(rejected.name, "CharacterScopeError");
+    assertEquals(
+      rejected.message,
+      "Conversion rejected: 2 out-of-scope characters.",
+    );
+    assertEquals(
+      rejected.diagnostics.map(({ code, index, character, message }) => ({
+        code,
+        index,
+        character,
+        message,
+      })),
+      [
+        {
+          code: "out-of-scope-character",
+          index: 1,
+          character: "digamma",
+          message:
+            "Character digamma is outside this converter's repertoire and was rejected.",
+        },
+        {
+          code: "out-of-scope-character",
+          index: 2,
+          character: "yot",
+          message:
+            "Character yot is outside this converter's repertoire and was rejected.",
+        },
+      ],
+    );
+    assertEquals(Object.isFrozen(rejected.diagnostics), true);
+    assertEquals(Object.isFrozen(rejected.diagnostics[0]), true);
+  }
+
+  assertEquals(converter.convert("α☃", "greek", "beta-code"), "a☃");
+});
+
+Deno.test("strict ALA-LC accepts marked numerals but rejects unmarked letters", () => {
+  const converter = createConverter({
+    preset: "ala-lc-modern",
+    outOfScopeBehavior: "reject",
+  });
+
+  assertEquals(converter.convert("ϛʹ", "greek", "transliteration"), "6");
+
+  let error: unknown;
+  try {
+    converter.convert("ϛ ϛʹ", "greek", "transliteration");
+  } catch (caught) {
+    error = caught;
+  }
+  assertEquals(error instanceof CharacterScopeError, true);
+  assertEquals(
+    (error as CharacterScopeError).diagnostics.map(({ index, character }) => [
+      index,
+      character,
+    ]),
+    [[0, "stigma"]],
+  );
+});
+
+Deno.test("strict repertoire exclusions cover custom and Beta Code forms", () => {
+  const converter = createConverter({
+    preset: "perseus",
+    characters: [SAN],
+    exclude: ["san"],
+    outOfScopeBehavior: "reject",
+  });
+
+  let error: unknown;
+  try {
+    converter.convert("ϻϝ", "greek", "beta-code");
+  } catch (caught) {
+    error = caught;
+  }
+  assertEquals(error instanceof CharacterScopeError, true);
+  assertEquals(
+    (error as CharacterScopeError).diagnostics.map(({ character }) =>
+      character
+    ),
+    ["san", "digamma"],
+  );
+
+  const beta = createConverter({
+    exclude: ["stigma"],
+    outOfScopeBehavior: "reject",
+  });
+  try {
+    beta.convert("a#2b", "beta-code", "greek");
+    error = undefined;
+  } catch (caught) {
+    error = caught;
+  }
+  assertEquals(error instanceof CharacterScopeError, true);
+  assertEquals((error as CharacterScopeError).diagnostics[0].index, 1);
+  assertEquals(beta.convert("ab", "beta-code", "greek"), "αβ");
+});
+
+Deno.test("rejects invalid out-of-scope policies at construction", () => {
+  let error: unknown;
+  try {
+    createConverter({ outOfScopeBehavior: "unknown" as never });
+  } catch (caught) {
+    error = caught;
+  }
+  assertEquals(error instanceof TypeError, true);
+  assertEquals(
+    (error as Error).message,
+    "Unknown out-of-scope behavior: unknown.",
   );
 });
 

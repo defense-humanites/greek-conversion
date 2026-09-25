@@ -132,7 +132,10 @@ Lunate sigma is not an independent `Letter`; the parser records it as
 Presets supplied as ordinary `ConversionOptions` continue to report and use
 `outOfScopeBehavior: "engine-default"`. Binding a preset through
 `createConverter({ preset })` opts into the audited boundary: excluded
-characters are preserved and reported separately from information loss.
+characters are preserved and reported separately from information loss by
+default. `createConverter({ preset, outOfScopeBehavior: "reject" })` instead
+throws `CharacterScopeError` for recognized excluded characters, with all
+source diagnostics attached.
 
 The bound converter applies contextual ALA-LC rules, so it can accept a marked
 alphabetic numeral while preserving the same semantic letter when unmarked.

@@ -104,9 +104,32 @@ result.diagnostics[0].code; // out-of-scope-character
 ```
 
 Literal preservation is not information loss, so it does not set `lossy`.
-Applications that require rejection should treat a non-empty `diagnostics`
-array as a failed scope check. A future strict validation facade can formalize
-that workflow without changing the permissive `convert()` contract.
+For strict processing, select rejection when creating the converter:
+
+```ts
+import { CharacterScopeError, createConverter } from "@humanities/greek-conversion";
+
+const strict = createConverter({
+  preset: "perseus",
+  outOfScopeBehavior: "reject",
+});
+
+try {
+  strict.convert("αϝ", "greek", "beta-code");
+} catch (error) {
+  if (error instanceof CharacterScopeError) {
+    error.diagnostics; // [{ code: "out-of-scope-character", index: 1, ... }]
+  } else {
+    throw error;
+  }
+}
+```
+
+Both `convert()` and `convertDetailed()` reject the entire input when a
+recognized character falls outside the effective repertoire. The error
+contains every such occurrence, with the same source token indices as
+`convertDetailed().diagnostics` in preservation mode. Unknown literals remain
+literal: strict mode checks recognized characters, not arbitrary text.
 
 ## Preset boundary
 
@@ -121,7 +144,8 @@ perseus.convert("Ἄνθρωπος ϝ", "greek", "beta-code");
 ```
 
 Here digamma is recognized but preserved because it is outside the Perseus
-subset. `convertDetailed()` reports it as `out-of-scope-character`. Per-call
+subset. `convertDetailed()` reports it as `out-of-scope-character`. Set
+`outOfScopeBehavior: "reject"` on the converter to reject it instead. Per-call
 options may refine the bound preset, but selecting another preset is rejected
 because its options would no longer agree with the converter's fixed scope.
 

@@ -10,7 +10,11 @@
  */
 
 import { encode, parse } from "./conversion.ts";
-export { Converter, createConverter } from "./converter.ts";
+export {
+  CharacterScopeError,
+  Converter,
+  createConverter,
+} from "./converter.ts";
 export type {
   CharacterAliasDefinition,
   CharacterRepertoireDefinition,
@@ -18,6 +22,7 @@ export type {
   CharacterScopeDiagnosticCode,
   ConverterConfiguration,
   ConverterConversionResult,
+  ConverterOutOfScopeBehavior,
   CustomCharacterDefinition,
   CustomCharacterForms,
 } from "./converter.ts";

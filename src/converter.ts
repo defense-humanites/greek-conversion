@@ -18,6 +18,9 @@ import {
 } from "./presets.ts";
 import { parsePunctuation } from "./punctuation.ts";
 
+/** Treatment of recognized characters outside this converter's repertoire. */
+export type ConverterOutOfScopeBehavior = "preserve" | "reject";
+
 /** One additional input spelling that resolves to a built-in Greek letter. */
 export interface CharacterAliasDefinition {
   /** Built-in semantic letter that receives the additional spelling. */
@@ -62,6 +65,8 @@ export interface CharacterRepertoireDefinition {
 export interface ConverterConfiguration extends CharacterRepertoireDefinition {
   /** Preset options and audited built-in scope bound to every conversion. */
   preset?: Preset;
+  /** Preserves out-of-scope input by default or rejects the whole conversion. */
+  outOfScopeBehavior?: ConverterOutOfScopeBehavior;
   /** Additional spellings of built-in semantic letters. */
   aliases?: readonly CharacterAliasDefinition[];
   /** Opaque characters converted only through their declared direct forms. */
@@ -71,7 +76,7 @@ export interface ConverterConfiguration extends CharacterRepertoireDefinition {
 /** Stable diagnostic codes emitted by an extensible converter. */
 export type CharacterScopeDiagnosticCode = "out-of-scope-character";
 
-/** One recognized character preserved instead of converted. */
+/** One recognized character outside the converter's effective repertoire. */
 export interface CharacterScopeDiagnostic {
   /** Stable category suitable for programmatic handling. */
   code: CharacterScopeDiagnosticCode;
@@ -81,6 +86,25 @@ export interface CharacterScopeDiagnostic {
   character: string;
   /** Human-readable English explanation. */
   message: string;
+}
+
+/** Error raised when a converter rejects recognized out-of-scope input. */
+export class CharacterScopeError extends RangeError {
+  /** Every out-of-scope occurrence, indexed in the parsed source document. */
+  readonly diagnostics: readonly CharacterScopeDiagnostic[];
+
+  /** Creates an error with an immutable snapshot of the source diagnostics. */
+  constructor(diagnostics: readonly CharacterScopeDiagnostic[]) {
+    super(
+      `Conversion rejected: ${diagnostics.length} out-of-scope ${
+        diagnostics.length === 1 ? "character" : "characters"
+      }.`,
+    );
+    this.name = "CharacterScopeError";
+    this.diagnostics = Object.freeze(
+      diagnostics.map((diagnostic) => Object.freeze({ ...diagnostic })),
+    );
+  }
 }
 
 /** Detailed conversion result with repertoire diagnostics kept separate. */
@@ -150,6 +174,7 @@ export class Converter {
   readonly #repertoire?: ReadonlySet<string>;
   readonly #excluded: ReadonlySet<string>;
   readonly #preset?: Preset;
+  readonly #outOfScopeBehavior: ConverterOutOfScopeBehavior;
 
   /** Creates an isolated converter from copied and validated definitions. */
   constructor(configuration: ConverterConfiguration = {}) {
@@ -157,6 +182,11 @@ export class Converter {
       resolveConversionOptions({ preset: configuration.preset });
     }
     this.#preset = configuration.preset;
+    const behavior = configuration.outOfScopeBehavior ?? "preserve";
+    if (behavior !== "preserve" && behavior !== "reject") {
+      throw new TypeError(`Unknown out-of-scope behavior: ${behavior}.`);
+    }
+    this.#outOfScopeBehavior = behavior;
 
     const characters = normalizeCharacters(configuration.characters ?? []);
     this.#characters = new Map(characters.map((value) => [value.id, value]));
@@ -215,6 +245,7 @@ export class Converter {
     const resolved = this.#resolveOptions(options);
     const sourceInput = this.#preprocess(input, from, resolved);
     const prepared = this.#prepareSource(sourceInput, from, resolved);
+    this.#assertScope(prepared.diagnostics);
     const encoded = encode(prepared.document, to, resolved);
     const output = this.#postprocess(encoded, to);
 
@@ -239,6 +270,7 @@ export class Converter {
     const resolved = this.#resolveOptions(options);
     const preprocessed = this.#preprocess(input, from, resolved);
     const prepared = this.#prepareSource(preprocessed, from, resolved);
+    this.#assertScope(prepared.diagnostics);
     const encoded = encode(prepared.document, to, resolved);
     return { output: this.#postprocess(encoded, to) };
   }
@@ -305,7 +337,9 @@ export class Converter {
     const document = parsed.flatMap((token, index): readonly Token[] => {
       if (token.kind === "grapheme") {
         if (this.#isAllowed(token.letter, parsed, index)) return [token];
-        diagnostics.push(scopeDiagnostic(index, token.letter));
+        diagnostics.push(
+          scopeDiagnostic(index, token.letter, this.#outOfScopeBehavior),
+        );
         return literalTokens(encode([token], format, options));
       }
 
@@ -317,7 +351,9 @@ export class Converter {
         return [token];
       }
 
-      diagnostics.push(scopeDiagnostic(index, custom.character.id));
+      diagnostics.push(
+        scopeDiagnostic(index, custom.character.id, this.#outOfScopeBehavior),
+      );
       const occurrence = occurrences.get(token.value) ?? 0;
       occurrences.set(token.value, occurrence + 1);
       const original = input.originals.get(token.value)?.[occurrence] ??
@@ -356,6 +392,12 @@ export class Converter {
         ? options
         : { ...options, preset: this.#preset },
     );
+  }
+
+  #assertScope(diagnostics: readonly CharacterScopeDiagnostic[]): void {
+    if (this.#outOfScopeBehavior === "reject" && diagnostics.length > 0) {
+      throw new CharacterScopeError(diagnostics);
+    }
   }
 
   #isAllowed(id: string, document: Document, index: number): boolean {
@@ -588,13 +630,16 @@ function customForm(
 function scopeDiagnostic(
   index: number,
   character: string,
+  behavior: ConverterOutOfScopeBehavior,
 ): CharacterScopeDiagnostic {
   return {
     code: "out-of-scope-character",
     index,
     character,
     message:
-      `Character ${character} is outside this converter's repertoire and was preserved literally.`,
+      `Character ${character} is outside this converter's repertoire and was ${
+        behavior === "reject" ? "rejected" : "preserved literally"
+      }.`,
   };
 }
 
