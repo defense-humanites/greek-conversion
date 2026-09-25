@@ -223,6 +223,91 @@ Deno.test("bound preset scopes match the audited additional-letter matrix", () =
   }
 });
 
+Deno.test("ISO Type 1 preserves in-scope characters without defined letter mappings", () => {
+  const converter = createConverter({ preset: "iso-843-type-1" });
+  const result = converter.convertDetailed(
+    "ϝϳϛϟϙϡ",
+    "greek",
+    "transliteration",
+  );
+
+  assertEquals(result.output, "wjϛϟϙϡ");
+  assertEquals(result.lossy, false);
+  assertEquals(
+    result.diagnostics.map(({ code, index, character }) => [
+      code,
+      index,
+      character,
+    ]),
+    [
+      ["undefined-preset-mapping", 2, "stigma"],
+      ["undefined-preset-mapping", 3, "koppa"],
+      ["unresolved-preset-mapping", 4, "archaic-koppa"],
+      ["undefined-preset-mapping", 5, "sampi"],
+    ],
+  );
+
+  // The preset alone retains its documented engine-default behavior.
+  assertEquals(
+    convert("ϛ", "greek", "transliteration", {
+      preset: "iso-843-type-1",
+    }),
+    "c̄",
+  );
+  assertEquals(converter.convert("ϛ", "greek", "greek"), "ϛ");
+  assertEquals(converter.convert("ϛ", "greek", "beta-code"), "#2");
+  assertEquals(
+    converter.convert("ϛʹ", "greek", "transliteration", {
+      orthography: { numerals: "decimal" },
+    }),
+    "6",
+  );
+});
+
+Deno.test("strict ISO Type 1 rejects missing mappings separately from exclusions", () => {
+  const converter = createConverter({
+    preset: "iso-843-type-1",
+    exclude: ["digamma"],
+    outOfScopeBehavior: "reject",
+  });
+
+  for (const detailed of [false, true]) {
+    let error: unknown;
+    try {
+      if (detailed) {
+        converter.convertDetailed("ϝϛϙ", "greek", "transliteration");
+      } else {
+        converter.convert("ϝϛϙ", "greek", "transliteration");
+      }
+    } catch (caught) {
+      error = caught;
+    }
+    assertEquals(error instanceof CharacterScopeError, true);
+    assertEquals(
+      (error as CharacterScopeError).diagnostics.map(({ code, index }) => [
+        code,
+        index,
+      ]),
+      [
+        ["out-of-scope-character", 0],
+        ["undefined-preset-mapping", 1],
+        ["unresolved-preset-mapping", 2],
+      ],
+    );
+    assertEquals(
+      (error as CharacterScopeError).message,
+      "Conversion rejected: 3 unsupported characters.",
+    );
+  }
+  assertEquals(
+    createConverter({
+      preset: "iso-843-type-1",
+      outOfScopeBehavior: "reject",
+    }).convert("ϝϳ", "greek", "transliteration"),
+    "wj",
+  );
+});
+
 Deno.test("bound preset options remain overridable but not replaceable", () => {
   const converter = createConverter({ preset: "bnf-core" });
 

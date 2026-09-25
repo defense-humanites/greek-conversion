@@ -50,7 +50,10 @@ preset bound through `createConverter({ preset })` additionally enforces every
 scope boundary established by the repertoire audit. Its converter preserves
 excluded characters by default and reports them through
 `convertDetailed().diagnostics`. Set `outOfScopeBehavior: "reject"` on the
-converter to throw `CharacterScopeError` with those diagnostics instead.
+converter to throw `CharacterScopeError` with those diagnostics instead. A
+bound ISO Type 1 converter also preserves or rejects Greek letters whose
+transliteration is undefined or unresolved by the cited table, using distinct
+diagnostic codes; this applies only when transliteration is the target.
 
 ## Available presets
 
@@ -225,7 +228,8 @@ Type 1 transliteration of Greek characters into Latin characters.
 **Known limitations:**
 
 - The preset implements the mechanically expressible Type 1 letter choices, not every contextual provision of the standard.
-- ISO 843 names stigma, koppa, and sampi in its Greek repertoire but does not assign them Type 1 conversions; engine defaults for those letters are not ISO-defined output.
+- ISO 843 names stigma, koppa, and sampi in its Greek repertoire but does not assign them Type 1 conversions; bound converters preserve or reject them for transliteration, while ordinary preset use retains engine defaults.
+- The standard's single named koppa cannot be identified unambiguously with the engine's separate archaic-koppa entry; bound transliteration reports this unresolved mapping.
 
 ### `perseus` — Perseus Beta Code — Core subset
 

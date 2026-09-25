@@ -10,6 +10,10 @@ project follows [Semantic Versioning](https://semver.org/).
 - `createConverter({ outOfScopeBehavior: "reject" })` rejects recognized
   characters outside the preset or custom repertoire and exposes all source
   diagnostics through the public `CharacterScopeError`.
+- Bound ISO 843 Type 1 converters now report undefined transliterations for
+  stigma, koppa, and sampi, and the unresolved identification of archaic koppa.
+  Preservation retains the source glyph; strict mode rejects it. Decimal
+  conversion of marked numerals remains available explicitly.
 
 ## [1.0.0-beta.6] - 2026-09-23
 

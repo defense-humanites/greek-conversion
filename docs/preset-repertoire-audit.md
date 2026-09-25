@@ -134,15 +134,22 @@ Presets supplied as ordinary `ConversionOptions` continue to report and use
 `createConverter({ preset })` opts into the audited boundary: excluded
 characters are preserved and reported separately from information loss by
 default. `createConverter({ preset, outOfScopeBehavior: "reject" })` instead
-throws `CharacterScopeError` for recognized excluded characters, with all
-source diagnostics attached.
+throws `CharacterScopeError` with all source diagnostics attached.
 
 The bound converter applies contextual ALA-LC rules, so it can accept a marked
 alphabetic numeral while preserving the same semantic letter when unmarked.
 Perseus and both SBL profiles exclude all six additional entries. BnF and TLG
-accept all six. ISO 843 remains unrestricted because its source repertoire
-contains characters without prescribed Type 1 output and does not distinguish
-the engine's two koppa entries clearly enough for stricter enforcement.
+accept all six. ISO 843 includes all six in its source repertoire. When the
+target is transliteration, a bound ISO converter preserves and reports stigma,
+koppa, and sampi as `undefined-preset-mapping`, because Table 4 assigns no
+Type 1 letter mapping. It reports `archaic-koppa` separately as
+`unresolved-preset-mapping`: the standard's single koppa does not resolve the
+engine's two Unicode forms. Strict mode rejects these occurrences with their
+distinct codes. Digamma and yot use the defined Latin mappings; marked Greek
+numerals can use the standard's separate decimal correspondence if the caller
+explicitly sets `orthography.numerals: "decimal"`. This rule applies only when
+the target is transliteration. It does not certify the rest of ISO 843 as fully
+implemented.
 
 ## Sources
 

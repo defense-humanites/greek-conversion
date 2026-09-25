@@ -172,7 +172,10 @@ restrictions.
 
 For strict conversion, set `outOfScopeBehavior: "reject"` when creating the
 converter. Both conversion methods then throw `CharacterScopeError`, whose
-`diagnostics` identify every recognized character outside the repertoire.
+`diagnostics` identify recognized characters outside the repertoire or with
+known undefined or unresolved preset mappings. For ISO Type 1 transliteration,
+these include stigma, koppa, sampi, and the ambiguously identified archaic
+koppa; see the [preset repertoire audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-repertoire-audit.md).
 
 ### Inspect effective defaults
 

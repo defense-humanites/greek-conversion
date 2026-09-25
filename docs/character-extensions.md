@@ -126,8 +126,9 @@ try {
 ```
 
 Both `convert()` and `convertDetailed()` reject the entire input when a
-recognized character falls outside the effective repertoire. The error
-contains every such occurrence, with the same source token indices as
+recognized character falls outside the effective repertoire or has a known
+undefined or unresolved mapping in the target preset. The error contains
+every such occurrence, with the same source token indices as
 `convertDetailed().diagnostics` in preservation mode. Unknown literals remain
 literal: strict mode checks recognized characters, not arbitrary text.
 
@@ -151,9 +152,15 @@ because its options would no longer agree with the converter's fixed scope.
 
 ALA-LC boundaries are context-sensitive. For example, a modern ALA-LC-bound
 converter preserves unmarked stigma but accepts `ϛʹ` as the alphabetic numeral
-6. ISO 843 remains unrestricted because its cited source inventory contains
-characters for which Type 1 output is undefined; the audit deliberately does
-not invent a scope policy for them.
+6. ISO 843 includes stigma, koppa, and sampi in its Greek source inventory but
+does not define their Type 1 transliterations. A bound ISO converter reports
+`undefined-preset-mapping` when transliterating them; for archaic koppa it
+reports `unresolved-preset-mapping` because the single koppa named in the
+standard cannot be assigned unambiguously to the engine's two forms. In
+preservation mode they remain Greek text in the output; strict mode rejects
+them. Explicit decimal conversion of marked numerals still works. Other
+conversion targets and ordinary `convert(..., { preset: "iso-843-type-1" })`
+retain the engine's behavior.
 
 Adding an alias or custom character never expands the documented scope of a
 preset. A custom character registered alongside a bound preset is allowed as

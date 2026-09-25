@@ -14,6 +14,7 @@ import type {
 } from "./options.ts";
 import {
   isCharacterInPresetScope,
+  presetMappingIssue,
   resolveConversionOptions,
 } from "./presets.ts";
 import { parsePunctuation } from "./punctuation.ts";
@@ -65,7 +66,7 @@ export interface CharacterRepertoireDefinition {
 export interface ConverterConfiguration extends CharacterRepertoireDefinition {
   /** Preset options and audited built-in scope bound to every conversion. */
   preset?: Preset;
-  /** Preserves out-of-scope input by default or rejects the whole conversion. */
+  /** Preserves unsupported recognized input by default or rejects the conversion. */
   outOfScopeBehavior?: ConverterOutOfScopeBehavior;
   /** Additional spellings of built-in semantic letters. */
   aliases?: readonly CharacterAliasDefinition[];
@@ -74,9 +75,12 @@ export interface ConverterConfiguration extends CharacterRepertoireDefinition {
 }
 
 /** Stable diagnostic codes emitted by an extensible converter. */
-export type CharacterScopeDiagnosticCode = "out-of-scope-character";
+export type CharacterScopeDiagnosticCode =
+  | "out-of-scope-character"
+  | "undefined-preset-mapping"
+  | "unresolved-preset-mapping";
 
-/** One recognized character outside the converter's effective repertoire. */
+/** One recognized character excluded or lacking a defined preset mapping. */
 export interface CharacterScopeDiagnostic {
   /** Stable category suitable for programmatic handling. */
   code: CharacterScopeDiagnosticCode;
@@ -88,17 +92,20 @@ export interface CharacterScopeDiagnostic {
   message: string;
 }
 
-/** Error raised when a converter rejects recognized out-of-scope input. */
+/** Error raised when a converter rejects recognized unsupported input. */
 export class CharacterScopeError extends RangeError {
-  /** Every out-of-scope occurrence, indexed in the parsed source document. */
+  /** Every rejected occurrence, indexed in the parsed source document. */
   readonly diagnostics: readonly CharacterScopeDiagnostic[];
 
   /** Creates an error with an immutable snapshot of the source diagnostics. */
   constructor(diagnostics: readonly CharacterScopeDiagnostic[]) {
+    const onlyScope = diagnostics.every(({ code }) =>
+      code === "out-of-scope-character"
+    );
     super(
-      `Conversion rejected: ${diagnostics.length} out-of-scope ${
-        diagnostics.length === 1 ? "character" : "characters"
-      }.`,
+      `Conversion rejected: ${diagnostics.length} ${
+        onlyScope ? "out-of-scope" : "unsupported"
+      } ${diagnostics.length === 1 ? "character" : "characters"}.`,
     );
     this.name = "CharacterScopeError";
     this.diagnostics = Object.freeze(
@@ -107,9 +114,9 @@ export class CharacterScopeError extends RangeError {
   }
 }
 
-/** Detailed conversion result with repertoire diagnostics kept separate. */
+/** Detailed conversion result with character diagnostics kept separate. */
 export interface ConverterConversionResult extends ConversionResult {
-  /** Non-lossy scope diagnostics produced while parsing the source. */
+  /** Non-lossy repertoire and preset-mapping diagnostics from the source. */
   diagnostics: readonly CharacterScopeDiagnostic[];
   /** Information losses inherited from the ordinary conversion contract. */
   losses: readonly ConversionLoss[];
@@ -244,7 +251,7 @@ export class Converter {
   ): ConverterConversionResult {
     const resolved = this.#resolveOptions(options);
     const sourceInput = this.#preprocess(input, from, resolved);
-    const prepared = this.#prepareSource(sourceInput, from, resolved);
+    const prepared = this.#prepareSource(sourceInput, from, resolved, to);
     this.#assertScope(prepared.diagnostics);
     const encoded = encode(prepared.document, to, resolved);
     const output = this.#postprocess(encoded, to);
@@ -269,7 +276,7 @@ export class Converter {
   ): { output: string } {
     const resolved = this.#resolveOptions(options);
     const preprocessed = this.#preprocess(input, from, resolved);
-    const prepared = this.#prepareSource(preprocessed, from, resolved);
+    const prepared = this.#prepareSource(preprocessed, from, resolved, to);
     this.#assertScope(prepared.diagnostics);
     const encoded = encode(prepared.document, to, resolved);
     return { output: this.#postprocess(encoded, to) };
@@ -329,6 +336,7 @@ export class Converter {
     input: PreprocessedInput,
     format: Format,
     options: ResolvedConversionOptions,
+    target?: Format,
   ): PreparedSource {
     const parsed = parse(input.value, format, options);
     const diagnostics: CharacterScopeDiagnostic[] = [];
@@ -336,9 +344,30 @@ export class Converter {
 
     const document = parsed.flatMap((token, index): readonly Token[] => {
       if (token.kind === "grapheme") {
-        if (this.#isAllowed(token.letter, parsed, index)) return [token];
+        if (!this.#isAllowed(token.letter, parsed, index)) {
+          diagnostics.push(
+            scopeDiagnostic(index, token.letter, this.#outOfScopeBehavior),
+          );
+          return literalTokens(encode([token], format, options));
+        }
+        const issue = this.#preset !== undefined && target !== undefined
+          ? presetMappingIssue(
+            this.#preset,
+            token.letter,
+            parsed,
+            index,
+            target,
+            options,
+          )
+          : undefined;
+        if (issue === undefined) return [token];
         diagnostics.push(
-          scopeDiagnostic(index, token.letter, this.#outOfScopeBehavior),
+          mappingDiagnostic(
+            index,
+            token.letter,
+            issue,
+            this.#outOfScopeBehavior,
+          ),
         );
         return literalTokens(encode([token], format, options));
       }
@@ -640,6 +669,25 @@ function scopeDiagnostic(
       `Character ${character} is outside this converter's repertoire and was ${
         behavior === "reject" ? "rejected" : "preserved literally"
       }.`,
+  };
+}
+
+function mappingDiagnostic(
+  index: number,
+  character: string,
+  code: "undefined-preset-mapping" | "unresolved-preset-mapping",
+  behavior: ConverterOutOfScopeBehavior,
+): CharacterScopeDiagnostic {
+  const reason = code === "undefined-preset-mapping"
+    ? "has no ISO 843 Type 1 transliteration"
+    : "cannot be identified unambiguously with ISO 843's koppa";
+  return {
+    code,
+    index,
+    character,
+    message: `Character ${character} ${reason} and was ${
+      behavior === "reject" ? "rejected" : "preserved literally"
+    }.`,
   };
 }
 

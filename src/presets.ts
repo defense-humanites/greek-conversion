@@ -6,7 +6,7 @@ import {
   type ResolvedConversionOptions,
 } from "./options.ts";
 import { isGreekNumeralContext } from "./context.ts";
-import type { Document, Letter } from "./model.ts";
+import type { Document, Format, Letter } from "./model.ts";
 
 /** Partial option fields contributed by one registered preset. */
 export type PresetOptions = Omit<ConversionOptions, "preset">;
@@ -197,7 +197,8 @@ const PRESET_DEFINITIONS = {
       }],
       limitations: [
         "The preset implements the mechanically expressible Type 1 letter choices, not every contextual provision of the standard.",
-        "ISO 843 names stigma, koppa, and sampi in its Greek repertoire but does not assign them Type 1 conversions; engine defaults for those letters are not ISO-defined output.",
+        "ISO 843 names stigma, koppa, and sampi in its Greek repertoire but does not assign them Type 1 conversions; bound converters preserve or reject them for transliteration, while ordinary preset use retains engine defaults.",
+        "The standard's single named koppa cannot be identified unambiguously with the engine's separate archaic-koppa entry; bound transliteration reports this unresolved mapping.",
       ],
     },
     options: {
@@ -425,6 +426,31 @@ export function isCharacterInPresetScope(
     case "tlg-core":
       return true;
   }
+}
+
+/** A recognized ISO source character without an established Type 1 mapping. */
+export function presetMappingIssue(
+  preset: Preset,
+  character: Letter,
+  document: Document,
+  index: number,
+  target: Format,
+  options: ResolvedConversionOptions,
+): "undefined-preset-mapping" | "unresolved-preset-mapping" | undefined {
+  if (preset !== "iso-843-type-1" || target !== "transliteration") {
+    return undefined;
+  }
+  // ISO's separate numeral table permits decimal indexing when requested.
+  if (
+    options.orthography.numerals === "decimal" &&
+    isGreekNumeralContext(document, index)
+  ) return undefined;
+
+  if (character === "archaic-koppa") return "unresolved-preset-mapping";
+  if (
+    character === "stigma" || character === "koppa" || character === "sampi"
+  ) return "undefined-preset-mapping";
+  return undefined;
 }
 
 function registeredDefinition(preset: Preset): PresetDefinition {
