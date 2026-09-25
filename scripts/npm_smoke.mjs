@@ -7,7 +7,7 @@ const packageJson = JSON.parse(
   await readFile(new URL("../npm/package.json", import.meta.url), "utf8"),
 );
 assert.equal(packageJson.name, "@humanities/greek-conversion");
-assert.equal(packageJson.license, "AGPL-3.0-or-later");
+assert.equal(packageJson.license, "MIT");
 
 assert.equal(convert("a)/nqrwpos", "beta-code", "greek"), "ἄνθρωπος");
 assert.equal(

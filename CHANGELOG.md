@@ -7,6 +7,12 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [1.0.0-beta.7] - 2026-09-25
 
+### Changed
+
+- Starting with this release, the project is distributed under the MIT License
+  instead of AGPL-3.0-or-later. Earlier published releases retain their
+  original license.
+
 ### Added
 
 - `createConverter({ outOfScopeBehavior: "reject" })` rejects recognized

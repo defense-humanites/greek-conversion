@@ -16,6 +16,9 @@ The package is ESM-only.
 
 ## Updating from `1.0.0-beta.6`
 
+The `1.0.0-beta.7` package uses the MIT License. Earlier published releases
+retain their original AGPL-3.0-or-later license.
+
 `bnf-core` now preserves known smooth breathings on Latin letters, uses a
 combining circumflex instead of a tilde, and omits explicit macrons and
 breves in transliteration. `iso-843-type-1` now prefixes an initial smooth

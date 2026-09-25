@@ -482,5 +482,6 @@ deno task test
 
 Copyright (C) 2021-2026  Antoine Boquet
 
-`greek-conversion` is licensed under the
-[GNU Affero General Public License v3.0 or later](https://github.com/defense-humanites/greek-conversion/blob/main/LICENSE).
+Starting with `1.0.0-beta.7`, `greek-conversion` is licensed under the
+[MIT License](https://github.com/defense-humanites/greek-conversion/blob/main/LICENSE).
+Previously published versions retain their original AGPL-3.0-or-later license.

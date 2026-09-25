@@ -1,7 +1,7 @@
 {
   "name": "@humanities/greek-conversion",
   "version": "1.0.0-beta.7",
-  "license": "AGPL-3.0-or-later",
+  "license": "MIT",
   "lock": false,
   "exports": {
     ".": "./src/mod.ts",
