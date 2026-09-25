@@ -161,7 +161,8 @@ const PRESET_DEFINITIONS = {
       }],
       limitations: [
         "Context-dependent access-point variants such as kappa → c and chi → kh are not selected automatically.",
-        "BnF-specific keraia transliteration, Cypriot syndyazomeno, and the Iliad/Odyssey numeral exception are not implemented.",
+        "BnF keraiai are rendered as a comma and acute in transliteration, but reverse conversion cannot always distinguish the resulting accent from a letter accent.",
+        "Cypriot syndyazomeno and the Iliad/Odyssey numeral exception are not implemented.",
         "Iota adscript cannot be distinguished mechanically from an ordinary iota.",
         "The BnF circumflex scalar and omission of explicit macron and breve marks are not independently selectable.",
         "Both documented koppa forms collapse to q in BnF transliteration and therefore cannot be distinguished on reverse conversion.",
@@ -171,6 +172,7 @@ const PRESET_DEFINITIONS = {
       orthography: {
         archaicKoppa: "q",
         coronis: "greek",
+        keraia: "bnf",
         lunateSigma: "c",
         upsilon: "y-with-au-eu-ou",
       },

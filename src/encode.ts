@@ -164,6 +164,10 @@ export function encodeTransliteration(
 
   return rendered.map((token, index) => {
     if (token.kind === "literal") {
+      if (options.orthography?.keraia === "bnf") {
+        if (token.value === DEXIA_KERAIA) return "\u0301";
+        if (token.value === ARISTERI_KERAIA) return ",";
+      }
       return encodePunctuation(token.value, "transliteration", options) ??
         token.value;
     }

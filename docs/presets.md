@@ -179,6 +179,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
   "orthography": {
     "archaicKoppa": "q",
     "coronis": "greek",
+    "keraia": "bnf",
     "lunateSigma": "c",
     "upsilon": "y-with-au-eu-ou"
   },
@@ -191,7 +192,8 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
 **Known limitations:**
 
 - Context-dependent access-point variants such as kappa → c and chi → kh are not selected automatically.
-- BnF-specific keraia transliteration, Cypriot syndyazomeno, and the Iliad/Odyssey numeral exception are not implemented.
+- BnF keraiai are rendered as a comma and acute in transliteration, but reverse conversion cannot always distinguish the resulting accent from a letter accent.
+- Cypriot syndyazomeno and the Iliad/Odyssey numeral exception are not implemented.
 - Iota adscript cannot be distinguished mechanically from an ordinary iota.
 - The BnF circumflex scalar and omission of explicit macron and breve marks are not independently selectable.
 - Both documented koppa forms collapse to q in BnF transliteration and therefore cannot be distinguished on reverse conversion.
@@ -398,3 +400,12 @@ The ISO Type 1 and BnF presets use the narrower
 diaeresis prevents the three combinations. When reading unmarked `ay`, `ey`,
 or `oy`, the parser infers a separated upsilon so a second conversion cannot
 silently turn it into `au`, `eu`, or `ou`.
+
+`bnf-core` also selects `orthography.keraia: "bnf"` for transliteration: the
+right numeral mark becomes an acute accent and the left numeral mark becomes
+a comma. This matches BnF spelling, but a vowel with an acute accent can be
+indistinguishable from a vowel followed by the right keraia. Forward
+conversion therefore reports information loss through `convertDetailed()`;
+the transliteration parser does not guess which character was intended.
+Canonical NFC output may compose the acute with a preceding Latin vowel.
+Set `orthography.keraia: "greek"` to keep the original numeral marks.

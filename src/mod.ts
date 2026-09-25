@@ -65,6 +65,7 @@ export type {
   GreekAnoTeleiaForm,
   GreekQuestionMarkForm,
   GreekUnicodeOptions,
+  KeraiaTransliteration,
   LetterCaseOrthography,
   LongVowelOrthography,
   LunateSigmaTransliteration,

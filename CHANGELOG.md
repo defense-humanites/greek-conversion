@@ -21,6 +21,10 @@ project follows [Semantic Versioning](https://semver.org/).
   `au`, `eu`, and `ou` while retaining `y` for other upsilons. The new
   `orthography.upsilon: "y-with-au-eu-ou"` setting also preserves those
   distinctions when parsing transliteration.
+- `bnf-core` renders the right keraia as an acute and the left keraia as a
+  comma in transliteration through `orthography.keraia: "bnf"`. The inverse
+  is ambiguous for some accented vowels; `convertDetailed()` reports the
+  information loss.
 
 ## [1.0.0-beta.6] - 2026-09-23
 

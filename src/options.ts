@@ -22,6 +22,9 @@ export type FinalSigmaOrthography = "contextual" | "medial" | "preserve";
 /** Preserves marked alphabetic numerals or renders valid groups as decimals. */
 export type NumeralOrthography = "alphabetic" | "decimal";
 
+/** Selects Greek keraia marks or the BnF comma and combining acute in Latin output. */
+export type KeraiaTransliteration = "greek" | "bnf";
+
 /** Preserves a dental before sigma or applies the lossy assimilation. */
 export type DentalSigmaOrthography = "preserve" | "assimilate";
 
@@ -157,6 +160,8 @@ export interface OrthographyOptions {
   finalSigma?: FinalSigmaOrthography;
   /** Alphabetic or decimal numeral output. Defaults to `"alphabetic"`. */
   numerals?: NumeralOrthography;
+  /** Keraia marks in transliteration. Defaults to `"greek"`; `"bnf"` is not always reversible. */
+  keraia?: KeraiaTransliteration;
   /** Dental assimilation before sigma. Defaults to `"preserve"`. */
   dentalSigma?: DentalSigmaOrthography;
   /** Upsilon transliteration. `"y-with-au-eu-ou"` uses u only in the three cited pairs; defaults to `"u"`. */
@@ -248,6 +253,7 @@ export interface DefaultConversionOptions {
     readonly lunateSigma: "s";
     readonly finalSigma: "contextual";
     readonly numerals: "alphabetic";
+    readonly keraia: "greek";
     readonly dentalSigma: "preserve";
     readonly upsilon: "u";
     readonly longVowels: "macron";
@@ -304,6 +310,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         lunateSigma: "s",
         finalSigma: "contextual",
         numerals: "alphabetic",
+        keraia: "greek",
         dentalSigma: "preserve",
         upsilon: "u",
         longVowels: "macron",

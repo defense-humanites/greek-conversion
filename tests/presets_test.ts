@@ -190,6 +190,48 @@ Deno.test("ISO and BnF restrict upsilon-u to au, eu, and ou", () => {
   }
 });
 
+Deno.test("BnF renders keraiai only in transliteration and reports their loss", () => {
+  const greek = "βʹ ͵αʹ, βʹ";
+  const options = { preset: "bnf-core" } as const;
+  const result = convertDetailed(greek, "greek", "transliteration", options);
+
+  assertNfcEquals(result.output, "b́ ,á, b́");
+  assertEquals(result.lossy, true);
+  assertEquals(result.losses.length > 0, true);
+  const markedVowel = convertDetailed("αʹ", "greek", "transliteration", options);
+  assertEquals(markedVowel.output, "á");
+  assertEquals(markedVowel.losses.some(({ index }) => index === 1), true);
+  assertEquals(
+    convert("αʹ", "greek", "transliteration", options),
+    convert("ά", "greek", "transliteration", options),
+  );
+  assertEquals(
+    convert("αʹ", "greek", "transliteration", {
+      preset: "bnf-core",
+      orthography: { numerals: "decimal" },
+    }),
+    "1",
+  );
+  assertNfcEquals(
+    convert(greek, "greek", "transliteration", {
+      preset: "iso-843-type-1",
+    }),
+    "vʹ ͵aʹ, vʹ",
+  );
+  assertNfcEquals(convert(greek, "greek", "greek", options), greek);
+  assertNfcEquals(
+    convert(greek, "greek", "beta-code", options),
+    "b# #22a#, b#",
+  );
+  assertNfcEquals(
+    convert(greek, "greek", "transliteration", {
+      preset: "bnf-core",
+      orthography: { keraia: "greek" },
+    }),
+    "bʹ ͵aʹ, bʹ",
+  );
+});
+
 Deno.test("applies ancient ALA-LC policies without inferring breathings", () => {
   assertNfcEquals(
     convert(
