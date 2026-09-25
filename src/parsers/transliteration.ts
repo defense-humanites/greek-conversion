@@ -88,13 +88,12 @@ export function parseTransliteration(
     }
 
     const archaic = markedArchaicLetter(chars, i);
-    const lunateSigma = !archaic &&
+    const ordinary = trie.longest(chars, i);
+    const lunateSigma = !archaic && !ordinary &&
       options.orthography?.lunateSigma === "c" &&
       chars[i]?.toLowerCase() === "c";
-    const match = archaic ??
-      (lunateSigma
-        ? { value: "sigma" as const, length: 1 }
-        : trie.longest(chars, i));
+    const match = archaic ?? ordinary ??
+      (lunateSigma ? { value: "sigma" as const, length: 1 } : undefined);
 
     if (!match) {
       if (chars[i] === "\u1FBD") {

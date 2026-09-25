@@ -5,6 +5,18 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- A source-traceable BnF and ISO 843 Type 1 conformance corpus with forward
+  output, inverse stability, loss expectations, and documented open rules.
+
+### Fixed
+
+- `bnf-core` parses the `ch` digram as chi before considering standalone `c`
+  as Byzantine sigma, so its `Chará` and `téchnē` transliterations can be read
+  back correctly.
+- `bnf-core` preserves the BnF's typographic U+2010 hyphen in Latin output.
+
 ## [1.0.0-beta.7] - 2026-09-25
 
 ### Changed

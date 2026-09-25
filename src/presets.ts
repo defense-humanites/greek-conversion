@@ -174,6 +174,7 @@ const PRESET_DEFINITIONS = {
         archaicKoppa: "q",
         coronis: "greek",
         circumflexAccent: "circumflex",
+        hyphen: "typographic",
         keraia: "bnf",
         lunateSigma: "c",
         quantityTransliteration: "omit",

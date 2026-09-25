@@ -180,6 +180,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
     "archaicKoppa": "q",
     "coronis": "greek",
     "circumflexAccent": "circumflex",
+    "hyphen": "typographic",
     "keraia": "bnf",
     "lunateSigma": "c",
     "quantityTransliteration": "omit",

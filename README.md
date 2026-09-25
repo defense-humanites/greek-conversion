@@ -470,6 +470,7 @@ during the `1.0.0` prerelease series. See [validation](https://github.com/defens
 | Character extensions and repertoires | [Character extensions](https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md) |
 | Preset character repertoire audit | [Preset repertoire audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-repertoire-audit.md) |
 | Preset behavior audit | [Preset behavior audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-behavior-audit.md) |
+| BnF and ISO conformance corpus | [Preset conformance corpus](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-conformance-corpus.md) |
 
 ## Development
 

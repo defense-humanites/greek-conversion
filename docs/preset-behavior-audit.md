@@ -5,6 +5,8 @@ This is a targeted audit of diacritics, punctuation, and numerals beyond the
 check specific rules; passing them is not a certification of a complete
 standard. The precise current options and limitations are listed in the
 [generated preset reference](presets.md).
+The [source-traceable BnF and ISO corpus](preset-conformance-corpus.md) records
+executable examples and rules that remain open.
 
 | Preset | Rules checked in the test suite | Remaining boundary |
 | --- | --- | --- |
