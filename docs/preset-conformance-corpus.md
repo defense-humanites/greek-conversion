@@ -19,16 +19,14 @@ variant. `iso-843-type-1` selects the main ISO forms.
 | Reference | Covered cases | Inverse assessment |
 | --- | --- | --- |
 | [BnF, §§ 2.1–2.3](https://kitcat.bnf.fr/consignes-catalogage/translitteration-du-grec) | Ancient variants `βηφ → bēph`, `αυ/ευ/ου`, and examples `Θάλασσα → Thálassa`, `Χαρά → Chará`, `Ψάρι → Psári` | The covered letters reparse without reported loss; `ch` is parsed before the standalone Byzantine-sigma `c`. |
-| BnF, §§ 4.1–4.3 | Initial rough breathing, coronis, smooth breathing, circumflex, U+2010 hyphen, quantity marks, and both keraiai | Explicit macron/breve are omitted. Numeral keraiai can collide with ordinary comma/accent; these cases report loss. |
+| BnF, §§ 4.1–4.3, 7.2 | Initial rough breathing, coronis, smooth breathing, circumflex, U+2010 hyphen, quantity marks, both keraiai, and marked uppercase archaic numerals | Explicit macron/breve are omitted. Numeral keraiai can collide with ordinary comma/accent; the lowercase Latin spellings for uppercase stigma/sampi also lose case. These cases report loss. |
 | [ISO 843:1997, Table 1 and note 1](https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf) | `βηφ → vīf`, `αυ/ευ/ου → au/eu/ou` | The selected letter forms reparse without reported loss. |
-| ISO 843:1997, Tables 3–4 | Smooth and rough breathings, question mark versus ano teleia, iota subscript, digamma and yot; missing archaic mappings in a bound strict converter | An apostrophe for smooth breathing is not sufficient evidence to reconstruct that breathing: the case reports loss. |
+| ISO 843:1997, Tables 3–4 | Smooth and rough breathings, question mark versus ano teleia, iota subscript, enotikon, digamma and yot; missing archaic mappings in a bound strict converter | An apostrophe for smooth breathing and a hyphen for enotikon are insufficient to reconstruct those distinctions: both cases report loss. |
 
 ## Rules still open
 
 | Source rule | Reference expectation | Current boundary |
 | --- | --- | --- |
-| ISO 843, Table 3: enotikon | Greek `‿` → Latin `-` | `iso-843-type-1` currently retains `‿`. A target-specific spelling and its ambiguous reverse parsing need design. |
-| BnF, § 7.2: marked uppercase archaic numerals | `Ϛʹ` and `Ϡʹ` use lowercase `c̄` and `s̄` plus an acute; `Ϟʹ` uses uppercase `Q` plus an acute | The engine applies ordinary letter case uniformly and currently produces uppercase `C̄` and `S̄` for the first two. |
 | BnF, § 4.1.2: Cypriot syndyazomeno | Upper U+0306 and lower U+032E are retained | U+0306 is also the ordinary breve that BnF omits; the source character alone cannot identify which meaning applies. U+032E is not modelled as a semantic mark. |
 | BnF, §§ 2.1–2.2 and 9.4: catalogue variants and Homeric numerals | Additional forms depend on the record and work | Neither the source text nor a preset identifier provides the required cataloguing context. |
 

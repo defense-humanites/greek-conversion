@@ -74,6 +74,9 @@ export type WhitespaceOrthography = "preserve" | "collapse";
 /** Selects ASCII or typographic hyphen in transliteration output. */
 export type TransliterationHyphen = "ascii" | "typographic";
 
+/** Preserves the enotikon or renders it as an ambiguous Latin hyphen. */
+export type EnotikonTransliteration = "preserve" | "hyphen";
+
 /** Selects `b` or modern `v` for beta in transliteration. */
 export type BetaTransliteration = "b" | "v";
 
@@ -189,6 +192,8 @@ export interface OrthographyOptions {
   whitespace?: WhitespaceOrthography;
   /** Transliteration hyphen. Defaults to `"ascii"`. */
   hyphen?: TransliterationHyphen;
+  /** Transliteration of Greek enotikon (U+203F). Defaults to `"preserve"`. */
+  enotikon?: EnotikonTransliteration;
   /** Beta transliteration. Defaults to `"b"`. */
   beta?: BetaTransliteration;
   /** Eta transliteration. Defaults to `"ē"`. */
@@ -278,6 +283,7 @@ export interface DefaultConversionOptions {
     readonly accentuation: "polytonic";
     readonly whitespace: "preserve";
     readonly hyphen: "ascii";
+    readonly enotikon: "preserve";
     readonly beta: "b";
     readonly eta: "ē";
     readonly xi: "x";
@@ -338,6 +344,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         accentuation: "polytonic",
         whitespace: "preserve",
         hyphen: "ascii",
+        enotikon: "preserve",
         beta: "b",
         eta: "ē",
         xi: "x",

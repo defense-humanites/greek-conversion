@@ -12,6 +12,12 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- `iso-843-type-1` renders the enotikon as a Latin hyphen and reports its
+  ambiguous inverse; the new `orthography.enotikon` option controls this
+  target-specific rendering.
+- `bnf-core` renders marked uppercase stigma and sampi numerals with lowercase
+  Latin letters, while leaving unmarked archaic capitals uppercase; detailed
+  conversion reports the case lost in marked numerals.
 - `bnf-core` parses the `ch` digram as chi before considering standalone `c`
   as Byzantine sigma, so its `Chará` and `téchnē` transliterations can be read
   back correctly.

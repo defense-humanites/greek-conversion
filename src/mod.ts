@@ -59,6 +59,7 @@ export type {
   DiacriticDisposition,
   DiacriticOptions,
   DoubleRhoOrthography,
+  EnotikonTransliteration,
   EtaTransliteration,
   FinalSigmaOrthography,
   GreekAccentuation,

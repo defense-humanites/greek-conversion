@@ -86,5 +86,9 @@ export function encodePunctuation(
     format === "transliteration" && punctuation === HYPHEN &&
     options.orthography?.hyphen === "typographic"
   ) return HYPHEN;
+  if (
+    format === "transliteration" && punctuation === ENOTIKON &&
+    options.orthography?.enotikon === "hyphen"
+  ) return "-";
   return OUTPUT[format].get(punctuation);
 }

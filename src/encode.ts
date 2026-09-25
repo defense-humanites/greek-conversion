@@ -212,7 +212,14 @@ export function encodeTransliteration(
         isNasalGamma(doc, index)
       ? "n"
       : transliterationBase(doc, index, token.letter, options);
-    if (token.uppercase && (!groupUppercase || uppercaseOutput)) {
+    const bnfLowercaseNumeral =
+      options.orthography?.keraia === "bnf" && token.uppercase &&
+      (token.letter === "stigma" || token.letter === "sampi") &&
+      isGreekNumeralContext(doc, index);
+    if (
+      token.uppercase && !bnfLowercaseNumeral &&
+      (!groupUppercase || uppercaseOutput)
+    ) {
       base = uppercaseOutput
         ? base.toUpperCase()
         : base[0].toUpperCase() + base.slice(1);

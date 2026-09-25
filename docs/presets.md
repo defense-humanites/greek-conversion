@@ -223,6 +223,7 @@ Type 1 transliteration of Greek characters into Latin characters.
   "orthography": {
     "beta": "v",
     "coronis": "apostrophe",
+    "enotikon": "hyphen",
     "eta": "ī",
     "nasalGamma": "literal",
     "phi": "f",

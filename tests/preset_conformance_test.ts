@@ -70,6 +70,13 @@ const CASES = [
     lossy: false,
   },
   {
+    preset: "bnf-core",
+    rule: "§ 7.2: marked archaic numerals have prescribed letter case",
+    greek: "Ϛʹ Ϟʹ Ϡʹ ͵Ϛ ͵Ϡ",
+    latin: "c̄́ Q́ s̄́ ,c̄ ,s̄",
+    lossy: true,
+  },
+  {
     preset: "iso-843-type-1",
     rule: "Table 1: beta, eta, and phi",
     greek: "βηφ",
@@ -118,6 +125,13 @@ const CASES = [
     latin: "w j",
     lossy: false,
   },
+  {
+    preset: "iso-843-type-1",
+    rule: "Table 3: enotikon uses the same Latin glyph as the hyphen",
+    greek: "α‿β α‐β",
+    latin: "a-v a-v",
+    lossy: true,
+  },
 ] as const;
 
 for (const { preset, rule, greek, latin, lossy } of CASES) {
@@ -132,6 +146,26 @@ for (const { preset, rule, greek, latin, lossy } of CASES) {
     );
   });
 }
+
+Deno.test("BnF unmarked uppercase archaic letters retain their case", () => {
+  assertNfcEquals(
+    convert("Ϛ Ϡ", "greek", "transliteration", { preset: "bnf-core" }),
+    "C̄ S̄",
+  );
+});
+
+Deno.test("enotikon transliteration only affects Latin output", () => {
+  const options = { preset: "iso-843-type-1" } as const;
+  assertNfcEquals(convert("‿", "greek", "greek", options), "‿");
+  assertNfcEquals(convert("‿", "greek", "beta-code", options), "‿");
+  assertNfcEquals(convert("-", "transliteration", "greek", options), "‐");
+  assertEquals(
+    convertDetailed("‿", "greek", "transliteration", options).losses.map(
+      (loss) => loss.code,
+    ),
+    ["unrepresented-literal"],
+  );
+});
 
 Deno.test("BnF chi digram wins over standalone lunate sigma", () => {
   const letters = parse("ch c c̄", "transliteration", { preset: "bnf-core" })

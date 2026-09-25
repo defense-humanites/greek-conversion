@@ -212,6 +212,7 @@ const PRESET_DEFINITIONS = {
       orthography: {
         beta: "v",
         coronis: "apostrophe",
+        enotikon: "hyphen",
         eta: "ī",
         nasalGamma: "literal",
         phi: "f",

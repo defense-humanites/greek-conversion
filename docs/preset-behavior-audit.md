@@ -12,8 +12,8 @@ executable examples and rules that remain open.
 | --- | --- | --- |
 | `ala-lc-ancient` | Rough breathing when present; contextual `y/u`; marked numerals as decimal | Missing breathings and iota adscript cannot be inferred from spelling alone. |
 | `ala-lc-modern` | Supported `μπ/ντ/γκ` contexts; marked numerals as decimal | Other language-dependent romanization choices require further fixtures or lexical input. |
-| `bnf-core` | Ancient-Greek variant letters; `αυ/ευ/ου`; known smooth breathing, circumflex, and keraiai in Latin output; omission of explicit macron/breve | The upper Cypriot syndyazomeno shares U+0306 with breve; cataloguing variants and the Iliad/Odyssey numeral exception require external context. |
-| `iso-843-type-1` | Type 1 letter choices; `αυ/ευ/ου`; initial smooth breathing; question mark and ano teleia; undefined and unresolved archaic mappings | Some reference provisions remain unimplemented; an apostrophe in Latin text cannot by itself establish a smooth breathing. |
+| `bnf-core` | Ancient-Greek variant letters; `αυ/ευ/ου`; known smooth breathing, circumflex, keraiai, and marked archaic numerals in Latin output; omission of explicit macron/breve | The upper Cypriot syndyazomeno shares U+0306 with breve; cataloguing variants and the Iliad/Odyssey numeral exception require external context. |
+| `iso-843-type-1` | Type 1 letter choices; `αυ/ευ/ου`; initial smooth breathing; question mark, ano teleia, and enotikon; undefined and unresolved archaic mappings | Some reference provisions remain unimplemented; a Latin apostrophe or hyphen cannot by itself establish a smooth breathing or enotikon. |
 | `perseus` | Lowercase ASCII Beta Code, letters, and supported diacritics | TLG escapes are outside the cited Perseus subset. |
 | `sbl-academic` | The library's academic diacritic profile | This is an adaptation, not a separate SBL table. |
 | `sbl-general` | The library's general-purpose removal and retention of diacritics | The profile covers an engine adaptation of SBL's single general-purpose table. |
@@ -28,10 +28,14 @@ both render as `á` under `bnf-core`), so the inverse parser does not invent
 numeral provenance. `convertDetailed()` reports the loss. The BnF table also
 uses both koppa forms with Latin `q`, which likewise cannot be inverted
 without source provenance.
+Marked uppercase stigma and sampi numerals render with lowercase Latin `c̄`
+and `s̄` under BnF; `convertDetailed()` reports the changed case.
 
 ISO 843 transliterates the Greek question mark as `?` and ano teleia as `;`.
 The initial smooth breathing is rendered as an apostrophe; an apostrophe in
 Latin input is not sufficient evidence for reconstructing that mark.
+The enotikon renders as `-` under ISO 843 Type 1. The inverse parser reads
+that glyph as an ordinary hyphen and reports the lost distinction.
 
 The bound converter's `outOfScopeBehavior: "reject"` rejects **recognized**
 source characters outside the audited repertoire and known missing ISO Type 1
