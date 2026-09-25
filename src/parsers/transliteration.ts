@@ -141,7 +141,9 @@ export function parseTransliteration(
     while (i < chars.length) {
       if (
         chars[i] === "\u0302" &&
-        (match.value === "epsilon" || match.value === "omicron")
+        (match.value === "epsilon" || match.value === "omicron") &&
+        !(marks.has("macron") &&
+          options.orthography?.circumflexAccent === "circumflex")
       ) {
         structuralCircumflex = true;
         i++;
@@ -205,7 +207,7 @@ export function parseTransliteration(
   if (options.orthography?.nasalGamma !== "literal") {
     inferNasalGammas(out);
   }
-  inferInitialBreathings(out);
+  inferInitialBreathings(out, options);
 
   return out;
 }
@@ -332,7 +334,7 @@ function resolveLongVowel(
   return letter;
 }
 
-function inferInitialBreathings(tokens: Token[]) {
+function inferInitialBreathings(tokens: Token[], options: ConversionOptions) {
   let wordStart = true;
 
   for (let i = 0; i < tokens.length; i++) {
@@ -355,6 +357,8 @@ function inferInitialBreathings(tokens: Token[]) {
       token.diacritics.delete("rough");
       target.diacritics.add("rough");
     } else if (
+      options.orthography?.smoothBreathing !== "greek" &&
+      options.orthography?.smoothBreathing !== "apostrophe" &&
       !target.diacritics.has("rough") &&
       !hasQuantity(token) &&
       !hasQuantity(target)

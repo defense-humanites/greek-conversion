@@ -132,6 +132,15 @@ every such occurrence, with the same source token indices as
 `convertDetailed().diagnostics` in preservation mode. Unknown literals remain
 literal: strict mode checks recognized characters, not arbitrary text.
 
+Rejection checks a recognized character against the converter's effective
+repertoire and the known missing mappings for the bound preset and target.
+It does not guarantee a reversible or fully standards-conformant conversion.
+For example, a strict BnF converter accepts `αʹ` and emits `á`, whose numeral
+mark cannot be recovered reliably. This can have `lossy: true` without scope
+diagnostics. Check `convertDetailed().losses` independently
+when these distinctions matter. See the [preset behavior audit](preset-behavior-audit.md)
+for other rules that require contextual information.
+
 ## Preset boundary
 
 Bind a preset to a converter to apply both its conversion options and every

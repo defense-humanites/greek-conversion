@@ -162,9 +162,10 @@ const PRESET_DEFINITIONS = {
       limitations: [
         "Context-dependent access-point variants such as kappa → c and chi → kh are not selected automatically.",
         "BnF keraiai are rendered as a comma and acute in transliteration, but reverse conversion cannot always distinguish the resulting accent from a letter accent.",
-        "Cypriot syndyazomeno and the Iliad/Odyssey numeral exception are not implemented.",
+        "Upper Cypriot syndyazomeno shares U+0306 with the ordinary breve and cannot be distinguished mechanically; lower syndyazomeno is not interpreted as a semantic mark.",
+        "The Iliad/Odyssey numeral exception is not selected without the relevant cataloguing context.",
         "Iota adscript cannot be distinguished mechanically from an ordinary iota.",
-        "The BnF circumflex scalar and omission of explicit macron and breve marks are not independently selectable.",
+        "The BnF circumflex and smooth breathing marks and omission of explicit quantity marks apply only to transliteration; missing breathings are never inferred from Greek source text.",
         "Both documented koppa forms collapse to q in BnF transliteration and therefore cannot be distinguished on reverse conversion.",
       ],
     },
@@ -172,8 +173,11 @@ const PRESET_DEFINITIONS = {
       orthography: {
         archaicKoppa: "q",
         coronis: "greek",
+        circumflexAccent: "circumflex",
         keraia: "bnf",
         lunateSigma: "c",
+        quantityTransliteration: "omit",
+        smoothBreathing: "greek",
         upsilon: "y-with-au-eu-ou",
       },
       unicode: {
@@ -197,7 +201,8 @@ const PRESET_DEFINITIONS = {
           "https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf",
       }],
       limitations: [
-        "The preset implements the mechanically expressible Type 1 letter choices, not every contextual provision of the standard.",
+        "The preset implements mechanically expressible Type 1 mappings, not every contextual provision of the standard.",
+        "An apostrophe for initial smooth breathing can also represent punctuation; reverse parsing does not infer it as a distinct breathing mark.",
         "ISO 843 names stigma, koppa, and sampi in its Greek repertoire but does not assign them Type 1 conversions; bound converters preserve or reject them for transliteration, while ordinary preset use retains engine defaults.",
         "The standard's single named koppa cannot be identified unambiguously with the engine's separate archaic-koppa entry; bound transliteration reports this unresolved mapping.",
       ],
@@ -209,6 +214,7 @@ const PRESET_DEFINITIONS = {
         eta: "ī",
         nasalGamma: "literal",
         phi: "f",
+        smoothBreathing: "apostrophe",
         upsilon: "y-with-au-eu-ou",
       },
     },

@@ -308,6 +308,22 @@ Deno.test("strict ISO Type 1 rejects missing mappings separately from exclusions
   );
 });
 
+Deno.test("strict repertoire rejection does not promise lossless conversion", () => {
+  const bnf = createConverter({
+    preset: "bnf-core",
+    outOfScopeBehavior: "reject",
+  });
+  const markedNumeral = bnf.convertDetailed(
+    "αʹ",
+    "greek",
+    "transliteration",
+  );
+  assertEquals(markedNumeral.output, "á");
+  assertEquals(markedNumeral.diagnostics, []);
+  assertEquals(markedNumeral.lossy, true);
+  assertEquals(markedNumeral.losses.length > 0, true);
+});
+
 Deno.test("bound preset options remain overridable but not replaceable", () => {
   const converter = createConverter({ preset: "bnf-core" });
 

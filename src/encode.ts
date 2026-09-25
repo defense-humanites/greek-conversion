@@ -200,6 +200,10 @@ export function encodeTransliteration(
       preservesDiacritic("rough", options, "transliteration") &&
       breathingToken?.kind === "grapheme" &&
       breathingToken.diacritics.has("rough");
+    const initialSmooth =
+      preservesDiacritic("smooth", options, "transliteration") &&
+      breathingToken?.kind === "grapheme" &&
+      breathingToken.diacritics.has("smooth");
     const groupUppercase = initialRough && breathingStart !== undefined &&
       (rendered[breathingStart].kind === "grapheme" &&
           rendered[breathingStart].uppercase ||
@@ -213,6 +217,10 @@ export function encodeTransliteration(
         ? base.toUpperCase()
         : base[0].toUpperCase() + base.slice(1);
     }
+    if (
+      initialSmooth && index === breathingStart &&
+      options.orthography?.smoothBreathing === "apostrophe"
+    ) base = "\u2019" + base;
     if (initialRough && index === breathingStart) {
       base = (groupUppercase ? "H" : "h") +
         (groupUppercase && uppercaseOutput
@@ -383,7 +391,11 @@ function trMark(mark: Diacritic, options: ConversionOptions) {
     case "grave":
       return "\u0300";
     case "circumflex":
-      return "\u0303";
+      return options.orthography?.circumflexAccent === "circumflex"
+        ? "\u0302"
+        : "\u0303";
+    case "smooth":
+      return options.orthography?.smoothBreathing === "greek" ? "\u0313" : "";
     case "diaeresis":
       return "\u0308";
     case "iota-subscript":

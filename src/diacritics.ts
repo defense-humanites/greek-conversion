@@ -16,6 +16,12 @@ export function diacriticDisposition(
       : "remove";
   }
 
+  if (
+    format === "transliteration" &&
+    (diacritic === "macron" || diacritic === "breve") &&
+    options.orthography?.quantityTransliteration === "omit"
+  ) return "remove";
+
   const policy = options.diacritics;
   switch (diacritic) {
     case "acute":

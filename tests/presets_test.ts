@@ -166,7 +166,7 @@ Deno.test("applies ISO 843 Type 1 spellings", () => {
     convert("βήτα ἄγγελος φύσις κἀγώ", "greek", "transliteration", {
       preset: "iso-843-type-1",
     }),
-    "vī́ta ággelos fýsis ka’gṓ",
+    "vī́ta ’ággelos fýsis ka’gṓ",
   );
 });
 
@@ -187,6 +187,10 @@ Deno.test("ISO and BnF restrict upsilon-u to au, eu, and ou", () => {
       convert("au eu ou", "transliteration", "transliteration", { preset }),
       "au eu ou",
     );
+    assertEquals(
+      convert("a", "transliteration", "transliteration", { preset }),
+      "a",
+    );
   }
 });
 
@@ -198,7 +202,12 @@ Deno.test("BnF renders keraiai only in transliteration and reports their loss", 
   assertNfcEquals(result.output, "b́ ,á, b́");
   assertEquals(result.lossy, true);
   assertEquals(result.losses.length > 0, true);
-  const markedVowel = convertDetailed("αʹ", "greek", "transliteration", options);
+  const markedVowel = convertDetailed(
+    "αʹ",
+    "greek",
+    "transliteration",
+    options,
+  );
   assertEquals(markedVowel.output, "á");
   assertEquals(markedVowel.losses.some(({ index }) => index === 1), true);
   assertEquals(
@@ -230,6 +239,60 @@ Deno.test("BnF renders keraiai only in transliteration and reports their loss", 
     }),
     "bʹ ͵aʹ, bʹ",
   );
+});
+
+Deno.test("BnF distinguishes structural length from explicit quantity marks", () => {
+  const options = { preset: "bnf-core" } as const;
+
+  assertNfcEquals(
+    convert("ἄ ὦ ῆ ᾱ ᾰ ποιῇ", "greek", "transliteration", options),
+    "a̓́ ō̓̂ ē̂ a a poiȩ̄̂",
+  );
+  const etaWithCircumflex = convert(
+    "ποιῇ",
+    "greek",
+    "transliteration",
+    options,
+  );
+  assertEquals(
+    convert(etaWithCircumflex, "transliteration", "transliteration", options),
+    etaWithCircumflex,
+  );
+  assertNfcEquals(
+    convert("a̓́", "transliteration", "greek", options),
+    "ἄ",
+  );
+  assertNfcEquals(
+    convert("ᾱ ᾰ", "greek", "greek", options),
+    "ᾱ ᾰ",
+  );
+  assertNfcEquals(
+    convert("ᾱ ᾰ", "greek", "transliteration", {
+      preset: "bnf-core",
+      orthography: { quantityTransliteration: "preserve" },
+    }),
+    "ā ă",
+  );
+  assertEquals(
+    convertDetailed("ᾱ", "greek", "transliteration", options).lossy,
+    true,
+  );
+});
+
+Deno.test("ISO Type 1 uses apostrophe and distinct punctuation for cited marks", () => {
+  const options = { preset: "iso-843-type-1" } as const;
+
+  assertNfcEquals(
+    convert("ἄ αὐ;·", "greek", "transliteration", options),
+    "’á ’au?;",
+  );
+  assertNfcEquals(
+    convert("ἄ;·", "greek", "transliteration", {
+      preset: "bnf-core",
+    }),
+    "a̓́?;",
+  );
+  assertEquals(convert(";·", "greek", "transliteration", options), "?;");
 });
 
 Deno.test("applies ancient ALA-LC policies without inferring breathings", () => {

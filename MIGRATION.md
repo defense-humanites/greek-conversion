@@ -5,14 +5,29 @@ aliases for the `0.14.x` API.
 
 ## Installation
 
-The prerelease will be available from JSR and npm after publication:
+The prerelease is available from JSR and npm after publication:
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0-beta.4
+deno add jsr:@humanities/greek-conversion@1.0.0-beta.7
 npm install @humanities/greek-conversion@beta
 ```
 
 The package is ESM-only.
+
+## Updating from `1.0.0-beta.6`
+
+`bnf-core` now preserves known smooth breathings on Latin letters, uses a
+combining circumflex instead of a tilde, and omits explicit macrons and
+breves in transliteration. `iso-843-type-1` now prefixes an initial smooth
+breathing with an apostrophe. ISO 843 retains distinct Latin punctuation:
+Greek question mark becomes `?`, and ano teleia becomes `;`.
+
+The new orthography fields `smoothBreathing`, `circumflexAccent`,
+and `quantityTransliteration` can override
+these behaviors. Strict bound converters still reject only recognized
+out-of-scope characters and known undefined or unresolved preset mappings;
+inspect `convertDetailed().losses` for in-scope distinctions lost during
+conversion. See the [behavior audit](docs/preset-behavior-audit.md).
 
 ## Updating from `1.0.0-beta.4`
 

@@ -7,6 +7,15 @@ export type MedialBetaOrthography = "standard" | "symbol";
 /** Selects how a semantic coronis is represented in transliteration. */
 export type CoronisOrthography = "omit" | "apostrophe" | "greek";
 
+/** Selects whether a known smooth breathing is rendered on a Latin letter. */
+export type SmoothBreathingTransliteration = "omit" | "greek" | "apostrophe";
+
+/** Selects the combining mark used for a transliterated circumflex accent. */
+export type CircumflexTransliteration = "tilde" | "circumflex";
+
+/** Selects whether explicit source quantity marks appear in Latin output. */
+export type QuantityTransliteration = "preserve" | "omit";
+
 /** Selects contextual nasal gamma (`n`) or literal gamma (`g`). */
 export type NasalGammaOrthography = "nasal" | "literal";
 
@@ -150,6 +159,12 @@ export interface OrthographyOptions {
   medialBeta?: MedialBetaOrthography;
   /** Coronis representation in transliteration. Defaults to `"omit"`. */
   coronis?: CoronisOrthography;
+  /** Smooth breathing in transliteration; `"apostrophe"` prefixes an initial vowel. Defaults to `"omit"`. */
+  smoothBreathing?: SmoothBreathingTransliteration;
+  /** Circumflex accent in transliteration. Defaults to `"tilde"` (U+0303). */
+  circumflexAccent?: CircumflexTransliteration;
+  /** Explicit macron/breve in transliteration. Defaults to `"preserve"`. */
+  quantityTransliteration?: QuantityTransliteration;
   /** Nasal gamma spelling. Defaults to `"nasal"`. */
   nasalGamma?: NasalGammaOrthography;
   /** Sigma glyph policy. Defaults to `"standard"`. */
@@ -248,6 +263,9 @@ export interface DefaultConversionOptions {
     readonly doubleRho: "unmarked";
     readonly medialBeta: "standard";
     readonly coronis: "omit";
+    readonly smoothBreathing: "omit";
+    readonly circumflexAccent: "tilde";
+    readonly quantityTransliteration: "preserve";
     readonly nasalGamma: "nasal";
     readonly sigma: "standard";
     readonly lunateSigma: "s";
@@ -305,6 +323,9 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         doubleRho: "unmarked",
         medialBeta: "standard",
         coronis: "omit",
+        smoothBreathing: "omit",
+        circumflexAccent: "tilde",
+        quantityTransliteration: "preserve",
         nasalGamma: "nasal",
         sigma: "standard",
         lunateSigma: "s",

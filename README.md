@@ -30,10 +30,10 @@ discarded.
 
 ## Installation
 
-The `1.0.0-beta.6` prerelease is ESM-only and targets JSR and npm:
+The `1.0.0-beta.7` prerelease is ESM-only and targets JSR and npm:
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0-beta.6
+deno add jsr:@humanities/greek-conversion@1.0.0-beta.7
 npm install @humanities/greek-conversion@beta
 ```
 
@@ -176,6 +176,11 @@ converter. Both conversion methods then throw `CharacterScopeError`, whose
 known undefined or unresolved preset mappings. For ISO Type 1 transliteration,
 these include stigma, koppa, sampi, and the ambiguously identified archaic
 koppa; see the [preset repertoire audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-repertoire-audit.md).
+This rejects recognized out-of-scope characters and known missing mappings;
+it does not guarantee a reversible result. Inspect `convertDetailed().losses`
+separately for distinctions lost by an in-scope conversion. The
+[preset behavior audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-behavior-audit.md)
+records the remaining contextual limits.
 
 ### Inspect effective defaults
 
@@ -464,6 +469,7 @@ during the `1.0.0` prerelease series. See [validation](https://github.com/defens
 | Canonical document validation | [Validation](https://github.com/defense-humanites/greek-conversion/blob/main/docs/validation.md) |
 | Character extensions and repertoires | [Character extensions](https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md) |
 | Preset character repertoire audit | [Preset repertoire audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-repertoire-audit.md) |
+| Preset behavior audit | [Preset behavior audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-behavior-audit.md) |
 
 ## Development
 

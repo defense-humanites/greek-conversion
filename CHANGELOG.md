@@ -5,6 +5,8 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.0-beta.7] - 2026-09-25
+
 ### Added
 
 - `createConverter({ outOfScopeBehavior: "reject" })` rejects recognized
@@ -14,6 +16,11 @@ project follows [Semantic Versioning](https://semver.org/).
   stigma, koppa, and sampi, and the unresolved identification of archaic koppa.
   Preservation retains the source glyph; strict mode rejects it. Decimal
   conversion of marked numerals remains available explicitly.
+- Audited each bundled preset's diacritics, punctuation, and numerals against
+  its cited references; documented reversibility and remaining contextual
+  boundaries in `docs/preset-behavior-audit.md`.
+- Target-specific orthography choices for smooth breathing, circumflex,
+  and explicit quantity marks in transliteration.
 
 ### Fixed
 
@@ -25,6 +32,14 @@ project follows [Semantic Versioning](https://semver.org/).
   comma in transliteration through `orthography.keraia: "bnf"`. The inverse
   is ambiguous for some accented vowels; `convertDetailed()` reports the
   information loss.
+- `bnf-core` preserves the smooth breathing on the Latin letter, emits a
+  combining circumflex (U+0302), and omits explicit macrons and breves in
+  transliteration, in line with its reference.
+- `iso-843-type-1` prefixes an initial smooth breathing with an apostrophe.
+  The Greek question mark and ano teleia retain their distinct `?` and `;`
+  transliterations.
+- Transliteration with either of those presets no longer invents a smooth
+  breathing from unmarked Latin input.
 
 ## [1.0.0-beta.6] - 2026-09-23
 
@@ -178,7 +193,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.6...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.7...HEAD
+[1.0.0-beta.7]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.6...v1.0.0-beta.7
 [1.0.0-beta.6]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.5...v1.0.0-beta.6
 [1.0.0-beta.5]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.4...v1.0.0-beta.5
 [1.0.0-beta.4]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.3...v1.0.0-beta.4
