@@ -102,7 +102,12 @@ export function validateDocument(
       add(diagnostics, "invalid-case", index, "Expected a boolean case flag.");
     }
     if (!(token.diacritics instanceof Set)) {
-      add(diagnostics, "invalid-diacritics", index, "Expected a set of diacritics.");
+      add(
+        diagnostics,
+        "invalid-diacritics",
+        index,
+        "Expected a set of diacritics.",
+      );
       return;
     }
     if (!Object.hasOwn(ALPHABET, token.letter)) {
