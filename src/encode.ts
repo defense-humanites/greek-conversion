@@ -212,8 +212,8 @@ export function encodeTransliteration(
         isNasalGamma(doc, index)
       ? "n"
       : transliterationBase(doc, index, token.letter, options);
-    const bnfLowercaseNumeral =
-      options.orthography?.keraia === "bnf" && token.uppercase &&
+    const bnfLowercaseNumeral = options.orthography?.keraia === "bnf" &&
+      token.uppercase &&
       (token.letter === "stigma" || token.letter === "sampi") &&
       isGreekNumeralContext(doc, index);
     if (
