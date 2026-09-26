@@ -18,7 +18,11 @@ export type ValidationCode =
   | "invalid-quantity"
   | "invalid-letter"
   | "invalid-diacritic"
-  | "invalid-glyph-variant";
+  | "invalid-glyph-variant"
+  | "invalid-token"
+  | "invalid-literal"
+  | "invalid-case"
+  | "invalid-diacritics";
 
 /** One structural problem found in a canonical document. */
 export interface ValidationDiagnostic {
@@ -77,9 +81,59 @@ export function validateDocument(
 ): readonly ValidationDiagnostic[] {
   const diagnostics: ValidationDiagnostic[] = [];
 
+  // A malformed token can also break context checks on adjacent graphemes.
+  // Inspect the whole shape before checking the semantic combinations.
   document.forEach((token, index) => {
-    if (token.kind === "literal") return;
-    validateGrapheme(document, token, index, diagnostics);
+    if (token === null || typeof token !== "object") {
+      add(diagnostics, "invalid-token", index, "Expected a document token.");
+      return;
+    }
+    if (token.kind === "literal") {
+      if (typeof token.value !== "string") {
+        add(diagnostics, "invalid-literal", index, "Expected literal text.");
+      }
+      return;
+    }
+    if (token.kind !== "grapheme") {
+      add(diagnostics, "invalid-token", index, "Unknown document token kind.");
+      return;
+    }
+    if (typeof token.uppercase !== "boolean") {
+      add(diagnostics, "invalid-case", index, "Expected a boolean case flag.");
+    }
+    if (!(token.diacritics instanceof Set)) {
+      add(diagnostics, "invalid-diacritics", index, "Expected a set of diacritics.");
+      return;
+    }
+    if (!Object.hasOwn(ALPHABET, token.letter)) {
+      add(diagnostics, "invalid-letter", index, "Unknown Greek letter.");
+      return;
+    }
+    for (const mark of token.diacritics) {
+      if (!DIACRITICS.has(mark)) {
+        add(diagnostics, "invalid-diacritic", index, "Unknown diacritic.");
+      }
+    }
+    if (
+      token.glyphVariant !== undefined &&
+      (token.letter !== "sigma" || !SIGMA_VARIANTS.has(token.glyphVariant) ||
+        token.uppercase === true && token.glyphVariant === "final-sigma")
+    ) {
+      add(
+        diagnostics,
+        "invalid-glyph-variant",
+        index,
+        "This source glyph variant is not valid for the selected letter and case.",
+      );
+    }
+  });
+
+  if (diagnostics.length > 0) return diagnostics;
+
+  document.forEach((token, index) => {
+    if (token.kind === "grapheme") {
+      validateGrapheme(document, token, index, diagnostics);
+    }
   });
 
   return diagnostics;
@@ -92,27 +146,6 @@ function validateGrapheme(
   diagnostics: ValidationDiagnostic[],
 ): void {
   const { diacritics, letter } = token;
-  if (!Object.hasOwn(ALPHABET, letter)) {
-    add(diagnostics, "invalid-letter", index, "Unknown Greek letter.");
-    return;
-  }
-  for (const mark of diacritics) {
-    if (!DIACRITICS.has(mark)) {
-      add(diagnostics, "invalid-diacritic", index, "Unknown diacritic.");
-    }
-  }
-  if (
-    token.glyphVariant !== undefined &&
-    (letter !== "sigma" || !SIGMA_VARIANTS.has(token.glyphVariant) ||
-      token.uppercase && token.glyphVariant === "final-sigma")
-  ) {
-    add(
-      diagnostics,
-      "invalid-glyph-variant",
-      index,
-      "This source glyph variant is not valid for the selected letter and case.",
-    );
-  }
   const accentCount = count(diacritics, ACCENTS);
   const breathingCount = count(diacritics, BREATHINGS);
   const quantityCount = count(diacritics, QUANTITIES);

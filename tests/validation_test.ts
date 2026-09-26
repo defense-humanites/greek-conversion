@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import {
   type Diacritic,
+  type Document,
   grapheme,
   type Letter,
   literal,
@@ -140,6 +141,27 @@ Deno.test("validation catches invalid manually modified document values", () => 
       ["invalid-diacritic", 1],
       ["invalid-glyph-variant", 2],
       ["invalid-glyph-variant", 3],
+    ],
+  );
+});
+
+Deno.test("validation diagnoses malformed tokens before contextual checks", () => {
+  const malformed = [
+    null,
+    { kind: "other" },
+    { kind: "literal", value: 42 },
+    { kind: "grapheme", letter: "alpha", uppercase: "false", diacritics: [] },
+    grapheme("alpha", false, ["coronis"]),
+  ] as unknown as Document;
+
+  assertEquals(
+    validateDocument(malformed).map(({ code, index }) => [code, index]),
+    [
+      ["invalid-token", 0],
+      ["invalid-token", 1],
+      ["invalid-literal", 2],
+      ["invalid-case", 3],
+      ["invalid-diacritics", 3],
     ],
   );
 });

@@ -67,7 +67,8 @@ const output = encode(document, "greek", options); // Χαρά
 typed or manually modified document. Its indices refer to token
 positions, not offsets into the source string. Validation is an explicit step:
 `encode()` does not call it, and even a valid document can encode lossily under
-an output policy. Use `convertDetailed()` when information loss matters.
+an output policy. Correct structural diagnostics before relying on contextual
+ones. Use `convertDetailed()` when information loss matters.
 
 The main `createConverter()` API has a separate registry for aliases, custom
 characters, and repertoire checks. `parse()` and `encode()` here operate on

@@ -12,8 +12,8 @@ The conversion pipeline is intentionally permissive:
   be inspected and, where possible, encoded deterministically;
 - conversion returns a string and does not hide a second diagnostics or
   exception channel;
-- validation can return every structured diagnostic instead of stopping at the
-  first error.
+- validation can return multiple structured diagnostics instead of stopping at
+  the first error.
 
 Making validation implicit would require either throwing from otherwise
 permissive APIs or changing their return types. An option would also make it
@@ -54,6 +54,12 @@ quantity are valid for their grapheme and context. It also reports unknown
 letters or diacritics and glyph variants that do not fit their letter and case
 on manually modified graphemes. The [document API contract](document-api.md)
 explains ownership and copying of mutable tokens.
+
+Malformed token kinds, non-text literals, non-boolean case flags, and non-`Set`
+diacritics also receive diagnostics. Structural checks run over the whole
+document first; if any fail, contextual and combinatorial checks are deferred
+until those structural problems are corrected. This avoids interpreting the
+neighbors of an ill-formed token as valid Greek context.
 
 ## Validation boundary
 
