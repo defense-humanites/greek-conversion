@@ -7,12 +7,29 @@
  *
  * A document may be constructed manually, but {@link validateDocument} should
  * be used before encoding data that did not originate from {@link parse}.
+ * `Document` has a readonly sequence but mutable tokens; copy the nested
+ * diacritic sets when deriving independent versions of one parsed document.
  *
  * @module
  */
 
 export { encode, parse } from "./conversion.ts";
-export { applyGreekOrthography } from "./orthography.ts";
+import type { Document } from "./model.ts";
+import type { ConversionOptions } from "./options.ts";
+import { applyGreekOrthography as applyResolvedGreekOrthography } from "./orthography.ts";
+import { resolveConversionOptions } from "./presets.ts";
+
+/** Applies Greek-output policies, resolving preset options before transforming. */
+export function applyGreekOrthography(
+  document: Document,
+  options: ConversionOptions = {},
+): Document {
+  return applyResolvedGreekOrthography(
+    document,
+    resolveConversionOptions(options),
+  );
+}
+
 export {
   type Diacritic,
   type Document,

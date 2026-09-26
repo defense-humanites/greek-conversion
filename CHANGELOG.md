@@ -5,6 +5,18 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Documented ownership, mutation, copying, option reuse, and converter
+  boundaries for the experimental `./document` entry point.
+- `validateDocument()` reports unknown letters and diacritics and invalid
+  glyph variants on manually modified documents before encoding.
+
+### Fixed
+
+- The public `applyGreekOrthography()` helper now resolves preset options like
+  `parse()` and `encode()` instead of silently ignoring them.
+
 ## [1.0.0-beta.8] - 2026-09-26
 
 ### Added

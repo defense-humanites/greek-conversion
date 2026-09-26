@@ -50,7 +50,7 @@ export type Diacritic =
 /** Source glyph distinctions retained independently from the Greek letter. */
 export type GlyphVariant = "lunate-sigma" | "final-sigma" | "medial-sigma";
 
-/** One canonical Greek letter with case and semantic diacritics. */
+/** One canonical Greek letter with mutable case and semantic diacritics. */
 export interface Grapheme {
   /** Discriminant distinguishing Greek graphemes from literal tokens. */
   kind: "grapheme";
@@ -75,7 +75,7 @@ export interface Literal {
 /** A semantic Greek grapheme or preserved literal text. */
 export type Token = Grapheme | Literal;
 
-/** Ordered canonical representation shared by every parser and encoder. */
+/** Readonly token sequence; its tokens and grapheme diacritic sets are mutable. */
 export type Document = readonly Token[];
 
 /** Creates a canonical Greek grapheme. */

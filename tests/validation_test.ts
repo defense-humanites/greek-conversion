@@ -123,3 +123,23 @@ Deno.test("validation is pure", () => {
 
   assertEquals(document[0].diacritics, before);
 });
+
+Deno.test("validation catches invalid manually modified document values", () => {
+  const letter = grapheme("alpha");
+  letter.letter = "unknown" as Letter;
+  const mark = grapheme("alpha");
+  mark.diacritics.add("unknown" as Diacritic);
+  const variant = grapheme("beta", false, [], "lunate-sigma");
+  const capitalFinal = grapheme("sigma", true, [], "final-sigma");
+  const diagnostics = validateDocument([letter, mark, variant, capitalFinal]);
+
+  assertEquals(
+    diagnostics.map(({ code, index }) => [code, index]),
+    [
+      ["invalid-letter", 0],
+      ["invalid-diacritic", 1],
+      ["invalid-glyph-variant", 2],
+      ["invalid-glyph-variant", 3],
+    ],
+  );
+});

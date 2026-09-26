@@ -456,7 +456,9 @@ const output = encode(document, "greek");
 
 Validation deliberately remains a separate diagnostic step instead of changing
 the contract of `convert()`. The `./document` entry point may still evolve
-during the `1.0.0` prerelease series. See [validation](https://github.com/defense-humanites/greek-conversion/blob/main/docs/validation.md).
+during the `1.0.0` prerelease series. See the [document API contract](https://github.com/defense-humanites/greek-conversion/blob/main/docs/document-api.md)
+for ownership, transformations, and options, and [validation](https://github.com/defense-humanites/greek-conversion/blob/main/docs/validation.md)
+for the separate strict workflow.
 
 ## Documentation
 
@@ -467,6 +469,7 @@ during the `1.0.0` prerelease series. See [validation](https://github.com/defens
 | Detailed conversion results | [Conversion analysis](https://github.com/defense-humanites/greek-conversion/blob/main/docs/conversion-analysis.md) |
 | Loss by format pair | [Information loss](https://github.com/defense-humanites/greek-conversion/blob/main/docs/information-loss.md) |
 | Canonical document validation | [Validation](https://github.com/defense-humanites/greek-conversion/blob/main/docs/validation.md) |
+| Canonical document API | [Document API](https://github.com/defense-humanites/greek-conversion/blob/main/docs/document-api.md) |
 | Character extensions and repertoires | [Character extensions](https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md) |
 | Preset character repertoire audit | [Preset repertoire audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-repertoire-audit.md) |
 | Preset behavior audit | [Preset behavior audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-behavior-audit.md) |

@@ -1,5 +1,6 @@
 import type { Diacritic, Document, Grapheme, Letter } from "./model.ts";
 import { initialBreathingStart } from "./context.ts";
+import { ALPHABET, ORDER } from "./alphabet.ts";
 
 /** Machine-readable categories emitted by canonical-document validation. */
 export type ValidationCode =
@@ -14,7 +15,10 @@ export type ValidationCode =
   | "invalid-circumflex"
   | "invalid-diaeresis"
   | "invalid-iota-subscript"
-  | "invalid-quantity";
+  | "invalid-quantity"
+  | "invalid-letter"
+  | "invalid-diacritic"
+  | "invalid-glyph-variant";
 
 /** One structural problem found in a canonical document. */
 export interface ValidationDiagnostic {
@@ -55,6 +59,12 @@ const BREVE_LETTERS = new Set<Letter>(["alpha", "iota", "upsilon"]);
 const ACCENTS = ["acute", "grave", "circumflex"] as const;
 const BREATHINGS = ["smooth", "rough"] as const;
 const QUANTITIES = ["macron", "breve"] as const;
+const DIACRITICS = new Set<Diacritic>(ORDER);
+const SIGMA_VARIANTS = new Set([
+  "lunate-sigma",
+  "final-sigma",
+  "medial-sigma",
+]);
 
 /**
  * Reports structurally invalid combinations without modifying the document.
@@ -82,6 +92,27 @@ function validateGrapheme(
   diagnostics: ValidationDiagnostic[],
 ): void {
   const { diacritics, letter } = token;
+  if (!Object.hasOwn(ALPHABET, letter)) {
+    add(diagnostics, "invalid-letter", index, "Unknown Greek letter.");
+    return;
+  }
+  for (const mark of diacritics) {
+    if (!DIACRITICS.has(mark)) {
+      add(diagnostics, "invalid-diacritic", index, "Unknown diacritic.");
+    }
+  }
+  if (
+    token.glyphVariant !== undefined &&
+    (letter !== "sigma" || !SIGMA_VARIANTS.has(token.glyphVariant) ||
+      token.uppercase && token.glyphVariant === "final-sigma")
+  ) {
+    add(
+      diagnostics,
+      "invalid-glyph-variant",
+      index,
+      "This source glyph variant is not valid for the selected letter and case.",
+    );
+  }
   const accentCount = count(diacritics, ACCENTS);
   const breathingCount = count(diacritics, BREATHINGS);
   const quantityCount = count(diacritics, QUANTITIES);
