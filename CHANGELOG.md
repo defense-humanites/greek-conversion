@@ -7,11 +7,16 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- A source-traceable conformance corpus for the published ALA-LC Ancient and
+  Modern Greek tables, with inverse stability and information-loss checks.
 - A source-traceable BnF and ISO 843 Type 1 conformance corpus with forward
   output, inverse stability, loss expectations, and documented open rules.
 
 ### Fixed
 
+- Both ALA-LC presets convert the documented `στʹ` form of six and thousands
+  marked only by the leading sign (`͵α`, `͵αα`) to decimal numbers. The ancient
+  preset reference now points to the published Ancient Greek table.
 - `iso-843-type-1` renders the enotikon as a Latin hyphen and reports its
   ambiguous inverse; the new `orthography.enotikon` option controls this
   target-specific rendering.

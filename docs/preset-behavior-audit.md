@@ -7,11 +7,13 @@ standard. The precise current options and limitations are listed in the
 [generated preset reference](presets.md).
 The [source-traceable BnF and ISO corpus](preset-conformance-corpus.md) records
 executable examples and rules that remain open.
+The [ALA-LC corpus](ala-lc-conformance-corpus.md) does the same for the ancient
+and modern Greek tables.
 
 | Preset | Rules checked in the test suite | Remaining boundary |
 | --- | --- | --- |
-| `ala-lc-ancient` | Rough breathing when present; contextual `y/u`; marked numerals as decimal | Missing breathings and iota adscript cannot be inferred from spelling alone. |
-| `ala-lc-modern` | Supported `μπ/ντ/γκ` contexts; marked numerals as decimal | Other language-dependent romanization choices require further fixtures or lexical input. |
+| `ala-lc-ancient` | Published text examples; rough breathing when present; contextual `y/u`; nasal gamma; archaic koppa; marked numerals, including `στʹ` and prefix-only thousands, as decimal | Missing breathings, iota adscript, and editorial capitalization cannot be inferred from spelling alone. |
+| `ala-lc-modern` | Published letter/notes rows for `μπ/ντ/γκ`, explicitly marked rho, omitted marks, and documented numeral variants | Supplying absent rough breathings or identifying uncertain polytonic/monotonic sources requires lexical or bibliographic context. |
 | `bnf-core` | Ancient-Greek variant letters; `αυ/ευ/ου`; known smooth breathing, circumflex, keraiai, and marked archaic numerals in Latin output; omission of explicit macron/breve | The upper Cypriot syndyazomeno shares U+0306 with breve; cataloguing variants and the Iliad/Odyssey numeral exception require external context. |
 | `iso-843-type-1` | Type 1 letter choices; `αυ/ευ/ου`; initial smooth breathing; question mark, ano teleia, and enotikon; undefined and unresolved archaic mappings | Some reference provisions remain unimplemented; a Latin apostrophe or hyphen cannot by itself establish a smooth breathing or enotikon. |
 | `perseus` | Lowercase ASCII Beta Code, letters, and supported diacritics | TLG escapes are outside the cited Perseus subset. |
@@ -47,7 +49,7 @@ required. Ordinary `convert(..., { preset })` retains the documented
 
 ## Sources
 
-- [ALA-LC Ancient and Medieval Greek](https://www.loc.gov/catdir/cpso/romanization/greek.pdf)
+- [ALA-LC Ancient and Medieval Greek](https://www.loc.gov/catdir/cpso/romanization/greeka.pdf)
 - [ALA-LC Modern Greek](https://www.loc.gov/catdir/cpso/romanization/greekm.pdf)
 - [BnF transliteration of Greek](https://kitcat.bnf.fr/consignes-catalogage/translitteration-du-grec)
 - [ISO 843:1997](https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf)

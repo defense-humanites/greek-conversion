@@ -153,7 +153,7 @@ implemented.
 
 ## Sources
 
-- [ALA-LC Ancient and Medieval Greek](https://www.loc.gov/catdir/cpso/romanization/greek.pdf)
+- [ALA-LC Ancient and Medieval Greek](https://www.loc.gov/catdir/cpso/romanization/greeka.pdf)
 - [ALA-LC Modern Greek](https://www.loc.gov/catdir/cpso/romanization/greekm.pdf)
 - [Cataloging Service Bulletin 124 — published ALA-LC Greek tables](https://www.loc.gov/aba/publications/FreeCSB/CSB_124.pdf)
 - [BnF transliteration of Greek](https://kitcat.bnf.fr/consignes-catalogage/translitteration-du-grec)

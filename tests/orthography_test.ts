@@ -540,8 +540,12 @@ Deno.test("converts marked alphabetic numerals to decimal on demand", () => {
   );
 
   assertNfcEquals(
-    convert("αβγ αβʹ ͵ιʹ", "greek", "greek", decimal),
-    "αβγ αβʹ ͵ιʹ",
+    convert("αβγ αβʹ ͵ιʹ ͵ααα", "greek", "greek", decimal),
+    "αβγ αβʹ ͵ιʹ ͵ααα",
+  );
+  assertNfcEquals(
+    convert("στʹ ͵α ͵αα ͵αβ", "greek", "greek", decimal),
+    "6 1000 1001 1002",
   );
 });
 

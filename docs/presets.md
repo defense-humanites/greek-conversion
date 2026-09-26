@@ -66,7 +66,7 @@ metadata or options.
 
 | Preset | Description | Scope | Coverage | Out of scope | Reference |
 | --- | --- | --- | --- | --- | --- |
-| `ala-lc-ancient` | Romanization profile for Ancient and Medieval Greek before 1454. | Ancient Greek; Medieval Greek before 1454 | partial | engine-default | [ALA-LC Romanization Tables: Greek (Ancient and Medieval)](https://www.loc.gov/catdir/cpso/romanization/greek.pdf) |
+| `ala-lc-ancient` | Romanization profile for Ancient and Medieval Greek before 1454. | Ancient Greek; Medieval Greek before 1454 | partial | engine-default | [ALA-LC Romanization Tables: Greek (Ancient and Medieval)](https://www.loc.gov/catdir/cpso/romanization/greeka.pdf) |
 | `ala-lc-modern` | Romanization profile for Modern Greek after 1453. | Modern Greek after 1453 | partial | engine-default | [ALA-LC Romanization Tables: Greek (Modern)](https://www.loc.gov/catdir/cpso/romanization/greekm.pdf) |
 | `bnf-core` | Core mechanically expressible profile for the BnF adaptation of ISO 843 for Ancient Greek. | Ancient Greek; French library cataloguing | partial | engine-default | [Translittération du grec — Kitcat BnF](https://kitcat.bnf.fr/consignes-catalogage/translitteration-du-grec) |
 | `iso-843-type-1` | Type 1 transliteration of Greek characters into Latin characters. | Ancient Greek; Modern Greek | partial | engine-default | [ISO 843:1997](https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf) |
@@ -86,7 +86,7 @@ Romanization profile for Ancient and Medieval Greek before 1454.
 
 **References:**
 
-- [ALA-LC Romanization Tables: Greek (Ancient and Medieval)](https://www.loc.gov/catdir/cpso/romanization/greek.pdf)
+- [ALA-LC Romanization Tables: Greek (Ancient and Medieval)](https://www.loc.gov/catdir/cpso/romanization/greeka.pdf)
 
 **Contributed options:**
 

@@ -95,7 +95,7 @@ const PRESET_DEFINITIONS = {
       outOfScopeBehavior: "engine-default",
       references: [{
         title: "ALA-LC Romanization Tables: Greek (Ancient and Medieval)",
-        url: "https://www.loc.gov/catdir/cpso/romanization/greek.pdf",
+        url: "https://www.loc.gov/catdir/cpso/romanization/greeka.pdf",
       }],
       limitations: [
         "Missing rough breathings are not inferred from lexical knowledge or capitalization.",

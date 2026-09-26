@@ -176,12 +176,23 @@ function readNumeral(
 
   let index = start;
   let value = 0;
+  let hasThousands = false;
 
   if (isLiteral(document[index], ARISTERI_KERAIA)) {
     const thousands = numericValue(document[index + 1]);
     if (thousands === undefined || thousands > 9) return undefined;
     value = thousands * 1000;
     index += 2;
+    hasThousands = true;
+  }
+
+  // Both ALA-LC Greek tables list στʹ as an alternate sign for six.
+  if (
+    !hasThousands && isLetter(document[index], "sigma") &&
+    isLetter(document[index + 1], "tau") &&
+    isLiteral(document[index + 2], DEXIA_KERAIA)
+  ) {
+    return { value: 6, end: index + 3 };
   }
 
   let previous = 1000;
@@ -195,9 +206,21 @@ function readNumeral(
     index++;
   }
 
-  if (value === 0 || (digits === 0 && start === index)) return undefined;
-  if (!isLiteral(document[index], DEXIA_KERAIA)) return undefined;
-  return { value, end: index + 1 };
+  if (value === 0 || (digits === 0 && !hasThousands)) return undefined;
+  if (isLiteral(document[index], DEXIA_KERAIA)) {
+    return { value, end: index + 1 };
+  }
+  // A leading thousands sign suffices in the ALA-LC tables. Do not convert
+  // a prefix of a longer sequence that fails the numeral ordering rule.
+  if (hasThousands && document[index]?.kind !== "grapheme") {
+    return { value, end: index };
+  }
+  return undefined;
+}
+
+function isLetter(token: Token | undefined, letter: Letter): boolean {
+  return token?.kind === "grapheme" && token.letter === letter &&
+    token.diacritics.size === 0;
 }
 
 function numericValue(token: Token | undefined): number | undefined {
