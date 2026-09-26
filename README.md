@@ -30,10 +30,10 @@ discarded.
 
 ## Installation
 
-The `1.0.0-beta.7` prerelease is ESM-only and targets JSR and npm:
+The `1.0.0-beta.8` release is ESM-only and targets JSR and npm:
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0-beta.7
+deno add jsr:@humanities/greek-conversion@1.0.0-beta.8
 npm install @humanities/greek-conversion@beta
 ```
 
@@ -471,6 +471,7 @@ during the `1.0.0` prerelease series. See [validation](https://github.com/defens
 | Preset character repertoire audit | [Preset repertoire audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-repertoire-audit.md) |
 | Preset behavior audit | [Preset behavior audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-behavior-audit.md) |
 | BnF and ISO conformance corpus | [Preset conformance corpus](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-conformance-corpus.md) |
+| ALA-LC conformance corpus | [ALA-LC conformance corpus](https://github.com/defense-humanites/greek-conversion/blob/main/docs/ala-lc-conformance-corpus.md) |
 
 ## Development
 

@@ -1,6 +1,6 @@
 # Releasing greek-conversion
 
-Publication is deliberately disabled between prereleases. Creating a GitHub
+Publication is deliberately disabled between releases. Creating a GitHub
 release cannot publish anything until the repository variable described below
 is explicitly enabled.
 
@@ -34,8 +34,9 @@ Both registries use the same package name and version:
 3. Verify the generated npm archive, especially its ESM exports, declarations,
    license, README, migration guide, and documentation directory.
 4. Merge the exact release commit and wait for CI to succeed.
-5. Create a draft GitHub prerelease whose tag exactly matches the version with
-   a `v` prefix, for example `v1.0.0-beta.7`.
+5. Create a draft GitHub release whose tag exactly matches the version with
+   a `v` prefix, for example `v1.0.0-beta.8`. Keep GitHub's prerelease flag
+   unchecked while the beta series is featured as the current release.
 6. Confirm both trusted-publisher configurations and explicitly set
    `PUBLISH_ENABLED` to `true` only when publication is authorized.
 7. Publish the GitHub release. The workflow publishes JSR first and npm second;

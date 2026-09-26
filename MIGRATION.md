@@ -8,11 +8,31 @@ aliases for the `0.14.x` API.
 The prerelease is available from JSR and npm after publication:
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0-beta.7
+deno add jsr:@humanities/greek-conversion@1.0.0-beta.8
 npm install @humanities/greek-conversion@beta
 ```
 
 The package is ESM-only.
+
+## Updating from `1.0.0-beta.7`
+
+Both ALA-LC presets now render the documented `στʹ` as decimal `6` and
+prefix-marked thousands such as `͵α` and `͵αα` as `1000` and `1001`. This
+extends the existing decimal numeral policy, which also applies to Greek and
+Beta Code output when either preset is selected. To keep alphabetic numeral
+marks, override `orthography.numerals` with `"alphabetic"`.
+
+`bnf-core` now uses lowercase Latin `c̄` and `s̄` for marked uppercase stigma
+and sampi numerals, preserves its U+2010 hyphen in transliteration, and parses
+`ch` as chi ahead of standalone `c` as Byzantine sigma. The ISO 843 Type 1
+preset transliterates the enotikon `‿` as `-`; the new
+`orthography.enotikon: "preserve"` override retains the Greek sign in Latin
+output. That `-` cannot unambiguously recover the enotikon, and
+`convertDetailed()` reports the loss.
+
+The [ALA-LC corpus](docs/ala-lc-conformance-corpus.md) and
+[BnF/ISO corpus](docs/preset-conformance-corpus.md) describe the covered
+examples and remaining limits.
 
 ## Updating from `1.0.0-beta.6`
 
