@@ -165,3 +165,11 @@ Deno.test("validation diagnoses malformed tokens before contextual checks", () =
     ],
   );
 });
+
+Deno.test("validation diagnoses holes in a constructed document", () => {
+  const sparse = [grapheme("alpha"), , grapheme("alpha")];
+  assertEquals(
+    validateDocument(sparse).map(({ code, index }) => [code, index]),
+    [["invalid-token", 1]],
+  );
+});

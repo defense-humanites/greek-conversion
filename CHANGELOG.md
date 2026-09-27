@@ -17,7 +17,8 @@ project follows [Semantic Versioning](https://semver.org/).
 - The public `applyGreekOrthography()` helper now resolves preset options like
   `parse()` and `encode()` instead of silently ignoring them.
 - `validateDocument()` now diagnoses malformed document tokens instead of
-  throwing during contextual validation of neighboring graphemes.
+  throwing during contextual validation of neighboring graphemes, including
+  missing entries in a sparse document.
 
 ## [1.0.0-beta.8] - 2026-09-26
 

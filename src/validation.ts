@@ -83,20 +83,21 @@ export function validateDocument(
 
   // A malformed token can also break context checks on adjacent graphemes.
   // Inspect the whole shape before checking the semantic combinations.
-  document.forEach((token, index) => {
+  for (let index = 0; index < document.length; index++) {
+    const token = document[index];
     if (token === null || typeof token !== "object") {
       add(diagnostics, "invalid-token", index, "Expected a document token.");
-      return;
+      continue;
     }
     if (token.kind === "literal") {
       if (typeof token.value !== "string") {
         add(diagnostics, "invalid-literal", index, "Expected literal text.");
       }
-      return;
+      continue;
     }
     if (token.kind !== "grapheme") {
       add(diagnostics, "invalid-token", index, "Unknown document token kind.");
-      return;
+      continue;
     }
     if (typeof token.uppercase !== "boolean") {
       add(diagnostics, "invalid-case", index, "Expected a boolean case flag.");
@@ -108,11 +109,11 @@ export function validateDocument(
         index,
         "Expected a set of diacritics.",
       );
-      return;
+      continue;
     }
     if (!Object.hasOwn(ALPHABET, token.letter)) {
       add(diagnostics, "invalid-letter", index, "Unknown Greek letter.");
-      return;
+      continue;
     }
     for (const mark of token.diacritics) {
       if (!DIACRITICS.has(mark)) {
@@ -131,7 +132,7 @@ export function validateDocument(
         "This source glyph variant is not valid for the selected letter and case.",
       );
     }
-  });
+  }
 
   if (diagnostics.length > 0) return diagnostics;
 
