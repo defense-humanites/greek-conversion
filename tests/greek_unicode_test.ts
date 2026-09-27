@@ -119,7 +119,7 @@ Deno.test("Greek orthography is immutable", () => {
     ["acute"],
   );
   assertEquals(transformed === source, false);
-  assertEquals(applyGreekOrthography(source) === source, true);
+  assertEquals(applyGreekOrthography(source) === source, false);
 });
 
 Deno.test("reports Unicode scalar values instead of UTF-16 code units", () => {

@@ -72,3 +72,35 @@ Deno.test("a Greek orthographic view does not replace the reusable source", () =
   assertNfcEquals(encode(monotonic, "beta-code"), "a/");
   assertNfcEquals(encode(source, "beta-code"), "a)/");
 });
+
+Deno.test("Greek orthographic views own all tokens and diacritic sets", () => {
+  const source = parse("ἄβ!", "greek");
+  const views = [
+    applyGreekOrthography(source),
+    applyGreekOrthography(source, {
+      orthography: { accentuation: "monotonic" },
+    }),
+  ];
+
+  for (const view of views) {
+    assertEquals(view === source, false);
+    for (let index = 0; index < source.length; index++) {
+      assertEquals(view[index] === source[index], false);
+      const current = view[index];
+      const original = source[index];
+      if (current.kind === "grapheme" && original.kind === "grapheme") {
+        assertEquals(current.diacritics === original.diacritics, false);
+      }
+    }
+
+    const second = view[1];
+    const punctuation = view[2];
+    if (second.kind !== "grapheme" || punctuation.kind !== "literal") {
+      throw new Error("Expected a grapheme and literal");
+    }
+    second.letter = "gamma";
+    second.diacritics.add("rough");
+    punctuation.value = "?";
+    assertNfcEquals(encode(source, "greek"), "ἄβ!");
+  }
+});

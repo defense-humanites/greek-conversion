@@ -16,10 +16,10 @@ diacritics are mutable so callers can make controlled transformations. This is
 
 `parse()` allocates a new document on each call. `grapheme()` copies the
 supplied diacritics into a new `Set`. `encode()`, `validateDocument()`, and
-`applyGreekOrthography()` do not modify their input document. The last helper
-may return the original document when no change is needed; callers should not
-assume it always allocates. Like `parse()` and `encode()`, the public helper
-resolves a supplied preset before applying its options.
+`applyGreekOrthography()` do not modify their input document. The public helper
+returns an independent document, including new token objects and diacritic
+sets even if no orthographic change was needed. Like `parse()` and `encode()`,
+it resolves a supplied preset before applying its options.
 
 `encode(document, "greek", options)` already applies Greek-output orthography.
 Use `applyGreekOrthography()` when the transformed tokens themselves must be

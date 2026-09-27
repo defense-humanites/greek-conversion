@@ -24,15 +24,22 @@ import { resolveConversionOptions } from "./presets.ts";
  *
  * Some policies remove source distinctions. Keep the original document when
  * encoding other formats, and use `encode(document, "greek", options)` when no
- * intermediate transformed document is needed.
+ * intermediate transformed document is needed. The returned tokens and their
+ * diacritic sets are detached from the source so callers may edit the view.
  */
 export function applyGreekOrthography(
   document: Document,
   options: ConversionOptions = {},
 ): Document {
-  return applyResolvedGreekOrthography(
+  const transformed = applyResolvedGreekOrthography(
     document,
     resolveConversionOptions(options),
+  );
+  return transformed.map((token) =>
+    token.kind === "literal" ? { ...token } : {
+      ...token,
+      diacritics: new Set(token.diacritics),
+    }
   );
 }
 
