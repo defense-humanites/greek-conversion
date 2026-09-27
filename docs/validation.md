@@ -58,7 +58,7 @@ Validation is pure and does not mutate the document. It currently checks
 conflicting accents, breathings and quantities, plus whether accents,
 breathings, coronis, circumflex, diaeresis, iota subscript, and explicit
 quantity are valid for their grapheme and context. It also reports unknown
-letters or diacritics and glyph variants that do not fit their letter and case
+letters or diacritics and glyph variants that do not fit their letter
 on manually modified graphemes. The [document API contract](document-api.md)
 explains ownership and copying of mutable tokens.
 

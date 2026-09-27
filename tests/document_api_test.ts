@@ -104,3 +104,36 @@ Deno.test("Greek orthographic views own all tokens and diacritic sets", () => {
     assertNfcEquals(encode(source, "greek"), "ἄβ!");
   }
 });
+
+Deno.test("preset Greek views remain valid across source formats", () => {
+  const presets = [
+    "ala-lc-ancient",
+    "ala-lc-modern",
+    "bnf-core",
+    "iso-843-type-1",
+    "perseus",
+    "sbl-academic",
+    "sbl-general",
+    "tlg-core",
+  ] as const;
+  const sources = [
+    ["greek", "Ἄνθρωπος ῥόδος ϲ ϛʹ · αʹ"],
+    ["beta-code", "*)/ANQRWPOS R(O/DOS S #2 A#"],
+    ["transliteration", "Anthrōpos rhodos"],
+  ] as const;
+
+  for (const preset of presets) {
+    for (const [format, input] of sources) {
+      const options = { preset };
+      const source = parse(input, format, options);
+      const view = applyGreekOrthography(source, options);
+
+      assertEquals(validateDocument(source), []);
+      assertEquals(validateDocument(view), []);
+      assertEquals(
+        encode(view, "greek", options),
+        encode(source, "greek", options),
+      );
+    }
+  }
+});
