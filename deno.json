@@ -28,6 +28,7 @@
       "tests/**/*.ts",
       "scripts/**/*.ts",
       "scripts/**/*.mjs",
+      "web/**/*.ts",
       ".github/**/*.yml",
       "*.json"
     ],
@@ -47,7 +48,8 @@
     "test": "deno test",
     "publish:check": "deno publish --dry-run --check=all",
     "npm:build": "deno run -A scripts/build_npm.ts",
-    "npm:check": "deno task npm:build && node scripts/npm_smoke.mjs && node scripts/npm_types_smoke.mjs && cd npm && npm pack --dry-run"
+    "npm:check": "deno task npm:build && node scripts/npm_smoke.mjs && node scripts/npm_types_smoke.mjs && cd npm && npm pack --dry-run",
+    "site:build": "deno run -A scripts/build_site.ts"
   },
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@0.43.2",

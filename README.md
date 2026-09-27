@@ -74,6 +74,11 @@ betaCodeToGreek("a)/nqrwpos"); // ἄνθρωπος
 The supported format names are `"greek"`, `"beta-code"`, and
 `"transliteration"`.
 
+Try the [interactive playground](https://defense-humanites.github.io/greek-conversion/)
+to compare formats, presets, information-loss diagnostics, and character
+repertoires in the browser. It uses the library code from the current `main`
+branch, which can be newer than the latest published package.
+
 ### Beta Code spelling
 
 ASCII letter case has no semantic value in Beta Code input. Only `*` marks a
@@ -483,7 +488,12 @@ for the validation boundary.
 ```sh
 deno task check
 deno task test
+deno task site:build
 ```
+
+The last command builds the static playground in `_site/`. Serve that directory
+with a local HTTP server to test the page; the `Playground` workflow publishes
+the same build to GitHub Pages when Pages is configured to use GitHub Actions.
 
 ## License
 

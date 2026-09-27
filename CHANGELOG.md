@@ -7,6 +7,9 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- A static browser playground for the three formats, presets, conversion
+  options, character repertoires, and loss and scope diagnostics, built from
+  the repository code and prepared for GitHub Pages.
 - Documented ownership, mutation, copying, option reuse, and converter
   boundaries for the experimental `./document` entry point, including the fact
   that document validation does not certify source syntax and that lossy

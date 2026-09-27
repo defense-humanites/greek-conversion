@@ -5,4 +5,5 @@ node_modules/
 npm/
 *.tgz
 coverage/
+_site/
 .node-test-runner.mjs
