@@ -19,6 +19,8 @@ project follows [Semantic Versioning](https://semver.org/).
 - `validateDocument()` now diagnoses malformed document tokens instead of
   throwing during contextual validation of neighboring graphemes, including
   missing entries in a sparse document.
+- Incomplete uppercase Beta Code prefixes retain their marks as literal text
+  instead of silently dropping them during parsing.
 
 ## [1.0.0-beta.8] - 2026-09-26
 

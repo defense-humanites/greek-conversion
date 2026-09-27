@@ -21,6 +21,7 @@ export function parseBetaCode(input: string): Document {
   const out: Token[] = [];
 
   for (let i = 0; i < chars.length;) {
+    const start = i;
     let upper = false;
 
     if (chars[i] === "*" && i + 1 < chars.length) {
@@ -47,13 +48,13 @@ export function parseBetaCode(input: string): Document {
     }
 
     const additional = additionalCharacter(chars, i);
-    if (additional) {
+    if (additional && marks.size === 0) {
       out.push(grapheme(additional.letter, upper));
       i += additional.length;
       continue;
     }
 
-    if (chars[i] === "#") {
+    if (chars[i] === "#" && !upper) {
       if (chars[i + 1] === "2" && chars[i + 2] === "2") {
         out.push(literal(ARISTERI_KERAIA));
         i += 3;
@@ -68,7 +69,7 @@ export function parseBetaCode(input: string): Document {
     const letter = source && BY_BETA.get(source.toLowerCase());
 
     if (!letter) {
-      if (upper) out.push(literal("*"));
+      if (upper) out.push(literal(chars.slice(start, i).join("")));
       if (source) out.push(literal(source));
       i++;
       continue;

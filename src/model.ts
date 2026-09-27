@@ -64,11 +64,11 @@ export interface Grapheme {
   glyphVariant?: GlyphVariant;
 }
 
-/** Uninterpreted text preserved verbatim between recognized graphemes. */
+/** Non-grapheme text, including unknown input and canonical punctuation. */
 export interface Literal {
   /** Discriminant distinguishing literal text from Greek graphemes. */
   kind: "literal";
-  /** Preserved literal value. */
+  /** Text passed through unless a format-specific punctuation rule applies. */
   value: string;
 }
 

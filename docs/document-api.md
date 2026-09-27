@@ -9,9 +9,10 @@ strings. This entry point is under review during the `1.0.0` beta series.
 
 `Document` is a readonly sequence of `Token` values. A token is either a
 `Grapheme` (semantic letter, case, diacritics, and optional source glyph
-variant) or a `Literal` (uninterpreted text). The sequence is readonly at the
-type level, but a grapheme's fields and its `Set` of diacritics are mutable so
-callers can make controlled transformations. This is **not** a frozen value.
+variant) or a `Literal` (unknown text or canonical punctuation). The sequence
+is readonly at the type level, but a grapheme's fields and its `Set` of
+diacritics are mutable so callers can make controlled transformations. This is
+**not** a frozen value.
 
 `parse()` allocates a new document on each call. `grapheme()` copies the
 supplied diacritics into a new `Set`. `encode()`, `validateDocument()`, and
@@ -45,9 +46,10 @@ encode(source, "greek"); // ἄνθρωπος
 ```
 
 A shallow copy of the sequence or of a grapheme still shares the original
-`Set`. A `Literal` can contain unknown content; validation checks the
-structure and Greek marks of graphemes, not arbitrary literal text or
-conformity to a preset.
+`Set`. Unknown literal text is passed through; recognized punctuation and
+numeral signs stored as literals may have format-specific output. Validation
+checks the structure and Greek marks of graphemes, not arbitrary literal text
+or conformity to a preset.
 
 ## Parse, validate, encode
 

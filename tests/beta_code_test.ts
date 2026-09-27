@@ -34,6 +34,14 @@ Deno.test("separates semantic case from Beta Code ASCII case", () => {
   );
 });
 
+Deno.test("preserves incomplete uppercase Beta Code prefixes", () => {
+  for (const input of ["*(", "*(?", "*(#1", "*#22"]) {
+    assertNfcEquals(reencode(input, "beta-code"), input);
+  }
+  assertNfcEquals(convert("*#1", "beta-code", "greek"), "Ϟ");
+  assertNfcEquals(convert("*(/A", "beta-code", "greek"), "Ἅ");
+});
+
 Deno.test("recognizes TLG yot and selects its canonical output", () => {
   assertNfcEquals(convert("#401", "beta-code", "greek"), "ϳ");
   assertNfcEquals(convert("ϳ", "greek", "beta-code"), "j");
