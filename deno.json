@@ -3,9 +3,6 @@
   "version": "1.0.0-beta.8",
   "license": "MIT",
   "lock": false,
-  "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
-  },
   "exports": {
     ".": "./src/mod.ts",
     "./document": "./src/document.ts"
@@ -45,7 +42,7 @@
     ]
   },
   "tasks": {
-    "check": "deno fmt --check && deno lint && deno check && deno task doc && deno run --allow-read scripts/generate_preset_docs.ts --check",
+    "check": "deno fmt --check && deno lint && deno check src/ tests/ scripts/ && deno check --config web/deno.json web/app.ts && deno task doc && deno run --allow-read scripts/generate_preset_docs.ts --check",
     "doc": "deno doc --lint src/mod.ts src/document.ts",
     "docs:presets": "deno run --allow-read --allow-write scripts/generate_preset_docs.ts",
     "test": "deno test",

@@ -8,6 +8,8 @@ for (const name of ["index.html", "styles.css"]) {
 const build = new Deno.Command(Deno.execPath(), {
   args: [
     "bundle",
+    "--config",
+    "web/deno.json",
     "--platform=browser",
     "--minify",
     "--check",
