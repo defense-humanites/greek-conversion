@@ -79,11 +79,15 @@ function showPreset(): void {
   if (metadata === undefined) return;
 
   const description = document.createElement("p");
-  description.textContent = `${metadata.description} Périmètre : ${metadata.scope.join(", ")}.`;
+  description.textContent = `${metadata.description} Périmètre : ${
+    metadata.scope.join(", ")
+  }.`;
   const details = document.createElement("p");
-  details.textContent = `Couverture : ${metadata.coverage} · ${metadata.limitations.length} limite(s) documentée(s) · `;
+  details.textContent =
+    `Couverture : ${metadata.coverage} · ${metadata.limitations.length} limite(s) documentée(s) · `;
   const link = document.createElement("a");
-  link.href = "https://github.com/defense-humanites/greek-conversion/blob/main/docs/presets.md";
+  link.href =
+    "https://github.com/defense-humanites/greek-conversion/blob/main/docs/presets.md";
   link.textContent = "Détails du preset ↗";
   details.append(link);
   presetInfo.append(description, details);
@@ -100,7 +104,9 @@ function parseSettings<T>(
   }
   const unknown = Object.keys(value).filter((key) => !allowed.includes(key));
   if (unknown.length) {
-    throw new TypeError(`${label} : champ non pris en charge (${unknown.join(", ")}).`);
+    throw new TypeError(
+      `${label} : champ non pris en charge (${unknown.join(", ")}).`,
+    );
   }
   return value as T;
 }
@@ -113,14 +119,20 @@ function showIssues(
   diagnostics.hidden = losses.length + scope.length === 0;
   if (diagnostics.hidden) return;
 
-  for (const [label, issues] of [["Pertes détectées", losses], ["Périmètre", scope]] as const) {
+  for (
+    const [label, issues] of [["Pertes détectées", losses], [
+      "Périmètre",
+      scope,
+    ]] as const
+  ) {
     if (!issues.length) continue;
     const heading = document.createElement("strong");
     heading.textContent = `${label} (${issues.length})`;
     const list = document.createElement("ul");
     for (const issue of issues) {
       const item = document.createElement("li");
-      item.textContent = `Token ${issue.index} · ${issue.code} — ${issue.message}`;
+      item.textContent =
+        `Token ${issue.index} · ${issue.code} — ${issue.message}`;
       list.append(item);
     }
     diagnostics.append(heading, list);
@@ -130,14 +142,18 @@ function showIssues(
 function inspectDocument(options: ConversionOptions): void {
   if (!documentPanel.open) return;
   const parsed = parse(source.value, selectedFormat(sourceFormat), options);
-  documentPreview.textContent = JSON.stringify({
-    tokens: parsed.map((token) =>
-      token.kind === "grapheme"
-        ? { ...token, diacritics: [...token.diacritics] }
-        : token
-    ),
-    validation: validateDocument(parsed),
-  }, null, 2);
+  documentPreview.textContent = JSON.stringify(
+    {
+      tokens: parsed.map((token) =>
+        token.kind === "grapheme"
+          ? { ...token, diacritics: [...token.diacritics] }
+          : token
+      ),
+      validation: validateDocument(parsed),
+    },
+    null,
+    2,
+  );
 }
 
 function update(): void {
@@ -180,7 +196,10 @@ function update(): void {
     copyButton.disabled = swapButton.disabled = true;
     status.classList.add("error");
     status.textContent = error instanceof Error ? error.message : String(error);
-    showIssues([], error instanceof CharacterScopeError ? error.diagnostics : []);
+    showIssues(
+      [],
+      error instanceof CharacterScopeError ? error.diagnostics : [],
+    );
     documentPreview.textContent = "";
   }
 }
@@ -218,7 +237,8 @@ copyButton.addEventListener("click", async () => {
     await navigator.clipboard.writeText(output.value);
     status.textContent = "Résultat copié.";
   } catch {
-    status.textContent = "Copie indisponible : sélectionnez le résultat manuellement.";
+    status.textContent =
+      "Copie indisponible : sélectionnez le résultat manuellement.";
   }
 });
 

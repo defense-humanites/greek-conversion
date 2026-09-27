@@ -3,6 +3,9 @@
   "version": "1.0.0-beta.8",
   "license": "MIT",
   "lock": false,
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
+  },
   "exports": {
     ".": "./src/mod.ts",
     "./document": "./src/document.ts"
