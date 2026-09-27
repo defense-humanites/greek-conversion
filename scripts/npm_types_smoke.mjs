@@ -26,7 +26,9 @@ try {
     "typescript@5.9.3",
   ], { stdio: "inherit" });
 
-  await writeFile(join(directory, "consumer.mts"), `
+  await writeFile(
+    join(directory, "consumer.mts"),
+    `
 import { createConverter } from "@humanities/greek-conversion";
 import {
   applyGreekOrthography,
@@ -49,18 +51,22 @@ const output: string = encode(view, "greek", options);
 const converter = createConverter({ preset: "ala-lc-modern" });
 converter.convert(output, "greek", "transliteration");
 void codes;
-`);
-  await writeFile(join(directory, "tsconfig.json"), JSON.stringify({
-    compilerOptions: {
-      module: "NodeNext",
-      moduleResolution: "NodeNext",
-      target: "ES2022",
-      strict: true,
-      noEmit: true,
-      skipLibCheck: false,
-    },
-    files: ["consumer.mts"],
-  }));
+`,
+  );
+  await writeFile(
+    join(directory, "tsconfig.json"),
+    JSON.stringify({
+      compilerOptions: {
+        module: "NodeNext",
+        moduleResolution: "NodeNext",
+        target: "ES2022",
+        strict: true,
+        noEmit: true,
+        skipLibCheck: false,
+      },
+      files: ["consumer.mts"],
+    }),
+  );
 
   execFileSync(process.execPath, [
     join(directory, "node_modules/typescript/bin/tsc"),
