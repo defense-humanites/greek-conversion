@@ -8,7 +8,8 @@ project follows [Semantic Versioning](https://semver.org/).
 ### Added
 
 - Documented ownership, mutation, copying, option reuse, and converter
-  boundaries for the experimental `./document` entry point.
+  boundaries for the experimental `./document` entry point, including the fact
+  that document validation does not certify source syntax.
 - `validateDocument()` reports unknown letters and diacritics and invalid
   glyph variants on manually modified documents before encoding.
 

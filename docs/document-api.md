@@ -70,7 +70,9 @@ typed or manually modified document. Its indices refer to token
 positions, not offsets into the source string. Validation is an explicit step:
 `encode()` does not call it, and even a valid document can encode lossily under
 an output policy. Correct structural diagnostics before relying on contextual
-ones. Use `convertDetailed()` when information loss matters.
+ones. A clean result does not certify the syntax of the source string: malformed
+sequences such as an incomplete Beta Code `*(` may be preserved as literals.
+Use `convertDetailed()` when information loss matters.
 
 The main `createConverter()` API has a separate registry for aliases, custom
 characters, and repertoire checks. `parse()` and `encode()` here operate on

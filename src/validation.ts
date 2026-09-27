@@ -71,10 +71,12 @@ const SIGMA_VARIANTS = new Set([
 ]);
 
 /**
- * Reports structurally invalid combinations without modifying the document.
+ * Reports invalid document structure and Greek marks without mutation.
  *
  * Parsed documents are normally valid. This helper is primarily intended for
  * documents constructed or modified through the advanced `./document` API.
+ * It does not validate the syntax of the source string: parsers can preserve
+ * unrecognized or malformed source sequences as literal tokens.
  */
 export function validateDocument(
   document: Document,

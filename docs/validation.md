@@ -20,10 +20,10 @@ permissive APIs or changing their return types. An option would also make it
 unclear whether the source document or the orthographically transformed target
 document is being validated.
 
-## Strict workflow
+## Canonical-document check
 
-Applications that require valid canonical Greek should make the stages
-explicit:
+Applications that need to inspect the interpreted document before encoding
+should make the stages explicit:
 
 ```ts
 import {
@@ -41,6 +41,13 @@ if (diagnostics.length > 0) {
 
 const output = encode(document, targetFormat, options);
 ```
+
+This checks the structure and Greek graphemes of the parsed document. It does
+not certify that the source string follows the syntax of its declared format.
+For example, `parse("*(", "beta-code")` retains the incomplete uppercase
+prefix as literal text, and `validateDocument()` returns no diagnostics for
+that structurally valid document. Unknown input can likewise remain literal.
+There is currently no separate source-syntax diagnostic API.
 
 Diagnostics contain a stable code, a token index in the canonical `Document`,
 and a human-readable message. The index is deliberately not a source-code-unit
@@ -63,15 +70,16 @@ neighbors of an ill-formed token as valid Greek context.
 
 ## Validation boundary
 
-The normal strict boundary is the document immediately returned by `parse()`.
-This answers whether the interpreted source is valid before any requested
-lossy target policy is applied.
+The normal validation boundary is the document immediately returned by
+`parse()`. This answers whether its interpreted Greek structure is valid before
+any requested lossy target policy is applied.
 
 Callers that directly construct or transform a `Document` should validate the
 exact document they intend to encode. Orthography helpers are immutable, so an
 application may also validate their returned document when it needs to audit a
 custom pipeline.
 
-If demand emerges for a convenience strict API, it should be a separate helper
-such as `convertValidated()` or `assertValidDocument()`, with an explicit return
-or error contract. It should not add mode-dependent behavior to `convert()`.
+Any future source-syntax diagnostics would need source positions and a separate
+contract from `validateDocument()`'s token indices. A convenience strict API,
+if needed, should likewise define its return or error behavior explicitly
+without making `convert()` mode-dependent.

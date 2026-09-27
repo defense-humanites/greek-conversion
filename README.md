@@ -455,10 +455,12 @@ const output = encode(document, "greek");
 ```
 
 Validation deliberately remains a separate diagnostic step instead of changing
-the contract of `convert()`. The `./document` entry point may still evolve
-during the `1.0.0` prerelease series. See the [document API contract](https://github.com/defense-humanites/greek-conversion/blob/main/docs/document-api.md)
+the contract of `convert()`. It checks the interpreted document, not the syntax
+of the original string; malformed source sequences can survive as literals.
+The `./document` entry point may still evolve during the `1.0.0` prerelease
+series. See the [document API contract](https://github.com/defense-humanites/greek-conversion/blob/main/docs/document-api.md)
 for ownership, transformations, and options, and [validation](https://github.com/defense-humanites/greek-conversion/blob/main/docs/validation.md)
-for the separate strict workflow.
+for the validation boundary.
 
 ## Documentation
 
