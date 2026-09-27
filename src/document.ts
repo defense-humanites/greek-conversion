@@ -19,7 +19,13 @@ import type { ConversionOptions } from "./options.ts";
 import { applyGreekOrthography as applyResolvedGreekOrthography } from "./orthography.ts";
 import { resolveConversionOptions } from "./presets.ts";
 
-/** Applies Greek-output policies, resolving preset options before transforming. */
+/**
+ * Returns a Greek-output orthographic view after resolving preset options.
+ *
+ * Some policies remove source distinctions. Keep the original document when
+ * encoding other formats, and use `encode(document, "greek", options)` when no
+ * intermediate transformed document is needed.
+ */
 export function applyGreekOrthography(
   document: Document,
   options: ConversionOptions = {},

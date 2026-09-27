@@ -9,7 +9,8 @@ project follows [Semantic Versioning](https://semver.org/).
 
 - Documented ownership, mutation, copying, option reuse, and converter
   boundaries for the experimental `./document` entry point, including the fact
-  that document validation does not certify source syntax.
+  that document validation does not certify source syntax and that lossy
+  orthographic views must not replace the reusable parsed source.
 - `validateDocument()` reports unknown letters and diacritics and invalid
   glyph variants on manually modified documents before encoding.
 

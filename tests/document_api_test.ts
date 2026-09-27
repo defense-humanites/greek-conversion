@@ -61,3 +61,14 @@ Deno.test("the public Greek orthography helper resolves preset options", () => {
   assertEquals(transformed, [{ kind: "literal", value: "1" }]);
   assertNfcEquals(encode(original, "greek"), "αʹ");
 });
+
+Deno.test("a Greek orthographic view does not replace the reusable source", () => {
+  const source = parse("ἄ", "greek");
+  const monotonic = applyGreekOrthography(source, {
+    orthography: { accentuation: "monotonic" },
+  });
+
+  assertNfcEquals(encode(monotonic, "greek"), "ά");
+  assertNfcEquals(encode(monotonic, "beta-code"), "a/");
+  assertNfcEquals(encode(source, "beta-code"), "a)/");
+});

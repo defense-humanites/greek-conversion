@@ -21,6 +21,11 @@ may return the original document when no change is needed; callers should not
 assume it always allocates. Like `parse()` and `encode()`, the public helper
 resolves a supplied preset before applying its options.
 
+`encode(document, "greek", options)` already applies Greek-output orthography.
+Use `applyGreekOrthography()` when the transformed tokens themselves must be
+inspected or edited. A monotonic or decimal-numeral view can discard source
+distinctions: keep the original parsed document for other output formats.
+
 When deriving two independent versions from one parse, copy both the tokens
 and their nested diacritic sets:
 
@@ -64,6 +69,10 @@ const options = { preset: "bnf-core" } as const;
 const document = parse("Chará", "transliteration", options);
 const output = encode(document, "greek", options); // Χαρά
 ```
+
+For multiple target formats, encode each from that same original document.
+Encoding a lossy orthographic view into a second format cannot restore the
+source distinctions removed by the view.
 
 `validateDocument()` reports structural problems and invalid values on a
 typed or manually modified document. Its indices refer to token
