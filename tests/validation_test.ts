@@ -1,8 +1,11 @@
 import { assertEquals } from "@std/assert";
 import {
+  applyGreekOrthography,
   type Diacritic,
   type Document,
+  encode,
   grapheme,
+  type GlyphVariant,
   type Letter,
   literal,
   parse,
@@ -131,8 +134,13 @@ Deno.test("validation catches invalid manually modified document values", () => 
   const mark = grapheme("alpha");
   mark.diacritics.add("unknown" as Diacritic);
   const variant = grapheme("beta", false, [], "lunate-sigma");
-  const capitalFinal = grapheme("sigma", true, [], "final-sigma");
-  const diagnostics = validateDocument([letter, mark, variant, capitalFinal]);
+  const unknownVariant = grapheme(
+    "sigma",
+    false,
+    [],
+    "unknown" as GlyphVariant,
+  );
+  const diagnostics = validateDocument([letter, mark, variant, unknownVariant]);
 
   assertEquals(
     diagnostics.map(({ code, index }) => [code, index]),
@@ -143,6 +151,21 @@ Deno.test("validation catches invalid manually modified document values", () => 
       ["invalid-glyph-variant", 3],
     ],
   );
+});
+
+Deno.test("sigma source variants survive case transformations", () => {
+  const source = parse("σ ς ϲ", "greek");
+  for (const letterCase of ["uppercase", "title"] as const) {
+    const transformed = applyGreekOrthography(source, {
+      orthography: { letterCase },
+    });
+    assertEquals(validateDocument(transformed), []);
+  }
+  const finalSigma = applyGreekOrthography(parse("ς", "greek"), {
+    orthography: { letterCase: "uppercase", finalSigma: "preserve" },
+  });
+  assertEquals(validateDocument(finalSigma), []);
+  assertEquals(encode(finalSigma, "greek"), "Σ");
 });
 
 Deno.test("validation diagnoses malformed tokens before contextual checks", () => {

@@ -11,6 +11,8 @@ project follows [Semantic Versioning](https://semver.org/).
   boundaries for the experimental `./document` entry point, including the fact
   that document validation does not certify source syntax and that lossy
   orthographic views must not replace the reusable parsed source.
+- The npm package check now type-checks a separate consumer of the packed
+  `./document` entry point and its generated declarations.
 - `validateDocument()` reports unknown letters and diacritics and invalid
   glyph variants on manually modified documents before encoding.
 
@@ -25,6 +27,8 @@ project follows [Semantic Versioning](https://semver.org/).
   missing entries in a sparse document.
 - Incomplete uppercase Beta Code prefixes retain their marks as literal text
   instead of silently dropping them during parsing.
+- `validateDocument()` accepts a final-sigma source variant after a case policy
+  changes the grapheme to uppercase; the variant remains source provenance.
 
 ## [1.0.0-beta.8] - 2026-09-26
 

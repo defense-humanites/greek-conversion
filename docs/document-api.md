@@ -14,6 +14,9 @@ is readonly at the type level, but a grapheme's fields and its `Set` of
 diacritics are mutable so callers can make controlled transformations. This is
 **not** a frozen value.
 
+The optional `glyphVariant` records a sigma shape from the source. It remains
+valid provenance if an orthographic policy changes the grapheme's current case.
+
 `parse()` allocates a new document on each call. `grapheme()` copies the
 supplied diacritics into a new `Set`. `encode()`, `validateDocument()`, and
 `applyGreekOrthography()` do not modify their input document. The public helper

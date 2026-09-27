@@ -124,14 +124,13 @@ export function validateDocument(
     }
     if (
       token.glyphVariant !== undefined &&
-      (token.letter !== "sigma" || !SIGMA_VARIANTS.has(token.glyphVariant) ||
-        token.uppercase === true && token.glyphVariant === "final-sigma")
+      (token.letter !== "sigma" || !SIGMA_VARIANTS.has(token.glyphVariant))
     ) {
       add(
         diagnostics,
         "invalid-glyph-variant",
         index,
-        "This source glyph variant is not valid for the selected letter and case.",
+        "This source glyph variant is not valid for the selected letter.",
       );
     }
   }
