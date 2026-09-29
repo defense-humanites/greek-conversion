@@ -23,6 +23,8 @@ project follows [Semantic Versioning](https://semver.org/).
 
 - The browser playground now presents its controls and diagnostics in English,
   matching the repository documentation.
+- The playground suggests conversion option names and values while editing
+  JSON, with keyboard and pointer selection.
 
 ### Fixed
 

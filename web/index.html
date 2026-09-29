@@ -76,8 +76,9 @@
         <details>
           <summary>Conversion options</summary>
           <div class="detail-body">
-            <label for="options">JSON options <span class="hint">Leave blank for defaults. Orthography, diacritics, and Unicode settings override the preset.</span></label>
-            <textarea id="options" class="json-editor" spellcheck="false" placeholder='{"orthography":{"accentuation":"monotonic"}}'></textarea>
+            <label for="options">JSON options <span class="hint">Leave blank for defaults. Orthography, diacritics, and Unicode settings override the preset. Type <code>{</code> to explore options; use ↑/↓ and Enter to choose a suggestion.</span></label>
+            <textarea id="options" class="json-editor" spellcheck="false" aria-autocomplete="list" aria-controls="options-suggestions" placeholder='{"orthography":{"accentuation":"monotonic"}}'></textarea>
+            <div id="options-suggestions" class="suggestions" role="listbox" aria-label="Available conversion options" hidden></div>
             <a href="https://github.com/defense-humanites/greek-conversion#common-recipes">Explore options ↗</a>
           </div>
         </details>

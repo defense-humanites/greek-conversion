@@ -62,6 +62,10 @@ textarea { display: block; width: 100%; padding: 15px; resize: vertical; }
 .detail-body label .hint { font-weight: 400; }
 .detail-body > a { display: inline-block; margin-top: 8px; font-size: .88rem; }
 .json-editor { min-height: 115px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .88rem; }
+.suggestions { max-height: 190px; overflow-y: auto; margin-top: 4px; padding: 4px; border: 1px solid #b9c5d2; border-radius: 8px; background: #fff; box-shadow: 0 8px 18px #14273c18; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .85rem; }
+.suggestions[hidden] { display: none; }
+.suggestions [role="option"] { padding: 5px 9px; border-radius: 5px; cursor: pointer; }
+.suggestions [role="option"][aria-selected="true"], .suggestions [role="option"]:hover { background: #e8f2fb; }
 pre { overflow: auto; max-height: 320px; padding: 13px; border-radius: 8px; background: #f3f5f7; font-size: .82rem; }
 footer { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 25px; color: #667589; font-size: .83rem; }
 
