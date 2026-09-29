@@ -239,8 +239,7 @@ copyButton.addEventListener("click", async () => {
     await navigator.clipboard.writeText(output.value);
     status.textContent = "Output copied.";
   } catch {
-    status.textContent =
-      "Copy unavailable; select the output manually.";
+    status.textContent = "Copy unavailable; select the output manually.";
   }
 });
 
