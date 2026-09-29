@@ -171,7 +171,9 @@ export function suggestOptions(value: string, caret: number): Suggestion[] {
     const objectKey = isKey && frame.path === "" && name !== "removeDiacritics";
     const replacement = isKey
       ? `"${name}"${alreadyHasColon ? "" : objectKey ? ": {}" : ": "}`
-      : frame.path !== "" ? `"${name}"` : name;
+      : frame.path !== ""
+      ? `"${name}"`
+      : name;
     const cursor = objectKey && !alreadyHasColon
       ? start + replacement.length - 1
       : start + replacement.length;

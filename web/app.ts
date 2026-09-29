@@ -43,7 +43,10 @@ let selectedSuggestion = 0;
 function renderSuggestions(): void {
   optionsSuggestions.replaceChildren();
   optionsSuggestions.hidden = visibleSuggestions.length === 0;
-  optionsInput.setAttribute("aria-expanded", String(!optionsSuggestions.hidden));
+  optionsInput.setAttribute(
+    "aria-expanded",
+    String(!optionsSuggestions.hidden),
+  );
   for (const [index, suggestion] of visibleSuggestions.entries()) {
     const option = document.createElement("div");
     option.id = `option-suggestion-${index}`;
@@ -294,7 +297,7 @@ optionsInput.addEventListener("keydown", (event) => {
   if (event.key === "ArrowDown" || event.key === "ArrowUp") {
     event.preventDefault();
     selectedSuggestion = (selectedSuggestion +
-        (event.key === "ArrowDown" ? 1 : visibleSuggestions.length - 1)) %
+      (event.key === "ArrowDown" ? 1 : visibleSuggestions.length - 1)) %
       visibleSuggestions.length;
     renderSuggestions();
   } else if (event.key === "Enter") {
