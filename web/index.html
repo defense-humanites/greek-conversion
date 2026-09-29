@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Essayez la conversion entre grec, Beta Code et translittération avec les presets de greek-conversion.">
-    <title>Atelier de conversion grecque</title>
+    <meta name="description" content="Try Greek, Beta Code, and transliteration conversions with the greek-conversion presets.">
+    <title>Greek Conversion Playground</title>
     <link rel="stylesheet" href="./styles.css">
     <script type="module" src="./app.js"></script>
   </head>
@@ -13,8 +13,8 @@
       <header class="page-header">
         <div>
           <p class="eyebrow">@humanities/greek-conversion</p>
-          <h1>Atelier de conversion grecque</h1>
-          <p class="intro">Essayez le grec, le Beta Code et la translittération avec les règles de la bibliothèque.</p>
+          <h1>Greek Conversion Playground</h1>
+          <p class="intro">Explore Greek, Beta Code, and transliteration with the library's conversion rules.</p>
         </div>
         <a class="text-link" href="https://github.com/defense-humanites/greek-conversion#readme">Documentation ↗</a>
       </header>
@@ -22,27 +22,27 @@
       <section class="card" aria-labelledby="conversion-title">
         <div class="section-heading">
           <h2 id="conversion-title">Conversion</h2>
-          <span class="local-note">Tout est calculé dans votre navigateur.</span>
+          <span class="local-note">Conversions run in your browser.</span>
         </div>
 
         <div class="controls">
-          <label>Depuis
+          <label>From
             <select id="source-format">
-              <option value="greek">Grec</option>
+              <option value="greek">Greek</option>
               <option value="beta-code">Beta Code</option>
-              <option value="transliteration">Translittération</option>
+              <option value="transliteration">Transliteration</option>
             </select>
           </label>
-          <button id="swap" class="swap" type="button" title="Inverser les formats et reprendre le résultat" aria-label="Inverser les formats et reprendre le résultat">⇄</button>
-          <label>Vers
+          <button id="swap" class="swap" type="button" title="Swap formats and use the output as input" aria-label="Swap formats and use the output as input">⇄</button>
+          <label>To
             <select id="target-format">
-              <option value="transliteration">Translittération</option>
-              <option value="greek">Grec</option>
+              <option value="transliteration">Transliteration</option>
+              <option value="greek">Greek</option>
               <option value="beta-code">Beta Code</option>
             </select>
           </label>
           <label>Preset
-            <select id="preset"><option value="">Aucun — règles par défaut</option></select>
+            <select id="preset"><option value="">None — engine defaults</option></select>
           </label>
         </div>
 
@@ -51,15 +51,15 @@
         <div class="editors">
           <div class="editor">
             <div class="editor-heading">
-              <label for="source">Texte source</label>
-              <select id="examples" aria-label="Charger un exemple"></select>
+              <label for="source">Input</label>
+              <select id="examples" aria-label="Load an example"></select>
             </div>
-            <textarea id="source" spellcheck="false" autocomplete="off" placeholder="Saisissez du texte à convertir…">ἄνθρωπος</textarea>
+            <textarea id="source" spellcheck="false" autocomplete="off" placeholder="Enter text to convert…">ἄνθρωπος</textarea>
           </div>
           <div class="editor">
             <div class="editor-heading">
-              <label for="output">Résultat</label>
-              <button id="copy" class="small-button" type="button">Copier</button>
+              <label for="output">Output</label>
+              <button id="copy" class="small-button" type="button">Copy</button>
             </div>
             <textarea id="output" readonly spellcheck="false" aria-describedby="status"></textarea>
           </div>
@@ -67,43 +67,43 @@
 
         <div class="summary">
           <p id="status" role="status" aria-live="polite"></p>
-          <label class="check"><input id="strict" type="checkbox"> Rejeter les caractères reconnus hors périmètre</label>
+          <label class="check"><input id="strict" type="checkbox"> Reject recognized characters outside the repertoire</label>
         </div>
         <div id="diagnostics" class="diagnostics" aria-live="polite" hidden></div>
       </section>
 
-      <section class="advanced" aria-label="Réglages avancés">
+      <section class="advanced" aria-label="Advanced settings">
         <details>
-          <summary>Options de conversion</summary>
+          <summary>Conversion options</summary>
           <div class="detail-body">
-            <label for="options">Options JSON <span class="hint">Orthographie, diacritiques et Unicode ; elles priment sur le preset.</span></label>
+            <label for="options">JSON options <span class="hint">Orthography, diacritics, and Unicode settings override the preset.</span></label>
             <textarea id="options" class="json-editor" spellcheck="false" placeholder='{"orthography":{"accentuation":"monotonic"}}'>{}</textarea>
-            <a href="https://github.com/defense-humanites/greek-conversion#common-recipes">Voir les options ↗</a>
+            <a href="https://github.com/defense-humanites/greek-conversion#common-recipes">Explore options ↗</a>
           </div>
         </details>
         <details>
-          <summary>Inventaire personnalisé</summary>
+          <summary>Custom character inventory</summary>
           <div class="detail-body">
-            <label for="inventory">Configuration JSON <span class="hint">Champs possibles : <code>aliases</code>, <code>characters</code>, <code>repertoire</code>, <code>exclude</code>.</span></label>
+            <label for="inventory">JSON configuration <span class="hint">Available fields: <code>aliases</code>, <code>characters</code>, <code>repertoire</code>, <code>exclude</code>.</span></label>
             <textarea id="inventory" class="json-editor" spellcheck="false" placeholder='{"exclude":["stigma","koppa","sampi"]}'>{}</textarea>
-            <a href="https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md">Voir les exemples ↗</a>
+            <a href="https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md">See examples ↗</a>
           </div>
         </details>
         <details id="document-panel">
-          <summary>Document canonique</summary>
+          <summary>Canonical document</summary>
           <div class="detail-body">
-            <p class="hint">Interprétation du texte source par l’alphabet intégré, sans les extensions de l’inventaire personnalisé. Les indices des diagnostics désignent des tokens.</p>
+            <p class="hint">The built-in alphabet's interpretation of the input, without custom character extensions. Diagnostic indices refer to tokens.</p>
             <pre id="document-preview"></pre>
           </div>
         </details>
       </section>
 
       <footer>
-        <a href="https://github.com/defense-humanites/greek-conversion">Code source</a>
+        <a href="https://github.com/defense-humanites/greek-conversion">Source code</a>
         <span>·</span>
-        <a href="https://github.com/defense-humanites/greek-conversion/issues">Signaler un problème</a>
+        <a href="https://github.com/defense-humanites/greek-conversion/issues">Report an issue</a>
         <span>·</span>
-        <span>Les presets documentent leur périmètre ; les diagnostics ne certifient pas une conformité exhaustive.</span>
+        <span>Preset scope is documented; diagnostics do not certify full conformity.</span>
       </footer>
     </main>
   </body>

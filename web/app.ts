@@ -41,20 +41,20 @@ for (const metadata of presets) {
 
 const examples: Record<Format, readonly [string, string][]> = {
   greek: [
-    ["Choisir un exemple…", ""],
+    ["Choose an example…", ""],
     ["ἄνθρωπος", "ἄνθρωπος"],
     ["Ἄνθρωπος ῥόδος", "Ἄνθρωπος ῥόδος"],
     ["ϲῶμα ϝ ϛʹ", "ϲῶμα ϝ ϛʹ"],
     ["αʹ καὶ ͵β", "αʹ καὶ ͵β"],
   ],
   "beta-code": [
-    ["Choisir un exemple…", ""],
+    ["Choose an example…", ""],
     ["A)/NQRWPOS", "A)/NQRWPOS"],
     ["*)/ANQRWPOS", "*)/ANQRWPOS"],
     ["*(=W|", "*(=W|"],
   ],
   transliteration: [
-    ["Choisir un exemple…", ""],
+    ["Choose an example…", ""],
     ["ánthrōpos", "ánthrōpos"],
     ["Chará", "Chará"],
     ["Thálassa", "Thálassa"],
@@ -79,16 +79,16 @@ function showPreset(): void {
   if (metadata === undefined) return;
 
   const description = document.createElement("p");
-  description.textContent = `${metadata.description} Périmètre : ${
+  description.textContent = `${metadata.description} Scope: ${
     metadata.scope.join(", ")
   }.`;
   const details = document.createElement("p");
   details.textContent =
-    `Couverture : ${metadata.coverage} · ${metadata.limitations.length} limite(s) documentée(s) · `;
+    `Coverage: ${metadata.coverage} · Known limitations: ${metadata.limitations.length} · `;
   const link = document.createElement("a");
   link.href =
     "https://github.com/defense-humanites/greek-conversion/blob/main/docs/presets.md";
-  link.textContent = "Détails du preset ↗";
+  link.textContent = "Preset details ↗";
   details.append(link);
   presetInfo.append(description, details);
 }
@@ -100,12 +100,12 @@ function parseSettings<T>(
 ): T {
   const value: unknown = JSON.parse(input.value.trim() || "{}");
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    throw new TypeError(`${label} : un objet JSON est attendu.`);
+    throw new TypeError(`${label}: expected a JSON object.`);
   }
   const unknown = Object.keys(value).filter((key) => !allowed.includes(key));
   if (unknown.length) {
     throw new TypeError(
-      `${label} : champ non pris en charge (${unknown.join(", ")}).`,
+      `${label}: unsupported field (${unknown.join(", ")}).`,
     );
   }
   return value as T;
@@ -120,8 +120,8 @@ function showIssues(
   if (diagnostics.hidden) return;
 
   for (
-    const [label, issues] of [["Pertes détectées", losses], [
-      "Périmètre",
+    const [label, issues] of [["Information loss", losses], [
+      "Repertoire",
       scope,
     ]] as const
   ) {
@@ -161,12 +161,12 @@ function update(): void {
     const options = parseSettings<ConversionOptions>(
       optionsInput,
       ["orthography", "diacritics", "unicode", "removeDiacritics"],
-      "Options de conversion",
+      "Conversion options",
     );
     const inventory = parseSettings<ConverterConfiguration>(
       inventoryInput,
       ["aliases", "characters", "repertoire", "exclude"],
-      "Inventaire personnalisé",
+      "Custom character inventory",
     );
     const preset = presetSelect.value as Preset | "";
     const converter = createConverter({
@@ -184,11 +184,13 @@ function update(): void {
     output.value = result.output;
     copyButton.disabled = swapButton.disabled = false;
     status.classList.remove("error");
+    const lossCount = result.losses.length;
+    const scopeCount = result.diagnostics.length;
     status.textContent = source.value
-      ? result.lossy || result.diagnostics.length
-        ? `${result.losses.length} perte(s) · ${result.diagnostics.length} diagnostic(s) de périmètre.`
-        : "Aucune perte ni sortie de périmètre détectée."
-      : "Saisissez un texte ou chargez un exemple.";
+      ? lossCount || scopeCount
+        ? `Losses: ${lossCount} · Repertoire diagnostics: ${scopeCount}.`
+        : "No information loss or repertoire issues detected."
+      : "Enter text or load an example.";
     showIssues(result.losses, result.diagnostics);
     inspectDocument({ ...options, ...(preset ? { preset } : {}) });
   } catch (error) {
@@ -235,10 +237,10 @@ swapButton.addEventListener("click", () => {
 copyButton.addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(output.value);
-    status.textContent = "Résultat copié.";
+    status.textContent = "Output copied.";
   } catch {
     status.textContent =
-      "Copie indisponible : sélectionnez le résultat manuellement.";
+      "Copy unavailable; select the output manually.";
   }
 });
 

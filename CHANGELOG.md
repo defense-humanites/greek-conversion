@@ -19,6 +19,11 @@ project follows [Semantic Versioning](https://semver.org/).
 - `validateDocument()` reports unknown letters and diacritics and invalid
   glyph variants on manually modified documents before encoding.
 
+### Changed
+
+- The browser playground now presents its controls and diagnostics in English,
+  matching the repository documentation.
+
 ### Fixed
 
 - The public `applyGreekOrthography()` helper now resolves preset options like
