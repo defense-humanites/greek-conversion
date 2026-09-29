@@ -157,18 +157,20 @@ function inspectDocument(options: ConversionOptions): void {
 }
 
 function update(): void {
+  documentPreview.textContent = "";
   try {
     const options = parseSettings<ConversionOptions>(
       optionsInput,
       ["orthography", "diacritics", "unicode", "removeDiacritics"],
       "Conversion options",
     );
+    const preset = presetSelect.value as Preset | "";
+    inspectDocument({ ...options, ...(preset ? { preset } : {}) });
     const inventory = parseSettings<ConverterConfiguration>(
       inventoryInput,
       ["aliases", "characters", "repertoire", "exclude"],
       "Custom character inventory",
     );
-    const preset = presetSelect.value as Preset | "";
     const converter = createConverter({
       ...inventory,
       ...(preset ? { preset } : {}),
@@ -192,7 +194,6 @@ function update(): void {
         : "No information loss or repertoire issues detected."
       : "Enter text or load an example.";
     showIssues(result.losses, result.diagnostics);
-    inspectDocument({ ...options, ...(preset ? { preset } : {}) });
   } catch (error) {
     output.value = "";
     copyButton.disabled = swapButton.disabled = true;
@@ -202,7 +203,6 @@ function update(): void {
       [],
       error instanceof CharacterScopeError ? error.diagnostics : [],
     );
-    documentPreview.textContent = "";
   }
 }
 
@@ -221,7 +221,11 @@ exampleSelect.addEventListener("change", () => {
     update();
   }
 });
-for (const field of [source, optionsInput, inventoryInput]) {
+source.addEventListener("input", () => {
+  exampleSelect.value = "";
+  update();
+});
+for (const field of [optionsInput, inventoryInput]) {
   field.addEventListener("input", update);
 }
 strict.addEventListener("change", update);

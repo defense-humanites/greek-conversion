@@ -76,16 +76,16 @@
         <details>
           <summary>Conversion options</summary>
           <div class="detail-body">
-            <label for="options">JSON options <span class="hint">Orthography, diacritics, and Unicode settings override the preset.</span></label>
-            <textarea id="options" class="json-editor" spellcheck="false" placeholder='{"orthography":{"accentuation":"monotonic"}}'>{}</textarea>
+            <label for="options">JSON options <span class="hint">Leave blank for defaults. Orthography, diacritics, and Unicode settings override the preset.</span></label>
+            <textarea id="options" class="json-editor" spellcheck="false" placeholder='{"orthography":{"accentuation":"monotonic"}}'></textarea>
             <a href="https://github.com/defense-humanites/greek-conversion#common-recipes">Explore options ↗</a>
           </div>
         </details>
         <details>
           <summary>Custom character inventory</summary>
           <div class="detail-body">
-            <label for="inventory">JSON configuration <span class="hint">Available fields: <code>aliases</code>, <code>characters</code>, <code>repertoire</code>, <code>exclude</code>.</span></label>
-            <textarea id="inventory" class="json-editor" spellcheck="false" placeholder='{"exclude":["stigma","koppa","sampi"]}'>{}</textarea>
+            <label for="inventory">JSON configuration <span class="hint">Leave blank for built-in characters. Available fields: <code>aliases</code>, <code>characters</code>, <code>repertoire</code>, <code>exclude</code>.</span></label>
+            <textarea id="inventory" class="json-editor" spellcheck="false" placeholder='{"exclude":["stigma","koppa","sampi"]}'></textarea>
             <a href="https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md">See examples ↗</a>
           </div>
         </details>

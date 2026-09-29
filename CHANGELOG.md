@@ -26,6 +26,9 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The playground keeps the source's canonical document visible when a strict
+  converter rejects an out-of-scope character; its advanced JSON examples
+  are visible before entry, and editing the input clears a stale example choice.
 - The public `applyGreekOrthography()` helper now resolves preset options like
   `parse()` and `encode()` instead of silently ignoring them, and returns an
   independent document whose tokens and diacritic sets can be edited without
