@@ -10,6 +10,7 @@ import type {
   Preset,
 } from "../src/mod.ts";
 import { parse, validateDocument } from "../src/document.ts";
+import { suggestInventory } from "./inventory_suggestions.ts";
 import { suggestOptions } from "./options_suggestions.ts";
 import type { Suggestion } from "./options_suggestions.ts";
 
@@ -28,6 +29,7 @@ const output = element<HTMLTextAreaElement>("output");
 const optionsInput = element<HTMLTextAreaElement>("options");
 const optionsSuggestions = element<HTMLDivElement>("options-suggestions");
 const inventoryInput = element<HTMLTextAreaElement>("inventory");
+const inventorySuggestions = element<HTMLDivElement>("inventory-suggestions");
 const strict = element<HTMLInputElement>("strict");
 const status = element<HTMLParagraphElement>("status");
 const diagnostics = element<HTMLDivElement>("diagnostics");
@@ -37,58 +39,83 @@ const documentPreview = element<HTMLPreElement>("document-preview");
 const copyButton = element<HTMLButtonElement>("copy");
 const swapButton = element<HTMLButtonElement>("swap");
 
-let visibleSuggestions: Suggestion[] = [];
-let selectedSuggestion = 0;
+function attachSuggestions(
+  input: HTMLTextAreaElement,
+  list: HTMLDivElement,
+  suggest: (value: string, caret: number) => Suggestion[],
+): void {
+  let visible: Suggestion[] = [];
+  let selected = 0;
 
-function renderSuggestions(): void {
-  optionsSuggestions.replaceChildren();
-  optionsSuggestions.hidden = visibleSuggestions.length === 0;
-  optionsInput.setAttribute(
-    "aria-expanded",
-    String(!optionsSuggestions.hidden),
-  );
-  for (const [index, suggestion] of visibleSuggestions.entries()) {
-    const option = document.createElement("div");
-    option.id = `option-suggestion-${index}`;
-    option.setAttribute("role", "option");
-    option.setAttribute("aria-selected", String(index === selectedSuggestion));
-    option.textContent = suggestion.label;
-    option.addEventListener("pointerdown", (event) => event.preventDefault());
-    option.addEventListener("click", () => acceptSuggestion(index));
-    optionsSuggestions.append(option);
-  }
-  if (optionsSuggestions.hidden) {
-    optionsInput.removeAttribute("aria-activedescendant");
-  } else {
-    optionsInput.setAttribute(
-      "aria-activedescendant",
-      `option-suggestion-${selectedSuggestion}`,
+  function render(): void {
+    list.replaceChildren();
+    list.hidden = visible.length === 0;
+    input.setAttribute(
+      "aria-expanded",
+      String(!list.hidden),
     );
+    for (const [index, suggestion] of visible.entries()) {
+      const option = document.createElement("div");
+      option.id = `${list.id}-${index}`;
+      option.setAttribute("role", "option");
+      option.setAttribute("aria-selected", String(index === selected));
+      option.textContent = suggestion.label;
+      option.addEventListener("pointerdown", (event) => event.preventDefault());
+      option.addEventListener("click", () => accept(index));
+      list.append(option);
+    }
+    if (list.hidden) {
+      input.removeAttribute("aria-activedescendant");
+    } else {
+      input.setAttribute("aria-activedescendant", `${list.id}-${selected}`);
+    }
   }
-}
 
-function refreshSuggestions(): void {
-  visibleSuggestions = suggestOptions(
-    optionsInput.value,
-    optionsInput.selectionStart,
-  );
-  selectedSuggestion = 0;
-  renderSuggestions();
-}
+  function refresh(): void {
+    visible = suggest(input.value, input.selectionStart);
+    selected = 0;
+    render();
+  }
 
-function acceptSuggestion(index: number): void {
-  const suggestion = visibleSuggestions[index];
-  if (!suggestion) return;
-  optionsInput.setRangeText(
-    suggestion.replacement,
-    suggestion.start,
-    suggestion.end,
-    "end",
-  );
-  optionsInput.setSelectionRange(suggestion.cursor, suggestion.cursor);
-  optionsInput.focus();
-  update();
-  refreshSuggestions();
+  function accept(index: number): void {
+    const suggestion = visible[index];
+    if (!suggestion) return;
+    input.setRangeText(
+      suggestion.replacement,
+      suggestion.start,
+      suggestion.end,
+      "end",
+    );
+    input.setSelectionRange(suggestion.cursor, suggestion.cursor);
+    input.focus();
+    update();
+    refresh();
+  }
+
+  input.addEventListener("input", refresh);
+  input.addEventListener("click", refresh);
+  input.addEventListener("focus", refresh);
+  input.addEventListener("blur", () => {
+    visible = [];
+    render();
+  });
+  input.addEventListener("keydown", (event) => {
+    if (!visible.length) return;
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      selected = (selected +
+        (event.key === "ArrowDown" ? 1 : visible.length - 1)) %
+        visible.length;
+      render();
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      accept(selected);
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      visible = [];
+      render();
+    }
+  });
 }
 
 const presets = listPresetMetadata();
@@ -285,30 +312,8 @@ source.addEventListener("input", () => {
 for (const field of [optionsInput, inventoryInput]) {
   field.addEventListener("input", update);
 }
-optionsInput.addEventListener("input", refreshSuggestions);
-optionsInput.addEventListener("click", refreshSuggestions);
-optionsInput.addEventListener("focus", refreshSuggestions);
-optionsInput.addEventListener("blur", () => {
-  visibleSuggestions = [];
-  renderSuggestions();
-});
-optionsInput.addEventListener("keydown", (event) => {
-  if (!visibleSuggestions.length) return;
-  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-    event.preventDefault();
-    selectedSuggestion = (selectedSuggestion +
-      (event.key === "ArrowDown" ? 1 : visibleSuggestions.length - 1)) %
-      visibleSuggestions.length;
-    renderSuggestions();
-  } else if (event.key === "Enter") {
-    event.preventDefault();
-    acceptSuggestion(selectedSuggestion);
-  } else if (event.key === "Escape") {
-    event.preventDefault();
-    visibleSuggestions = [];
-    renderSuggestions();
-  }
-});
+attachSuggestions(optionsInput, optionsSuggestions, suggestOptions);
+attachSuggestions(inventoryInput, inventorySuggestions, suggestInventory);
 strict.addEventListener("change", update);
 documentPanel.addEventListener("toggle", update);
 swapButton.addEventListener("click", () => {

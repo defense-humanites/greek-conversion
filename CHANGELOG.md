@@ -25,6 +25,8 @@ project follows [Semantic Versioning](https://semver.org/).
   matching the repository documentation.
 - The playground suggests conversion option names and values while editing
   JSON, with keyboard and pointer selection.
+- The custom character inventory editor suggests its nested fields, supported
+  formats, built-in letter identifiers, and registered custom identifiers.
 
 ### Fixed
 

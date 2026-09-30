@@ -85,8 +85,9 @@
         <details>
           <summary>Custom character inventory</summary>
           <div class="detail-body">
-            <label for="inventory">JSON configuration <span class="hint">Leave blank for built-in characters. Available fields: <code>aliases</code>, <code>characters</code>, <code>repertoire</code>, <code>exclude</code>.</span></label>
-            <textarea id="inventory" class="json-editor" spellcheck="false" placeholder='{"exclude":["stigma","koppa","sampi"]}'></textarea>
+            <label for="inventory">JSON configuration <span class="hint">Leave blank for built-in characters. Type <code>{</code> to explore <code>aliases</code>, <code>characters</code>, <code>repertoire</code>, and <code>exclude</code>; use ↑/↓ and Enter to choose a suggestion.</span></label>
+            <textarea id="inventory" class="json-editor" spellcheck="false" aria-autocomplete="list" aria-controls="inventory-suggestions" placeholder='{"exclude":["stigma","koppa","sampi"]}'></textarea>
+            <div id="inventory-suggestions" class="suggestions" role="listbox" aria-label="Available inventory fields and values" hidden></div>
             <a href="https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md">See examples ↗</a>
           </div>
         </details>
