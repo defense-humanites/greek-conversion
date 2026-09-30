@@ -27,9 +27,10 @@ throwing during contextual checks. An incomplete uppercase Beta Code prefix
 is preserved as literal input instead of disappearing. If an application
 depended on any of those earlier behaviors, review its output.
 
-The static [playground](https://defense-humanites.github.io/greek-conversion/)
+The separate [playground](https://defense-humanites.github.io/greek-conversion/)
 can be used to inspect presets, conversion losses, scope diagnostics, and
-canonical documents in a browser.
+canonical documents in a browser. Its site files are not part of either
+published package.
 
 ## Updating from `1.0.0-beta.7`
 

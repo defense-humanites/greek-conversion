@@ -9,9 +9,6 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- A static browser playground for the three formats, presets, conversion
-  options, character repertoires, and loss and scope diagnostics, built from
-  the repository code and prepared for GitHub Pages.
 - Documented ownership, mutation, copying, option reuse, and converter
   boundaries for the supported `./document` entry point, including the fact
   that document validation does not certify source syntax and that lossy
@@ -25,18 +22,9 @@ project follows [Semantic Versioning](https://semver.org/).
 
 - The audited `./document` entry point is now documented as a supported
   advanced API, with explicit ownership and validation boundaries.
-- The browser playground now presents its controls and diagnostics in English,
-  matching the repository documentation.
-- The playground suggests conversion option names and values while editing
-  JSON, with keyboard and pointer selection.
-- The custom character inventory editor suggests its nested fields, supported
-  formats, built-in letter identifiers, and registered custom identifiers.
 
 ### Fixed
 
-- The playground keeps the source's canonical document visible when a strict
-  converter rejects an out-of-scope character; its advanced JSON examples
-  are visible before entry, and editing the input clears a stale example choice.
 - The public `applyGreekOrthography()` helper now resolves preset options like
   `parse()` and `encode()` instead of silently ignoring them, and returns an
   independent document whose tokens and diacritic sets can be edited without
@@ -48,6 +36,16 @@ project follows [Semantic Versioning](https://semver.org/).
   instead of silently dropping them during parsing.
 - `validateDocument()` accepts a final-sigma source variant after a case policy
   changes the grapheme to uppercase; the variant remains source provenance.
+
+### Companion website (not included in JSR or npm)
+
+- Added a browser playground for the three formats, presets, conversion
+  options, character repertoires, and loss and scope diagnostics, hosted on
+  GitHub Pages and built from the current `main` branch.
+- Presented the controls and diagnostics in English, and added contextual JSON
+  suggestions for conversion options and custom character inventories.
+- Kept the canonical document visible after strict scope rejection and fixed
+  placeholder visibility and stale example selection.
 
 ## [1.0.0-beta.8] - 2026-09-26
 

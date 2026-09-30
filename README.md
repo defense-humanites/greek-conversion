@@ -9,24 +9,25 @@ discarded.
 ## Summary
 
 1. [Installation](#installation)
-2. [Quick start](#quick-start)
-3. [Choose the right API](#choose-the-right-api)
-4. [Use a preset](#use-a-preset)
+2. [Playground](#playground)
+3. [Quick start](#quick-start)
+4. [Choose the right API](#choose-the-right-api)
+5. [Use a preset](#use-a-preset)
    1. [Inspect effective defaults](#inspect-effective-defaults)
-5. [Common recipes](#common-recipes)
+6. [Common recipes](#common-recipes)
    1. [Produce monotonic Greek](#produce-monotonic-greek)
    2. [Remove all or selected diacritics](#remove-all-or-selected-diacritics)
    3. [Fold Greek letter variants](#fold-greek-letter-variants)
    4. [Normalize case and whitespace](#normalize-case-and-whitespace)
    5. [Select transliteration spellings](#select-transliteration-spellings)
    6. [Control Greek Unicode output](#control-greek-unicode-output)
-6. [Detect information loss](#detect-information-loss)
-7. [Extend or restrict the character inventory](#extend-or-restrict-the-character-inventory)
-8. [Guarantees and scope](#guarantees-and-scope)
-9. [Advanced API](#advanced-api)
-10. [Documentation](#documentation)
-11. [Development](#development)
-12. [License](#license)
+7. [Detect information loss](#detect-information-loss)
+8. [Extend or restrict the character inventory](#extend-or-restrict-the-character-inventory)
+9. [Guarantees and scope](#guarantees-and-scope)
+10. [Advanced API](#advanced-api)
+11. [Documentation](#documentation)
+12. [Development](#development)
+13. [License](#license)
 
 ## Installation
 
@@ -48,6 +49,15 @@ import {
 ```
 
 The same package name and named exports are available from npm.
+
+## Playground
+
+The [interactive playground](https://defense-humanites.github.io/greek-conversion/)
+is a separate website hosted on GitHub Pages. Its site files are not included
+in the JSR or npm package, and it needs no installation. Use it to compare
+formats, presets, information-loss diagnostics, and character repertoires in
+the browser. The site is built from the current `main` branch, so it may be
+newer than the latest published package.
 
 ## Quick start
 
@@ -73,11 +83,6 @@ betaCodeToGreek("a)/nqrwpos"); // ἄνθρωπος
 
 The supported format names are `"greek"`, `"beta-code"`, and
 `"transliteration"`.
-
-Try the [interactive playground](https://defense-humanites.github.io/greek-conversion/)
-to compare formats, presets, information-loss diagnostics, and character
-repertoires in the browser. It uses the library code from the current `main`
-branch, which can be newer than the latest published package.
 
 ### Beta Code spelling
 
