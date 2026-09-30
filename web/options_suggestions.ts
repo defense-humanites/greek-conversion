@@ -145,7 +145,9 @@ export function suggestOptions(value: string, caret: number): Suggestion[] {
   const prefix = value.slice(start + (quotedStart >= 0 ? 1 : 0), caret);
   let end = caret;
   if (quotedStart >= 0) {
-    while (end < value.length && value[end] !== '"' && value[end] !== "\n") {
+    while (
+      end < value.length && !['"', "\n", "}", ",", "]"].includes(value[end])
+    ) {
       end++;
     }
     if (value[end] === '"') end++;
@@ -169,14 +171,17 @@ export function suggestOptions(value: string, caret: number): Suggestion[] {
     const suffix = value.slice(end).trimStart();
     const alreadyHasColon = isKey && suffix.startsWith(":");
     const objectKey = isKey && frame.path === "" && name !== "removeDiacritics";
-    const replacement = isKey
+    const closeRoot = isKey && frame.path === "" &&
+      value.slice(0, start).trim() === "{" && !suffix;
+    const completion = isKey
       ? `"${name}"${alreadyHasColon ? "" : objectKey ? ": {}" : ": "}`
       : frame.path !== ""
       ? `"${name}"`
       : name;
+    const replacement = completion + (closeRoot ? "}" : "");
     const cursor = objectKey && !alreadyHasColon
-      ? start + replacement.length - 1
-      : start + replacement.length;
+      ? start + completion.length - 1
+      : start + completion.length;
     return { label: name, replacement, start, end, cursor };
   });
 }
