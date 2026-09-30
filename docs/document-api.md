@@ -3,7 +3,8 @@
 The `@humanities/greek-conversion/document` entry point is for applications
 that need to inspect, validate, or transform one parsed Greek representation.
 The ordinary conversion functions remain the simpler interface for converting
-strings. This entry point is under review during the `1.0.0` beta series.
+strings. This is a supported advanced entry point with the ownership and
+validation boundaries described below.
 
 ## Model and ownership
 

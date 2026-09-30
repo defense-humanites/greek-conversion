@@ -35,8 +35,9 @@ Both registries use the same package name and version:
    license, README, migration guide, and documentation directory.
 4. Merge the exact release commit and wait for CI to succeed.
 5. Create a draft GitHub release whose tag exactly matches the version with
-   a `v` prefix, for example `v1.0.0-beta.8`. Keep GitHub's prerelease flag
-   unchecked while the beta series is featured as the current release.
+   a `v` prefix, for example `v1.0.0-beta.9`. Publish the beta as a GitHub
+   release (without its prerelease flag), as intended for this series. The npm
+   dist-tag remains `beta`.
 6. Confirm both trusted-publisher configurations and explicitly set
    `PUBLISH_ENABLED` to `true` only when publication is authorized.
 7. Publish the GitHub release. The workflow publishes JSR first and npm second;

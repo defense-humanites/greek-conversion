@@ -1,8 +1,8 @@
 /**
  * Advanced access to the canonical document used by the conversion engine.
  *
- * This entry point is experimental during the `1.0.0` prerelease series. It is
- * intended for validation, custom analysis, and controlled transformations.
+ * This supported advanced entry point is intended for validation, custom
+ * analysis, and controlled transformations.
  * Ordinary conversions should use the package's main entry point instead.
  *
  * A document may be constructed manually, but {@link validateDocument} should

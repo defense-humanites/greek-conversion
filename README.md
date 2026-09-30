@@ -30,10 +30,10 @@ discarded.
 
 ## Installation
 
-The `1.0.0-beta.8` release is ESM-only and targets JSR and npm:
+The `1.0.0-beta.9` release is ESM-only and targets JSR and npm:
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0-beta.8
+deno add jsr:@humanities/greek-conversion@1.0.0-beta.9
 npm install @humanities/greek-conversion@beta
 ```
 
@@ -445,7 +445,7 @@ by the engine today.
 
 ## Advanced API
 
-Applications can work directly with the experimental canonical representation:
+Applications can work directly with the canonical document representation:
 
 ```ts
 import {
@@ -462,8 +462,8 @@ const output = encode(document, "greek");
 Validation deliberately remains a separate diagnostic step instead of changing
 the contract of `convert()`. It checks the interpreted document, not the syntax
 of the original string; malformed source sequences can survive as literals.
-The `./document` entry point may still evolve during the `1.0.0` prerelease
-series. See the [document API contract](https://github.com/defense-humanites/greek-conversion/blob/main/docs/document-api.md)
+The `./document` entry point is supported for advanced use, with an explicit
+ownership and validation contract. See the [document API contract](https://github.com/defense-humanites/greek-conversion/blob/main/docs/document-api.md)
 for ownership, transformations, and options, and [validation](https://github.com/defense-humanites/greek-conversion/blob/main/docs/validation.md)
 for the validation boundary.
 

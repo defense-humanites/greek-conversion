@@ -5,13 +5,15 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.0-beta.9] - 2026-09-30
+
 ### Added
 
 - A static browser playground for the three formats, presets, conversion
   options, character repertoires, and loss and scope diagnostics, built from
   the repository code and prepared for GitHub Pages.
 - Documented ownership, mutation, copying, option reuse, and converter
-  boundaries for the experimental `./document` entry point, including the fact
+  boundaries for the supported `./document` entry point, including the fact
   that document validation does not certify source syntax and that lossy
   orthographic views must not replace the reusable parsed source.
 - The npm package check now type-checks a separate consumer of the packed
@@ -21,6 +23,8 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The audited `./document` entry point is now documented as a supported
+  advanced API, with explicit ownership and validation boundaries.
 - The browser playground now presents its controls and diagnostics in English,
   matching the repository documentation.
 - The playground suggests conversion option names and values while editing
@@ -264,7 +268,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.8...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.9...HEAD
+[1.0.0-beta.9]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.8...v1.0.0-beta.9
 [1.0.0-beta.8]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.7...v1.0.0-beta.8
 [1.0.0-beta.7]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.6...v1.0.0-beta.7
 [1.0.0-beta.6]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.5...v1.0.0-beta.6

@@ -8,11 +8,28 @@ aliases for the `0.14.x` API.
 The prerelease is available from JSR and npm after publication:
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0-beta.8
+deno add jsr:@humanities/greek-conversion@1.0.0-beta.9
 npm install @humanities/greek-conversion@beta
 ```
 
 The package is ESM-only.
+
+## Updating from `1.0.0-beta.8`
+
+No API rename is required. The `./document` entry point now has a documented
+supported contract for ownership, validation, and option reuse. Keep the
+original parsed document when deriving a lossy orthographic view, and copy
+nested diacritic sets when making independent edits.
+
+`applyGreekOrthography()` now honors preset options and returns detached tokens.
+`validateDocument()` reports malformed manually modified tokens rather than
+throwing during contextual checks. An incomplete uppercase Beta Code prefix
+is preserved as literal input instead of disappearing. If an application
+depended on any of those earlier behaviors, review its output.
+
+The static [playground](https://defense-humanites.github.io/greek-conversion/)
+can be used to inspect presets, conversion losses, scope diagnostics, and
+canonical documents in a browser.
 
 ## Updating from `1.0.0-beta.7`
 
@@ -56,7 +73,7 @@ conversion. See the [behavior audit](docs/preset-behavior-audit.md).
 
 The optional `GreekText` facade has been removed. Use `convert()` or
 `convertDetailed()` for ordinary calls. To reuse one analysis across several
-representations, use `parse()` and `encode()` from the experimental
+representations, use `parse()` and `encode()` from the advanced
 `@humanities/greek-conversion/document` entry point, as shown under
 [reusable parsed documents](#reusable-parsed-documents).
 
@@ -152,7 +169,7 @@ const transliteration = encode(document, "transliteration", options);
 ## Canonical-document API
 
 Advanced parsing, validation, transformation, and encoding are isolated in the
-experimental `./document` entry point:
+supported `./document` entry point:
 
 ```ts
 import {
@@ -162,7 +179,8 @@ import {
 } from "@humanities/greek-conversion/document";
 ```
 
-The representation may still change during the `1.0.0` prerelease series.
+Its ownership, validation, and option boundaries are documented in
+[docs/document-api.md](docs/document-api.md).
 
 ## Behavioral differences
 
