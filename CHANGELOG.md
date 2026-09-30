@@ -5,6 +5,12 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-30
+
+The first stable release of the rewritten library. There are no API or
+conversion behavior changes from `1.0.0-beta.9`; see the beta changelog and
+[migration guide](MIGRATION.md) for the changes from `0.14.x`.
+
 ## [1.0.0-beta.9] - 2026-09-30
 
 ### Added
@@ -266,7 +272,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.9...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.9...v1.0.0
 [1.0.0-beta.9]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.8...v1.0.0-beta.9
 [1.0.0-beta.8]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.7...v1.0.0-beta.8
 [1.0.0-beta.7]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.6...v1.0.0-beta.7

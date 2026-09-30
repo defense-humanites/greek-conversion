@@ -1,18 +1,25 @@
 # Migrating from 0.14.x
 
-The `1.0.0` prerelease series is a rewrite. It does not provide compatibility
-aliases for the `0.14.x` API.
+The `1.0.0` release is a rewrite. It does not provide compatibility aliases
+for the `0.14.x` API.
 
 ## Installation
 
-The prerelease is available from JSR and npm after publication:
+The stable release is available from JSR and npm after publication:
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0-beta.9
-npm install @humanities/greek-conversion@beta
+deno add jsr:@humanities/greek-conversion@1.0.0
+npm install @humanities/greek-conversion@1.0.0
 ```
 
 The package is ESM-only.
+
+## Updating from `1.0.0-beta.9`
+
+The first stable release has no API or conversion behavior changes from
+`beta.9`. Update the dependency version; the npm release uses the `latest`
+distribution tag. The published preset scopes and the documented limits of
+the advanced `./document` API still apply.
 
 ## Updating from `1.0.0-beta.8`
 
@@ -115,12 +122,12 @@ Replace the `KeyType` runtime enum with literal format names:
 // 0.14.x
 toTransliteration(input, KeyType.GREEK);
 
-// 1.0 prerelease
+// 1.0
 convert(input, "greek", "transliteration");
 // or greekToTransliteration(input)
 ```
 
-| 0.14.x | 1.0 prerelease |
+| 0.14.x | 1.0 |
 | --- | --- |
 | `KeyType.GREEK` | `"greek"` |
 | `KeyType.BETA_CODE` | `"beta-code"` |
@@ -142,7 +149,7 @@ toTransliteration(input, KeyType.GREEK, [
   { removeDiacritics: false },
 ]);
 
-// 1.0 prerelease
+// 1.0
 convert(input, "greek", "transliteration", {
   preset: "ala-lc-ancient",
   removeDiacritics: false,

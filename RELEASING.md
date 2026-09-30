@@ -25,7 +25,7 @@ Both registries use the same package name and version:
 | JSR | `@humanities/greek-conversion` |
 | npm | `@humanities/greek-conversion` |
 
-## Prerelease checklist
+## Release checklist
 
 1. Update the version in `deno.json` and replace `Unreleased` in
    `CHANGELOG.md` with the release date.
@@ -35,14 +35,13 @@ Both registries use the same package name and version:
    license, README, migration guide, and documentation directory.
 4. Merge the exact release commit and wait for CI to succeed.
 5. Create a draft GitHub release whose tag exactly matches the version with
-   a `v` prefix, for example `v1.0.0-beta.9`. Publish the beta as a GitHub
-   release (without its prerelease flag), as intended for this series. The npm
-   dist-tag remains `beta`.
+   a `v` prefix, for example `v1.0.0`. Publish it as a GitHub release. The npm
+   dist-tag is `latest` for a stable version and `beta` for a beta. Earlier
+   betas were intentionally published without GitHub's prerelease flag.
 6. Confirm both trusted-publisher configurations and explicitly set
    `PUBLISH_ENABLED` to `true` only when publication is authorized.
 7. Publish the GitHub release. The workflow publishes JSR first and npm second;
-   npm prereleases use the `beta` distribution tag and the scoped package is
-   explicitly published with public access.
+   the scoped npm package is explicitly published with public access.
 8. Verify both registry pages, provenance, documentation, and installation
    commands, then reset `PUBLISH_ENABLED` to `false` if releases should require
    a fresh manual authorization.
@@ -56,4 +55,4 @@ release. JSR will recognize the already-published version, while npm can finish
 the coordinated release.
 
 Do not reuse a version after either registry has accepted it. If package
-contents must change, prepare the next prerelease version instead.
+contents must change, prepare a new version instead.

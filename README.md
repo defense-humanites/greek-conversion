@@ -31,11 +31,11 @@ discarded.
 
 ## Installation
 
-The `1.0.0-beta.9` release is ESM-only and targets JSR and npm:
+The `1.0.0` release is ESM-only and targets JSR and npm:
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0-beta.9
-npm install @humanities/greek-conversion@beta
+deno add jsr:@humanities/greek-conversion@1.0.0
+npm install @humanities/greek-conversion@1.0.0
 ```
 
 Import the public module from JSR:
