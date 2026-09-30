@@ -133,7 +133,7 @@ export function suggestInventory(value: string, caret: number): Suggestion[] {
     : path === "aliases[]" && frame.key === "format"
     ? formats
     : path === "aliases[]" &&
-        (frame.key === "uppercase" || frame.key === "override") ||
+          (frame.key === "uppercase" || frame.key === "override") ||
         path === "characters[]" && frame.key === "override"
     ? ["false", "true"]
     : [];
@@ -161,7 +161,9 @@ export function suggestInventory(value: string, caret: number): Suggestion[] {
       ? `"${name}"${
         alreadyHasColon ? "" : opensArray ? ": []" : opensObject ? ": {}" : ": "
       }`
-      : name === "true" || name === "false" ? name : `"${name}"`;
+      : name === "true" || name === "false"
+      ? name
+      : `"${name}"`;
     const replacement = completion + (closeRoot ? "}" : "");
     const cursor = isKey && !alreadyHasColon && (opensArray || opensObject)
       ? start + completion.length - 1
