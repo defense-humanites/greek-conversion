@@ -1,4 +1,4 @@
-import type { Document, Grapheme, Letter, Token } from "./model.ts";
+import type { Diacritic, Document, Grapheme, Letter, Token } from "./model.ts";
 import { APOSTROPHE } from "./punctuation.ts";
 
 const NASAL_GAMMA_FOLLOWERS = new Set<Letter>([
@@ -102,6 +102,28 @@ export function isGreekNumeralContext(
   return false;
 }
 
+/** Marks that, on the first vowel of a pair, signal that it is not a diphthong. */
+const HIATUS_MARKS: readonly Diacritic[] = [
+  "smooth",
+  "rough",
+  "acute",
+  "grave",
+  "circumflex",
+];
+
+/**
+ * Whether a vowel carries a mark that excludes a following diphthong.
+ *
+ * A breathing or accent written on the first of two vowels that could form a
+ * diphthong is the orthographic signal of hiatus or of an iota adscript
+ * (`Ἅιδης`, `Ἀίδης`, `ἀίδηλος`, `ἄυλος`); a diphthong carries its marks on
+ * the second element. The engine therefore trusts that placement instead of
+ * treating it as a misplaced mark.
+ */
+export function hasHiatusMark(token: Grapheme): boolean {
+  return HIATUS_MARKS.some((mark) => token.diacritics.has(mark));
+}
+
 export function isDiphthongAt(document: Document, start: number): boolean {
   const first = document[start];
   const second = document[start + 1];
@@ -110,6 +132,7 @@ export function isDiphthongAt(document: Document, start: number): boolean {
     second?.kind === "grapheme" &&
     DIPHTHONGS.has(`${first.letter}-${second.letter}`) &&
     !first.diacritics.has("iota-subscript") &&
+    !hasHiatusMark(first) &&
     !second.diacritics.has("diaeresis");
 }
 
@@ -124,37 +147,6 @@ export function isAuEuOuAt(document: Document, start: number): boolean {
 
 export function breathingTarget(document: Document, start: number): number {
   return isDiphthongAt(document, start) ? start + 1 : start;
-}
-
-/** Moves an initial breathing supplied on the first half of a diphthong. */
-export function normalizeInitialDiphthongBreathings(tokens: Token[]): void {
-  for (let start = 0; start < tokens.length; start++) {
-    const first = tokens[start];
-    if (
-      first.kind !== "grapheme" ||
-      !isWordInitial(tokens, start) ||
-      !isVowel(first.letter)
-    ) {
-      continue;
-    }
-
-    const targetIndex = breathingTarget(tokens, start);
-    if (targetIndex === start) continue;
-
-    const target = tokens[targetIndex];
-    if (target.kind !== "grapheme") continue;
-
-    for (const breathing of ["smooth", "rough"] as const) {
-      if (
-        first.diacritics.has(breathing) &&
-        !target.diacritics.has("smooth") &&
-        !target.diacritics.has("rough")
-      ) {
-        first.diacritics.delete(breathing);
-        target.diacritics.add(breathing);
-      }
-    }
-  }
 }
 
 export function initialBreathingStart(

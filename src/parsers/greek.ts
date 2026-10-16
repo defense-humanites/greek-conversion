@@ -1,8 +1,5 @@
 import { BY_GREEK, GREEK_MARKS } from "../alphabet.ts";
-import {
-  classifyCoronides,
-  normalizeInitialDiphthongBreathings,
-} from "../context.ts";
+import { classifyCoronides } from "../context.ts";
 import {
   type Diacritic,
   type Document,
@@ -52,7 +49,6 @@ export function parseGreek(input: string): Document {
     ));
   }
 
-  normalizeInitialDiphthongBreathings(out);
   classifyCoronides(out);
 
   return out;

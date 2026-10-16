@@ -1,4 +1,3 @@
-import { normalizeInitialDiphthongBreathings } from "./context.ts";
 import type { Diacritic, Document, Format, Token } from "./model.ts";
 import type { ConversionOptions, DiacriticDisposition } from "./options.ts";
 
@@ -96,6 +95,5 @@ export function prepareDiacriticsForRendering(
     }
   );
 
-  normalizeInitialDiphthongBreathings(rendered);
   return rendered;
 }

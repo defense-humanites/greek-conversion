@@ -167,7 +167,10 @@ export function parseTransliteration(
       source.toLowerCase() === "y"
     ) {
       const candidate = grapheme(letter, false, marks);
-      const document = [...out, candidate];
+      const document = withoutLatinBreathing(
+        [...out, candidate],
+        out.length - 1,
+      );
       const wouldRenderU = options.orthography.upsilon === "y-with-au-eu-ou"
         ? isAuEuOuAt(document, out.length - 1)
         : isDiphthongAt(document, out.length - 1);
@@ -182,7 +185,11 @@ export function parseTransliteration(
       contextualY.has(out.length - 1)
     ) {
       const candidate = grapheme(letter, false, marks);
-      if (isDiphthongAt([...out, candidate], out.length - 1)) {
+      const document = withoutLatinBreathing(
+        [...out, candidate],
+        out.length - 1,
+      );
+      if (isDiphthongAt(document, out.length - 1)) {
         marks.add("diaeresis");
       }
     }
@@ -349,7 +356,7 @@ function inferInitialBreathings(tokens: Token[], options: ConversionOptions) {
 
     if (!isVowel(token.letter) || isGreekNumeralContext(tokens, i)) continue;
 
-    const target = tokens[breathingTarget(tokens, i)];
+    const target = tokens[breathingTarget(withoutLatinBreathing(tokens, i), i)];
     if (target.kind !== "grapheme") continue;
 
     if (token.diacritics.has("rough") && target !== token) {
@@ -365,4 +372,31 @@ function inferInitialBreathings(tokens: Token[], options: ConversionOptions) {
       target.diacritics.add("smooth");
     }
   }
+}
+
+/**
+ * Returns a view of the document without the breathing provisionally attached
+ * to the vowel at `index`.
+ *
+ * A Latin `h` precedes the whole vowel group, so the rough breathing it places
+ * on the first vowel is not the hiatus signal that a breathing written on the
+ * first Greek vowel would be. Accents stay: they are attached to one Latin
+ * vowel and keep their hiatus meaning.
+ */
+function withoutLatinBreathing(
+  document: readonly Token[],
+  index: number,
+): Token[] {
+  const token = document[index];
+  if (token?.kind !== "grapheme" || !token.diacritics.has("rough")) {
+    return [...document];
+  }
+  const view = [...document];
+  view[index] = {
+    ...token,
+    diacritics: new Set(
+      [...token.diacritics].filter((mark) => mark !== "rough"),
+    ),
+  };
+  return view;
 }

@@ -38,7 +38,7 @@ Deno.test("exposes descriptive metadata for every preset", () => {
     }],
     limitations: [
       "Missing rough breathings are not inferred from lexical knowledge or capitalization.",
-      "Iota adscript cannot be distinguished mechanically from an ordinary iota.",
+      "An iota adscript written after a marked capital (Ἅιδῃ) is kept as a letter rather than omitted as the table prescribes.",
       "Omitted diaeresis is recoverable only in the deterministic contextual y/u cases implemented by the parser.",
       "Stigma, modern koppa, and sampi are documented only as marked numerals; their unmarked engine defaults are outside the ALA-LC table.",
       "Yot is not part of the cited ALA-LC inventory.",
@@ -176,11 +176,11 @@ Deno.test("ISO and BnF restrict upsilon-u to au, eu, and ou", () => {
     convert(greek, "greek", "transliteration", {
       preset: "iso-843-type-1",
     }),
-    "y au eu ou īy yi ōy aÿ áu",
+    "y au eu ou īy yi ōy aÿ áy",
   );
   assertNfcEquals(
     convert(greek, "greek", "transliteration", { preset: "bnf-core" }),
-    "y au eu ou ēy yi ōy aÿ áu",
+    "y au eu ou ēy yi ōy aÿ áy",
   );
   for (const preset of ["iso-843-type-1", "bnf-core"] as const) {
     assertNfcEquals(
@@ -337,13 +337,13 @@ Deno.test("applies modern ALA-LC contextual spellings", () => {
 
 Deno.test("distinguishes academic and general SBL diacritics", () => {
   assertNfcEquals(
-    convert("ἄϋλος ὑιός", "greek", "transliteration", {
+    convert("ἄϋλος υἱός", "greek", "transliteration", {
       preset: "sbl-academic",
     }),
     "áÿlos huiós",
   );
   assertNfcEquals(
-    convert("ἄϋλος ὑιός", "greek", "transliteration", {
+    convert("ἄϋλος υἱός", "greek", "transliteration", {
       preset: "sbl-general",
     }),
     "aÿlos huios",

@@ -23,7 +23,7 @@ marks or replaces alphabetic numerals with decimal numbers.
 | Source rule or example | Why the preset cannot determine it from the input alone |
 | --- | --- |
 | Ancient table, all-capitals examples such as `ΗΣΙΟΔΟΥ …` → `Hēsiodou …` | Greek capitals do not mark the missing rough breathing, and title-style Latin case requires editorial choices. A mechanical `letterCase` override does not infer either from the text. |
-| Ancient example `κεῖται παρ’ Ἅιδῃ` → `keitai par’ Hadē` | The table treats the written iota in `Ἅιδῃ` as an adscript that is omitted, whereas the engine cannot distinguish it from an ordinary iota by Unicode spelling alone; the preset produces `Haidē`. |
+| Ancient example `κεῖται παρ’ Ἅιδῃ` → `keitai par’ Hadē` | The table omits the iota adscript of `Ἅιδῃ`. The engine recognizes the marks on the capital as excluding a diphthong and keeps the iota as a letter; the preset produces `Haidē`. |
 | Modern table, missing rough breathing in monotonic or all-capitals text | Supplying `h` where historically appropriate requires language knowledge and sometimes evidence from the item. The preset uses only explicitly marked breathings. |
 | Modern table, polytonic versus monotonic identification | The source asks cataloguers to inspect the item or use a publication-date fallback when orthography is unclear. A source string alone cannot supply that bibliographic context. |
 

@@ -111,7 +111,7 @@ Romanization profile for Ancient and Medieval Greek before 1454.
 **Known limitations:**
 
 - Missing rough breathings are not inferred from lexical knowledge or capitalization.
-- Iota adscript cannot be distinguished mechanically from an ordinary iota.
+- An iota adscript written after a marked capital (Ἅιδῃ) is kept as a letter rather than omitted as the table prescribes.
 - Omitted diaeresis is recoverable only in the deterministic contextual y/u cases implemented by the parser.
 - Stigma, modern koppa, and sampi are documented only as marked numerals; their unmarked engine defaults are outside the ALA-LC table.
 - Yot is not part of the cited ALA-LC inventory.
@@ -154,7 +154,7 @@ Romanization profile for Modern Greek after 1453.
 **Known limitations:**
 
 - Missing rough breathings are not inferred from lexical knowledge or capitalization.
-- Iota adscript cannot be distinguished mechanically from an ordinary iota.
+- An iota adscript written after a marked capital (Ἅιδῃ) is kept as a letter rather than omitted as the table prescribes.
 - Only the documented contextual mu-pi, nu-tau, and gamma-kappa rules are implemented.
 - Digamma, stigma, both koppa forms, and sampi are documented only as marked numerals; their unmarked engine defaults are outside the ALA-LC table.
 - Yot is not part of the cited ALA-LC inventory.
@@ -199,7 +199,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
 - BnF keraiai are rendered as a comma and acute in transliteration, but reverse conversion cannot always distinguish the resulting accent from a letter accent.
 - Upper Cypriot syndyazomeno shares U+0306 with the ordinary breve and cannot be distinguished mechanically; lower syndyazomeno is not interpreted as a semantic mark.
 - The Iliad/Odyssey numeral exception is not selected without the relevant cataloguing context.
-- Iota adscript cannot be distinguished mechanically from an ordinary iota.
+- An iota adscript written after a marked capital (Ἅιδῃ) is kept as a letter rather than omitted as the table prescribes.
 - The BnF circumflex and smooth breathing marks and omission of explicit quantity marks apply only to transliteration; missing breathings are never inferred from Greek source text.
 - Both documented koppa forms collapse to q in BnF transliteration and therefore cannot be distinguished on reverse conversion.
 

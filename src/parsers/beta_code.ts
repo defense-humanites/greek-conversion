@@ -3,7 +3,6 @@ import {
   ARISTERI_KERAIA,
   classifyCoronides,
   DEXIA_KERAIA,
-  normalizeInitialDiphthongBreathings,
 } from "../context.ts";
 import {
   type Diacritic,
@@ -81,7 +80,6 @@ export function parseBetaCode(input: string): Document {
     out.push(grapheme(letter, upper, marks));
   }
 
-  normalizeInitialDiphthongBreathings(out);
   classifyCoronides(out);
 
   return out;

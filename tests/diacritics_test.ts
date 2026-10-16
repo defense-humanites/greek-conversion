@@ -186,19 +186,21 @@ Deno.test("removes coronis regardless of its output policy", () => {
   );
 });
 
-Deno.test("selective removal exposes diphthongs canonically on first render", () => {
+Deno.test("selective removal keeps hiatus marks on the first vowel", () => {
+  // Removing a diaeresis or an iota subscript does not turn the pair into a
+  // diphthong while the first vowel still carries a breathing or accent.
   const cases = [
     {
       source: "ἄϋλος",
       options: { diacritics: { diaeresis: "remove" } },
-      greek: "άὐλος",
-      beta: "a/u)los",
+      greek: "ἄυλος",
+      beta: "a)/ulos",
     },
     {
       source: "ᾄυ",
       options: { diacritics: { iotaSubscript: "remove" } },
-      greek: "άὐ",
-      beta: "a/u)",
+      greek: "ἄυ",
+      beta: "a)/u",
     },
   ] as const;
 

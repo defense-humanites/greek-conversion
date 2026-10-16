@@ -5,6 +5,18 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- A breathing or accent written on the first vowel of a pair that could form
+  a diphthong is now read as the hiatus or iota-adscript signal it is
+  (`Ἅιδῃ`, `Ἀίδης`, `ἀίδηλος`, `ἄυλος`), instead of being moved onto the second
+  vowel. Previously `Ἅιδῃ` became the invalid `Άἱδῃ` and the change was not
+  reported as a loss. Greek and Beta Code conversions now preserve these forms;
+  transliteration keeps a first-vowel accent, and `convertDetailed()` reports
+  the loss when a hiatus is marked only by a breathing.
+- Removing a diaeresis or an iota subscript no longer turns `ἄϋλος` or `ᾄυ`
+  into a diphthong while the first vowel still carries its marks.
+
 ## [1.0.0] - 2026-09-30
 
 The first stable release of the rewritten library. There are no API or
