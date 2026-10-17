@@ -18,7 +18,7 @@ export function diacriticDisposition(
   if (
     format === "transliteration" &&
     (diacritic === "macron" || diacritic === "breve") &&
-    options.orthography?.quantityTransliteration === "omit"
+    options.orthography?.quantity === "omit"
   ) return "remove";
 
   const policy = options.diacritics;

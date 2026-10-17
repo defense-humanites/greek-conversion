@@ -28,6 +28,19 @@ change.
 
 ### Changed
 
+- Option identifiers follow one naming rule: `diacritics.X` asks whether a
+  mark class is kept, `orthography.X` how X is written in the target format,
+  `unicode.X` which scalar represents it; and every accepted value is ASCII.
+  Accordingly `orthography.quantityTransliteration` is now
+  `orthography.quantity`, `orthography.yotBetaCode` is `orthography.betaCodeYot`,
+  and `orthography.eta` takes `"e-macron"` or `"i-macron"` instead of `"ē"`
+  or `"ī"`. The value types `TransliterationHyphen`, `CoronisOrthography`,
+  `UpsilonOrthography`, `LongVowelOrthography`, `NasalGammaOrthography`,
+  `ModernDigraphOrthography`, and `YotBetaCode` are renamed
+  `HyphenTransliteration`, `CoronisTransliteration`, `UpsilonTransliteration`,
+  `LongVowelTransliteration`, `NasalGammaTransliteration`,
+  `ModernDigraphTransliteration`, and `BetaCodeYot`, so that the suffix names
+  the format a policy applies to. See the migration guide.
 - Conversion options are validated strictly. An unknown option key, an
   unknown option value, or an option of the wrong type now throws
   (`RangeError` for unknown identifiers and values, `TypeError` for wrong

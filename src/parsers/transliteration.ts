@@ -223,7 +223,7 @@ function prioritizeEtaMacron(
   input: string[],
   options: ConversionOptions,
 ): string[] {
-  if (options.orthography?.eta !== "ī") return input;
+  if (options.orthography?.eta !== "i-macron") return input;
 
   const chars = [...input];
   for (let start = 0; start < chars.length; start++) {
@@ -247,7 +247,7 @@ function transliterationTrie(options: ConversionOptions): Trie<Letter> {
   const orthography = options.orthography;
 
   if (orthography?.beta === "v") variants.push(["v", "beta"]);
-  if (orthography?.eta === "ī") variants.push(["i\u0304", "eta"]);
+  if (orthography?.eta === "i-macron") variants.push(["i\u0304", "eta"]);
   if (orthography?.xi === "ks") variants.push(["ks", "xi"]);
   if (orthography?.phi === "f") variants.push(["f", "phi"]);
   if (orthography?.chi === "kh") variants.push(["kh", "chi"]);

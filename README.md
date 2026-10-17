@@ -101,7 +101,7 @@ Canonical output follows the
 without changing the represented Greek letter case. The default and Perseus
 preset use lowercase ASCII; `tlg-core` uses uppercase ASCII.
 
-The engine-default yot spelling is `j`. Set `orthography.yotBetaCode` to
+The engine-default yot spelling is `j`. Set `orthography.betaCodeYot` to
 `"#401"`, or use `tlg-core`, for the TLG character code.
 
 ## Choose the right API
@@ -213,6 +213,13 @@ resolveConversionOptions({ preset: "sbl-general" });
 contains every effective field after applying defaults, a preset, and custom
 overrides.
 
+The three option groups answer three questions, which is why a name such as
+`coronis` appears in two of them: `diacritics.X` asks whether the mark class X
+is kept (`"preserve"` or `"remove"`), `orthography.X` asks how X is written in
+the target format (`"omit"` means not written there, `"greek"` the Greek
+scalar, or a Latin spelling such as `"ph"`), and `unicode.X` selects a Unicode
+scalar for Greek output. Every accepted value is plain ASCII.
+
 Options are validated strictly: an unknown key, an unknown value, or a value
 of the wrong type throws a `RangeError` or `TypeError` rather than silently
 falling back to a default. `CONVERSION_OPTION_VALUES` lists every accepted
@@ -221,7 +228,7 @@ value, and `FORMATS` the supported format identifiers:
 ```ts
 import { CONVERSION_OPTION_VALUES, FORMATS } from "@humanities/greek-conversion";
 
-CONVERSION_OPTION_VALUES.orthography.eta; // ["ē", "ī"]
+CONVERSION_OPTION_VALUES.orthography.eta; // ["e-macron", "i-macron"]
 FORMATS; // ["greek", "beta-code", "transliteration"]
 ```
 
@@ -322,7 +329,7 @@ and replaces each Unicode whitespace run with one ASCII space.
 convert("βηξφχυ", "greek", "transliteration", {
   orthography: {
     beta: "v",
-    eta: "ī",
+    eta: "i-macron",
     xi: "ks",
     phi: "f",
     chi: "kh",

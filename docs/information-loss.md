@@ -131,7 +131,7 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `diacritics.<class>: "remove"` | Removes only the selected semantic class during rendering | No when that class occurs; unselected classes remain recoverable |
 | `letterCase: "lowercase"`, `"uppercase"`, or `"title"` | Applies deterministic case to recognized Greek graphemes | No when source case changes; unknown literals are untouched |
 | `betaCodeCase: "lowercase"` or `"uppercase"` | Selects the insignificant ASCII case of Beta Code letters without changing `*` markers | Yes; the canonical graphemes are unchanged |
-| `yotBetaCode: "#401"` | Uses the TLG character code instead of `j` for yot | Yes; both spellings parse as yot |
+| `betaCodeYot: "#401"` | Uses the TLG character code instead of `j` for yot | Yes; both spellings parse as yot |
 | `archaicKoppa: "q"` | Uses the same transliteration for both koppa forms | No; `q` parses as modern koppa |
 | `finalSigma: "medial"` | Uses `σ` instead of contextual `ς` in lowercase Greek output | Yes; both are the same canonical sigma letter |
 | `sigma: "standard"` (default) | Replaces a provenanced lunate sigma with the standard Greek or Beta Code glyph | No; `convertDetailed()` reports `removed-glyph-variant` |
@@ -152,7 +152,7 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | The accent is recoverable; its scalar preference is not |
 | Greek question-mark or ano-teleia scalar | Selects a canonically unstable punctuation scalar | The punctuation meaning is recoverable; its scalar preference is not |
-| `doubleRho`, `medialBeta`, `finalSigma`, letter variants, `upsilon`, `longVowels` | Selects a canonical output spelling | The canonical letters normally remain recoverable, but `eta: "ī"` conflicts with long iota |
+| `doubleRho`, `medialBeta`, `finalSigma`, letter variants, `upsilon`, `longVowels` | Selects a canonical output spelling | The canonical letters normally remain recoverable, but `eta: "i-macron"` conflicts with long iota |
 
 `longVowels` chooses either a macron or a circumflex for structural eta and
 omega length. A separately encoded macron remains a philological diacritic: it

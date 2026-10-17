@@ -83,7 +83,7 @@ Deno.test("rejects invalid option values instead of applying defaults", () => {
         }),
       RangeError,
     ).message,
-    'Invalid value for orthography.eta: "e"; expected one of "ē", "ī".',
+    'Invalid value for orthography.eta: "e"; expected one of "e-macron", "i-macron".',
   );
   assertThrows(
     () =>
@@ -145,6 +145,12 @@ Deno.test("the option value table matches the defaults", () => {
       );
     }
     assertEquals(Object.isFrozen(table), true);
+    for (const values of Object.values(table)) {
+      for (const value of values) {
+        // Every value must be typeable on any keyboard.
+        assertEquals(/^[\x20-\x7E]+$/.test(value), true, value);
+      }
+    }
   }
   assertEquals(Object.isFrozen(CONVERSION_OPTION_VALUES), true);
 });

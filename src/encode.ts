@@ -145,7 +145,7 @@ export function encodeBetaCode(
       base = "s3";
     } else {
       base = token.letter === "yot" &&
-          options.orthography?.yotBetaCode === "#401"
+          options.orthography?.betaCodeYot === "#401"
         ? "#401"
         : ALPHABET[token.letter].beta;
     }
@@ -392,7 +392,7 @@ function transliterationBase(
   let base: string;
   switch (letter) {
     case "eta":
-      if (options.orthography?.eta === "ī") return "i\u0304";
+      if (options.orthography?.eta === "i-macron") return "i\u0304";
       base = "e";
       break;
     case "omega":

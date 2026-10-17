@@ -183,7 +183,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
     "hyphen": "typographic",
     "keraia": "bnf",
     "lunateSigma": "c",
-    "quantityTransliteration": "omit",
+    "quantity": "omit",
     "smoothBreathing": "greek",
     "upsilon": "y-with-au-eu-ou"
   },
@@ -224,7 +224,7 @@ Type 1 transliteration of Greek characters into Latin characters.
     "beta": "v",
     "coronis": "apostrophe",
     "enotikon": "hyphen",
-    "eta": "ī",
+    "eta": "i-macron",
     "nasalGamma": "literal",
     "phi": "f",
     "smoothBreathing": "apostrophe",
@@ -354,7 +354,7 @@ Canonical Beta Code together with the TLG characters implemented by the engine.
 {
   "orthography": {
     "betaCodeCase": "uppercase",
-    "yotBetaCode": "#401"
+    "betaCodeYot": "#401"
   }
 }
 ```

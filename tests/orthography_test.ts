@@ -203,7 +203,7 @@ Deno.test("applies individual transliteration variants", () => {
   const variants = {
     orthography: {
       beta: "v",
-      eta: "ī",
+      eta: "i-macron",
       xi: "ks",
       phi: "f",
       chi: "kh",
@@ -237,7 +237,7 @@ Deno.test("applies individual transliteration variants", () => {
   );
   assertNfcEquals(
     convert("ηω", "greek", "transliteration", {
-      orthography: { eta: "ī", longVowels: "circumflex" },
+      orthography: { eta: "i-macron", longVowels: "circumflex" },
     }),
     "īô",
   );

@@ -16,9 +16,28 @@ The package is ESM-only.
 
 ## Updating from `1.0.0-beta.9`
 
-The first stable release has no API or conversion behavior changes from
-`beta.9`. Update the dependency version; the npm release uses the `latest`
-distribution tag. The published preset scopes and the documented limits of
+Three option identifiers and seven exported type names change in `1.0.0`;
+the behavior behind them does not:
+
+| Before | After |
+| --- | --- |
+| `orthography.quantityTransliteration` | `orthography.quantity` |
+| `orthography.yotBetaCode` | `orthography.betaCodeYot` |
+| `orthography.eta: "ē"` / `"ī"` | `orthography.eta: "e-macron"` / `"i-macron"` |
+| `TransliterationHyphen` | `HyphenTransliteration` |
+| `CoronisOrthography` | `CoronisTransliteration` |
+| `UpsilonOrthography` | `UpsilonTransliteration` |
+| `LongVowelOrthography` | `LongVowelTransliteration` |
+| `NasalGammaOrthography` | `NasalGammaTransliteration` |
+| `ModernDigraphOrthography` | `ModernDigraphTransliteration` |
+| `YotBetaCode` | `BetaCodeYot` |
+
+Options are now validated strictly, so an old identifier throws a
+`RangeError` naming it instead of being ignored.
+
+Apart from the renames above, update the dependency version; the npm release
+uses the `latest` distribution tag. Conversion output changes are listed in
+the changelog under *Fixed* and *Changed*. The published preset scopes and the documented limits of
 the advanced `./document` API still apply.
 
 ## Updating from `1.0.0-beta.8`
@@ -71,7 +90,7 @@ breathing with an apostrophe. ISO 843 retains distinct Latin punctuation:
 Greek question mark becomes `?`, and ano teleia becomes `;`.
 
 The new orthography fields `smoothBreathing`, `circumflexAccent`,
-and `quantityTransliteration` can override
+and `quantityTransliteration` (now `quantity`) can override
 these behaviors. Strict bound converters still reject only recognized
 out-of-scope characters and known undefined or unresolved preset mappings;
 inspect `convertDetailed().losses` for in-scope distinctions lost during

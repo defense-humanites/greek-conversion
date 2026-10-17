@@ -269,7 +269,7 @@ Deno.test("BnF distinguishes structural length from explicit quantity marks", ()
   assertNfcEquals(
     convert("ᾱ ᾰ", "greek", "transliteration", {
       preset: "bnf-core",
-      orthography: { quantityTransliteration: "preserve" },
+      orthography: { quantity: "preserve" },
     }),
     "ā ă",
   );
@@ -380,7 +380,7 @@ Deno.test("core presets remain conservative and mixable", () => {
   assertNfcEquals(
     convert("ϳ", "greek", "beta-code", {
       preset: "tlg-core",
-      orthography: { yotBetaCode: "j" },
+      orthography: { betaCodeYot: "j" },
     }),
     "J",
   );

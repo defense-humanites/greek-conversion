@@ -178,7 +178,7 @@ const PRESET_DEFINITIONS = {
         hyphen: "typographic",
         keraia: "bnf",
         lunateSigma: "c",
-        quantityTransliteration: "omit",
+        quantity: "omit",
         smoothBreathing: "greek",
         upsilon: "y-with-au-eu-ou",
       },
@@ -214,7 +214,7 @@ const PRESET_DEFINITIONS = {
         beta: "v",
         coronis: "apostrophe",
         enotikon: "hyphen",
-        eta: "ī",
+        eta: "i-macron",
         nasalGamma: "literal",
         phi: "f",
         smoothBreathing: "apostrophe",
@@ -338,7 +338,7 @@ const PRESET_DEFINITIONS = {
     options: {
       orthography: {
         betaCodeCase: "uppercase",
-        yotBetaCode: "#401",
+        betaCodeYot: "#401",
       },
     },
   },

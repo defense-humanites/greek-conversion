@@ -77,7 +77,7 @@ Deno.test("combines modern transliteration and whitespace policies", () => {
     orthography: {
       beta: "v",
       chi: "kh",
-      eta: "ī",
+      eta: "i-macron",
       modernDigraphs: "phonetic",
       phi: "f",
       rho: "systematic",
