@@ -189,6 +189,14 @@ be reconstructed. The differential corpus and explicit loss cases live in
 `tests/fixtures.ts`; pairwise stability and isolated non-default option values
 are exercised by `tests/stability_test.ts`.
 
+Three properties are checked for every preset and every format pair over a
+deterministic corpus of difficult forms in `tests/invariants_corpus_test.ts`:
+idempotence of canonical output; validity of the reparsed output, except at
+the documented boundaries listed in that file, which the producing conversion
+must report as lossy; and, when `convertDetailed()` reports no loss, exact
+reconstruction of the canonical source. A conversion reported as lossless is
+therefore reversible under the same options.
+
 For an actual input, `convertDetailed()` returns the output, a `lossy` status,
 and token-indexed diagnostics. Its comparison treats canonical Unicode and
 deterministic additions as information-preserving. See the

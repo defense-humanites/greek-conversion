@@ -14,6 +14,11 @@ change.
   release, with corrections of output toward the documentation or a preset's
   reference classified as patches, additions of codes, options, and presets as
   minor releases, and open diagnostic unions.
+- A property-based invariant suite (`tests/invariants_corpus_test.ts`)
+  checks, for every preset and every format pair over a deterministic corpus
+  of difficult forms, that canonical output is idempotent, that reparsed
+  output is a valid document outside the documented boundaries, and that a
+  conversion reported as lossless converts back to the same canonical source.
 - `FORMATS` lists the supported format identifiers, and
   `CONVERSION_OPTION_VALUES` lists every option key with its accepted values;
   the playground's option suggestions are derived from that table.
