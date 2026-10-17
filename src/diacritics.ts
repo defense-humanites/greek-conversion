@@ -43,6 +43,22 @@ export function diacriticDisposition(
   }
 }
 
+/**
+ * Whether the transliteration parser supplies a smooth breathing to an
+ * unmarked initial vowel group.
+ *
+ * Scientific transliteration omits the smooth breathing, so the polytonic
+ * reading infers it. Nothing is inferred when the orthography writes the
+ * breathing explicitly (`"greek"`, `"apostrophe"`), or does not write smooth
+ * breathings at all (monotonic accentuation, removal policies).
+ */
+export function infersSmoothBreathing(options: ConversionOptions): boolean {
+  return options.orthography?.smoothBreathing !== "greek" &&
+    options.orthography?.smoothBreathing !== "apostrophe" &&
+    options.orthography?.accentuation !== "monotonic" &&
+    preservesDiacritic("smooth", options, "greek");
+}
+
 export function preservesDiacritic(
   diacritic: Diacritic,
   options: ConversionOptions,

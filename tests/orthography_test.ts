@@ -183,9 +183,32 @@ Deno.test("applies the requested upsilon transliteration", () => {
     convert(canonical, "transliteration", "transliteration", threePairs),
     canonical,
   );
+  // `y` after a, e, or o means "not a diphthong". At word start the
+  // separation is carried by the breathing on the first vowel, as Greek
+  // writes it (ἀυ), so the Latin spelling is already canonical.
   assertNfcEquals(
     convert("ay ey oy", "transliteration", "transliteration", threePairs),
-    "aÿ eÿ oÿ",
+    "ay ey oy",
+  );
+  assertNfcEquals(
+    convert("ay ey oy", "transliteration", "greek", threePairs),
+    "ἀυ ἐυ ὀυ",
+  );
+  // Elsewhere, and where no breathing is written or inferred, the diaeresis
+  // carries it and is written at once.
+  assertNfcEquals(
+    convert("kay", "transliteration", "transliteration", threePairs),
+    "kaÿ",
+  );
+  assertNfcEquals(
+    convert("ἄυλος", "greek", "transliteration", { preset: "sbl-general" }),
+    "aÿlos",
+  );
+  assertNfcEquals(
+    convert("aylos", "transliteration", "transliteration", {
+      preset: "sbl-general",
+    }),
+    "aÿlos",
   );
   assertNfcEquals(
     convert("Υ ΑΥ ΑΫ", "greek", "transliteration", {

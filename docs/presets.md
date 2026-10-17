@@ -405,9 +405,13 @@ idempotent without lexical inference.
 The ISO Type 1 and BnF presets use the narrower
 `orthography.upsilon: "y-with-au-eu-ou"` rule: `αυ`, `ευ`, and `ου` produce
 `au`, `eu`, and `ou`; isolated upsilon and other vowel pairs use `y`. A
-diaeresis prevents the three combinations. When reading unmarked `ay`, `ey`,
-or `oy`, the parser infers a separated upsilon so a second conversion cannot
-silently turn it into `au`, `eu`, or `ou`.
+diaeresis prevents the three combinations. When reading `ay`, `ey`, or `oy`,
+the parser keeps the upsilon separated so a second conversion cannot silently
+turn it into `au`, `eu`, or `ou`: at word start the breathing on the first
+vowel carries the separation, as Greek writes a hiatus (`ay → ἀυ`,
+`hay → ἁυ`); elsewhere, or where no breathing is written or inferred, a
+diaeresis carries it (`kay → kaÿ`), and the encoder writes that diaeresis at
+once so the output is canonical.
 
 `bnf-core` also selects `orthography.keraia: "bnf"` for transliteration: the
 right numeral mark becomes an acute accent and the left numeral mark becomes

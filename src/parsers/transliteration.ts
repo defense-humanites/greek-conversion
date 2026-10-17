@@ -1,5 +1,5 @@
 import { ALPHABET, GREEK_MARKS } from "../alphabet.ts";
-import { preservesDiacritic } from "../diacritics.ts";
+import { infersSmoothBreathing } from "../diacritics.ts";
 import {
   breathingTarget,
   followsNasalGamma,
@@ -8,6 +8,7 @@ import {
   isDiphthongAt,
   isGreekNumeralContext,
   isVowel,
+  isWordInitial,
 } from "../context.ts";
 import {
   type Diacritic,
@@ -52,6 +53,9 @@ export function parseTransliteration(
   const out: Token[] = [];
   const trie = transliterationTrie(options);
   const contextualY = new Set<number>();
+  // Upsilons read from a contextual `y` whose separation from the preceding
+  // vowel is carried by a breathing on that vowel rather than by a diaeresis.
+  const separatedByBreathing = new Set<number>();
 
   for (let i = 0; i < chars.length;) {
     let rough = false;
@@ -176,7 +180,15 @@ export function parseTransliteration(
         ? isAuEuOuAt(document, out.length - 1)
         : isDiphthongAt(document, out.length - 1);
       if (wouldRenderU) {
-        marks.add("diaeresis");
+        // `y` says the pair is not a diphthong. Greek marks such a hiatus by
+        // a breathing on the first vowel when the word starts there (ἀυτμή,
+        // ἁυ); the diaeresis is the fallback where no breathing will sit.
+        const first = out[out.length - 1];
+        const breathingWillSit = first.kind === "grapheme" &&
+          isWordInitial(out, out.length - 1) &&
+          (first.diacritics.has("rough") || infersSmoothBreathing(options));
+        if (breathingWillSit) separatedByBreathing.add(out.length);
+        else marks.add("diaeresis");
       }
     }
 
@@ -214,7 +226,7 @@ export function parseTransliteration(
   if (options.orthography?.nasalGamma !== "literal") {
     inferNasalGammas(out);
   }
-  inferInitialBreathings(out, options);
+  inferInitialBreathings(out, options, separatedByBreathing);
 
   return out;
 }
@@ -341,15 +353,12 @@ function resolveLongVowel(
   return letter;
 }
 
-function inferInitialBreathings(tokens: Token[], options: ConversionOptions) {
-  // Scientific transliteration omits the smooth breathing, so an unmarked
-  // initial vowel is read as smooth in the polytonic frame. When the
-  // selected orthography does not write smooth breathings at all, nothing is
-  // inferred: the document then matches what the options describe.
-  const infersSmooth = options.orthography?.smoothBreathing !== "greek" &&
-    options.orthography?.smoothBreathing !== "apostrophe" &&
-    options.orthography?.accentuation !== "monotonic" &&
-    preservesDiacritic("smooth", options, "greek");
+function inferInitialBreathings(
+  tokens: Token[],
+  options: ConversionOptions,
+  separatedByBreathing: ReadonlySet<number>,
+) {
+  const infersSmooth = infersSmoothBreathing(options);
   let wordStart = true;
 
   for (let i = 0; i < tokens.length; i++) {
@@ -365,7 +374,9 @@ function inferInitialBreathings(tokens: Token[], options: ConversionOptions) {
 
     if (!isVowel(token.letter) || isGreekNumeralContext(tokens, i)) continue;
 
-    const target = tokens[breathingTarget(withoutLatinBreathing(tokens, i), i)];
+    const target = separatedByBreathing.has(i + 1)
+      ? token
+      : tokens[breathingTarget(withoutLatinBreathing(tokens, i), i)];
     if (target.kind !== "grapheme") continue;
 
     if (token.diacritics.has("rough") && target !== token) {

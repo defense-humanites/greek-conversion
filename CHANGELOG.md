@@ -74,6 +74,15 @@ change.
   it reversible.
 - Removing a diaeresis or an iota subscript no longer turns `ἄϋλος` or `ᾄυ`
   into a diphthong while the first vowel still carries its marks.
+- Under the contextual upsilon rules (`y-with-au-eu-ou`, `y-with-diphthong-u`),
+  a `y` read after a vowel that could form a diphthong no longer always
+  receives a diaeresis. At word start the separation is carried by the
+  breathing on the first vowel, as Greek writes it (`ay → ἀυ`, `hay → ἁυ`),
+  so `ἀυτμή` and `ἁυ` convert back and forth exactly under `bnf-core` and
+  `ay` is canonical. Where no breathing is written or inferred, the encoder
+  writes the diaeresis at once (`ἄυλος → aÿlos` under `sbl-general`,
+  `ἀυτμή → ’aÿtmī́` under `iso-843-type-1`) instead of producing text that a
+  second conversion changed.
 - Transliteration no longer infers a smooth breathing on an initial vowel
   that carries a diaeresis (`ḯ`, `ü`, `Ï`). The result was a document that
   `validateDocument()` rejects as `incompatible-diaeresis-breathing`, and
