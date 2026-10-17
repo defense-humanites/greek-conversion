@@ -317,6 +317,87 @@ export interface DefaultConversionOptions {
   readonly removeDiacritics: false;
 }
 
+/** Accepted values of every field of one option group. */
+export type OptionValueTable<T> = {
+  readonly [K in keyof T]-?: readonly NonNullable<T[K]>[];
+};
+
+/** Every accepted value of every string-valued conversion option, by group. */
+export interface ConversionOptionValues {
+  /** Accepted values of each orthographic and transliteration policy. */
+  readonly orthography: OptionValueTable<OrthographyOptions>;
+  /** Accepted values of each Greek Unicode representation preference. */
+  readonly unicode: OptionValueTable<GreekUnicodeOptions>;
+  /** Accepted values of each semantic diacritic class disposition. */
+  readonly diacritics: OptionValueTable<DiacriticOptions>;
+}
+
+const freezeTable = <T>(table: OptionValueTable<T>): OptionValueTable<T> =>
+  Object.freeze(
+    Object.fromEntries(
+      Object.entries(table).map(([key, values]) => [
+        key,
+        Object.freeze([...(values as readonly unknown[])]),
+      ]),
+    ) as OptionValueTable<T>,
+  );
+
+/**
+ * Complete, immutable inventory of option keys and their accepted values.
+ *
+ * {@link resolveConversionOptions} rejects any key or value absent from this
+ * table, so it is also the reference for user interfaces and validators.
+ */
+export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
+  orthography: freezeTable<OrthographyOptions>({
+    doubleRho: ["unmarked", "smooth-rough"],
+    medialBeta: ["standard", "symbol"],
+    coronis: ["omit", "apostrophe", "greek"],
+    smoothBreathing: ["omit", "greek", "apostrophe"],
+    circumflexAccent: ["tilde", "circumflex"],
+    quantityTransliteration: ["preserve", "omit"],
+    nasalGamma: ["nasal", "literal"],
+    sigma: ["standard", "lunate", "preserve"],
+    lunateSigma: ["s", "c"],
+    finalSigma: ["contextual", "medial", "preserve"],
+    numerals: ["alphabetic", "decimal"],
+    keraia: ["greek", "bnf"],
+    dentalSigma: ["preserve", "assimilate"],
+    upsilon: ["u", "y", "y-with-diphthong-u", "y-with-au-eu-ou"],
+    longVowels: ["macron", "circumflex"],
+    accentuation: ["polytonic", "monotonic"],
+    whitespace: ["preserve", "collapse"],
+    hyphen: ["ascii", "typographic"],
+    enotikon: ["preserve", "hyphen"],
+    beta: ["b", "v"],
+    eta: ["ē", "ī"],
+    xi: ["x", "ks"],
+    phi: ["ph", "f"],
+    chi: ["ch", "kh"],
+    modernDigraphs: ["preserve", "phonetic", "ala-lc"],
+    rho: ["contextual", "systematic"],
+    letterCase: ["preserve", "lowercase", "uppercase", "title"],
+    betaCodeCase: ["lowercase", "uppercase"],
+    yotBetaCode: ["j", "#401"],
+    archaicKoppa: ["k-dot-below", "q"],
+  }),
+  unicode: freezeTable<GreekUnicodeOptions>({
+    composition: ["composed", "decomposed"],
+    acute: ["system", "tonos", "oxia"],
+    questionMark: ["canonical", "semicolon", "greek"],
+    anoTeleia: ["canonical", "middle-dot", "greek"],
+  }),
+  diacritics: freezeTable<DiacriticOptions>({
+    accents: ["preserve", "remove"],
+    smoothBreathing: ["preserve", "remove"],
+    roughBreathing: ["preserve", "remove"],
+    coronis: ["preserve", "remove"],
+    diaeresis: ["preserve", "remove"],
+    iotaSubscript: ["preserve", "remove"],
+    quantity: ["preserve", "remove"],
+  }),
+});
+
 /**
  * Complete, immutable defaults used when no preset or custom option overrides
  * them. Inspect this value in an IDE to discover the engine's effective

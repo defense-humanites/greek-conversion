@@ -213,6 +213,18 @@ resolveConversionOptions({ preset: "sbl-general" });
 contains every effective field after applying defaults, a preset, and custom
 overrides.
 
+Options are validated strictly: an unknown key, an unknown value, or a value
+of the wrong type throws a `RangeError` or `TypeError` rather than silently
+falling back to a default. `CONVERSION_OPTION_VALUES` lists every accepted
+value, and `FORMATS` the supported format identifiers:
+
+```ts
+import { CONVERSION_OPTION_VALUES, FORMATS } from "@humanities/greek-conversion";
+
+CONVERSION_OPTION_VALUES.orthography.eta; // ["ē", "ī"]
+FORMATS; // ["greek", "beta-code", "transliteration"]
+```
+
 ## Common recipes
 
 ### Produce monotonic Greek

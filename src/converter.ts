@@ -5,7 +5,7 @@ import {
   type ConversionResult,
   findConversionLosses,
 } from "./losses.ts";
-import { grapheme, literal } from "./model.ts";
+import { assertFormat, assertTextInput, grapheme, literal } from "./model.ts";
 import type { Document, Format, Letter, Token } from "./model.ts";
 import type {
   ConversionOptions,
@@ -249,6 +249,9 @@ export class Converter {
     to: Format,
     options: ConversionOptions = {},
   ): ConverterConversionResult {
+    assertTextInput(input);
+    assertFormat(from);
+    assertFormat(to);
     const resolved = this.#resolveOptions(options);
     const sourceInput = this.#preprocess(input, from, resolved);
     const prepared = this.#prepareSource(sourceInput, from, resolved, to);
@@ -274,6 +277,9 @@ export class Converter {
     to: Format,
     options: ConversionOptions,
   ): { output: string } {
+    assertTextInput(input);
+    assertFormat(from);
+    assertFormat(to);
     const resolved = this.#resolveOptions(options);
     const preprocessed = this.#preprocess(input, from, resolved);
     const prepared = this.#prepareSource(preprocessed, from, resolved, to);

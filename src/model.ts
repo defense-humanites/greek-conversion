@@ -1,6 +1,39 @@
 /** Text representations understood by the conversion engine. */
 export type Format = "greek" | "beta-code" | "transliteration";
 
+/** Every supported format identifier, in documentation order. */
+export const FORMATS: readonly Format[] = Object.freeze([
+  "greek",
+  "beta-code",
+  "transliteration",
+]);
+
+/**
+ * Narrows a runtime value to a supported format identifier.
+ *
+ * @throws {RangeError} If the value is not a supported format.
+ */
+export function assertFormat(format: unknown): asserts format is Format {
+  if (!FORMATS.includes(format as Format)) {
+    throw new RangeError(`Unknown format: ${String(format)}`);
+  }
+}
+
+/**
+ * Checks that conversion input is a string before parsing it.
+ *
+ * @throws {TypeError} If the input is not a string.
+ */
+export function assertTextInput(input: unknown): asserts input is string {
+  if (typeof input !== "string") {
+    throw new TypeError(
+      `Expected a string to convert, received ${
+        input === null ? "null" : typeof input
+      }.`,
+    );
+  }
+}
+
 /** Semantic Greek letters represented by a canonical grapheme. */
 export type Letter =
   | "alpha"

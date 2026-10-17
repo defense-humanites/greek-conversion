@@ -7,9 +7,25 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `FORMATS` lists the supported format identifiers, and
+  `CONVERSION_OPTION_VALUES` lists every option key with its accepted values;
+  the playground's option suggestions are derived from that table.
 - `convertDetailed()` reports `displaced-diacritic` when a source breathing is
   reread on the following vowel of the target, instead of the misleading
   `removed-diacritic`. The breathing is retained; the hiatus it marked is not.
+
+### Changed
+
+- Conversion options are validated strictly. An unknown option key, an
+  unknown option value, or an option of the wrong type now throws
+  (`RangeError` for unknown identifiers and values, `TypeError` for wrong
+  types) instead of being silently replaced by the engine default. A field set
+  to `undefined` is still treated as absent.
+- An unknown format identifier throws `RangeError("Unknown format: …")` from
+  `convert()`, `convertDetailed()`, `parse()`, `encode()`, and the
+  `Converter` methods; `convert()` with an unknown target format previously
+  returned `undefined`. Non-string input throws a `TypeError` with a clear
+  message.
 
 ### Fixed
 
