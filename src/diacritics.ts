@@ -66,9 +66,9 @@ export function stripDiacritics(document: Document): Document {
 
 /**
  * Builds the diacritic view used for rendering without changing the semantic
- * document used by contextual orthography. Removing diaeresis or iota
- * subscript can expose a diphthong, so initial breathings are normalized again
- * on the detached view to make the first rendering canonical and idempotent.
+ * document used by contextual orthography. Marks on the first vowel of a
+ * pair keep signalling hiatus on the detached view, so removing a diaeresis
+ * or an iota subscript cannot turn that pair into a diphthong.
  */
 export function prepareDiacriticsForRendering(
   document: Document,

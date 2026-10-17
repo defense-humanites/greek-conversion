@@ -403,8 +403,11 @@ Deno.test("convertDetailed reports losses introduced by presets", () => {
 
   assertEquals(result.lossy, true);
   assertEquals(
-    result.losses.map((loss) => loss.code),
-    ["removed-diacritic"],
+    result.losses.map(({ code, diacritic }) => ({ code, diacritic })),
+    [
+      { code: "removed-diacritic", diacritic: "smooth" },
+      { code: "removed-diacritic", diacritic: "acute" },
+    ],
   );
 
   const bnfKoppa = convertDetailed(

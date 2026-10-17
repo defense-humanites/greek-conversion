@@ -22,7 +22,7 @@ the row format to the column format and parsing the result again.
 
 | From \ To | Greek | Beta Code | Transliteration |
 | --- | --- | --- | --- |
-| **Greek** | Selected glyph, accent, punctuation, and composition policies; lunate provenance unless preserved; unmarked labial/velar + sigma pairs contract | Canonical spelling and mark order; lunate provenance unless preserved | Lunate provenance by default; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; `ν` before a velar under nasal-gamma inference |
+| **Greek** | Selected glyph, accent, punctuation, and composition policies; lunate provenance unless preserved; unmarked labial/velar + sigma pairs contract | Canonical spelling and mark order; lunate provenance unless preserved | Lunate provenance by default; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; the absence of a breathing on an initial vowel (monotonic or uncial text), which reads back as a smooth breathing; `ν` before a velar under nasal-gamma inference |
 | **Beta Code** | Canonical Greek glyphs; lunate provenance unless preserved; unmarked labial/velar + sigma pairs contract | Canonical ASCII case, asterisk placement, mark order, aliases, and punctuation; lunate provenance unless preserved | Same transliteration losses as Greek, including lunate provenance, coronis, and marked double rho |
 | **Transliteration** | Initial smooth breathing is inferred where quantity is not explicit; labial/velar + sigma pairs contract; an elided mute may be aspirated before rough breathing | Initial smooth breathing is inferred where quantity is not explicit; accepted aliases converge to canonical Beta Code | Accepted aliases, punctuation, combining-mark order, NFC, and orthographic spelling converge |
 
@@ -105,6 +105,19 @@ group has neither rough breathing, explicit quantity, nor a diaeresis, parsing
 infers smooth breathing. Explicit `ā/ă`, `ī/ĭ`, and `ū/ŭ` remain
 breathing-neutral, and an initial `ï` or `ü` stays without a breathing, as
 Greek writes `ϊ` and `ϋ`.
+
+The inference belongs to the polytonic frame. It is not applied when the
+selected orthography does not write smooth breathings: `accentuation:
+"monotonic"`, `removeDiacritics: true`, `diacritics.smoothBreathing:
+"remove"`, or an explicit `smoothBreathing: "greek"` or `"apostrophe"`
+spelling. The canonical document then matches what the options describe, and
+monotonic text converts back and forth under those options without loss.
+
+In the default polytonic frame, the inference means that transliteration
+cannot distinguish an unmarked initial vowel from one with a smooth breathing.
+Monotonic or uncial Greek (`άνθρωπος`, `ΑΙΔΗΣ`) therefore reads back with a
+smooth breathing, and `convertDetailed()` reports `inferred-breathing` on the
+vowel that acquires it.
 
 With default nasal-gamma inference, `n` before gamma, kappa, xi, or chi becomes
 gamma in the canonical document. Set `nasalGamma: "literal"` to keep `n` as

@@ -57,6 +57,7 @@ a UTF-16 offset or a code-point index in the input string.
 | `removed-glyph-variant` | A known source glyph variant, currently lunate sigma, is absent from the reparsed target |
 | `removed-diacritic` | A source diacritic is absent from the reparsed target; `diacritic` identifies it |
 | `displaced-diacritic` | A source breathing is absent from its vowel but reappears on the following vowel of the reparsed target: a hiatus marked only by that breathing is read as a diphthong; `diacritic` identifies it |
+| `inferred-breathing` | The target does not distinguish an unmarked initial vowel from one with a smooth breathing, so the reparsed target carries a smooth breathing the source did not have; `index` is the vowel that acquires it (the second element of an initial diphthong), and `diacritic` is `"smooth"` |
 | `unrepresented-grapheme` | A source letter or its position cannot be recovered from the target document |
 | `unrepresented-literal` | A source literal token cannot be recovered from the target document |
 

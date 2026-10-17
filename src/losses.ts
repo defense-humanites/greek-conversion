@@ -1,3 +1,4 @@
+import { isVowel } from "./context.ts";
 import type { Diacritic, Document, Token } from "./model.ts";
 
 /** Machine-readable categories of information loss. */
@@ -6,6 +7,7 @@ export type ConversionLossCode =
   | "removed-glyph-variant"
   | "removed-diacritic"
   | "displaced-diacritic"
+  | "inferred-breathing"
   | "unrepresented-grapheme"
   | "unrepresented-literal";
 
@@ -18,8 +20,8 @@ export interface ConversionLoss {
   /** Human-readable English explanation. */
   message: string;
   /**
-   * The affected semantic mark when {@link code} is `"removed-diacritic"` or
-   * `"displaced-diacritic"`.
+   * The affected semantic mark when {@link code} is `"removed-diacritic"`,
+   * `"displaced-diacritic"`, or `"inferred-breathing"`.
    */
   diacritic?: Diacritic;
 }
@@ -51,6 +53,7 @@ export function findConversionLosses(
       targetIndex < target.length &&
       preservesToken(source[sourceIndex], target[targetIndex])
     ) {
+      addInferredBreathing(losses, source, target, sourceIndex, targetIndex);
       sourceIndex++;
       targetIndex++;
       continue;
@@ -254,6 +257,50 @@ function preservesToken(source: Token, target: Token): boolean {
     (source.glyphVariant !== "lunate-sigma" ||
       source.glyphVariant === target.glyphVariant) &&
     [...source.diacritics].every((mark) => target.diacritics.has(mark));
+}
+
+/**
+ * Reports a smooth breathing that the target carries on a vowel the source
+ * left unmarked.
+ *
+ * Transliteration writes nothing for a smooth breathing and nothing for an
+ * unmarked initial vowel, so the reparsed target infers a smooth breathing
+ * that monotonic or uncial sources did not have. A breathing that merely moved
+ * from the previous vowel is reported there as displaced, not here.
+ */
+function addInferredBreathing(
+  losses: ConversionLoss[],
+  source: Document,
+  target: Document,
+  index: number,
+  targetIndex: number,
+): void {
+  const sourceToken = source[index];
+  const targetToken = target[targetIndex];
+  if (
+    sourceToken.kind !== "grapheme" || targetToken.kind !== "grapheme" ||
+    !isVowel(sourceToken.letter) ||
+    !targetToken.diacritics.has("smooth") ||
+    BREATHINGS.some((mark) => sourceToken.diacritics.has(mark))
+  ) return;
+
+  const previousSource = source[index - 1];
+  const previousTarget = target[targetIndex - 1];
+  const displaced = previousSource?.kind === "grapheme" &&
+    previousTarget?.kind === "grapheme" &&
+    BREATHINGS.some((mark) =>
+      previousSource.diacritics.has(mark) &&
+      !previousTarget.diacritics.has(mark)
+    );
+  if (displaced) return;
+
+  losses.push({
+    code: "inferred-breathing",
+    index,
+    diacritic: "smooth",
+    message:
+      "The target representation does not distinguish an unmarked initial vowel from one with a smooth breathing; the breathing is inferred when the target is read back.",
+  });
 }
 
 /**

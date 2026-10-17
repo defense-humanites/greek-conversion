@@ -10,6 +10,11 @@ project follows [Semantic Versioning](https://semver.org/).
 - `FORMATS` lists the supported format identifiers, and
   `CONVERSION_OPTION_VALUES` lists every option key with its accepted values;
   the playground's option suggestions are derived from that table.
+- `convertDetailed()` reports `inferred-breathing` when transliteration of
+  an unmarked initial vowel (monotonic or uncial Greek such as `άνθρωπος` or
+  `ΑΙΔΗΣ`) reads back with a smooth breathing the source did not have. Such a
+  conversion was previously reported as lossless although the round trip
+  changed the text.
 - `convertDetailed()` reports `displaced-diacritic` when a source breathing is
   reread on the following vowel of the target, instead of the misleading
   `removed-diacritic`. The breathing is retained; the hiatus it marked is not.
@@ -21,6 +26,13 @@ project follows [Semantic Versioning](https://semver.org/).
   (`RangeError` for unknown identifiers and values, `TypeError` for wrong
   types) instead of being silently replaced by the engine default. A field set
   to `undefined` is still treated as absent.
+- The transliteration parser infers a smooth breathing only when the selected
+  orthography writes smooth breathings. Under `accentuation: "monotonic"`,
+  `removeDiacritics: true`, or `diacritics.smoothBreathing: "remove"` (as in
+  the ALA-LC and SBL general presets), an unmarked initial vowel stays
+  unmarked in the canonical document. As a consequence, a preset that removes
+  the smooth breathing now reports that removal for polytonic sources instead
+  of hiding it behind the reparse.
 - An unknown format identifier throws `RangeError("Unknown format: …")` from
   `convert()`, `convertDetailed()`, `parse()`, `encode()`, and the
   `Converter` methods; `convert()` with an unknown target format previously

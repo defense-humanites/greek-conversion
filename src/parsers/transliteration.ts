@@ -1,4 +1,5 @@
 import { ALPHABET, GREEK_MARKS } from "../alphabet.ts";
+import { preservesDiacritic } from "../diacritics.ts";
 import {
   breathingTarget,
   followsNasalGamma,
@@ -341,6 +342,14 @@ function resolveLongVowel(
 }
 
 function inferInitialBreathings(tokens: Token[], options: ConversionOptions) {
+  // Scientific transliteration omits the smooth breathing, so an unmarked
+  // initial vowel is read as smooth in the polytonic frame. When the
+  // selected orthography does not write smooth breathings at all, nothing is
+  // inferred: the document then matches what the options describe.
+  const infersSmooth = options.orthography?.smoothBreathing !== "greek" &&
+    options.orthography?.smoothBreathing !== "apostrophe" &&
+    options.orthography?.accentuation !== "monotonic" &&
+    preservesDiacritic("smooth", options, "greek");
   let wordStart = true;
 
   for (let i = 0; i < tokens.length; i++) {
@@ -363,8 +372,7 @@ function inferInitialBreathings(tokens: Token[], options: ConversionOptions) {
       token.diacritics.delete("rough");
       target.diacritics.add("rough");
     } else if (
-      options.orthography?.smoothBreathing !== "greek" &&
-      options.orthography?.smoothBreathing !== "apostrophe" &&
+      infersSmooth &&
       !target.diacritics.has("rough") &&
       // A diaeresis and a breathing never share a vowel; Greek writes an
       // initial `ϊ` or `ϋ` without a breathing, so none is inferred.
