@@ -22,7 +22,7 @@ the row format to the column format and parsing the result again.
 
 | From \ To | Greek | Beta Code | Transliteration |
 | --- | --- | --- | --- |
-| **Greek** | Selected glyph, accent, punctuation, and composition policies; lunate provenance unless preserved; unmarked labial/velar + sigma pairs contract | Canonical spelling and mark order; lunate provenance unless preserved | Lunate provenance by default; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; `ν` before a velar under nasal-gamma inference |
+| **Greek** | Selected glyph, accent, punctuation, and composition policies; lunate provenance unless preserved; unmarked labial/velar + sigma pairs contract | Canonical spelling and mark order; lunate provenance unless preserved | Lunate provenance by default; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; `ν` before a velar under nasal-gamma inference |
 | **Beta Code** | Canonical Greek glyphs; lunate provenance unless preserved; unmarked labial/velar + sigma pairs contract | Canonical ASCII case, asterisk placement, mark order, aliases, and punctuation; lunate provenance unless preserved | Same transliteration losses as Greek, including lunate provenance, coronis, and marked double rho |
 | **Transliteration** | Initial smooth breathing is inferred where quantity is not explicit; labial/velar + sigma pairs contract; an elided mute may be aspirated before rough breathing | Initial smooth breathing is inferred where quantity is not explicit; accepted aliases converge to canonical Beta Code | Accepted aliases, punctuation, combining-mark order, NFC, and orthographic spelling converge |
 
@@ -62,6 +62,15 @@ Default transliteration has these intrinsic ambiguities:
   explicitly marked smooth–rough in Greek or Beta Code;
 - an initial vowel with explicit quantity has no inferred smooth breathing, so
   an explicitly smooth quantity-marked source converges to the unmarked form;
+- a smooth breathing written on the first vowel of a pair that could form a
+  diphthong marks a hiatus or an iota adscript (`Ἀίδης`, `ἀυτμή`), but the
+  omitted breathing leaves `Aídēs`, `autmḗ`, which parse back as diphthongs;
+  `convertDetailed()` reports `displaced-diacritic`. The engine does not add
+  a diaeresis to compensate, because the same spelling also marks an iota
+  adscript (`Ἅιδης`, `τῆι` in editions that write the adscript), which is not
+  a hiatus. `smoothBreathing: "greek"` or `"apostrophe"` writes the breathing
+  in place and keeps the distinction; an accent on the first vowel
+  (`Ἅιδῃ → Háidȩ̄`) keeps it as well;
 - with the default `nasalGamma: "nasal"`, Greek gamma and nu before a velar can
   both be read as nasal gamma after transliteration.
 

@@ -5,6 +5,12 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `convertDetailed()` reports `displaced-diacritic` when a source breathing is
+  reread on the following vowel of the target, instead of the misleading
+  `removed-diacritic`. The breathing is retained; the hiatus it marked is not.
+
 ### Fixed
 
 - A breathing or accent written on the first vowel of a pair that could form
@@ -14,6 +20,10 @@ project follows [Semantic Versioning](https://semver.org/).
   reported as a loss. Greek and Beta Code conversions now preserve these forms;
   transliteration keeps a first-vowel accent, and `convertDetailed()` reports
   the loss when a hiatus is marked only by a breathing.
+- A hiatus marked only by a breathing on its first vowel is not compensated
+  with an inferred diaeresis in transliteration, because the same spelling also
+  marks an iota adscript; `smoothBreathing: "greek"` or `"apostrophe"` keeps
+  it reversible.
 - Removing a diaeresis or an iota subscript no longer turns `ἄϋλος` or `ᾄυ`
   into a diphthong while the first vowel still carries its marks.
 

@@ -134,7 +134,9 @@ Deno.test("marks on the first vowel of a pair signal hiatus and are kept", () =>
   }
 
   // An accent on the first vowel survives transliteration; a hiatus signalled
-  // only by a breathing does not, and that loss is reported.
+  // only by a breathing does not, because the breathing is reread on the
+  // diphthong. That displacement is reported, and the breathing itself is not
+  // reported as removed.
   for (const word of ["Ἅιδῃ", "ἄυλος"]) {
     const result = convertDetailed(word, "greek", "transliteration");
     assertEquals(result.lossy, false);
@@ -143,7 +145,25 @@ Deno.test("marks on the first vowel of a pair signal hiatus and are kept", () =>
   for (const word of ["Ἀίδης", "ἀίδηλος", "ἀυτμή"]) {
     const result = convertDetailed(word, "greek", "transliteration");
     assertEquals(result.lossy, true);
-    assertEquals(result.losses[0].code, "removed-diacritic");
+    assertEquals(
+      result.losses.map(({ code, index, diacritic }) => ({
+        code,
+        index,
+        diacritic,
+      })),
+      [{ code: "displaced-diacritic", index: 0, diacritic: "smooth" }],
+    );
+  }
+
+  // Writing the smooth breathing in place keeps the hiatus reversible.
+  const inPlace = { orthography: { smoothBreathing: "greek" } } as const;
+  for (const word of ["Ἀίδης", "ἀίδηλος", "ἀυτμή"]) {
+    const result = convertDetailed(word, "greek", "transliteration", inPlace);
+    assertEquals(result.lossy, false);
+    assertNfcEquals(
+      convert(result.output, "transliteration", "greek", inPlace),
+      word,
+    );
   }
 
   assertNfcEquals(convert("Ἅιδῃ", "greek", "beta-code"), "*(/aidh|");
