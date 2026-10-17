@@ -26,6 +26,20 @@ project follows [Semantic Versioning](https://semver.org/).
   it reversible.
 - Removing a diaeresis or an iota subscript no longer turns `ἄϋλος` or `ᾄυ`
   into a diphthong while the first vowel still carries its marks.
+- Transliteration no longer infers a smooth breathing on an initial vowel
+  that carries a diaeresis (`ḯ`, `ü`, `Ï`). The result was a document that
+  `validateDocument()` rejects as `incompatible-diaeresis-breathing`, and
+  `ΐδιος` did not survive a round trip.
+- Transliteration writes the combining marks of one vowel in a single
+  canonical order: quantity, breathing, diaeresis, accent. An explicit macron
+  is now spelled like the structural macron of eta and omega (`ā́` like `ḗ`).
+  Previously `ῑ́` rendered as `í̄`, which `iso-843-type-1` reread and rewrote
+  as `ī́`, breaking idempotence. Output changes only where an explicit macron
+  or breve meets another mark (`á̄` → `ā́`, `ã̄` → `ā̃`); input in either
+  order is still accepted.
+- A macron or breve on epsilon or omicron is omitted from transliteration,
+  because `ē` and `ō` denote eta and omega, and `convertDetailed()` reports
+  the removed mark instead of producing text that reparses as another letter.
 
 ## [1.0.0] - 2026-09-30
 

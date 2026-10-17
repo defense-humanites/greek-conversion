@@ -366,6 +366,9 @@ function inferInitialBreathings(tokens: Token[], options: ConversionOptions) {
       options.orthography?.smoothBreathing !== "greek" &&
       options.orthography?.smoothBreathing !== "apostrophe" &&
       !target.diacritics.has("rough") &&
+      // A diaeresis and a breathing never share a vowel; Greek writes an
+      // initial `ϊ` or `ϋ` without a breathing, so none is inferred.
+      !target.diacritics.has("diaeresis") &&
       !hasQuantity(token) &&
       !hasQuantity(target)
     ) {

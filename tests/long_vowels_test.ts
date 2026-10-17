@@ -1,6 +1,7 @@
-import { convert } from "../src/mod.ts";
+import { convert, convertDetailed } from "../src/mod.ts";
 import { encode } from "../src/document.ts";
 import { grapheme } from "../src/model.ts";
+import { assertEquals } from "@std/assert";
 import { assertNfcEquals } from "./assertions.ts";
 
 const CIRCUMFLEX = {
@@ -79,7 +80,7 @@ Deno.test("keeps structural length distinct from Greek circumflex accent", () =>
       "transliteration",
       CIRCUMFLEX,
     ),
-    "ã̄",
+    "ā̃",
   );
 
   assertNfcEquals(
@@ -88,6 +89,46 @@ Deno.test("keeps structural length distinct from Greek circumflex accent", () =>
       "transliteration",
       CIRCUMFLEX,
     ),
-    "ễ̄",
+    "ê̄̃",
+  );
+});
+
+Deno.test("writes quantity before other marks in transliteration", () => {
+  const cases = [
+    ["ᾱ́", "a\u0304\u0301"],
+    ["ᾱ̀", "a\u0304\u0300"],
+    ["ῑ́", "i\u0304\u0301"],
+    ["ῠ́", "u\u0306\u0301"],
+    ["ῑ̈", "i\u0304\u0308"],
+    ["ᾱ̓́", "a\u0304\u0301"],
+  ] as const;
+  for (const [greek, latin] of cases) {
+    const output = convert(greek, "greek", "transliteration");
+    assertEquals(output, latin.normalize("NFC"));
+    assertEquals(
+      convert(output, "transliteration", "transliteration"),
+      output,
+    );
+  }
+  // Either input order is accepted and yields the same canonical Greek.
+  const canonical = convert("ᾱ́", "greek", "greek");
+  assertNfcEquals(convert("á̄", "transliteration", "greek"), canonical);
+  assertNfcEquals(convert("ā́", "transliteration", "greek"), canonical);
+
+  // An explicit macron on iota stays idempotent even where `ī` is eta.
+  const iso = { preset: "iso-843-type-1" } as const;
+  const once = convert("ῑ́", "greek", "transliteration", iso);
+  assertEquals(convert(once, "transliteration", "transliteration", iso), once);
+});
+
+Deno.test("omits a quantity mark on epsilon and omicron in transliteration", () => {
+  const result = convertDetailed("ἔ̄ ὄ̄", "greek", "transliteration");
+  assertNfcEquals(result.output, "é ó");
+  assertEquals(
+    result.losses.map(({ code, diacritic }) => ({ code, diacritic })),
+    [
+      { code: "removed-diacritic", diacritic: "macron" },
+      { code: "removed-diacritic", diacritic: "macron" },
+    ],
   );
 });

@@ -1,5 +1,5 @@
 import { convert, convertDetailed, greekToBetaCode } from "../src/mod.ts";
-import { encode } from "../src/document.ts";
+import { encode, parse, validateDocument } from "../src/document.ts";
 import { grapheme } from "../src/model.ts";
 import { assertEquals } from "@std/assert";
 import { assertNfcEquals } from "./assertions.ts";
@@ -403,4 +403,30 @@ Deno.test("does not contract separated, marked, or numeric pairs", () => {
     ),
     "βς́",
   );
+});
+
+Deno.test("does not infer a breathing on an initial vowel with diaeresis", () => {
+  for (
+    const [latin, greek] of [
+      ["ḯdios", "ΐδιος"],
+      ["ïdios", "ϊδιος"],
+      ["Ïdios", "Ϊδιος"],
+      ["ü", "ϋ"],
+      ["ǘdōr", "ΰδωρ"],
+    ] as const
+  ) {
+    const parsed = parse(latin, "transliteration");
+    assertEquals(validateDocument(parsed), []);
+    assertNfcEquals(convert(latin, "transliteration", "greek"), greek);
+    assertNfcEquals(
+      convert(
+        convert(greek, "greek", "transliteration"),
+        "transliteration",
+        "greek",
+      ),
+      greek,
+    );
+  }
+  // A breathing still reaches a vowel group whose diaeresis sits elsewhere.
+  assertNfcEquals(convert("aḯdios", "transliteration", "greek"), "ἀΐδιος");
 });

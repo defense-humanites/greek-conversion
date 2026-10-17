@@ -23,8 +23,27 @@ import { applyGreekOrthography } from "./orthography.ts";
 import { encodePunctuation } from "./punctuation.ts";
 import { applyGreekUnicode } from "./unicode.ts";
 
+/**
+ * Canonical order of combining marks on a Latin vowel: quantity, breathing,
+ * diaeresis, accent. Quantity comes first so that an explicit macron and the
+ * structural macron of eta and omega share one spelling (`ā́` like `ḗ`),
+ * which keeps transliteration output idempotent when the two meet.
+ */
+const LATIN_ORDER: readonly Diacritic[] = [
+  "macron",
+  "breve",
+  "smooth",
+  "coronis",
+  "rough",
+  "diaeresis",
+  "acute",
+  "grave",
+  "circumflex",
+  "iota-subscript",
+];
+
 const marks = (token: Grapheme, options: ConversionOptions, format: Format) =>
-  ORDER.filter((mark) =>
+  (format === "transliteration" ? LATIN_ORDER : ORDER).filter((mark) =>
     token.diacritics.has(mark) && preservesDiacritic(mark, options, format)
   );
 
@@ -256,7 +275,13 @@ export function encodeTransliteration(
     ) {
       base += uppercaseOutput ? "H" : "h";
     }
-    const tokenMarks = marks(token, options, "transliteration");
+    // Latin `ē` and `ō` are eta and omega, so a quantity mark on epsilon or
+    // omicron has no transliteration; convertDetailed() reports its removal.
+    const tokenMarks = marks(token, options, "transliteration").filter(
+      (mark) =>
+        !(mark === "macron" || mark === "breve") ||
+        (token.letter !== "epsilon" && token.letter !== "omicron"),
+    );
     const transliteratedMarks = tokenMarks
       .filter((mark) => mark !== "coronis")
       .map((mark) => trMark(mark, options))

@@ -42,6 +42,9 @@ not necessarily NFC. Accepted aliases do not round-trip byte for byte:
   `sigma: "preserve"` or `lunateSigma: "c"` retains it in the target format;
 - Unicode punctuation aliases become the canonical punctuation for the target;
 - equivalent combining-mark order and duplicate recognized marks converge;
+  transliteration writes the marks of one vowel in the order quantity,
+  breathing, diaeresis, accent, so that an explicit macron is spelled like
+  the structural macron of eta and omega (`ā́` like `ḗ`);
 - Beta Code aliases, case placement, and mark order converge.
 
 ASCII letter case in Beta Code is presentation only and does not enter the
@@ -72,7 +75,10 @@ Default transliteration has these intrinsic ambiguities:
   in place and keeps the distinction; an accent on the first vowel
   (`Ἅιδῃ → Háidȩ̄`) keeps it as well;
 - with the default `nasalGamma: "nasal"`, Greek gamma and nu before a velar can
-  both be read as nasal gamma after transliteration.
+  both be read as nasal gamma after transliteration;
+- a macron or breve on epsilon or omicron is omitted, because `ē` and `ō`
+  denote eta and omega; such a document is already invalid for
+  `validateDocument()`, and `convertDetailed()` reports the removed mark.
 
 The `coronis: "apostrophe"` policy makes the mark visible for readers, but
 U+2019 remains punctuation and does not retain semantic provenance. By
@@ -95,8 +101,10 @@ the pre-transform spelling.
 ### Inference from transliteration
 
 Transliteration does not normally write smooth breathing. When an initial vowel
-group has neither rough breathing nor explicit quantity, parsing infers smooth
-breathing. Explicit `ā/ă`, `ī/ĭ`, and `ū/ŭ` remain breathing-neutral.
+group has neither rough breathing, explicit quantity, nor a diaeresis, parsing
+infers smooth breathing. Explicit `ā/ă`, `ī/ĭ`, and `ū/ŭ` remain
+breathing-neutral, and an initial `ï` or `ü` stays without a breathing, as
+Greek writes `ϊ` and `ϋ`.
 
 With default nasal-gamma inference, `n` before gamma, kappa, xi, or chi becomes
 gamma in the canonical document. Set `nasalGamma: "literal"` to keep `n` as
