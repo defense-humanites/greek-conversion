@@ -453,6 +453,10 @@ repertoires](https://github.com/defense-humanites/greek-conversion/blob/main/doc
   knowledge.
 - A reverse conversion is not necessarily lossless; use `convertDetailed()`
   when that distinction matters.
+- The version number protects the documented contract, not the bytes of a
+  given release: a correction that brings output closer to the documentation
+  or to a preset's cited reference is a patch. See the
+  [stability policy](https://github.com/defense-humanites/greek-conversion/blob/main/docs/stability.md).
 
 The engine currently covers polytonic and monotonic accentuation, contextual
 diphthongs and breathings, crasis and coronis provenance, elision aspiration,
@@ -488,6 +492,7 @@ for the validation boundary.
 
 | Topic | Document |
 | --- | --- |
+| What the version number promises | [Stability policy](https://github.com/defense-humanites/greek-conversion/blob/main/docs/stability.md) |
 | Presets and exact option values | [Presets](https://github.com/defense-humanites/greek-conversion/blob/main/docs/presets.md) |
 | Greek orthography and Unicode | [Greek Unicode](https://github.com/defense-humanites/greek-conversion/blob/main/docs/greek-unicode.md) |
 | Detailed conversion results | [Conversion analysis](https://github.com/defense-humanites/greek-conversion/blob/main/docs/conversion-analysis.md) |

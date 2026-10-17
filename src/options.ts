@@ -249,7 +249,13 @@ export interface ConversionOptions {
   removeDiacritics?: boolean;
 }
 
-/** Fully populated conversion options used internally after resolution. */
+/**
+ * Every effective option after defaults, a preset, and custom overrides.
+ *
+ * This is an output type, returned by `resolveConversionOptions()`. Fields are
+ * added in minor releases, so construct it through that function rather than
+ * by hand; see the stability policy.
+ */
 export interface ResolvedConversionOptions {
   /** Effective orthographic and transliteration policies. */
   orthography: Required<OrthographyOptions>;

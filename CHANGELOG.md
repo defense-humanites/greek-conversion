@@ -1,12 +1,19 @@
 # Changelog
 
 All notable changes to `greek-conversion` are documented in this file. The
-project follows [Semantic Versioning](https://semver.org/).
+project follows [Semantic Versioning](https://semver.org/); the
+[stability policy](docs/stability.md) states what each kind of release may
+change.
 
 ## [Unreleased]
 
 ### Added
 
+- A [stability policy](docs/stability.md) states what the version number
+  covers from `1.0.0` on: the documented contract rather than the bytes of a
+  release, with corrections of output toward the documentation or a preset's
+  reference classified as patches, additions of codes, options, and presets as
+  minor releases, and open diagnostic unions.
 - `FORMATS` lists the supported format identifiers, and
   `CONVERSION_OPTION_VALUES` lists every option key with its accepted values;
   the playground's option suggestions are derived from that table.
