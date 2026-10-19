@@ -17,6 +17,9 @@
  * are compared after NFC normalization; other results are compared as JSON.
  * Comments without an arrow are illustrative and are not checked.
  *
+ * Links to files of this repository, and to headings in them or in the
+ * README, must exist in the working tree.
+ *
  * Run with `deno run --allow-read scripts/check_readme.ts`.
  */
 
@@ -104,12 +107,48 @@ for (const block of codeBlocks(lines)) {
   });
 }
 
+// Links to this repository point at main, because the README is also shown on
+// JSR and npm; check that each linked file and heading exists in this tree.
+const REPOSITORY =
+  "https://github.com/defense-humanites/greek-conversion/blob/main/";
+const slug = (heading: string) =>
+  heading.trim().toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .replace(/\s/g, "-");
+for (const [index, line] of lines.entries()) {
+  for (const match of line.matchAll(/\]\(([^)\s]+)\)/g)) {
+    const target = match[1];
+    let file: string | undefined;
+    let anchor: string | undefined;
+    if (target.startsWith(REPOSITORY)) {
+      [file, anchor] = target.slice(REPOSITORY.length).split("#");
+    } else if (target.startsWith("#")) {
+      file = "README.md";
+      anchor = target.slice(1);
+    } else continue;
+
+    let text: string;
+    try {
+      text = await Deno.readTextFile(new URL(`../${file}`, import.meta.url));
+    } catch {
+      failures.push(`README.md:${index + 1}: no such file: ${file}`);
+      continue;
+    }
+    checked++;
+    if (anchor === undefined) continue;
+    const headings = text.split("\n").filter((row) => /^#{1,6} /.test(row))
+      .map((row) => slug(row.replace(/^#+ /, "")));
+    if (!headings.includes(anchor)) {
+      failures.push(`README.md:${index + 1}: no heading #${anchor} in ${file}`);
+    }
+  }
+}
+
 if (failures.length > 0) {
   console.error(failures.join("\n"));
-  console.error(`\n${failures.length} README example(s) do not match.`);
+  console.error(`\n${failures.length} README problem(s) found.`);
   Deno.exit(1);
 }
-console.log(`${checked} README results match the library.`);
+console.log(`${checked} README results and links check out.`);
 
 function* codeBlocks(
   all: readonly string[],
