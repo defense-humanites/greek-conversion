@@ -63,14 +63,14 @@ Deno.test("the public Greek orthography helper resolves preset options", () => {
 });
 
 Deno.test("a Greek orthographic view does not replace the reusable source", () => {
-  const source = parse("ἄ", "greek");
+  const source = parse("ἄρα", "greek");
   const monotonic = applyGreekOrthography(source, {
     orthography: { accentuation: "monotonic" },
   });
 
-  assertNfcEquals(encode(monotonic, "greek"), "ά");
-  assertNfcEquals(encode(monotonic, "beta-code"), "a/");
-  assertNfcEquals(encode(source, "beta-code"), "a)/");
+  assertNfcEquals(encode(monotonic, "greek"), "άρα");
+  assertNfcEquals(encode(monotonic, "beta-code"), "a/ra");
+  assertNfcEquals(encode(source, "beta-code"), "a)/ra");
 });
 
 Deno.test("Greek orthographic views own all tokens and diacritic sets", () => {

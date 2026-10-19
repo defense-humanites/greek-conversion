@@ -244,7 +244,8 @@ function isWhitespace(token: Token | undefined): boolean {
 }
 
 /** Marks and explicit join controls do not interrupt an orthographic word. */
-function isBoundaryTransparent(token: Token | undefined): boolean {
+/** Whether a literal is a combining mark or word-join control inside a word. */
+export function isBoundaryTransparent(token: Token | undefined): boolean {
   return token?.kind === "literal" &&
     (/^\p{M}$/u.test(token.value) || WORD_JOIN_CONTROLS.has(token.value));
 }

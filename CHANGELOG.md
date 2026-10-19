@@ -78,6 +78,13 @@ change.
 
 ### Fixed
 
+- `accentuation: "monotonic"` no longer accents monosyllables. Polytonic
+  `καὶ`, `τῶν`, `δὲ` gave `καί`, `τών`, `δέ`; they now give `και`, `των`,
+  `δε`, as monotonic orthography requires. The exceptions are identified from
+  the polytonic marks: disjunctive `ἤ`/`ἢ` gives `ή`, interrogative `ποῦ` and
+  `πῶς` give `πού` and `πώς`, and monotonic input is unchanged. Monosyllables
+  by synizesis (`γιὰ`, `μιὰ`) keep their accent, because recognizing them
+  needs knowledge of the word.
 - A breathing or accent written on the first vowel of a pair that could form
   a diphthong is now read as the hiatus or iota-adscript signal it is
   (`Ἅιδῃ`, `Ἀίδης`, `ἀίδηλος`, `ἄυλος`), instead of being moved onto the second

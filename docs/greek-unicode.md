@@ -10,19 +10,32 @@ Greek output is polytonic by default. Request the mechanical monotonic profile
 with `orthography.accentuation`:
 
 ```ts
-convert("Ἄνθρωπὸς ᾆ ῑ", "greek", "greek", {
+convert("Ποῦ εἶσαι; Ἢ ἐδῶ ἢ ἐκεῖ, καὶ ὄχι ἀλλοῦ.", "greek", "greek", {
   orthography: { accentuation: "monotonic" },
-}); // Άνθρωπός ά ι
+}); // Πού είσαι; Ή εδώ ή εκεί, και όχι αλλού.
 ```
 
 The monotonic transform:
 
 - preserves diaeresis;
-- maps acute, grave, and circumflex to acute;
+- maps acute, grave, and circumflex to acute, keeping the second accent that
+  a word receives from a following enclitic (`ἄνθρωπός τις → άνθρωπός τις`);
 - removes smooth and rough breathings, coronis, iota subscript, macron, and
   breve;
-- does not apply lexical rules such as suppressing stress on particular
-  monosyllables.
+- leaves monosyllables unaccented (`καὶ → και`, `τῶν → των`, `κἂν → καν`),
+  except the three the monotonic system distinguishes, which the polytonic
+  marks identify: disjunctive `ή` from `ἤ` or `ἢ` (not the article `ἡ`, nor
+  `ἦ` or `ἥ`), and interrogative `πού` and `πώς` from `ποῦ` and `πῶς` (not the
+  relative or indefinite `ποὺ`, `που`, `πὼς`, `πως`).
+
+Syllables are counted on the written vowels: a diphthong is one syllable,
+and a diaeresis or an accent on the first of two vowels marks two. An acute
+on `πού` or `πώς` is kept, because that is how monotonic text writes the
+interrogative, so monotonic input is already canonical. Two cases need
+knowledge of the word and are left as written: a monosyllable by synizesis
+(`γιὰ`, `μιὰ`, `δυὸ`, `πιὰ` keep their accent, since `Διός` and `κιών`, with
+the same vowels, are disyllables), and the optional accent that monotonic
+authors put on a weak pronoun to avoid ambiguity (`μού`), which is removed.
 
 It is applied only when the target format is Greek. Beta Code and
 transliteration retain the source document's polytonic distinctions. The

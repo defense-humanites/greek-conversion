@@ -263,9 +263,9 @@ export const LOSSY_CONVERSIONS = [
     name: "monotonic Greek cannot reconstruct polytonic marks",
     sourceFormat: "greek",
     intermediateFormat: "greek",
-    source: "ἄ ὰ ᾶ ᾳ ῑ ϊ",
-    intermediate: "ά ά ά α ι ϊ",
-    canonicalRoundTrip: "ά ά ά α ι ϊ",
+    source: "ἄρα ἀλλὰ πᾶσα ᾠδῇ ῑτέα ϊδέα καὶ",
+    intermediate: "άρα αλλά πάσα ωδή ιτέα ϊδέα και",
+    canonicalRoundTrip: "άρα αλλά πάσα ωδή ιτέα ϊδέα και",
     options: MONOTONIC_GREEK,
   },
 ] as const satisfies readonly LossyConversion[];

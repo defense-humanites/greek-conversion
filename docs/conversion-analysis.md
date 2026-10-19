@@ -9,7 +9,7 @@ const result = convertDetailed("ἄνθρωπος", "greek", "greek", {
 });
 
 // {
-//   output: "Άνθρωπος",
+//   output: "άνθρωπος",
 //   lossy: true,
 //   losses: [{
 //     code: "removed-diacritic",

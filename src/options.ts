@@ -186,7 +186,7 @@ export interface OrthographyOptions {
   upsilon?: UpsilonTransliteration;
   /** Structural long-vowel marker in transliteration. Defaults to `"macron"`. */
   longVowels?: LongVowelTransliteration;
-  /** Greek accentuation system. Defaults to `"polytonic"`. */
+  /** Greek accentuation system. Defaults to `"polytonic"`; `"monotonic"` follows the monotonic rules, monosyllables included, as far as the written text allows. */
   accentuation?: GreekAccentuation;
   /** Whitespace rendering. Defaults to `"preserve"`. */
   whitespace?: WhitespaceOrthography;

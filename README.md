@@ -250,14 +250,18 @@ changing format.
 ```ts
 import { convert } from "@humanities/greek-conversion";
 
-convert("Ἄνθρωπὸς ᾆ", "greek", "greek", {
+convert("Ποῦ εἶσαι; Ἢ ἐδῶ ἢ ἐκεῖ, καὶ ὄχι ἀλλοῦ.", "greek", "greek", {
   orthography: { accentuation: "monotonic" },
 });
-// → Άνθρωπός ά
+// → Πού είσαι; Ή εδώ ή εκεί, και όχι αλλού.
 ```
 
-The transformation is mechanical: every accent becomes an acute, other
-polytonic marks are removed, and the diaeresis is kept.
+Every accent becomes a tonos, breathings and other polytonic marks are
+removed, and the diaeresis is kept. Monosyllables lose their accent, except
+disjunctive `ή` and interrogative `πού` and `πώς`, which the polytonic marks
+identify (`ἢ`, `ποῦ`, `πῶς`). The rules are applied mechanically from the
+written text; a monosyllable by synizesis such as `γιὰ` keeps its accent. See
+[Greek accentuation and Unicode](https://github.com/defense-humanites/greek-conversion/blob/main/docs/greek-unicode.md#accentuation-systems).
 
 ### Choose transliteration spellings
 
