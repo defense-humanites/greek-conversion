@@ -9,6 +9,10 @@ change.
 
 ### Added
 
+- `CITATION.cff` describes how to cite the library; GitHub offers it as
+  "Cite this repository".
+- `deno task bench` measures conversion throughput as a baseline for future
+  changes.
 - A [stability policy](docs/stability.md) states what the version number
   covers from `1.0.0` on: the documented contract rather than the bytes of a
   release, with corrections of output toward the documentation or a preset's
@@ -33,6 +37,10 @@ change.
 
 ### Changed
 
+- The npm package requires Node.js 24 or later (`engines.node: ">=24"`),
+  declares `sideEffects: false` so that bundlers can drop unused exports, and
+  carries an up-to-date description. `RELEASING.md`, a maintainer procedure,
+  is no longer included in the JSR and npm packages.
 - Option identifiers follow one naming rule: `diacritics.X` asks whether a
   mark class is kept, `orthography.X` how X is written in the target format,
   `unicode.X` which scalar represents it; and every accepted value is ASCII.

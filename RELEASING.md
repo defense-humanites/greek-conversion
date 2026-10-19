@@ -27,12 +27,14 @@ Both registries use the same package name and version:
 
 ## Release checklist
 
-1. Update the version in `deno.json` and replace `Unreleased` in
-   `CHANGELOG.md` with the release date.
+1. Update the version in `deno.json` and `CITATION.cff`, and replace
+   `Unreleased` in `CHANGELOG.md` with the release date. The publish workflow
+   refuses a release whose tag or citation version differs from `deno.json`.
 2. Run `deno task check`, `deno task test`, `deno task publish:check`, and
    `deno task npm:check`.
 3. Verify the generated npm archive, especially its ESM exports, declarations,
-   license, README, migration guide, and documentation directory.
+   license, README, migration guide, and documentation directory. This file is
+   deliberately excluded from both packages.
 4. Merge the exact release commit and wait for CI to succeed.
 5. Create a draft GitHub release whose tag exactly matches the version with
    a `v` prefix, for example `v1.0.0`. Publish it as a GitHub release. The npm

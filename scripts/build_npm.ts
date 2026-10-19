@@ -2,12 +2,12 @@ import { build, emptyDir } from "@deno/dnt";
 import denoConfig from "../deno.json" with { type: "json" };
 
 const OUT_DIR = "./npm";
+// RELEASING.md is a maintainer procedure and stays in the repository only.
 const DOCUMENTS = [
   "CHANGELOG.md",
   "LICENSE",
   "MIGRATION.md",
   "README.md",
-  "RELEASING.md",
 ] as const;
 
 if (denoConfig.name !== "@humanities/greek-conversion") {
@@ -39,7 +39,7 @@ await build({
     name: denoConfig.name,
     version: denoConfig.version,
     description:
-      "A small, yet powerful, JavaScript library for converting both polytonic and monotonic Greek from/into many representations.",
+      "Bidirectional conversion between Greek, Beta Code, and transliteration, with standards-based presets and information-loss diagnostics.",
     author: "Antoine Boquet",
     license: denoConfig.license,
     homepage: "https://github.com/defense-humanites/greek-conversion#readme",
@@ -69,8 +69,11 @@ await build({
       "tlg",
     ],
     engines: {
-      node: ">=18",
+      node: ">=24",
     },
+    // The package has no import-time side effects; bundlers may drop
+    // unused exports.
+    sideEffects: false,
   },
   async postBuild(): Promise<void> {
     for (const document of DOCUMENTS) {

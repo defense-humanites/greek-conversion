@@ -13,7 +13,6 @@
       "LICENSE",
       "CHANGELOG.md",
       "MIGRATION.md",
-      "RELEASING.md",
       "docs/**/*.md",
       "src/**/*.ts"
     ]
@@ -29,6 +28,7 @@
       "scripts/**/*.ts",
       "scripts/**/*.mjs",
       "web/**/*.ts",
+      "bench/**/*.ts",
       ".github/**/*.yml",
       "*.json"
     ],
@@ -42,10 +42,11 @@
     ]
   },
   "tasks": {
-    "check": "deno fmt --check && deno lint && deno check src/ tests/ scripts/ && deno check --config web/deno.json web/app.ts && deno task doc && deno run --allow-read scripts/generate_preset_docs.ts --check",
+    "check": "deno fmt --check && deno lint && deno check src/ tests/ scripts/ bench/ && deno check --config web/deno.json web/app.ts && deno task doc && deno run --allow-read scripts/generate_preset_docs.ts --check",
     "doc": "deno doc --lint src/mod.ts src/document.ts",
     "docs:presets": "deno run --allow-read --allow-write scripts/generate_preset_docs.ts",
     "test": "deno test",
+    "bench": "deno bench bench/",
     "publish:check": "deno publish --dry-run --check=all",
     "npm:build": "deno run -A scripts/build_npm.ts",
     "npm:check": "deno task npm:build && node scripts/npm_smoke.mjs && node scripts/npm_types_smoke.mjs && cd npm && npm pack --dry-run",
