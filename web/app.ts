@@ -1,15 +1,17 @@
 import {
   CharacterScopeError,
   createConverter,
+  FORMATS,
   listPresetMetadata,
 } from "../src/mod.ts";
 import type {
+  ConversionLoss,
   ConversionOptions,
   ConverterConfiguration,
   Format,
   Preset,
 } from "../src/mod.ts";
-import { parse, validateDocument } from "../src/document.ts";
+import { encode, parse, validateDocument } from "../src/document.ts";
 import { suggestInventory } from "./inventory_suggestions.ts";
 import { suggestOptions } from "./options_suggestions.ts";
 import type { Suggestion } from "./options_suggestions.ts";
@@ -26,6 +28,8 @@ const presetSelect = element<HTMLSelectElement>("preset");
 const exampleSelect = element<HTMLSelectElement>("examples");
 const source = element<HTMLTextAreaElement>("source");
 const output = element<HTMLTextAreaElement>("output");
+const sourceLabel = element<HTMLLabelElement>("source-label");
+const outputLabel = element<HTMLLabelElement>("output-label");
 const optionsInput = element<HTMLTextAreaElement>("options");
 const optionsSuggestions = element<HTMLDivElement>("options-suggestions");
 const inventoryInput = element<HTMLTextAreaElement>("inventory");
@@ -33,11 +37,22 @@ const inventorySuggestions = element<HTMLDivElement>("inventory-suggestions");
 const strict = element<HTMLInputElement>("strict");
 const status = element<HTMLParagraphElement>("status");
 const diagnostics = element<HTMLDivElement>("diagnostics");
-const presetInfo = element<HTMLDivElement>("preset-info");
+const presetInfo = element<HTMLDetailsElement>("preset-info");
+const presetSummary = element<HTMLElement>("preset-summary");
+const presetBody = element<HTMLDivElement>("preset-body");
 const documentPanel = element<HTMLDetailsElement>("document-panel");
 const documentPreview = element<HTMLPreElement>("document-preview");
+const code = element<HTMLElement>("code");
 const copyButton = element<HTMLButtonElement>("copy");
+const copyCodeButton = element<HTMLButtonElement>("copy-code");
+const shareButton = element<HTMLButtonElement>("share");
 const swapButton = element<HTMLButtonElement>("swap");
+
+const FORMAT_NAMES: Readonly<Record<Format, string>> = {
+  greek: "Greek",
+  "beta-code": "Beta Code",
+  transliteration: "Transliteration",
+};
 
 function attachSuggestions(
   input: HTMLTextAreaElement,
@@ -123,58 +138,144 @@ for (const metadata of presets) {
   presetSelect.add(new Option(metadata.name, metadata.id));
 }
 
-const examples: Record<Format, readonly [string, string][]> = {
-  greek: [
-    ["Choose an example…", ""],
-    ["ἄνθρωπος", "ἄνθρωπος"],
-    ["Ἄνθρωπος ῥόδος", "Ἄνθρωπος ῥόδος"],
-    ["ϲῶμα ϝ ϛʹ", "ϲῶμα ϝ ϛʹ"],
-    ["αʹ καὶ ͵β", "αʹ καὶ ͵β"],
-  ],
-  "beta-code": [
-    ["Choose an example…", ""],
-    ["A)/NQRWPOS", "A)/NQRWPOS"],
-    ["*)/ANQRWPOS", "*)/ANQRWPOS"],
-    ["*(=W|", "*(=W|"],
-  ],
-  transliteration: [
-    ["Choose an example…", ""],
-    ["ánthrōpos", "ánthrōpos"],
-    ["Chará", "Chará"],
-    ["Thálassa", "Thálassa"],
-  ],
-};
+/** A complete scenario: loading one sets the text, formats, and settings. */
+interface Example {
+  label: string;
+  text: string;
+  from: Format;
+  to: Format;
+  preset?: Preset;
+  options?: ConversionOptions;
+}
+
+const THUCYDIDES =
+  "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων, ὡς δὲ εἰπεῖν καὶ ἐπὶ πλεῖστον ἀνθρώπων.";
+
+const EXAMPLES: readonly Example[] = [
+  {
+    label: "Thucydides, transliterated",
+    text: THUCYDIDES,
+    from: "greek",
+    to: "transliteration",
+  },
+  {
+    label: "Thucydides, ALA-LC",
+    text: THUCYDIDES,
+    from: "greek",
+    to: "transliteration",
+    preset: "ala-lc-ancient",
+  },
+  {
+    label: "Thucydides, TLG Beta Code",
+    text: THUCYDIDES,
+    from: "greek",
+    to: "beta-code",
+    preset: "tlg-core",
+  },
+  {
+    label: "Monotonic Greek",
+    text: "Ποῦ εἶσαι; Ἢ ἐδῶ ἢ ἐκεῖ, καὶ ὄχι ἀλλοῦ.",
+    from: "greek",
+    to: "greek",
+    options: { orthography: { accentuation: "monotonic" } },
+  },
+  {
+    label: "Modern Greek, ALA-LC",
+    text: "Βίος και πολιτεία του Αλέξη Ζορμπά",
+    from: "greek",
+    to: "transliteration",
+    preset: "ala-lc-modern",
+  },
+  {
+    label: "Hiatus and iota adscript",
+    text: "Ἅιδῃ Ἀίδης ἀίδηλος ἄυλος",
+    from: "greek",
+    to: "transliteration",
+  },
+  {
+    label: "Numerals and archaic letters",
+    text: "αʹ ιβʹ ͵αωκγʹ ϛʹ ϟʹ ϡʹ ϝάναξ",
+    from: "greek",
+    to: "transliteration",
+    preset: "bnf-core",
+  },
+  {
+    label: "Beta Code to Greek",
+    text: "*mh=nin a)/eide qea\\ *phlhi+a/dew *)axilh=os",
+    from: "beta-code",
+    to: "greek",
+  },
+  {
+    label: "Transliteration to Greek",
+    text: "Hóti mèn humeĩs, ō̃ ándres Athēnaĩoi",
+    from: "transliteration",
+    to: "greek",
+  },
+];
+
+exampleSelect.add(new Option("Choose an example", ""));
+for (const [index, example] of EXAMPLES.entries()) {
+  exampleSelect.add(new Option(example.label, String(index)));
+}
 
 function selectedFormat(select: HTMLSelectElement): Format {
   return select.value as Format;
 }
 
-function updateExamples(): void {
-  exampleSelect.replaceChildren();
-  for (const [label, value] of examples[selectedFormat(sourceFormat)]) {
-    exampleSelect.add(new Option(label, value));
+/** Shows each text in the typeface of its format. */
+function applyFaces(): void {
+  for (
+    const [field, label, select] of [
+      [source, sourceLabel, sourceFormat],
+      [output, outputLabel, targetFormat],
+    ] as const
+  ) {
+    const format = selectedFormat(select);
+    for (const name of FORMATS) {
+      field.classList.toggle(`face-${name}`, name === format);
+    }
+    field.lang = format === "greek" ? "grc" : "";
+    label.textContent = FORMAT_NAMES[format];
   }
 }
 
 function showPreset(): void {
   const metadata = presets.find(({ id }) => id === presetSelect.value);
-  presetInfo.replaceChildren();
   presetInfo.hidden = metadata === undefined;
+  presetBody.replaceChildren();
   if (metadata === undefined) return;
 
+  const limits = metadata.limitations.length;
+  presetSummary.textContent =
+    `${metadata.name}: ${metadata.coverage} coverage, ${
+      limits === 1 ? "1 known limit" : `${limits} known limits`
+    }`;
+
   const description = document.createElement("p");
-  description.textContent = `${metadata.description} Scope: ${
-    metadata.scope.join(", ")
+  description.textContent = `${metadata.description} For ${
+    metadata.scope.join("; ")
   }.`;
-  const details = document.createElement("p");
-  details.textContent =
-    `Coverage: ${metadata.coverage} · Known limitations: ${metadata.limitations.length} · `;
-  const link = document.createElement("a");
-  link.href =
-    "https://github.com/defense-humanites/greek-conversion/blob/main/docs/presets.md";
-  link.textContent = "Preset details ↗";
-  details.append(link);
-  presetInfo.append(description, details);
+  const list = document.createElement("ul");
+  for (const limitation of metadata.limitations) {
+    const item = document.createElement("li");
+    item.textContent = limitation;
+    list.append(item);
+  }
+  const references = document.createElement("p");
+  references.append("Based on ");
+  metadata.references.forEach((reference, index) => {
+    if (index > 0) {
+      references.append(
+        index === metadata.references.length - 1 ? " and " : ", ",
+      );
+    }
+    const link = document.createElement("a");
+    link.href = reference.url;
+    link.textContent = reference.title;
+    references.append(link);
+  });
+  references.append(".");
+  presetBody.append(description, list, references);
 }
 
 function parseSettings<T>(
@@ -182,7 +283,12 @@ function parseSettings<T>(
   allowed: readonly string[],
   label: string,
 ): T {
-  const value: unknown = JSON.parse(input.value.trim() || "{}");
+  let value: unknown;
+  try {
+    value = JSON.parse(input.value.trim() || "{}");
+  } catch {
+    throw new SyntaxError(`${label}: this is not valid JSON yet.`);
+  }
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     throw new TypeError(`${label}: expected a JSON object.`);
   }
@@ -195,28 +301,70 @@ function parseSettings<T>(
   return value as T;
 }
 
+/** The text of one source token, for display beside its diagnostic. */
+function tokenText(
+  index: number,
+  format: Format,
+  options: ConversionOptions,
+): string {
+  try {
+    const token = parse(source.value, format, options)[index];
+    if (token === undefined) return "";
+    return token.kind === "literal" ? token.value : encode([token], "greek");
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Lists diagnostics grouped by message, so that one kind of loss appears
+ * once with every letter it affects rather than once per letter.
+ */
 function showIssues(
-  losses: readonly { code: string; index: number; message: string }[],
+  losses: readonly ConversionLoss[],
   scope: readonly { code: string; index: number; message: string }[],
+  letters: ((index: number) => string) | undefined,
 ): void {
   diagnostics.replaceChildren();
   diagnostics.hidden = losses.length + scope.length === 0;
   if (diagnostics.hidden) return;
 
   for (
-    const [label, issues] of [["Information loss", losses], [
-      "Repertoire",
-      scope,
-    ]] as const
+    const [label, issues] of [
+      ["What the target does not keep", losses],
+      ["Characters outside the repertoire", scope],
+    ] as const
   ) {
     if (!issues.length) continue;
-    const heading = document.createElement("strong");
-    heading.textContent = `${label} (${issues.length})`;
-    const list = document.createElement("ul");
+    const groups = new Map<string, { code: string; indices: number[] }>();
     for (const issue of issues) {
+      const group = groups.get(issue.message) ??
+        { code: issue.code, indices: [] };
+      group.indices.push(issue.index);
+      groups.set(issue.message, group);
+    }
+
+    const heading = document.createElement("h2");
+    heading.textContent = label;
+    const list = document.createElement("ul");
+    for (const [message, { code: issueCode, indices }] of groups) {
       const item = document.createElement("li");
-      item.textContent =
-        `Token ${issue.index} · ${issue.code} — ${issue.message}`;
+      const text = document.createElement("p");
+      const detail = document.createElement("span");
+      detail.className = "code";
+      detail.textContent = ` ${issueCode}`;
+      text.append(message, detail);
+      const affected = document.createElement("p");
+      affected.className = "letters";
+      for (const index of indices) {
+        const letter = document.createElement("span");
+        letter.className = "letter";
+        letter.lang = "grc";
+        letter.title = `Token ${index}`;
+        letter.textContent = letters?.(index) || `#${index}`;
+        affected.append(letter);
+      }
+      item.append(text, affected);
       list.append(item);
     }
     diagnostics.append(heading, list);
@@ -240,70 +388,176 @@ function inspectDocument(options: ConversionOptions): void {
   );
 }
 
+/** Writes a value as a TypeScript literal, with unquoted identifier keys. */
+function literalOf(value: unknown): string {
+  return JSON.stringify(value, null, 2)
+    .replace(/"([A-Za-z_$][\w$]*)":/g, "$1:");
+}
+
+function showCode(
+  preset: Preset | "",
+  options: ConversionOptions,
+  inventory: ConverterConfiguration,
+): void {
+  const from = JSON.stringify(sourceFormat.value);
+  const to = JSON.stringify(targetFormat.value);
+  const bound = Object.keys(inventory).length > 0 || strict.checked;
+
+  if (!bound) {
+    const all = { ...(preset ? { preset } : {}), ...options };
+    const argument = Object.keys(all).length ? `, ${literalOf(all)}` : "";
+    code.textContent =
+      `import { convert } from "@humanities/greek-conversion";\n\n` +
+      `convert(text, ${from}, ${to}${argument});`;
+    return;
+  }
+  const configuration = {
+    ...(preset ? { preset } : {}),
+    ...inventory,
+    ...(strict.checked ? { outOfScopeBehavior: "reject" } : {}),
+  };
+  const argument = Object.keys(options).length ? `, ${literalOf(options)}` : "";
+  code.textContent =
+    `import { createConverter } from "@humanities/greek-conversion";\n\n` +
+    `const converter = createConverter(${literalOf(configuration)});\n` +
+    `converter.convert(text, ${from}, ${to}${argument});`;
+}
+
+/** Keeps the page state in the address, so that a link reproduces it. */
+function saveState(): void {
+  const state = new URLSearchParams({
+    from: sourceFormat.value,
+    to: targetFormat.value,
+    text: source.value,
+  });
+  if (presetSelect.value) state.set("preset", presetSelect.value);
+  if (optionsInput.value.trim()) state.set("options", optionsInput.value);
+  if (inventoryInput.value.trim()) {
+    state.set("characters", inventoryInput.value);
+  }
+  if (strict.checked) state.set("strict", "1");
+  history.replaceState(null, "", `#${state}`);
+}
+
+function restoreState(): void {
+  const state = new URLSearchParams(location.hash.slice(1));
+  const known = (value: string | null): value is Format =>
+    value !== null && (FORMATS as readonly string[]).includes(value);
+  const from = state.get("from");
+  const to = state.get("to");
+  if (known(from)) sourceFormat.value = from;
+  if (known(to)) targetFormat.value = to;
+  const preset = state.get("preset");
+  if (preset && presets.some(({ id }) => id === preset)) {
+    presetSelect.value = preset;
+  }
+  if (state.has("text")) source.value = state.get("text") ?? "";
+  optionsInput.value = state.get("options") ?? "";
+  inventoryInput.value = state.get("characters") ?? "";
+  strict.checked = state.get("strict") === "1";
+  for (const panel of [optionsInput, inventoryInput]) {
+    if (panel.value) panel.closest("details")?.setAttribute("open", "");
+  }
+}
+
 function update(): void {
   documentPreview.textContent = "";
+  applyFaces();
+  const from = selectedFormat(sourceFormat);
+  const to = selectedFormat(targetFormat);
+  let letters: ((index: number) => string) | undefined;
   try {
     const options = parseSettings<ConversionOptions>(
       optionsInput,
       ["orthography", "diacritics", "unicode", "removeDiacritics"],
-      "Conversion options",
+      "Options",
     );
     const preset = presetSelect.value as Preset | "";
-    inspectDocument({ ...options, ...(preset ? { preset } : {}) });
+    const withPreset = { ...options, ...(preset ? { preset } : {}) };
+    inspectDocument(withPreset);
     const inventory = parseSettings<ConverterConfiguration>(
       inventoryInput,
       ["aliases", "characters", "repertoire", "exclude"],
-      "Custom character inventory",
+      "Character inventory",
     );
+    showCode(preset, options, inventory);
+    // Token numbers match the built-in reading only without custom characters.
+    letters = Object.keys(inventory).length === 0
+      ? (index: number) => tokenText(index, from, withPreset)
+      : undefined;
     const converter = createConverter({
       ...inventory,
       ...(preset ? { preset } : {}),
       outOfScopeBehavior: strict.checked ? "reject" : "preserve",
     });
-    const result = converter.convertDetailed(
-      source.value,
-      selectedFormat(sourceFormat),
-      selectedFormat(targetFormat),
-      options,
-    );
+    const result = converter.convertDetailed(source.value, from, to, options);
 
     output.value = result.output;
     copyButton.disabled = swapButton.disabled = false;
-    status.classList.remove("error");
-    const lossCount = result.losses.length;
-    const scopeCount = result.diagnostics.length;
-    status.textContent = source.value
-      ? lossCount || scopeCount
-        ? `Losses: ${lossCount} · Repertoire diagnostics: ${scopeCount}.`
-        : "No information loss or repertoire issues detected."
-      : "Enter text or load an example.";
-    showIssues(result.losses, result.diagnostics);
+    const lost = result.losses.length;
+    const outside = result.diagnostics.length;
+    status.className = !source.value ? "" : lost ? "lossy" : "ok";
+    status.textContent = !source.value
+      ? "Type or paste text to convert it."
+      : lost
+      ? `${
+        lost === 1 ? "1 distinction" : `${lost} distinctions`
+      } lost: converting the result back will not give the same text.`
+      : `Lossless: converting the result back gives the same text.`;
+    if (source.value && outside) {
+      status.textContent += ` ${
+        outside === 1 ? "1 character is" : `${outside} characters are`
+      } outside the repertoire and copied through.`;
+    }
+    showIssues(result.losses, result.diagnostics, letters);
   } catch (error) {
     output.value = "";
     copyButton.disabled = swapButton.disabled = true;
-    status.classList.add("error");
+    status.className = "error";
     status.textContent = error instanceof Error ? error.message : String(error);
     showIssues(
       [],
       error instanceof CharacterScopeError ? error.diagnostics : [],
+      letters,
     );
   }
+  saveState();
 }
 
-sourceFormat.addEventListener("change", () => {
-  updateExamples();
+async function copy(text: string, button: HTMLButtonElement): Promise<void> {
+  const label = button.textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    button.textContent = "Copied";
+  } catch {
+    button.textContent = "Select and copy manually";
+  }
+  setTimeout(() => (button.textContent = label), 1600);
+}
+
+function loadExample(example: Example): void {
+  source.value = example.text;
+  sourceFormat.value = example.from;
+  targetFormat.value = example.to;
+  presetSelect.value = example.preset ?? "";
+  optionsInput.value = example.options ? JSON.stringify(example.options) : "";
+  if (example.options) {
+    optionsInput.closest("details")?.setAttribute("open", "");
+  }
+  showPreset();
   update();
-});
-targetFormat.addEventListener("change", update);
+}
+
+for (const select of [sourceFormat, targetFormat]) {
+  select.addEventListener("change", update);
+}
 presetSelect.addEventListener("change", () => {
   showPreset();
   update();
 });
 exampleSelect.addEventListener("change", () => {
-  if (exampleSelect.value) {
-    source.value = exampleSelect.value;
-    update();
-  }
+  const example = EXAMPLES[Number(exampleSelect.value)];
+  if (exampleSelect.value && example) loadExample(example);
 });
 source.addEventListener("input", () => {
   exampleSelect.value = "";
@@ -321,18 +575,21 @@ swapButton.addEventListener("click", () => {
   sourceFormat.value = targetFormat.value;
   targetFormat.value = oldSource;
   source.value = output.value;
-  updateExamples();
+  exampleSelect.value = "";
   update();
 });
-copyButton.addEventListener("click", async () => {
-  try {
-    await navigator.clipboard.writeText(output.value);
-    status.textContent = "Output copied.";
-  } catch {
-    status.textContent = "Copy unavailable; select the output manually.";
-  }
+copyButton.addEventListener("click", () => copy(output.value, copyButton));
+copyCodeButton.addEventListener(
+  "click",
+  () => copy(code.textContent ?? "", copyCodeButton),
+);
+shareButton.addEventListener("click", () => copy(location.href, shareButton));
+addEventListener("hashchange", () => {
+  restoreState();
+  showPreset();
+  update();
 });
 
-updateExamples();
+restoreState();
 showPreset();
 update();

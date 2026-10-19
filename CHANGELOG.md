@@ -138,6 +138,20 @@ change.
   because `ē` and `ō` denote eta and omega, and `convertDetailed()` reports
   the removed mark instead of producing text that reparses as another letter.
 
+### Companion website (not included in JSR or npm)
+
+- Each format is shown in its own typeface: a polytonic-capable serif for
+  Greek and transliteration, a monospace face for Beta Code, whose marks are
+  letters.
+- The page state is kept in the address, so "Copy link" shares a conversion
+  with its standard and options; the equivalent library call is shown and can
+  be copied.
+- Diagnostics are grouped by kind and show the affected letters; a standard's
+  references and known limits can be expanded in place.
+- Examples are complete scenarios, starting with Thucydides 1.1.2; the page
+  follows the system dark mode and fits narrow screens.
+- Loss messages name diacritics in full ("the smooth breathing").
+
 ## [1.0.0] - 2026-09-30
 
 The first stable release of the rewritten library. There are no API or
