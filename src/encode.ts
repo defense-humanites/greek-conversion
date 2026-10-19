@@ -27,6 +27,7 @@ import {
 } from "./diacritics.ts";
 import type { Diacritic, Document, Format, Grapheme } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
+import { greekUpper } from "./case.ts";
 import { applyGreekOrthography } from "./orthography.ts";
 import { encodePunctuation } from "./punctuation.ts";
 import { applyGreekUnicode } from "./unicode.ts";
@@ -93,7 +94,7 @@ export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
               isWordFinal(doc, i + 1)
         ) base = "ς";
       }
-      out += contraction.uppercase ? base.toLocaleUpperCase("el") : base;
+      out += contraction.uppercase ? greekUpper(base) : base;
       i++;
       continue;
     }
@@ -127,7 +128,7 @@ export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
     ) {
       base = "ϐ";
     }
-    if (token.uppercase) base = base.toLocaleUpperCase("el");
+    if (token.uppercase) base = greekUpper(base);
 
     out += base +
       marks(token, options, "greek").map((mark) => GREEK_FOR[mark]).join("");
@@ -496,13 +497,12 @@ function writesSeparationDiaeresis(
 
   // Without its hiatus mark the pair would be a diphthong rendered with u.
   const unmarked: Document = [
-    ...document.slice(0, index - 1),
     { ...first, diacritics: new Set<Diacritic>() },
-    ...document.slice(index),
+    token,
   ];
   const wouldBeDiphthong = upsilon === "y-with-au-eu-ou"
-    ? isAuEuOuAt(unmarked, index - 1)
-    : isDiphthongAt(unmarked, index - 1);
+    ? isAuEuOuAt(unmarked, 0)
+    : isDiphthongAt(unmarked, 0);
   if (!wouldBeDiphthong) return false;
 
   // The hiatus survives when one of its marks is reread on the first vowel.

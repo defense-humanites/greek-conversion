@@ -16,6 +16,7 @@ import {
   grapheme,
   type Letter,
   literal,
+  ownedGrapheme,
   type Token,
 } from "../model.ts";
 import type { ConversionOptions } from "../options.ts";
@@ -171,14 +172,10 @@ export function parseTransliteration(
         options.orthography?.upsilon === "y-with-au-eu-ou") &&
       source.toLowerCase() === "y"
     ) {
-      const candidate = grapheme(letter, false, marks);
-      const document = withoutLatinBreathing(
-        [...out, candidate],
-        out.length - 1,
-      );
+      const pair = latinPair(out.at(-1), grapheme(letter, false, marks));
       const wouldRenderU = options.orthography.upsilon === "y-with-au-eu-ou"
-        ? isAuEuOuAt(document, out.length - 1)
-        : isDiphthongAt(document, out.length - 1);
+        ? isAuEuOuAt(pair, 0)
+        : isDiphthongAt(pair, 0);
       if (wouldRenderU) {
         // `y` says the pair is not a diphthong. Greek marks such a hiatus by
         // a breathing on the first vowel when the word starts there (ἀυτμή,
@@ -197,12 +194,8 @@ export function parseTransliteration(
       options.orthography?.upsilon === "y-with-diphthong-u" &&
       contextualY.has(out.length - 1)
     ) {
-      const candidate = grapheme(letter, false, marks);
-      const document = withoutLatinBreathing(
-        [...out, candidate],
-        out.length - 1,
-      );
-      if (isDiphthongAt(document, out.length - 1)) {
+      const pair = latinPair(out.at(-1), grapheme(letter, false, marks));
+      if (isDiphthongAt(pair, 0)) {
         marks.add("diaeresis");
       }
     }
@@ -215,7 +208,7 @@ export function parseTransliteration(
       contextualY.add(out.length);
     }
 
-    out.push(grapheme(
+    out.push(ownedGrapheme(
       letter,
       roughUppercase || source !== source.toLowerCase(),
       marks,
@@ -376,7 +369,7 @@ function inferInitialBreathings(
 
     const target = separatedByBreathing.has(i + 1)
       ? token
-      : tokens[breathingTarget(withoutLatinBreathing(tokens, i), i)];
+      : tokens[i + breathingTarget(latinPair(token, tokens[i + 1]), 0)];
     if (target.kind !== "grapheme") continue;
 
     if (token.diacritics.has("rough") && target !== token) {
@@ -397,28 +390,31 @@ function inferInitialBreathings(
 }
 
 /**
- * Returns a view of the document without the breathing provisionally attached
- * to the vowel at `index`.
+ * Returns the two-token window that the diphthong helpers inspect, without
+ * the breathing provisionally attached to the first vowel.
  *
  * A Latin `h` precedes the whole vowel group, so the rough breathing it places
  * on the first vowel is not the hiatus signal that a breathing written on the
  * first Greek vowel would be. Accents stay: they are attached to one Latin
- * vowel and keep their hiatus meaning.
+ * vowel and keep their hiatus meaning. The window avoids copying the document
+ * at each vowel, which made parsing quadratic.
  */
-function withoutLatinBreathing(
-  document: readonly Token[],
-  index: number,
+function latinPair(
+  first: Token | undefined,
+  second: Token | undefined,
 ): Token[] {
-  const token = document[index];
-  if (token?.kind !== "grapheme" || !token.diacritics.has("rough")) {
-    return [...document];
-  }
-  const view = [...document];
-  view[index] = {
-    ...token,
-    diacritics: new Set(
-      [...token.diacritics].filter((mark) => mark !== "rough"),
-    ),
-  };
-  return view;
+  const pair: Token[] = [];
+  if (first === undefined) return pair;
+  pair.push(
+    first.kind === "grapheme" && first.diacritics.has("rough")
+      ? {
+        ...first,
+        diacritics: new Set(
+          [...first.diacritics].filter((mark) => mark !== "rough"),
+        ),
+      }
+      : first,
+  );
+  if (second !== undefined) pair.push(second);
+  return pair;
 }

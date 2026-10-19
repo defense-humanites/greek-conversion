@@ -41,6 +41,11 @@ change.
 
 ### Changed
 
+- Conversion is about twice as fast from Greek and Beta Code, and about four
+  times as fast from transliteration, on 20 000-character inputs: Greek case
+  mapping is cached per character, the oxia substitution runs in one pass,
+  and parsers no longer copy each grapheme's diacritic set. Output is
+  unchanged.
 - Greek output writes a macron or breve before the other marks of its vowel,
   following the typographic convention that the quantity sits on the letter
   with breathing and accent above it. `ᾱ́` is now U+1FB1 U+0301 instead of
@@ -84,6 +89,11 @@ change.
 
 ### Fixed
 
+- Reading transliteration took time quadratic in the length of the text: the
+  parser copied the whole document at every word-initial vowel. 80 000
+  characters took 2.5 s and now take about 60 ms; `convertDetailed()`, which
+  reads its target back, benefits for every target format. A scaling test
+  now guards every format against superlinear cost.
 - `accentuation: "monotonic"` no longer accents monosyllables. Polytonic
   `καὶ`, `τῶν`, `δὲ` gave `καί`, `τών`, `δέ`; they now give `και`, `των`,
   `δε`, as monotonic orthography requires. The exceptions are identified from

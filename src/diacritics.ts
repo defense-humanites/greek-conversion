@@ -91,12 +91,13 @@ export function prepareDiacriticsForRendering(
   options: ConversionOptions,
   format: Format,
 ): Document {
-  const removesAnyMark = document.some((token) =>
-    token.kind === "grapheme" &&
-    [...token.diacritics].some((mark) =>
-      !preservesDiacritic(mark, options, format)
-    )
-  );
+  const removesAnyMark = document.some((token) => {
+    if (token.kind !== "grapheme") return false;
+    for (const mark of token.diacritics) {
+      if (!preservesDiacritic(mark, options, format)) return true;
+    }
+    return false;
+  });
 
   if (!removesAnyMark) return document;
 

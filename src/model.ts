@@ -111,6 +111,22 @@ export type Token = Grapheme | Literal;
 /** Readonly token sequence; its tokens and grapheme diacritic sets are mutable. */
 export type Document = readonly Token[];
 
+/**
+ * Creates a grapheme that takes ownership of the supplied diacritic set.
+ *
+ * Internal to the parsers, which build a fresh set for every grapheme; the
+ * public {@link grapheme} copies its argument instead.
+ */
+export const ownedGrapheme = (
+  letter: Letter,
+  uppercase: boolean,
+  diacritics: Set<Diacritic>,
+  glyphVariant?: GlyphVariant,
+): Grapheme =>
+  glyphVariant === undefined
+    ? { kind: "grapheme", letter, uppercase, diacritics }
+    : { kind: "grapheme", letter, uppercase, diacritics, glyphVariant };
+
 /** Creates a canonical Greek grapheme. */
 export const grapheme = (
   letter: Letter,
