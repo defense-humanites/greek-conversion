@@ -49,6 +49,17 @@ Both registries use the same package name and version:
    commands, then reset `PUBLISH_ENABLED` to `false` if releases should require
    a fresh manual authorization.
 
+## A slow JSR step
+
+After `Publishing @humanities/greek-conversion@<version> ...`, `deno publish`
+waits for JSR to process the version, with no time limit. This usually takes
+seconds, but `1.0.0-rc.1` took about 12 minutes on 2026-10-19 while other
+packages published normally. Wait at least 30 minutes before cancelling, and
+check the version page (`https://jsr.io/@humanities/greek-conversion@<version>`)
+first: once it exists, JSR has accepted the version and the workflow will
+continue with npm. Cancelling while JSR processes leaves nothing published on
+either registry, and rerunning the same release is safe.
+
 ## Partial publication
 
 Registry publication is not atomic and published versions are immutable. If
