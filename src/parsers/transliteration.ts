@@ -1,4 +1,5 @@
 import { ALPHABET, GREEK_MARKS } from "../alphabet.ts";
+import { infersSmoothBreathing } from "../diacritics.ts";
 import {
   breathingTarget,
   followsNasalGamma,
@@ -7,6 +8,7 @@ import {
   isDiphthongAt,
   isGreekNumeralContext,
   isVowel,
+  isWordInitial,
 } from "../context.ts";
 import {
   type Diacritic,
@@ -14,6 +16,7 @@ import {
   grapheme,
   type Letter,
   literal,
+  ownedGrapheme,
   type Token,
 } from "../model.ts";
 import type { ConversionOptions } from "../options.ts";
@@ -51,6 +54,9 @@ export function parseTransliteration(
   const out: Token[] = [];
   const trie = transliterationTrie(options);
   const contextualY = new Set<number>();
+  // Upsilons read from a contextual `y` whose separation from the preceding
+  // vowel is carried by a breathing on that vowel rather than by a diaeresis.
+  const separatedByBreathing = new Set<number>();
 
   for (let i = 0; i < chars.length;) {
     let rough = false;
@@ -166,13 +172,20 @@ export function parseTransliteration(
         options.orthography?.upsilon === "y-with-au-eu-ou") &&
       source.toLowerCase() === "y"
     ) {
-      const candidate = grapheme(letter, false, marks);
-      const document = [...out, candidate];
+      const pair = latinPair(out.at(-1), grapheme(letter, false, marks));
       const wouldRenderU = options.orthography.upsilon === "y-with-au-eu-ou"
-        ? isAuEuOuAt(document, out.length - 1)
-        : isDiphthongAt(document, out.length - 1);
+        ? isAuEuOuAt(pair, 0)
+        : isDiphthongAt(pair, 0);
       if (wouldRenderU) {
-        marks.add("diaeresis");
+        // `y` says the pair is not a diphthong. Greek marks such a hiatus by
+        // a breathing on the first vowel when the word starts there (ἀυτμή,
+        // ἁυ); the diaeresis is the fallback where no breathing will sit.
+        const first = out[out.length - 1];
+        const breathingWillSit = first.kind === "grapheme" &&
+          isWordInitial(out, out.length - 1) &&
+          (first.diacritics.has("rough") || infersSmoothBreathing(options));
+        if (breathingWillSit) separatedByBreathing.add(out.length);
+        else marks.add("diaeresis");
       }
     }
 
@@ -181,8 +194,8 @@ export function parseTransliteration(
       options.orthography?.upsilon === "y-with-diphthong-u" &&
       contextualY.has(out.length - 1)
     ) {
-      const candidate = grapheme(letter, false, marks);
-      if (isDiphthongAt([...out, candidate], out.length - 1)) {
+      const pair = latinPair(out.at(-1), grapheme(letter, false, marks));
+      if (isDiphthongAt(pair, 0)) {
         marks.add("diaeresis");
       }
     }
@@ -195,7 +208,7 @@ export function parseTransliteration(
       contextualY.add(out.length);
     }
 
-    out.push(grapheme(
+    out.push(ownedGrapheme(
       letter,
       roughUppercase || source !== source.toLowerCase(),
       marks,
@@ -206,7 +219,7 @@ export function parseTransliteration(
   if (options.orthography?.nasalGamma !== "literal") {
     inferNasalGammas(out);
   }
-  inferInitialBreathings(out, options);
+  inferInitialBreathings(out, options, separatedByBreathing);
 
   return out;
 }
@@ -215,7 +228,7 @@ function prioritizeEtaMacron(
   input: string[],
   options: ConversionOptions,
 ): string[] {
-  if (options.orthography?.eta !== "ī") return input;
+  if (options.orthography?.eta !== "i-macron") return input;
 
   const chars = [...input];
   for (let start = 0; start < chars.length; start++) {
@@ -239,7 +252,7 @@ function transliterationTrie(options: ConversionOptions): Trie<Letter> {
   const orthography = options.orthography;
 
   if (orthography?.beta === "v") variants.push(["v", "beta"]);
-  if (orthography?.eta === "ī") variants.push(["i\u0304", "eta"]);
+  if (orthography?.eta === "i-macron") variants.push(["i\u0304", "eta"]);
   if (orthography?.xi === "ks") variants.push(["ks", "xi"]);
   if (orthography?.phi === "f") variants.push(["f", "phi"]);
   if (orthography?.chi === "kh") variants.push(["kh", "chi"]);
@@ -333,7 +346,12 @@ function resolveLongVowel(
   return letter;
 }
 
-function inferInitialBreathings(tokens: Token[], options: ConversionOptions) {
+function inferInitialBreathings(
+  tokens: Token[],
+  options: ConversionOptions,
+  separatedByBreathing: ReadonlySet<number>,
+) {
+  const infersSmooth = infersSmoothBreathing(options);
   let wordStart = true;
 
   for (let i = 0; i < tokens.length; i++) {
@@ -349,20 +367,54 @@ function inferInitialBreathings(tokens: Token[], options: ConversionOptions) {
 
     if (!isVowel(token.letter) || isGreekNumeralContext(tokens, i)) continue;
 
-    const target = tokens[breathingTarget(tokens, i)];
+    const target = separatedByBreathing.has(i + 1)
+      ? token
+      : tokens[i + breathingTarget(latinPair(token, tokens[i + 1]), 0)];
     if (target.kind !== "grapheme") continue;
 
     if (token.diacritics.has("rough") && target !== token) {
       token.diacritics.delete("rough");
       target.diacritics.add("rough");
     } else if (
-      options.orthography?.smoothBreathing !== "greek" &&
-      options.orthography?.smoothBreathing !== "apostrophe" &&
+      infersSmooth &&
       !target.diacritics.has("rough") &&
+      // A diaeresis and a breathing never share a vowel; Greek writes an
+      // initial `ϊ` or `ϋ` without a breathing, so none is inferred.
+      !target.diacritics.has("diaeresis") &&
       !hasQuantity(token) &&
       !hasQuantity(target)
     ) {
       target.diacritics.add("smooth");
     }
   }
+}
+
+/**
+ * Returns the two-token window that the diphthong helpers inspect, without
+ * the breathing provisionally attached to the first vowel.
+ *
+ * A Latin `h` precedes the whole vowel group, so the rough breathing it places
+ * on the first vowel is not the hiatus signal that a breathing written on the
+ * first Greek vowel would be. Accents stay: they are attached to one Latin
+ * vowel and keep their hiatus meaning. The window avoids copying the document
+ * at each vowel, which made parsing quadratic.
+ */
+function latinPair(
+  first: Token | undefined,
+  second: Token | undefined,
+): Token[] {
+  const pair: Token[] = [];
+  if (first === undefined) return pair;
+  pair.push(
+    first.kind === "grapheme" && first.diacritics.has("rough")
+      ? {
+        ...first,
+        diacritics: new Set(
+          [...first.diacritics].filter((mark) => mark !== "rough"),
+        ),
+      }
+      : first,
+  );
+  if (second !== undefined) pair.push(second);
+  return pair;
 }

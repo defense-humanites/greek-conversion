@@ -1,15 +1,164 @@
 # Changelog
 
 All notable changes to `greek-conversion` are documented in this file. The
-project follows [Semantic Versioning](https://semver.org/).
+project follows [Semantic Versioning](https://semver.org/); the
+[stability policy](docs/stability.md) states what each kind of release may
+change.
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-09-30
+## [1.0.0-rc.1] - 2026-10-19
 
-The first stable release of the rewritten library. There are no API or
-conversion behavior changes from `1.0.0-beta.9`; see the beta changelog and
-[migration guide](MIGRATION.md) for the changes from `0.14.x`.
+Release candidate for `1.0.0`. The stable release prepared as `1.0.0` on
+2026-09-30 was not published; a review before publication led to the changes
+below. Some option identifiers are renamed and some conversion output is
+corrected; see the [migration guide](MIGRATION.md) for the renames. Unless a
+problem is found, `1.0.0` will have the same content.
+
+### Added
+
+- The README is reorganized around tasks, opens with a Thucydides quick
+  start, and documents the option groups, the loss codes, and the error
+  behavior. Every TypeScript example in it is type-checked and executed by
+  `deno task check`, and its output must match the `// →` comment beside it.
+- `CITATION.cff` describes how to cite the library; GitHub offers it as
+  "Cite this repository".
+- `deno task bench` measures conversion throughput as a baseline for future
+  changes.
+- A [stability policy](docs/stability.md) states what the version number
+  covers from `1.0.0` on: the documented contract rather than the bytes of a
+  release, with corrections of output toward the documentation or a preset's
+  reference classified as patches, additions of codes, options, and presets as
+  minor releases, and open diagnostic unions.
+- A property-based invariant suite (`tests/invariants_corpus_test.ts`)
+  checks, for every preset and every format pair over a deterministic corpus
+  of difficult forms, that canonical output is idempotent, that reparsed
+  output is a valid document outside the documented boundaries, and that a
+  conversion reported as lossless converts back to the same canonical source.
+- `FORMATS` lists the supported format identifiers, and
+  `CONVERSION_OPTION_VALUES` lists every option key with its accepted values;
+  the playground's option suggestions are derived from that table.
+- `convertDetailed()` reports `inferred-breathing` when transliteration of
+  an unmarked initial vowel (monotonic or uncial Greek such as `άνθρωπος` or
+  `ΑΙΔΗΣ`) reads back with a smooth breathing the source did not have. Such a
+  conversion was previously reported as lossless although the round trip
+  changed the text.
+- `convertDetailed()` reports `displaced-diacritic` when a source breathing is
+  reread on the following vowel of the target, instead of the misleading
+  `removed-diacritic`. The breathing is retained; the hiatus it marked is not.
+
+### Changed
+
+- Conversion is about twice as fast from Greek and Beta Code, and about four
+  times as fast from transliteration, on 20 000-character inputs: Greek case
+  mapping is cached per character, the oxia substitution runs in one pass,
+  and parsers no longer copy each grapheme's diacritic set. Output is
+  unchanged.
+- Greek output writes a macron or breve before the other marks of its vowel,
+  following the typographic convention that the quantity sits on the letter
+  with breathing and accent above it. `ᾱ́` is now U+1FB1 U+0301 instead of
+  U+1F71 U+0304, and `ἀ̄` becomes `ᾱ̓` (U+1FB1 U+0313). The canonical document
+  is unchanged and either order is still accepted as input; Beta Code keeps
+  the TLG order.
+- The npm package requires Node.js 24 or later (`engines.node: ">=24"`),
+  declares `sideEffects: false` so that bundlers can drop unused exports, and
+  carries an up-to-date description. `RELEASING.md`, a maintainer procedure,
+  is no longer included in the JSR and npm packages.
+- Option identifiers follow one naming rule: `diacritics.X` asks whether a
+  mark class is kept, `orthography.X` how X is written in the target format,
+  `unicode.X` which scalar represents it; and every accepted value is ASCII.
+  Accordingly `orthography.quantityTransliteration` is now
+  `orthography.quantity`, `orthography.yotBetaCode` is `orthography.betaCodeYot`,
+  and `orthography.eta` takes `"e-macron"` or `"i-macron"` instead of `"ē"`
+  or `"ī"`. The value types `TransliterationHyphen`, `CoronisOrthography`,
+  `UpsilonOrthography`, `LongVowelOrthography`, `NasalGammaOrthography`,
+  `ModernDigraphOrthography`, and `YotBetaCode` are renamed
+  `HyphenTransliteration`, `CoronisTransliteration`, `UpsilonTransliteration`,
+  `LongVowelTransliteration`, `NasalGammaTransliteration`,
+  `ModernDigraphTransliteration`, and `BetaCodeYot`, so that the suffix names
+  the format a policy applies to. See the migration guide.
+- Conversion options are validated strictly. An unknown option key, an
+  unknown option value, or an option of the wrong type now throws
+  (`RangeError` for unknown identifiers and values, `TypeError` for wrong
+  types) instead of being silently replaced by the engine default. A field set
+  to `undefined` is still treated as absent.
+- The transliteration parser infers a smooth breathing only when the selected
+  orthography writes smooth breathings. Under `accentuation: "monotonic"`,
+  `removeDiacritics: true`, or `diacritics.smoothBreathing: "remove"` (as in
+  the ALA-LC and SBL general presets), an unmarked initial vowel stays
+  unmarked in the canonical document. As a consequence, a preset that removes
+  the smooth breathing now reports that removal for polytonic sources instead
+  of hiding it behind the reparse.
+- An unknown format identifier throws `RangeError("Unknown format: …")` from
+  `convert()`, `convertDetailed()`, `parse()`, `encode()`, and the
+  `Converter` methods; `convert()` with an unknown target format previously
+  returned `undefined`. Non-string input throws a `TypeError` with a clear
+  message.
+
+### Fixed
+
+- Reading transliteration took time quadratic in the length of the text: the
+  parser copied the whole document at every word-initial vowel. 80 000
+  characters took 2.5 s and now take about 60 ms; `convertDetailed()`, which
+  reads its target back, benefits for every target format. A scaling test
+  now guards every format against superlinear cost.
+- `accentuation: "monotonic"` no longer accents monosyllables. Polytonic
+  `καὶ`, `τῶν`, `δὲ` gave `καί`, `τών`, `δέ`; they now give `και`, `των`,
+  `δε`, as monotonic orthography requires. The exceptions are identified from
+  the polytonic marks: disjunctive `ἤ`/`ἢ` gives `ή`, interrogative `ποῦ` and
+  `πῶς` give `πού` and `πώς`, and monotonic input is unchanged. Monosyllables
+  by synizesis (`γιὰ`, `μιὰ`) keep their accent, because recognizing them
+  needs knowledge of the word.
+- A breathing or accent written on the first vowel of a pair that could form
+  a diphthong is now read as the hiatus or iota-adscript signal it is
+  (`Ἅιδῃ`, `Ἀίδης`, `ἀίδηλος`, `ἄυλος`), instead of being moved onto the second
+  vowel. Previously `Ἅιδῃ` became the invalid `Άἱδῃ` and the change was not
+  reported as a loss. Greek and Beta Code conversions now preserve these forms;
+  transliteration keeps a first-vowel accent, and `convertDetailed()` reports
+  the loss when a hiatus is marked only by a breathing.
+- A hiatus marked only by a breathing on its first vowel is not compensated
+  with an inferred diaeresis in transliteration, because the same spelling also
+  marks an iota adscript; `smoothBreathing: "greek"` or `"apostrophe"` keeps
+  it reversible.
+- Removing a diaeresis or an iota subscript no longer turns `ἄϋλος` or `ᾄυ`
+  into a diphthong while the first vowel still carries its marks.
+- Under the contextual upsilon rules (`y-with-au-eu-ou`, `y-with-diphthong-u`),
+  a `y` read after a vowel that could form a diphthong no longer always
+  receives a diaeresis. At word start the separation is carried by the
+  breathing on the first vowel, as Greek writes it (`ay → ἀυ`, `hay → ἁυ`),
+  so `ἀυτμή` and `ἁυ` convert back and forth exactly under `bnf-core` and
+  `ay` is canonical. Where no breathing is written or inferred, the encoder
+  writes the diaeresis at once (`ἄυλος → aÿlos` under `sbl-general`,
+  `ἀυτμή → ’aÿtmī́` under `iso-843-type-1`) instead of producing text that a
+  second conversion changed.
+- Transliteration no longer infers a smooth breathing on an initial vowel
+  that carries a diaeresis (`ḯ`, `ü`, `Ï`). The result was a document that
+  `validateDocument()` rejects as `incompatible-diaeresis-breathing`, and
+  `ΐδιος` did not survive a round trip.
+- Transliteration writes the combining marks of one vowel in a single
+  canonical order: quantity, breathing, diaeresis, accent. An explicit macron
+  is now spelled like the structural macron of eta and omega (`ā́` like `ḗ`).
+  Previously `ῑ́` rendered as `í̄`, which `iso-843-type-1` reread and rewrote
+  as `ī́`, breaking idempotence. Output changes only where an explicit macron
+  or breve meets another mark (`á̄` → `ā́`, `ã̄` → `ā̃`); input in either
+  order is still accepted.
+- A macron or breve on epsilon or omicron is omitted from transliteration,
+  because `ē` and `ō` denote eta and omega, and `convertDetailed()` reports
+  the removed mark instead of producing text that reparses as another letter.
+
+### Companion website (not included in JSR or npm)
+
+- Each format is shown in its own typeface: a polytonic-capable serif for
+  Greek and transliteration, a monospace face for Beta Code, whose marks are
+  letters.
+- The page state is kept in the address, so "Copy link" shares a conversion
+  with its standard and options; the equivalent library call is shown and can
+  be copied.
+- Diagnostics are grouped by kind and show the affected letters; a standard's
+  references and known limits can be expanded in place.
+- Examples are complete scenarios, starting with Thucydides 1.1.2; the page
+  follows the system dark mode and fits narrow screens.
+- Loss messages name diacritics in full ("the smooth breathing").
 
 ## [1.0.0-beta.9] - 2026-09-30
 
@@ -272,8 +421,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.9...v1.0.0
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.1...HEAD
+[1.0.0-rc.1]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.9...v1.0.0-rc.1
 [1.0.0-beta.9]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.8...v1.0.0-beta.9
 [1.0.0-beta.8]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.7...v1.0.0-beta.8
 [1.0.0-beta.7]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.6...v1.0.0-beta.7

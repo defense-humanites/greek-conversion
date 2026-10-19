@@ -60,13 +60,14 @@ Deno.test("reports each removed diacritic at its source token", () => {
       code: "removed-diacritic",
       index: 1,
       diacritic: "smooth",
-      message: "The target representation does not retain smooth.",
+      message:
+        "The target representation does not retain the smooth breathing.",
     },
     {
       code: "removed-diacritic",
       index: 1,
       diacritic: "acute",
-      message: "The target representation does not retain acute.",
+      message: "The target representation does not retain the acute accent.",
     },
   ]);
 });
@@ -109,7 +110,7 @@ Deno.test("reports case changes separately from removed diacritics", () => {
       code: "removed-diacritic",
       index: 0,
       diacritic: "acute",
-      message: "The target representation does not retain acute.",
+      message: "The target representation does not retain the acute accent.",
     },
   ]);
 });
@@ -231,7 +232,7 @@ Deno.test("selected transliteration variants retain recoverable letters", () => 
       orthography: {
         beta: "v",
         chi: "kh",
-        eta: "ī",
+        eta: "i-macron",
         modernDigraphs: "phonetic",
         phi: "f",
         rho: "systematic",
@@ -260,8 +261,73 @@ Deno.test("ALA-LC modern digraph spellings retain recoverable letters", () => {
   );
 
   assertEquals(result.output, "b v d̲ d gk anká agk");
-  assertEquals(result.lossy, false);
-  assertEquals(result.losses, []);
+  // The letters are recoverable; only the unmarked initial vowels of this
+  // monotonic input acquire a smooth breathing on the way back.
+  assertEquals(
+    result.losses.map(({ code, index }) => ({ code, index })),
+    [
+      { code: "inferred-breathing", index: 13 },
+      { code: "inferred-breathing", index: 18 },
+    ],
+  );
+});
+
+Deno.test("reports the smooth breathing inferred on unmarked Greek", () => {
+  // The index is that of the vowel which acquires the breathing: the second
+  // element of an initial diphthong (ΑΙ), otherwise the initial vowel.
+  for (
+    const [greek, index] of [["άνθρωπος", 0], ["Αθήνα", 0], [
+      "ΑΙΔΗΣ",
+      1,
+    ]] as const
+  ) {
+    const result = convertDetailed(greek, "greek", "transliteration");
+    assertEquals(result.lossy, true);
+    assertEquals(
+      result.losses.map(({ code, index, diacritic }) => ({
+        code,
+        index,
+        diacritic,
+      })),
+      [{ code: "inferred-breathing", index, diacritic: "smooth" }],
+    );
+  }
+
+  // Under an orthography without smooth breathings nothing is inferred, so
+  // the same monotonic text converts back and forth without loss.
+  for (
+    const options of [
+      { orthography: { accentuation: "monotonic" } },
+      { diacritics: { smoothBreathing: "remove" } },
+      { removeDiacritics: true },
+    ] as const
+  ) {
+    const result = convertDetailed(
+      "άνθρωπος",
+      "greek",
+      "transliteration",
+      options,
+    );
+    assertEquals(
+      result.losses.map(({ code }) => code).includes("inferred-breathing"),
+      false,
+    );
+    assertEquals(
+      convert(result.output, "transliteration", "greek", options),
+      convert("άνθρωπος", "greek", "greek", options),
+    );
+  }
+
+  // A polytonic source still reads back with its breathing, without a report.
+  assertEquals(
+    convertDetailed("ἄνθρωπος", "greek", "transliteration").losses,
+    [],
+  );
+  // Quantity-marked initial vowels stay breathing-neutral.
+  assertEquals(
+    convertDetailed("ᾱ", "greek", "transliteration").losses,
+    [],
+  );
 });
 
 Deno.test("reports destructive orthography policies from their actual input", () => {

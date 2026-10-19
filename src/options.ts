@@ -5,7 +5,7 @@ export type DoubleRhoOrthography = "unmarked" | "smooth-rough";
 export type MedialBetaOrthography = "standard" | "symbol";
 
 /** Selects how a semantic coronis is represented in transliteration. */
-export type CoronisOrthography = "omit" | "apostrophe" | "greek";
+export type CoronisTransliteration = "omit" | "apostrophe" | "greek";
 
 /** Selects whether a known smooth breathing is rendered on a Latin letter. */
 export type SmoothBreathingTransliteration = "omit" | "greek" | "apostrophe";
@@ -17,7 +17,7 @@ export type CircumflexTransliteration = "tilde" | "circumflex";
 export type QuantityTransliteration = "preserve" | "omit";
 
 /** Selects contextual nasal gamma (`n`) or literal gamma (`g`). */
-export type NasalGammaOrthography = "nasal" | "literal";
+export type NasalGammaTransliteration = "nasal" | "literal";
 
 /** Selects standard, lunate, or source-preserving sigma glyphs. */
 export type SigmaOrthography = "standard" | "lunate" | "preserve";
@@ -38,7 +38,7 @@ export type KeraiaTransliteration = "greek" | "bnf";
 export type DentalSigmaOrthography = "preserve" | "assimilate";
 
 /** Selects the transliterated spelling of upsilon. */
-export type UpsilonOrthography =
+export type UpsilonTransliteration =
   | "u"
   | "y"
   | "y-with-diphthong-u"
@@ -49,7 +49,7 @@ export type UpsilonOrthography =
  * circumflex in transliteration. Explicit philological macrons remain
  * independent semantic marks.
  */
-export type LongVowelOrthography =
+export type LongVowelTransliteration =
   | "macron"
   | "circumflex";
 
@@ -72,7 +72,7 @@ export type GreekAnoTeleiaForm = "canonical" | "middle-dot" | "greek";
 export type WhitespaceOrthography = "preserve" | "collapse";
 
 /** Selects ASCII or typographic hyphen in transliteration output. */
-export type TransliterationHyphen = "ascii" | "typographic";
+export type HyphenTransliteration = "ascii" | "typographic";
 
 /** Preserves the enotikon or renders it as an ambiguous Latin hyphen. */
 export type EnotikonTransliteration = "preserve" | "hyphen";
@@ -81,7 +81,7 @@ export type EnotikonTransliteration = "preserve" | "hyphen";
 export type BetaTransliteration = "b" | "v";
 
 /** Selects `ē` or `ī` for eta in transliteration. */
-export type EtaTransliteration = "ē" | "ī";
+export type EtaTransliteration = "e-macron" | "i-macron";
 
 /** Selects `x` or `ks` for xi in transliteration. */
 export type XiTransliteration = "x" | "ks";
@@ -93,7 +93,7 @@ export type PhiTransliteration = "ph" | "f";
 export type ChiTransliteration = "ch" | "kh";
 
 /** Selects preservation or a supported modern-Greek digraph policy. */
-export type ModernDigraphOrthography = "preserve" | "phonetic" | "ala-lc";
+export type ModernDigraphTransliteration = "preserve" | "phonetic" | "ala-lc";
 
 /** Selects contextual rho spelling or one final `h` per contiguous rho group. */
 export type RhoTransliteration = "contextual" | "systematic";
@@ -109,7 +109,7 @@ export type LetterCaseOrthography =
 export type BetaCodeCase = "lowercase" | "uppercase";
 
 /** Selects the Beta Code spelling emitted for yot. */
-export type YotBetaCode = "j" | "#401";
+export type BetaCodeYot = "j" | "#401";
 
 /** Selects the transliteration emitted for archaic koppa. */
 export type ArchaicKoppaTransliteration = "k-dot-below" | "q";
@@ -161,15 +161,15 @@ export interface OrthographyOptions {
   /** Medial lowercase beta glyph. Defaults to `"standard"`. */
   medialBeta?: MedialBetaOrthography;
   /** Coronis representation in transliteration. Defaults to `"omit"`. */
-  coronis?: CoronisOrthography;
+  coronis?: CoronisTransliteration;
   /** Smooth breathing in transliteration; `"apostrophe"` prefixes an initial vowel. Defaults to `"omit"`. */
   smoothBreathing?: SmoothBreathingTransliteration;
   /** Circumflex accent in transliteration. Defaults to `"tilde"` (U+0303). */
   circumflexAccent?: CircumflexTransliteration;
   /** Explicit macron/breve in transliteration. Defaults to `"preserve"`. */
-  quantityTransliteration?: QuantityTransliteration;
+  quantity?: QuantityTransliteration;
   /** Nasal gamma spelling. Defaults to `"nasal"`. */
-  nasalGamma?: NasalGammaOrthography;
+  nasalGamma?: NasalGammaTransliteration;
   /** Sigma glyph policy. Defaults to `"standard"`. */
   sigma?: SigmaOrthography;
   /** Provenanced lunate sigma transliteration. Defaults to `"s"`. */
@@ -182,21 +182,21 @@ export interface OrthographyOptions {
   keraia?: KeraiaTransliteration;
   /** Dental assimilation before sigma. Defaults to `"preserve"`. */
   dentalSigma?: DentalSigmaOrthography;
-  /** Upsilon transliteration. `"y-with-au-eu-ou"` uses u only in the three cited pairs; defaults to `"u"`. */
-  upsilon?: UpsilonOrthography;
-  /** Structural long-vowel marker: `"macron"` or `"circumflex"`. */
-  longVowels?: LongVowelOrthography;
-  /** Greek accentuation system. Defaults to `"polytonic"`. */
+  /** Upsilon transliteration. Defaults to `"u"`; `"y-with-au-eu-ou"` uses `u` only in the three cited pairs. */
+  upsilon?: UpsilonTransliteration;
+  /** Structural long-vowel marker in transliteration. Defaults to `"macron"`. */
+  longVowels?: LongVowelTransliteration;
+  /** Greek accentuation system. Defaults to `"polytonic"`; `"monotonic"` follows the monotonic rules, monosyllables included, as far as the written text allows. */
   accentuation?: GreekAccentuation;
   /** Whitespace rendering. Defaults to `"preserve"`. */
   whitespace?: WhitespaceOrthography;
   /** Transliteration hyphen. Defaults to `"ascii"`. */
-  hyphen?: TransliterationHyphen;
+  hyphen?: HyphenTransliteration;
   /** Transliteration of Greek enotikon (U+203F). Defaults to `"preserve"`. */
   enotikon?: EnotikonTransliteration;
   /** Beta transliteration. Defaults to `"b"`. */
   beta?: BetaTransliteration;
-  /** Eta transliteration. Defaults to `"ē"`. */
+  /** Eta transliteration: `"e-macron"` (`ē`) or `"i-macron"` (`ī`). Defaults to `"e-macron"`. */
   eta?: EtaTransliteration;
   /** Xi transliteration. Defaults to `"x"`. */
   xi?: XiTransliteration;
@@ -205,7 +205,7 @@ export interface OrthographyOptions {
   /** Chi transliteration. Defaults to `"ch"`. */
   chi?: ChiTransliteration;
   /** Modern-Greek digraph policy. Defaults to `"preserve"`. */
-  modernDigraphs?: ModernDigraphOrthography;
+  modernDigraphs?: ModernDigraphTransliteration;
   /** Rho transliteration. Defaults to `"contextual"`. */
   rho?: RhoTransliteration;
   /** Semantic letter case applied to recognized graphemes. Defaults to `"preserve"`. */
@@ -213,7 +213,7 @@ export interface OrthographyOptions {
   /** Insignificant ASCII letter case used only in Beta Code output. Defaults to `"lowercase"`. */
   betaCodeCase?: BetaCodeCase;
   /** Beta Code spelling of yot. Defaults to `"j"`; TLG uses `"#401"`. */
-  yotBetaCode?: YotBetaCode;
+  betaCodeYot?: BetaCodeYot;
   /** Archaic-koppa transliteration. Defaults to `"k-dot-below"`; BnF uses `"q"`. */
   archaicKoppa?: ArchaicKoppaTransliteration;
 }
@@ -230,7 +230,21 @@ export interface GreekUnicodeOptions {
   anoTeleia?: GreekAnoTeleiaForm;
 }
 
-/** Options shared by conversion functions, helpers, and converters. */
+/**
+ * Options shared by conversion functions, helpers, and converters.
+ *
+ * The three option groups answer three different questions, which is why one
+ * name can appear in two of them:
+ *
+ * - `diacritics.X` asks whether the mark class X is kept: `"preserve"` or
+ *   `"remove"` from the document;
+ * - `orthography.X` asks how X is written in the target format: a spelling
+ *   (`"omit"` means not written in that format, `"greek"` the Greek scalar,
+ *   a Latin spelling such as `"ph"`) or a policy such as `"contextual"`;
+ * - `unicode.X` asks which Unicode scalar represents X in Greek output.
+ *
+ * Every accepted value is ASCII; see {@link CONVERSION_OPTION_VALUES}.
+ */
 export interface ConversionOptions {
   /** Named configuration applied before custom fields. */
   preset?: Preset;
@@ -249,7 +263,13 @@ export interface ConversionOptions {
   removeDiacritics?: boolean;
 }
 
-/** Fully populated conversion options used internally after resolution. */
+/**
+ * Every effective option after defaults, a preset, and custom overrides.
+ *
+ * This is an output type, returned by `resolveConversionOptions()`. Fields are
+ * added in minor releases, so construct it through that function rather than
+ * by hand; see the stability policy.
+ */
 export interface ResolvedConversionOptions {
   /** Effective orthographic and transliteration policies. */
   orthography: Required<OrthographyOptions>;
@@ -270,7 +290,7 @@ export interface DefaultConversionOptions {
     readonly coronis: "omit";
     readonly smoothBreathing: "omit";
     readonly circumflexAccent: "tilde";
-    readonly quantityTransliteration: "preserve";
+    readonly quantity: "preserve";
     readonly nasalGamma: "nasal";
     readonly sigma: "standard";
     readonly lunateSigma: "s";
@@ -285,7 +305,7 @@ export interface DefaultConversionOptions {
     readonly hyphen: "ascii";
     readonly enotikon: "preserve";
     readonly beta: "b";
-    readonly eta: "ē";
+    readonly eta: "e-macron";
     readonly xi: "x";
     readonly phi: "ph";
     readonly chi: "ch";
@@ -293,7 +313,7 @@ export interface DefaultConversionOptions {
     readonly rho: "contextual";
     readonly letterCase: "preserve";
     readonly betaCodeCase: "lowercase";
-    readonly yotBetaCode: "j";
+    readonly betaCodeYot: "j";
     readonly archaicKoppa: "k-dot-below";
   };
   /** Literal default values for Greek Unicode representation. */
@@ -317,6 +337,87 @@ export interface DefaultConversionOptions {
   readonly removeDiacritics: false;
 }
 
+/** Accepted values of every field of one option group. */
+export type OptionValueTable<T> = {
+  readonly [K in keyof T]-?: readonly NonNullable<T[K]>[];
+};
+
+/** Every accepted value of every string-valued conversion option, by group. */
+export interface ConversionOptionValues {
+  /** Accepted values of each orthographic and transliteration policy. */
+  readonly orthography: OptionValueTable<OrthographyOptions>;
+  /** Accepted values of each Greek Unicode representation preference. */
+  readonly unicode: OptionValueTable<GreekUnicodeOptions>;
+  /** Accepted values of each semantic diacritic class disposition. */
+  readonly diacritics: OptionValueTable<DiacriticOptions>;
+}
+
+const freezeTable = <T>(table: OptionValueTable<T>): OptionValueTable<T> =>
+  Object.freeze(
+    Object.fromEntries(
+      Object.entries(table).map(([key, values]) => [
+        key,
+        Object.freeze([...(values as readonly unknown[])]),
+      ]),
+    ) as OptionValueTable<T>,
+  );
+
+/**
+ * Complete, immutable inventory of option keys and their accepted values.
+ *
+ * {@link resolveConversionOptions} rejects any key or value absent from this
+ * table, so it is also the reference for user interfaces and validators.
+ */
+export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
+  orthography: freezeTable<OrthographyOptions>({
+    doubleRho: ["unmarked", "smooth-rough"],
+    medialBeta: ["standard", "symbol"],
+    coronis: ["omit", "apostrophe", "greek"],
+    smoothBreathing: ["omit", "greek", "apostrophe"],
+    circumflexAccent: ["tilde", "circumflex"],
+    quantity: ["preserve", "omit"],
+    nasalGamma: ["nasal", "literal"],
+    sigma: ["standard", "lunate", "preserve"],
+    lunateSigma: ["s", "c"],
+    finalSigma: ["contextual", "medial", "preserve"],
+    numerals: ["alphabetic", "decimal"],
+    keraia: ["greek", "bnf"],
+    dentalSigma: ["preserve", "assimilate"],
+    upsilon: ["u", "y", "y-with-diphthong-u", "y-with-au-eu-ou"],
+    longVowels: ["macron", "circumflex"],
+    accentuation: ["polytonic", "monotonic"],
+    whitespace: ["preserve", "collapse"],
+    hyphen: ["ascii", "typographic"],
+    enotikon: ["preserve", "hyphen"],
+    beta: ["b", "v"],
+    eta: ["e-macron", "i-macron"],
+    xi: ["x", "ks"],
+    phi: ["ph", "f"],
+    chi: ["ch", "kh"],
+    modernDigraphs: ["preserve", "phonetic", "ala-lc"],
+    rho: ["contextual", "systematic"],
+    letterCase: ["preserve", "lowercase", "uppercase", "title"],
+    betaCodeCase: ["lowercase", "uppercase"],
+    betaCodeYot: ["j", "#401"],
+    archaicKoppa: ["k-dot-below", "q"],
+  }),
+  unicode: freezeTable<GreekUnicodeOptions>({
+    composition: ["composed", "decomposed"],
+    acute: ["system", "tonos", "oxia"],
+    questionMark: ["canonical", "semicolon", "greek"],
+    anoTeleia: ["canonical", "middle-dot", "greek"],
+  }),
+  diacritics: freezeTable<DiacriticOptions>({
+    accents: ["preserve", "remove"],
+    smoothBreathing: ["preserve", "remove"],
+    roughBreathing: ["preserve", "remove"],
+    coronis: ["preserve", "remove"],
+    diaeresis: ["preserve", "remove"],
+    iotaSubscript: ["preserve", "remove"],
+    quantity: ["preserve", "remove"],
+  }),
+});
+
 /**
  * Complete, immutable defaults used when no preset or custom option overrides
  * them. Inspect this value in an IDE to discover the engine's effective
@@ -331,7 +432,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         coronis: "omit",
         smoothBreathing: "omit",
         circumflexAccent: "tilde",
-        quantityTransliteration: "preserve",
+        quantity: "preserve",
         nasalGamma: "nasal",
         sigma: "standard",
         lunateSigma: "s",
@@ -346,7 +447,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         hyphen: "ascii",
         enotikon: "preserve",
         beta: "b",
-        eta: "ē",
+        eta: "e-macron",
         xi: "x",
         phi: "ph",
         chi: "ch",
@@ -354,7 +455,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         rho: "contextual",
         letterCase: "preserve",
         betaCodeCase: "lowercase",
-        yotBetaCode: "j",
+        betaCodeYot: "j",
         archaicKoppa: "k-dot-below",
       }),
       unicode: Object.freeze({

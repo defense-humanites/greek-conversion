@@ -1,6 +1,7 @@
-import { convert, greekToBetaCode } from "../src/mod.ts";
-import { encode } from "../src/document.ts";
+import { convert, convertDetailed, greekToBetaCode } from "../src/mod.ts";
+import { encode, parse, validateDocument } from "../src/document.ts";
 import { grapheme } from "../src/model.ts";
+import { assertEquals } from "@std/assert";
 import { assertNfcEquals } from "./assertions.ts";
 
 Deno.test("preserves case when transliterating nasal gamma", () => {
@@ -115,10 +116,64 @@ Deno.test("handles rare omega-upsilon as an initial diphthong", () => {
   );
 });
 
-Deno.test("normalizes a misplaced initial diphthong breathing", () => {
-  assertNfcEquals(convert("ἁι", "greek", "greek"), "αἱ");
-  assertNfcEquals(convert("a(i", "beta-code", "beta-code"), "ai(");
-  assertNfcEquals(convert("a)i", "beta-code", "greek"), "αἰ");
+Deno.test("marks on the first vowel of a pair signal hiatus and are kept", () => {
+  // A breathing or accent on the first vowel means the pair is not a
+  // diphthong: iota adscript after a capital, or two syllables.
+  assertNfcEquals(convert("ἁι", "greek", "greek"), "ἁι");
+  assertNfcEquals(convert("a(i", "beta-code", "beta-code"), "a(i");
+  assertNfcEquals(convert("a)i", "beta-code", "greek"), "ἀι");
+
+  for (const word of ["Ἅιδῃ", "Ἀίδης", "ἀίδηλος", "ἄυλος", "ἀυτμή"]) {
+    assertNfcEquals(convert(word, "greek", "greek"), word);
+    assertEquals(convertDetailed(word, "greek", "greek").lossy, false);
+    assertNfcEquals(
+      convert(convert(word, "greek", "beta-code"), "beta-code", "greek"),
+      word,
+    );
+    assertEquals(convertDetailed(word, "greek", "beta-code").lossy, false);
+  }
+
+  // An accent on the first vowel survives transliteration; a hiatus signalled
+  // only by a breathing does not, because the breathing is reread on the
+  // diphthong. That displacement is reported, and the breathing itself is not
+  // reported as removed.
+  for (const word of ["Ἅιδῃ", "ἄυλος"]) {
+    const result = convertDetailed(word, "greek", "transliteration");
+    assertEquals(result.lossy, false);
+    assertNfcEquals(convert(result.output, "transliteration", "greek"), word);
+  }
+  for (const word of ["Ἀίδης", "ἀίδηλος", "ἀυτμή"]) {
+    const result = convertDetailed(word, "greek", "transliteration");
+    assertEquals(result.lossy, true);
+    assertEquals(
+      result.losses.map(({ code, index, diacritic }) => ({
+        code,
+        index,
+        diacritic,
+      })),
+      [{ code: "displaced-diacritic", index: 0, diacritic: "smooth" }],
+    );
+  }
+
+  // Writing the smooth breathing in place keeps the hiatus reversible.
+  const inPlace = { orthography: { smoothBreathing: "greek" } } as const;
+  for (const word of ["Ἀίδης", "ἀίδηλος", "ἀυτμή"]) {
+    const result = convertDetailed(word, "greek", "transliteration", inPlace);
+    assertEquals(result.lossy, false);
+    assertNfcEquals(
+      convert(result.output, "transliteration", "greek", inPlace),
+      word,
+    );
+  }
+
+  assertNfcEquals(convert("Ἅιδῃ", "greek", "beta-code"), "*(/aidh|");
+  assertNfcEquals(convert("*(/aidh|", "beta-code", "greek"), "Ἅιδῃ");
+  assertNfcEquals(convert("Ἅιδῃ", "greek", "transliteration"), "Háidȩ̄");
+  // The diphthong keeps its marks on the second element.
+  assertNfcEquals(convert("Αἴδης", "greek", "transliteration"), "Aídēs");
+  assertNfcEquals(convert("Aídēs", "transliteration", "greek"), "Αἴδης");
+  assertNfcEquals(convert("αἱ", "greek", "transliteration"), "hai");
+  assertNfcEquals(convert("hai", "transliteration", "greek"), "αἱ");
 });
 
 Deno.test("does not infer breathings on internal vowel groups", () => {
@@ -250,7 +305,7 @@ Deno.test("quantity marks do not infer an initial smooth breathing", () => {
   );
   assertNfcEquals(
     convert("hā", "transliteration", "greek"),
-    "ἁ̄",
+    "ᾱ̔",
   );
 });
 
@@ -348,4 +403,30 @@ Deno.test("does not contract separated, marked, or numeric pairs", () => {
     ),
     "βς́",
   );
+});
+
+Deno.test("does not infer a breathing on an initial vowel with diaeresis", () => {
+  for (
+    const [latin, greek] of [
+      ["ḯdios", "ΐδιος"],
+      ["ïdios", "ϊδιος"],
+      ["Ïdios", "Ϊδιος"],
+      ["ü", "ϋ"],
+      ["ǘdōr", "ΰδωρ"],
+    ] as const
+  ) {
+    const parsed = parse(latin, "transliteration");
+    assertEquals(validateDocument(parsed), []);
+    assertNfcEquals(convert(latin, "transliteration", "greek"), greek);
+    assertNfcEquals(
+      convert(
+        convert(greek, "greek", "transliteration"),
+        "transliteration",
+        "greek",
+      ),
+      greek,
+    );
+  }
+  // A breathing still reaches a vowel group whose diaeresis sits elsewhere.
+  assertNfcEquals(convert("aḯdios", "transliteration", "greek"), "ἀΐδιος");
 });

@@ -12,7 +12,7 @@ and modern Greek tables.
 
 | Preset | Rules checked in the test suite | Remaining boundary |
 | --- | --- | --- |
-| `ala-lc-ancient` | Published text examples; rough breathing when present; contextual `y/u`; nasal gamma; archaic koppa; marked numerals, including `στʹ` and prefix-only thousands, as decimal | Missing breathings, iota adscript, and editorial capitalization cannot be inferred from spelling alone. |
+| `ala-lc-ancient` | Published text examples; rough breathing when present; contextual `y/u`; nasal gamma; archaic koppa; marked numerals, including `στʹ` and prefix-only thousands, as decimal | Missing breathings and editorial capitalization cannot be inferred from spelling alone; an iota adscript after a marked capital is kept rather than omitted. |
 | `ala-lc-modern` | Published letter/notes rows for `μπ/ντ/γκ`, explicitly marked rho, omitted marks, and documented numeral variants | Supplying absent rough breathings or identifying uncertain polytonic/monotonic sources requires lexical or bibliographic context. |
 | `bnf-core` | Ancient-Greek variant letters; `αυ/ευ/ου`; known smooth breathing, circumflex, keraiai, and marked archaic numerals in Latin output; omission of explicit macron/breve | The upper Cypriot syndyazomeno shares U+0306 with breve; cataloguing variants and the Iliad/Odyssey numeral exception require external context. |
 | `iso-843-type-1` | Type 1 letter choices; `αυ/ευ/ου`; initial smooth breathing; question mark, ano teleia, and enotikon; undefined and unresolved archaic mappings | Some reference provisions remain unimplemented; a Latin apostrophe or hyphen cannot by itself establish a smooth breathing or enotikon. |

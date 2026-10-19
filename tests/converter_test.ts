@@ -438,7 +438,7 @@ Deno.test("character exclusions preserve source-format spelling", () => {
   );
 
   const detailed = converter.convertDetailed(
-    "αϛβ",
+    "ἀϛβ",
     "greek",
     "transliteration",
   );

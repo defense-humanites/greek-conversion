@@ -1,3 +1,4 @@
+import { isVowel } from "./context.ts";
 import type { Diacritic, Document, Token } from "./model.ts";
 
 /** Machine-readable categories of information loss. */
@@ -5,6 +6,8 @@ export type ConversionLossCode =
   | "changed-case"
   | "removed-glyph-variant"
   | "removed-diacritic"
+  | "displaced-diacritic"
+  | "inferred-breathing"
   | "unrepresented-grapheme"
   | "unrepresented-literal";
 
@@ -16,7 +19,10 @@ export interface ConversionLoss {
   index: number;
   /** Human-readable English explanation. */
   message: string;
-  /** Removed semantic mark when {@link code} is `"removed-diacritic"`. */
+  /**
+   * The affected semantic mark when {@link code} is `"removed-diacritic"`,
+   * `"displaced-diacritic"`, or `"inferred-breathing"`.
+   */
   diacritic?: Diacritic;
 }
 
@@ -32,6 +38,21 @@ export interface ConversionResult {
 
 const ALIGNMENT_WINDOW = 16;
 
+const BREATHINGS: readonly Diacritic[] = ["smooth", "rough"];
+
+const DIACRITIC_NAMES: Readonly<Record<Diacritic, string>> = {
+  smooth: "smooth breathing",
+  rough: "rough breathing",
+  coronis: "coronis",
+  acute: "acute accent",
+  grave: "grave accent",
+  circumflex: "circumflex accent",
+  diaeresis: "diaeresis",
+  "iota-subscript": "iota subscript",
+  macron: "macron",
+  breve: "breve",
+};
+
 export function findConversionLosses(
   source: Document,
   target: Document,
@@ -45,6 +66,7 @@ export function findConversionLosses(
       targetIndex < target.length &&
       preservesToken(source[sourceIndex], target[targetIndex])
     ) {
+      addInferredBreathing(losses, source, target, sourceIndex, targetIndex);
       sourceIndex++;
       targetIndex++;
       continue;
@@ -54,12 +76,7 @@ export function findConversionLosses(
       targetIndex < target.length &&
       sameTokenIdentity(source[sourceIndex], target[targetIndex])
     ) {
-      addTokenLoss(
-        losses,
-        source[sourceIndex],
-        target[targetIndex],
-        sourceIndex,
-      );
+      addTokenLoss(losses, source, target, sourceIndex, targetIndex);
       sourceIndex++;
       targetIndex++;
       continue;
@@ -81,7 +98,13 @@ export function findConversionLosses(
       continue;
     }
 
-    addTokenLoss(losses, source[sourceIndex], target[targetIndex], sourceIndex);
+    addTokenLoss(
+      losses,
+      source,
+      target,
+      sourceIndex,
+      targetIndex < target.length ? targetIndex : undefined,
+    );
     sourceIndex++;
     if (targetIndex < target.length) targetIndex++;
   }
@@ -129,19 +152,25 @@ function addLosses(
 ): void {
   for (let index = sourceStart; index < sourceEnd; index++) {
     const targetOffset = index - sourceStart;
-    const targetToken = targetStart + targetOffset < targetEnd
-      ? target[targetStart + targetOffset]
+    const targetIndex = targetStart + targetOffset < targetEnd
+      ? targetStart + targetOffset
       : undefined;
-    addTokenLoss(losses, source[index], targetToken, index);
+    addTokenLoss(losses, source, target, index, targetIndex);
   }
 }
 
 function addTokenLoss(
   losses: ConversionLoss[],
-  source: Token,
-  target: Token | undefined,
+  sourceDocument: Document,
+  targetDocument: Document,
   index: number,
+  targetIndex: number | undefined,
 ): void {
+  const source = sourceDocument[index];
+  const target = targetIndex === undefined
+    ? undefined
+    : targetDocument[targetIndex];
+
   if (
     source.kind === "grapheme" &&
     target?.kind === "grapheme" &&
@@ -163,11 +192,32 @@ function addTokenLoss(
     if (removed.length > 0) {
       changed = true;
       for (const diacritic of removed) {
+        if (
+          isDisplacedBreathing(
+            diacritic,
+            sourceDocument,
+            targetDocument,
+            index,
+            targetIndex,
+          )
+        ) {
+          losses.push({
+            code: "displaced-diacritic",
+            index,
+            diacritic,
+            message: `The target representation moves the ${
+              DIACRITIC_NAMES[diacritic]
+            } onto the next vowel; the hiatus it marked is read as a diphthong.`,
+          });
+          continue;
+        }
         losses.push({
           code: "removed-diacritic",
           index,
           diacritic,
-          message: `The target representation does not retain ${diacritic}.`,
+          message: `The target representation does not retain the ${
+            DIACRITIC_NAMES[diacritic]
+          }.`,
         });
       }
     }
@@ -223,4 +273,75 @@ function preservesToken(source: Token, target: Token): boolean {
     (source.glyphVariant !== "lunate-sigma" ||
       source.glyphVariant === target.glyphVariant) &&
     [...source.diacritics].every((mark) => target.diacritics.has(mark));
+}
+
+/**
+ * Reports a smooth breathing that the target carries on a vowel the source
+ * left unmarked.
+ *
+ * Transliteration writes nothing for a smooth breathing and nothing for an
+ * unmarked initial vowel, so the reparsed target infers a smooth breathing
+ * that monotonic or uncial sources did not have. A breathing that merely moved
+ * from the previous vowel is reported there as displaced, not here.
+ */
+function addInferredBreathing(
+  losses: ConversionLoss[],
+  source: Document,
+  target: Document,
+  index: number,
+  targetIndex: number,
+): void {
+  const sourceToken = source[index];
+  const targetToken = target[targetIndex];
+  if (
+    sourceToken.kind !== "grapheme" || targetToken.kind !== "grapheme" ||
+    !isVowel(sourceToken.letter) ||
+    !targetToken.diacritics.has("smooth") ||
+    BREATHINGS.some((mark) => sourceToken.diacritics.has(mark))
+  ) return;
+
+  const previousSource = source[index - 1];
+  const previousTarget = target[targetIndex - 1];
+  const displaced = previousSource?.kind === "grapheme" &&
+    previousTarget?.kind === "grapheme" &&
+    BREATHINGS.some((mark) =>
+      previousSource.diacritics.has(mark) &&
+      !previousTarget.diacritics.has(mark)
+    );
+  if (displaced) return;
+
+  losses.push({
+    code: "inferred-breathing",
+    index,
+    diacritic: "smooth",
+    message:
+      "The target representation does not distinguish an unmarked initial vowel from one with a smooth breathing; the breathing is inferred when the target is read back.",
+  });
+}
+
+/**
+ * Whether a breathing absent from the target token reappears on the following
+ * target vowel, where the source had none.
+ *
+ * This happens when a hiatus marked only by a breathing on its first vowel is
+ * rendered in a format that does not write that breathing in place, so the
+ * reparsed target reads the pair as a diphthong.
+ */
+function isDisplacedBreathing(
+  diacritic: Diacritic,
+  source: Document,
+  target: Document,
+  index: number,
+  targetIndex: number | undefined,
+): boolean {
+  if (!BREATHINGS.includes(diacritic) || targetIndex === undefined) {
+    return false;
+  }
+  const nextSource = source[index + 1];
+  const nextTarget = target[targetIndex + 1];
+  return nextSource?.kind === "grapheme" &&
+    nextTarget?.kind === "grapheme" &&
+    nextSource.letter === nextTarget.letter &&
+    !BREATHINGS.some((mark) => nextSource.diacritics.has(mark)) &&
+    nextTarget.diacritics.has(diacritic);
 }

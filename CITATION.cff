@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: >-
+  If you use greek-conversion in research or in a published resource, please
+  cite it using the metadata below.
+type: software
+title: greek-conversion
+abstract: >-
+  A TypeScript library for bidirectional conversion between Greek, Beta Code,
+  and scientific transliteration. It defines atomic conversion options,
+  implements published conventions (ALA-LC, BnF, ISO 843, SBL, TLG, Perseus)
+  as presets over those options, and reports the information a conversion
+  loses.
+authors:
+  - family-names: Boquet
+    given-names: Antoine
+version: 1.0.0-rc.1
+license: MIT
+repository-code: "https://github.com/defense-humanites/greek-conversion"
+url: "https://defense-humanites.github.io/greek-conversion/"
+keywords:
+  - Ancient Greek
+  - Modern Greek
+  - polytonic Greek
+  - Beta Code
+  - transliteration
+  - romanization
+  - digital humanities

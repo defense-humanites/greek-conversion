@@ -19,6 +19,8 @@ const TONOS_TO_OXIA = new Map<string, string>([
   ["ΰ", "ΰ"],
 ]);
 
+const TONOS = new RegExp(`[${[...TONOS_TO_OXIA.keys()].join("")}]`, "gu");
+
 export function applyGreekUnicode(
   input: string,
   options: ConversionOptions = {},
@@ -28,10 +30,10 @@ export function applyGreekUnicode(
   let output = input.normalize(composition === "decomposed" ? "NFD" : "NFC");
 
   if (composition === "composed" && acuteForm(options) === "oxia") {
-    output = Array.from(
-      output,
-      (character) => TONOS_TO_OXIA.get(character) ?? character,
-    ).join("");
+    output = output.replace(
+      TONOS,
+      (character) => TONOS_TO_OXIA.get(character)!,
+    );
   }
 
   if (unicode?.questionMark === "greek") {

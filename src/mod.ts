@@ -27,10 +27,16 @@ export type {
   CustomCharacterForms,
 } from "./converter.ts";
 import { type ConversionResult, findConversionLosses } from "./losses.ts";
-import type { Document, Format } from "./model.ts";
+import {
+  assertFormat,
+  assertTextInput,
+  type Document,
+  type Format,
+} from "./model.ts";
 import type { ConversionOptions, GreekUnicodeOptions } from "./options.ts";
 import { resolveConversionOptions } from "./presets.ts";
 
+export { FORMATS } from "./model.ts";
 export type {
   Diacritic,
   Document,
@@ -49,11 +55,13 @@ export type {
 export type {
   ArchaicKoppaTransliteration,
   BetaCodeCase,
+  BetaCodeYot,
   BetaTransliteration,
   ChiTransliteration,
   CircumflexTransliteration,
   ConversionOptions,
-  CoronisOrthography,
+  ConversionOptionValues,
+  CoronisTransliteration,
   DefaultConversionOptions,
   DentalSigmaOrthography,
   DiacriticDisposition,
@@ -67,14 +75,16 @@ export type {
   GreekAnoTeleiaForm,
   GreekQuestionMarkForm,
   GreekUnicodeOptions,
+  HyphenTransliteration,
   KeraiaTransliteration,
   LetterCaseOrthography,
-  LongVowelOrthography,
+  LongVowelTransliteration,
   LunateSigmaTransliteration,
   MedialBetaOrthography,
-  ModernDigraphOrthography,
-  NasalGammaOrthography,
+  ModernDigraphTransliteration,
+  NasalGammaTransliteration,
   NumeralOrthography,
+  OptionValueTable,
   OrthographyOptions,
   PhiTransliteration,
   Preset,
@@ -83,14 +93,15 @@ export type {
   RhoTransliteration,
   SigmaOrthography,
   SmoothBreathingTransliteration,
-  TransliterationHyphen,
   UnicodeComposition,
-  UpsilonOrthography,
+  UpsilonTransliteration,
   WhitespaceOrthography,
   XiTransliteration,
-  YotBetaCode,
 } from "./options.ts";
-export { DEFAULT_CONVERSION_OPTIONS } from "./options.ts";
+export {
+  CONVERSION_OPTION_VALUES,
+  DEFAULT_CONVERSION_OPTIONS,
+} from "./options.ts";
 export {
   getPresetMetadata,
   getPresetOptions,
@@ -186,6 +197,10 @@ export function formatGreekUnicode(
  * Unknown literals are preserved. The result is canonical and idempotent for
  * fixed formats and options, but a reverse conversion is not necessarily
  * lossless; use {@link convertDetailed} when that distinction matters.
+ *
+ * @throws {TypeError} If `input` is not a string.
+ * @throws {RangeError} If a format, preset, option key, or option value is
+ * unknown.
  */
 export function convert(
   input: string,
@@ -226,6 +241,10 @@ export function reencode(
  * not reported as loss. Known lunate-sigma provenance is reported when an
  * output policy removes it. The conversion itself is executed once; only the
  * rendered target is parsed again for comparison.
+ *
+ * @throws {TypeError} If `input` is not a string.
+ * @throws {RangeError} If a format, preset, option key, or option value is
+ * unknown.
  */
 export function convertDetailed(
   input: string,
@@ -246,6 +265,9 @@ function runConversion(
   to: Format,
   options: ConversionOptions,
 ): { source: Document; output: string } {
+  assertTextInput(input);
+  assertFormat(from);
+  assertFormat(to);
   const resolved = resolveConversionOptions(options);
   const source = parse(input, from, resolved);
   return { source, output: encode(source, to, resolved) };

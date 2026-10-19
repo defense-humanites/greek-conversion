@@ -1,8 +1,6 @@
-import { DEFAULT_CONVERSION_OPTIONS } from "../src/mod.ts";
-import type {
-  DiacriticOptions,
-  GreekUnicodeOptions,
-  OrthographyOptions,
+import {
+  CONVERSION_OPTION_VALUES,
+  DEFAULT_CONVERSION_OPTIONS,
 } from "../src/mod.ts";
 
 type Group = "orthography" | "diacritics" | "unicode";
@@ -12,60 +10,7 @@ type Frame = {
   key: string;
 };
 
-// The defaults supply the key inventory; these lists cover the other valid values.
-const choices: {
-  orthography: Record<keyof OrthographyOptions, readonly string[]>;
-  diacritics: Record<keyof DiacriticOptions, readonly string[]>;
-  unicode: Record<keyof GreekUnicodeOptions, readonly string[]>;
-} = {
-  orthography: {
-    doubleRho: ["unmarked", "smooth-rough"],
-    medialBeta: ["standard", "symbol"],
-    coronis: ["omit", "apostrophe", "greek"],
-    smoothBreathing: ["omit", "greek", "apostrophe"],
-    circumflexAccent: ["tilde", "circumflex"],
-    quantityTransliteration: ["preserve", "omit"],
-    nasalGamma: ["nasal", "literal"],
-    sigma: ["standard", "lunate", "preserve"],
-    lunateSigma: ["s", "c"],
-    finalSigma: ["contextual", "medial", "preserve"],
-    numerals: ["alphabetic", "decimal"],
-    keraia: ["greek", "bnf"],
-    dentalSigma: ["preserve", "assimilate"],
-    upsilon: ["u", "y", "y-with-diphthong-u", "y-with-au-eu-ou"],
-    longVowels: ["macron", "circumflex"],
-    accentuation: ["polytonic", "monotonic"],
-    whitespace: ["preserve", "collapse"],
-    hyphen: ["ascii", "typographic"],
-    enotikon: ["preserve", "hyphen"],
-    beta: ["b", "v"],
-    eta: ["ē", "ī"],
-    xi: ["x", "ks"],
-    phi: ["ph", "f"],
-    chi: ["ch", "kh"],
-    modernDigraphs: ["preserve", "phonetic", "ala-lc"],
-    rho: ["contextual", "systematic"],
-    letterCase: ["preserve", "lowercase", "uppercase", "title"],
-    betaCodeCase: ["lowercase", "uppercase"],
-    yotBetaCode: ["j", "#401"],
-    archaicKoppa: ["k-dot-below", "q"],
-  },
-  diacritics: {
-    accents: ["preserve", "remove"],
-    smoothBreathing: ["preserve", "remove"],
-    roughBreathing: ["preserve", "remove"],
-    coronis: ["preserve", "remove"],
-    diaeresis: ["preserve", "remove"],
-    iotaSubscript: ["preserve", "remove"],
-    quantity: ["preserve", "remove"],
-  },
-  unicode: {
-    composition: ["composed", "decomposed"],
-    acute: ["system", "tonos", "oxia"],
-    questionMark: ["canonical", "semicolon", "greek"],
-    anoTeleia: ["canonical", "middle-dot", "greek"],
-  },
-};
+const choices = CONVERSION_OPTION_VALUES;
 
 export interface Suggestion {
   label: string;

@@ -5,20 +5,42 @@ for the `0.14.x` API.
 
 ## Installation
 
-The stable release is available from JSR and npm after publication:
+The release candidate `1.0.0-rc.1` is published on JSR, and on npm under the
+`next` distribution tag; the stable `1.0.0` will follow with the same content
+unless a problem is found:
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0
-npm install @humanities/greek-conversion@1.0.0
+deno add jsr:@humanities/greek-conversion@1.0.0-rc.1
+npm install @humanities/greek-conversion@next
 ```
 
 The package is ESM-only.
 
 ## Updating from `1.0.0-beta.9`
 
-The first stable release has no API or conversion behavior changes from
-`beta.9`. Update the dependency version; the npm release uses the `latest`
-distribution tag. The published preset scopes and the documented limits of
+Three option identifiers and seven exported type names change in
+`1.0.0-rc.1`, and therefore in `1.0.0`; the behavior behind them does not:
+
+| Before | After |
+| --- | --- |
+| `orthography.quantityTransliteration` | `orthography.quantity` |
+| `orthography.yotBetaCode` | `orthography.betaCodeYot` |
+| `orthography.eta: "ē"` / `"ī"` | `orthography.eta: "e-macron"` / `"i-macron"` |
+| `TransliterationHyphen` | `HyphenTransliteration` |
+| `CoronisOrthography` | `CoronisTransliteration` |
+| `UpsilonOrthography` | `UpsilonTransliteration` |
+| `LongVowelOrthography` | `LongVowelTransliteration` |
+| `NasalGammaOrthography` | `NasalGammaTransliteration` |
+| `ModernDigraphOrthography` | `ModernDigraphTransliteration` |
+| `YotBetaCode` | `BetaCodeYot` |
+
+Options are now validated strictly, so an old identifier throws a
+`RangeError` naming it instead of being ignored.
+
+Apart from the renames above, update the dependency version. The release
+candidate uses the npm `next` distribution tag; the stable release will use
+`latest`. Conversion output changes are listed in the changelog under *Fixed*
+and *Changed*. The published preset scopes and the documented limits of
 the advanced `./document` API still apply.
 
 ## Updating from `1.0.0-beta.8`
@@ -71,7 +93,7 @@ breathing with an apostrophe. ISO 843 retains distinct Latin punctuation:
 Greek question mark becomes `?`, and ano teleia becomes `;`.
 
 The new orthography fields `smoothBreathing`, `circumflexAccent`,
-and `quantityTransliteration` can override
+and `quantityTransliteration` (now `quantity`) can override
 these behaviors. Strict bound converters still reject only recognized
 out-of-scope characters and known undefined or unresolved preset mappings;
 inspect `convertDetailed().losses` for in-scope distinctions lost during

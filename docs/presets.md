@@ -111,7 +111,7 @@ Romanization profile for Ancient and Medieval Greek before 1454.
 **Known limitations:**
 
 - Missing rough breathings are not inferred from lexical knowledge or capitalization.
-- Iota adscript cannot be distinguished mechanically from an ordinary iota.
+- An iota adscript written after a marked capital (Ἅιδῃ) is kept as a letter rather than omitted as the table prescribes.
 - Omitted diaeresis is recoverable only in the deterministic contextual y/u cases implemented by the parser.
 - Stigma, modern koppa, and sampi are documented only as marked numerals; their unmarked engine defaults are outside the ALA-LC table.
 - Yot is not part of the cited ALA-LC inventory.
@@ -154,7 +154,7 @@ Romanization profile for Modern Greek after 1453.
 **Known limitations:**
 
 - Missing rough breathings are not inferred from lexical knowledge or capitalization.
-- Iota adscript cannot be distinguished mechanically from an ordinary iota.
+- An iota adscript written after a marked capital (Ἅιδῃ) is kept as a letter rather than omitted as the table prescribes.
 - Only the documented contextual mu-pi, nu-tau, and gamma-kappa rules are implemented.
 - Digamma, stigma, both koppa forms, and sampi are documented only as marked numerals; their unmarked engine defaults are outside the ALA-LC table.
 - Yot is not part of the cited ALA-LC inventory.
@@ -183,7 +183,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
     "hyphen": "typographic",
     "keraia": "bnf",
     "lunateSigma": "c",
-    "quantityTransliteration": "omit",
+    "quantity": "omit",
     "smoothBreathing": "greek",
     "upsilon": "y-with-au-eu-ou"
   },
@@ -199,7 +199,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
 - BnF keraiai are rendered as a comma and acute in transliteration, but reverse conversion cannot always distinguish the resulting accent from a letter accent.
 - Upper Cypriot syndyazomeno shares U+0306 with the ordinary breve and cannot be distinguished mechanically; lower syndyazomeno is not interpreted as a semantic mark.
 - The Iliad/Odyssey numeral exception is not selected without the relevant cataloguing context.
-- Iota adscript cannot be distinguished mechanically from an ordinary iota.
+- An iota adscript written after a marked capital (Ἅιδῃ) is kept as a letter rather than omitted as the table prescribes.
 - The BnF circumflex and smooth breathing marks and omission of explicit quantity marks apply only to transliteration; missing breathings are never inferred from Greek source text.
 - Both documented koppa forms collapse to q in BnF transliteration and therefore cannot be distinguished on reverse conversion.
 
@@ -224,7 +224,7 @@ Type 1 transliteration of Greek characters into Latin characters.
     "beta": "v",
     "coronis": "apostrophe",
     "enotikon": "hyphen",
-    "eta": "ī",
+    "eta": "i-macron",
     "nasalGamma": "literal",
     "phi": "f",
     "smoothBreathing": "apostrophe",
@@ -354,7 +354,7 @@ Canonical Beta Code together with the TLG characters implemented by the engine.
 {
   "orthography": {
     "betaCodeCase": "uppercase",
-    "yotBetaCode": "#401"
+    "betaCodeYot": "#401"
   }
 }
 ```
@@ -405,9 +405,13 @@ idempotent without lexical inference.
 The ISO Type 1 and BnF presets use the narrower
 `orthography.upsilon: "y-with-au-eu-ou"` rule: `αυ`, `ευ`, and `ου` produce
 `au`, `eu`, and `ou`; isolated upsilon and other vowel pairs use `y`. A
-diaeresis prevents the three combinations. When reading unmarked `ay`, `ey`,
-or `oy`, the parser infers a separated upsilon so a second conversion cannot
-silently turn it into `au`, `eu`, or `ou`.
+diaeresis prevents the three combinations. When reading `ay`, `ey`, or `oy`,
+the parser keeps the upsilon separated so a second conversion cannot silently
+turn it into `au`, `eu`, or `ou`: at word start the breathing on the first
+vowel carries the separation, as Greek writes a hiatus (`ay → ἀυ`,
+`hay → ἁυ`); elsewhere, or where no breathing is written or inferred, a
+diaeresis carries it (`kay → kaÿ`), and the encoder writes that diaeresis at
+once so the output is canonical.
 
 `bnf-core` also selects `orthography.keraia: "bnf"` for transliteration: the
 right numeral mark becomes an acute accent and the left numeral mark becomes

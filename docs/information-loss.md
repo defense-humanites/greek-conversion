@@ -22,7 +22,7 @@ the row format to the column format and parsing the result again.
 
 | From \ To | Greek | Beta Code | Transliteration |
 | --- | --- | --- | --- |
-| **Greek** | Selected glyph, accent, punctuation, and composition policies; lunate provenance unless preserved; unmarked labial/velar + sigma pairs contract | Canonical spelling and mark order; lunate provenance unless preserved | Lunate provenance by default; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; `ν` before a velar under nasal-gamma inference |
+| **Greek** | Selected glyph, accent, punctuation, and composition policies; lunate provenance unless preserved; unmarked labial/velar + sigma pairs contract | Canonical spelling and mark order; lunate provenance unless preserved | Lunate provenance by default; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; the absence of a breathing on an initial vowel (monotonic or uncial text), which reads back as a smooth breathing; `ν` before a velar under nasal-gamma inference |
 | **Beta Code** | Canonical Greek glyphs; lunate provenance unless preserved; unmarked labial/velar + sigma pairs contract | Canonical ASCII case, asterisk placement, mark order, aliases, and punctuation; lunate provenance unless preserved | Same transliteration losses as Greek, including lunate provenance, coronis, and marked double rho |
 | **Transliteration** | Initial smooth breathing is inferred where quantity is not explicit; labial/velar + sigma pairs contract; an elided mute may be aspirated before rough breathing | Initial smooth breathing is inferred where quantity is not explicit; accepted aliases converge to canonical Beta Code | Accepted aliases, punctuation, combining-mark order, NFC, and orthographic spelling converge |
 
@@ -42,6 +42,10 @@ not necessarily NFC. Accepted aliases do not round-trip byte for byte:
   `sigma: "preserve"` or `lunateSigma: "c"` retains it in the target format;
 - Unicode punctuation aliases become the canonical punctuation for the target;
 - equivalent combining-mark order and duplicate recognized marks converge;
+  Greek and transliteration write the marks of one vowel in the order
+  quantity, breathing, diaeresis, accent, so that the macron sits on the
+  vowel (`ᾱ́`), and in transliteration an explicit macron is spelled like the
+  structural macron of eta and omega (`ā́` like `ḗ`);
 - Beta Code aliases, case placement, and mark order converge.
 
 ASCII letter case in Beta Code is presentation only and does not enter the
@@ -62,8 +66,20 @@ Default transliteration has these intrinsic ambiguities:
   explicitly marked smooth–rough in Greek or Beta Code;
 - an initial vowel with explicit quantity has no inferred smooth breathing, so
   an explicitly smooth quantity-marked source converges to the unmarked form;
+- a smooth breathing written on the first vowel of a pair that could form a
+  diphthong marks a hiatus or an iota adscript (`Ἀίδης`, `ἀυτμή`), but the
+  omitted breathing leaves `Aídēs`, `autmḗ`, which parse back as diphthongs;
+  `convertDetailed()` reports `displaced-diacritic`. The engine does not add
+  a diaeresis to compensate, because the same spelling also marks an iota
+  adscript (`Ἅιδης`, `τῆι` in editions that write the adscript), which is not
+  a hiatus. `smoothBreathing: "greek"` or `"apostrophe"` writes the breathing
+  in place and keeps the distinction; an accent on the first vowel
+  (`Ἅιδῃ → Háidȩ̄`) keeps it as well;
 - with the default `nasalGamma: "nasal"`, Greek gamma and nu before a velar can
-  both be read as nasal gamma after transliteration.
+  both be read as nasal gamma after transliteration;
+- a macron or breve on epsilon or omicron is omitted, because `ē` and `ō`
+  denote eta and omega; such a document is already invalid for
+  `validateDocument()`, and `convertDetailed()` reports the removed mark.
 
 The `coronis: "apostrophe"` policy makes the mark visible for readers, but
 U+2019 remains punctuation and does not retain semantic provenance. By
@@ -86,8 +102,23 @@ the pre-transform spelling.
 ### Inference from transliteration
 
 Transliteration does not normally write smooth breathing. When an initial vowel
-group has neither rough breathing nor explicit quantity, parsing infers smooth
-breathing. Explicit `ā/ă`, `ī/ĭ`, and `ū/ŭ` remain breathing-neutral.
+group has neither rough breathing, explicit quantity, nor a diaeresis, parsing
+infers smooth breathing. Explicit `ā/ă`, `ī/ĭ`, and `ū/ŭ` remain
+breathing-neutral, and an initial `ï` or `ü` stays without a breathing, as
+Greek writes `ϊ` and `ϋ`.
+
+The inference belongs to the polytonic frame. It is not applied when the
+selected orthography does not write smooth breathings: `accentuation:
+"monotonic"`, `removeDiacritics: true`, `diacritics.smoothBreathing:
+"remove"`, or an explicit `smoothBreathing: "greek"` or `"apostrophe"`
+spelling. The canonical document then matches what the options describe, and
+monotonic text converts back and forth under those options without loss.
+
+In the default polytonic frame, the inference means that transliteration
+cannot distinguish an unmarked initial vowel from one with a smooth breathing.
+Monotonic or uncial Greek (`άνθρωπος`, `ΑΙΔΗΣ`) therefore reads back with a
+smooth breathing, and `convertDetailed()` reports `inferred-breathing` on the
+vowel that acquires it.
 
 With default nasal-gamma inference, `n` before gamma, kappa, xi, or chi becomes
 gamma in the canonical document. Set `nasalGamma: "literal"` to keep `n` as
@@ -101,7 +132,7 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `diacritics.<class>: "remove"` | Removes only the selected semantic class during rendering | No when that class occurs; unselected classes remain recoverable |
 | `letterCase: "lowercase"`, `"uppercase"`, or `"title"` | Applies deterministic case to recognized Greek graphemes | No when source case changes; unknown literals are untouched |
 | `betaCodeCase: "lowercase"` or `"uppercase"` | Selects the insignificant ASCII case of Beta Code letters without changing `*` markers | Yes; the canonical graphemes are unchanged |
-| `yotBetaCode: "#401"` | Uses the TLG character code instead of `j` for yot | Yes; both spellings parse as yot |
+| `betaCodeYot: "#401"` | Uses the TLG character code instead of `j` for yot | Yes; both spellings parse as yot |
 | `archaicKoppa: "q"` | Uses the same transliteration for both koppa forms | No; `q` parses as modern koppa |
 | `finalSigma: "medial"` | Uses `σ` instead of contextual `ς` in lowercase Greek output | Yes; both are the same canonical sigma letter |
 | `sigma: "standard"` (default) | Replaces a provenanced lunate sigma with the standard Greek or Beta Code glyph | No; `convertDetailed()` reports `removed-glyph-variant` |
@@ -115,14 +146,14 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `coronis: "omit"` (default) | Omits coronis from transliteration | No |
 | `coronis: "apostrophe"` | Emits U+2019 as display punctuation | No |
 | `coronis: "greek"` | Emits semantic U+1FBD after the affected vowel | Yes for implemented coronis contexts |
-| `accentuation: "monotonic"` | Keeps diaeresis, maps every accent to acute, and removes other polytonic marks | No |
+| `accentuation: "monotonic"` | Keeps diaeresis, maps every accent to acute, removes other polytonic marks, and unaccents monosyllables except `ή`, `πού`, `πώς` | No |
 | `modernDigraphs: "phonetic"` | Maps word-initial `μπ/ντ` to `b/d` in transliteration | No; `b/d` are also canonical spellings of beta/delta |
 | `modernDigraphs: "ala-lc"` | Maps initial `μπ/ντ` to `b/d̲` and contextual `γκ` to `gk/nk` | Yes with the coordinated ALA-LC letter options; `d̲` remains distinct from delta |
 | `rho: "systematic"` | Adds one final `h` to every contiguous rho group | The rho letters are recoverable; an explicit rough breathing is not |
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | The accent is recoverable; its scalar preference is not |
 | Greek question-mark or ano-teleia scalar | Selects a canonically unstable punctuation scalar | The punctuation meaning is recoverable; its scalar preference is not |
-| `doubleRho`, `medialBeta`, `finalSigma`, letter variants, `upsilon`, `longVowels` | Selects a canonical output spelling | The canonical letters normally remain recoverable, but `eta: "ī"` conflicts with long iota |
+| `doubleRho`, `medialBeta`, `finalSigma`, letter variants, `upsilon`, `longVowels` | Selects a canonical output spelling | The canonical letters normally remain recoverable, but `eta: "i-macron"` conflicts with long iota |
 
 `longVowels` chooses either a macron or a circumflex for structural eta and
 omega length. A separately encoded macron remains a philological diacritic: it
@@ -158,6 +189,14 @@ reverse-round-trip guarantee and does not imply that the original source can
 be reconstructed. The differential corpus and explicit loss cases live in
 `tests/fixtures.ts`; pairwise stability and isolated non-default option values
 are exercised by `tests/stability_test.ts`.
+
+Three properties are checked for every preset and every format pair over a
+deterministic corpus of difficult forms in `tests/invariants_corpus_test.ts`:
+idempotence of canonical output; validity of the reparsed output, except at
+the documented boundaries listed in that file, which the producing conversion
+must report as lossy; and, when `convertDetailed()` reports no loss, exact
+reconstruction of the canonical source. A conversion reported as lossless is
+therefore reversible under the same options.
 
 For an actual input, `convertDetailed()` returns the output, a `lossy` status,
 and token-indexed diagnostics. Its comparison treats canonical Unicode and

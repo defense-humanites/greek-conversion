@@ -1,10 +1,17 @@
-import { ALPHABET, BETA_FOR, GREEK_FOR, ORDER } from "./alphabet.ts";
+import {
+  ALPHABET,
+  BETA_FOR,
+  GREEK_FOR,
+  GREEK_ORDER,
+  ORDER,
+} from "./alphabet.ts";
 import {
   ARISTERI_KERAIA,
   breathingTarget,
   contractedSigma,
   DEXIA_KERAIA,
   elidedAspirate,
+  hasHiatusMark,
   initialBreathingStart,
   isAuEuOuAt,
   isDiphthongAt,
@@ -14,19 +21,44 @@ import {
   isWordInitial,
 } from "./context.ts";
 import {
+  infersSmoothBreathing,
   prepareDiacriticsForRendering,
   preservesDiacritic,
 } from "./diacritics.ts";
 import type { Diacritic, Document, Format, Grapheme } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
+import { greekUpper } from "./case.ts";
 import { applyGreekOrthography } from "./orthography.ts";
 import { encodePunctuation } from "./punctuation.ts";
 import { applyGreekUnicode } from "./unicode.ts";
 
+/**
+ * Canonical order of combining marks on a Latin vowel: quantity, breathing,
+ * diaeresis, accent. Quantity comes first so that an explicit macron and the
+ * structural macron of eta and omega share one spelling (`ā́` like `ḗ`),
+ * which keeps transliteration output idempotent when the two meet.
+ */
+const LATIN_ORDER: readonly Diacritic[] = [
+  "macron",
+  "breve",
+  "smooth",
+  "coronis",
+  "rough",
+  "diaeresis",
+  "acute",
+  "grave",
+  "circumflex",
+  "iota-subscript",
+];
+
 const marks = (token: Grapheme, options: ConversionOptions, format: Format) =>
-  ORDER.filter((mark) =>
-    token.diacritics.has(mark) && preservesDiacritic(mark, options, format)
-  );
+  (format === "transliteration"
+    ? LATIN_ORDER
+    : format === "greek"
+    ? GREEK_ORDER
+    : ORDER).filter((mark) =>
+      token.diacritics.has(mark) && preservesDiacritic(mark, options, format)
+    );
 
 export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
   let out = "";
@@ -62,7 +94,7 @@ export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
               isWordFinal(doc, i + 1)
         ) base = "ς";
       }
-      out += contraction.uppercase ? base.toLocaleUpperCase("el") : base;
+      out += contraction.uppercase ? greekUpper(base) : base;
       i++;
       continue;
     }
@@ -96,7 +128,7 @@ export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
     ) {
       base = "ϐ";
     }
-    if (token.uppercase) base = base.toLocaleUpperCase("el");
+    if (token.uppercase) base = greekUpper(base);
 
     out += base +
       marks(token, options, "greek").map((mark) => GREEK_FOR[mark]).join("");
@@ -126,7 +158,7 @@ export function encodeBetaCode(
       base = "s3";
     } else {
       base = token.letter === "yot" &&
-          options.orthography?.yotBetaCode === "#401"
+          options.orthography?.betaCodeYot === "#401"
         ? "#401"
         : ALPHABET[token.letter].beta;
     }
@@ -256,7 +288,20 @@ export function encodeTransliteration(
     ) {
       base += uppercaseOutput ? "H" : "h";
     }
-    const tokenMarks = marks(token, options, "transliteration");
+    // Latin `ē` and `ō` are eta and omega, so a quantity mark on epsilon or
+    // omicron has no transliteration; convertDetailed() reports its removal.
+    const tokenMarks = marks(token, options, "transliteration").filter(
+      (mark) =>
+        !(mark === "macron" || mark === "breve") ||
+        (token.letter !== "epsilon" && token.letter !== "omicron"),
+    );
+    if (
+      writesSeparationDiaeresis(doc, index, options) &&
+      !tokenMarks.includes("diaeresis") &&
+      preservesDiacritic("diaeresis", options, "transliteration")
+    ) {
+      tokenMarks.push("diaeresis");
+    }
     const transliteratedMarks = tokenMarks
       .filter((mark) => mark !== "coronis")
       .map((mark) => trMark(mark, options))
@@ -367,7 +412,7 @@ function transliterationBase(
   let base: string;
   switch (letter) {
     case "eta":
-      if (options.orthography?.eta === "ī") return "i\u0304";
+      if (options.orthography?.eta === "i-macron") return "i\u0304";
       base = "e";
       break;
     case "omega":
@@ -423,4 +468,55 @@ function trMark(mark: Diacritic, options: ConversionOptions) {
     default:
       return "";
   }
+}
+
+/**
+ * Whether a contextual `y` must carry a diaeresis to keep its separation.
+ *
+ * Under the contextual upsilon rules, `y` after a vowel already means "not a
+ * diphthong". Greek marks that hiatus by a breathing on the first vowel; when
+ * this orthography neither writes that breathing in place nor infers it on
+ * reading, the separation would be reread as a diaeresis, so the diaeresis
+ * is written at once and the output is idempotent.
+ */
+function writesSeparationDiaeresis(
+  document: Document,
+  index: number,
+  options: ConversionOptions,
+): boolean {
+  const upsilon = options.orthography?.upsilon;
+  if (upsilon !== "y-with-au-eu-ou" && upsilon !== "y-with-diphthong-u") {
+    return false;
+  }
+  const token = document[index];
+  const first = document[index - 1];
+  if (
+    token?.kind !== "grapheme" || token.letter !== "upsilon" ||
+    first?.kind !== "grapheme" || !hasHiatusMark(first)
+  ) return false;
+
+  // Without its hiatus mark the pair would be a diphthong rendered with u.
+  const unmarked: Document = [
+    { ...first, diacritics: new Set<Diacritic>() },
+    token,
+  ];
+  const wouldBeDiphthong = upsilon === "y-with-au-eu-ou"
+    ? isAuEuOuAt(unmarked, 0)
+    : isDiphthongAt(unmarked, 0);
+  if (!wouldBeDiphthong) return false;
+
+  // The hiatus survives when one of its marks is reread on the first vowel.
+  const written = (mark: Diacritic) =>
+    first.diacritics.has(mark) &&
+    preservesDiacritic(mark, options, "transliteration");
+  if (written("acute") || written("grave") || written("circumflex")) {
+    return false;
+  }
+  if (written("rough") && isWordInitial(document, index - 1)) return false;
+  if (
+    first.diacritics.has("smooth") &&
+    (infersSmoothBreathing(options) ||
+      (options.orthography?.smoothBreathing === "greek" && written("smooth")))
+  ) return false;
+  return true;
 }

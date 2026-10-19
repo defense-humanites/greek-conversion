@@ -1,4 +1,12 @@
-import { ARISTERI_KERAIA, DEXIA_KERAIA, isWordInitial } from "./context.ts";
+import {
+  ARISTERI_KERAIA,
+  DEXIA_KERAIA,
+  isBoundaryTransparent,
+  isDiphthongAt,
+  isGreekNumeralContext,
+  isVowel,
+  isWordInitial,
+} from "./context.ts";
 import { literal } from "./model.ts";
 import type { Diacritic, Document, Grapheme, Letter, Token } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
@@ -59,9 +67,11 @@ export function applyOrthography(
  * Applies Greek-output orthography to a canonical document without mutation.
  *
  * The monotonic policy is mechanical and lossy: it preserves diaeresis,
- * collapses acute/grave/circumflex to one acute, and removes breathings,
- * coronis, iota subscript, and explicit quantity. It does not use lexical or
- * morphological knowledge.
+ * collapses acute/grave/circumflex to one acute, removes breathings, coronis,
+ * iota subscript, and explicit quantity, and leaves monosyllables unaccented
+ * except for the three the monotonic system distinguishes (see
+ * {@link keepsMonosyllableAccent}). It does not use lexical or morphological
+ * knowledge.
  */
 export function applyGreekOrthography(
   document: Document,
@@ -91,7 +101,104 @@ export function applyGreekOrthography(
     return { ...token, diacritics };
   });
 
+  changed = unaccentMonosyllables(orthographic, monotonic) || changed;
   return changed ? monotonic : orthographic;
+}
+
+/**
+ * Removes the accent of monosyllabic words from the monotonic view, in place.
+ *
+ * Syllables are counted on the monotonic view itself, where an accent on the
+ * first of two vowels is the only remaining sign of hiatus, so that rendering
+ * the output again gives the same result. The exceptions are read from the
+ * marks of the source.
+ */
+function unaccentMonosyllables(
+  source: Document,
+  monotonic: Token[],
+): boolean {
+  let changed = false;
+  for (let start = 0; start < monotonic.length; start++) {
+    if (
+      monotonic[start].kind !== "grapheme" || !isWordInitial(monotonic, start)
+    ) continue;
+
+    const word: number[] = [];
+    let end = start;
+    for (; end < monotonic.length; end++) {
+      const token = monotonic[end];
+      if (token.kind === "grapheme") word.push(end);
+      else if (!isBoundaryTransparent(token)) break;
+    }
+    start = end - 1;
+
+    const accented = word.filter((index) =>
+      (monotonic[index] as Grapheme).diacritics.has("acute")
+    );
+    if (
+      accented.length === 0 ||
+      isGreekNumeralContext(monotonic, word[0]) ||
+      syllableCount(monotonic, word) !== 1 ||
+      keepsMonosyllableAccent(source, word)
+    ) continue;
+
+    for (const index of accented) {
+      const token = monotonic[index] as Grapheme;
+      const diacritics = new Set(token.diacritics);
+      diacritics.delete("acute");
+      monotonic[index] = { ...token, diacritics };
+    }
+    changed = true;
+  }
+  return changed;
+}
+
+function syllableCount(document: Document, word: readonly number[]): number {
+  let count = 0;
+  for (const index of word) {
+    const token = document[index] as Grapheme;
+    if (!isVowel(token.letter)) continue;
+    if (word.includes(index - 1) && isDiphthongAt(document, index - 1)) {
+      continue;
+    }
+    count++;
+  }
+  return count;
+}
+
+/**
+ * The monosyllables that keep their accent in monotonic orthography, as far
+ * as the source marks identify them:
+ *
+ * - disjunctive `ή` ("or"), written `ἤ` or `ἢ` in polytonic Greek, as opposed
+ *   to the article `ἡ` and to `ἦ`;
+ * - interrogative `πού` and `πώς`, written `ποῦ` and `πῶς` in polytonic Greek,
+ *   as opposed to the relative or indefinite `που`, `ποὺ`, `πως`, `πὼς`.
+ *
+ * An acute on `πού` or `πώς` is kept, because it is how monotonic text writes
+ * the interrogative; a polytonic enclitic that received an acute from a
+ * following enclitic is therefore kept as well.
+ */
+function keepsMonosyllableAccent(
+  source: Document,
+  word: readonly number[],
+): boolean {
+  const tokens = word.map((index) => source[index]);
+  if (!tokens.every((token) => token?.kind === "grapheme")) return false;
+  const graphemes = tokens as Grapheme[];
+  const letters = graphemes.map(({ letter }) => letter).join(" ");
+
+  if (letters === "eta") {
+    const [eta] = graphemes;
+    return !eta.diacritics.has("rough") &&
+      (eta.diacritics.has("acute") || eta.diacritics.has("grave"));
+  }
+  if (letters === "pi omicron upsilon" || letters === "pi omega sigma") {
+    return graphemes.some(({ diacritics }) =>
+      diacritics.has("circumflex") || diacritics.has("acute")
+    );
+  }
+  return false;
 }
 
 export function applyNumeralOrthography(

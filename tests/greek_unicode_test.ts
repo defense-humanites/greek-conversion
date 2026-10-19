@@ -10,22 +10,23 @@ const POLYTONIC = { orthography: { accentuation: "polytonic" } } as const;
 const MONOTONIC = { orthography: { accentuation: "monotonic" } } as const;
 
 Deno.test("uses the accentuation system to select tonos or oxia", () => {
-  assertEquals(convert("ά ΐ", "greek", "greek", POLYTONIC), "ά ΐ");
-  assertEquals(convert("ά ΐ", "greek", "greek", MONOTONIC), "ά ΐ");
+  // Polysyllables, because monotonic monosyllables carry no accent.
+  assertEquals(convert("άβα ΐβα", "greek", "greek", POLYTONIC), "άβα ΐβα");
+  assertEquals(convert("άβα ΐβα", "greek", "greek", MONOTONIC), "άβα ΐβα");
 
   assertEquals(
-    convert("ά ΐ", "greek", "greek", {
+    convert("άβα ΐβα", "greek", "greek", {
       ...POLYTONIC,
       unicode: { acute: "tonos" },
     }),
-    "ά ΐ",
+    "άβα ΐβα",
   );
   assertEquals(
-    convert("ά ΐ", "greek", "greek", {
+    convert("άβα ΐβα", "greek", "greek", {
       ...MONOTONIC,
       unicode: { acute: "oxia" },
     }),
-    "ά ΐ",
+    "άβα ΐβα",
   );
 });
 
@@ -43,7 +44,7 @@ Deno.test("converts polytonic marks to the mechanical monotonic profile", () => 
 
   assertEquals(
     convert(source, "greek", "greek", MONOTONIC),
-    "Άνθρωπός ά ι άϋλος καγώ πολύρριζος",
+    "Άνθρωπός α ι άϋλος καγώ πολύρριζος",
   );
 });
 
@@ -58,6 +59,43 @@ Deno.test("applies Greek accentuation only to Greek output", () => {
     convert(source, "greek", "transliteration", MONOTONIC),
     "á ã̧ ī",
   );
+});
+
+Deno.test("monotonic monosyllables carry no accent except ή, πού, and πώς", () => {
+  assertEquals(
+    convert(
+      "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων, ὡς δὲ εἰπεῖν",
+      "greek",
+      "greek",
+      MONOTONIC,
+    ),
+    "Έλλησιν εγένετο και μέρει τινί των βαρβάρων, ως δε ειπείν",
+  );
+  // Disjunctive ή keeps its accent; the article, ἦ, and ἥ do not.
+  assertEquals(
+    convert("ἡ γῆ, ἦ, ἥ, ἤ, ἢ, Ἢ", "greek", "greek", MONOTONIC),
+    "η γη, η, η, ή, ή, Ή",
+  );
+  // Interrogative ποῦ and πῶς keep theirs; relative and indefinite forms do not.
+  assertEquals(
+    convert("Ποῦ; Πῶς; ποὺ πὼς που πως", "greek", "greek", MONOTONIC),
+    "Πού; Πώς; που πως που πως",
+  );
+  // Crasis, elision, and accents on enclisis follow the same syllable count.
+  assertEquals(
+    convert("κἂν δ’ ἐκεῖνος, ἄνθρωπός τις", "greek", "greek", MONOTONIC),
+    "καν δ’ εκείνος, άνθρωπός τις",
+  );
+  // An accent on the first of two vowels marks hiatus: two syllables.
+  assertEquals(
+    convert("ἄυλος αἳ οἷς", "greek", "greek", MONOTONIC),
+    "άυλος αι οις",
+  );
+  // Monotonic input is already canonical.
+  const monotonic = "Πού είσαι; Ή εδώ ή εκεί, και όχι αλλού.";
+  assertEquals(convert(monotonic, "greek", "greek", MONOTONIC), monotonic);
+  // Numerals are not words.
+  assertEquals(convert("αʹ ιβʹ", "greek", "greek", MONOTONIC), "αʹ ιβʹ");
 });
 
 Deno.test("monotonic rendering does not create blocked contractions", () => {
@@ -107,7 +145,7 @@ Deno.test("formatGreekUnicode shares the Greek encoder policy", () => {
 });
 
 Deno.test("Greek orthography is immutable", () => {
-  const source = parse("ἄ", "greek");
+  const source = parse("ἄρα", "greek");
   const transformed = applyGreekOrthography(source, MONOTONIC);
 
   assertEquals(source[0].kind === "grapheme" && [...source[0].diacritics], [

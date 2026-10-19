@@ -1,4 +1,5 @@
 import {
+  CONVERSION_OPTION_VALUES,
   type ConversionOptions,
   DEFAULT_CONVERSION_OPTIONS,
   type DiacriticOptions,
@@ -99,7 +100,7 @@ const PRESET_DEFINITIONS = {
       }],
       limitations: [
         "Missing rough breathings are not inferred from lexical knowledge or capitalization.",
-        "Iota adscript cannot be distinguished mechanically from an ordinary iota.",
+        "An iota adscript written after a marked capital (Ἅιδῃ) is kept as a letter rather than omitted as the table prescribes.",
         "Omitted diaeresis is recoverable only in the deterministic contextual y/u cases implemented by the parser.",
         "Stigma, modern koppa, and sampi are documented only as marked numerals; their unmarked engine defaults are outside the ALA-LC table.",
         "Yot is not part of the cited ALA-LC inventory.",
@@ -128,7 +129,7 @@ const PRESET_DEFINITIONS = {
       }],
       limitations: [
         "Missing rough breathings are not inferred from lexical knowledge or capitalization.",
-        "Iota adscript cannot be distinguished mechanically from an ordinary iota.",
+        "An iota adscript written after a marked capital (Ἅιδῃ) is kept as a letter rather than omitted as the table prescribes.",
         "Only the documented contextual mu-pi, nu-tau, and gamma-kappa rules are implemented.",
         "Digamma, stigma, both koppa forms, and sampi are documented only as marked numerals; their unmarked engine defaults are outside the ALA-LC table.",
         "Yot is not part of the cited ALA-LC inventory.",
@@ -164,7 +165,7 @@ const PRESET_DEFINITIONS = {
         "BnF keraiai are rendered as a comma and acute in transliteration, but reverse conversion cannot always distinguish the resulting accent from a letter accent.",
         "Upper Cypriot syndyazomeno shares U+0306 with the ordinary breve and cannot be distinguished mechanically; lower syndyazomeno is not interpreted as a semantic mark.",
         "The Iliad/Odyssey numeral exception is not selected without the relevant cataloguing context.",
-        "Iota adscript cannot be distinguished mechanically from an ordinary iota.",
+        "An iota adscript written after a marked capital (Ἅιδῃ) is kept as a letter rather than omitted as the table prescribes.",
         "The BnF circumflex and smooth breathing marks and omission of explicit quantity marks apply only to transliteration; missing breathings are never inferred from Greek source text.",
         "Both documented koppa forms collapse to q in BnF transliteration and therefore cannot be distinguished on reverse conversion.",
       ],
@@ -177,7 +178,7 @@ const PRESET_DEFINITIONS = {
         hyphen: "typographic",
         keraia: "bnf",
         lunateSigma: "c",
-        quantityTransliteration: "omit",
+        quantity: "omit",
         smoothBreathing: "greek",
         upsilon: "y-with-au-eu-ou",
       },
@@ -213,7 +214,7 @@ const PRESET_DEFINITIONS = {
         beta: "v",
         coronis: "apostrophe",
         enotikon: "hyphen",
-        eta: "ī",
+        eta: "i-macron",
         nasalGamma: "literal",
         phi: "f",
         smoothBreathing: "apostrophe",
@@ -337,7 +338,7 @@ const PRESET_DEFINITIONS = {
     options: {
       orthography: {
         betaCodeCase: "uppercase",
-        yotBetaCode: "#401",
+        betaCodeYot: "#401",
       },
     },
   },
@@ -374,11 +375,20 @@ export function getPresetOptions(preset: Preset): PresetOptions {
  * Custom fields override corresponding preset fields while unrelated preset
  * fields remain active. The returned object is detached from the registry.
  *
- * @throws {RangeError} If `options.preset` is not registered at runtime.
+ * Options are validated strictly: an unknown option key, an unknown option
+ * value, or a value of the wrong type is rejected rather than ignored, so a
+ * misspelled policy cannot silently fall back to the engine default. A field
+ * set to `undefined` is treated as absent.
+ *
+ * @throws {RangeError} If `options.preset` is not registered at runtime, or
+ * if an option key or value is unknown.
+ * @throws {TypeError} If `options`, an option group, or `removeDiacritics`
+ * has the wrong type.
  */
 export function resolveConversionOptions(
   options: ConversionOptions = {},
 ): ResolvedConversionOptions {
+  validateConversionOptions(options);
   const { preset, ...custom } = options;
   const base = preset === undefined ? {} : registeredPreset(preset);
   const merged = mergeConversionOptions(base, custom);
@@ -406,6 +416,75 @@ export function resolveConversionOptions(
 
 function registeredPreset(preset: Preset): PresetOptions {
   return registeredDefinition(preset).options;
+}
+
+const OPTION_GROUPS = ["orthography", "unicode", "diacritics"] as const;
+const TOP_LEVEL_KEYS: ReadonlySet<string> = new Set([
+  "preset",
+  "removeDiacritics",
+  ...OPTION_GROUPS,
+]);
+
+function validateConversionOptions(options: unknown): void {
+  if (
+    options === null || typeof options !== "object" || Array.isArray(options)
+  ) {
+    throw new TypeError(
+      `Expected conversion options to be an object, received ${
+        options === null
+          ? "null"
+          : Array.isArray(options)
+          ? "array"
+          : typeof options
+      }.`,
+    );
+  }
+  for (const [key, value] of Object.entries(options)) {
+    if (value === undefined) continue;
+    if (!TOP_LEVEL_KEYS.has(key)) {
+      throw new RangeError(`Unknown conversion option: ${key}`);
+    }
+    if (key === "removeDiacritics" && typeof value !== "boolean") {
+      throw new TypeError(
+        `Expected removeDiacritics to be a boolean, received ${typeof value}.`,
+      );
+    }
+  }
+  for (const group of OPTION_GROUPS) {
+    const value = (options as Record<string, unknown>)[group];
+    if (value === undefined) continue;
+    if (value === null || typeof value !== "object" || Array.isArray(value)) {
+      throw new TypeError(
+        `Expected ${group} options to be an object, received ${
+          value === null
+            ? "null"
+            : Array.isArray(value)
+            ? "array"
+            : typeof value
+        }.`,
+      );
+    }
+    const table = CONVERSION_OPTION_VALUES[group] as Record<
+      string,
+      readonly string[]
+    >;
+    for (const [key, choice] of Object.entries(value)) {
+      if (choice === undefined) continue;
+      const accepted = Object.hasOwn(table, key) ? table[key] : undefined;
+      if (accepted === undefined) {
+        throw new RangeError(`Unknown conversion option: ${group}.${key}`);
+      }
+      if (!accepted.includes(choice as string)) {
+        throw new RangeError(
+          `Invalid value for ${group}.${key}: ${
+            JSON.stringify(choice)
+          }; expected one of ${
+            accepted.map((v) => JSON.stringify(v)).join(", ")
+          }.`,
+        );
+      }
+    }
+  }
 }
 
 /** Returns whether one character occurrence is inside a bound preset's scope. */

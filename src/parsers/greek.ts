@@ -1,13 +1,11 @@
 import { BY_GREEK, GREEK_MARKS } from "../alphabet.ts";
-import {
-  classifyCoronides,
-  normalizeInitialDiphthongBreathings,
-} from "../context.ts";
+import { greekLower } from "../case.ts";
+import { classifyCoronides } from "../context.ts";
 import {
   type Diacritic,
   type Document,
-  grapheme,
   literal,
+  ownedGrapheme,
   type Token,
 } from "../model.ts";
 import { parsePunctuation } from "../punctuation.ts";
@@ -18,7 +16,7 @@ export function parseGreek(input: string): Document {
 
   for (let i = 0; i < chars.length;) {
     const source = chars[i];
-    const lower = source.toLocaleLowerCase("el");
+    const lower = greekLower(source);
     const letter = BY_GREEK.get(lower === "ς" ? "σ" : lower);
 
     if (!letter) {
@@ -38,7 +36,7 @@ export function parseGreek(input: string): Document {
       i++;
     }
 
-    out.push(grapheme(
+    out.push(ownedGrapheme(
       letter,
       source !== lower,
       marks,
@@ -52,7 +50,6 @@ export function parseGreek(input: string): Document {
     ));
   }
 
-  normalizeInitialDiphthongBreathings(out);
   classifyCoronides(out);
 
   return out;

@@ -3,13 +3,13 @@ import {
   ARISTERI_KERAIA,
   classifyCoronides,
   DEXIA_KERAIA,
-  normalizeInitialDiphthongBreathings,
 } from "../context.ts";
 import {
   type Diacritic,
   type Document,
   grapheme,
   literal,
+  ownedGrapheme,
   type Token,
 } from "../model.ts";
 import { parsePunctuation } from "../punctuation.ts";
@@ -33,7 +33,7 @@ export function parseBetaCode(input: string): Document {
     if (upper) i = consumeMarks(chars, i, marks, true);
 
     if (chars[i]?.toLowerCase() === "s" && chars[i + 1] === "3") {
-      out.push(grapheme("sigma", upper, marks, "lunate-sigma"));
+      out.push(ownedGrapheme("sigma", upper, marks, "lunate-sigma"));
       i += 2;
       continue;
     }
@@ -78,10 +78,9 @@ export function parseBetaCode(input: string): Document {
     i++;
     i = consumeMarks(chars, i, marks, QUANTITY_LETTERS.has(letter));
 
-    out.push(grapheme(letter, upper, marks));
+    out.push(ownedGrapheme(letter, upper, marks));
   }
 
-  normalizeInitialDiphthongBreathings(out);
   classifyCoronides(out);
 
   return out;
