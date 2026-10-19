@@ -42,8 +42,9 @@
     ]
   },
   "tasks": {
-    "check": "deno fmt --check && deno lint && deno check src/ tests/ scripts/ bench/ && deno check --config web/deno.json web/app.ts && deno task doc && deno run --allow-read scripts/generate_preset_docs.ts --check",
+    "check": "deno fmt --check && deno lint && deno check src/ tests/ scripts/ bench/ && deno check --config web/deno.json web/app.ts && deno task doc && deno task readme && deno run --allow-read scripts/generate_preset_docs.ts --check",
     "doc": "deno doc --lint src/mod.ts src/document.ts",
+    "readme": "deno check --doc-only README.md && deno run --allow-read scripts/check_readme.ts",
     "docs:presets": "deno run --allow-read --allow-write scripts/generate_preset_docs.ts",
     "test": "deno test",
     "bench": "deno bench bench/",

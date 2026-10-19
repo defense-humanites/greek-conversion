@@ -1,331 +1,269 @@
 # greek-conversion
 
-This library supports bidirectional conversion between Greek, Beta Code,
-and scientific transliteration. It provides predictable output, named
-standards-oriented presets, and diagnostics when a conversion loses
-information. Unknown characters are preserved instead of being silently
-discarded.
+[![JSR](https://jsr.io/badges/@humanities/greek-conversion)](https://jsr.io/@humanities/greek-conversion)
+[![npm](https://img.shields.io/npm/v/@humanities/greek-conversion)](https://www.npmjs.com/package/@humanities/greek-conversion)
+[![CI](https://github.com/defense-humanites/greek-conversion/actions/workflows/ci.yml/badge.svg)](https://github.com/defense-humanites/greek-conversion/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/defense-humanites/greek-conversion/blob/main/LICENSE)
 
-## Summary
+**Convert Greek text between Unicode Greek, Beta Code, and scientific
+transliteration, in every direction, and know exactly what each conversion
+keeps.**
 
-1. [Installation](#installation)
-2. [Playground](#playground)
-3. [Quick start](#quick-start)
-4. [Choose the right API](#choose-the-right-api)
-5. [Use a preset](#use-a-preset)
-   1. [Inspect effective defaults](#inspect-effective-defaults)
-6. [Common recipes](#common-recipes)
-   1. [Produce monotonic Greek](#produce-monotonic-greek)
-   2. [Remove all or selected diacritics](#remove-all-or-selected-diacritics)
-   3. [Fold Greek letter variants](#fold-greek-letter-variants)
-   4. [Normalize case and whitespace](#normalize-case-and-whitespace)
-   5. [Select transliteration spellings](#select-transliteration-spellings)
-   6. [Control Greek Unicode output](#control-greek-unicode-output)
-7. [Detect information loss](#detect-information-loss)
-8. [Extend or restrict the character inventory](#extend-or-restrict-the-character-inventory)
-9. [Guarantees and scope](#guarantees-and-scope)
-10. [Advanced API](#advanced-api)
-11. [Documentation](#documentation)
-12. [Development](#development)
-13. [License](#license)
+`greek-conversion` is a TypeScript library for classicists, librarians, and
+digital-humanities developers. It handles polytonic and monotonic Greek,
+implements published conventions (ALA-LC, BnF, ISO 843, SBL, TLG, Perseus) as
+ready-made presets, and tells you when a conversion loses information instead
+of quietly guessing. It has no dependencies and runs on Deno, Node.js, and in
+bundled browser code.
+
+[**Try it in the playground →**](https://defense-humanites.github.io/greek-conversion/)
+
+## Contents
+
+1. [Quick start](#quick-start)
+2. [Installation](#installation)
+3. [How it works](#how-it-works)
+4. [Which function to use](#which-function-to-use)
+5. [Presets](#presets)
+6. [Recipes](#recipes)
+7. [Knowing what a conversion loses](#knowing-what-a-conversion-loses)
+8. [Custom characters and strict repertoires](#custom-characters-and-strict-repertoires)
+9. [Options are checked, errors are explicit](#options-are-checked-errors-are-explicit)
+10. [Working with the canonical document](#working-with-the-canonical-document)
+11. [Guarantees and limits](#guarantees-and-limits)
+12. [Documentation](#documentation)
+13. [Development](#development)
+14. [Citing and license](#citing-and-license)
+
+## Quick start
+
+Let's transliterate some Thucydides (*History* 1.1.2), then write the same
+passage without diacritics, in Beta Code, and following the ISO 843 standard:
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+const thucydides =
+  "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων, ὡς δὲ εἰπεῖν καὶ ἐπὶ πλεῖστον ἀνθρώπων.";
+
+convert(thucydides, "greek", "transliteration");
+// → Héllēsin egéneto kaì mérei tinì tō̃n barbárōn, hōs dè eipeĩn kaì epì pleĩston anthrṓpōn.
+
+convert(thucydides, "greek", "transliteration", { removeDiacritics: true });
+// → Hellēsin egeneto kai merei tini tōn barbarōn, hōs de eipein kai epi pleiston anthrōpōn.
+
+convert(thucydides, "greek", "beta-code");
+// → *(/ellhsin e)ge/neto kai\ me/rei tini\ tw=n barba/rwn, w(s de\ ei)pei=n kai\ e)pi\ plei=ston a)nqrw/pwn.
+
+convert(thucydides, "greek", "transliteration", { preset: "iso-843-type-1" });
+// → Héllīsin ’egéneto kaì mérei tinì tō̃n varvárōn, hōs dè ’eipeĩn kaì ’epì pleĩston ’anthrṓpōn.
+```
+
+Without diacritics, the rough breathing stays as `h`: in Latin script it is a
+letter. Every conversion also works in reverse, and when it matters whether
+you can get back to where you started, `convertDetailed()` tells you:
+
+```ts
+import { convert, convertDetailed } from "@humanities/greek-conversion";
+
+convert(
+  "*(/ellhsin e)ge/neto kai\\ me/rei tini\\ tw=n barba/rwn",
+  "beta-code",
+  "greek",
+);
+// → Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων
+
+const thucydides =
+  "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων, ὡς δὲ εἰπεῖν καὶ ἐπὶ πλεῖστον ἀνθρώπων.";
+
+convertDetailed(thucydides, "greek", "transliteration").lossy; // → false
+
+const plain = convertDetailed(thucydides, "greek", "transliteration", {
+  removeDiacritics: true,
+});
+plain.lossy; // → true
+plain.losses[0].code; // → removed-diacritic
+plain.losses[0].diacritic; // → acute
+```
 
 ## Installation
 
-The `1.0.0` release is ESM-only and targets JSR and npm:
+The package is published as `@humanities/greek-conversion` on
+[JSR](https://jsr.io/@humanities/greek-conversion) and
+[npm](https://www.npmjs.com/package/@humanities/greek-conversion), with the same
+named exports in both. It is ESM-only and ships its own type declarations.
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0
-npm install @humanities/greek-conversion@1.0.0
+# Deno
+deno add jsr:@humanities/greek-conversion
+
+# Node.js 24 or later
+npm install @humanities/greek-conversion
 ```
 
-Import the public module from JSR:
+The [playground](https://defense-humanites.github.io/greek-conversion/) needs no
+installation. It is built from the `main` branch, so it may be ahead of the
+latest published release.
+
+## How it works
+
+Three text formats are supported, each in both directions:
+
+| Format | Identifier | `ἄνθρωπος` is written |
+| --- | --- | --- |
+| Unicode Greek, polytonic or monotonic | `"greek"` | `ἄνθρωπος` |
+| [Beta Code](https://stephanus.tlg.uci.edu/encoding.php), the ASCII encoding of the TLG | `"beta-code"` | `a)/nqrwpos` |
+| Scientific transliteration in Latin script | `"transliteration"` | `ánthrōpos` |
+
+A conversion reads the source into a **canonical document** (letters, case,
+and diacritics, independent of any spelling), applies your options, and writes
+the target format. Because every format goes through the same document, any
+pair converts in either direction with the same rules, and the library can
+compare what went in with what came out.
+
+Options come in three groups, each answering one question. That is why a name
+such as `coronis` can appear in two of them:
+
+| Group | Question | Typical values |
+| --- | --- | --- |
+| `diacritics.X` | Is the mark class X kept in the document? | `"preserve"`, `"remove"` |
+| `orthography.X` | How is X written in the target format? | `"omit"` (not written there), `"greek"` (the Greek mark), a Latin spelling such as `"ph"`, or a policy such as `"contextual"` |
+| `unicode.X` | Which Unicode scalar represents X in Greek output? | `"composed"`, `"oxia"`, `"canonical"` |
+
+Every option value is plain ASCII, so it can be typed on any keyboard. Unknown
+characters are never discarded: anything the library does not recognize is
+copied through unchanged.
+
+## Which function to use
+
+| You want to… | Use |
+| --- | --- |
+| Convert a string | `convert(input, from, to, options?)` |
+| Convert, with a readable name | `greekToBetaCode`, `betaCodeToGreek`, `greekToTransliteration`, `transliterationToGreek`, `betaCodeToTransliteration`, `transliterationToBetaCode` |
+| Normalize or restyle a string without changing its format | `reencode(input, format, options?)` |
+| Know whether the conversion loses information | `convertDetailed(input, from, to, options?)` |
+| Reuse one configuration, add characters, or restrict the repertoire | `createConverter(configuration)` |
+| Inspect or edit the parsed text itself | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
 
 ```ts
 import {
   betaCodeToGreek,
   convert,
-  convertDetailed,
+  reencode,
 } from "@humanities/greek-conversion";
+
+betaCodeToGreek("a)/nqrwpos"); // → ἄνθρωπος
+convert("ánthrōpos", "transliteration", "beta-code"); // → a)/nqrwpos
+reencode("λόγος", "greek", { orthography: { finalSigma: "medial" } }); // → λόγοσ
 ```
 
-The same package name and named exports are available from npm.
+All of these share the same parser, document, options, and encoders, so they
+always agree with one another.
 
-## Playground
+## Presets
 
-The [interactive playground](https://defense-humanites.github.io/greek-conversion/)
-is a separate website hosted on GitHub Pages. Its site files are not included
-in the JSR or npm package, and it needs no installation. Use it to compare
-formats, presets, information-loss diagnostics, and character repertoires in
-the browser. The site is built from the current `main` branch, so it may be
-newer than the latest published package.
+A preset bundles the options that implement one published convention:
 
-## Quick start
-
-Use `convert()` for any pair of supported formats:
-
-```ts
-convert("a)/nqrwpos", "beta-code", "greek");
-// ἄνθρωπος
-
-convert("ἄνθρωπος", "greek", "transliteration");
-// ánthrōpos
-
-convert("ánthrōpos", "transliteration", "beta-code");
-// a)/nqrwpos
-```
-
-Directional helpers are also available when they make application code easier
-to read:
-
-```ts
-betaCodeToGreek("a)/nqrwpos"); // ἄνθρωπος
-```
-
-The supported format names are `"greek"`, `"beta-code"`, and
-`"transliteration"`.
-
-### Beta Code spelling
-
-ASCII letter case has no semantic value in Beta Code input. Only `*` marks a
-Greek capital, so `A)/NQRWPOS` and `a)/nqrwpos` both convert to `ἄνθρωπος`,
-whereas `*)/ANQRWPOS` converts to `Ἄνθρωπος`. Marking every letter, as in
-`*)/A*N*Q*R*W*P*O*S`, produces `ἌΝΘΡΩΠΟΣ`.
-
-Canonical output follows the
-[TLG placement and order rules](https://stephanus.tlg.uci.edu/encoding.php):
-
-- lowercase: letter, breathing, accent, iota subscript — `w(=|`;
-- uppercase: asterisk, breathing, accent, letter, iota subscript — `*(=w|`.
-
-`orthography.betaCodeCase` selects `"lowercase"` or `"uppercase"` ASCII output
-without changing the represented Greek letter case. The default and Perseus
-preset use lowercase ASCII; `tlg-core` uses uppercase ASCII.
-
-The engine-default yot spelling is `j`. Set `orthography.betaCodeYot` to
-`"#401"`, or use `tlg-core`, for the TLG character code.
-
-## Choose the right API
-
-| Need | API |
-| --- | --- |
-| Convert one string | `convert()` or a directional helper |
-| Canonicalize or transform a string without changing its format | `reencode()` |
-| Display a warning when information is lost | `convertDetailed()` |
-| Reuse or inspect one parsed source | `parse()` and `encode()` |
-
-All of these APIs use the same parser, canonical Greek document, conversion
-options, and encoders.
-
-For a same-format conversion, `reencode()` avoids repeating the format:
-
-```ts
-reencode("λόγος", "greek", {
-  orthography: { finalSigma: "medial" },
-});
-// λόγοσ
-```
-
-## Use a preset
-
-Presets collect coherent options for a published convention or a practical
-interchange profile:
-
-```ts
-convert("Βίος Μπάλα", "greek", "transliteration", {
-  preset: "ala-lc-modern",
-});
-// Vios Bala
-```
-
-Available presets:
-
-| Preset | Target format | Intended use |
+| Preset | Target | For |
 | --- | --- | --- |
-| `ala-lc-ancient` | `transliteration` | Library romanization of Ancient and pre-1454 Medieval Greek |
-| `ala-lc-modern` | `transliteration` | Library romanization of post-1453 Modern Greek, including supported contextual digraphs |
-| `bnf-core` | `transliteration` | BnF/ISO-based romanization core for Ancient Greek cataloguing |
-| `iso-843-type-1` | `transliteration` | ISO 843 Type 1 character transliteration for Ancient and Modern Greek |
-| `perseus` | `beta-code` | Lowercase-ASCII subset for Perseus and Morpheus interchange |
-| `sbl-academic` | `transliteration` | Scholarly Biblical-studies output retaining scientific diacritics |
-| `sbl-general` | `transliteration` | Reader-facing Biblical-studies output omitting most scholarly diacritics |
-| `tlg-core` | `beta-code` | Uppercase-ASCII TLG core for polytonic Greek interchange |
-
-Custom options override only the corresponding fields of a preset:
+| `ala-lc-ancient` | transliteration | Library romanization of Ancient and pre-1454 Medieval Greek |
+| `ala-lc-modern` | transliteration | Library romanization of post-1453 Modern Greek, with its contextual digraphs |
+| `bnf-core` | transliteration | BnF/ISO-based romanization for Ancient Greek cataloguing |
+| `iso-843-type-1` | transliteration | ISO 843 Type 1 transliteration for Ancient and Modern Greek |
+| `sbl-academic` | transliteration | Biblical studies, keeping scholarly diacritics |
+| `sbl-general` | transliteration | Biblical studies for general readers, without most diacritics |
+| `tlg-core` | Beta Code | Uppercase-ASCII TLG Beta Code for polytonic interchange |
+| `perseus` | Beta Code | Lowercase-ASCII Beta Code for Perseus and Morpheus |
 
 ```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("Φίληβος ἢ Περὶ ἡδονῆς", "greek", "transliteration", {
+  preset: "ala-lc-ancient",
+});
+// → Philēbos ē Peri hēdonēs
+
+convert("Βίος Μπάλα", "greek", "transliteration", { preset: "ala-lc-modern" });
+// → Vios Bala
+```
+
+Your own options override only the fields they name; the rest of the preset
+stays in force. Defaults apply first, then the preset, then your options:
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
 convert("Βίος Μπάλα", "greek", "transliteration", {
   preset: "ala-lc-modern",
   orthography: { beta: "b" },
 });
-// Bios Bala
+// → Bios Bala
 ```
 
-The priority is: library defaults, then preset options, then custom options.
-See the complete [preset configuration table](https://github.com/defense-humanites/greek-conversion/blob/main/docs/presets.md), including the
-precise scope and known limitations of each preset.
-
-For repeated conversion with scope enforcement, bind the preset to a
-converter:
-
-```ts
-const perseus = createConverter({ preset: "perseus" });
-const result = perseus.convertDetailed("ἄνθρωπος ϝ", "greek", "beta-code");
-
-result.output; // a)/nqrwpos ϝ
-result.diagnostics[0].code; // out-of-scope-character
-```
-
-Out-of-scope characters are preserved rather than silently converted. The
-dedicated [character-extension documentation](https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md)
-explains contextual ALA-LC numerals, custom extensions, and further
-restrictions.
-
-For strict conversion, set `outOfScopeBehavior: "reject"` when creating the
-converter. Both conversion methods then throw `CharacterScopeError`, whose
-`diagnostics` identify recognized characters outside the repertoire or with
-known undefined or unresolved preset mappings. For ISO Type 1 transliteration,
-these include stigma, koppa, sampi, and the ambiguously identified archaic
-koppa; see the [preset repertoire audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-repertoire-audit.md).
-This rejects recognized out-of-scope characters and known missing mappings;
-it does not guarantee a reversible result. Inspect `convertDetailed().losses`
-separately for distinctions lost by an in-scope conversion. The
-[preset behavior audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-behavior-audit.md)
-records the remaining contextual limits.
-
-### Inspect effective defaults
-
-Every effective default is available as an immutable, IDE-friendly object:
+Each preset documents its references, its coverage, and what it does not
+implement, both in the
+[preset reference](https://github.com/defense-humanites/greek-conversion/blob/main/docs/presets.md)
+and at run time:
 
 ```ts
 import {
   DEFAULT_CONVERSION_OPTIONS,
+  getPresetMetadata,
   resolveConversionOptions,
 } from "@humanities/greek-conversion";
 
-DEFAULT_CONVERSION_OPTIONS.orthography.longVowels; // "macron"
-DEFAULT_CONVERSION_OPTIONS.unicode.composition; // "composed"
-
-resolveConversionOptions({ preset: "sbl-general" });
-// A complete ResolvedConversionOptions object
+getPresetMetadata("bnf-core").coverage; // → partial
+DEFAULT_CONVERSION_OPTIONS.orthography.longVowels; // → macron
+resolveConversionOptions({ preset: "sbl-general" }).diacritics.accents; // → remove
 ```
 
-`ConversionOptions` remains the partial input type. `ResolvedConversionOptions`
-contains every effective field after applying defaults, a preset, and custom
-overrides.
+A preset implements what can be done mechanically from the text. It does not
+supply a rough breathing missing from the source, or anything else that needs
+a dictionary; the
+[preset behavior audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-behavior-audit.md)
+lists those limits for each standard.
 
-The three option groups answer three questions, which is why a name such as
-`coronis` appears in two of them: `diacritics.X` asks whether the mark class X
-is kept (`"preserve"` or `"remove"`), `orthography.X` asks how X is written in
-the target format (`"omit"` means not written there, `"greek"` the Greek
-scalar, or a Latin spelling such as `"ph"`), and `unicode.X` selects a Unicode
-scalar for Greek output. Every accepted value is plain ASCII.
+## Recipes
 
-Options are validated strictly: an unknown key, an unknown value, or a value
-of the wrong type throws a `RangeError` or `TypeError` rather than silently
-falling back to a default. `CONVERSION_OPTION_VALUES` lists every accepted
-value, and `FORMATS` the supported format identifiers:
+### Remove all or some diacritics
 
 ```ts
-import { CONVERSION_OPTION_VALUES, FORMATS } from "@humanities/greek-conversion";
+import { convert } from "@humanities/greek-conversion";
 
-CONVERSION_OPTION_VALUES.orthography.eta; // ["e-macron", "i-macron"]
-FORMATS; // ["greek", "beta-code", "transliteration"]
+convert("ἄνθρωπος ᾆ ῑ", "greek", "transliteration", { removeDiacritics: true });
+// → anthrōpos a i
+
+convert("ἄνθρωπος ἅγιος κἀγώ", "greek", "transliteration", {
+  diacritics: { accents: "remove", smoothBreathing: "remove", coronis: "remove" },
+});
+// → anthrōpos hagios kagō
 ```
 
-## Common recipes
+Structural letters stay distinct (`η → ē`, `ω → ō`). In Greek and Beta Code,
+`removeDiacritics` also removes breathings; in transliteration the rough
+breathing's `h` is kept unless you set `diacritics.roughBreathing: "remove"`.
+The standalone `removeDiacritics(input, format)` helper does the same without
+changing format.
 
 ### Produce monotonic Greek
 
 ```ts
+import { convert } from "@humanities/greek-conversion";
+
 convert("Ἄνθρωπὸς ᾆ", "greek", "greek", {
   orthography: { accentuation: "monotonic" },
 });
-// Άνθρωπός ά
+// → Άνθρωπός ά
 ```
 
-The transformation is mechanical: it does not use a lexicon or infer missing
-breathings. Polytonic Greek remains the default.
+The transformation is mechanical: every accent becomes an acute, other
+polytonic marks are removed, and the diaeresis is kept.
 
-### Remove all or selected diacritics
-
-Use the shortcut to remove marks. In transliteration, it retains the `h` of a
-rough breathing (`ὁδός → hodos`); in Greek and Beta Code, it removes the
-breathing. To suppress the transliterated `h` explicitly, set
-`diacritics: { roughBreathing: "remove" }`.
+### Choose transliteration spellings
 
 ```ts
-convert("ἄνθρωπος ᾆ ῑ", "greek", "transliteration", {
-  removeDiacritics: true,
-});
-// anthrōpos a i
-```
+import { convert } from "@humanities/greek-conversion";
 
-Or select semantic classes independently:
-
-```ts
-convert("ἄνθρωπος ἅγιος κἀγώ", "greek", "transliteration", {
-  diacritics: {
-    accents: "remove",
-    smoothBreathing: "remove",
-    roughBreathing: "preserve",
-    coronis: "remove",
-  },
-});
-// anthrōpos hagios kagō
-```
-
-`removeDiacritics()` exposes mark removal as a standalone helper.
-Structural distinctions such as `η → ē` and `ω → ō` are retained.
-With `removeDiacritics: true`, Greek source sigma forms (`σ`, `ς`, `ϲ`) are
-retained by default, including when using `convert()`. Explicit `sigma` and
-`finalSigma` options can still select another spelling.
-Transliteration uses ASCII `-` by default; set
-`orthography: { hyphen: "typographic" }` to output `‐` instead.
-
-### Fold Greek letter variants
-
-Use `foldGreekVariants()` to obtain a uniform Greek spelling for comparison:
-
-```ts
-import { foldGreekVariants } from "@humanities/greek-conversion";
-
-foldGreekVariants("ϐίος λόγος ϲῶμα");
-// βίοσ λόγοσ σῶμα
-```
-
-The helper maps medial beta `ϐ` to `β`, lunate sigma `ϲ` to `σ`, and final
-sigma `ς` to medial `σ`. It parses and re-encodes Greek rather than relying on
-`NFKC`, so the same semantic rules and numeral exceptions apply as during a
-conversion. Diacritics and case are preserved unless their independent options
-are supplied:
-
-```ts
-foldGreekVariants("ϐΊΟΣ", {
-  orthography: { letterCase: "lowercase" },
-  removeDiacritics: true,
-});
-// βιοσ
-```
-
-### Normalize case and whitespace
-
-```ts
-convert("  ΦΙΛΗΒΟΣ\nΗΔΟΝΗ  ", "greek", "transliteration", {
-  orthography: {
-    letterCase: "lowercase",
-    whitespace: "collapse",
-  },
-});
-// philēbos ēdonē
-```
-
-Case values are `"preserve"`, `"lowercase"`, `"uppercase"`, and `"title"`.
-Whitespace can be `"preserve"` or `"collapse"`; the latter trims the output
-and replaces each Unicode whitespace run with one ASCII space.
-
-### Select transliteration spellings
-
-```ts
 convert("βηξφχυ", "greek", "transliteration", {
   orthography: {
     beta: "v",
@@ -336,41 +274,81 @@ convert("βηξφχυ", "greek", "transliteration", {
     upsilon: "y",
   },
 });
-// vīksfkhy
+// → vīksfkhy
+
+convert("τέχνη", "greek", "transliteration", {
+  orthography: { longVowels: "circumflex", chi: "kh" },
+});
+// → tékhnê
 ```
 
-Other policies cover long-vowel spelling, nasal gamma, modern digraphs,
-systematic `rh`, double rho, medial beta, sigma style, contextual or uniform
-final sigma, coronis, and alphabetic numerals. The selected spellings are
-recognized on transliteration input when the same options are supplied.
+Further options cover nasal gamma, Modern Greek digraphs, systematic `rh`,
+double rho, the coronis, numerals, and more; every key and its accepted values
+are listed in `CONVERSION_OPTION_VALUES`. Supply the same options when reading
+transliteration back, and the chosen spellings are recognized.
 
-Lunate sigma has two independent controls. `sigma: "standard" | "lunate" |
-"preserve"` selects its Greek and Beta Code glyph; `"preserve"` is useful for
-mixed texts because the parsers remember whether each source sigma was lunate.
-`lunateSigma: "s" | "c"` selects the transliteration of only those provenanced
-lunate sigma graphemes:
+### Keep or fold letter variants
+
+Lunate sigma has two independent controls: `sigma` picks the Greek and Beta
+Code glyph (`"preserve"` remembers which source sigmas were lunate), and
+`lunateSigma` picks their transliteration:
 
 ```ts
-const options = {
-  orthography: { sigma: "preserve", lunateSigma: "c" },
-} as const;
+import { convert } from "@humanities/greek-conversion";
 
-convert("σϲς", "greek", "transliteration", options); // "scs"
-convert("scs", "transliteration", "greek", options); // "σϲς"
+const options = { orthography: { sigma: "preserve", lunateSigma: "c" } } as const;
+
+convert("σϲς", "greek", "transliteration", options); // → scs
+convert("scs", "transliteration", "greek", options); // → σϲς
 ```
 
-A global `sigma: "lunate"` policy remains stylistic: it does not make every
-transliterated `s` become `c`. The `bnf-core` preset does not select this option.
+To compare texts regardless of glyph variants, fold them:
 
-`longVowels` accepts `"macron"` (the default) or `"circumflex"`. It controls
-only the structural representation of inherently long eta and omega. An
-explicit macron alongside a circumflex, such as in `ê̄`, is treated separately
-as a philological mark and is reproduced without changing the identified
+```ts
+import { foldGreekVariants } from "@humanities/greek-conversion";
+
+foldGreekVariants("ϐίος λόγος ϲῶμα"); // → βίοσ λόγοσ σῶμα
+foldGreekVariants("ϐΊΟΣ", {
+  orthography: { letterCase: "lowercase" },
+  removeDiacritics: true,
+});
+// → βιοσ
+```
+
+### Normalize case and whitespace
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("  ΦΙΛΗΒΟΣ\nΗΔΟΝΗ  ", "greek", "transliteration", {
+  orthography: { letterCase: "lowercase", whitespace: "collapse" },
+});
+// → philēbos ēdonē
+```
+
+`letterCase` accepts `"preserve"`, `"lowercase"`, `"uppercase"`, and `"title"`;
+`whitespace: "collapse"` trims the text and reduces every run of whitespace to
+one space.
+
+### Write Beta Code the TLG way
+
+ASCII letter case carries no meaning in Beta Code input: only `*` marks a
+capital. Output follows the
+[TLG placement rules](https://stephanus.tlg.uci.edu/encoding.php): breathing,
+accent, then iota subscript, with the asterisk and marks before an uppercase
 letter.
 
-`archaicKoppa` selects `"k-dot-below"` (the default, rendered `ḳ`) or `"q"`
-for transliteration. The `bnf-core` preset uses `"q"` for both koppa forms, so
-that distinction is intentionally lost on reverse conversion.
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("A)/NQRWPOS", "beta-code", "greek"); // → ἄνθρωπος
+convert("*)/ANQRWPOS", "beta-code", "greek"); // → Ἄνθρωπος
+convert("ᾯ", "greek", "beta-code"); // → *(=w|
+convert("ἄνθρωπος", "greek", "beta-code", { preset: "tlg-core" }); // → A)/NQRWPOS
+```
+
+`orthography.betaCodeCase` selects lowercase or uppercase ASCII, and
+`orthography.betaCodeYot: "#401"` writes yot with its TLG code instead of `j`.
 
 ### Control Greek Unicode output
 
@@ -380,100 +358,132 @@ import {
   toUnicodeCodePoints,
 } from "@humanities/greek-conversion";
 
-formatGreekUnicode("ά;·", {
-  acute: "oxia",
-  questionMark: "greek",
-  anoTeleia: "greek",
-});
-// ά;·
-
-toUnicodeCodePoints("ά;😀");
-// ["U+1F71", "U+037E", "U+1F600"]
+const styled = formatGreekUnicode("ά;", { acute: "oxia", questionMark: "greek" });
+toUnicodeCodePoints(styled); // → ["U+1F71","U+037E"]
 ```
 
-Greek output supports composed or decomposed text, tonos or oxia, and explicit
-Greek punctuation scalars. These are representation choices, not linguistic
-transformations. See [Greek accentuation and Unicode output](https://github.com/defense-humanites/greek-conversion/blob/main/docs/greek-unicode.md).
+Composed or decomposed output, tonos or oxia, and the Greek punctuation
+scalars are representation choices: they never change the text's meaning, and
+they are not reported as loss. See
+[Greek accentuation and Unicode](https://github.com/defense-humanites/greek-conversion/blob/main/docs/greek-unicode.md).
 
-## Detect information loss
+## Knowing what a conversion loses
 
-Some conversions necessarily merge distinctions. `convertDetailed()` returns
-the output and diagnostics from the same conversion request:
+Some conversions necessarily merge distinctions. `convertDetailed()` runs the
+conversion once and reports, token by token, what the target cannot express:
 
 ```ts
-const result = convertDetailed("ἄνθρωπος", "greek", "greek", {
+import { convertDetailed } from "@humanities/greek-conversion";
+
+const monotonic = convertDetailed("ἄνθρωπος", "greek", "greek", {
   orthography: { accentuation: "monotonic" },
 });
+monotonic.output; // → άνθρωπος
+monotonic.lossy; // → true
+monotonic.losses[0].code; // → removed-diacritic
+monotonic.losses[0].diacritic; // → smooth
 
-result.output; // άνθρωπος
-result.lossy; // true
-result.losses;
-// [{ code: "removed-diacritic", ... }]
+// Monotonic or uncial Greek has no breathings; transliteration cannot tell
+// "no breathing" from "smooth breathing", so reading it back adds one.
+convertDetailed("άνθρωπος", "greek", "transliteration").losses[0].code;
+// → inferred-breathing
 ```
 
-Loss is evaluated on the canonical document. Unicode composition and
-tonos/oxia are therefore not reported as destructive. Lunate-sigma provenance
-is the exception among glyph distinctions: removing a known lunate form
-reports `removed-glyph-variant`. Examples of other actual loss include removing
-diacritics, decimalizing alphabetic numerals, and using context-dependent
-spellings that merge distinct source sequences.
+When `lossy` is `false`, converting the output back with the same options
+gives the same canonical text. The loss codes are:
 
-See the [conversion-analysis contract](https://github.com/defense-humanites/greek-conversion/blob/main/docs/conversion-analysis.md) and the
-[information-loss matrix](https://github.com/defense-humanites/greek-conversion/blob/main/docs/information-loss.md).
+| Code | What the target cannot keep |
+| --- | --- |
+| `removed-diacritic` | A diacritic of the source |
+| `displaced-diacritic` | The position of a breathing: a hiatus marked only by a breathing (`Ἀίδης`) reads back as a diphthong (`Αἴδης`) |
+| `inferred-breathing` | The absence of a breathing on an initial vowel, which reads back as a smooth breathing |
+| `changed-case` | The letter case |
+| `removed-glyph-variant` | A known lunate sigma |
+| `unrepresented-grapheme` | A letter, or its position |
+| `unrepresented-literal` | A literal token |
 
-## Extend or restrict the character inventory
+See the
+[information-loss matrix](https://github.com/defense-humanites/greek-conversion/blob/main/docs/information-loss.md)
+for each format pair and option, and the
+[conversion-analysis contract](https://github.com/defense-humanites/greek-conversion/blob/main/docs/conversion-analysis.md)
+for the result format.
 
-Create an isolated `Converter` when an application needs additional spellings,
-opaque custom characters, or a restricted repertoire:
+## Custom characters and strict repertoires
+
+A converter created with `createConverter()` binds a preset and can extend or
+restrict the character inventory:
 
 ```ts
 import { createConverter } from "@humanities/greek-conversion";
 
 const converter = createConverter({
-  aliases: [{
-    letter: "theta",
-    format: "transliteration",
-    spellings: ["þ"],
-  }],
+  aliases: [{ letter: "theta", format: "transliteration", spellings: ["þ"] }],
   exclude: ["stigma", "koppa", "sampi"],
 });
 
-converter.convert("þeos", "transliteration", "greek"); // θεος
+converter.convert("þeos", "transliteration", "greek"); // → θεος
 ```
 
-Aliases inherit every rule of their built-in letter. New character definitions
-only guarantee direct format mapping and case; they do not silently join Greek
-diphthong, contraction, numeral, or diacritic rules. Excluded characters become
-source-format literals, and `converter.convertDetailed()`
-reports them separately from information loss. See [character extensions and
-repertoires](https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md).
+An alias inherits every rule of its built-in letter. A new character
+definition maps directly between formats and keeps its case, but does not join
+the contextual rules for diphthongs, breathings, or numerals. Excluded
+characters are copied through as text.
 
-## Guarantees and scope
+A converter bound to a preset also enforces the preset's character scope.
+Characters outside it are preserved and reported; with
+`outOfScopeBehavior: "reject"`, the conversion throws instead:
 
-- Every format pair is supported in both directions.
-- For fixed formats and options, canonical output is stable and idempotent.
-- Unknown literals are preserved.
-- Greek punctuation and contextual Greek rules are handled semantically where
-  the canonical document contains enough information.
-- The engine does not infer a missing rough breathing and does not perform
-  transformations that intrinsically require lexical or morphological
-  knowledge.
-- A reverse conversion is not necessarily lossless; use `convertDetailed()`
-  when that distinction matters.
-- The version number protects the documented contract, not the bytes of a
-  given release: a correction that brings output closer to the documentation
-  or to a preset's cited reference is a patch. See the
-  [stability policy](https://github.com/defense-humanites/greek-conversion/blob/main/docs/stability.md).
+```ts
+import { createConverter } from "@humanities/greek-conversion";
 
-The engine currently covers polytonic and monotonic accentuation, contextual
-diphthongs and breathings, crasis and coronis provenance, elision aspiration,
-sigma and beta variants, archaic letters, Greek punctuation, and marked
-alphabetic numerals. Presets are limited to the rules and characters implemented
-by the engine today.
+const perseus = createConverter({ preset: "perseus" });
+const result = perseus.convertDetailed("ἄνθρωπος ϝ", "greek", "beta-code");
+result.output; // → a)/nqrwpos ϝ
+result.diagnostics[0].code; // → out-of-scope-character
 
-## Advanced API
+const iso = createConverter({
+  preset: "iso-843-type-1",
+  outOfScopeBehavior: "reject",
+});
+iso.convert("ϟ", "greek", "transliteration");
+// throws CharacterScopeError: Conversion rejected: 1 unsupported character.
+```
 
-Applications can work directly with the canonical document representation:
+The error's `diagnostics` list each rejected occurrence; here, koppa, for
+which ISO 843 defines no transliteration. See
+[character extensions and repertoires](https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md)
+and the
+[preset repertoire audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-repertoire-audit.md).
+
+## Options are checked, errors are explicit
+
+A misspelled option never falls back silently to a default. Unknown keys,
+unknown values, and unknown formats throw a `RangeError` that names them;
+values of the wrong type throw a `TypeError`. This matters most when options
+come from a configuration file or a form:
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+const options = JSON.parse('{ "orthography": { "eta": "ē" } }');
+convert("λόγος", "greek", "transliteration", options);
+// throws RangeError: Invalid value for orthography.eta: "ē"; expected one of "e-macron", "i-macron".
+```
+
+`FORMATS` and `CONVERSION_OPTION_VALUES` list everything that is accepted,
+which is convenient for building a user interface:
+
+```ts
+import { CONVERSION_OPTION_VALUES, FORMATS } from "@humanities/greek-conversion";
+
+FORMATS; // → ["greek","beta-code","transliteration"]
+CONVERSION_OPTION_VALUES.orthography.eta; // → ["e-macron","i-macron"]
+```
+
+## Working with the canonical document
+
+The `@humanities/greek-conversion/document` entry point exposes the parsed
+text, for validation, analysis, or controlled edits:
 
 ```ts
 import {
@@ -483,51 +493,85 @@ import {
 } from "@humanities/greek-conversion/document";
 
 const document = parse("a)/nqrwpos", "beta-code");
-const diagnostics = validateDocument(document);
-const output = encode(document, "greek");
+validateDocument(document); // → []
+encode(document, "greek"); // → ἄνθρωπος
+encode(document, "transliteration"); // → ánthrōpos
 ```
 
-Validation deliberately remains a separate diagnostic step instead of changing
-the contract of `convert()`. It checks the interpreted document, not the syntax
-of the original string; malformed source sequences can survive as literals.
-The `./document` entry point is supported for advanced use, with an explicit
-ownership and validation contract. See the [document API contract](https://github.com/defense-humanites/greek-conversion/blob/main/docs/document-api.md)
-for ownership, transformations, and options, and [validation](https://github.com/defense-humanites/greek-conversion/blob/main/docs/validation.md)
-for the validation boundary.
+Parse once and encode as many times as you need. Validation checks the
+document, not the original spelling: a malformed source sequence can survive
+as a literal. The
+[document API contract](https://github.com/defense-humanites/greek-conversion/blob/main/docs/document-api.md)
+describes ownership and editing rules, and
+[validation](https://github.com/defense-humanites/greek-conversion/blob/main/docs/validation.md)
+lists the diagnostic codes.
+
+## Guarantees and limits
+
+What you can rely on:
+
+- Every format pair converts in both directions.
+- For fixed formats and options, output is canonical and idempotent:
+  converting it again changes nothing.
+- A conversion that `convertDetailed()` reports as lossless converts back to
+  the same canonical text.
+- Unknown characters are preserved, never dropped.
+- These properties are checked for every preset and format pair on each
+  change.
+
+What the library deliberately does not do:
+
+- infer a rough breathing, an iota adscript, or anything else that requires
+  a dictionary or knowledge of the language;
+- claim complete conformance to a standard: each preset documents what it
+  implements and what it leaves out.
+
+The engine covers polytonic and monotonic accentuation, diphthongs, hiatus,
+and breathings in context, crasis and coronis, elision, sigma and beta
+variants, archaic letters, Greek punctuation, and marked alphabetic numerals.
+
+From version 1.0.0, the version number protects the documented behavior.
+Corrections that bring output closer to the documentation or to a preset's
+reference are released as patches; see the
+[stability policy](https://github.com/defense-humanites/greek-conversion/blob/main/docs/stability.md).
 
 ## Documentation
 
 | Topic | Document |
 | --- | --- |
+| Presets and their exact options | [Presets](https://github.com/defense-humanites/greek-conversion/blob/main/docs/presets.md) |
 | What the version number promises | [Stability policy](https://github.com/defense-humanites/greek-conversion/blob/main/docs/stability.md) |
-| Presets and exact option values | [Presets](https://github.com/defense-humanites/greek-conversion/blob/main/docs/presets.md) |
-| Greek orthography and Unicode | [Greek Unicode](https://github.com/defense-humanites/greek-conversion/blob/main/docs/greek-unicode.md) |
+| Loss by format pair and option | [Information loss](https://github.com/defense-humanites/greek-conversion/blob/main/docs/information-loss.md) |
 | Detailed conversion results | [Conversion analysis](https://github.com/defense-humanites/greek-conversion/blob/main/docs/conversion-analysis.md) |
-| Loss by format pair | [Information loss](https://github.com/defense-humanites/greek-conversion/blob/main/docs/information-loss.md) |
-| Canonical document validation | [Validation](https://github.com/defense-humanites/greek-conversion/blob/main/docs/validation.md) |
-| Canonical document API | [Document API](https://github.com/defense-humanites/greek-conversion/blob/main/docs/document-api.md) |
-| Character extensions and repertoires | [Character extensions](https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md) |
-| Preset character repertoire audit | [Preset repertoire audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-repertoire-audit.md) |
-| Preset behavior audit | [Preset behavior audit](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-behavior-audit.md) |
-| BnF and ISO conformance corpus | [Preset conformance corpus](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-conformance-corpus.md) |
-| ALA-LC conformance corpus | [ALA-LC conformance corpus](https://github.com/defense-humanites/greek-conversion/blob/main/docs/ala-lc-conformance-corpus.md) |
+| Greek accentuation and Unicode | [Greek Unicode](https://github.com/defense-humanites/greek-conversion/blob/main/docs/greek-unicode.md) |
+| Custom characters and repertoires | [Character extensions](https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md) |
+| The canonical document | [Document API](https://github.com/defense-humanites/greek-conversion/blob/main/docs/document-api.md) and [Validation](https://github.com/defense-humanites/greek-conversion/blob/main/docs/validation.md) |
+| Preset audits | [Repertoire](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-repertoire-audit.md) and [behavior](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-behavior-audit.md) |
+| Conformance corpora | [BnF and ISO](https://github.com/defense-humanites/greek-conversion/blob/main/docs/preset-conformance-corpus.md) and [ALA-LC](https://github.com/defense-humanites/greek-conversion/blob/main/docs/ala-lc-conformance-corpus.md) |
+| Upgrading from 0.14.x or a 1.0 beta | [Migration guide](https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md) |
+| Release history | [Changelog](https://github.com/defense-humanites/greek-conversion/blob/main/CHANGELOG.md) |
 
 ## Development
 
+The library is developed with [Deno](https://deno.com/) 2:
+
 ```sh
-deno task check
-deno task test
-deno task site:build
+deno task check      # formatting, lint, types, docs, README examples
+deno task test       # unit, conformance, and property tests
+deno task bench      # throughput baseline
+deno task site:build # builds the playground into _site/
 ```
 
-The last command builds the static playground in `_site/`. Serve that directory
-with a local HTTP server to test the page; the `Playground` workflow publishes
-the same build to GitHub Pages when Pages is configured to use GitHub Actions.
+Every TypeScript example in this README is executed by `deno task check`, and
+its output must match the `// →` comment. Bug reports and suggestions are
+welcome in the [issue tracker](https://github.com/defense-humanites/greek-conversion/issues).
 
-## License
+## Citing and license
 
-Copyright (C) 2021-2026  Antoine Boquet
+If you use `greek-conversion` in research or in a published resource, please
+cite it; GitHub's "Cite this repository" button uses the metadata in
+[`CITATION.cff`](https://github.com/defense-humanites/greek-conversion/blob/main/CITATION.cff).
 
-Starting with `1.0.0-beta.7`, `greek-conversion` is licensed under the
-[MIT License](https://github.com/defense-humanites/greek-conversion/blob/main/LICENSE).
-Previously published versions retain their original AGPL-3.0-or-later license.
+Copyright © 2021–2026 Antoine Boquet. Released under the
+[MIT License](https://github.com/defense-humanites/greek-conversion/blob/main/LICENSE)
+since `1.0.0-beta.7`; earlier versions remain under AGPL-3.0-or-later.

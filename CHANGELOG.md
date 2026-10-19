@@ -9,6 +9,10 @@ change.
 
 ### Added
 
+- The README is reorganized around tasks, opens with a Thucydides quick
+  start, and documents the option groups, the loss codes, and the error
+  behavior. Every TypeScript example in it is type-checked and executed by
+  `deno task check`, and its output must match the `// →` comment beside it.
 - `CITATION.cff` describes how to cite the library; GitHub offers it as
   "Cite this repository".
 - `deno task bench` measures conversion throughput as a baseline for future
