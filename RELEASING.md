@@ -38,7 +38,8 @@ Both registries use the same package name and version:
 4. Merge the exact release commit and wait for CI to succeed.
 5. Create a draft GitHub release whose tag exactly matches the version with
    a `v` prefix, for example `v1.0.0`. Publish it as a GitHub release. The npm
-   dist-tag is `latest` for a stable version and `beta` for a beta. Earlier
+   dist-tag is `latest` for a stable version, `beta` for a beta, and `next`
+   for any other pre-release such as a release candidate. Earlier
    betas were intentionally published without GitHub's prerelease flag.
 6. Confirm both trusted-publisher configurations and explicitly set
    `PUBLISH_ENABLED` to `true` only when publication is authorized.

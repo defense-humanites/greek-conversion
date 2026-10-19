@@ -5,19 +5,21 @@ for the `0.14.x` API.
 
 ## Installation
 
-The stable release is available from JSR and npm after publication:
+The release candidate `1.0.0-rc.1` is published on JSR, and on npm under the
+`next` distribution tag; the stable `1.0.0` will follow with the same content
+unless a problem is found:
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0
-npm install @humanities/greek-conversion@1.0.0
+deno add jsr:@humanities/greek-conversion@1.0.0-rc.1
+npm install @humanities/greek-conversion@next
 ```
 
 The package is ESM-only.
 
 ## Updating from `1.0.0-beta.9`
 
-Three option identifiers and seven exported type names change in `1.0.0`;
-the behavior behind them does not:
+Three option identifiers and seven exported type names change in
+`1.0.0-rc.1`, and therefore in `1.0.0`; the behavior behind them does not:
 
 | Before | After |
 | --- | --- |
@@ -35,9 +37,10 @@ the behavior behind them does not:
 Options are now validated strictly, so an old identifier throws a
 `RangeError` naming it instead of being ignored.
 
-Apart from the renames above, update the dependency version; the npm release
-uses the `latest` distribution tag. Conversion output changes are listed in
-the changelog under *Fixed* and *Changed*. The published preset scopes and the documented limits of
+Apart from the renames above, update the dependency version. The release
+candidate uses the npm `next` distribution tag; the stable release will use
+`latest`. Conversion output changes are listed in the changelog under *Fixed*
+and *Changed*. The published preset scopes and the documented limits of
 the advanced `./document` API still apply.
 
 ## Updating from `1.0.0-beta.8`
