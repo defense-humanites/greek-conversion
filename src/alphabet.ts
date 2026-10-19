@@ -97,6 +97,30 @@ export const BETA_MARKS = new Map(
 
 BETA_MARKS.set(")", "smooth");
 
+/**
+ * Order of combining marks in Greek output: quantity first, then breathing,
+ * diaeresis, accent, and iota subscript.
+ *
+ * Marks of the same canonical combining class stack outward from the letter
+ * in sequence order, so the macron or breve sits on the vowel and the
+ * breathing and accent above it, as Greek is typeset (`ᾱ́`, `ᾱ̓`). NFC then
+ * composes the precomposed long or short vowel (`ᾱ` U+1FB1) and keeps the
+ * other marks as combining characters.
+ */
+export const GREEK_ORDER: readonly Diacritic[] = [
+  "macron",
+  "breve",
+  "smooth",
+  "coronis",
+  "rough",
+  "diaeresis",
+  "acute",
+  "grave",
+  "circumflex",
+  "iota-subscript",
+];
+
+/** Order of Beta Code marks, after the TLG placement rules. */
 export const ORDER: readonly Diacritic[] = [
   "smooth",
   "coronis",

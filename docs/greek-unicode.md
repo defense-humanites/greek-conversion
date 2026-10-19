@@ -42,6 +42,18 @@ transliteration retain the source document's polytonic distinctions. The
 transform is intentionally lossy and cannot reconstruct the source
 accentuation.
 
+## Order of marks
+
+Greek output writes the marks of one vowel in the order quantity, breathing,
+diaeresis, accent, iota subscript. Marks of the same combining class stack
+outward from the letter in that order, so the macron or breve sits on the
+vowel with the breathing and accent above it, as Greek is typeset. Composed
+output therefore keeps the precomposed long or short vowel and adds the
+other marks: `ᾱ́` is U+1FB1 U+0301, and `ᾱ̓́` is U+1FB1 U+0313 U+0301. Input
+in another order is accepted and converges to this one. Beta Code keeps the
+TLG order (`a)/&`), and transliteration uses the same quantity-first order as
+Greek (`ā́`).
+
 ## Composed and decomposed output
 
 Greek output is composed by default. Set `unicode.composition` to

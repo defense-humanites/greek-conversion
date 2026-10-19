@@ -42,9 +42,10 @@ not necessarily NFC. Accepted aliases do not round-trip byte for byte:
   `sigma: "preserve"` or `lunateSigma: "c"` retains it in the target format;
 - Unicode punctuation aliases become the canonical punctuation for the target;
 - equivalent combining-mark order and duplicate recognized marks converge;
-  transliteration writes the marks of one vowel in the order quantity,
-  breathing, diaeresis, accent, so that an explicit macron is spelled like
-  the structural macron of eta and omega (`ā́` like `ḗ`);
+  Greek and transliteration write the marks of one vowel in the order
+  quantity, breathing, diaeresis, accent, so that the macron sits on the
+  vowel (`ᾱ́`), and in transliteration an explicit macron is spelled like the
+  structural macron of eta and omega (`ā́` like `ḗ`);
 - Beta Code aliases, case placement, and mark order converge.
 
 ASCII letter case in Beta Code is presentation only and does not enter the

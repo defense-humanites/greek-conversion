@@ -1,4 +1,10 @@
-import { ALPHABET, BETA_FOR, GREEK_FOR, ORDER } from "./alphabet.ts";
+import {
+  ALPHABET,
+  BETA_FOR,
+  GREEK_FOR,
+  GREEK_ORDER,
+  ORDER,
+} from "./alphabet.ts";
 import {
   ARISTERI_KERAIA,
   breathingTarget,
@@ -45,9 +51,13 @@ const LATIN_ORDER: readonly Diacritic[] = [
 ];
 
 const marks = (token: Grapheme, options: ConversionOptions, format: Format) =>
-  (format === "transliteration" ? LATIN_ORDER : ORDER).filter((mark) =>
-    token.diacritics.has(mark) && preservesDiacritic(mark, options, format)
-  );
+  (format === "transliteration"
+    ? LATIN_ORDER
+    : format === "greek"
+    ? GREEK_ORDER
+    : ORDER).filter((mark) =>
+      token.diacritics.has(mark) && preservesDiacritic(mark, options, format)
+    );
 
 export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
   let out = "";

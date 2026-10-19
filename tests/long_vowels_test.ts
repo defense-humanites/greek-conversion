@@ -121,6 +121,28 @@ Deno.test("writes quantity before other marks in transliteration", () => {
   assertEquals(convert(once, "transliteration", "transliteration", iso), once);
 });
 
+Deno.test("writes quantity before other marks in Greek", () => {
+  // The macron or breve sits on the vowel, the breathing and accent above
+  // it: NFC keeps the precomposed long vowel and adds the other marks.
+  const cases = [
+    ["\u03B1\u0301\u0304", "\u1FB1\u0301"],
+    ["\u1F00\u0304", "\u1FB1\u0313"],
+    ["\u1F04\u0304", "\u1FB1\u0313\u0301"],
+    ["\u1FB9\u0301", "\u1FB9\u0301"],
+    ["\u03B9\u0308\u0304", "\u1FD1\u0308"],
+    ["\u03C5\u0301\u0306", "\u1FE0\u0301"],
+  ] as const;
+  for (const [source, expected] of cases) {
+    const output = convert(source, "greek", "greek");
+    assertEquals(output, expected);
+    assertEquals(output, output.normalize("NFC"));
+    assertEquals(convert(output, "greek", "greek"), output);
+  }
+  // Beta Code keeps its TLG mark order and reads back the same Greek.
+  assertEquals(convert("\u1F04\u0304", "greek", "beta-code"), "a)/&");
+  assertEquals(convert("a)/&", "beta-code", "greek"), "\u1FB1\u0313\u0301");
+});
+
 Deno.test("omits a quantity mark on epsilon and omicron in transliteration", () => {
   const result = convertDetailed("ἔ̄ ὄ̄", "greek", "transliteration");
   assertNfcEquals(result.output, "é ó");

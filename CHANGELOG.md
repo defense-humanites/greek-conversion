@@ -41,6 +41,12 @@ change.
 
 ### Changed
 
+- Greek output writes a macron or breve before the other marks of its vowel,
+  following the typographic convention that the quantity sits on the letter
+  with breathing and accent above it. `ᾱ́` is now U+1FB1 U+0301 instead of
+  U+1F71 U+0304, and `ἀ̄` becomes `ᾱ̓` (U+1FB1 U+0313). The canonical document
+  is unchanged and either order is still accepted as input; Beta Code keeps
+  the TLG order.
 - The npm package requires Node.js 24 or later (`engines.node: ">=24"`),
   declares `sideEffects: false` so that bundlers can drop unused exports, and
   carries an up-to-date description. `RELEASING.md`, a maintainer procedure,
