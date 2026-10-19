@@ -94,7 +94,7 @@ The package is published as `@humanities/greek-conversion` on
 named exports in both. It is ESM-only and ships its own type declarations.
 
 ```sh
-# Deno
+# Deno 2 or later
 deno add jsr:@humanities/greek-conversion
 
 # Node.js 24 or later
