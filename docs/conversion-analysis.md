@@ -15,7 +15,7 @@ const result = convertDetailed("ἄνθρωπος", "greek", "greek", {
 //     code: "removed-diacritic",
 //     index: 0,
 //     diacritic: "smooth",
-//     message: "The target representation does not retain smooth."
+//     message: "The target representation does not retain the smooth breathing."
 //   }]
 // }
 ```

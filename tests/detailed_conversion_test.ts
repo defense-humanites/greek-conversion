@@ -60,13 +60,14 @@ Deno.test("reports each removed diacritic at its source token", () => {
       code: "removed-diacritic",
       index: 1,
       diacritic: "smooth",
-      message: "The target representation does not retain smooth.",
+      message:
+        "The target representation does not retain the smooth breathing.",
     },
     {
       code: "removed-diacritic",
       index: 1,
       diacritic: "acute",
-      message: "The target representation does not retain acute.",
+      message: "The target representation does not retain the acute accent.",
     },
   ]);
 });
@@ -109,7 +110,7 @@ Deno.test("reports case changes separately from removed diacritics", () => {
       code: "removed-diacritic",
       index: 0,
       diacritic: "acute",
-      message: "The target representation does not retain acute.",
+      message: "The target representation does not retain the acute accent.",
     },
   ]);
 });

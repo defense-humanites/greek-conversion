@@ -40,6 +40,19 @@ const ALIGNMENT_WINDOW = 16;
 
 const BREATHINGS: readonly Diacritic[] = ["smooth", "rough"];
 
+const DIACRITIC_NAMES: Readonly<Record<Diacritic, string>> = {
+  smooth: "smooth breathing",
+  rough: "rough breathing",
+  coronis: "coronis",
+  acute: "acute accent",
+  grave: "grave accent",
+  circumflex: "circumflex accent",
+  diaeresis: "diaeresis",
+  "iota-subscript": "iota subscript",
+  macron: "macron",
+  breve: "breve",
+};
+
 export function findConversionLosses(
   source: Document,
   target: Document,
@@ -192,8 +205,9 @@ function addTokenLoss(
             code: "displaced-diacritic",
             index,
             diacritic,
-            message:
-              `The target representation moves the ${diacritic} breathing onto the next vowel; the hiatus it marked is read as a diphthong.`,
+            message: `The target representation moves the ${
+              DIACRITIC_NAMES[diacritic]
+            } onto the next vowel; the hiatus it marked is read as a diphthong.`,
           });
           continue;
         }
@@ -201,7 +215,9 @@ function addTokenLoss(
           code: "removed-diacritic",
           index,
           diacritic,
-          message: `The target representation does not retain ${diacritic}.`,
+          message: `The target representation does not retain the ${
+            DIACRITIC_NAMES[diacritic]
+          }.`,
         });
       }
     }
