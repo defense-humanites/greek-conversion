@@ -120,16 +120,8 @@ export const GREEK_ORDER: readonly Diacritic[] = [
   "iota-subscript",
 ];
 
-/** Order of Beta Code marks, after the TLG placement rules. */
-export const ORDER: readonly Diacritic[] = [
-  "smooth",
-  "coronis",
-  "rough",
-  "diaeresis",
-  "acute",
-  "grave",
-  "circumflex",
-  "macron",
-  "breve",
-  "iota-subscript",
-];
+/**
+ * Order of Beta Code marks, after the TLG placement rules. Defined in
+ * `model.ts`, where it also fixes the bits of the shared diacritic sets.
+ */
+export { ORDER } from "./model.ts";

@@ -65,12 +65,20 @@ const marks = (token: Grapheme, options: ConversionOptions, format: Format) =>
  * Memoizes, for one encoding call, a value derived only from a grapheme's
  * marks. Shared diacritic sets are keyed by their mask; a caller's own set
  * is computed each time.
+ *
+ * A cached value is shared by every token with the same marks, so it is
+ * frozen: copy it before adding to it (`[...marks, "diaeresis"]`), or the
+ * change would reach all those tokens. Values computed for a caller's set
+ * are frozen too, so both paths fail the same way.
  */
-function byMarks<T>(compute: (token: Grapheme) => T): (token: Grapheme) => T {
-  const cache: (T | undefined)[] = [];
+function byMarks<T>(
+  compute: (token: Grapheme) => T,
+): (token: Grapheme) => Readonly<T> {
+  const cache: (Readonly<T> | undefined)[] = [];
   return (token) => {
     const mask = sharedMask(token.diacritics);
-    return mask === undefined ? compute(token) : cache[mask] ??= compute(token);
+    if (mask === undefined) return Object.freeze(compute(token));
+    return cache[mask] ??= Object.freeze(compute(token));
   };
 }
 

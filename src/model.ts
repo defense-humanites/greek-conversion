@@ -118,8 +118,16 @@ export type Token = Grapheme | Literal;
  */
 export type Document = readonly Token[];
 
-/** Every diacritic, in canonical order; the index is the bit of its mask. */
-const DIACRITICS: readonly Diacritic[] = [
+/**
+ * Every diacritic in canonical order, which is also the order of Beta Code
+ * marks after the TLG placement rules.
+ *
+ * The index of a diacritic is its bit in the masks of the shared sets below,
+ * so this order is also the iteration order of every set the library builds,
+ * and hence the order of losses reported for the marks of one grapheme. A new
+ * diacritic goes here, at its canonical rank, and nowhere else.
+ */
+export const ORDER: readonly Diacritic[] = [
   "smooth",
   "coronis",
   "rough",
@@ -133,7 +141,7 @@ const DIACRITICS: readonly Diacritic[] = [
 ];
 
 const BITS = new Map<unknown, number>(
-  DIACRITICS.map((diacritic, index) => [diacritic, 1 << index]),
+  ORDER.map((diacritic, index) => [diacritic, 1 << index]),
 );
 
 const READ_ONLY_MESSAGE =
@@ -147,9 +155,17 @@ const READ_ONLY_MESSAGE =
  * structural equality with a caller's `new Set(...)` still holds; their
  * mutating methods are shadowed by non-enumerable throwing ones, since a
  * mutation would change every grapheme at once.
+ *
+ * The guard catches ordinary calls (`set.add(...)`), not a deliberate bypass:
+ * `Set.prototype.add.call(set, ...)` or `Reflect.apply` still writes the
+ * shared set, and every later parse in the process inherits the change.
+ * `Object.freeze` below only fixes the shadowing properties; it does not
+ * freeze a `Set`'s contents, which live in internal slots. A `Proxy` would
+ * close the gap but break structural equality, so the gap is documented
+ * instead (docs/document-api.md).
  */
 const SHARED: (ReadonlySet<Diacritic> | undefined)[] = new Array(
-  1 << DIACRITICS.length,
+  1 << ORDER.length,
 );
 // Non-enumerable, so invisible to structural equality.
 const MASK = Symbol("diacritic mask");
@@ -163,8 +179,8 @@ function sharedFromMask(mask: number): ReadonlySet<Diacritic> {
   const cached = SHARED[mask];
   if (cached) return cached;
   const set = new Set<Diacritic>();
-  for (let bit = 0; bit < DIACRITICS.length; bit++) {
-    if (mask & (1 << bit)) set.add(DIACRITICS[bit]);
+  for (let bit = 0; bit < ORDER.length; bit++) {
+    if (mask & (1 << bit)) set.add(ORDER[bit]);
   }
   for (const method of ["add", "delete", "clear"]) {
     Object.defineProperty(set, method, { value: readOnly });

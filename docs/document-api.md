@@ -19,7 +19,12 @@ library are shared: every grapheme with the same marks holds the same set,
 which avoids one allocation per letter. They are ordinary `Set` objects, so
 structural equality with a `new Set(...)` holds, but their `add`, `delete`,
 and `clear` throw a `TypeError`. To change the marks of a grapheme, assign it a
-new set; any `Set` is accepted.
+new set; any `Set` is accepted. They iterate in canonical mark order.
+
+The guard stops ordinary calls, not a deliberate bypass: calling
+`Set.prototype.add.call(set, ...)` (or `Reflect.apply`) on a library-built set
+modifies it for every grapheme that shares it, including those of later
+parses in the same process. Do not mutate a set you did not create.
 
 The optional `glyphVariant` records a sigma shape from the source. It remains
 valid provenance if an orthographic policy changes the grapheme's current case.
@@ -59,9 +64,12 @@ if (diagnostics.length === 0) {
 encode(source, "greek"); // ἄνθρωπος
 ```
 
-A shallow copy of a grapheme shares its diacritic set, which is safe because
-the set cannot be modified in place. Unknown literal text is passed through; recognized punctuation and
-numeral signs stored as literals may have format-specific output. Validation
+A shallow copy of a grapheme shares its diacritic set. That is safe for a set
+built by the library, which cannot be modified in place; a `Set` you assigned
+yourself stays mutable and is shared by the copies, so replace it rather than
+modify it if the copies must differ. Unknown literal text is passed through;
+recognized punctuation and numeral signs stored as literals may have
+format-specific output. Validation
 checks the structure and Greek marks of graphemes, not arbitrary literal text
 or conformity to a preset.
 

@@ -30,6 +30,14 @@ Deno.test("parsed and constructed graphemes share read-only diacritic sets", () 
   first[0].diacritics = new Set(["smooth"]);
   assertEquals(second[0].diacritics.has("acute"), true);
 
+  // Shared sets iterate in canonical order, whatever the source order.
+  const ordered = grapheme("alpha", false, [
+    "iota-subscript",
+    "acute",
+    "smooth",
+  ]);
+  assertEquals([...ordered.diacritics], ["smooth", "acute", "iota-subscript"]);
+
   const marks = new Set(["acute"] as const);
   const token = grapheme("alpha", false, marks);
   marks.clear();
