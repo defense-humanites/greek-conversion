@@ -10,6 +10,7 @@ import {
   grapheme,
   literal,
   ownedGrapheme,
+  sharedDiacritics,
   type Token,
 } from "../model.ts";
 import { parsePunctuation } from "../punctuation.ts";
@@ -19,6 +20,8 @@ const QUANTITY_LETTERS = new Set(["alpha", "iota", "upsilon"]);
 export function parseBetaCode(input: string): Document {
   const chars = Array.from(input);
   const out: Token[] = [];
+  // Reused for every grapheme; sharedDiacritics() returns the shared copy.
+  const marks = new Set<Diacritic>();
 
   for (let i = 0; i < chars.length;) {
     const start = i;
@@ -29,11 +32,13 @@ export function parseBetaCode(input: string): Document {
       i++;
     }
 
-    const marks = new Set<Diacritic>();
+    marks.clear();
     if (upper) i = consumeMarks(chars, i, marks, true);
 
     if (chars[i]?.toLowerCase() === "s" && chars[i + 1] === "3") {
-      out.push(ownedGrapheme("sigma", upper, marks, "lunate-sigma"));
+      out.push(
+        ownedGrapheme("sigma", upper, sharedDiacritics(marks), "lunate-sigma"),
+      );
       i += 2;
       continue;
     }
@@ -78,7 +83,7 @@ export function parseBetaCode(input: string): Document {
     i++;
     i = consumeMarks(chars, i, marks, QUANTITY_LETTERS.has(letter));
 
-    out.push(ownedGrapheme(letter, upper, marks));
+    out.push(ownedGrapheme(letter, upper, sharedDiacritics(marks)));
   }
 
   classifyCoronides(out);

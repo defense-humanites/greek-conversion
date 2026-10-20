@@ -131,8 +131,8 @@ Deno.test("validation is pure", () => {
 Deno.test("validation catches invalid manually modified document values", () => {
   const letter = grapheme("alpha");
   letter.letter = "unknown" as Letter;
-  const mark = grapheme("alpha");
-  mark.diacritics.add("unknown" as Diacritic);
+  // An unknown value cannot be shared; grapheme() keeps it for validation.
+  const mark = grapheme("alpha", false, ["unknown" as Diacritic]);
   const variant = grapheme("beta", false, [], "lunate-sigma");
   const unknownVariant = grapheme(
     "sigma",

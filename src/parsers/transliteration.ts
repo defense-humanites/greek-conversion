@@ -17,7 +17,10 @@ import {
   type Letter,
   literal,
   ownedGrapheme,
+  sharedDiacritics,
   type Token,
+  withDiacritic,
+  withoutDiacritic,
 } from "../model.ts";
 import type { ConversionOptions } from "../options.ts";
 import { parsePunctuation } from "../punctuation.ts";
@@ -57,6 +60,8 @@ export function parseTransliteration(
   // Upsilons read from a contextual `y` whose separation from the preceding
   // vowel is carried by a breathing on that vowel rather than by a diaeresis.
   const separatedByBreathing = new Set<number>();
+  // Reused for every grapheme; sharedDiacritics() returns the shared copy.
+  const marks = new Set<Diacritic>();
 
   for (let i = 0; i < chars.length;) {
     let rough = false;
@@ -107,7 +112,7 @@ export function parseTransliteration(
         if (
           previous?.kind === "grapheme" && isVowel(previous.letter)
         ) {
-          previous.diacritics.add("coronis");
+          previous.diacritics = withDiacritic(previous.diacritics, "coronis");
           i++;
           continue;
         }
@@ -138,7 +143,7 @@ export function parseTransliteration(
       i++;
     }
 
-    const marks = new Set<Diacritic>();
+    marks.clear();
     let structuralCircumflex = false;
 
     if (rough) marks.add("rough");
@@ -211,7 +216,7 @@ export function parseTransliteration(
     out.push(ownedGrapheme(
       letter,
       roughUppercase || source !== source.toLowerCase(),
-      marks,
+      sharedDiacritics(marks),
       lunateSigma ? "lunate-sigma" : undefined,
     ));
   }
@@ -378,8 +383,8 @@ function inferInitialBreathings(
     if (target.kind !== "grapheme") continue;
 
     if (token.diacritics.has("rough") && target !== token) {
-      token.diacritics.delete("rough");
-      target.diacritics.add("rough");
+      token.diacritics = withoutDiacritic(token.diacritics, "rough");
+      target.diacritics = withDiacritic(target.diacritics, "rough");
     } else if (
       infersSmooth &&
       !target.diacritics.has("rough") &&
@@ -389,7 +394,7 @@ function inferInitialBreathings(
       !hasQuantity(token) &&
       !hasQuantity(target)
     ) {
-      target.diacritics.add("smooth");
+      target.diacritics = withDiacritic(target.diacritics, "smooth");
     }
   }
 }
@@ -414,9 +419,7 @@ function latinPair(
     first.kind === "grapheme" && first.diacritics.has("rough")
       ? {
         ...first,
-        diacritics: new Set(
-          [...first.diacritics].filter((mark) => mark !== "rough"),
-        ),
+        diacritics: withoutDiacritic(first.diacritics, "rough"),
       }
       : first,
   );

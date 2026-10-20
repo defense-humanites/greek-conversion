@@ -1,3 +1,4 @@
+import { withDiacritic, withoutDiacritic } from "./model.ts";
 import type { Diacritic, Document, Grapheme, Letter, Token } from "./model.ts";
 import { APOSTROPHE } from "./punctuation.ts";
 
@@ -184,8 +185,10 @@ export function classifyCoronides(tokens: Token[]): void {
       token.diacritics.has("smooth") &&
       initialBreathingStart(tokens, i) === undefined
     ) {
-      token.diacritics.delete("smooth");
-      token.diacritics.add("coronis");
+      token.diacritics = withDiacritic(
+        withoutDiacritic(token.diacritics, "smooth"),
+        "coronis",
+      );
     }
   }
 }

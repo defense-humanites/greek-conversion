@@ -16,6 +16,27 @@ npm install @humanities/greek-conversion@next
 
 The package is ESM-only.
 
+## Updating from `1.0.0-rc.1`
+
+`Grapheme.diacritics` in the `./document` entry point is now a
+`ReadonlySet<Diacritic>`, shared between graphemes and read-only at run time.
+Code that modified it in place now fails to type-check and throws a
+`TypeError`; assign a new set instead:
+
+```ts
+// Before
+grapheme.diacritics.delete("acute");
+
+// After
+grapheme.diacritics = new Set(
+  [...grapheme.diacritics].filter((mark) => mark !== "acute"),
+);
+```
+
+Copying the sets when deriving two versions of one document is no longer
+necessary. Code that only reads the sets, or that only uses the string
+conversion functions, is unaffected.
+
 ## Updating from `1.0.0-beta.9`
 
 Three option identifiers and seven exported type names change in
