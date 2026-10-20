@@ -7,6 +7,13 @@ change.
 
 ## [Unreleased]
 
+### Fixed
+
+- Parsing transliteration with `orthography.eta: "i-macron"` (used by the
+  `iso-843-type-1` preset) took time quadratic in the length of the text:
+  each `i` searched the rest of the text for a macron. It is linear again,
+  with the same results (180,000 parses compared with `1.0.0-rc.1`).
+
 ## [1.0.0-rc.1] - 2026-10-19
 
 Release candidate for `1.0.0`. The stable release prepared as `1.0.0` on
