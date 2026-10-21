@@ -237,10 +237,15 @@ function prioritizeEtaMacron(
     let end = start + 1;
     while (end < chars.length && /^\p{M}$/u.test(chars[end])) end++;
 
-    const macron = chars.indexOf("\u0304", start + 1);
-    if (macron >= end || macron === -1) continue;
-    chars.splice(macron, 1);
-    chars.splice(start + 1, 0, "\u0304");
+    // Look for the macron inside this letter's marks only: scanning the rest
+    // of the text at every `i` made parsing quadratic.
+    let macron = start + 1;
+    while (macron < end && chars[macron] !== "\u0304") macron++;
+    if (macron < end && macron > start + 1) {
+      // Move the macron to the front of the marks, shifting the others right.
+      for (let j = macron; j > start + 1; j--) chars[j] = chars[j - 1];
+      chars[start + 1] = "\u0304";
+    }
     start = end - 1;
   }
 
