@@ -328,21 +328,35 @@ Deno.test("preserves crasis while transliteration remains lossy", () => {
   assertNfcEquals(convert("toúnoma", "transliteration", "greek"), "τούνομα");
 });
 
-Deno.test("contracts labials and velars before sigma in Greek output", () => {
+Deno.test("keeps a labial or velar before sigma as written", () => {
+  // Greek writes these pairs where a prefix meets a stem (ἔκστασις, ἐκσῴζω);
+  // ψ and ξ are read from their own spellings, never contracted.
   assertNfcEquals(
     convert("πσ βσ φσ κσ γσ χσ", "greek", "greek"),
-    "ψ ψ ψ ξ ξ ξ",
+    "πς βς φς κς γς χς",
+  );
+  assertNfcEquals(convert("ἔκστασις", "greek", "greek"), "ἔκστασις");
+  assertNfcEquals(convert("ἐκσῴζω", "greek", "greek"), "ἐκσῴζω");
+  assertNfcEquals(convert("e)/kstasis", "beta-code", "greek"), "ἔκστασις");
+  assertNfcEquals(
+    convert("ékstasis", "transliteration", "greek"),
+    "ἔκστασις",
+  );
+  assertNfcEquals(convert("ps ks", "beta-code", "greek"), "πς κς");
+  assertNfcEquals(convert("y c", "beta-code", "greek"), "ψ ξ");
+  assertNfcEquals(
+    convert("psychḗ xénos", "transliteration", "greek"),
+    "ψυχή ξένος",
   );
   assertNfcEquals(
-    convert("ΠΣ ΒΣ Φσ ΚΣ ΓΣ Χσ", "greek", "greek"),
-    "Ψ Ψ Ψ Ξ Ξ Ξ",
+    convert("ks", "transliteration", "greek", { orthography: { xi: "ks" } }),
+    "ξ",
   );
-  assertNfcEquals(convert("πΣ βΣ κΣ γΣ", "greek", "greek"), "πΣ βΣ κΣ γΣ");
-  assertNfcEquals(
-    convert("ps bs fs ks gs xs", "beta-code", "greek"),
-    "ψ ψ ψ ξ ξ ξ",
+  assertEquals(
+    convertDetailed("ἔκστασις", "greek", "greek").lossy,
+    false,
   );
-  assertNfcEquals(greekToBetaCode("πσ"), "ps");
+  assertNfcEquals(greekToBetaCode("ἔκστασις"), "e)/kstasis");
 });
 
 Deno.test("assimilates dentals before sigma only on demand", () => {

@@ -7,6 +7,16 @@ change.
 
 ## [Unreleased]
 
+### Fixed
+
+- Greek output no longer contracts a labial or a velar before sigma to `ψ` or
+  `ξ`. Greek writes these pairs where a prefix meets a stem, so the rule
+  altered correct text: `ἔκστασις` and the TLG's `e)/kstasis` both became
+  `ἔξτασις`. Psi and xi are still read from their own spellings (`y` and `c`
+  in Beta Code, `ps` and `x` in transliteration); a transliterated `ks` is now
+  read as two letters unless `orthography.xi` is `"ks"`. The opt-in
+  `dentalSigma: "assimilate"` is unchanged.
+
 ## [1.0.0-rc.2] - 2026-10-21
 
 Second release candidate for `1.0.0`. It changes one type of the advanced

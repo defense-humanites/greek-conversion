@@ -7,8 +7,8 @@ import {
 } from "./alphabet.ts";
 import {
   ARISTERI_KERAIA,
+  assimilatedDental,
   breathingTarget,
-  contractedSigma,
   DEXIA_KERAIA,
   elidedAspirate,
   hasHiatusMark,
@@ -101,25 +101,21 @@ export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
       continue;
     }
 
-    const contraction = contractedSigma(
-      doc,
-      i,
-      options.orthography?.dentalSigma === "assimilate",
-    );
+    const assimilated = options.orthography?.dentalSigma === "assimilate"
+      ? assimilatedDental(doc, i)
+      : undefined;
 
-    if (contraction !== undefined) {
-      let base = ALPHABET[contraction.letter].greek;
-      if (contraction.letter === "sigma") {
-        if (rendersLunateSigma(contraction, options)) base = "ϲ";
-        else if (
-          options.orthography?.finalSigma === "preserve"
-            ? contraction.glyphVariant === "final-sigma" ||
-              contraction.glyphVariant === undefined && isWordFinal(doc, i + 1)
-            : options.orthography?.finalSigma !== "medial" &&
-              isWordFinal(doc, i + 1)
-        ) base = "ς";
-      }
-      out += contraction.uppercase ? greekUpper(base) : base;
+    if (assimilated !== undefined) {
+      let base = ALPHABET.sigma.greek;
+      if (rendersLunateSigma(assimilated, options)) base = "ϲ";
+      else if (
+        options.orthography?.finalSigma === "preserve"
+          ? assimilated.glyphVariant === "final-sigma" ||
+            assimilated.glyphVariant === undefined && isWordFinal(doc, i + 1)
+          : options.orthography?.finalSigma !== "medial" &&
+            isWordFinal(doc, i + 1)
+      ) base = "ς";
+      out += assimilated.uppercase ? greekUpper(base) : base;
       i++;
       continue;
     }

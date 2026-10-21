@@ -22,9 +22,9 @@ the row format to the column format and parsing the result again.
 
 | From \ To | Greek | Beta Code | Transliteration |
 | --- | --- | --- | --- |
-| **Greek** | Selected glyph, accent, punctuation, and composition policies; lunate provenance unless preserved; unmarked labial/velar + sigma pairs contract | Canonical spelling and mark order; lunate provenance unless preserved | Lunate provenance by default; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; the absence of a breathing on an initial vowel (monotonic or uncial text), which reads back as a smooth breathing; `ν` before a velar under nasal-gamma inference |
-| **Beta Code** | Canonical Greek glyphs; lunate provenance unless preserved; unmarked labial/velar + sigma pairs contract | Canonical ASCII case, asterisk placement, mark order, aliases, and punctuation; lunate provenance unless preserved | Same transliteration losses as Greek, including lunate provenance, coronis, and marked double rho |
-| **Transliteration** | Initial smooth breathing is inferred where quantity is not explicit; labial/velar + sigma pairs contract; an elided mute may be aspirated before rough breathing | Initial smooth breathing is inferred where quantity is not explicit; accepted aliases converge to canonical Beta Code | Accepted aliases, punctuation, combining-mark order, NFC, and orthographic spelling converge |
+| **Greek** | Selected glyph, accent, punctuation, and composition policies; lunate provenance unless preserved | Canonical spelling and mark order; lunate provenance unless preserved | Lunate provenance by default; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; the absence of a breathing on an initial vowel (monotonic or uncial text), which reads back as a smooth breathing; `ν` before a velar under nasal-gamma inference |
+| **Beta Code** | Canonical Greek glyphs; lunate provenance unless preserved | Canonical ASCII case, asterisk placement, mark order, aliases, and punctuation; lunate provenance unless preserved | Same transliteration losses as Greek, including lunate provenance, coronis, and marked double rho |
+| **Transliteration** | Initial smooth breathing is inferred where quantity is not explicit; an elided mute may be aspirated before rough breathing | Initial smooth breathing is inferred where quantity is not explicit; accepted aliases converge to canonical Beta Code | Accepted aliases, punctuation, combining-mark order, NFC, and orthographic spelling converge |
 
 “Canonical documents” excludes invalid or ambiguous combinations. Use
 `validateDocument()` when that distinction matters.
@@ -90,10 +90,12 @@ coronis contexts without guessing from ordinary apostrophes.
 
 ### Canonical Greek orthography
 
-Greek output contracts adjacent, unmarked labials plus sigma to psi and velars
-plus sigma to xi. Thus, for example, Beta Code `ps` and `bs` both become `ψ`,
-and `ks` and `gs` both become `ξ`. Marked, separated, and numeral graphemes do
-not contract.
+Greek output keeps a labial or a velar before sigma as written: Greek has
+these pairs where a prefix meets a stem (`ἔκστασις`, `ἐκσῴζω`), so they are
+never contracted to `ψ` or `ξ`. Psi and xi are read from their own spellings
+(`y` and `c` in Beta Code, `ps` and `x` in transliteration); a transliterated
+`ks` is two letters unless `orthography.xi` is `"ks"`. Only the opt-in
+`dentalSigma: "assimilate"` merges a consonant with the following sigma.
 
 Greek output also applies the regular aspiration of an elided final `π`, `τ`,
 or `κ` before a rough breathing. The output records the aspirated consonant, not
@@ -162,7 +164,7 @@ diacritic policy.
 
 `removeDiacritics` and the granular `diacritics` policy are applied during
 encoding, after contextual analysis. They therefore cannot manufacture a
-diphthong or enable a consonant contraction by first deleting a blocking mark.
+diphthong or enable a dental assimilation by first deleting a blocking mark.
 `removeDiacritics: true` dominates granular `"preserve"` settings. In
 transliteration, the rough breathing produces a letter (`h`, including in `rh`),
 so it survives this shortcut. An explicit
