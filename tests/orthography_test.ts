@@ -515,7 +515,7 @@ Deno.test("selects contextual or uniform medial final sigma", () => {
   );
   assertNfcEquals(
     convert("ψ βς κς", "greek", "greek", medial),
-    "ψ ψ ξ",
+    "ψ βσ κσ",
   );
   assertNfcEquals(
     convert("σος σʹ", "greek", "greek", {

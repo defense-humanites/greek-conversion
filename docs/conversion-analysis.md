@@ -39,8 +39,8 @@ Consequently:
 - removing known lunate-sigma provenance is a loss, while adding a
   deterministic lunate style is not;
 - deterministic marks added by an output policy are not losses;
-- removed diacritics, monotonic simplification, numeral conversion,
-  contractions, consonant changes, and unrepresented source tokens are losses
+- removed diacritics, monotonic simplification, numeral conversion, dental
+  assimilation, consonant changes, and unrepresented source tokens are losses
   when they occur in the actual input.
 
 `lossy` is equivalent to `losses.length > 0` and is included as a convenience
@@ -62,8 +62,8 @@ a UTF-16 offset or a code-point index in the input string.
 | `unrepresented-literal` | A source literal token cannot be recovered from the target document |
 
 The codes describe observable information loss rather than the implementation
-rule that caused it. A contraction and an elision-induced consonant change can
-therefore both report `unrepresented-grapheme`.
+rule that caused it. A dental assimilation and an elision-induced consonant
+change can therefore both report `unrepresented-grapheme`.
 
 ## Static and dynamic questions
 

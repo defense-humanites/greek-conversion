@@ -53,7 +53,7 @@ that a custom character:
 
 - is a vowel or consonant;
 - accepts Greek diacritics;
-- participates in a diphthong, contraction, aspiration, or digraph;
+- participates in a diphthong, dental assimilation, aspiration, or digraph;
 - has an alphabetic-numeral value;
 - belongs to any bundled preset.
 

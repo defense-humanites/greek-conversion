@@ -44,15 +44,6 @@ const ELIDED_ASPIRATES = new Map<Letter, Letter>([
   ["kappa", "chi"],
 ]);
 
-const SIGMA_CONTRACTIONS = new Map<Letter, Letter>([
-  ["pi", "psi"],
-  ["beta", "psi"],
-  ["phi", "psi"],
-  ["kappa", "xi"],
-  ["gamma", "xi"],
-  ["chi", "xi"],
-]);
-
 const DENTALS = new Set<Letter>(["tau", "delta", "theta"]);
 
 export function isWordInitial(document: Document, index: number): boolean {
@@ -253,35 +244,39 @@ export function isBoundaryTransparent(token: Token | undefined): boolean {
     (/^\p{M}$/u.test(token.value) || WORD_JOIN_CONTROLS.has(token.value));
 }
 
-export function contractedSigma(
+/**
+ * Returns the sigma that replaces a dental and the following sigma when
+ * `dentalSigma: "assimilate"` deletes the dental.
+ *
+ * Only this opt-in assimilation merges two letters. Greek writes `κσ` and
+ * `πσ` where a prefix meets a stem (`ἔκστασις`), so a labial or velar before
+ * sigma is never contracted to `ψ` or `ξ`: that would alter correct source
+ * text, and the parsers already read `ψ` and `ξ` from their own spellings.
+ */
+export function assimilatedDental(
   document: Document,
   index: number,
-  assimilateDentals = false,
-): Pick<Grapheme, "letter" | "uppercase" | "glyphVariant"> | undefined {
-  const mute = document[index];
+): Pick<Grapheme, "uppercase" | "glyphVariant"> | undefined {
+  const dental = document[index];
   const sigma = document[index + 1];
 
   if (
-    mute.kind !== "grapheme" ||
-    mute.diacritics.size > 0 ||
+    dental.kind !== "grapheme" ||
+    !DENTALS.has(dental.letter) ||
+    dental.diacritics.size > 0 ||
     sigma?.kind !== "grapheme" ||
     sigma.letter !== "sigma" ||
-    sigma.diacritics.size > 0
+    sigma.diacritics.size > 0 ||
+    sigma.uppercase && !dental.uppercase ||
+    isGreekNumeralContext(document, index)
   ) {
     return undefined;
   }
 
-  if (isGreekNumeralContext(document, index)) return undefined;
-
-  const letter = SIGMA_CONTRACTIONS.get(mute.letter) ??
-    (assimilateDentals && DENTALS.has(mute.letter) ? "sigma" : undefined);
-  if (!letter || sigma.uppercase && !mute.uppercase) return undefined;
-
   return {
-    letter,
-    uppercase: mute.uppercase,
-    ...(letter === "sigma" && sigma.glyphVariant !== undefined
-      ? { glyphVariant: sigma.glyphVariant }
-      : {}),
+    uppercase: dental.uppercase,
+    ...(sigma.glyphVariant === undefined
+      ? {}
+      : { glyphVariant: sigma.glyphVariant }),
   };
 }
