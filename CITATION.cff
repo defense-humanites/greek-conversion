@@ -13,7 +13,7 @@ abstract: >-
 authors:
   - family-names: Boquet
     given-names: Antoine
-version: 1.0.0-rc.2
+version: 1.0.0-rc.3
 license: MIT
 repository-code: "https://github.com/defense-humanites/greek-conversion"
 url: "https://defense-humanites.github.io/greek-conversion/"

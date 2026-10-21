@@ -7,6 +7,13 @@ change.
 
 ## [Unreleased]
 
+## [1.0.0-rc.3] - 2026-10-21
+
+Third release candidate for `1.0.0`. It fixes one conversion rule: Greek
+output no longer rewrites a labial or a velar before sigma as `ψ` or `ξ`,
+which altered correct text such as `ἔκστασις`. The API is unchanged. Unless a
+problem is found, `1.0.0` will have the same content.
+
 ### Fixed
 
 - Greek output no longer contracts a labial or a velar before sigma to `ψ` or
@@ -466,7 +473,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.2...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.3...HEAD
+[1.0.0-rc.3]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.2...v1.0.0-rc.3
 [1.0.0-rc.2]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.1...v1.0.0-rc.2
 [1.0.0-rc.1]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.9...v1.0.0-rc.1
 [1.0.0-beta.9]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.8...v1.0.0-beta.9
