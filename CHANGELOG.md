@@ -7,6 +7,17 @@ change.
 
 ## [Unreleased]
 
+## [1.0.0-rc.2] - 2026-10-21
+
+Second release candidate for `1.0.0`. It changes one type of the advanced
+`./document` entry point, which a stable release could no longer change:
+`Grapheme.diacritics` becomes read-only, so that graphemes can share their
+diacritic sets; see the [migration guide](MIGRATION.md). Conversion output is
+unchanged, conversion is faster on long texts, and parsing transliteration
+under `orthography.eta: "i-macron"` is linear again. The ordinary conversion
+functions are not affected. Unless a problem is found, `1.0.0` will have the
+same content.
+
 ### Changed
 
 - `Grapheme.diacritics` is typed `ReadonlySet<Diacritic>` instead of
@@ -445,7 +456,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.1...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.2...HEAD
+[1.0.0-rc.2]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.1...v1.0.0-rc.2
 [1.0.0-rc.1]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.9...v1.0.0-rc.1
 [1.0.0-beta.9]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.8...v1.0.0-beta.9
 [1.0.0-beta.8]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.7...v1.0.0-beta.8
