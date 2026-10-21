@@ -7,7 +7,12 @@ import {
   isVowel,
   isWordInitial,
 } from "./context.ts";
-import { literal } from "./model.ts";
+import {
+  literal,
+  sharedDiacritics,
+  withDiacritic as addDiacritic,
+  withoutDiacritic,
+} from "./model.ts";
 import type { Diacritic, Document, Grapheme, Letter, Token } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
 
@@ -98,7 +103,7 @@ export function applyGreekOrthography(
 
     if (sameDiacritics(token.diacritics, diacritics)) return token;
     changed = true;
-    return { ...token, diacritics };
+    return { ...token, diacritics: sharedDiacritics(diacritics) };
   });
 
   changed = unaccentMonosyllables(orthographic, monotonic) || changed;
@@ -144,9 +149,10 @@ function unaccentMonosyllables(
 
     for (const index of accented) {
       const token = monotonic[index] as Grapheme;
-      const diacritics = new Set(token.diacritics);
-      diacritics.delete("acute");
-      monotonic[index] = { ...token, diacritics };
+      monotonic[index] = {
+        ...token,
+        diacritics: withoutDiacritic(token.diacritics, "acute"),
+      };
     }
     changed = true;
   }
@@ -348,10 +354,7 @@ function isRho(token: Token | undefined): token is Grapheme {
 }
 
 function withDiacritic(token: Grapheme, diacritic: Diacritic): Grapheme {
-  return {
-    ...token,
-    diacritics: new Set([...token.diacritics, diacritic]),
-  };
+  return { ...token, diacritics: addDiacritic(token.diacritics, diacritic) };
 }
 
 function sameDiacritics(

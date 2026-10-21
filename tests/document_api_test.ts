@@ -1,6 +1,7 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import {
   applyGreekOrthography,
+  type Diacritic,
   encode,
   grapheme,
   parse,
@@ -8,20 +9,40 @@ import {
 } from "../src/document.ts";
 import { assertNfcEquals } from "./assertions.ts";
 
-Deno.test("parsed documents and constructed graphemes own their diacritic sets", () => {
+Deno.test("parsed and constructed graphemes share read-only diacritic sets", () => {
   const first = parse("ἄ", "greek");
   const second = parse("ἄ", "greek");
   assertEquals(first === second, false);
   if (first[0].kind !== "grapheme" || second[0].kind !== "grapheme") {
     throw new Error("Expected parsed graphemes");
   }
-  first[0].diacritics.delete("acute");
+  // One set per combination of marks, whatever the source.
+  assertEquals(first[0].diacritics === second[0].diacritics, true);
+  assertEquals(first[0].diacritics, new Set(["smooth", "acute"]));
+
+  const shared = first[0].diacritics as Set<Diacritic>;
+  assertThrows(() => shared.delete("acute"), TypeError);
+  assertThrows(() => shared.add("rough"), TypeError);
+  assertThrows(() => shared.clear(), TypeError);
   assertEquals(second[0].diacritics.has("acute"), true);
+
+  // Replacing a token's set leaves the other graphemes unchanged.
+  first[0].diacritics = new Set(["smooth"]);
+  assertEquals(second[0].diacritics.has("acute"), true);
+
+  // Shared sets iterate in canonical order, whatever the source order.
+  const ordered = grapheme("alpha", false, [
+    "iota-subscript",
+    "acute",
+    "smooth",
+  ]);
+  assertEquals([...ordered.diacritics], ["smooth", "acute", "iota-subscript"]);
 
   const marks = new Set(["acute"] as const);
   const token = grapheme("alpha", false, marks);
   marks.clear();
   assertEquals(token.diacritics.has("acute"), true);
+  assertEquals(token.diacritics === marks, false);
 });
 
 Deno.test("encoding and validation leave an edited document unchanged", () => {
@@ -34,7 +55,9 @@ Deno.test("encoding and validation leave an edited document unchanged", () => {
   if (edited[0].kind !== "grapheme") {
     throw new Error("Expected initial vowel");
   }
-  edited[0].diacritics.delete("acute");
+  edited[0].diacritics = new Set(
+    [...edited[0].diacritics].filter((mark) => mark !== "acute"),
+  );
 
   const before = edited.map((token) =>
     token.kind === "grapheme"
@@ -73,7 +96,7 @@ Deno.test("a Greek orthographic view does not replace the reusable source", () =
   assertNfcEquals(encode(source, "beta-code"), "a)/ra");
 });
 
-Deno.test("Greek orthographic views own all tokens and diacritic sets", () => {
+Deno.test("Greek orthographic views own all tokens", () => {
   const source = parse("ἄβ!", "greek");
   const views = [
     applyGreekOrthography(source),
@@ -86,11 +109,6 @@ Deno.test("Greek orthographic views own all tokens and diacritic sets", () => {
     assertEquals(view === source, false);
     for (let index = 0; index < source.length; index++) {
       assertEquals(view[index] === source[index], false);
-      const current = view[index];
-      const original = source[index];
-      if (current.kind === "grapheme" && original.kind === "grapheme") {
-        assertEquals(current.diacritics === original.diacritics, false);
-      }
     }
 
     const second = view[1];
@@ -99,7 +117,7 @@ Deno.test("Greek orthographic views own all tokens and diacritic sets", () => {
       throw new Error("Expected a grapheme and literal");
     }
     second.letter = "gamma";
-    second.diacritics.add("rough");
+    second.diacritics = new Set([...second.diacritics, "rough"]);
     punctuation.value = "?";
     assertNfcEquals(encode(source, "greek"), "ἄβ!");
   }

@@ -91,8 +91,12 @@ export interface Grapheme {
   letter: Letter;
   /** Whether the letter is uppercase. */
   uppercase: boolean;
-  /** Semantic marks; validate manually modified sets before encoding. */
-  diacritics: Set<Diacritic>;
+  /**
+   * Semantic marks. Sets built by the library are shared between graphemes
+   * and read-only: to change the marks, assign a new set (and validate it
+   * before encoding).
+   */
+  diacritics: ReadonlySet<Diacritic>;
   /** Optional source glyph provenance used by preserving output policies. */
   glyphVariant?: GlyphVariant;
 }
@@ -108,19 +112,169 @@ export interface Literal {
 /** A semantic Greek grapheme or preserved literal text. */
 export type Token = Grapheme | Literal;
 
-/** Readonly token sequence; its tokens and grapheme diacritic sets are mutable. */
+/**
+ * Readonly token sequence. Its tokens are mutable; their diacritic sets are
+ * replaced, not modified.
+ */
 export type Document = readonly Token[];
 
 /**
- * Creates a grapheme that takes ownership of the supplied diacritic set.
+ * Every diacritic in canonical order, which is also the order of Beta Code
+ * marks after the TLG placement rules.
  *
- * Internal to the parsers, which build a fresh set for every grapheme; the
- * public {@link grapheme} copies its argument instead.
+ * The index of a diacritic is its bit in the masks of the shared sets below,
+ * so this order is also the iteration order of every set the library builds,
+ * and hence the order of losses reported for the marks of one grapheme. A new
+ * diacritic goes here, at its canonical rank, and nowhere else.
+ */
+export const ORDER: readonly Diacritic[] = [
+  "smooth",
+  "coronis",
+  "rough",
+  "diaeresis",
+  "acute",
+  "grave",
+  "circumflex",
+  "macron",
+  "breve",
+  "iota-subscript",
+];
+
+const BITS = new Map<unknown, number>(
+  ORDER.map((diacritic, index) => [diacritic, 1 << index]),
+);
+
+const READ_ONLY_MESSAGE =
+  "Grapheme diacritic sets are shared and read-only; assign a new Set instead";
+
+/**
+ * Diacritic sets shared by every grapheme that carries the same marks.
+ *
+ * There are at most 2^10 distinct sets, so one instance per combination
+ * replaces one allocation per grapheme. They stay plain `Set` objects, so
+ * structural equality with a caller's `new Set(...)` still holds; their
+ * mutating methods are shadowed by non-enumerable throwing ones, since a
+ * mutation would change every grapheme at once.
+ *
+ * The guard catches ordinary calls (`set.add(...)`), not a deliberate bypass:
+ * `Set.prototype.add.call(set, ...)` or `Reflect.apply` still writes the
+ * shared set, and every later parse in the process inherits the change.
+ * `Object.freeze` below only fixes the shadowing properties; it does not
+ * freeze a `Set`'s contents, which live in internal slots. A `Proxy` would
+ * close the gap but break structural equality, so the gap is documented
+ * instead (docs/document-api.md).
+ */
+const SHARED: (ReadonlySet<Diacritic> | undefined)[] = new Array(
+  1 << ORDER.length,
+);
+// Non-enumerable, so invisible to structural equality.
+const MASK = Symbol("diacritic mask");
+type SharedSet = ReadonlySet<Diacritic> & { readonly [MASK]?: number };
+
+const readOnly = (): never => {
+  throw new TypeError(READ_ONLY_MESSAGE);
+};
+
+function sharedFromMask(mask: number): ReadonlySet<Diacritic> {
+  const cached = SHARED[mask];
+  if (cached) return cached;
+  const set = new Set<Diacritic>();
+  for (let bit = 0; bit < ORDER.length; bit++) {
+    if (mask & (1 << bit)) set.add(ORDER[bit]);
+  }
+  for (const method of ["add", "delete", "clear"]) {
+    Object.defineProperty(set, method, { value: readOnly });
+  }
+  Object.defineProperty(set, MASK, { value: mask });
+  Object.freeze(set);
+  return SHARED[mask] = set;
+}
+
+/** Returns the mask of `marks`, or `undefined` if one value is not a diacritic. */
+function maskOf(marks: Iterable<unknown>): number | undefined {
+  let mask = 0;
+  for (const mark of marks) {
+    const bit = BITS.get(mark);
+    if (bit === undefined) return undefined;
+    mask |= bit;
+  }
+  return mask;
+}
+
+/**
+ * Returns the mask of a shared set, or `undefined` for a set the library did
+ * not build (whose content may change between calls).
+ */
+export const sharedMask = (marks: ReadonlySet<Diacritic>): number | undefined =>
+  (marks as SharedSet)[MASK];
+
+/** Bit of a diacritic in the masks read by {@link diacriticsFromMask}. */
+export const diacriticBit = (diacritic: Diacritic): number =>
+  BITS.get(diacritic)!;
+
+/** Returns the shared set for a mask built with {@link diacriticBit}. */
+export const diacriticsFromMask = (mask: number): ReadonlySet<Diacritic> =>
+  SHARED[mask] ?? sharedFromMask(mask);
+
+/** The shared empty diacritic set. */
+export const NO_DIACRITICS: ReadonlySet<Diacritic> = sharedFromMask(0);
+
+/**
+ * Returns the shared read-only set holding these marks.
+ *
+ * Values that are not diacritics (possible in documents built by callers
+ * outside TypeScript) cannot be shared: they are kept in a new set so that
+ * validation still reports them.
+ */
+export function sharedDiacritics(
+  marks: Iterable<Diacritic>,
+): ReadonlySet<Diacritic> {
+  if ((marks as SharedSet)[MASK] !== undefined) {
+    return marks as ReadonlySet<Diacritic>;
+  }
+  // A one-shot iterable must be read once, whatever the outcome.
+  const values = marks instanceof Set || Array.isArray(marks)
+    ? marks
+    : [...marks];
+  const mask = maskOf(values);
+  return mask === undefined ? new Set(values) : sharedFromMask(mask);
+}
+
+/** Returns the shared set of `marks` with `diacritic` added. */
+export function withDiacritic(
+  marks: ReadonlySet<Diacritic>,
+  diacritic: Diacritic,
+): ReadonlySet<Diacritic> {
+  if (marks.has(diacritic)) return marks;
+  const mask = (marks as SharedSet)[MASK] ?? maskOf(marks);
+  return mask === undefined
+    ? new Set([...marks, diacritic])
+    : sharedFromMask(mask | BITS.get(diacritic)!);
+}
+
+/** Returns the shared set of `marks` with `diacritic` removed. */
+export function withoutDiacritic(
+  marks: ReadonlySet<Diacritic>,
+  diacritic: Diacritic,
+): ReadonlySet<Diacritic> {
+  if (!marks.has(diacritic)) return marks;
+  const mask = (marks as SharedSet)[MASK] ?? maskOf(marks);
+  return mask === undefined
+    ? new Set([...marks].filter((mark) => mark !== diacritic))
+    : sharedFromMask(mask & ~BITS.get(diacritic)!);
+}
+
+/**
+ * Creates a grapheme from a diacritic set that is already shared.
+ *
+ * Internal to the parsers, which obtain the set from
+ * {@link diacriticsFromMask} or {@link sharedDiacritics}; the public
+ * {@link grapheme} accepts any iterable instead.
  */
 export const ownedGrapheme = (
   letter: Letter,
   uppercase: boolean,
-  diacritics: Set<Diacritic>,
+  diacritics: ReadonlySet<Diacritic>,
   glyphVariant?: GlyphVariant,
 ): Grapheme =>
   glyphVariant === undefined
@@ -137,7 +291,7 @@ export const grapheme = (
   kind: "grapheme",
   letter,
   uppercase,
-  diacritics: new Set(diacritics),
+  diacritics: sharedDiacritics(diacritics),
   ...(glyphVariant === undefined ? {} : { glyphVariant }),
 });
 

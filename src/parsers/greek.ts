@@ -2,7 +2,8 @@ import { BY_GREEK, GREEK_MARKS } from "../alphabet.ts";
 import { greekLower } from "../case.ts";
 import { classifyCoronides } from "../context.ts";
 import {
-  type Diacritic,
+  diacriticBit,
+  diacriticsFromMask,
   type Document,
   literal,
   ownedGrapheme,
@@ -25,21 +26,21 @@ export function parseGreek(input: string): Document {
       continue;
     }
 
-    const marks = new Set<Diacritic>();
+    let marks = 0;
 
     i++;
 
     while (i < chars.length) {
       const mark = GREEK_MARKS.get(chars[i]);
       if (!mark) break;
-      marks.add(mark);
+      marks |= diacriticBit(mark);
       i++;
     }
 
     out.push(ownedGrapheme(
       letter,
       source !== lower,
-      marks,
+      diacriticsFromMask(marks),
       lower === "ϲ"
         ? "lunate-sigma"
         : lower === "ς"

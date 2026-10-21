@@ -11,18 +11,30 @@ validation boundaries described below.
 `Document` is a readonly sequence of `Token` values. A token is either a
 `Grapheme` (semantic letter, case, diacritics, and optional source glyph
 variant) or a `Literal` (unknown text or canonical punctuation). The sequence
-is readonly at the type level, but a grapheme's fields and its `Set` of
-diacritics are mutable so callers can make controlled transformations. This is
-**not** a frozen value.
+is readonly at the type level, but a token's fields are mutable so callers can
+make controlled transformations. This is **not** a frozen value.
+
+A grapheme's `diacritics` is a `ReadonlySet<Diacritic>`. The sets built by the
+library are shared: every grapheme with the same marks holds the same set,
+which avoids one allocation per letter. They are ordinary `Set` objects, so
+structural equality with a `new Set(...)` holds, but their `add`, `delete`,
+and `clear` throw a `TypeError`. To change the marks of a grapheme, assign it a
+new set; any `Set` is accepted. They iterate in canonical mark order.
+
+The guard stops ordinary calls, not a deliberate bypass: calling
+`Set.prototype.add.call(set, ...)` (or `Reflect.apply`) on a library-built set
+modifies it for every grapheme that shares it, including those of later
+parses in the same process. Do not mutate a set you did not create.
 
 The optional `glyphVariant` records a sigma shape from the source. It remains
 valid provenance if an orthographic policy changes the grapheme's current case.
 
-`parse()` allocates a new document on each call. `grapheme()` copies the
-supplied diacritics into a new `Set`. `encode()`, `validateDocument()`, and
-`applyGreekOrthography()` do not modify their input document. The public helper
-returns an independent document, including new token objects and diacritic
-sets even if no orthographic change was needed. Like `parse()` and `encode()`,
+`parse()` allocates new tokens on each call. `grapheme()` reads the supplied
+diacritics into the shared set for those marks, so a later change to the
+caller's iterable does not reach the grapheme. `encode()`,
+`validateDocument()`, and `applyGreekOrthography()` do not modify their input
+document. The public helper returns an independent document, with new token
+objects even if no orthographic change was needed. Like `parse()` and `encode()`,
 it resolves a supplied preset before applying its options.
 
 `encode(document, "greek", options)` already applies Greek-output orthography.
@@ -30,21 +42,19 @@ Use `applyGreekOrthography()` when the transformed tokens themselves must be
 inspected or edited. A monotonic or decimal-numeral view can discard source
 distinctions: keep the original parsed document for other output formats.
 
-When deriving two independent versions from one parse, copy both the tokens
-and their nested diacritic sets:
+When deriving two independent versions from one parse, copy the tokens and
+assign new diacritic sets where the marks change:
 
 ```ts
 import { encode, parse, validateDocument } from "@humanities/greek-conversion/document";
 
 const source = parse("ἄνθρωπος", "greek");
-const edited = source.map((token) =>
-  token.kind === "grapheme"
-    ? { ...token, diacritics: new Set(token.diacritics) }
-    : { ...token }
-);
+const edited = source.map((token) => ({ ...token }));
 
 if (edited[0].kind === "grapheme") {
-  edited[0].diacritics.delete("acute");
+  edited[0].diacritics = new Set(
+    [...edited[0].diacritics].filter((mark) => mark !== "acute"),
+  );
 }
 
 const diagnostics = validateDocument(edited);
@@ -54,9 +64,12 @@ if (diagnostics.length === 0) {
 encode(source, "greek"); // ἄνθρωπος
 ```
 
-A shallow copy of the sequence or of a grapheme still shares the original
-`Set`. Unknown literal text is passed through; recognized punctuation and
-numeral signs stored as literals may have format-specific output. Validation
+A shallow copy of a grapheme shares its diacritic set. That is safe for a set
+built by the library, which cannot be modified in place; a `Set` you assigned
+yourself stays mutable and is shared by the copies, so replace it rather than
+modify it if the copies must differ. Unknown literal text is passed through;
+recognized punctuation and numeral signs stored as literals may have
+format-specific output. Validation
 checks the structure and Greek marks of graphemes, not arbitrary literal text
 or conformity to a preset.
 

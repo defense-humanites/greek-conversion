@@ -1,3 +1,4 @@
+import { NO_DIACRITICS, sharedDiacritics } from "./model.ts";
 import type { Diacritic, Document, Format, Token } from "./model.ts";
 import type { ConversionOptions, DiacriticDisposition } from "./options.ts";
 
@@ -74,7 +75,7 @@ export function stripDiacritics(document: Document): Document {
     if (token.kind === "literal" || token.diacritics.size === 0) return token;
 
     changed = true;
-    return { ...token, diacritics: new Set<Diacritic>() };
+    return { ...token, diacritics: NO_DIACRITICS };
   });
 
   return changed ? stripped : document;
@@ -104,7 +105,7 @@ export function prepareDiacriticsForRendering(
   const rendered: Token[] = document.map((token) =>
     token.kind === "literal" ? token : {
       ...token,
-      diacritics: new Set(
+      diacritics: sharedDiacritics(
         [...token.diacritics].filter((mark) =>
           preservesDiacritic(mark, options, format)
         ),

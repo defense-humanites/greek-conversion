@@ -25,6 +25,7 @@ import {
   prepareDiacriticsForRendering,
   preservesDiacritic,
 } from "./diacritics.ts";
+import { NO_DIACRITICS, sharedMask } from "./model.ts";
 import type { Diacritic, Document, Format, Grapheme } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
 import { greekUpper } from "./case.ts";
@@ -60,8 +61,32 @@ const marks = (token: Grapheme, options: ConversionOptions, format: Format) =>
       token.diacritics.has(mark) && preservesDiacritic(mark, options, format)
     );
 
+/**
+ * Memoizes, for one encoding call, a value derived only from a grapheme's
+ * marks. Shared diacritic sets are keyed by their mask; a caller's own set
+ * is computed each time.
+ *
+ * A cached value is shared by every token with the same marks, so it is
+ * frozen: copy it before adding to it (`[...marks, "diaeresis"]`), or the
+ * change would reach all those tokens. Values computed for a caller's set
+ * are frozen too, so both paths fail the same way.
+ */
+function byMarks<T>(
+  compute: (token: Grapheme) => T,
+): (token: Grapheme) => Readonly<T> {
+  const cache: (Readonly<T> | undefined)[] = [];
+  return (token) => {
+    const mask = sharedMask(token.diacritics);
+    if (mask === undefined) return Object.freeze(compute(token));
+    return cache[mask] ??= Object.freeze(compute(token));
+  };
+}
+
 export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
   let out = "";
+  const greekMarks = byMarks((token) =>
+    marks(token, options, "greek").map((mark) => GREEK_FOR[mark]).join("")
+  );
   const rendered = prepareDiacriticsForRendering(
     applyGreekOrthography(doc, options),
     options,
@@ -130,8 +155,7 @@ export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
     }
     if (token.uppercase) base = greekUpper(base);
 
-    out += base +
-      marks(token, options, "greek").map((mark) => GREEK_FOR[mark]).join("");
+    out += base + greekMarks(token);
   }
 
   return applyGreekUnicode(out, options);
@@ -142,6 +166,7 @@ export function encodeBetaCode(
   options: ConversionOptions = {},
 ) {
   const rendered = prepareDiacriticsForRendering(doc, options, "beta-code");
+  const betaMarks = byMarks((token) => marks(token, options, "beta-code"));
 
   return rendered.map((token, index) => {
     if (token.kind === "literal") {
@@ -169,7 +194,7 @@ export function encodeBetaCode(
       base = base.toLowerCase();
     }
 
-    const renderedMarks = marks(token, options, "beta-code");
+    const renderedMarks = betaMarks(token);
     if (!token.uppercase) {
       return base + renderedMarks.map((mark) => BETA_FOR[mark]).join("");
     }
@@ -192,6 +217,9 @@ export function encodeTransliteration(
     doc,
     options,
     "transliteration",
+  );
+  const latinMarks = byMarks((token) =>
+    marks(token, options, "transliteration")
   );
 
   return rendered.map((token, index) => {
@@ -290,7 +318,7 @@ export function encodeTransliteration(
     }
     // Latin `ē` and `ō` are eta and omega, so a quantity mark on epsilon or
     // omicron has no transliteration; convertDetailed() reports its removal.
-    const tokenMarks = marks(token, options, "transliteration").filter(
+    const tokenMarks = latinMarks(token).filter(
       (mark) =>
         !(mark === "macron" || mark === "breve") ||
         (token.letter !== "epsilon" && token.letter !== "omicron"),
@@ -497,7 +525,7 @@ function writesSeparationDiaeresis(
 
   // Without its hiatus mark the pair would be a diphthong rendered with u.
   const unmarked: Document = [
-    { ...first, diacritics: new Set<Diacritic>() },
+    { ...first, diacritics: NO_DIACRITICS },
     token,
   ];
   const wouldBeDiphthong = upsilon === "y-with-au-eu-ou"

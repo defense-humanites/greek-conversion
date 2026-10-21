@@ -7,6 +7,23 @@ change.
 
 ## [Unreleased]
 
+### Changed
+
+- `Grapheme.diacritics` is typed `ReadonlySet<Diacritic>` instead of
+  `Set<Diacritic>`. The sets built by the library are shared between the
+  graphemes that carry the same marks (at most 1,024 combinations), so parsing
+  no longer allocates one set per letter; their `add`, `delete`, and `clear`
+  throw a `TypeError`. Assign a new set to change a grapheme's marks. Any
+  `Set` is still accepted, and structural equality with one still holds.
+- Conversion is 1.1 to 2.6 times faster on texts of 10,000 to 1,000,000
+  characters (median of five runs), mostly through less garbage collection;
+  encoders also compute the rendered marks once per combination rather than
+  once per letter.
+- Losses reported for several marks of one grapheme follow the canonical mark
+  order instead of the order of the marks in the source spelling; losses
+  remain in source-token order. Output is otherwise unchanged (442,584
+  conversions and parses compared with `1.0.0-rc.1`).
+
 ### Fixed
 
 - Parsing transliteration with `orthography.eta: "i-macron"` (used by the

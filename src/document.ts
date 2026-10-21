@@ -7,13 +7,14 @@
  *
  * A document may be constructed manually, but {@link validateDocument} should
  * be used before encoding data that did not originate from {@link parse}.
- * `Document` has a readonly sequence but mutable tokens; copy the nested
- * diacritic sets when deriving independent versions of one parsed document.
+ * `Document` has a readonly sequence but mutable tokens; diacritic sets are
+ * shared and read-only, so assign a new set to change a grapheme's marks.
  *
  * @module
  */
 
 export { encode, parse } from "./conversion.ts";
+import { sharedDiacritics } from "./model.ts";
 import type { Document } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
 import { applyGreekOrthography as applyResolvedGreekOrthography } from "./orthography.ts";
@@ -38,7 +39,7 @@ export function applyGreekOrthography(
   return transformed.map((token) =>
     token.kind === "literal" ? { ...token } : {
       ...token,
-      diacritics: new Set(token.diacritics),
+      diacritics: sharedDiacritics(token.diacritics),
     }
   );
 }
