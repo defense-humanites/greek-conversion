@@ -7,6 +7,17 @@ change.
 
 ## [Unreleased]
 
+### Changed
+
+- The three readers work on UTF-16 code units instead of one string per
+  character, with lookup tables indexed by code unit and filled on first use;
+  marks are gathered in a bitmask everywhere. Reading is about 4 times as
+  fast for Greek, 3 times for Beta Code, and 2 times for transliteration on
+  100,000 characters, and conversions are 1.2 to 2.4 times as fast. Output is
+  unchanged (441,936 conversions and parses compared with `1.0.0-rc.3`, plus
+  150,000 parses of random strings: 10,000 per reader, transliteration under
+  13 option settings), as are the cost of short calls and the import time.
+
 ## [1.0.0-rc.3] - 2026-10-21
 
 Third release candidate for `1.0.0`. It fixes one conversion rule: Greek
