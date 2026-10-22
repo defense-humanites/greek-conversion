@@ -11,11 +11,11 @@ change.
 
 - The three readers work on UTF-16 code units instead of one string per
   character, with lookup tables indexed by code unit and filled on first use;
-  marks are gathered in a bitmask everywhere. On long texts, reading is 3 to
-  4 times as fast for Greek, about 3 times for Beta Code, and about 2 times
-  for transliteration, and conversions are 1.2 to 2.3 times as fast; reading
-  a short sentence is about twice as fast. The exact factors depend on the
-  machine. Output is unchanged (441,936 conversions and parses compared with
+  marks are gathered in a bitmask everywhere. On Thucydides, book I (10,000
+  and 100,000 characters), reading is about 3 times as fast for Greek, 2 to
+  2.5 times for Beta Code, and 1.7 to 2.6 times for transliteration, and
+  conversions are 1.15 to 1.8 times as fast; reading a short sentence is about
+  twice as fast. The exact factors depend on the machine. Output is unchanged (441,936 conversions and parses compared with
   `1.0.0-rc.3`, plus 150,000 parses of random strings: 10,000 per reader,
   transliteration under 13 option settings).
 
