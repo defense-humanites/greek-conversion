@@ -579,3 +579,8 @@ cite it; GitHub's "Cite this repository" button uses the metadata in
 Copyright © 2021–2026 Antoine Boquet. Released under the
 [MIT License](https://github.com/defense-humanites/greek-conversion/blob/main/LICENSE)
 since `1.0.0-beta.7`; earlier versions remain under AGPL-3.0-or-later.
+The benchmark input,
+[`bench/thucydides.ts`](https://github.com/defense-humanites/greek-conversion/blob/main/bench/thucydides.ts)
+(Thucydides 1.1–1.10, from the Perseus Digital Library), is under
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) and is not part
+of the published packages.
