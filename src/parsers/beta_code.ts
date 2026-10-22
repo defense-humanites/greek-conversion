@@ -15,7 +15,7 @@ import {
   type Token,
 } from "../model.ts";
 import { parsePunctuation } from "../punctuation.ts";
-import { codePointAt } from "./code_units.ts";
+import { codePointAt, codeUnitTable } from "./code_units.ts";
 
 /**
  * Like the Greek reader, this one works on UTF-16 code units. Every symbol
@@ -42,10 +42,11 @@ function classify(unit: number): number {
 }
 
 /** Marks are ASCII. */
-const MARK_BIT = new Uint16Array(0x80);
-for (const [mark, diacritic] of BETA_MARKS) {
-  MARK_BIT[mark.charCodeAt(0)] = diacriticBit(diacritic);
-}
+const MARK_BIT = codeUnitTable(
+  0,
+  0x80,
+  [...BETA_MARKS].map(([mark, diacritic]) => [mark, diacriticBit(diacritic)]),
+);
 
 const ASTERISK = 0x2a;
 const APOSTROPHE = 0x27;

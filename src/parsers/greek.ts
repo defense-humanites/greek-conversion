@@ -12,7 +12,7 @@ import {
   type Token,
 } from "../model.ts";
 import { parsePunctuation } from "../punctuation.ts";
-import { codePointAt } from "./code_units.ts";
+import { codePointAt, codeUnitTable } from "./code_units.ts";
 
 /**
  * The reader works on UTF-16 code units rather than on one string per
@@ -49,10 +49,11 @@ function classify(unit: number): number {
 
 /** Combining marks all lie in U+0300–U+036F. */
 const MARKS_START = 0x0300;
-const MARK_BIT = new Uint16Array(0x70);
-for (const [mark, diacritic] of GREEK_MARKS) {
-  MARK_BIT[mark.charCodeAt(0) - MARKS_START] = diacriticBit(diacritic);
-}
+const MARK_BIT = codeUnitTable(
+  MARKS_START,
+  0x70,
+  [...GREEK_MARKS].map(([mark, diacritic]) => [mark, diacriticBit(diacritic)]),
+);
 
 const markBit = (unit: number): number =>
   unit >= MARKS_START && unit < MARKS_START + 0x70

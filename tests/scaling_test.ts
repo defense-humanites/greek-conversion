@@ -17,8 +17,10 @@ import { parse } from "../src/document.ts";
  */
 const PASSAGE =
   "κίνησις γὰρ αὕτη δὴ μεγίστη τοῖς Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων, ὡς δὲ εἰπεῖν καὶ ἐπὶ πλεῖστον ἀνθρώπων. ἀυτμή ἄυλος ϛʹ Μπάλα ϲῶμα. ";
-const SMALL = PASSAGE.repeat(15);
-const LARGE = PASSAGE.repeat(120);
+// Large enough for the small input to take well over the 0.05 ms floor of
+// fastest() now that the readers run at under 0.05 ms per 1,000 characters.
+const SMALL = PASSAGE.repeat(60);
+const LARGE = PASSAGE.repeat(480);
 const MAX_RATIO = 25;
 
 function fastest(run: () => unknown): number {

@@ -10,3 +10,33 @@ export function codePointAt(text: string, index: number): string {
   }
   return text[index];
 }
+
+/**
+ * Builds a table of values indexed by code unit, for the units from `start`
+ * to `start + size - 1`.
+ *
+ * A key that is not one code unit in that range throws at load time: written
+ * into a typed array, it would otherwise land out of bounds and be ignored
+ * without a word, and the character would never be recognized.
+ */
+export function codeUnitTable(
+  start: number,
+  size: number,
+  entries: Iterable<readonly [string, number]>,
+): Uint16Array {
+  const table = new Uint16Array(size);
+  for (const [char, value] of entries) {
+    const index = char.charCodeAt(0) - start;
+    if (char.length !== 1 || index < 0 || index >= size) {
+      throw new RangeError(
+        `${JSON.stringify(char)} is outside the table U+${hex(start)}–U+${
+          hex(start + size - 1)
+        }`,
+      );
+    }
+    table[index] = value;
+  }
+  return table;
+}
+
+const hex = (unit: number) => unit.toString(16).toUpperCase().padStart(4, "0");

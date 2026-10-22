@@ -25,6 +25,7 @@ import {
 import type { ConversionOptions } from "../options.ts";
 import { parsePunctuation } from "../punctuation.ts";
 import { Trie } from "../trie.ts";
+import { codeUnitTable } from "./code_units.ts";
 
 const CANONICAL_ENTRIES = [
   ...Object.entries(ALPHABET)
@@ -47,15 +48,21 @@ const CANONICAL_ENTRIES = [
 const TRIE = new Trie<Letter>(CANONICAL_ENTRIES);
 
 /**
- * `toLowerCase()` of each one-unit character, memoized: the reader compares
- * the lowercase form of every character several times. A character outside
- * the BMP is lowercased directly.
+ * `toLowerCase()` of each one-unit character below U+0400, memoized: the
+ * reader compares the lowercase form of every character several times, and
+ * transliteration lives in that range (Latin, combining marks). Other
+ * characters are lowercased directly. The memo is preallocated and bounded:
+ * an empty array indexed by a high code unit would switch to slow dictionary
+ * elements for the rest of the process.
  */
-const LOWER: string[] = [];
-const lowercase = (char: string): string =>
-  char.length === 1
-    ? LOWER[char.charCodeAt(0)] ??= char.toLowerCase()
+const LOWER_END = 0x400;
+const LOWER: (string | undefined)[] = new Array(LOWER_END).fill(undefined);
+function lowercase(char: string): string {
+  const unit = char.charCodeAt(0);
+  return char.length === 1 && unit < LOWER_END
+    ? LOWER[unit] ??= char.toLowerCase()
     : char.toLowerCase();
+}
 
 /**
  * Bit of each combining mark the reader accepts, by code unit. They all lie
@@ -63,13 +70,14 @@ const lowercase = (char: string): string =>
  * cedilla as an iota subscript.
  */
 const MARKS_START = 0x0300;
-const MARK_BIT = new Uint16Array(0x70);
-for (const [mark, diacritic] of GREEK_MARKS) {
-  MARK_BIT[mark.charCodeAt(0) - MARKS_START] = diacriticBit(diacritic);
-}
-MARK_BIT[0x0303 - MARKS_START] = diacriticBit("circumflex");
-MARK_BIT[0x0342 - MARKS_START] = diacriticBit("circumflex");
-MARK_BIT[0x0327 - MARKS_START] = diacriticBit("iota-subscript");
+const MARK_BIT = codeUnitTable(MARKS_START, 0x70, [
+  ...[...GREEK_MARKS].map(([mark, diacritic]) =>
+    [mark, diacriticBit(diacritic)] as const
+  ),
+  ["\u0303", diacriticBit("circumflex")],
+  ["\u0342", diacriticBit("circumflex")],
+  ["\u0327", diacriticBit("iota-subscript")],
+]);
 
 function markBit(char: string): number {
   if (char.length !== 1) return 0;
@@ -92,7 +100,12 @@ export function parseTransliteration(
     options,
   );
   // Lowercased once, after prioritizeEtaMacron() has reordered the marks.
-  const lowered = chars.map(lowercase);
+  // Built with a loop rather than `chars.map()`: once this function is
+  // optimized, V8's inlined `map` returns arrays of a different elements kind
+  // from the builtin's, and the reads of `lowered` below then deoptimize the
+  // whole function every few hundred calls.
+  const lowered: string[] = [];
+  for (let k = 0; k < chars.length; k++) lowered.push(lowercase(chars[k]));
   const out: Token[] = [];
   const trie = transliterationTrie(options);
   const contextualY = new Set<number>();
