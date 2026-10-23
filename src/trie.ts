@@ -28,25 +28,31 @@ export class Trie<T> {
 
     node.value = value;
   }
+  /**
+   * Returns the longest key that starts at `start`, reading `lowered`, the
+   * input's characters already lowercased.
+   */
   longest(
-    input: readonly string[],
+    lowered: readonly string[],
     start: number,
   ): { value: T; length: number } | undefined {
     let node = this.#root;
-    let result;
+    let value: T | undefined;
+    let length = 0;
 
-    for (let i = start; i < input.length; i++) {
-      const child = node.children.get(input[i].toLowerCase());
+    for (let i = start; i < lowered.length; i++) {
+      const child = node.children.get(lowered[i]);
 
       if (!child) break;
 
       node = child;
 
       if (node.value !== undefined) {
-        result = { value: node.value, length: i - start + 1 };
+        value = node.value;
+        length = i - start + 1;
       }
     }
 
-    return result;
+    return value === undefined ? undefined : { value, length };
   }
 }

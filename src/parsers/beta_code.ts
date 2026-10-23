@@ -1,50 +1,88 @@
-import { BETA_MARKS, BY_BETA } from "../alphabet.ts";
+import { ALPHABET, BETA_MARKS, BY_BETA } from "../alphabet.ts";
 import {
   ARISTERI_KERAIA,
   classifyCoronides,
   DEXIA_KERAIA,
 } from "../context.ts";
 import {
-  type Diacritic,
+  diacriticBit,
+  diacriticsFromMask,
   type Document,
   grapheme,
+  type Letter,
   literal,
   ownedGrapheme,
-  sharedDiacritics,
   type Token,
 } from "../model.ts";
 import { parsePunctuation } from "../punctuation.ts";
+import { codePointAt, codeUnitTable } from "./code_units.ts";
 
+/**
+ * Like the Greek reader, this one works on UTF-16 code units. Every symbol
+ * Beta Code gives a meaning to (asterisk, letters, marks, `#` codes,
+ * punctuation) is a single BMP code unit, so code-unit indices make the same
+ * comparisons as the code-point indices of `Array.from()`; only a character
+ * outside the BMP needs two units, and it is always a literal.
+ */
+const LETTERS = Object.keys(ALPHABET) as Letter[];
+const LETTER_INDEX = new Map(LETTERS.map((letter, index) => [letter, index]));
 const QUANTITY_LETTERS = new Set(["alpha", "iota", "upsilon"]);
+const ACCEPTS_BREVE = LETTERS.map((letter) => QUANTITY_LETTERS.has(letter));
+
+const UNSEEN = -2;
+const NOT_A_LETTER = -1;
+/** Letter index of each code unit, or NOT_A_LETTER; UNSEEN until classified. */
+const LETTER_OF = new Int8Array(0x10000).fill(UNSEEN);
+
+function classify(unit: number): number {
+  const letter = BY_BETA.get(String.fromCharCode(unit).toLowerCase());
+  return LETTER_OF[unit] = letter === undefined
+    ? NOT_A_LETTER
+    : LETTER_INDEX.get(letter)!;
+}
+
+/** Marks are ASCII. */
+const MARK_BIT = codeUnitTable(
+  0,
+  0x80,
+  [...BETA_MARKS].map(([mark, diacritic]) => [mark, diacriticBit(diacritic)]),
+);
+
+const ASTERISK = 0x2a;
+const APOSTROPHE = 0x27;
+const HASH = 0x23;
 
 export function parseBetaCode(input: string): Document {
-  const chars = Array.from(input);
+  const text = input;
   const out: Token[] = [];
-  // Reused for every grapheme; sharedDiacritics() returns the shared copy.
-  const marks = new Set<Diacritic>();
 
-  for (let i = 0; i < chars.length;) {
+  for (let i = 0; i < text.length;) {
     const start = i;
     let upper = false;
 
-    if (chars[i] === "*" && i + 1 < chars.length) {
+    if (text.charCodeAt(i) === ASTERISK && i + 1 < text.length) {
       upper = true;
       i++;
     }
 
-    marks.clear();
-    if (upper) i = consumeMarks(chars, i, marks, true);
+    let marks = 0;
+    if (upper) [i, marks] = consumeMarks(text, i, true);
 
-    if (chars[i]?.toLowerCase() === "s" && chars[i + 1] === "3") {
+    if (text[i]?.toLowerCase() === "s" && text[i + 1] === "3") {
       out.push(
-        ownedGrapheme("sigma", upper, sharedDiacritics(marks), "lunate-sigma"),
+        ownedGrapheme(
+          "sigma",
+          upper,
+          diacriticsFromMask(marks),
+          "lunate-sigma",
+        ),
       );
       i += 2;
       continue;
     }
 
-    const punctuation = !upper
-      ? parsePunctuation(chars[i], "beta-code")
+    const punctuation = !upper && i < text.length
+      ? parsePunctuation(codePointAt(text, i), "beta-code")
       : undefined;
     if (punctuation) {
       out.push(literal(punctuation));
@@ -52,15 +90,15 @@ export function parseBetaCode(input: string): Document {
       continue;
     }
 
-    const additional = additionalCharacter(chars, i);
-    if (additional && marks.size === 0) {
+    const additional = additionalCharacter(text, i);
+    if (additional && marks === 0) {
       out.push(grapheme(additional.letter, upper));
       i += additional.length;
       continue;
     }
 
-    if (chars[i] === "#" && !upper) {
-      if (chars[i + 1] === "2" && chars[i + 2] === "2") {
+    if (text.charCodeAt(i) === HASH && !upper) {
+      if (text[i + 1] === "2" && text[i + 2] === "2") {
         out.push(literal(ARISTERI_KERAIA));
         i += 3;
       } else {
@@ -70,20 +108,27 @@ export function parseBetaCode(input: string): Document {
       continue;
     }
 
-    const source = chars[i];
-    const letter = source && BY_BETA.get(source.toLowerCase());
+    if (i >= text.length) {
+      if (upper) out.push(literal(text.slice(start, i)));
+      break;
+    }
 
-    if (!letter) {
-      if (upper) out.push(literal(chars.slice(start, i).join("")));
-      if (source) out.push(literal(source));
-      i++;
+    const unit = text.charCodeAt(i);
+    let letter = LETTER_OF[unit];
+    if (letter === UNSEEN) letter = classify(unit);
+
+    if (letter === NOT_A_LETTER) {
+      const source = codePointAt(text, i);
+      if (upper) out.push(literal(text.slice(start, i)));
+      out.push(literal(source));
+      i += source.length;
       continue;
     }
 
     i++;
-    i = consumeMarks(chars, i, marks, QUANTITY_LETTERS.has(letter));
+    [i, marks] = consumeMarks(text, i, ACCEPTS_BREVE[letter], marks);
 
-    out.push(ownedGrapheme(letter, upper, sharedDiacritics(marks)));
+    out.push(ownedGrapheme(LETTERS[letter], upper, diacriticsFromMask(marks)));
   }
 
   classifyCoronides(out);
@@ -92,43 +137,44 @@ export function parseBetaCode(input: string): Document {
 }
 
 function consumeMarks(
-  chars: readonly string[],
+  text: string,
   start: number,
-  marks: Set<Diacritic>,
   acceptsBreve: boolean,
-): number {
+  marks = 0,
+): [number, number] {
   let index = start;
-  while (index < chars.length) {
-    if (chars[index] === "'" && !acceptsBreve) break;
-    const mark = BETA_MARKS.get(chars[index]);
-    if (!mark) break;
-    marks.add(mark);
+  while (index < text.length) {
+    const unit = text.charCodeAt(index);
+    if (unit === APOSTROPHE && !acceptsBreve) break;
+    const bit = unit < 0x80 ? MARK_BIT[unit] : 0;
+    if (bit === 0) break;
+    marks |= bit;
     index++;
   }
-  return index;
+  return [index, marks];
 }
 
 function additionalCharacter(
-  chars: readonly string[],
+  text: string,
   start: number,
 ):
   | { letter: "stigma" | "koppa" | "archaic-koppa" | "sampi"; length: 2 }
   | { letter: "yot"; length: 4 }
   | undefined {
-  if (chars[start] !== "#") return undefined;
+  if (text.charCodeAt(start) !== HASH) return undefined;
 
   if (
-    chars[start + 1] === "4" && chars[start + 2] === "0" &&
-    chars[start + 3] === "1"
+    text[start + 1] === "4" && text[start + 2] === "0" &&
+    text[start + 3] === "1"
   ) {
     return { letter: "yot", length: 4 };
   }
 
-  switch (chars[start + 1]) {
+  switch (text[start + 1]) {
     case "1":
       return { letter: "koppa", length: 2 };
     case "2":
-      if (chars[start + 2] === "2") return undefined;
+      if (text[start + 2] === "2") return undefined;
       return { letter: "stigma", length: 2 };
     case "3":
       return { letter: "archaic-koppa", length: 2 };
