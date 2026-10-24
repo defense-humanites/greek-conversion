@@ -9,7 +9,10 @@ import {
   type Document,
   type Format,
 } from "./model.ts";
-import type { ConversionOptions } from "./options.ts";
+import type {
+  ConversionOptions,
+  ResolvedConversionOptions,
+} from "./options.ts";
 import { applyNumeralOrthography, applyOrthography } from "./orthography.ts";
 import { parseBetaCode } from "./parsers/beta_code.ts";
 import { parseGreek } from "./parsers/greek.ts";
@@ -33,14 +36,30 @@ export function parse(
 ): Document {
   assertTextInput(input);
   assertFormat(format);
-  const resolved = resolveConversionOptions(options);
+  return parseResolved(input, format, resolveConversionOptions(options));
+}
+
+/**
+ * {@link parse} for options that `resolveConversionOptions()` already returned
+ * in this call, with input and format already checked. Library functions that
+ * parse and encode with the same options use it so that the resolved object,
+ * with its forty-odd fields, is not validated and copied again at each step:
+ * that re-resolution was about three quarters of a short conversion.
+ *
+ * Internal: not exported by the package entry points.
+ */
+export function parseResolved(
+  input: string,
+  format: Format,
+  options: ResolvedConversionOptions,
+): Document {
   switch (format) {
     case "greek":
       return parseGreek(input);
     case "beta-code":
       return parseBetaCode(input);
     case "transliteration":
-      return parseTransliteration(input, resolved);
+      return parseTransliteration(input, options);
   }
 }
 
@@ -59,17 +78,31 @@ export function encode(
   options: ConversionOptions = {},
 ): string {
   assertFormat(format);
-  const resolved = resolveConversionOptions(options);
+  return encodeResolved(document, format, resolveConversionOptions(options));
+}
+
+/**
+ * {@link encode} for options that `resolveConversionOptions()` already
+ * returned in this call, with the format already checked; see
+ * {@link parseResolved}.
+ *
+ * Internal: not exported by the package entry points.
+ */
+export function encodeResolved(
+  document: Document,
+  format: Format,
+  options: ResolvedConversionOptions,
+): string {
   const prepared = format === "transliteration"
-    ? applyNumeralOrthography(document, resolved)
-    : applyOrthography(document, resolved);
+    ? applyNumeralOrthography(document, options)
+    : applyOrthography(document, options);
 
   switch (format) {
     case "greek":
-      return encodeGreek(prepared, resolved);
+      return encodeGreek(prepared, options);
     case "beta-code":
-      return encodeBetaCode(prepared, resolved);
+      return encodeBetaCode(prepared, options);
     case "transliteration":
-      return encodeTransliteration(prepared, resolved);
+      return encodeTransliteration(prepared, options);
   }
 }

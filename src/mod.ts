@@ -9,7 +9,7 @@
  * @module
  */
 
-import { encode, parse } from "./conversion.ts";
+import { encode, encodeResolved, parse, parseResolved } from "./conversion.ts";
 export {
   CharacterScopeError,
   Converter,
@@ -33,7 +33,11 @@ import {
   type Document,
   type Format,
 } from "./model.ts";
-import type { ConversionOptions, GreekUnicodeOptions } from "./options.ts";
+import type {
+  ConversionOptions,
+  GreekUnicodeOptions,
+  ResolvedConversionOptions,
+} from "./options.ts";
 import { resolveConversionOptions } from "./presets.ts";
 
 export { FORMATS } from "./model.ts";
@@ -138,8 +142,10 @@ export function removeDiacritics(
   options: ConversionOptions = {},
 ): string {
   const resolved = resolveConversionOptions(options);
-  return encode(
-    parse(input, format, resolved),
+  assertTextInput(input);
+  assertFormat(format);
+  return encodeResolved(
+    parseResolved(input, format, resolved),
     format,
     resolveConversionOptions({ ...options, removeDiacritics: true }),
   );
@@ -166,7 +172,8 @@ export function foldGreekVariants(
   options: ConversionOptions = {},
 ): string {
   const resolved = resolveConversionOptions(options);
-  return encode(parse(input, "greek", resolved), "greek", {
+  assertTextInput(input);
+  return encodeResolved(parseResolved(input, "greek", resolved), "greek", {
     ...resolved,
     orthography: {
       ...resolved.orthography,
@@ -252,8 +259,8 @@ export function convertDetailed(
   to: Format,
   options: ConversionOptions = {},
 ): ConversionResult {
-  const { source, output } = runConversion(input, from, to, options);
-  const target = parse(output, to, options);
+  const { source, output, resolved } = runConversion(input, from, to, options);
+  const target = parseResolved(output, to, resolved);
   const losses = findConversionLosses(source, target);
 
   return { output, lossy: losses.length > 0, losses };
@@ -264,13 +271,13 @@ function runConversion(
   from: Format,
   to: Format,
   options: ConversionOptions,
-): { source: Document; output: string } {
+): { source: Document; output: string; resolved: ResolvedConversionOptions } {
   assertTextInput(input);
   assertFormat(from);
   assertFormat(to);
   const resolved = resolveConversionOptions(options);
-  const source = parse(input, from, resolved);
-  return { source, output: encode(source, to, resolved) };
+  const source = parseResolved(input, from, resolved);
+  return { source, output: encodeResolved(source, to, resolved), resolved };
 }
 
 /** Converts Greek text to canonical Beta Code. */
