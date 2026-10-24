@@ -28,10 +28,24 @@ Deno.test("the Greek reader classifies every BMP code unit as greekLower does", 
     const actual = token.kind === "grapheme" ? token.letter : undefined;
     if (actual !== expected) {
       mismatches.push(`${hex(unit)}: ${actual} instead of ${expected}`);
-    } else if (
-      token.kind === "grapheme" && token.uppercase !== (char !== lower)
-    ) {
-      mismatches.push(`${hex(unit)}: wrong case`);
+    } else if (token.kind === "grapheme") {
+      const variant = lower === "ϲ"
+        ? "lunate-sigma"
+        : lower === "ς"
+        ? "final-sigma"
+        : lower === "σ"
+        ? "medial-sigma"
+        : undefined;
+      if (token.uppercase !== (char !== lower)) {
+        mismatches.push(`${hex(unit)}: wrong case`);
+      }
+      if (token.glyphVariant !== variant) {
+        mismatches.push(
+          `${
+            hex(unit)
+          }: glyph variant ${token.glyphVariant} instead of ${variant}`,
+        );
+      }
     }
   }
   assertEquals(mismatches, []);
