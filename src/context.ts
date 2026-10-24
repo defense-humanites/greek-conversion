@@ -1,4 +1,9 @@
-import { withDiacritic, withoutDiacritic } from "./model.ts";
+import {
+  diacriticBit,
+  sharedMask,
+  withDiacritic,
+  withoutDiacritic,
+} from "./model.ts";
 import type { Diacritic, Document, Grapheme, Letter, Token } from "./model.ts";
 import { APOSTROPHE } from "./punctuation.ts";
 
@@ -30,6 +35,19 @@ const DIPHTHONGS = new Set([
   "upsilon-iota",
   "omega-upsilon",
 ]);
+
+/**
+ * The second letters that make a diphthong with each first letter, from
+ * DIPHTHONGS: looking a pair up this way builds no string per call.
+ */
+const DIPHTHONG_SECONDS = new Map<string, ReadonlySet<string>>();
+for (const pair of DIPHTHONGS) {
+  const [first, second] = pair.split("-");
+  DIPHTHONG_SECONDS.set(
+    first,
+    new Set([...DIPHTHONG_SECONDS.get(first) ?? [], second]),
+  );
+}
 
 const ELISION_MARKS = new Set(["'", "\u02BC", "\u1FBD", APOSTROPHE]);
 
@@ -102,6 +120,10 @@ const HIATUS_MARKS: readonly Diacritic[] = [
   "grave",
   "circumflex",
 ];
+const HIATUS_MASK = HIATUS_MARKS.reduce(
+  (mask, mark) => mask | diacriticBit(mark),
+  0,
+);
 
 /**
  * Whether a vowel carries a mark that excludes a following diphthong.
@@ -113,7 +135,10 @@ const HIATUS_MARKS: readonly Diacritic[] = [
  * treating it as a misplaced mark.
  */
 export function hasHiatusMark(token: Grapheme): boolean {
-  return HIATUS_MARKS.some((mark) => token.diacritics.has(mark));
+  const mask = sharedMask(token.diacritics);
+  return mask === undefined
+    ? HIATUS_MARKS.some((mark) => token.diacritics.has(mark))
+    : (mask & HIATUS_MASK) !== 0;
 }
 
 export function isDiphthongAt(document: Document, start: number): boolean {
@@ -122,7 +147,7 @@ export function isDiphthongAt(document: Document, start: number): boolean {
 
   return first?.kind === "grapheme" &&
     second?.kind === "grapheme" &&
-    DIPHTHONGS.has(`${first.letter}-${second.letter}`) &&
+    DIPHTHONG_SECONDS.get(first.letter)?.has(second.letter) === true &&
     !first.diacritics.has("iota-subscript") &&
     !hasHiatusMark(first) &&
     !second.diacritics.has("diaeresis");
@@ -240,8 +265,13 @@ function isWhitespace(token: Token | undefined): boolean {
 /** Marks and explicit join controls do not interrupt an orthographic word. */
 /** Whether a literal is a combining mark or word-join control inside a word. */
 export function isBoundaryTransparent(token: Token | undefined): boolean {
-  return token?.kind === "literal" &&
-    (/^\p{M}$/u.test(token.value) || WORD_JOIN_CONTROLS.has(token.value));
+  if (token?.kind !== "literal") return false;
+  // Most literals are spaces and punctuation: no combining mark or join
+  // control lies below U+0300, so a one-unit literal there needs no regex.
+  if (token.value.length === 1 && token.value.charCodeAt(0) < 0x0300) {
+    return false;
+  }
+  return /^\p{M}$/u.test(token.value) || WORD_JOIN_CONTROLS.has(token.value);
 }
 
 /**

@@ -7,6 +7,18 @@ change.
 
 ## [Unreleased]
 
+### Changed
+
+- The transliteration encoder writes the marks of a letter once per
+  combination of marks instead of building them at every letter, finds
+  diphthongs without building a string per pair, and reads which marks the
+  options remove as a mask. Encoding to transliteration is about twice as
+  fast, and Greek → transliteration 1.5 to 1.65 times as fast, on
+  Thucydides, book I (10,000 and 100,000 characters); other paths gain up to
+  20 %. Output is unchanged (441,936 conversions and parses compared with
+  `1.0.0-rc.3`, plus 414,000 encodings of random texts under 23 option
+  settings, half of them with caller-built diacritic sets).
+
 ## [1.0.0-rc.3] - 2026-10-21
 
 Third release candidate for `1.0.0`. It fixes one conversion rule: Greek
