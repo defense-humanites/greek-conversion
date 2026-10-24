@@ -29,17 +29,27 @@ const LETTER_INDEX = new Map(LETTERS.map((letter, index) => [letter, index]));
 const QUANTITY_LETTERS = new Set(["alpha", "iota", "upsilon"]);
 const ACCEPTS_BREVE = LETTERS.map((letter) => QUANTITY_LETTERS.has(letter));
 
-const UNSEEN = -2;
 const NOT_A_LETTER = -1;
-/** Letter index of each code unit, or NOT_A_LETTER; UNSEEN until classified. */
-const LETTER_OF = new Int8Array(0x10000).fill(UNSEEN);
 
 function classify(unit: number): number {
   const letter = BY_BETA.get(String.fromCharCode(unit).toLowerCase());
-  return LETTER_OF[unit] = letter === undefined
-    ? NOT_A_LETTER
-    : LETTER_INDEX.get(letter)!;
+  return letter === undefined ? NOT_A_LETTER : LETTER_INDEX.get(letter)!;
 }
+
+/**
+ * Letter index of each ASCII unit, or NOT_A_LETTER. Beta Code letters are
+ * ASCII, but the reader does not normalize its input and `toLowerCase()`
+ * maps one other BMP unit to a letter, the Kelvin sign U+212A (`k`, kappa):
+ * units above ASCII, rare in Beta Code, are classified on the fly.
+ * tests/reader_tables_test.ts checks every BMP unit.
+ */
+const ASCII_LETTER_OF = Int8Array.from(
+  { length: 0x80 },
+  (_, unit) => classify(unit),
+);
+
+const letterOf = (unit: number): number =>
+  unit < 0x80 ? ASCII_LETTER_OF[unit] : classify(unit);
 
 /** Marks are ASCII. */
 const MARK_BIT = codeUnitTable(
@@ -114,8 +124,7 @@ export function parseBetaCode(input: string): Document {
     }
 
     const unit = text.charCodeAt(i);
-    let letter = LETTER_OF[unit];
-    if (letter === UNSEEN) letter = classify(unit);
+    const letter = letterOf(unit);
 
     if (letter === NOT_A_LETTER) {
       const source = codePointAt(text, i);
