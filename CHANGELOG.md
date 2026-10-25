@@ -42,6 +42,17 @@ change.
   errors are unchanged (1,442,718 comparisons with `1.0.0-rc.3`, invalid
   inputs and options included).
 
+- Conversions read Greek and Beta Code into tokens shared by every occurrence
+  of the same grapheme or literal, instead of one new object per letter, and
+  the preparation of diacritics copies a token only when an option removes one
+  of its marks, once per distinct token. `parse()` still returns tokens of its
+  own, which callers may modify. A conversion allocates about 40 % less
+  memory; on Thucydides, book I (100,000 characters), conversions from Greek
+  are 7 to 8 % faster with the default options and 23 to 48 % faster with
+  `ala-lc-ancient`, and short conversions do not change. Outputs and errors
+  are unchanged (1,457,622 comparisons with `1.0.0-rc.3`, and 840,000
+  conversions of random texts).
+
 ## [1.0.0-rc.3] - 2026-10-21
 
 Third release candidate for `1.0.0`. It fixes one conversion rule: Greek

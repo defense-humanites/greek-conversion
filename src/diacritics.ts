@@ -122,10 +122,18 @@ export function prepareDiacriticsForRendering(
 
   if (!removesAnyMark) return document;
 
+  // A token that loses nothing is kept as it is, and a token that loses marks
+  // is copied once per call: documents read for the library share their
+  // tokens, so a long text has a few hundred copies to make, not one per
+  // letter. The rendered document is only read by the encoders.
+  const copies = new Map<Token, Token>();
   const rendered: Token[] = document.map((token) => {
     if (token.kind === "literal") return token;
     const mask = sharedMask(token.diacritics);
-    return {
+    if (mask !== undefined && (mask & removed) === 0) return token;
+    const known = copies.get(token);
+    if (known !== undefined) return known;
+    const copy: Token = {
       ...token,
       diacritics: mask !== undefined
         ? diacriticsFromMask(mask & ~removed)
@@ -135,6 +143,8 @@ export function prepareDiacriticsForRendering(
           ),
         ),
     };
+    copies.set(token, copy);
+    return copy;
   });
 
   return rendered;

@@ -1,18 +1,22 @@
-import { ALPHABET, BY_GREEK, GREEK_MARKS } from "../alphabet.ts";
+import { BY_GREEK, GREEK_MARKS } from "../alphabet.ts";
 import { greekLower } from "../case.ts";
 import { classifyCoronides } from "../context.ts";
 import {
   diacriticBit,
   diacriticsFromMask,
   type Document,
-  type GlyphVariant,
-  type Letter,
   literal,
   ownedGrapheme,
   type Token,
 } from "../model.ts";
 import { parsePunctuation } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
+import {
+  LETTERS,
+  sharedGrapheme,
+  sharedLiteral,
+  VARIANTS,
+} from "./shared_tokens.ts";
 
 /**
  * The reader works on UTF-16 code units rather than on one string per
@@ -21,14 +25,7 @@ import { codePointAt, codeUnitTable } from "./code_units.ts";
  * time, with the same functions as before (`greekLower`, `BY_GREEK`), and the
  * answers are kept in small typed arrays.
  */
-const LETTERS = Object.keys(ALPHABET) as Letter[];
 const LETTER_INDEX = new Map(LETTERS.map((letter, index) => [letter, index]));
-const VARIANTS: readonly (GlyphVariant | undefined)[] = [
-  undefined,
-  "lunate-sigma",
-  "final-sigma",
-  "medial-sigma",
-];
 
 const NOT_A_LETTER = -1;
 
@@ -73,7 +70,11 @@ const markBit = (unit: number): number =>
     ? MARK_BIT[unit - MARKS_START]
     : 0;
 
-export function parseGreek(input: string): Document {
+/**
+ * Reads Greek. With `share`, equal tokens are one shared object (see
+ * `shared_tokens.ts`): only for documents that never reach the caller.
+ */
+export function parseGreek(input: string, share = false): Document {
   const text = input.normalize("NFD");
   const out: Token[] = [];
 
@@ -83,7 +84,8 @@ export function parseGreek(input: string): Document {
 
     if (letter === NOT_A_LETTER) {
       const source = codePointAt(text, i);
-      out.push(literal(parsePunctuation(source, "greek") ?? source));
+      const value = parsePunctuation(source, "greek") ?? source;
+      out.push(share ? sharedLiteral(value) : literal(value));
       i += source.length;
       continue;
     }
@@ -100,12 +102,14 @@ export function parseGreek(input: string): Document {
     }
 
     const flags = FLAGS_OF[unit - LETTERS_START];
-    out.push(ownedGrapheme(
-      LETTERS[letter],
-      (flags & 1) === 1,
-      diacriticsFromMask(marks),
-      VARIANTS[flags >> 1],
-    ));
+    out.push(
+      share ? sharedGrapheme(letter, flags, marks) : ownedGrapheme(
+        LETTERS[letter],
+        (flags & 1) === 1,
+        diacriticsFromMask(marks),
+        VARIANTS[flags >> 1],
+      ),
+    );
   }
 
   classifyCoronides(out);

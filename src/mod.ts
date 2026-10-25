@@ -145,7 +145,7 @@ export function removeDiacritics(
   assertTextInput(input);
   assertFormat(format);
   return encodeResolved(
-    parseResolved(input, format, resolved),
+    parseResolved(input, format, resolved, true),
     format,
     resolveConversionOptions({ ...options, removeDiacritics: true }),
   );
@@ -173,15 +173,19 @@ export function foldGreekVariants(
 ): string {
   const resolved = resolveConversionOptions(options);
   assertTextInput(input);
-  return encodeResolved(parseResolved(input, "greek", resolved), "greek", {
-    ...resolved,
-    orthography: {
-      ...resolved.orthography,
-      medialBeta: "standard",
-      sigma: "standard",
-      finalSigma: "medial",
+  return encodeResolved(
+    parseResolved(input, "greek", resolved, true),
+    "greek",
+    {
+      ...resolved,
+      orthography: {
+        ...resolved.orthography,
+        medialBeta: "standard",
+        sigma: "standard",
+        finalSigma: "medial",
+      },
     },
-  });
+  );
 }
 
 /**
@@ -260,7 +264,7 @@ export function convertDetailed(
   options: ConversionOptions = {},
 ): ConversionResult {
   const { source, output, resolved } = runConversion(input, from, to, options);
-  const target = parseResolved(output, to, resolved);
+  const target = parseResolved(output, to, resolved, true);
   const losses = findConversionLosses(source, target);
 
   return { output, lossy: losses.length > 0, losses };
@@ -276,7 +280,7 @@ function runConversion(
   assertFormat(from);
   assertFormat(to);
   const resolved = resolveConversionOptions(options);
-  const source = parseResolved(input, from, resolved);
+  const source = parseResolved(input, from, resolved, true);
   return { source, output: encodeResolved(source, to, resolved), resolved };
 }
 
