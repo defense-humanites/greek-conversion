@@ -1,4 +1,11 @@
-import { NO_DIACRITICS, sharedDiacritics } from "./model.ts";
+import {
+  diacriticBit,
+  diacriticsFromMask,
+  NO_DIACRITICS,
+  ORDER,
+  sharedDiacritics,
+  sharedMask,
+} from "./model.ts";
 import type { Diacritic, Document, Format, Token } from "./model.ts";
 import type { ConversionOptions, DiacriticDisposition } from "./options.ts";
 
@@ -92,8 +99,21 @@ export function prepareDiacriticsForRendering(
   options: ConversionOptions,
   format: Format,
 ): Document {
+  // The marks this format and these options remove, as a mask: a shared set
+  // is tested and filtered with one operation. A caller's own set has no
+  // mask and is checked mark by mark, as before.
+  const removed = ORDER.reduce(
+    (mask, mark) =>
+      preservesDiacritic(mark, options, format)
+        ? mask
+        : mask | diacriticBit(mark),
+    0,
+  );
+
   const removesAnyMark = document.some((token) => {
     if (token.kind !== "grapheme") return false;
+    const mask = sharedMask(token.diacritics);
+    if (mask !== undefined) return (mask & removed) !== 0;
     for (const mark of token.diacritics) {
       if (!preservesDiacritic(mark, options, format)) return true;
     }
@@ -102,16 +122,20 @@ export function prepareDiacriticsForRendering(
 
   if (!removesAnyMark) return document;
 
-  const rendered: Token[] = document.map((token) =>
-    token.kind === "literal" ? token : {
+  const rendered: Token[] = document.map((token) => {
+    if (token.kind === "literal") return token;
+    const mask = sharedMask(token.diacritics);
+    return {
       ...token,
-      diacritics: sharedDiacritics(
-        [...token.diacritics].filter((mark) =>
-          preservesDiacritic(mark, options, format)
+      diacritics: mask !== undefined
+        ? diacriticsFromMask(mask & ~removed)
+        : sharedDiacritics(
+          [...token.diacritics].filter((mark) =>
+            preservesDiacritic(mark, options, format)
+          ),
         ),
-      ),
-    }
-  );
+    };
+  });
 
   return rendered;
 }

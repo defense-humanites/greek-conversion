@@ -217,6 +217,58 @@ export function encodeTransliteration(
   const latinMarks = byMarks((token) =>
     marks(token, options, "transliteration")
   );
+  const preservesDiaeresis = preservesDiacritic(
+    "diaeresis",
+    options,
+    "transliteration",
+  );
+  // Constant for the whole call: computed once, not at every token.
+  const preservesRough = preservesDiacritic(
+    "rough",
+    options,
+    "transliteration",
+  );
+  const preservesSmooth = preservesDiacritic(
+    "smooth",
+    options,
+    "transliteration",
+  );
+  // The written marks of a token depend only on its marks, on whether it is
+  // epsilon or omicron, and on a separation diaeresis: memoized per call on
+  // those three for shared sets, as byMarks() does.
+  const markStrings: (string | undefined)[] = [];
+  const markString = (token: Grapheme, separation: boolean): string => {
+    const shortVowel = token.letter === "epsilon" ||
+      token.letter === "omicron";
+    const mask = sharedMask(token.diacritics);
+    if (mask === undefined) {
+      return writeLatinMarks(token, shortVowel, separation);
+    }
+    const key = mask << 2 | (shortVowel ? 2 : 0) | (separation ? 1 : 0);
+    return markStrings[key] ??= writeLatinMarks(token, shortVowel, separation);
+  };
+  const writeLatinMarks = (
+    token: Grapheme,
+    shortVowel: boolean,
+    separation: boolean,
+  ): string => {
+    // Latin `ē` and `ō` are eta and omega, so a quantity mark on epsilon or
+    // omicron has no transliteration; convertDetailed() reports its removal.
+    const tokenMarks = latinMarks(token).filter(
+      (mark) => !(mark === "macron" || mark === "breve") || !shortVowel,
+    );
+    if (separation && !tokenMarks.includes("diaeresis")) {
+      tokenMarks.push("diaeresis");
+    }
+    const transliteratedMarks = tokenMarks
+      .filter((mark) => mark !== "coronis")
+      .map((mark) => trMark(mark, options))
+      .join("");
+    const coronis = tokenMarks.includes("coronis")
+      ? trMark("coronis", options)
+      : "";
+    return transliteratedMarks + coronis;
+  };
 
   return rendered.map((token, index) => {
     if (token.kind === "literal") {
@@ -252,12 +304,10 @@ export function encodeTransliteration(
     const breathingToken = breathingIndex === undefined
       ? undefined
       : rendered[breathingIndex];
-    const initialRough =
-      preservesDiacritic("rough", options, "transliteration") &&
+    const initialRough = preservesRough &&
       breathingToken?.kind === "grapheme" &&
       breathingToken.diacritics.has("rough");
-    const initialSmooth =
-      preservesDiacritic("smooth", options, "transliteration") &&
+    const initialSmooth = preservesSmooth &&
       breathingToken?.kind === "grapheme" &&
       breathingToken.diacritics.has("smooth");
     const groupUppercase = initialRough && breathingStart !== undefined &&
@@ -297,7 +347,7 @@ export function encodeTransliteration(
         base += uppercaseOutput ? "H" : "h";
       }
     } else if (
-      preservesDiacritic("rough", options, "transliteration") &&
+      preservesRough &&
       token.diacritics.has("rough") && index !== breathingIndex
     ) {
       if (token.letter === "rho") base += uppercaseOutput ? "H" : "h";
@@ -312,29 +362,10 @@ export function encodeTransliteration(
     ) {
       base += uppercaseOutput ? "H" : "h";
     }
-    // Latin `ē` and `ō` are eta and omega, so a quantity mark on epsilon or
-    // omicron has no transliteration; convertDetailed() reports its removal.
-    const tokenMarks = latinMarks(token).filter(
-      (mark) =>
-        !(mark === "macron" || mark === "breve") ||
-        (token.letter !== "epsilon" && token.letter !== "omicron"),
-    );
-    if (
-      writesSeparationDiaeresis(doc, index, options) &&
-      !tokenMarks.includes("diaeresis") &&
-      preservesDiacritic("diaeresis", options, "transliteration")
-    ) {
-      tokenMarks.push("diaeresis");
-    }
-    const transliteratedMarks = tokenMarks
-      .filter((mark) => mark !== "coronis")
-      .map((mark) => trMark(mark, options))
-      .join("");
-    const coronis = tokenMarks.includes("coronis")
-      ? trMark("coronis", options)
-      : "";
+    const separation = writesSeparationDiaeresis(doc, index, options) &&
+      preservesDiaeresis;
 
-    return base + transliteratedMarks + coronis;
+    return base + markString(token, separation);
   }).join("").normalize("NFC");
 }
 
