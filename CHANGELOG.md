@@ -12,13 +12,23 @@ change.
 - The three readers work on UTF-16 code units instead of one string per
   character, with small lookup tables indexed by code unit (under 10 KB in
   all); marks are gathered in a bitmask everywhere. On Thucydides, book I
-  (10,000 and 100,000 characters), reading is about 3 times as fast for
-  Greek, 2 to 2.5 times for Beta Code, and 1.7 to 2.6 times for
-  transliteration, and conversions are 1.15 to 1.8 times as fast; reading a
-  short sentence is about twice as fast. The exact factors depend on the
-  machine. Output is unchanged (441,936 conversions and parses compared with
-  `1.0.0-rc.3`, plus 150,000 parses of random strings: 10,000 per reader,
-  transliteration under 13 option settings).
+  (10,000 and 100,000 characters), reading is about 3 times as fast for Greek,
+  2 to 2.5 times for Beta Code, and 1.7 to 2.6 times for transliteration, and
+  conversions are 1.15 to 1.8 times as fast; reading a short sentence is about
+  twice as fast. The exact factors depend on the machine. Output is unchanged
+  (441,936 conversions and parses compared with `1.0.0-rc.3`, plus 150,000
+  parses of random strings: 10,000 per reader, transliteration under 13 option
+  settings).
+
+- The transliteration encoder writes the marks of a letter once per
+  combination of marks instead of building them at every letter, finds
+  diphthongs without building a string per pair, and reads which marks the
+  options remove as a mask. Encoding to transliteration is about twice as
+  fast, and Greek → transliteration 1.5 to 1.65 times as fast, on
+  Thucydides, book I (10,000 and 100,000 characters); other paths gain up to
+  20 %. Output is unchanged (441,936 conversions and parses compared with
+  `1.0.0-rc.3`, plus 414,000 encodings of random texts under 23 option
+  settings, half of them with caller-built diacritic sets).
 
 ## [1.0.0-rc.3] - 2026-10-21
 
