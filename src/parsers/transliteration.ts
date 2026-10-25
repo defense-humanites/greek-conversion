@@ -11,13 +11,13 @@ import {
   isWordInitial,
 } from "../context.ts";
 import {
-  type Diacritic,
+  diacriticBit,
+  diacriticsFromMask,
   type Document,
   grapheme,
   type Letter,
   literal,
   ownedGrapheme,
-  sharedDiacritics,
   type Token,
   withDiacritic,
   withoutDiacritic,
@@ -25,6 +25,7 @@ import {
 import type { ConversionOptions } from "../options.ts";
 import { parsePunctuation } from "../punctuation.ts";
 import { Trie } from "../trie.ts";
+import { codeUnitTable } from "./code_units.ts";
 
 const CANONICAL_ENTRIES = [
   ...Object.entries(ALPHABET)
@@ -46,6 +47,50 @@ const CANONICAL_ENTRIES = [
 
 const TRIE = new Trie<Letter>(CANONICAL_ENTRIES);
 
+/**
+ * `toLowerCase()` of each one-unit character below U+0400, memoized: the
+ * reader compares the lowercase form of every character several times, and
+ * transliteration lives in that range (Latin, combining marks). Other
+ * characters are lowercased directly. The memo is preallocated and bounded:
+ * an empty array indexed by a high code unit would switch to slow dictionary
+ * elements for the rest of the process.
+ */
+const LOWER_END = 0x400;
+const LOWER: (string | undefined)[] = new Array(LOWER_END).fill(undefined);
+function lowercase(char: string): string {
+  const unit = char.charCodeAt(0);
+  return char.length === 1 && unit < LOWER_END
+    ? LOWER[unit] ??= char.toLowerCase()
+    : char.toLowerCase();
+}
+
+/**
+ * Bit of each combining mark the reader accepts, by code unit. They all lie
+ * in U+0300–U+036F: the Greek marks, plus the tilde as a circumflex and the
+ * cedilla as an iota subscript.
+ */
+const MARKS_START = 0x0300;
+const MARK_BIT = codeUnitTable(MARKS_START, 0x70, [
+  ...[...GREEK_MARKS].map(([mark, diacritic]) =>
+    [mark, diacriticBit(diacritic)] as const
+  ),
+  ["\u0303", diacriticBit("circumflex")],
+  ["\u0342", diacriticBit("circumflex")],
+  ["\u0327", diacriticBit("iota-subscript")],
+]);
+
+function markBit(char: string): number {
+  if (char.length !== 1) return 0;
+  const unit = char.charCodeAt(0);
+  return unit >= MARKS_START && unit < MARKS_START + 0x70
+    ? MARK_BIT[unit - MARKS_START]
+    : 0;
+}
+
+const ROUGH = diacriticBit("rough");
+const MACRON = diacriticBit("macron");
+const DIAERESIS = diacriticBit("diaeresis");
+
 export function parseTransliteration(
   input: string,
   options: ConversionOptions = {},
@@ -54,55 +99,58 @@ export function parseTransliteration(
     Array.from(input.normalize("NFD")),
     options,
   );
+  // Lowercased once, after prioritizeEtaMacron() has reordered the marks.
+  // Built with a loop rather than `chars.map()`: once this function is
+  // optimized, V8's inlined `map` returns arrays of a different elements kind
+  // from the builtin's, and the reads of `lowered` below then deoptimize the
+  // whole function every few hundred calls.
+  const lowered: string[] = [];
+  for (let k = 0; k < chars.length; k++) lowered.push(lowercase(chars[k]));
   const out: Token[] = [];
   const trie = transliterationTrie(options);
   const contextualY = new Set<number>();
   // Upsilons read from a contextual `y` whose separation from the preceding
   // vowel is carried by a breathing on that vowel rather than by a diaeresis.
   const separatedByBreathing = new Set<number>();
-  // Reused for every grapheme; sharedDiacritics() returns the shared copy.
-  const marks = new Set<Diacritic>();
+  const orthography = options.orthography;
+  const digraphB = (orthography?.modernDigraphs === "phonetic" ||
+    orthography?.modernDigraphs === "ala-lc") &&
+    orthography.beta === "v";
+  const digraphD = orthography?.modernDigraphs === "ala-lc";
+  const lunateC = orthography?.lunateSigma === "c";
+  const systematicRho = orthography?.rho === "systematic";
+  const circumflexAccent = orthography?.circumflexAccent === "circumflex";
+  const upsilon = orthography?.upsilon;
 
   for (let i = 0; i < chars.length;) {
     let rough = false;
     let roughUppercase = false;
 
-    if (
-      (options.orthography?.modernDigraphs === "phonetic" ||
-        options.orthography?.modernDigraphs === "ala-lc") &&
-      options.orthography.beta === "v" &&
-      chars[i].toLowerCase() === "b"
-    ) {
-      const uppercase = chars[i] !== chars[i].toLowerCase();
+    if (digraphB && lowered[i] === "b") {
+      const uppercase = chars[i] !== lowered[i];
       out.push(grapheme("mu", uppercase), grapheme("pi"));
       i++;
       continue;
     }
 
-    if (
-      options.orthography?.modernDigraphs === "ala-lc" &&
-      chars[i].toLowerCase() === "d" &&
-      chars[i + 1] === "\u0332"
-    ) {
-      const uppercase = chars[i] !== chars[i].toLowerCase();
+    if (digraphD && lowered[i] === "d" && chars[i + 1] === "\u0332") {
+      const uppercase = chars[i] !== lowered[i];
       out.push(grapheme("nu", uppercase), grapheme("tau"));
       i += 2;
       continue;
     }
 
     if (
-      chars[i].toLowerCase() === "h" && startsVowel(chars, i + 1, trie)
+      lowered[i] === "h" && startsVowel(lowered, i + 1, trie)
     ) {
       rough = true;
-      roughUppercase = chars[i] !== chars[i].toLowerCase();
+      roughUppercase = chars[i] !== lowered[i];
       i++;
     }
 
-    const archaic = markedArchaicLetter(chars, i);
-    const ordinary = trie.longest(chars, i);
-    const lunateSigma = !archaic && !ordinary &&
-      options.orthography?.lunateSigma === "c" &&
-      chars[i]?.toLowerCase() === "c";
+    const archaic = markedArchaicLetter(chars, lowered, i);
+    const ordinary = trie.longest(lowered, i);
+    const lunateSigma = !archaic && !ordinary && lunateC && lowered[i] === "c";
     const match = archaic ?? ordinary ??
       (lunateSigma ? { value: "sigma" as const, length: 1 } : undefined);
 
@@ -127,14 +175,15 @@ export function parseTransliteration(
     }
 
     const source = chars[i];
+    const sourceLower = lowered[i];
 
     i += match.length;
 
-    if (match.value === "rho" && chars[i]?.toLowerCase() === "h") {
+    if (match.value === "rho" && lowered[i] === "h") {
       const previous = out.at(-1);
 
       if (
-        options.orthography?.rho !== "systematic" &&
+        !systematicRho &&
         (previous?.kind !== "grapheme" || previous.letter !== "rho")
       ) {
         rough = true;
@@ -143,42 +192,43 @@ export function parseTransliteration(
       i++;
     }
 
-    marks.clear();
+    let marks = rough ? ROUGH : 0;
     let structuralCircumflex = false;
-
-    if (rough) marks.add("rough");
 
     while (i < chars.length) {
       if (
         chars[i] === "\u0302" &&
         (match.value === "epsilon" || match.value === "omicron") &&
-        !(marks.has("macron") &&
-          options.orthography?.circumflexAccent === "circumflex")
+        !((marks & MACRON) !== 0 && circumflexAccent)
       ) {
         structuralCircumflex = true;
         i++;
         continue;
       }
-      const mark = trMark(chars[i]);
-      if (!mark) break;
-      marks.add(mark);
+      const bit = markBit(chars[i]);
+      if (bit === 0) break;
+      marks |= bit;
       i++;
     }
 
     const letter = resolveLongVowel(
       match.value,
-      marks,
+      (marks & MACRON) !== 0,
       structuralCircumflex,
     );
+    // The macron of `ē` and `ō` makes the letter, not a mark.
+    if (letter !== match.value && !structuralCircumflex) marks &= ~MACRON;
 
     if (
       letter === "upsilon" &&
-      (options.orthography?.upsilon === "y-with-diphthong-u" ||
-        options.orthography?.upsilon === "y-with-au-eu-ou") &&
-      source.toLowerCase() === "y"
+      (upsilon === "y-with-diphthong-u" || upsilon === "y-with-au-eu-ou") &&
+      sourceLower === "y"
     ) {
-      const pair = latinPair(out.at(-1), grapheme(letter, false, marks));
-      const wouldRenderU = options.orthography.upsilon === "y-with-au-eu-ou"
+      const pair = latinPair(
+        out.at(-1),
+        grapheme(letter, false, diacriticsFromMask(marks)),
+      );
+      const wouldRenderU = upsilon === "y-with-au-eu-ou"
         ? isAuEuOuAt(pair, 0)
         : isDiphthongAt(pair, 0);
       if (wouldRenderU) {
@@ -190,33 +240,36 @@ export function parseTransliteration(
           isWordInitial(out, out.length - 1) &&
           (first.diacritics.has("rough") || infersSmoothBreathing(options));
         if (breathingWillSit) separatedByBreathing.add(out.length);
-        else marks.add("diaeresis");
+        else marks |= DIAERESIS;
       }
     }
 
     if (
       letter === "iota" &&
-      options.orthography?.upsilon === "y-with-diphthong-u" &&
+      upsilon === "y-with-diphthong-u" &&
       contextualY.has(out.length - 1)
     ) {
-      const pair = latinPair(out.at(-1), grapheme(letter, false, marks));
+      const pair = latinPair(
+        out.at(-1),
+        grapheme(letter, false, diacriticsFromMask(marks)),
+      );
       if (isDiphthongAt(pair, 0)) {
-        marks.add("diaeresis");
+        marks |= DIAERESIS;
       }
     }
 
     if (
       letter === "upsilon" &&
-      options.orthography?.upsilon === "y-with-diphthong-u" &&
-      source.toLowerCase() === "y"
+      upsilon === "y-with-diphthong-u" &&
+      sourceLower === "y"
     ) {
       contextualY.add(out.length);
     }
 
     out.push(ownedGrapheme(
       letter,
-      roughUppercase || source !== source.toLowerCase(),
-      sharedDiacritics(marks),
+      roughUppercase || source !== sourceLower,
+      diacriticsFromMask(marks),
       lunateSigma ? "lunate-sigma" : undefined,
     ));
   }
@@ -237,7 +290,7 @@ function prioritizeEtaMacron(
 
   const chars = [...input];
   for (let start = 0; start < chars.length; start++) {
-    if (chars[start].toLowerCase() !== "i") continue;
+    if (lowercase(chars[start]) !== "i") continue;
 
     let end = start + 1;
     while (end < chars.length && /^\p{M}$/u.test(chars[end])) end++;
@@ -274,13 +327,14 @@ function transliterationTrie(options: ConversionOptions): Trie<Letter> {
 
 function markedArchaicLetter(
   chars: readonly string[],
+  lowered: readonly string[],
   start: number,
 ):
   | { value: "archaic-koppa"; length: 2 }
   | { value: "stigma" | "sampi"; length: number }
   | undefined {
   if (
-    chars[start]?.toLowerCase() === "k" &&
+    lowered[start] === "k" &&
     chars[start + 1] === "\u0323"
   ) {
     return { value: "archaic-koppa", length: 2 };
@@ -295,7 +349,7 @@ function markedArchaicLetter(
     ? 3
     : 2;
 
-  switch (chars[start].toLowerCase()) {
+  switch (lowered[start]) {
     case "c":
       return { value: "stigma", length };
     case "s":
@@ -322,37 +376,22 @@ function inferNasalGammas(tokens: Token[]) {
 }
 
 function startsVowel(
-  chars: readonly string[],
+  lowered: readonly string[],
   start: number,
   trie: Trie<Letter>,
 ) {
-  const match = trie.longest(chars, start);
+  const match = trie.longest(lowered, start);
   return !!match && isVowel(match.value);
-}
-
-function trMark(char: string): Diacritic | undefined {
-  if (char === "\u0303" || char === "\u0342") return "circumflex";
-  if (char === "\u0327") return "iota-subscript";
-  return GREEK_MARKS.get(char);
 }
 
 function resolveLongVowel(
   letter: Letter,
-  marks: Set<Diacritic>,
+  macron: boolean,
   structuralCircumflex: boolean,
 ): Letter {
-  if (!marks.has("macron") && !structuralCircumflex) return letter;
-
-  if (letter === "epsilon") {
-    if (!structuralCircumflex) marks.delete("macron");
-    return "eta";
-  }
-
-  if (letter === "omicron") {
-    if (!structuralCircumflex) marks.delete("macron");
-    return "omega";
-  }
-
+  if (!macron && !structuralCircumflex) return letter;
+  if (letter === "epsilon") return "eta";
+  if (letter === "omicron") return "omega";
   return letter;
 }
 

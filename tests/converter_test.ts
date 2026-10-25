@@ -492,6 +492,71 @@ Deno.test("converter construction rejects ambiguous registries", () => {
   );
 });
 
+Deno.test("custom characters may be spelled outside the BMP", () => {
+  // The readers must keep a surrogate pair as one literal, as Array.from()
+  // does; otherwise this spelling would seem to have a meaning and require
+  // override, and its sentinel would not be found again after parsing.
+  const zero = "\u{1018A}"; // GREEK ZERO SIGN
+  const converter = createConverter({
+    characters: [{
+      id: "zero",
+      forms: {
+        greek: { lowercase: zero },
+        "beta-code": { lowercase: zero },
+        transliteration: { lowercase: zero },
+      },
+    }],
+  });
+
+  for (
+    const [source, from, to, output] of [
+      [`${zero} ἄνθρωπος`, "greek", "transliteration", `${zero} ánthrōpos`],
+      [`${zero} ἄνθρωπος`, "greek", "beta-code", `${zero} a)/nqrwpos`],
+      [`${zero} a)/nqrwpos`, "beta-code", "greek", `${zero} ἄνθρωπος`],
+      [`${zero} ánthrōpos`, "transliteration", "greek", `${zero} ἄνθρωπος`],
+    ] as const
+  ) {
+    assertEquals(
+      converter.convert(source, from, to).normalize("NFC"),
+      output.normalize("NFC"),
+    );
+  }
+});
+
+Deno.test("spellings that a reader folds onto a letter already have a meaning", () => {
+  // The Beta Code reader does not normalize and lowercases the Kelvin sign
+  // to `k`, kappa; the Greek reader's NFD turns the ohm sign into omega.
+  const neutral = "";
+  const messageFor = (format: "greek" | "beta-code", spelling: string) => {
+    try {
+      createConverter({
+        characters: [{
+          id: "custom",
+          forms: {
+            greek: { lowercase: format === "greek" ? spelling : neutral },
+            "beta-code": {
+              lowercase: format === "beta-code" ? spelling : neutral,
+            },
+            transliteration: { lowercase: neutral },
+          },
+        }],
+      });
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+    return "accepted";
+  };
+
+  assertEquals(
+    messageFor("beta-code", "K"),
+    "beta-code spelling K already has a meaning; set override to true to replace it.",
+  );
+  assertEquals(
+    messageFor("greek", "Ω"),
+    "greek spelling Ω already has a meaning; set override to true to replace it.",
+  );
+});
+
 Deno.test("converter configuration is copied before use", () => {
   const forms = {
     greek: { lowercase: "ϻ", uppercase: "Ϻ" },
