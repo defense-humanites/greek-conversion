@@ -46,18 +46,22 @@ export function parse(
  * with its forty-odd fields, is not validated and copied again at each step:
  * that re-resolution was about three quarters of a short conversion.
  *
+ * With `share`, the Greek and Beta Code readers return shared tokens
+ * (see `parsers/shared_tokens.ts`): for documents that never reach the caller.
+ *
  * Internal: not exported by the package entry points.
  */
 export function parseResolved(
   input: string,
   format: Format,
   options: ResolvedConversionOptions,
+  share = false,
 ): Document {
   switch (format) {
     case "greek":
-      return parseGreek(input);
+      return parseGreek(input, share);
     case "beta-code":
-      return parseBetaCode(input);
+      return parseBetaCode(input, share);
     case "transliteration":
       return parseTransliteration(input, options);
   }

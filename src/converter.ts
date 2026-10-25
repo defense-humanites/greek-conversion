@@ -344,7 +344,7 @@ export class Converter {
     options: ResolvedConversionOptions,
     target?: Format,
   ): PreparedSource {
-    const parsed = parseResolved(input.value, format, options);
+    const parsed = parseResolved(input.value, format, options, true);
     const diagnostics: CharacterScopeDiagnostic[] = [];
     const occurrences = new Map<string, number>();
 

@@ -1,4 +1,4 @@
-import { ALPHABET, BETA_MARKS, BY_BETA } from "../alphabet.ts";
+import { BETA_MARKS, BY_BETA } from "../alphabet.ts";
 import {
   ARISTERI_KERAIA,
   classifyCoronides,
@@ -9,13 +9,13 @@ import {
   diacriticsFromMask,
   type Document,
   grapheme,
-  type Letter,
   literal,
   ownedGrapheme,
   type Token,
 } from "../model.ts";
 import { parsePunctuation } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
+import { LETTERS, sharedGrapheme, sharedLiteral } from "./shared_tokens.ts";
 
 /**
  * Like the Greek reader, this one works on UTF-16 code units. Every symbol
@@ -24,8 +24,10 @@ import { codePointAt, codeUnitTable } from "./code_units.ts";
  * comparisons as the code-point indices of `Array.from()`; only a character
  * outside the BMP needs two units, and it is always a literal.
  */
-const LETTERS = Object.keys(ALPHABET) as Letter[];
 const LETTER_INDEX = new Map(LETTERS.map((letter, index) => [letter, index]));
+const SIGMA = LETTERS.indexOf("sigma");
+/** Variant flag of the lunate sigma (index 1 of VARIANTS, in bits 1–2). */
+const LUNATE = 1 << 1;
 const QUANTITY_LETTERS = new Set(["alpha", "iota", "upsilon"]);
 const ACCEPTS_BREVE = LETTERS.map((letter) => QUANTITY_LETTERS.has(letter));
 
@@ -62,7 +64,11 @@ const ASTERISK = 0x2a;
 const APOSTROPHE = 0x27;
 const HASH = 0x23;
 
-export function parseBetaCode(input: string): Document {
+/**
+ * Reads Beta Code. With `share`, equal tokens are one shared object
+ * (see `shared_tokens.ts`): only for documents that never reach the caller.
+ */
+export function parseBetaCode(input: string, share = false): Document {
   const text = input;
   const out: Token[] = [];
 
@@ -80,12 +86,14 @@ export function parseBetaCode(input: string): Document {
 
     if (text[i]?.toLowerCase() === "s" && text[i + 1] === "3") {
       out.push(
-        ownedGrapheme(
-          "sigma",
-          upper,
-          diacriticsFromMask(marks),
-          "lunate-sigma",
-        ),
+        share
+          ? sharedGrapheme(SIGMA, (upper ? 1 : 0) | LUNATE, marks)
+          : ownedGrapheme(
+            "sigma",
+            upper,
+            diacriticsFromMask(marks),
+            "lunate-sigma",
+          ),
       );
       i += 2;
       continue;
@@ -95,7 +103,7 @@ export function parseBetaCode(input: string): Document {
       ? parsePunctuation(codePointAt(text, i), "beta-code")
       : undefined;
     if (punctuation) {
-      out.push(literal(punctuation));
+      out.push(share ? sharedLiteral(punctuation) : literal(punctuation));
       i++;
       continue;
     }
@@ -129,7 +137,7 @@ export function parseBetaCode(input: string): Document {
     if (letter === NOT_A_LETTER) {
       const source = codePointAt(text, i);
       if (upper) out.push(literal(text.slice(start, i)));
-      out.push(literal(source));
+      out.push(share ? sharedLiteral(source) : literal(source));
       i += source.length;
       continue;
     }
@@ -137,7 +145,11 @@ export function parseBetaCode(input: string): Document {
     i++;
     [i, marks] = consumeMarks(text, i, ACCEPTS_BREVE[letter], marks);
 
-    out.push(ownedGrapheme(LETTERS[letter], upper, diacriticsFromMask(marks)));
+    out.push(
+      share
+        ? sharedGrapheme(letter, upper ? 1 : 0, marks)
+        : ownedGrapheme(LETTERS[letter], upper, diacriticsFromMask(marks)),
+    );
   }
 
   classifyCoronides(out);

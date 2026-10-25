@@ -201,10 +201,14 @@ export function classifyCoronides(tokens: Token[]): void {
       token.diacritics.has("smooth") &&
       initialBreathingStart(tokens, i) === undefined
     ) {
-      token.diacritics = withDiacritic(
-        withoutDiacritic(token.diacritics, "smooth"),
-        "coronis",
-      );
+      // Replaced, not modified: the token may be shared by other occurrences.
+      tokens[i] = {
+        ...token,
+        diacritics: withDiacritic(
+          withoutDiacritic(token.diacritics, "smooth"),
+          "coronis",
+        ),
+      };
     }
   }
 }
