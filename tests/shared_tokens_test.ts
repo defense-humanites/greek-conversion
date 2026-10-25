@@ -2,17 +2,23 @@ import { assertEquals } from "@std/assert";
 import { GREEK_MARKS } from "../src/alphabet.ts";
 import { encode, parse } from "../src/document.ts";
 import type { Format, Grapheme } from "../src/model.ts";
+import { parseResolved } from "../src/conversion.ts";
 import { convert, convertDetailed } from "../src/mod.ts";
 import {
-  SHARED_TOKEN_LIMIT,
-  sharedTokenCount,
+  resetSharedTokens,
+  SHARED_GRAPHEME_LIMIT,
+  SHARED_LITERAL_LIMIT,
+  sharedTokenCounts,
 } from "../src/parsers/shared_tokens.ts";
+import { resolveConversionOptions } from "../src/presets.ts";
 
 /**
  * `convert()` and the other functions that read text for themselves share
  * equal tokens (src/parsers/shared_tokens.ts); `parse()` does not. These tests
  * check that the two paths agree, that a caller's document stays its own, and
- * that the cache stays bounded.
+ * that the cache stays bounded. `deno test` gives each file its own module
+ * state, so the cache is empty when this file starts; the tests that fill it
+ * empty it again, so that the next test of this file starts from scratch.
  */
 
 Deno.test("parse() returns tokens of its own, which the caller may modify", () => {
@@ -73,6 +79,15 @@ function everyMarkCombination(): string {
 }
 
 Deno.test("conversions past the cache limit equal encode(parse()), and the cache stays bounded", () => {
+  resetSharedTokens();
+  try {
+    conversionsPastTheLimit();
+  } finally {
+    resetSharedTokens();
+  }
+});
+
+function conversionsPastTheLimit(): void {
   const greek = everyMarkCombination();
   const sources: Record<"greek" | "beta-code", string> = {
     greek,
@@ -103,5 +118,49 @@ Deno.test("conversions past the cache limit equal encode(parse()), and the cache
     }
   }
 
-  assertEquals(sharedTokenCount(), SHARED_TOKEN_LIMIT);
+  assertEquals(sharedTokenCounts().graphemes, SHARED_GRAPHEME_LIMIT);
+}
+
+Deno.test("non-Greek text cannot use up the room of Greek tokens in the cache", () => {
+  resetSharedTokens();
+  try {
+    // 5,000 distinct CJK characters: one literal each, more than the cache
+    // holds, as a server converting arbitrary text could receive.
+    const foreign = Array.from(
+      { length: 5000 },
+      (_, index) => String.fromCodePoint(0x4E00 + index),
+    ).join("");
+    convert(foreign, "greek", "transliteration");
+    assertEquals(sharedTokenCounts().literals, SHARED_LITERAL_LIMIT);
+
+    // Every grapheme and literal of a Greek text read afterwards is still
+    // shared: one object per distinct token.
+    const greek = "Θουκυδίδης Ἀθηναῖος ξυνέγραψε τὸν πόλεμον, ὡς ἐπολέμησαν· " +
+      "ἀρξάμενος εὐθὺς καθισταμένου (καὶ ἐλπίσας) — 1.1.";
+    const keys = new Set(
+      parse(greek, "greek").map((token) =>
+        token.kind === "grapheme"
+          ? JSON.stringify([
+            token.letter,
+            token.uppercase,
+            [...token.diacritics].sort(),
+            token.glyphVariant ?? null,
+          ])
+          : token.value
+      ),
+    );
+    const shared = parseResolved(
+      greek,
+      "greek",
+      resolveConversionOptions({}),
+      true,
+    );
+    assertEquals(new Set(shared).size, keys.size);
+    assertEquals(
+      convert(greek, "greek", "transliteration"),
+      encode(parse(greek, "greek"), "transliteration"),
+    );
+  } finally {
+    resetSharedTokens();
+  }
 });
