@@ -1,5 +1,5 @@
 import { ALPHABET } from "./alphabet.ts";
-import { encode, parse } from "./conversion.ts";
+import { encodeResolved, parse, parseResolved } from "./conversion.ts";
 import {
   type ConversionLoss,
   type ConversionResult,
@@ -256,7 +256,7 @@ export class Converter {
     const sourceInput = this.#preprocess(input, from, resolved);
     const prepared = this.#prepareSource(sourceInput, from, resolved, to);
     this.#assertScope(prepared.diagnostics);
-    const encoded = encode(prepared.document, to, resolved);
+    const encoded = encodeResolved(prepared.document, to, resolved);
     const output = this.#postprocess(encoded, to);
 
     const targetInput = this.#preprocess(output, to, resolved);
@@ -284,7 +284,7 @@ export class Converter {
     const preprocessed = this.#preprocess(input, from, resolved);
     const prepared = this.#prepareSource(preprocessed, from, resolved, to);
     this.#assertScope(prepared.diagnostics);
-    const encoded = encode(prepared.document, to, resolved);
+    const encoded = encodeResolved(prepared.document, to, resolved);
     return { output: this.#postprocess(encoded, to) };
   }
 
@@ -319,7 +319,7 @@ export class Converter {
       }
 
       if (match.kind === "alias") {
-        output.push(encode(
+        output.push(encodeResolved(
           [grapheme(match.letter, match.uppercase)],
           format,
           options,
@@ -344,7 +344,7 @@ export class Converter {
     options: ResolvedConversionOptions,
     target?: Format,
   ): PreparedSource {
-    const parsed = parse(input.value, format, options);
+    const parsed = parseResolved(input.value, format, options);
     const diagnostics: CharacterScopeDiagnostic[] = [];
     const occurrences = new Map<string, number>();
 
@@ -354,7 +354,7 @@ export class Converter {
           diagnostics.push(
             scopeDiagnostic(index, token.letter, this.#outOfScopeBehavior),
           );
-          return literalTokens(encode([token], format, options));
+          return literalTokens(encodeResolved([token], format, options));
         }
         const issue = this.#preset !== undefined && target !== undefined
           ? presetMappingIssue(
@@ -375,7 +375,7 @@ export class Converter {
             this.#outOfScopeBehavior,
           ),
         );
-        return literalTokens(encode([token], format, options));
+        return literalTokens(encodeResolved([token], format, options));
       }
 
       const custom = this.#sentinels.get(token.value);

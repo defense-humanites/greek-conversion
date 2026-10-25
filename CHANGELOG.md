@@ -19,6 +19,18 @@ change.
   `1.0.0-rc.3`, plus 414,000 encodings of random texts under 23 option
   settings, half of them with caller-built diacritic sets).
 
+- `convert()`, `convertDetailed()`, `removeDiacritics()`,
+  `foldGreekVariants()` and the converters returned by `createConverter()`
+  resolve their options once per call. They used to pass the resolved options
+  to `parse()` and `encode()`, which validated and copied all of them again:
+  about three quarters of the time of a short conversion. Converting one word
+  is about 4 times as fast (Greek → transliteration with a preset: 24 µs →
+  6 µs), and so is converting Thucydides 1.1–10 one word per call (1,672
+  calls: 40 → 10 ms; 87 → 33 ms on the first pass of a process). `parse()`,
+  `encode()` and `resolveConversionOptions()` behave as before. Outputs and
+  errors are unchanged (1,442,718 comparisons with `1.0.0-rc.3`, invalid
+  inputs and options included).
+
 ## [1.0.0-rc.3] - 2026-10-21
 
 Third release candidate for `1.0.0`. It fixes one conversion rule: Greek
