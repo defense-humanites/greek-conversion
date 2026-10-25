@@ -7,6 +7,18 @@ change.
 
 ## [Unreleased]
 
+## [1.0.0-rc.4] - 2026-10-25
+
+Fourth release candidate for `1.0.0`. It only makes the library faster.
+Compared with `1.0.0-rc.3`, converting a long text is 2 to 3 times as fast
+(Greek → transliteration on Thucydides, book I: 2.4 to 3 times, depending on
+the machine), a short conversion about 3 times as fast, and a word converted
+with a preset about 6 times as fast; a Greek → transliteration conversion
+allocates 7 to 8 times less memory. The entries below give the share of each
+change. The API and the output are unchanged (more than two million
+comparisons with `1.0.0-rc.3`, errors included). Unless a problem is found,
+`1.0.0` will have the same content.
+
 ### Changed
 
 - The three readers work on UTF-16 code units instead of one string per
@@ -519,7 +531,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.3...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.4...HEAD
+[1.0.0-rc.4]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.3...v1.0.0-rc.4
 [1.0.0-rc.3]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.2...v1.0.0-rc.3
 [1.0.0-rc.2]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.1...v1.0.0-rc.2
 [1.0.0-rc.1]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-beta.9...v1.0.0-rc.1
