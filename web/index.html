@@ -17,21 +17,19 @@
       <header class="masthead">
         <div class="identity">
           <h1>greek-conversion <span class="product">playground</span></h1>
-          <p class="specimen"
-            aria-label="ἄνθρωπος in Greek, Beta Code, and transliteration">
-            <span class="face-greek" lang="grc">ἄνθρωπος</span>
-            <span class="arrow" aria-hidden="true">⇄</span>
-            <span class="face-beta-code">a)/nqrwpos</span>
-            <span class="arrow" aria-hidden="true">⇄</span>
-            <span class="face-transliteration">ánthrōpos</span>
-          </p>
-          <p
-            class="intro">Convert in any direction, follow a published standard, and see exactly what a conversion keeps. Everything runs in your browser.</p>
+          <div class="about" id="about">
+            <button id="about-button" class="about-button" type="button"
+              aria-label="About this playground" aria-expanded="false"
+              aria-controls="about-text"
+              aria-describedby="about-text">?</button>
+            <p id="about-text"
+              class="about-text">Convert in any direction, follow a published standard, and see exactly what a conversion keeps. Everything runs in your browser.</p>
+          </div>
         </div>
         <nav class="links" aria-label="Project">
-          <a
+          <a target="_blank" rel="noopener"
             href="https://github.com/defense-humanites/greek-conversion#readme">Documentation</a>
-          <a
+          <a target="_blank" rel="noopener"
             href="https://github.com/defense-humanites/greek-conversion">Source</a>
         </nav>
       </header>
@@ -102,61 +100,77 @@
               type="button">Copy link</button>
           </div>
           <div id="diagnostics" class="diagnostics" hidden></div>
-
-          <div class="snippet">
-            <div class="pane-head">
-              <span class="snippet-label">The same call in code</span>
-              <button id="copy-code" class="text-button"
-                type="button">Copy</button>
-            </div>
-            <pre><code id="code"></code></pre>
-          </div>
         </section>
 
         <section class="settings" aria-label="Settings">
-          <details>
-            <summary>Options</summary>
-            <div class="detail-body">
-              <label
-                for="options">JSON options <span class="hint">Your options override the standard field by field. Type <code>{</code> to browse every option; use ↑ and ↓, then Enter.</span></label>
-              <textarea id="options" class="json-editor" spellcheck="false"
-                aria-autocomplete="list" aria-controls="options-suggestions"
-                placeholder='{"orthography":{"accentuation":"monotonic"}}'></textarea>
-              <div id="options-suggestions" class="suggestions" role="listbox"
-                aria-label="Available conversion options" hidden></div>
-              <p
-                class="hint"><a href="https://github.com/defense-humanites/greek-conversion#recipes">Option recipes</a></p>
-            </div>
-          </details>
-          <details>
-            <summary>Characters</summary>
-            <div class="detail-body">
-              <label
-                for="inventory">JSON character inventory <span class="hint">Add spellings, define characters, or restrict the repertoire. Type <code>{</code> to browse <code>aliases</code>, <code>characters</code>, <code>repertoire</code>, and <code>exclude</code>.</span></label>
-              <textarea id="inventory" class="json-editor" spellcheck="false"
-                aria-autocomplete="list" aria-controls="inventory-suggestions"
-                placeholder='{"exclude":["stigma","koppa","sampi"]}'></textarea>
-              <div id="inventory-suggestions" class="suggestions" role="listbox"
-                aria-label="Available inventory fields and values" hidden></div>
-              <label
-                class="check"><input id="strict" type="checkbox"> Reject characters outside the standard's repertoire instead of copying them through</label>
-              <p
-                class="hint"><a href="https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md">Character extensions and repertoires</a></p>
-            </div>
-          </details>
-          <details id="document-panel">
-            <summary>Canonical document</summary>
-            <div class="detail-body">
-              <p
-                class="hint">How the library reads the input with its built-in alphabet: letters, case, and diacritics, independent of spelling. Diagnostic token numbers refer to this list.</p>
-              <pre id="document-preview"></pre>
-            </div>
-          </details>
+          <!-- Settings, left; what they produce (the code, the document the
+               library read), right. Stacked, the order stays the same. -->
+          <div class="settings-input">
+            <details id="options-panel" open>
+              <summary>Options</summary>
+              <div class="detail-body">
+                <label
+                  for="options">JSON options <span class="hint">Your options override the standard field by field. Type <code>{</code> to browse every option; use ↑ and ↓, then Enter.</span></label>
+                <textarea id="options" class="json-editor" spellcheck="false"
+                  aria-autocomplete="list" aria-controls="options-suggestions"
+                  placeholder='{"orthography":{"accentuation":"monotonic"}}'></textarea>
+                <div id="options-suggestions" class="suggestions" role="listbox"
+                  aria-label="Available conversion options" hidden></div>
+                <p
+                  class="hint"><a target="_blank" rel="noopener" href="https://github.com/defense-humanites/greek-conversion#recipes">Option recipes</a></p>
+              </div>
+            </details>
+            <details id="characters-panel" open>
+              <summary>Characters</summary>
+              <div class="detail-body">
+                <label
+                  for="inventory">JSON character inventory <span class="hint">Add spellings, define characters, or restrict the repertoire. Type <code>{</code> to browse <code>aliases</code>, <code>characters</code>, <code>repertoire</code>, and <code>exclude</code>.</span></label>
+                <textarea id="inventory" class="json-editor" spellcheck="false"
+                  aria-autocomplete="list" aria-controls="inventory-suggestions"
+                  placeholder='{"exclude":["stigma","koppa","sampi"]}'></textarea>
+                <div id="inventory-suggestions" class="suggestions"
+                  role="listbox"
+                  aria-label="Available inventory fields and values"
+                  hidden></div>
+                <label
+                  class="check"><input id="strict" type="checkbox"> Reject characters outside the standard's repertoire instead of copying them through</label>
+                <p
+                  class="hint"><a target="_blank" rel="noopener" href="https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md">Character extensions and repertoires</a></p>
+              </div>
+            </details>
+          </div>
+          <div class="settings-output">
+            <details id="code-panel" open>
+              <summary>Code</summary>
+              <div class="detail-body">
+                <div class="pane-head">
+                  <p
+                    class="hint">The same call with the library, input text included.</p>
+                  <button id="copy-code" class="text-button"
+                    type="button">Copy</button>
+                </div>
+                <pre><code id="code"></code></pre>
+              </div>
+            </details>
+            <details id="document-panel" open>
+              <summary>Canonical document</summary>
+              <div class="detail-body">
+                <p
+                  class="hint">How the library reads the input with its built-in alphabet: letters, case, and diacritics, independent of spelling. Diagnostic token numbers refer to this list.</p>
+                <pre id="document-preview"></pre>
+                <div id="document-limit" class="document-limit" hidden>
+                  <p id="document-limit-text" class="hint"></p>
+                  <button id="document-show-all" class="text-button"
+                    type="button">Show all</button>
+                </div>
+              </div>
+            </details>
+          </div>
         </section>
       </main>
 
       <footer>
-        <p>Presets implement what their standards allow without a dictionary; each one documents its scope and limits. <a href="https://github.com/defense-humanites/greek-conversion/issues">Report a conversion that looks wrong</a>.</p>
+        <p>Presets implement what their standards allow without a dictionary; each one documents its scope and limits. <a target="_blank" rel="noopener" href="https://github.com/defense-humanites/greek-conversion/issues">Report a conversion that looks wrong</a>.</p>
       </footer>
     </div>
   </body>

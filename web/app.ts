@@ -42,11 +42,83 @@ const presetSummary = element<HTMLElement>("preset-summary");
 const presetBody = element<HTMLDivElement>("preset-body");
 const documentPanel = element<HTMLDetailsElement>("document-panel");
 const documentPreview = element<HTMLPreElement>("document-preview");
+const documentLimit = element<HTMLDivElement>("document-limit");
+const documentLimitText = element<HTMLParagraphElement>("document-limit-text");
+const documentShowAll = element<HTMLButtonElement>("document-show-all");
 const code = element<HTMLElement>("code");
 const copyButton = element<HTMLButtonElement>("copy");
 const copyCodeButton = element<HTMLButtonElement>("copy-code");
 const shareButton = element<HTMLButtonElement>("share");
 const swapButton = element<HTMLButtonElement>("swap");
+
+/**
+ * Opens a link to another site in a new tab, so that following it never
+ * leaves the playground and its work in progress, and marks it as such: an
+ * icon kept on the line of the last word, and a phrase for screen readers.
+ * Links on the playground's own origin are left as they are.
+ */
+function markExternal(link: HTMLAnchorElement): void {
+  if (new URL(link.href, location.href).origin === location.origin) return;
+  link.target = "_blank";
+  link.rel = "noopener";
+  if (link.querySelector(".external-mark") !== null) return;
+
+  const icon = document.createElement("span");
+  icon.className = "external-mark";
+  icon.setAttribute("aria-hidden", "true");
+  const last = link.lastChild;
+  const value = last?.nodeType === Node.TEXT_NODE ? last.textContent ?? "" : "";
+  const start = value.search(/\S+\s*$/);
+  if (last !== null && start >= 0) {
+    const tail = document.createElement("span");
+    tail.className = "external-tail";
+    tail.append(value.slice(start).trimEnd(), icon);
+    last.textContent = value.slice(0, start);
+    link.append(tail);
+  } else {
+    link.append(icon);
+  }
+  const phrase = document.createElement("span");
+  phrase.className = "visually-hidden";
+  phrase.textContent = " (opens in a new tab)";
+  link.append(phrase);
+}
+
+for (const link of document.querySelectorAll<HTMLAnchorElement>("a[href]")) {
+  markExternal(link);
+}
+
+/**
+ * The circled question mark beside the title: its text shows on hover and
+ * keyboard focus (CSS), and a click or tap keeps it open until a second
+ * click, Escape, or a click elsewhere. Escape also hides the hover or focus
+ * view until the pointer or focus leaves.
+ */
+const about = element<HTMLDivElement>("about");
+const aboutButton = element<HTMLButtonElement>("about-button");
+function setAboutOpen(open: boolean): void {
+  about.toggleAttribute("data-open", open);
+  aboutButton.setAttribute("aria-expanded", String(open));
+}
+aboutButton.addEventListener("click", () => {
+  about.removeAttribute("data-dismissed");
+  setAboutOpen(!about.hasAttribute("data-open"));
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (!about.matches(":hover, :focus-within, [data-open]")) return;
+  setAboutOpen(false);
+  about.setAttribute("data-dismissed", "");
+});
+document.addEventListener("click", (event) => {
+  if (!about.contains(event.target as Node)) setAboutOpen(false);
+});
+about.addEventListener("pointerleave", () => {
+  about.removeAttribute("data-dismissed");
+});
+about.addEventListener("focusout", () => {
+  about.removeAttribute("data-dismissed");
+});
 
 const FORMAT_NAMES: Readonly<Record<Format, string>> = {
   greek: "Greek",
@@ -272,6 +344,7 @@ function showPreset(): void {
     const link = document.createElement("a");
     link.href = reference.url;
     link.textContent = reference.title;
+    markExternal(link);
     references.append(link);
   });
   references.append(".");
@@ -301,20 +374,33 @@ function parseSettings<T>(
   return value as T;
 }
 
-/** The text of one source token, for display beside its diagnostic. */
-function tokenText(
-  index: number,
+/**
+ * The text of each source token, for display beside its diagnostic. The
+ * source is read once, on first use: reading it again for every affected
+ * letter made a long lossy text quadratic (two seconds per keystroke for
+ * 10,000 characters of Latin read as Greek).
+ */
+function tokenTexts(
   format: Format,
   options: ConversionOptions,
-): string {
-  try {
-    const token = parse(source.value, format, options)[index];
+): (index: number) => string {
+  let tokens: ReturnType<typeof parse> | null | undefined;
+  return (index) => {
+    if (tokens === undefined) {
+      try {
+        tokens = parse(source.value, format, options);
+      } catch {
+        tokens = null;
+      }
+    }
+    const token = tokens?.[index];
     if (token === undefined) return "";
     return token.kind === "literal" ? token.value : encode([token], "greek");
-  } catch {
-    return "";
-  }
+  };
 }
+
+/** Affected letters shown per kind of loss; the status gives the total. */
+const LETTERS_PER_ISSUE = 60;
 
 /**
  * Lists diagnostics grouped by message, so that one kind of loss appears
@@ -356,13 +442,19 @@ function showIssues(
       text.append(message, detail);
       const affected = document.createElement("p");
       affected.className = "letters";
-      for (const index of indices) {
+      for (const index of indices.slice(0, LETTERS_PER_ISSUE)) {
         const letter = document.createElement("span");
         letter.className = "letter";
         letter.lang = "grc";
         letter.title = `Token ${index}`;
         letter.textContent = letters?.(index) || `#${index}`;
         affected.append(letter);
+      }
+      if (indices.length > LETTERS_PER_ISSUE) {
+        const more = document.createElement("span");
+        more.className = "more";
+        more.textContent = `… and ${indices.length - LETTERS_PER_ISSUE} more`;
+        affected.append(more);
       }
       item.append(text, affected);
       list.append(item);
@@ -371,21 +463,38 @@ function showIssues(
   }
 }
 
+/**
+ * Tokens shown in the canonical document until the reader asks for all: as
+ * pretty JSON, a 10,000-character text makes a megabyte of text to lay out
+ * at every keystroke (about 330 ms against 18 ms without the preview).
+ */
+const PREVIEW_TOKENS = 300;
+let showAllTokens = false;
+
 function inspectDocument(options: ConversionOptions): void {
   if (!documentPanel.open) return;
   const parsed = parse(source.value, selectedFormat(sourceFormat), options);
+  const shown = showAllTokens ? parsed : parsed.slice(0, PREVIEW_TOKENS);
   documentPreview.textContent = JSON.stringify(
     {
-      tokens: parsed.map((token) =>
+      tokens: shown.map((token) =>
         token.kind === "grapheme"
           ? { ...token, diacritics: [...token.diacritics] }
           : token
       ),
+      // Always the whole document, whatever the preview shows.
       validation: validateDocument(parsed),
     },
     null,
     2,
   );
+  const truncated = shown.length < parsed.length;
+  documentLimit.hidden = !truncated;
+  if (truncated) {
+    documentLimitText.textContent = `Showing tokens 0 to ${
+      shown.length - 1
+    } of ${parsed.length}; validation covers them all.`;
+  }
 }
 
 /** Writes a value as a TypeScript literal, with unquoted identifier keys. */
@@ -402,12 +511,15 @@ function showCode(
   const from = JSON.stringify(sourceFormat.value);
   const to = JSON.stringify(targetFormat.value);
   const bound = Object.keys(inventory).length > 0 || strict.checked;
+  // The input itself, so that the copied code reproduces this conversion.
+  const text = `const text = ${JSON.stringify(source.value)};\n`;
 
   if (!bound) {
     const all = { ...(preset ? { preset } : {}), ...options };
     const argument = Object.keys(all).length ? `, ${literalOf(all)}` : "";
     code.textContent =
       `import { convert } from "@humanities/greek-conversion";\n\n` +
+      text +
       `convert(text, ${from}, ${to}${argument});`;
     return;
   }
@@ -419,8 +531,62 @@ function showCode(
   const argument = Object.keys(options).length ? `, ${literalOf(options)}` : "";
   code.textContent =
     `import { createConverter } from "@humanities/greek-conversion";\n\n` +
+    text +
     `const converter = createConverter(${literalOf(configuration)});\n` +
     `converter.convert(text, ${from}, ${to}${argument});`;
+}
+
+/**
+ * The settings panels are open by default; each one the reader closes or
+ * opens stays so on the next visit. Browser storage may be unavailable
+ * (private windows, blocked site data), in which case the panels simply
+ * open by default.
+ */
+const PANELS_KEY = "greek-conversion:panels";
+const panels = [
+  "options-panel",
+  "characters-panel",
+  "code-panel",
+  "document-panel",
+].map((id) => element<HTMLDetailsElement>(id));
+
+function restorePanels(): void {
+  let saved: Record<string, boolean> = {};
+  try {
+    saved = JSON.parse(localStorage.getItem(PANELS_KEY) ?? "{}");
+  } catch {
+    return;
+  }
+  for (const panel of panels) {
+    if (typeof saved[panel.id] === "boolean") panel.open = saved[panel.id];
+  }
+}
+
+function savePanels(): void {
+  try {
+    localStorage.setItem(
+      PANELS_KEY,
+      JSON.stringify(
+        Object.fromEntries(panels.map((panel) => [panel.id, panel.open])),
+      ),
+    );
+  } catch {
+    // Storage unavailable: the panels open by default next time.
+  }
+}
+
+// Only the reader's own clicks (or Enter and Space on a summary) are
+// remembered, not the panels that a shared link opens because they hold
+// options or characters.
+let panelClicked = false;
+for (const panel of panels) {
+  panel.querySelector("summary")?.addEventListener("click", () => {
+    panelClicked = true;
+  });
+  panel.addEventListener("toggle", () => {
+    if (panelClicked) savePanels();
+    panelClicked = false;
+  });
 }
 
 /** Keeps the page state in the address, so that a link reproduces it. */
@@ -483,7 +649,7 @@ function update(): void {
     showCode(preset, options, inventory);
     // Token numbers match the built-in reading only without custom characters.
     letters = Object.keys(inventory).length === 0
-      ? (index: number) => tokenText(index, from, withPreset)
+      ? tokenTexts(from, withPreset)
       : undefined;
     const converter = createConverter({
       ...inventory,
@@ -570,6 +736,10 @@ attachSuggestions(optionsInput, optionsSuggestions, suggestOptions);
 attachSuggestions(inventoryInput, inventorySuggestions, suggestInventory);
 strict.addEventListener("change", update);
 documentPanel.addEventListener("toggle", update);
+documentShowAll.addEventListener("click", () => {
+  showAllTokens = true;
+  update();
+});
 swapButton.addEventListener("click", () => {
   const oldSource = sourceFormat.value;
   sourceFormat.value = targetFormat.value;
@@ -590,6 +760,7 @@ addEventListener("hashchange", () => {
   update();
 });
 
+restorePanels();
 restoreState();
 showPreset();
 update();

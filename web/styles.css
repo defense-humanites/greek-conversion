@@ -26,6 +26,9 @@
     Menlo, Consolas, monospace;
 
   --radius: 6px;
+  /* Height shared by the selects and the swap button. */
+  --control-height: 46px;
+  --external-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 7.5 8.5M12 9.5v3a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3'/%3E%3C/svg%3E");
   font-family: var(--face-ui);
   color: var(--ink);
   background: var(--page);
@@ -74,6 +77,29 @@ a {
 a:hover {
   text-decoration-thickness: 2px;
 }
+/* Links to other sites open in a new tab; the mark says so. */
+.external-tail {
+  white-space: nowrap;
+}
+.external-mark {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-left: 0.2em;
+  vertical-align: -0.02em;
+  background-color: currentColor;
+  -webkit-mask: var(--external-icon) center / contain no-repeat;
+  mask: var(--external-icon) center / contain no-repeat;
+  forced-color-adjust: none;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 :focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
@@ -94,48 +120,100 @@ code {
 .shell {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 40px 28px 32px;
+  padding: 22px 28px 32px;
 }
 
 /* Masthead */
 .masthead {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 28px;
+  margin-bottom: 34px;
+}
+.identity {
+  /* The about text is placed from the start of the title, not the button. */
+  position: relative;
+}
+/* The title and its question mark flow as text, so that the button stays
+   after the last word when the title wraps. */
+.identity h1 {
+  display: inline;
 }
 h1 {
   margin: 0;
-  font-size: 1.05rem;
-  font-weight: 650;
-  letter-spacing: -0.005em;
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
 }
 .product {
   color: var(--muted);
   font-weight: 450;
 }
-.specimen {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.2em 0.55em;
-  margin: 14px 0 0;
-  font-size: clamp(1.9rem, 4.6vw, 3.1rem);
-  line-height: 1.15;
+/*
+ * About: a circled question mark whose text shows on hover or keyboard
+ * focus, and stays open once clicked or tapped (see app.ts).
+ */
+.about {
+  display: inline-flex;
+  margin-left: 8px;
+  vertical-align: 0.2em;
 }
-.specimen .face-beta-code {
-  font-size: 0.82em;
-  letter-spacing: -0.02em;
-}
-.specimen .arrow {
-  color: var(--accent);
-  font-size: 0.6em;
-}
-.intro {
-  max-width: 62ch;
-  margin: 14px 0 0;
+.about-button {
+  display: grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  padding: 0;
+  border: 1.5px solid var(--strong-rule);
+  border-radius: 50%;
+  background: transparent;
   color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.about-button:hover,
+.about-button[aria-expanded="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.about-text {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  width: max-content;
+  /* At least as wide as the title and its button, so that the pointer can
+     go straight down from the button onto the text. */
+  min-width: 100%;
+  max-width: min(36ch, calc(100vw - 32px));
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.12);
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 400;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.12s, visibility 0.12s;
+}
+/* Bridges the gap so that the pointer can move onto the text. */
+.about-text::before {
+  content: "";
+  position: absolute;
+  inset: -14px 0 auto;
+  height: 14px;
+}
+.about:not([data-dismissed]):hover .about-text,
+.about:not([data-dismissed]):has(.about-button:focus-visible) .about-text,
+.about[data-open] .about-text {
+  visibility: visible;
+  opacity: 1;
 }
 .links {
   display: flex;
@@ -170,15 +248,15 @@ h1 {
 }
 select {
   width: 100%;
-  min-height: 40px;
-  padding: 7px 10px;
+  height: var(--control-height);
+  padding: 0 12px;
   border: 1px solid var(--strong-rule);
   border-radius: var(--radius);
   background: var(--surface);
 }
 .icon-button {
-  width: 40px;
-  height: 40px;
+  width: var(--control-height);
+  height: var(--control-height);
   border: 1px solid var(--strong-rule);
   border-radius: var(--radius);
   background: var(--surface);
@@ -251,6 +329,7 @@ select {
   min-width: 0;
 }
 .output-pane {
+  position: relative;
   border-left: 1px solid var(--rule);
   background: var(--sunken);
 }
@@ -267,8 +346,11 @@ select {
   font-size: 0.82rem;
   font-weight: 600;
 }
-.output-pane .pane-head {
-  padding-right: 8px;
+/* The Copy button keeps the same distance from the top and right edges. */
+.output-pane #copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
 }
 .output-pane .pane-head .pane-label {
   padding-bottom: 0;
@@ -359,6 +441,11 @@ select {
   gap: 4px 6px;
   margin-top: 4px;
 }
+.diagnostics .more {
+  align-self: center;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
 .letter {
   min-width: 1.9em;
   padding: 0 6px;
@@ -370,19 +457,13 @@ select {
   text-align: center;
 }
 
-/* Code */
-.snippet {
-  margin-top: 18px;
-}
-.snippet-label {
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 600;
-}
+/* Code: long lines wrap rather than run off a narrow screen. */
 pre {
   margin: 6px 0 0;
   padding: 12px 14px;
   overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   border-radius: var(--radius);
   background: var(--sunken);
   font-family: var(--face-code);
@@ -394,9 +475,24 @@ pre code {
 }
 
 /* Settings */
+/*
+ * Two columns on wide screens, aligned with the panes above: the right
+ * column starts at the output pane's edge, and the left one keeps its
+ * distance from it with padding rather than a gap.
+ */
 .settings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   margin-top: 28px;
+}
+.settings-input,
+.settings-output {
+  min-width: 0;
   border-top: 1px solid var(--rule);
+}
+.settings-input {
+  padding-right: 32px;
 }
 .settings details {
   border-bottom: 1px solid var(--rule);
@@ -423,6 +519,26 @@ pre code {
 }
 .detail-body > .hint {
   margin: 10px 0 0;
+}
+.detail-body .pane-head .hint {
+  margin: 0;
+}
+/* The canonical document scrolls within its panel instead of the page. */
+#document-preview {
+  max-height: 26rem;
+}
+.document-limit {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+.document-limit .hint {
+  margin: 0;
+}
+.document-limit[hidden] {
+  display: none;
 }
 .json-editor {
   display: block;
@@ -496,11 +612,16 @@ footer p {
 
 @media (max-width: 640px) {
   .shell {
-    padding: 24px 16px;
+    padding: 16px 16px 24px;
   }
   .masthead {
     flex-direction: column;
+    align-items: flex-start;
     gap: 10px;
+    margin-bottom: 26px;
+  }
+  h1 {
+    font-size: 1.25rem;
   }
   .toolbar {
     grid-template-columns: minmax(0, 1fr);
@@ -514,6 +635,15 @@ footer p {
   }
   .panes {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .settings {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .settings-input {
+    padding-right: 0;
+  }
+  .settings-output {
+    border-top: 0;
   }
   .output-pane {
     border-left: 0;
