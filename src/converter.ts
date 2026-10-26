@@ -36,7 +36,12 @@ export interface CharacterAliasDefinition {
   override?: boolean;
 }
 
-/** Lowercase and optional uppercase spellings in one representation. */
+/**
+ * Lowercase and optional uppercase spellings in one representation. Each form
+ * should spell one letter: a later release may write a multi-letter uppercase
+ * form in full capitals among capitals, as built-in letters are (see
+ * `docs/character-extensions.md`, *Word context*).
+ */
 export interface CustomCharacterForms {
   /** Canonical lowercase spelling. */
   lowercase: string;

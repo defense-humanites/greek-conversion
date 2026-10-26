@@ -17,6 +17,14 @@ change.
   confused with eta. Other output is unchanged. An old value throws a
   `RangeError` that names its replacement. See the migration guide.
 
+- The documentation of custom characters (`createConverter({ characters })`)
+  no longer presents them as word boundaries by contract. They still act as
+  such today, so that a neighbouring sigma takes its final form and a
+  neighbouring multi-letter capital keeps only its first letter in capitals;
+  a `1.x` release may let them take part in their word and write a
+  multi-letter uppercase form in full capitals among capitals. No case or word
+  behavior is guaranteed for a form that spells more than one letter.
+
 ### Fixed
 
 - `longVowels: "circumflex"` with `circumflexAccent: "circumflex"` wrote `ῆ`
