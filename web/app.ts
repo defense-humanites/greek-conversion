@@ -48,6 +48,43 @@ const copyCodeButton = element<HTMLButtonElement>("copy-code");
 const shareButton = element<HTMLButtonElement>("share");
 const swapButton = element<HTMLButtonElement>("swap");
 
+/**
+ * Opens a link to another site in a new tab, so that following it never
+ * leaves the playground and its work in progress, and marks it as such: an
+ * icon kept on the line of the last word, and a phrase for screen readers.
+ * Links on the playground's own origin are left as they are.
+ */
+function markExternal(link: HTMLAnchorElement): void {
+  if (new URL(link.href, location.href).origin === location.origin) return;
+  link.target = "_blank";
+  link.rel = "noopener";
+  if (link.querySelector(".external-mark") !== null) return;
+
+  const icon = document.createElement("span");
+  icon.className = "external-mark";
+  icon.setAttribute("aria-hidden", "true");
+  const last = link.lastChild;
+  const value = last?.nodeType === Node.TEXT_NODE ? last.textContent ?? "" : "";
+  const start = value.search(/\S+\s*$/);
+  if (last !== null && start >= 0) {
+    const tail = document.createElement("span");
+    tail.className = "external-tail";
+    tail.append(value.slice(start).trimEnd(), icon);
+    last.textContent = value.slice(0, start);
+    link.append(tail);
+  } else {
+    link.append(icon);
+  }
+  const phrase = document.createElement("span");
+  phrase.className = "visually-hidden";
+  phrase.textContent = " (opens in a new tab)";
+  link.append(phrase);
+}
+
+for (const link of document.querySelectorAll<HTMLAnchorElement>("a[href]")) {
+  markExternal(link);
+}
+
 const FORMAT_NAMES: Readonly<Record<Format, string>> = {
   greek: "Greek",
   "beta-code": "Beta Code",
@@ -272,6 +309,7 @@ function showPreset(): void {
     const link = document.createElement("a");
     link.href = reference.url;
     link.textContent = reference.title;
+    markExternal(link);
     references.append(link);
   });
   references.append(".");

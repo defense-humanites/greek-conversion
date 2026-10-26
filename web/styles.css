@@ -26,6 +26,7 @@
     Menlo, Consolas, monospace;
 
   --radius: 6px;
+  --external-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 7.5 8.5M12 9.5v3a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3'/%3E%3C/svg%3E");
   font-family: var(--face-ui);
   color: var(--ink);
   background: var(--page);
@@ -73,6 +74,29 @@ a {
 }
 a:hover {
   text-decoration-thickness: 2px;
+}
+/* Links to other sites open in a new tab; the mark says so. */
+.external-tail {
+  white-space: nowrap;
+}
+.external-mark {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-left: 0.2em;
+  vertical-align: -0.02em;
+  background-color: currentColor;
+  -webkit-mask: var(--external-icon) center / contain no-repeat;
+  mask: var(--external-icon) center / contain no-repeat;
+  forced-color-adjust: none;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 :focus-visible {
   outline: 3px solid var(--accent);
