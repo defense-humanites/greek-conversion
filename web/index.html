@@ -106,7 +106,7 @@
           <!-- Settings, left; what they produce (the code, the document the
                library read), right. Stacked, the order stays the same. -->
           <div class="settings-input">
-            <details>
+            <details id="options-panel" open>
               <summary>Options</summary>
               <div class="detail-body">
                 <label
@@ -120,7 +120,7 @@
                   class="hint"><a target="_blank" rel="noopener" href="https://github.com/defense-humanites/greek-conversion#recipes">Option recipes</a></p>
               </div>
             </details>
-            <details>
+            <details id="characters-panel" open>
               <summary>Characters</summary>
               <div class="detail-body">
                 <label
@@ -140,7 +140,7 @@
             </details>
           </div>
           <div class="settings-output">
-            <details>
+            <details id="code-panel" open>
               <summary>Code</summary>
               <div class="detail-body">
                 <div class="pane-head">
@@ -152,12 +152,17 @@
                 <pre><code id="code"></code></pre>
               </div>
             </details>
-            <details id="document-panel">
+            <details id="document-panel" open>
               <summary>Canonical document</summary>
               <div class="detail-body">
                 <p
                   class="hint">How the library reads the input with its built-in alphabet: letters, case, and diacritics, independent of spelling. Diagnostic token numbers refer to this list.</p>
                 <pre id="document-preview"></pre>
+                <div id="document-limit" class="document-limit" hidden>
+                  <p id="document-limit-text" class="hint"></p>
+                  <button id="document-show-all" class="text-button"
+                    type="button">Show all</button>
+                </div>
               </div>
             </details>
           </div>

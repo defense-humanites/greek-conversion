@@ -427,6 +427,11 @@ select {
   gap: 4px 6px;
   margin-top: 4px;
 }
+.diagnostics .more {
+  align-self: center;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
 .letter {
   min-width: 1.9em;
   padding: 0 6px;
@@ -503,6 +508,23 @@ pre code {
 }
 .detail-body .pane-head .hint {
   margin: 0;
+}
+/* The canonical document scrolls within its panel instead of the page. */
+#document-preview {
+  max-height: 26rem;
+}
+.document-limit {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+.document-limit .hint {
+  margin: 0;
+}
+.document-limit[hidden] {
+  display: none;
 }
 .json-editor {
   display: block;

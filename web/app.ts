@@ -42,6 +42,9 @@ const presetSummary = element<HTMLElement>("preset-summary");
 const presetBody = element<HTMLDivElement>("preset-body");
 const documentPanel = element<HTMLDetailsElement>("document-panel");
 const documentPreview = element<HTMLPreElement>("document-preview");
+const documentLimit = element<HTMLDivElement>("document-limit");
+const documentLimitText = element<HTMLParagraphElement>("document-limit-text");
+const documentShowAll = element<HTMLButtonElement>("document-show-all");
 const code = element<HTMLElement>("code");
 const copyButton = element<HTMLButtonElement>("copy");
 const copyCodeButton = element<HTMLButtonElement>("copy-code");
@@ -371,20 +374,33 @@ function parseSettings<T>(
   return value as T;
 }
 
-/** The text of one source token, for display beside its diagnostic. */
-function tokenText(
-  index: number,
+/**
+ * The text of each source token, for display beside its diagnostic. The
+ * source is read once, on first use: reading it again for every affected
+ * letter made a long lossy text quadratic (two seconds per keystroke for
+ * 10,000 characters of Latin read as Greek).
+ */
+function tokenTexts(
   format: Format,
   options: ConversionOptions,
-): string {
-  try {
-    const token = parse(source.value, format, options)[index];
+): (index: number) => string {
+  let tokens: ReturnType<typeof parse> | null | undefined;
+  return (index) => {
+    if (tokens === undefined) {
+      try {
+        tokens = parse(source.value, format, options);
+      } catch {
+        tokens = null;
+      }
+    }
+    const token = tokens?.[index];
     if (token === undefined) return "";
     return token.kind === "literal" ? token.value : encode([token], "greek");
-  } catch {
-    return "";
-  }
+  };
 }
+
+/** Affected letters shown per kind of loss; the status gives the total. */
+const LETTERS_PER_ISSUE = 60;
 
 /**
  * Lists diagnostics grouped by message, so that one kind of loss appears
@@ -426,13 +442,19 @@ function showIssues(
       text.append(message, detail);
       const affected = document.createElement("p");
       affected.className = "letters";
-      for (const index of indices) {
+      for (const index of indices.slice(0, LETTERS_PER_ISSUE)) {
         const letter = document.createElement("span");
         letter.className = "letter";
         letter.lang = "grc";
         letter.title = `Token ${index}`;
         letter.textContent = letters?.(index) || `#${index}`;
         affected.append(letter);
+      }
+      if (indices.length > LETTERS_PER_ISSUE) {
+        const more = document.createElement("span");
+        more.className = "more";
+        more.textContent = `… and ${indices.length - LETTERS_PER_ISSUE} more`;
+        affected.append(more);
       }
       item.append(text, affected);
       list.append(item);
@@ -441,21 +463,38 @@ function showIssues(
   }
 }
 
+/**
+ * Tokens shown in the canonical document until the reader asks for all: as
+ * pretty JSON, a 10,000-character text makes a megabyte of text to lay out
+ * at every keystroke (about 330 ms against 18 ms without the preview).
+ */
+const PREVIEW_TOKENS = 300;
+let showAllTokens = false;
+
 function inspectDocument(options: ConversionOptions): void {
   if (!documentPanel.open) return;
   const parsed = parse(source.value, selectedFormat(sourceFormat), options);
+  const shown = showAllTokens ? parsed : parsed.slice(0, PREVIEW_TOKENS);
   documentPreview.textContent = JSON.stringify(
     {
-      tokens: parsed.map((token) =>
+      tokens: shown.map((token) =>
         token.kind === "grapheme"
           ? { ...token, diacritics: [...token.diacritics] }
           : token
       ),
+      // Always the whole document, whatever the preview shows.
       validation: validateDocument(parsed),
     },
     null,
     2,
   );
+  const truncated = shown.length < parsed.length;
+  documentLimit.hidden = !truncated;
+  if (truncated) {
+    documentLimitText.textContent = `Showing tokens 0 to ${
+      shown.length - 1
+    } of ${parsed.length}; validation covers them all.`;
+  }
 }
 
 /** Writes a value as a TypeScript literal, with unquoted identifier keys. */
@@ -495,6 +534,59 @@ function showCode(
     text +
     `const converter = createConverter(${literalOf(configuration)});\n` +
     `converter.convert(text, ${from}, ${to}${argument});`;
+}
+
+/**
+ * The settings panels are open by default; each one the reader closes or
+ * opens stays so on the next visit. Browser storage may be unavailable
+ * (private windows, blocked site data), in which case the panels simply
+ * open by default.
+ */
+const PANELS_KEY = "greek-conversion:panels";
+const panels = [
+  "options-panel",
+  "characters-panel",
+  "code-panel",
+  "document-panel",
+].map((id) => element<HTMLDetailsElement>(id));
+
+function restorePanels(): void {
+  let saved: Record<string, boolean> = {};
+  try {
+    saved = JSON.parse(localStorage.getItem(PANELS_KEY) ?? "{}");
+  } catch {
+    return;
+  }
+  for (const panel of panels) {
+    if (typeof saved[panel.id] === "boolean") panel.open = saved[panel.id];
+  }
+}
+
+function savePanels(): void {
+  try {
+    localStorage.setItem(
+      PANELS_KEY,
+      JSON.stringify(
+        Object.fromEntries(panels.map((panel) => [panel.id, panel.open])),
+      ),
+    );
+  } catch {
+    // Storage unavailable: the panels open by default next time.
+  }
+}
+
+// Only the reader's own clicks (or Enter and Space on a summary) are
+// remembered, not the panels that a shared link opens because they hold
+// options or characters.
+let panelClicked = false;
+for (const panel of panels) {
+  panel.querySelector("summary")?.addEventListener("click", () => {
+    panelClicked = true;
+  });
+  panel.addEventListener("toggle", () => {
+    if (panelClicked) savePanels();
+    panelClicked = false;
+  });
 }
 
 /** Keeps the page state in the address, so that a link reproduces it. */
@@ -557,7 +649,7 @@ function update(): void {
     showCode(preset, options, inventory);
     // Token numbers match the built-in reading only without custom characters.
     letters = Object.keys(inventory).length === 0
-      ? (index: number) => tokenText(index, from, withPreset)
+      ? tokenTexts(from, withPreset)
       : undefined;
     const converter = createConverter({
       ...inventory,
@@ -644,6 +736,10 @@ attachSuggestions(optionsInput, optionsSuggestions, suggestOptions);
 attachSuggestions(inventoryInput, inventorySuggestions, suggestInventory);
 strict.addEventListener("change", update);
 documentPanel.addEventListener("toggle", update);
+documentShowAll.addEventListener("click", () => {
+  showAllTokens = true;
+  update();
+});
 swapButton.addEventListener("click", () => {
   const oldSource = sourceFormat.value;
   sourceFormat.value = targetFormat.value;
@@ -664,6 +760,7 @@ addEventListener("hashchange", () => {
   update();
 });
 
+restorePanels();
 restoreState();
 showPreset();
 update();
