@@ -334,6 +334,20 @@ convert("  ΦΙΛΗΒΟΣ\nΗΔΟΝΗ  ", "greek", "transliteration", {
 `whitespace: "collapse"` trims the text and reduces every run of whitespace to
 one space.
 
+Under `"preserve"`, a capital spelled with several Latin letters is written in
+full capitals among capitals, and with its first letter only before lowercase
+text or on its own, as ISO 843 (Table 1, note 11) prescribes. The same holds
+for the `h` of a rough breathing or of rho:
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("ΘΑΛΑΣΣΑ ἙΛΛΑΣ ΠΥΡΡΟΣ", "greek", "transliteration");
+// → THALASSA HELLAS PURRHOS
+convert("Θάλασσα Ἑλλάς Θ.", "greek", "transliteration");
+// → Thálassa Hellás Th.
+```
+
 ### Write Beta Code the TLG way
 
 ASCII letter case carries no meaning in Beta Code input: only `*` marks a

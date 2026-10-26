@@ -13,6 +13,7 @@ import {
   elidedAspirate,
   hasHiatusMark,
   initialBreathingStart,
+  isAmongCapitals,
   isAuEuOuAt,
   isDiphthongAt,
   isGreekNumeralContext,
@@ -310,10 +311,24 @@ export function encodeTransliteration(
     const initialSmooth = preservesSmooth &&
       breathingToken?.kind === "grapheme" &&
       breathingToken.diacritics.has("smooth");
-    const groupUppercase = initialRough && breathingStart !== undefined &&
-      (rendered[breathingStart].kind === "grapheme" &&
-          rendered[breathingStart].uppercase ||
+    const groupStart = breathingStart === undefined
+      ? undefined
+      : rendered[breathingStart];
+    const groupUppercase = initialRough && groupStart !== undefined &&
+      (groupStart.kind === "grapheme" && groupStart.uppercase ||
         breathingToken.uppercase);
+    // A Greek capital whose Latin spelling has several letters is written in
+    // full capitals among capitals (`ΘΑΛΑΣΣΑ` → `THALASSA`, `ἙΛΛΑΣ` →
+    // `HELLAS`), and with its first letter only before lowercase text or
+    // alone (`Θάλασσα` → `Thálassa`, `Θ.` → `Th.`). A rough-breathing group
+    // is capitalized as a whole: every letter of it must be uppercase.
+    const capitals = uppercaseOutput ||
+      (groupUppercase
+        ? groupStart?.kind === "grapheme" && groupStart.uppercase &&
+          breathingToken.uppercase &&
+          isAmongCapitals(doc, breathingIndex!)
+        : token.uppercase && isAmongCapitals(doc, index));
+    const h = capitals ? "H" : "h";
     let base = options.orthography?.nasalGamma !== "literal" &&
         isNasalGamma(doc, index)
       ? "n"
@@ -324,9 +339,9 @@ export function encodeTransliteration(
       isGreekNumeralContext(doc, index);
     if (
       token.uppercase && !bnfLowercaseNumeral &&
-      (!groupUppercase || uppercaseOutput)
+      (!groupUppercase || capitals)
     ) {
-      base = uppercaseOutput
+      base = capitals
         ? base.toUpperCase()
         : base[0].toUpperCase() + base.slice(1);
     }
@@ -336,31 +351,26 @@ export function encodeTransliteration(
     ) base = "\u2019" + base;
     if (initialRough && index === breathingStart) {
       base = (groupUppercase ? "H" : "h") +
-        (groupUppercase && uppercaseOutput
-          ? base.toUpperCase()
-          : base.toLowerCase());
+        (capitals ? base.toUpperCase() : base.toLowerCase());
     } else if (
       token.letter === "rho" &&
       options.orthography?.rho === "systematic"
     ) {
-      if (next?.kind !== "grapheme" || next.letter !== "rho") {
-        base += uppercaseOutput ? "H" : "h";
-      }
+      if (next?.kind !== "grapheme" || next.letter !== "rho") base += h;
     } else if (
       preservesRough &&
       token.diacritics.has("rough") && index !== breathingIndex
     ) {
-      if (token.letter === "rho") base += uppercaseOutput ? "H" : "h";
+      if (token.letter === "rho") base += h;
       else if (token.uppercase) {
-        base = "H" +
-          (uppercaseOutput ? base.toUpperCase() : base.toLowerCase());
+        base = "H" + (capitals ? base.toUpperCase() : base.toLowerCase());
       } else base = "h" + base;
     } else if (
       token.letter === "rho" &&
       previous?.kind === "grapheme" &&
       previous.letter === "rho"
     ) {
-      base += uppercaseOutput ? "H" : "h";
+      base += h;
     }
     const separation = writesSeparationDiaeresis(doc, index, options) &&
       preservesDiaeresis;

@@ -67,6 +67,37 @@ Deno.test("applies letter case to every output format", () => {
   );
 });
 
+Deno.test("writes Latin digraphs in full capitals among capitals", () => {
+  // ISO 843, Table 1 (TH, CH, PS) and note 11: the second letter may be
+  // lowercase only before lowercase text.
+  const cases = [
+    ["ΘΑΛΑΣΣΑ ΧΘΩΝ ΨΑΡΙ ΚΛΩΨ ΦΥΣΙΣ", "THALASSA CHTHŌN PSARI KLŌPS PHUSIS"],
+    ["Θάλασσα Χθών Ψάρι", "Thálassa Chthṓn Psári"],
+    ["Θ. ΘεΟΣ", "Th. TheOS"],
+    ["ἙΛΛΑΣ ΑἹΜΑ ΟἹ ὍΜΗΡΟΣ", "HELLAS HAIMA HOI HÓMĒROS"],
+    ["Ἑλλάς Αἷμα Οἱ Ὁ", "Hellás Haĩma Hoi Ho"],
+    ["ῬΟΔΟΣ ΠΥΡΡΟΣ ΠΥΡΡ", "RHODOS PURRHOS PURRH"],
+    ["Ῥόδος Πύρρος", "Rhódos Púrrhos"],
+  ] as const;
+  for (const [greek, latin] of cases) {
+    assertNfcEquals(convert(greek, "greek", "transliteration"), latin);
+    assertNfcEquals(
+      convert(latin, "transliteration", "transliteration"),
+      latin,
+    );
+  }
+  assertNfcEquals(
+    convert("ΞΕΝΟΣ ΧΑΟΣ ΡΟΔΟΝ", "greek", "transliteration", {
+      orthography: { xi: "ks", chi: "kh", rho: "systematic" },
+    }),
+    "KSENOS KHAOS RHODON",
+  );
+  assertNfcEquals(
+    convert("ΑΘΗΝΑ", "greek", "transliteration", { preset: "iso-843-type-1" }),
+    "ATHĪNA",
+  );
+});
+
 Deno.test("combines uppercase output with ALA-LC digraphs", () => {
   const options = {
     orthography: {
@@ -112,11 +143,16 @@ Deno.test("transliterates every rho with one final h per group", () => {
       "transliteration",
       systematic,
     ),
-    "rh arh rrh rrrh rh rrh Rh RRh",
+    "rh arh rrh rrrh rh rrh Rh RRH",
   );
   assertNfcEquals(
-    convert("rh rrh rrrh Rh RRh", "transliteration", "greek", systematic),
-    "ρ ρρ ρρρ Ρ ΡΡ",
+    convert(
+      "rh rrh rrrh Rh RRH RRh",
+      "transliteration",
+      "greek",
+      systematic,
+    ),
+    "ρ ρρ ρρρ Ρ ΡΡ ΡΡ",
   );
   assertNfcEquals(
     convert("ρ αρ ρρ", "greek", "transliteration"),
@@ -244,7 +280,7 @@ Deno.test("applies individual transliteration variants", () => {
   );
   assertNfcEquals(
     convert("ΒΗΞΦΧΥ", "greek", "transliteration", variants),
-    "VĪKsFKhY",
+    "VĪKSFKHY",
   );
   assertNfcEquals(
     convert("βηξφχυ", "greek", "transliteration"),

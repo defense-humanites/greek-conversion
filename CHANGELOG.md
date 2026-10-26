@@ -7,6 +7,22 @@ change.
 
 ## [Unreleased]
 
+### Fixed
+
+- A Greek capital spelled with several Latin letters is written in full
+  capitals among capitals, for every preset and by default, after ISO 843
+  (Table 1 and note 11): `ΘΑΛΑΣΣΑ` → `THALASSA` (was `ThALASSA`), `ΧΘΩΝ` →
+  `CHTHŌN` (was `ChThŌN`), `ΓΧ` → `NCH`. The `h` of a rough breathing or of
+  rho follows: `ἙΛΛΑΣ` → `HELLAS` (was `HeLLAS`), `ΑἹΜΑ` → `HAIMA` (was
+  `HaiMA`), `ΠΥΡΡΟΣ` → `PURRHOS` (was `PURRhOS`). Before lowercase text or for
+  a lone letter, only the first letter is a capital, as before: `Θάλασσα` →
+  `Thálassa`, `Θ.` → `Th.`. A capital rough-breathing group such as `ΑἹ` or
+  `ΟἹ`, rendered `Hai` and `Hoi` before, now reads back with its case, so
+  `convertDetailed()` no longer reports `changed-case` for it. Earlier
+  spellings are still read as before. Compared with `1.0.0-rc.4` over 52,000
+  conversions (13 option settings, mixed-case text): no other output changes,
+  no new loss.
+
 ## [1.0.0-rc.4] - 2026-10-25
 
 Fourth release candidate for `1.0.0`. It only makes the library faster.
