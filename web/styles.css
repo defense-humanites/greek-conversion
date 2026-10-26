@@ -124,10 +124,17 @@ code {
 /* Masthead */
 .masthead {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 28px;
+  margin-bottom: 22px;
+}
+.identity {
+  /* The about text is placed from the start of the title, not the button. */
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 h1 {
   margin: 0;
@@ -139,10 +146,64 @@ h1 {
   color: var(--muted);
   font-weight: 450;
 }
-.intro {
-  max-width: 62ch;
-  margin: 8px 0 0;
+/*
+ * About: a circled question mark whose text shows on hover or keyboard
+ * focus, and stays open once clicked or tapped (see app.ts).
+ */
+.about {
+  display: flex;
+}
+.about-button {
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  padding: 0;
+  border: 1.5px solid var(--strong-rule);
+  border-radius: 50%;
+  background: transparent;
   color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.about-button:hover,
+.about-button[aria-expanded="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.about-text {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  width: max-content;
+  max-width: min(36ch, calc(100vw - 32px));
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.12);
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 400;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.12s, visibility 0.12s;
+}
+/* Bridges the gap so that the pointer can move onto the text. */
+.about-text::before {
+  content: "";
+  position: absolute;
+  inset: -9px 0 auto;
+  height: 9px;
+}
+.about:not([data-dismissed]):hover .about-text,
+.about:not([data-dismissed]):has(.about-button:focus-visible) .about-text,
+.about[data-open] .about-text {
+  visibility: visible;
+  opacity: 1;
 }
 .links {
   display: flex;
@@ -504,6 +565,7 @@ footer p {
   }
   .masthead {
     flex-direction: column;
+    align-items: flex-start;
     gap: 10px;
   }
   .toolbar {

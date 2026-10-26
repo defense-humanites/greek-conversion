@@ -85,6 +85,38 @@ for (const link of document.querySelectorAll<HTMLAnchorElement>("a[href]")) {
   markExternal(link);
 }
 
+/**
+ * The circled question mark beside the title: its text shows on hover and
+ * keyboard focus (CSS), and a click or tap keeps it open until a second
+ * click, Escape, or a click elsewhere. Escape also hides the hover or focus
+ * view until the pointer or focus leaves.
+ */
+const about = element<HTMLDivElement>("about");
+const aboutButton = element<HTMLButtonElement>("about-button");
+function setAboutOpen(open: boolean): void {
+  about.toggleAttribute("data-open", open);
+  aboutButton.setAttribute("aria-expanded", String(open));
+}
+aboutButton.addEventListener("click", () => {
+  about.removeAttribute("data-dismissed");
+  setAboutOpen(!about.hasAttribute("data-open"));
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (!about.matches(":hover, :focus-within, [data-open]")) return;
+  setAboutOpen(false);
+  about.setAttribute("data-dismissed", "");
+});
+document.addEventListener("click", (event) => {
+  if (!about.contains(event.target as Node)) setAboutOpen(false);
+});
+about.addEventListener("pointerleave", () => {
+  about.removeAttribute("data-dismissed");
+});
+about.addEventListener("focusout", () => {
+  about.removeAttribute("data-dismissed");
+});
+
 const FORMAT_NAMES: Readonly<Record<Format, string>> = {
   greek: "Greek",
   "beta-code": "Beta Code",
