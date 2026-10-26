@@ -5,12 +5,12 @@ for the `0.14.x` API.
 
 ## Installation
 
-The release candidate `1.0.0-rc.4` is published on JSR, and on npm under the
+The release candidate `1.0.0-rc.5` is published on JSR, and on npm under the
 `next` distribution tag; the stable `1.0.0` will follow with the same content
 unless a problem is found:
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0-rc.4
+deno add jsr:@humanities/greek-conversion@1.0.0-rc.5
 npm install @humanities/greek-conversion@next
 ```
 

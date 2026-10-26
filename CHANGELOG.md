@@ -7,6 +7,20 @@ change.
 
 ## [Unreleased]
 
+## [1.0.0-rc.5] - 2026-10-26
+
+Fifth release candidate for `1.0.0`. It brings transliteration closer to ISO 843
+and settles the last option names before the stable release. Two option changes
+break code written for `1.0.0-rc.4`: the values of `orthography.eta`, and
+`orthography.modernDigraphs`, split into `muPi`, `nuTau`, and a value of
+`nasalGamma` (see the migration guide). One combination of options is now
+rejected, and a preset is added, `iso-843-type-2`. Output changes for capitals
+spelled with several Latin letters among capitals (`THALASSA`, every preset),
+for the perispomeni under `iso-843-type-1` (`toû`), and for eta under `eta: "i"`
+with `longVowels: "circumflex"` (`î`); otherwise it is unchanged, and so is
+speed, `ala-lc-modern` aside. Unless a problem is found, `1.0.0` will have the
+same content.
+
 ### Added
 
 - Preset `iso-843-type-2`: the Type 2 transcription of ISO 843:1997, which
@@ -29,6 +43,14 @@ change.
 
 ### Changed
 
+- `orthography.eta` takes `"e"` or `"i"` instead of `"e-macron"` or
+  `"i-macron"`: it chooses the Latin letter of eta, and `longVowels` its mark,
+  as for omega. `eta: "i"` with `longVowels: "circumflex"` now writes `î`
+  (`"i-macron"` kept `ī` whatever `longVowels` said) and reads it back as eta;
+  under that mark, `ī` is iota with a macron again, so `ῑ` is no longer confused
+  with eta. Other output is unchanged. An old value throws a `RangeError` that
+  names its replacement. See the migration guide.
+
 - `orthography.modernDigraphs` is replaced by one option per letter pair, so
   that each rule can be combined with the others and no rule depends on a
   preset's name: `muPi` (`"mp"`, `"b-initial"`, `"b-initial-final"`), `nuTau`
@@ -39,20 +61,6 @@ change.
   The old key throws a `RangeError` that names the new ones. See the migration
   guide.
 
-- Writing `μπ` or `ντ` as one letter tests the two letters
-  before the costlier numeral context, and the accent transfer of
-  `y-with-ou-v-f` looks only at upsilons and the vowels before them:
-  `ala-lc-modern` and `iso-843-type-2` transliterate about a quarter faster
-  (100,000 characters of Thucydides). Output is unchanged.
-
-- `orthography.eta` takes `"e"` or `"i"` instead of `"e-macron"` or
-  `"i-macron"`: it chooses the Latin letter of eta, and `longVowels` its mark,
-  as for omega. `eta: "i"` with `longVowels: "circumflex"` now writes `î`
-  (`"i-macron"` kept `ī` whatever `longVowels` said) and reads it back as eta;
-  under that mark, `ī` is iota with a macron again, so `ῑ` is no longer confused
-  with eta. Other output is unchanged. An old value throws a `RangeError` that
-  names its replacement. See the migration guide.
-
 - The documentation of custom characters (`createConverter({ characters })`) no
   longer presents them as word boundaries by contract. They still act as such
   today, so that a neighbouring sigma takes its final form and a neighbouring
@@ -61,21 +69,12 @@ change.
   in full capitals among capitals. No case or word behavior is guaranteed for a
   form that spells more than one letter.
 
+- Writing `μπ` or `ντ` as one letter tests the two letters before the costlier
+  numeral context: `ala-lc-modern` transliterates long texts about 10 % faster
+  than in `1.0.0-rc.4` (100,000 characters of Thucydides, medians of five
+  processes). Other paths are unchanged in speed, and output is unchanged.
+
 ### Fixed
-
-- A capital `B` read as `μπ` (or `D̲` as `ντ`) among capitals now gives `ΜΠ`
-  (`ΝΤ`): `BAMPAS` reads back as `ΜΠΑΜΠΑΣ` instead of `ΜπΑΜΠΑΣ` under
-  `ala-lc-modern` and `iso-843-type-2`.
-
-- `longVowels: "circumflex"` with `circumflexAccent: "circumflex"` wrote `ῆ` as
-  `ê̂`, which read back as `η` without its accent, so the output was not
-  idempotent. The combination is now rejected with a `RangeError`, including
-  when one value comes from a preset (`bnf-core`, and `iso-843-type-1` since it
-  writes the perispomeni as a circumflex).
-
-- `iso-843-type-1` writes the perispomeni as a circumflex, as ISO 843 Table 3
-  prescribes for both types: `τοῦ` → `toû` (was `toũ`). The README quick start
-  changes accordingly (`tō̂n`, `eipeîn`, `pleîston`).
 
 - A Greek capital spelled with several Latin letters is written in full capitals
   among capitals, for every preset and by default, after ISO 843 (Table 1 and
@@ -89,6 +88,20 @@ change.
   longer reports `changed-case` for it. Earlier spellings are still read as
   before. Compared with `1.0.0-rc.4` over 52,000 conversions (13 option
   settings, mixed-case text): no other output changes, no new loss.
+
+- `iso-843-type-1` writes the perispomeni as a circumflex, as ISO 843 Table 3
+  prescribes for both types: `τοῦ` → `toû` (was `toũ`). The README quick start
+  changes accordingly (`tō̂n`, `eipeîn`, `pleîston`).
+
+- `longVowels: "circumflex"` with `circumflexAccent: "circumflex"` wrote `ῆ` as
+  `ê̂`, which read back as `η` without its accent, so the output was not
+  idempotent. The combination is now rejected with a `RangeError`, including
+  when one value comes from a preset (`bnf-core`, and `iso-843-type-1` since it
+  writes the perispomeni as a circumflex).
+
+- A capital `B` read as `μπ` (or `D̲` as `ντ`) among capitals now gives `ΜΠ`
+  (`ΝΤ`): `BAMPAS` reads back as `ΜΠΑΜΠΑΣ` instead of `ΜπΑΜΠΑΣ` under
+  `ala-lc-modern` and `iso-843-type-2`.
 
 - The `iso-843-type-1` metadata records that note 2 (a Latin `s` before a hyphen
   is read back as medial sigma) is not followed: the parser takes the hyphen as
@@ -612,7 +625,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.4...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.5...HEAD
+[1.0.0-rc.5]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.4...v1.0.0-rc.5
 [1.0.0-rc.4]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.3...v1.0.0-rc.4
 [1.0.0-rc.3]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.2...v1.0.0-rc.3
 [1.0.0-rc.2]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.1...v1.0.0-rc.2
