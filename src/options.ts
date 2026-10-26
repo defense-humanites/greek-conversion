@@ -16,8 +16,17 @@ export type CircumflexTransliteration = "tilde" | "circumflex";
 /** Selects whether explicit source quantity marks appear in Latin output. */
 export type QuantityTransliteration = "preserve" | "omit";
 
-/** Selects contextual nasal gamma (`n`) or literal gamma (`g`). */
-export type NasalGammaTransliteration = "nasal" | "literal";
+/**
+ * Selects contextual nasal gamma (`n`) or literal gamma (`g`).
+ *
+ * `"nasal"` writes `n` for gamma before gamma, kappa, xi, and chi (`γγ` →
+ * `ng`, `γκ` → `nk`); `"nasal-except-kappa"` does so except before kappa
+ * (`γκ` → `gk`), as ISO 843 Type 2 does; `"literal"` always writes `g`.
+ */
+export type NasalGammaTransliteration =
+  | "nasal"
+  | "nasal-except-kappa"
+  | "literal";
 
 /** Selects standard, lunate, or source-preserving sigma glyphs. */
 export type SigmaOrthography = "standard" | "lunate" | "preserve";
@@ -37,27 +46,42 @@ export type KeraiaTransliteration = "greek" | "bnf";
 /** Preserves a dental before sigma or applies the lossy assimilation. */
 export type DentalSigmaOrthography = "preserve" | "assimilate";
 
-/** Selects the transliterated spelling of upsilon. */
+/**
+ * Selects the transliterated spelling of upsilon.
+ *
+ * `"y-with-ou-v-f"` follows ISO 843 Type 2: `y`, but `u` in the diphthong
+ * `ου`, and in the diphthongs `αυ`, `ευ`, `ηυ` a `v` before a voiced
+ * consonant (β, γ, δ, ζ, λ, μ, ν, ρ) or a vowel and an `f` before a voiceless
+ * consonant (θ, κ, ξ, π, σ, τ, φ, χ, ψ) or at the end of a word; an accent on
+ * that upsilon moves to the preceding vowel (`Εύβοια` → `Évvoia`). The `v`
+ * and `f` are read back as beta and phi under `beta: "v"` and `phi: "f"`, as
+ * in the `iso-843-type-2` preset, and otherwise remain Latin letters: the
+ * spelling is not reversible.
+ */
 export type UpsilonTransliteration =
   | "u"
   | "y"
   | "y-with-diphthong-u"
-  | "y-with-au-eu-ou";
+  | "y-with-au-eu-ou"
+  | "y-with-ou-v-f";
 
 /**
  * Selects the mark that shows the length of eta and omega in
- * transliteration: a macron (`ē`, `ō`) or a circumflex (`ê`, `ô`). The letter
- * that carries it on eta is chosen by {@link EtaTransliteration}. The same
- * mark distinguishes stigma and sampi from `c` and `s` (`c̄`, `s̄`). Explicit
- * philological macrons remain independent semantic marks.
+ * transliteration: a macron (`ē`, `ō`), a circumflex (`ê`, `ô`), or none
+ * (`e`, `o`, as in ISO 843 Type 2). The letter that carries it on eta is
+ * chosen by {@link EtaTransliteration}. The same mark distinguishes stigma and
+ * sampi from `c` and `s` (`c̄`, `ĉ`); under `"omit"`, they keep the macron.
+ * Explicit philological macrons remain independent semantic marks.
  *
- * `"circumflex"` cannot be combined with
+ * `"omit"` writes eta and omega like epsilon (or iota) and omicron, so they
+ * are read back as those letters. `"circumflex"` cannot be combined with
  * `circumflexAccent: "circumflex"`, which would write the length mark and the
  * accent alike.
  */
 export type LongVowelTransliteration =
   | "macron"
-  | "circumflex";
+  | "circumflex"
+  | "omit";
 
 /** Selects polytonic output or a mechanical, lossy monotonic transformation. */
 export type GreekAccentuation = "polytonic" | "monotonic";
@@ -102,8 +126,19 @@ export type PhiTransliteration = "ph" | "f";
 /** Selects `ch` or `kh` for chi in transliteration. */
 export type ChiTransliteration = "ch" | "kh";
 
-/** Selects preservation or a supported modern-Greek digraph policy. */
-export type ModernDigraphTransliteration = "preserve" | "phonetic" | "ala-lc";
+/**
+ * Selects preservation or a supported modern-Greek digraph policy.
+ *
+ * `"phonetic"` writes word-initial `μπ` and `ντ` as `b` and `d`; `"ala-lc"`
+ * writes them `b` and `d̲` and `γκ` as `gk` or `nk` by position; `"iso-843"`
+ * writes `μπ` as `b` at the beginning or end of a word (ISO 843 Type 2) and
+ * leaves `ντ` as `nt`. Without `beta: "v"`, `b` is also the spelling of beta.
+ */
+export type ModernDigraphTransliteration =
+  | "preserve"
+  | "phonetic"
+  | "ala-lc"
+  | "iso-843";
 
 /** Selects contextual rho spelling or one final `h` per contiguous rho group. */
 export type RhoTransliteration = "contextual" | "systematic";
@@ -141,6 +176,7 @@ export type Preset =
   | "ala-lc-modern"
   | "bnf-core"
   | "iso-843-type-1"
+  | "iso-843-type-2"
   | "perseus"
   | "sbl-academic"
   | "sbl-general"
@@ -194,7 +230,7 @@ export interface OrthographyOptions {
   dentalSigma?: DentalSigmaOrthography;
   /** Upsilon transliteration. Defaults to `"u"`; `"y-with-au-eu-ou"` uses `u` only in the three cited pairs. */
   upsilon?: UpsilonTransliteration;
-  /** Length mark of eta and omega in transliteration. Defaults to `"macron"`; `"circumflex"` cannot be combined with `circumflexAccent: "circumflex"`. */
+  /** Length mark of eta and omega in transliteration: `"macron"`, `"circumflex"`, or `"omit"`. Defaults to `"macron"`; `"circumflex"` cannot be combined with `circumflexAccent: "circumflex"`. */
   longVowels?: LongVowelTransliteration;
   /** Greek accentuation system. Defaults to `"polytonic"`; `"monotonic"` follows the monotonic rules, monosyllables included, as far as the written text allows. */
   accentuation?: GreekAccentuation;
@@ -388,15 +424,21 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
     smoothBreathing: ["omit", "greek", "apostrophe"],
     circumflexAccent: ["tilde", "circumflex"],
     quantity: ["preserve", "omit"],
-    nasalGamma: ["nasal", "literal"],
+    nasalGamma: ["nasal", "nasal-except-kappa", "literal"],
     sigma: ["standard", "lunate", "preserve"],
     lunateSigma: ["s", "c"],
     finalSigma: ["contextual", "medial", "preserve"],
     numerals: ["alphabetic", "decimal"],
     keraia: ["greek", "bnf"],
     dentalSigma: ["preserve", "assimilate"],
-    upsilon: ["u", "y", "y-with-diphthong-u", "y-with-au-eu-ou"],
-    longVowels: ["macron", "circumflex"],
+    upsilon: [
+      "u",
+      "y",
+      "y-with-diphthong-u",
+      "y-with-au-eu-ou",
+      "y-with-ou-v-f",
+    ],
+    longVowels: ["macron", "circumflex", "omit"],
     accentuation: ["polytonic", "monotonic"],
     whitespace: ["preserve", "collapse"],
     hyphen: ["ascii", "typographic"],
@@ -406,7 +448,7 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
     xi: ["x", "ks"],
     phi: ["ph", "f"],
     chi: ["ch", "kh"],
-    modernDigraphs: ["preserve", "phonetic", "ala-lc"],
+    modernDigraphs: ["preserve", "phonetic", "ala-lc", "iso-843"],
     rho: ["contextual", "systematic"],
     letterCase: ["preserve", "lowercase", "uppercase", "title"],
     betaCodeCase: ["lowercase", "uppercase"],

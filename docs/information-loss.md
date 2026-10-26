@@ -145,12 +145,16 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `numerals: "decimal"` | Replaces a valid marked alphabetic numeral group with decimal digits | No |
 | `dentalSigma: "assimilate"` | Deletes `τ`, `δ`, or `θ` before sigma in Greek output | No |
 | `nasalGamma: "nasal"` (default) | Converges nasal gamma and nu-before-velar transliteration spellings | No |
+| `nasalGamma: "nasal-except-kappa"` | As `"nasal"`, but writes `γκ` as `gk` (ISO 843 Type 2) | Yes for `γκ`; as `"nasal"` otherwise |
 | `coronis: "omit"` (default) | Omits coronis from transliteration | No |
 | `coronis: "apostrophe"` | Emits U+2019 as display punctuation | No |
 | `coronis: "greek"` | Emits semantic U+1FBD after the affected vowel | Yes for implemented coronis contexts |
 | `accentuation: "monotonic"` | Keeps diaeresis, maps every accent to acute, removes other polytonic marks, and unaccents monosyllables except `ή`, `πού`, `πώς` | No |
 | `modernDigraphs: "phonetic"` | Maps word-initial `μπ/ντ` to `b/d` in transliteration | No; `b/d` are also canonical spellings of beta/delta |
 | `modernDigraphs: "ala-lc"` | Maps initial `μπ/ντ` to `b/d̲` and contextual `γκ` to `gk/nk` | Yes with the coordinated ALA-LC letter options; `d̲` remains distinct from delta |
+| `modernDigraphs: "iso-843"` | Maps `μπ` to `b` at either end of a word (ISO 843 Type 2) | Yes with `beta: "v"`; otherwise `b` is also beta |
+| `upsilon: "y-with-ou-v-f"` | Writes the upsilon of `αυ/ευ/ηυ` as `v` or `f` and moves its accent to the vowel (ISO 843 Type 2) | No: `v` and `f` read back as beta and phi (with `beta: "v"`, `phi: "f"`), and the accent stays on the vowel |
+| `longVowels: "omit"` | Writes eta and omega without a length mark (ISO 843 Type 2) | No: they read back as epsilon (or iota) and omicron, except where a circumflex or an iota subscript only fits the long vowel |
 | `rho: "systematic"` | Adds one final `h` to every contiguous rho group | The rho letters are recoverable; an explicit rough breathing is not |
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | The accent is recoverable; its scalar preference is not |

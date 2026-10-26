@@ -690,7 +690,7 @@ function mappingDiagnostic(
   behavior: ConverterOutOfScopeBehavior,
 ): CharacterScopeDiagnostic {
   const reason = code === "undefined-preset-mapping"
-    ? "has no ISO 843 Type 1 transliteration"
+    ? "has no ISO 843 conversion"
     : "cannot be identified unambiguously with ISO 843's koppa";
   return {
     code,

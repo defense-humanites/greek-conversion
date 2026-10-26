@@ -18,15 +18,22 @@ import {
   isDiphthongAt,
   isGreekNumeralContext,
   isNasalGamma,
+  isVowelUpsilonAt,
   isWordFinal,
   isWordInitial,
+  precedesVoicedSound,
 } from "./context.ts";
 import {
   infersSmoothBreathing,
   prepareDiacriticsForRendering,
   preservesDiacritic,
 } from "./diacritics.ts";
-import { NO_DIACRITICS, sharedMask } from "./model.ts";
+import {
+  NO_DIACRITICS,
+  sharedMask,
+  withDiacritic,
+  withoutDiacritic,
+} from "./model.ts";
 import type { Diacritic, Document, Format, Grapheme } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
 import { greekUpper } from "./case.ts";
@@ -329,8 +336,9 @@ export function encodeTransliteration(
           isAmongCapitals(doc, breathingIndex!)
         : token.uppercase && isAmongCapitals(doc, index));
     const h = capitals ? "H" : "h";
-    let base = options.orthography?.nasalGamma !== "literal" &&
-        isNasalGamma(doc, index)
+    const nasalGamma = options.orthography?.nasalGamma;
+    let base = nasalGamma !== "literal" &&
+        isNasalGamma(doc, index, nasalGamma === "nasal-except-kappa")
       ? "n"
       : transliterationBase(doc, index, token.letter, options);
     const bnfLowercaseNumeral = options.orthography?.keraia === "bnf" &&
@@ -375,7 +383,11 @@ export function encodeTransliteration(
     const separation = writesSeparationDiaeresis(doc, index, options) &&
       preservesDiaeresis;
 
-    return base + markString(token, separation);
+    return base +
+      markString(
+        transferredAccents(rendered, index, options) ?? token,
+        separation,
+      );
   }).join("").normalize("NFC");
 }
 
@@ -394,7 +406,10 @@ function modernDigraphAt(
   options: ConversionOptions,
 ): string | undefined {
   const policy = options.orthography?.modernDigraphs;
-  if ((policy !== "phonetic" && policy !== "ala-lc") || index < 0) {
+  if (
+    (policy !== "phonetic" && policy !== "ala-lc" && policy !== "iso-843") ||
+    index < 0
+  ) {
     return undefined;
   }
 
@@ -411,6 +426,13 @@ function modernDigraphAt(
   }
 
   const initial = isWordInitial(document, index);
+  if (policy === "iso-843") {
+    // ISO 843 Type 2, notes 5 to 7: b at either end of the word, mp inside.
+    return first.letter === "mu" && second.letter === "pi" &&
+        (initial || isWordFinal(document, index + 1))
+      ? "b"
+      : undefined;
+  }
   if (first.letter === "mu" && second.letter === "pi" && initial) return "b";
   if (first.letter === "nu" && second.letter === "tau" && initial) {
     return policy === "ala-lc" ? "d\u0332" : "d";
@@ -462,6 +484,17 @@ function transliterationBase(
     switch (options.orthography?.upsilon) {
       case "y":
         return "y";
+      case "y-with-ou-v-f": {
+        if (isVowelUpsilonAt(document, index - 1)) {
+          return precedesVoicedSound(document, index) ? "v" : "f";
+        }
+        const previous = document[index - 1];
+        return previous?.kind === "grapheme" &&
+            previous.letter === "omicron" &&
+            isDiphthongAt(document, index - 1)
+          ? "u"
+          : "y";
+      }
       case "y-with-au-eu-ou":
         return isAuEuOuAt(document, index - 1) ? "u" : "y";
       case "y-with-diphthong-u":
@@ -495,9 +528,55 @@ function transliterationBase(
   switch (options.orthography?.longVowels) {
     case "circumflex":
       return `${base}\u0302`;
+    case "omit":
+      // Stigma and sampi keep the macron that tells them from c and s.
+      return letter === "eta" || letter === "omega" ? base : `${base}\u0304`;
     default:
       return `${base}\u0304`;
   }
+}
+
+const ACCENTS: readonly Diacritic[] = ["acute", "grave", "circumflex"];
+
+/**
+ * Under `upsilon: "y-with-ou-v-f"`, the accent of the upsilon of `αυ`, `ευ`,
+ * `ηυ`, written `v` or `f`, moves to the preceding vowel (ISO 843, note 10:
+ * `Εύβοια` → `Évvoia`). Returns the token whose marks are written at `index`
+ * when they differ from its own, or undefined.
+ */
+function transferredAccents(
+  rendered: Document,
+  index: number,
+  options: ConversionOptions,
+): Grapheme | undefined {
+  if (options.orthography?.upsilon !== "y-with-ou-v-f") return undefined;
+  const token = rendered[index];
+  if (token.kind !== "grapheme") return undefined;
+  if (token.letter === "upsilon" && isVowelUpsilonAt(rendered, index - 1)) {
+    let diacritics = token.diacritics;
+    for (const accent of ACCENTS) {
+      diacritics = withoutDiacritic(diacritics, accent);
+    }
+    return diacritics === token.diacritics
+      ? undefined
+      : { ...token, diacritics };
+  }
+  const next = rendered[index + 1];
+  if (
+    next?.kind === "grapheme" && next.letter === "upsilon" &&
+    isVowelUpsilonAt(rendered, index)
+  ) {
+    let diacritics = token.diacritics;
+    for (const accent of ACCENTS) {
+      if (next.diacritics.has(accent)) {
+        diacritics = withDiacritic(diacritics, accent);
+      }
+    }
+    return diacritics === token.diacritics
+      ? undefined
+      : { ...token, diacritics };
+  }
+  return undefined;
 }
 
 function trMark(mark: Diacritic, options: ConversionOptions) {
@@ -549,7 +628,10 @@ function writesSeparationDiaeresis(
   options: ConversionOptions,
 ): boolean {
   const upsilon = options.orthography?.upsilon;
-  if (upsilon !== "y-with-au-eu-ou" && upsilon !== "y-with-diphthong-u") {
+  if (
+    upsilon !== "y-with-au-eu-ou" && upsilon !== "y-with-diphthong-u" &&
+    upsilon !== "y-with-ou-v-f"
+  ) {
     return false;
   }
   const token = document[index];
@@ -559,14 +641,16 @@ function writesSeparationDiaeresis(
     first?.kind !== "grapheme" || !hasHiatusMark(first)
   ) return false;
 
-  // Without its hiatus mark the pair would be a diphthong rendered with u.
+  // Without its hiatus mark the pair would be a diphthong rendered with u
+  // (or with v or f).
   const unmarked: Document = [
     { ...first, diacritics: NO_DIACRITICS },
     token,
   ];
-  const wouldBeDiphthong = upsilon === "y-with-au-eu-ou"
-    ? isAuEuOuAt(unmarked, 0)
-    : isDiphthongAt(unmarked, 0);
+  const wouldBeDiphthong = upsilon === "y-with-diphthong-u"
+    ? isDiphthongAt(unmarked, 0)
+    : isAuEuOuAt(unmarked, 0) ||
+      upsilon === "y-with-ou-v-f" && isVowelUpsilonAt(unmarked, 0);
   if (!wouldBeDiphthong) return false;
 
   // The hiatus survives when one of its marks is reread on the first vowel.

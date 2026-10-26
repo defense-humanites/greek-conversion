@@ -29,6 +29,7 @@ matrix records only the six additional entries.
 | `ala-lc-modern` | Numeral-only | Outside | Numeral-only | Numeral-only | Numeral-only | Numeral-only |
 | `bnf-core` | Exact | Exact | Exact | Exact | Exact | Exact |
 | `iso-843-type-1` | Exact | Exact | Undefined | Undefined | Unresolved | Undefined |
+| `iso-843-type-2` | Exact | Exact | Undefined | Undefined | Unresolved | Undefined |
 | `perseus` | Outside | Outside | Outside | Outside | Outside | Outside |
 | `sbl-academic` | Outside | Outside | Outside | Outside | Outside | Outside |
 | `sbl-general` | Outside | Outside | Outside | Outside | Outside | Outside |
@@ -79,12 +80,13 @@ forms, and sampi. Its table assigns `q` to both koppa code points. The preset
 now selects that spelling for `archaic-koppa` (`ϙ`) as well, deliberately
 collapsing the two source characters in transliteration.
 
-### ISO 843 Type 1
+### ISO 843 Types 1 and 2
 
 ISO 843 identifies stigma, digamma, koppa, sampi, Byzantine/lunate sigma, and
 yot as part of the Greek source repertoire. Its archaic-character conversion
 table assigns Latin output only to digamma, yot, and Byzantine sigma. Stigma,
-koppa, and sampi are consequently in scope without ISO-defined Type 1 output.
+koppa, and sampi are consequently in scope without ISO-defined output; Table 4
+is common to Type 1 and Type 2, so both presets share this matrix row.
 
 The standard predates Unicode's separate modern and archaic koppa pair used by
 the engine. The audit therefore does not equate its single named koppa with
@@ -141,8 +143,8 @@ alphabetic numeral while preserving the same semantic letter when unmarked.
 Perseus and both SBL profiles exclude all six additional entries. BnF and TLG
 accept all six. ISO 843 includes all six in its source repertoire. When the
 target is transliteration, a bound ISO converter preserves and reports stigma,
-koppa, and sampi as `undefined-preset-mapping`, because Table 4 assigns no
-Type 1 letter mapping. It reports `archaic-koppa` separately as
+koppa, and sampi as `undefined-preset-mapping`, because Table 4 assigns them
+no letter mapping for either type. It reports `archaic-koppa` separately as
 `unresolved-preset-mapping`: the standard's single koppa does not resolve the
 engine's two Unicode forms. Strict mode rejects these occurrences with their
 distinct codes. Digamma and yot use the defined Latin mappings; marked Greek

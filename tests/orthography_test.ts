@@ -337,6 +337,54 @@ Deno.test("eta takes its letter from eta and its mark from longVowels", () => {
   );
 });
 
+Deno.test("applies the ISO 843 Type 2 policies one by one", () => {
+  const cases = [
+    [
+      { longVowels: "omit" },
+      "ημέρα ῆ ῳ ῶ ϛ ϡ",
+      "eméra ẽ o̧ õ c̄ s̄",
+      // A circumflex or an iota subscript tells eta and omega back.
+      "ἐμέρα ἦ ᾠ ὦ ϛ ϡ",
+    ],
+    [
+      { longVowels: "omit", eta: "i" },
+      "ημέρα ῆ ῃ ῑ",
+      "iméra ĩ i̧ ī",
+      "ἰμέρα ἶ ᾐ ῑ",
+    ],
+    [
+      { nasalGamma: "nasal-except-kappa" },
+      "ἄγκυρα ἄγγελος ἐνκαλῶ",
+      "ágkura ángelos enkalō̃",
+      "ἄγκυρα ἄγγελος ἐνκαλῶ",
+    ],
+    [
+      { modernDigraphs: "iso-843", beta: "v" },
+      "μπαμπάς κλαμπ ΜΠΑΜΠΑΣ",
+      "bampás klab BAMPAS",
+      "μπαμπάς κλαμπ ΜΠΑΜΠΑΣ",
+    ],
+    [
+      { upsilon: "y-with-ou-v-f", beta: "v", phi: "f" },
+      "Εὔβοια αὐτός ηὗρον οὐ",
+      "Évvoia aftós hē̃vron ou",
+      "Ἔββοια ἀφτός ἧβρον οὐ",
+    ],
+  ] as const;
+  for (const [orthography, greek, latin, reread] of cases) {
+    const options = { orthography };
+    assertNfcEquals(convert(greek, "greek", "transliteration", options), latin);
+    assertNfcEquals(
+      convert(latin, "transliteration", "transliteration", options),
+      latin,
+    );
+    assertNfcEquals(
+      convert(latin, "transliteration", "greek", options),
+      reread,
+    );
+  }
+});
+
 Deno.test("transliterates initial modern Greek digraphs phonetically", () => {
   const modern = {
     orthography: { modernDigraphs: "phonetic" },

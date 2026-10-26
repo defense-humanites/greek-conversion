@@ -224,6 +224,46 @@ const PRESET_DEFINITIONS = {
       },
     },
   },
+  "iso-843-type-2": {
+    metadata: {
+      id: "iso-843-type-2",
+      name: "ISO 843:1997 — Type 2",
+      authority: "International Organization for Standardization",
+      description:
+        "Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility (identity documents, road signs, maps).",
+      scope: ["Modern Greek", "Ancient Greek"],
+      coverage: "partial",
+      outOfScopeBehavior: "engine-default",
+      references: [{
+        title: "ISO 843:1997",
+        url:
+          "https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf",
+      }],
+      limitations: [
+        "A transcription is not reversible by design: the v and f of αυ, ευ, ηυ read back as beta and phi, i and o as iota and omicron, and b at the edge of a word as μπ; convertDetailed() reports these losses.",
+        "Notes 3 and 4 list the letters of the modern alphabet; before an archaic letter, the upsilon of αυ, ευ, ηυ follows that letter's sound (f before stigma, koppa, sampi; v before digamma and yot), and any non-letter after it counts as the end of the word.",
+        "An apostrophe for initial smooth breathing can also represent punctuation; reverse parsing does not infer it as a distinct breathing mark.",
+        "Note 2 reads a Latin s followed by a hyphen as medial sigma, for a word divided at the end of a line; the parser treats a hyphen as a word boundary and reads final sigma there.",
+        "ISO 843 names stigma, koppa, and sampi in its Greek repertoire but does not assign them Type 2 conversions; bound converters preserve or reject them for transliteration, while ordinary preset use retains engine defaults.",
+        "The standard's single named koppa cannot be identified unambiguously with the engine's separate archaic-koppa entry; bound transliteration reports this unresolved mapping.",
+      ],
+    },
+    options: {
+      orthography: {
+        beta: "v",
+        circumflexAccent: "circumflex",
+        coronis: "apostrophe",
+        enotikon: "hyphen",
+        eta: "i",
+        longVowels: "omit",
+        modernDigraphs: "iso-843",
+        nasalGamma: "nasal-except-kappa",
+        phi: "f",
+        smoothBreathing: "apostrophe",
+        upsilon: "y-with-ou-v-f",
+      },
+    },
+  },
   "perseus": {
     metadata: {
       id: "perseus",
@@ -556,12 +596,13 @@ export function isCharacterInPresetScope(
       return false;
     case "bnf-core":
     case "iso-843-type-1":
+    case "iso-843-type-2":
     case "tlg-core":
       return true;
   }
 }
 
-/** A recognized ISO source character without an established Type 1 mapping. */
+/** A recognized ISO source character without an established Type 1 or 2 mapping. */
 export function presetMappingIssue(
   preset: Preset,
   character: Letter,
@@ -570,7 +611,10 @@ export function presetMappingIssue(
   target: Format,
   options: ResolvedConversionOptions,
 ): "undefined-preset-mapping" | "unresolved-preset-mapping" | undefined {
-  if (preset !== "iso-843-type-1" || target !== "transliteration") {
+  if (
+    (preset !== "iso-843-type-1" && preset !== "iso-843-type-2") ||
+    target !== "transliteration"
+  ) {
     return undefined;
   }
   // ISO's separate numeral table permits decimal indexing when requested.

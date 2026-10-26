@@ -194,6 +194,7 @@ Deno.test("bound preset scopes match the audited additional-letter matrix", () =
     ],
     ["bnf-core", []],
     ["iso-843-type-1", []],
+    ["iso-843-type-2", []],
     [
       "perseus",
       ["digamma", "yot", "stigma", "koppa", "archaic-koppa", "sampi"],
@@ -223,46 +224,46 @@ Deno.test("bound preset scopes match the audited additional-letter matrix", () =
   }
 });
 
-Deno.test("ISO Type 1 preserves in-scope characters without defined letter mappings", () => {
-  const converter = createConverter({ preset: "iso-843-type-1" });
-  const result = converter.convertDetailed(
-    "ϝϳϛϟϙϡ",
-    "greek",
-    "transliteration",
-  );
+for (const preset of ["iso-843-type-1", "iso-843-type-2"] as const) {
+  Deno.test(`${preset} preserves in-scope characters without defined letter mappings`, () => {
+    const converter = createConverter({ preset });
+    const result = converter.convertDetailed(
+      "ϝϳϛϟϙϡ",
+      "greek",
+      "transliteration",
+    );
 
-  assertEquals(result.output, "wjϛϟϙϡ");
-  assertEquals(result.lossy, false);
-  assertEquals(
-    result.diagnostics.map(({ code, index, character }) => [
-      code,
-      index,
-      character,
-    ]),
-    [
-      ["undefined-preset-mapping", 2, "stigma"],
-      ["undefined-preset-mapping", 3, "koppa"],
-      ["unresolved-preset-mapping", 4, "archaic-koppa"],
-      ["undefined-preset-mapping", 5, "sampi"],
-    ],
-  );
+    assertEquals(result.output, "wjϛϟϙϡ");
+    assertEquals(result.lossy, false);
+    assertEquals(
+      result.diagnostics.map(({ code, index, character }) => [
+        code,
+        index,
+        character,
+      ]),
+      [
+        ["undefined-preset-mapping", 2, "stigma"],
+        ["undefined-preset-mapping", 3, "koppa"],
+        ["unresolved-preset-mapping", 4, "archaic-koppa"],
+        ["undefined-preset-mapping", 5, "sampi"],
+      ],
+    );
 
-  // The preset alone retains its documented engine-default behavior.
-  assertEquals(
-    convert("ϛ", "greek", "transliteration", {
-      preset: "iso-843-type-1",
-    }),
-    "c̄",
-  );
-  assertEquals(converter.convert("ϛ", "greek", "greek"), "ϛ");
-  assertEquals(converter.convert("ϛ", "greek", "beta-code"), "#2");
-  assertEquals(
-    converter.convert("ϛʹ", "greek", "transliteration", {
-      orthography: { numerals: "decimal" },
-    }),
-    "6",
-  );
-});
+    // The preset alone retains its documented engine-default behavior.
+    assertEquals(
+      convert("ϛ", "greek", "transliteration", { preset }),
+      "c̄",
+    );
+    assertEquals(converter.convert("ϛ", "greek", "greek"), "ϛ");
+    assertEquals(converter.convert("ϛ", "greek", "beta-code"), "#2");
+    assertEquals(
+      converter.convert("ϛʹ", "greek", "transliteration", {
+        orthography: { numerals: "decimal" },
+      }),
+      "6",
+    );
+  });
+}
 
 Deno.test("strict ISO Type 1 rejects missing mappings separately from exclusions", () => {
   const converter = createConverter({

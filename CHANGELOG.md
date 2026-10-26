@@ -7,6 +7,26 @@ change.
 
 ## [Unreleased]
 
+### Added
+
+- Preset `iso-843-type-2`: the Type 2 transcription of ISO 843:1997, which
+  follows pronunciation (identity documents, road signs, maps) and is not
+  reversible by design. `Εύβοια, Ευρώπη, αυτός` → `Évvoia, Evrópi, aftós`;
+  `άγγελος, άγκυρα` → `ángelos, ágkyra`; `μπαμπάς, κλαμπ, λόμπι` → `bampás,
+  klab, lómpi`; `ημέρα, ώρα` → `iméra, óra`. A conformance corpus covers
+  Table 2 and notes 3 to 10. It rests on four new option values, usable on
+  their own:
+  - `longVowels: "omit"` writes eta and omega without a length mark (stigma
+    and sampi keep their macron); a circumflex or an iota subscript on `e`,
+    `i`, or `o`, which only the long vowel can bear, still reads back as eta
+    or omega (`tôn` → `τῶν`);
+  - `nasalGamma: "nasal-except-kappa"` writes `γκ` as `gk` and the other
+    nasal gammas as `n`;
+  - `modernDigraphs: "iso-843"` writes `μπ` as `b` at either end of a word;
+  - `upsilon: "y-with-ou-v-f"` writes the upsilon of `αυ`, `ευ`, `ηυ` as `v`
+    before a voiced sound and `f` before a voiceless one or at the end of a
+    word, and moves its accent to the vowel; `ου` stays `ou`.
+
 ### Changed
 
 - `orthography.eta` takes `"e"` or `"i"` instead of `"e-macron"` or
@@ -26,6 +46,10 @@ change.
   behavior is guaranteed for a form that spells more than one letter.
 
 ### Fixed
+
+- A capital `B` read as `μπ` (or `D̲` as `ντ`) among capitals now gives `ΜΠ`
+  (`ΝΤ`): `BAMPAS` reads back as `ΜΠΑΜΠΑΣ` instead of `ΜπΑΜΠΑΣ` under
+  `ala-lc-modern` and `iso-843-type-2`.
 
 - `longVowels: "circumflex"` with `circumflexAccent: "circumflex"` wrote `ῆ`
   as `ê̂`, which read back as `η` without its accent, so the output was not

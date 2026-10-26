@@ -16,6 +16,7 @@ and modern Greek tables.
 | `ala-lc-modern` | Published letter/notes rows for `μπ/ντ/γκ`, explicitly marked rho, omitted marks, and documented numeral variants | Supplying absent rough breathings or identifying uncertain polytonic/monotonic sources requires lexical or bibliographic context. |
 | `bnf-core` | Ancient-Greek variant letters; `αυ/ευ/ου`; known smooth breathing, circumflex, keraiai, and marked archaic numerals in Latin output; omission of explicit macron/breve | The upper Cypriot syndyazomeno shares U+0306 with breve; cataloguing variants and the Iliad/Odyssey numeral exception require external context. |
 | `iso-843-type-1` | Type 1 letter choices; `αυ/ευ/ου`; capitals of multi-letter spellings; initial smooth breathing; perispomeni as circumflex; question mark, ano teleia, and enotikon; undefined and unresolved archaic mappings | Some reference provisions remain unimplemented; a Latin apostrophe or hyphen cannot by itself establish a smooth breathing or enotikon, and `s` before a hyphen is read as final sigma (note 2). |
+| `iso-843-type-2` | Table 2 transcription: `αυ/ευ/ηυ` as `v` or `f` by the next sound, accent moved to the vowel, nasal gamma except before kappa, `μπ` as `b` at word edges, unmarked eta and omega; Table 3 marks and punctuation as for Type 1; undefined and unresolved archaic mappings | Not reversible by design; before an archaic letter, upsilon follows that letter's sound; the same apostrophe, hyphen, and note 2 limits as Type 1. |
 | `perseus` | Lowercase ASCII Beta Code, letters, and supported diacritics | TLG escapes are outside the cited Perseus subset. |
 | `sbl-academic` | The library's academic diacritic profile | This is an adaptation, not a separate SBL table. |
 | `sbl-general` | The library's general-purpose removal and retention of diacritics | The profile covers an engine adaptation of SBL's single general-purpose table. |
@@ -36,11 +37,11 @@ and `s̄` under BnF; `convertDetailed()` reports the changed case.
 ISO 843 transliterates the Greek question mark as `?` and ano teleia as `;`.
 The initial smooth breathing is rendered as an apostrophe; an apostrophe in
 Latin input is not sufficient evidence for reconstructing that mark.
-The enotikon renders as `-` under ISO 843 Type 1. The inverse parser reads
+The enotikon renders as `-` under both ISO 843 types. The inverse parser reads
 that glyph as an ordinary hyphen and reports the lost distinction.
 
 The bound converter's `outOfScopeBehavior: "reject"` rejects **recognized**
-source characters outside the audited repertoire and known missing ISO Type 1
+source characters outside the audited repertoire and known missing ISO 843
 letter mappings. It does not reject arbitrary unknown literals, all
 information loss, or every unimplemented contextual rule. Inspect
 `convertDetailed().losses` separately when preservation of distinctions is

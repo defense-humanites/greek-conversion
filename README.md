@@ -170,6 +170,7 @@ A preset bundles the options that implement one published convention:
 | `ala-lc-modern` | transliteration | Library romanization of post-1453 Modern Greek, with its contextual digraphs |
 | `bnf-core` | transliteration | BnF/ISO-based romanization for Ancient Greek cataloguing |
 | `iso-843-type-1` | transliteration | ISO 843 Type 1 transliteration for Ancient and Modern Greek |
+| `iso-843-type-2` | transliteration | ISO 843 Type 2 transcription, by pronunciation (passports, road signs, maps) |
 | `sbl-academic` | transliteration | Biblical studies, keeping scholarly diacritics |
 | `sbl-general` | transliteration | Biblical studies for general readers, without most diacritics |
 | `tlg-core` | Beta Code | Uppercase-ASCII TLG Beta Code for polytonic interchange |
@@ -185,7 +186,16 @@ convert("Φίληβος ἢ Περὶ ἡδονῆς", "greek", "transliteration
 
 convert("Βίος Μπάλα", "greek", "transliteration", { preset: "ala-lc-modern" });
 // → Vios Bala
+
+convert("Εύβοια, Ευρώπη, αυτός", "greek", "transliteration", {
+  preset: "iso-843-type-2",
+});
+// → Évvoia, Evrópi, aftós
 ```
+
+Type 2 follows pronunciation and is not reversible: `convertDetailed()`
+reports what it loses, such as eta written `i` or the upsilon of `ευ` written
+`v`.
 
 Your own options override only the fields they name; the rest of the preset
 stays in force. Defaults apply first, then the preset, then your options:

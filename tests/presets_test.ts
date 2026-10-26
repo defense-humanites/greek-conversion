@@ -17,6 +17,7 @@ Deno.test("exposes descriptive metadata for every preset", () => {
     "ala-lc-modern",
     "bnf-core",
     "iso-843-type-1",
+    "iso-843-type-2",
     "perseus",
     "sbl-academic",
     "sbl-general",
