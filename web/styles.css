@@ -456,9 +456,24 @@ pre code {
 }
 
 /* Settings */
+/*
+ * Two columns on wide screens, aligned with the panes above: the right
+ * column starts at the output pane's edge, and the left one keeps its
+ * distance from it with padding rather than a gap.
+ */
 .settings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   margin-top: 28px;
+}
+.settings-input,
+.settings-output {
+  min-width: 0;
   border-top: 1px solid var(--rule);
+}
+.settings-input {
+  padding-right: 32px;
 }
 .settings details {
   border-bottom: 1px solid var(--rule);
@@ -580,6 +595,15 @@ footer p {
   }
   .panes {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .settings {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .settings-input {
+    padding-right: 0;
+  }
+  .settings-output {
+    border-top: 0;
   }
   .output-pane {
     border-left: 0;
