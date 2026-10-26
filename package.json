@@ -1,7 +1,7 @@
 {
   "name": "greek-conversion",
   "author": "Antoine Boquet",
-  "license": "AGPL-3.0-or-later",
+  "license": "MIT",
   "version": "0.14.5",
   "description": "Deprecated: use @humanities/greek-conversion instead. A small library to convert a polytonic greek string from/into various representations.",
   "keywords": [

@@ -1,7 +1,7 @@
 /**
  * greek-conversion
  * Copyright (C) 2021-2026 Antoine Boquet
- * @license AGPL-3.0-or-later
+ * @license MIT
  */
 
 export { AdditionalChar, Coronis, KeyType, Preset } from './enums';

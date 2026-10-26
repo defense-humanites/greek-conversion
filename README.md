@@ -7,11 +7,11 @@ A small, yet powerful, JavaScript library for converting both polytonic and mono
 
 ## Status
 
-`0.14.5` is the last release of the `0.x` series. It contains no functional change from `0.14.4`; it only marks the series as deprecated.
+`0.14.5` is the last release of the `0.x` series. It contains no functional change from `0.14.4`: it marks the series as deprecated and moves it to the MIT license.
 
 - **No further development is planned** for `greek-conversion` 0.x: no new features and no bug fixes. The library has no runtime dependencies.
 - **Your code keeps working.** The published versions stay on npm and the `latest` tag stays on `0.14.5`. npm, pnpm, Yarn and Bun now print a deprecation notice when installing the package; it is informational.
-- **When to migrate:** [`@humanities/greek-conversion`](https://github.com/defense-humanites/greek-conversion) 1.0 brings stricter and more complete conversion presets, loss diagnostics and an MIT license. It is ESM-only and requires Node.js ≥ 24; if your project needs CommonJS or an older Node.js, you can stay on `0.14.5`.
+- **When to migrate:** [`@humanities/greek-conversion`](https://github.com/defense-humanites/greek-conversion) 1.0 brings stricter and more complete conversion presets and loss diagnostics. It is ESM-only and requires Node.js ≥ 24; if your project needs CommonJS or an older Node.js, you can stay on `0.14.5`.
 - The `0.x` source code lives on the [`legacy`](https://github.com/defense-humanites/greek-conversion/tree/legacy) branch.
 
 ## Summary
@@ -298,17 +298,6 @@ This is what you should know before using this library:
 
 ## License
 
-Copyright (C) 2021-2026  Antoine Boquet
+Copyright (c) 2021-2026 Antoine Boquet
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see https://www.gnu.org/licenses/agpl-3.0.fr.html.
+Released under the [MIT License](LICENSE) since `0.14.5`. Earlier versions were released under the GNU Affero General Public License, version 3 or later.
