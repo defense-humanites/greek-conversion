@@ -205,6 +205,7 @@ const PRESET_DEFINITIONS = {
       limitations: [
         "The preset implements mechanically expressible Type 1 mappings, not every contextual provision of the standard.",
         "An apostrophe for initial smooth breathing can also represent punctuation; reverse parsing does not infer it as a distinct breathing mark.",
+        "Note 2 reads a Latin s followed by a hyphen as medial sigma, for a word divided at the end of a line; the parser treats a hyphen as a word boundary and reads final sigma there.",
         "ISO 843 names stigma, koppa, and sampi in its Greek repertoire but does not assign them Type 1 conversions; bound converters preserve or reject them for transliteration, while ordinary preset use retains engine defaults.",
         "The standard's single named koppa cannot be identified unambiguously with the engine's separate archaic-koppa entry; bound transliteration reports this unresolved mapping.",
       ],
@@ -212,6 +213,7 @@ const PRESET_DEFINITIONS = {
     options: {
       orthography: {
         beta: "v",
+        circumflexAccent: "circumflex",
         coronis: "apostrophe",
         enotikon: "hyphen",
         eta: "i-macron",

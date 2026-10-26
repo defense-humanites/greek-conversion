@@ -78,6 +78,33 @@ export function isWordFinal(document: Document, index: number): boolean {
   return next === document.length || document[next].kind === "literal";
 }
 
+/**
+ * Whether the letter at `index` stands among capitals: the nearest letter of
+ * the same word, after it or else before it, is uppercase. A Latin spelling
+ * of several letters for one Greek capital (`TH`, `CH`, `PS`, the `H` of a
+ * rough breathing) is then written in full capitals; before lowercase text,
+ * or for a lone letter, only its first letter is (ISO 843, Table 1, note 11).
+ */
+export function isAmongCapitals(document: Document, index: number): boolean {
+  const neighbour = adjacentGrapheme(document, index, 1) ??
+    adjacentGrapheme(document, index, -1);
+  return neighbour?.uppercase === true;
+}
+
+function adjacentGrapheme(
+  document: Document,
+  index: number,
+  step: 1 | -1,
+): Grapheme | undefined {
+  let position = index + step;
+  while (
+    position >= 0 && position < document.length &&
+    isBoundaryTransparent(document[position])
+  ) position += step;
+  const token = document[position];
+  return token?.kind === "grapheme" ? token : undefined;
+}
+
 export function isVowel(letter: Letter): boolean {
   return VOWELS.has(letter);
 }

@@ -56,7 +56,7 @@ convert(thucydides, "greek", "beta-code");
 // → *(/ellhsin e)ge/neto kai\ me/rei tini\ tw=n barba/rwn, w(s de\ ei)pei=n kai\ e)pi\ plei=ston a)nqrw/pwn.
 
 convert(thucydides, "greek", "transliteration", { preset: "iso-843-type-1" });
-// → Héllīsin ’egéneto kaì mérei tinì tō̃n varvárōn, hōs dè ’eipeĩn kaì ’epì pleĩston ’anthrṓpōn.
+// → Héllīsin ’egéneto kaì mérei tinì tō̂n varvárōn, hōs dè ’eipeîn kaì ’epì pleîston ’anthrṓpōn.
 ```
 
 Without diacritics, the rough breathing stays as `h`: in Latin script it is a
@@ -333,6 +333,20 @@ convert("  ΦΙΛΗΒΟΣ\nΗΔΟΝΗ  ", "greek", "transliteration", {
 `letterCase` accepts `"preserve"`, `"lowercase"`, `"uppercase"`, and `"title"`;
 `whitespace: "collapse"` trims the text and reduces every run of whitespace to
 one space.
+
+Under `"preserve"`, a capital spelled with several Latin letters is written in
+full capitals among capitals, and with its first letter only before lowercase
+text or on its own, as ISO 843 (Table 1, note 11) prescribes. The same holds
+for the `h` of a rough breathing or of rho:
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("ΘΑΛΑΣΣΑ ἙΛΛΑΣ ΠΥΡΡΟΣ", "greek", "transliteration");
+// → THALASSA HELLAS PURRHOS
+convert("Θάλασσα Ἑλλάς Θ.", "greek", "transliteration");
+// → Thálassa Hellás Th.
+```
 
 ### Write Beta Code the TLG way
 

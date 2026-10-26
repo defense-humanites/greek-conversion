@@ -7,12 +7,14 @@ import { assertNfcEquals } from "./assertions.ts";
 Deno.test("preserves case when transliterating nasal gamma", () => {
   assertNfcEquals(
     convert("ΓΓ ΓΚ ΓΞ ΓΧ", "greek", "transliteration"),
-    "NG NK NX NCh",
+    "NG NK NX NCH",
   );
-  assertNfcEquals(
-    convert("NG NK NX NCh", "transliteration", "greek"),
-    "ΓΓ ΓΚ ΓΞ ΓΧ",
-  );
+  for (const latin of ["NG NK NX NCH", "NG NK NX NCh"]) {
+    assertNfcEquals(
+      convert(latin, "transliteration", "greek"),
+      "ΓΓ ΓΚ ΓΞ ΓΧ",
+    );
+  }
 });
 
 Deno.test("makes nasal-gamma transliteration optional", () => {
@@ -24,7 +26,7 @@ Deno.test("makes nasal-gamma transliteration optional", () => {
   );
   assertNfcEquals(
     convert("ΓΓ ΓΚ ΓΞ ΓΧ", "greek", "transliteration", literal),
-    "GG GK GX GCh",
+    "GG GK GX GCH",
   );
   assertNfcEquals(
     convert("gg gk gx gch", "transliteration", "greek", literal),
