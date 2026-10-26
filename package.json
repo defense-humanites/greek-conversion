@@ -1,9 +1,9 @@
 {
   "name": "greek-conversion",
   "author": "Antoine Boquet",
-  "license": "agpl-3.0",
-  "version": "0.14.4",
-  "description": "A small library to convert a polytonic greek string from/into various representations.",
+  "license": "AGPL-3.0-or-later",
+  "version": "0.14.5",
+  "description": "Deprecated: use @humanities/greek-conversion instead. A small library to convert a polytonic greek string from/into various representations.",
   "keywords": [
     "greek",
     "polytonic",
@@ -22,10 +22,10 @@
     "SBL",
     "TLG"
   ],
-  "homepage": "https://github.com/antoineboquet/greek-conversion#readme",
+  "homepage": "https://github.com/defense-humanites/greek-conversion/tree/legacy#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/antoineboquet/greek-conversion.git"
+    "url": "git+https://github.com/defense-humanites/greek-conversion.git"
   },
   "type": "module",
   "exports": {

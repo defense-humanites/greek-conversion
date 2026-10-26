@@ -77,6 +77,13 @@ export const applyGammaNasals = (
   }
 };
 
+/**
+ * Applies the beta and sigma variants, and replaces πσ with ψ.
+ *
+ * @deprecated `greek-conversion` 0.x is no longer maintained. Its successor
+ * is `@humanities/greek-conversion`, a rewrite with a new API; see
+ * https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md
+ */
 export const applyGreekVariants = (
   greekStr: string,
   options?: IGreekStyle
@@ -352,6 +359,10 @@ export const normalizeTransliteration = (
  * mark (see the next parameter) to preserve.
  * @param trUseCxOverMacron - The diacritical mark to match (defaults to
  * the macron [\u0304]).
+ *
+ * @deprecated `greek-conversion` 0.x is no longer maintained. Its successor
+ * is `@humanities/greek-conversion`, a rewrite with a new API; see
+ * https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md
  */
 export const removeDiacritics = (
   str: string,
@@ -393,6 +404,13 @@ export const removeDiacritics = (
   }
 };
 
+/**
+ * Removes the beta and sigma variants, and replaces grave accents with acute accents.
+ *
+ * @deprecated `greek-conversion` 0.x is no longer maintained. Its successor
+ * is `@humanities/greek-conversion`, a rewrite with a new API; see
+ * https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md
+ */
 export const removeGreekVariants = (
   greekStr: string, options: {
     preserveAccents?: boolean

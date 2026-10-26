@@ -6,6 +6,13 @@ import { toGreek } from './toGreek';
 import { toTransliteration } from './toTransliteration';
 import { handleOptions, handleTLGInput, notImplementedError } from './utils';
 
+/**
+ * Holds the beta code, Greek and transliterated representations of a string.
+ *
+ * @deprecated `greek-conversion` 0.x is no longer maintained. Its successor
+ * is `@humanities/greek-conversion`, a rewrite with a new API; see
+ * https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md
+ */
 export class GreekString {
   readonly #fromType: KeyType;
   readonly #options: IConversionOptions;

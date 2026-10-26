@@ -1,25 +1,36 @@
 # greek-conversion
 
-> **This library needs some feedback before getting its first stable release!**
+> [!WARNING]
+> **This package is no longer maintained.** `greek-conversion` 0.x still works, but its successor is [`@humanities/greek-conversion`](https://www.npmjs.com/package/@humanities/greek-conversion) 1.0, a rewrite with a new API (ESM-only, Node.js ≥ 24). Migrating is optional; see the [migration guide](https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md).
 
 A small, yet powerful, JavaScript library for converting both polytonic and monotonic Greek from/into many representations.
 
+## Status
+
+`0.14.5` is the last release of the `0.x` series. It contains no functional change from `0.14.4`; it only marks the series as deprecated.
+
+- **No further development is planned** for `greek-conversion` 0.x: no new features and no bug fixes. The library has no runtime dependencies.
+- **Your code keeps working.** The published versions stay on npm and the `latest` tag stays on `0.14.5`. npm, pnpm, Yarn and Bun now print a deprecation notice when installing the package; it is informational.
+- **When to migrate:** [`@humanities/greek-conversion`](https://github.com/defense-humanites/greek-conversion) 1.0 brings stricter and more complete conversion presets, loss diagnostics and an MIT license. It is ESM-only and requires Node.js ≥ 24; if your project needs CommonJS or an older Node.js, you can stay on `0.14.5`.
+- The `0.x` source code lives on the [`legacy`](https://github.com/defense-humanites/greek-conversion/tree/legacy) branch.
+
 ## Summary
 
-1. [Usage](#usage)
+1. [Status](#status)
+2. [Usage](#usage)
     1. [With a package manager (recommended)](#with-a-package-manager-recommended)
     2. [The old way](#the-old-way)
-2. [Core functions](#core-functions)
+3. [Core functions](#core-functions)
     1. [Summary](#summary-1)
     2. [Conversion presets](#conversion-presets)
     3. [Conversion options](#conversion-options)
     4. [Examples](#examples)
-3. [OOP style](#oop-style)
+4. [OOP style](#oop-style)
     1. [Summary](#summary-2)
     2. [Example](#example)
-4. [Helper functions](#helper-functions)
-5. [Limitations](#limitations)
-6. [License](#license)
+5. [Helper functions](#helper-functions)
+6. [Limitations](#limitations)
+7. [License](#license)
 
 ## Usage
 
@@ -57,7 +68,7 @@ toTransliteration(
 > [!NOTE]
 > This is primarily intended for the use of the library in the browser in the absence of a modern development environment.
 
-You can either import the library from the unpkg <abbr title="Content Delivery Network">CDN</abbr> (`https://www.unpkg.com/greek-conversion`) or download the latest release on Github then include `greekConversion.min.js` into your project (but you could experience a CORS issue in this case and need to use a local server to run your project).
+You can either import the library from the unpkg <abbr title="Content Delivery Network">CDN</abbr> (`https://www.unpkg.com/greek-conversion@0.14`) or download the `v0.14.5` release on GitHub then include `greekConversion.min.js` into your project (but you could experience a CORS issue in this case and need to use a local server to run your project).
 
 As the library is built as a module, the `<script>` tag needs to be set as `type="module"` (which is supported by all modern browsers).
 
@@ -65,7 +76,7 @@ You can then call the library's functions as exemplified below:
 
 ```html
 <script type="module">
-  import { KeyType, toGreek } from 'https://www.unpkg.com/greek-conversion' // or './greekConversion.min.js'
+  import { KeyType, toGreek } from 'https://www.unpkg.com/greek-conversion@0.14' // or './greekConversion.min.js'
   console.log(toGreek('anthrōpos', KeyType.TRANSLITERATION)) // ανθρωπος
 </script>
 ```
@@ -74,7 +85,7 @@ You can then call the library's functions as exemplified below:
 
 ### Summary
 
-This library provides three main functions to convert a greek string: **`toBetaCode`**, **`toGreek`** & **`toTransliteration`**. You can refer to the [conversion chart](https://github.com/antoineboquet/greek-conversion/wiki#conversion-chart) for further information about the expected input & output.
+This library provides three main functions to convert a greek string: **`toBetaCode`**, **`toGreek`** & **`toTransliteration`**. You can refer to the [conversion chart](https://github.com/defense-humanites/greek-conversion/wiki#conversion-chart) for further information about the expected input & output.
 
 Functions signature is consistently:
 ```ts
@@ -98,18 +109,18 @@ The available presets are:
 
 | Preset | Description |
 | ------ | ----------- |
-| [**`SIMPLE_BC`**](https://github.com/antoineboquet/greek-conversion/wiki#simple-beta-code) | A simplified beta code style for faster writing |
-| [**`TLG`**](https://github.com/antoineboquet/greek-conversion/wiki#tlg) | Thesaurus Linguae Graecae |
+| [**`SIMPLE_BC`**](https://github.com/defense-humanites/greek-conversion/wiki#simple-beta-code) | A simplified beta code style for faster writing |
+| [**`TLG`**](https://github.com/defense-humanites/greek-conversion/wiki#tlg) | Thesaurus Linguae Graecae |
 
 2. **For transliteration:**
 
 | Preset | Description | Scope |
 | ------ | ----------- | ----- |
-| [**`ALA_LC`**](https://github.com/antoineboquet/greek-conversion/wiki#ala-lc) | American Library Association – Library of Congress | Ancient and Medieval Greek (before 1454) |
-| [**`ALA_LC_MODERN`**](https://github.com/antoineboquet/greek-conversion/wiki#ala-lc-modern) | *Alternative form of the preceding* | Modern Greek (after 1453) |
-| [**`BNF_ADAPTED`**](https://github.com/antoineboquet/greek-conversion/wiki#bnf-adapted) | Bibliothèque nationale de France (adapted) | Ancient Greek |
-| [**`ISO`**](https://github.com/antoineboquet/greek-conversion/wiki#iso-843-1997) | ISO 843 (1997) type 1 (transliteration) | Ancient and Modern Greek |
-| [**`SBL`**](https://github.com/antoineboquet/greek-conversion/wiki#sbl) | Society of Biblical Literature | Ancient Greek |
+| [**`ALA_LC`**](https://github.com/defense-humanites/greek-conversion/wiki#ala-lc) | American Library Association – Library of Congress | Ancient and Medieval Greek (before 1454) |
+| [**`ALA_LC_MODERN`**](https://github.com/defense-humanites/greek-conversion/wiki#ala-lc-modern) | *Alternative form of the preceding* | Modern Greek (after 1453) |
+| [**`BNF_ADAPTED`**](https://github.com/defense-humanites/greek-conversion/wiki#bnf-adapted) | Bibliothèque nationale de France (adapted) | Ancient Greek |
+| [**`ISO`**](https://github.com/defense-humanites/greek-conversion/wiki#iso-843-1997) | ISO 843 (1997) type 1 (transliteration) | Ancient and Modern Greek |
+| [**`SBL`**](https://github.com/defense-humanites/greek-conversion/wiki#sbl) | Society of Biblical Literature | Ancient Greek |
 
 ### Conversion options
 
@@ -153,7 +164,7 @@ additionalChars?:                    // extend the default mapping with addition
 ```
 
 > [!TIP]
-> A more detailed description of these conversion options is available on this [page](https://github.com/antoineboquet/greek-conversion/wiki#conversion-options).
+> A more detailed description of these conversion options is available on this [page](https://github.com/defense-humanites/greek-conversion/wiki#conversion-options).
 
 ### Examples
 
@@ -223,7 +234,7 @@ toTransliteration('Cōkrátēc', KeyType.TRANSLITERATION, trStyle) // Sōkrátē
 ```
 
 > [!TIP]
-> Interactive examples are available in the `/examples` folder and accessible on this <a href="https://antoineboquet.github.io/greek-conversion/examples/" target="_blank">page</a>.
+> Interactive examples are available in the [`/examples`](https://github.com/defense-humanites/greek-conversion/tree/legacy/examples) folder; open them in a browser.
 
 ## OOP style
 
@@ -261,7 +272,7 @@ person.source // ἄνθρωπος
 ```
 
 > [!TIP]
-> Interactive examples are available in the `/examples` folder and accessible on this <a href="https://antoineboquet.github.io/greek-conversion/examples/" target="_blank">page</a>.
+> Interactive examples are available in the [`/examples`](https://github.com/defense-humanites/greek-conversion/tree/legacy/examples) folder; open them in a browser.
 
 ## Helper functions
 
@@ -283,7 +294,7 @@ Removes all the diacritics—according to the greek string representation—from
 
 This is what you should know before using this library:
 
-- Greek numerals are not supported yet (see [Add support for greek numerals](https://github.com/antoineboquet/greek-conversion/issues/5)).
+- Greek numerals are not supported yet (see [Add support for greek numerals](https://github.com/defense-humanites/greek-conversion/issues/5)).
 
 ## License
 

@@ -16,6 +16,13 @@ import {
   trApplyUppercaseChars
 } from './utils';
 
+/**
+ * Converts a string into beta code.
+ *
+ * @deprecated `greek-conversion` 0.x is no longer maintained. Its successor
+ * is `@humanities/greek-conversion`, a rewrite with a new API; see
+ * https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md
+ */
 export function toBetaCode(
   str: string,
   fromType: KeyType,
