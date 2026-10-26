@@ -418,8 +418,11 @@ function modernDigraphAt(
   if (
     first?.kind !== "grapheme" ||
     second?.kind !== "grapheme" ||
+    !isModernDigraphPair(first.letter, second.letter, policy) ||
     first.diacritics.size > 0 ||
     second.diacritics.size > 0 ||
+    // Checked last: the numeral context is the costly test, and most pairs
+    // of letters are not a digraph at all.
     isGreekNumeralContext(document, index)
   ) {
     return undefined;
@@ -445,6 +448,17 @@ function modernDigraphAt(
     return initial || isWordFinal(document, index + 1) ? "gk" : "nk";
   }
   return undefined;
+}
+
+/** Whether two letters can form a digraph that `policy` rewrites. */
+function isModernDigraphPair(
+  first: Grapheme["letter"],
+  second: Grapheme["letter"],
+  policy: "phonetic" | "ala-lc" | "iso-843",
+): boolean {
+  if (first === "mu") return second === "pi";
+  if (first === "nu") return second === "tau" && policy !== "iso-843";
+  return first === "gamma" && second === "kappa" && policy === "ala-lc";
 }
 
 function caseDigraph(
@@ -552,6 +566,10 @@ function transferredAccents(
   if (options.orthography?.upsilon !== "y-with-ou-v-f") return undefined;
   const token = rendered[index];
   if (token.kind !== "grapheme") return undefined;
+  // Only an upsilon, or the vowel before one, can change its marks.
+  const next = rendered[index + 1];
+  const beforeUpsilon = next?.kind === "grapheme" && next.letter === "upsilon";
+  if (token.letter !== "upsilon" && !beforeUpsilon) return undefined;
   if (token.letter === "upsilon" && isVowelUpsilonAt(rendered, index - 1)) {
     let diacritics = token.diacritics;
     for (const accent of ACCENTS) {
@@ -561,11 +579,7 @@ function transferredAccents(
       ? undefined
       : { ...token, diacritics };
   }
-  const next = rendered[index + 1];
-  if (
-    next?.kind === "grapheme" && next.letter === "upsilon" &&
-    isVowelUpsilonAt(rendered, index)
-  ) {
+  if (beforeUpsilon && isVowelUpsilonAt(rendered, index)) {
     let diacritics = token.diacritics;
     for (const accent of ACCENTS) {
       if (next.diacritics.has(accent)) {
