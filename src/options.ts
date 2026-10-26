@@ -45,9 +45,15 @@ export type UpsilonTransliteration =
   | "y-with-au-eu-ou";
 
 /**
- * Selects whether structural eta and omega length is shown by macron or
- * circumflex in transliteration. Explicit philological macrons remain
- * independent semantic marks.
+ * Selects the mark that shows the length of eta and omega in
+ * transliteration: a macron (`ē`, `ō`) or a circumflex (`ê`, `ô`). The letter
+ * that carries it on eta is chosen by {@link EtaTransliteration}. The same
+ * mark distinguishes stigma and sampi from `c` and `s` (`c̄`, `s̄`). Explicit
+ * philological macrons remain independent semantic marks.
+ *
+ * `"circumflex"` cannot be combined with
+ * `circumflexAccent: "circumflex"`, which would write the length mark and the
+ * accent alike.
  */
 export type LongVowelTransliteration =
   | "macron"
@@ -80,8 +86,12 @@ export type EnotikonTransliteration = "preserve" | "hyphen";
 /** Selects `b` or modern `v` for beta in transliteration. */
 export type BetaTransliteration = "b" | "v";
 
-/** Selects `ē` or `ī` for eta in transliteration. */
-export type EtaTransliteration = "e-macron" | "i-macron";
+/**
+ * Selects the Latin letter for eta in transliteration: `e` or `i`. The letter
+ * carries the length mark selected by {@link LongVowelTransliteration}: `ē` or
+ * `ī` by default, `ê` or `î` under `longVowels: "circumflex"`.
+ */
+export type EtaTransliteration = "e" | "i";
 
 /** Selects `x` or `ks` for xi in transliteration. */
 export type XiTransliteration = "x" | "ks";
@@ -164,7 +174,7 @@ export interface OrthographyOptions {
   coronis?: CoronisTransliteration;
   /** Smooth breathing in transliteration; `"apostrophe"` prefixes an initial vowel. Defaults to `"omit"`. */
   smoothBreathing?: SmoothBreathingTransliteration;
-  /** Circumflex accent in transliteration. Defaults to `"tilde"` (U+0303). */
+  /** Circumflex accent in transliteration. Defaults to `"tilde"` (U+0303); `"circumflex"` cannot be combined with `longVowels: "circumflex"`. */
   circumflexAccent?: CircumflexTransliteration;
   /** Explicit macron/breve in transliteration. Defaults to `"preserve"`. */
   quantity?: QuantityTransliteration;
@@ -184,7 +194,7 @@ export interface OrthographyOptions {
   dentalSigma?: DentalSigmaOrthography;
   /** Upsilon transliteration. Defaults to `"u"`; `"y-with-au-eu-ou"` uses `u` only in the three cited pairs. */
   upsilon?: UpsilonTransliteration;
-  /** Structural long-vowel marker in transliteration. Defaults to `"macron"`. */
+  /** Length mark of eta and omega in transliteration. Defaults to `"macron"`; `"circumflex"` cannot be combined with `circumflexAccent: "circumflex"`. */
   longVowels?: LongVowelTransliteration;
   /** Greek accentuation system. Defaults to `"polytonic"`; `"monotonic"` follows the monotonic rules, monosyllables included, as far as the written text allows. */
   accentuation?: GreekAccentuation;
@@ -196,7 +206,7 @@ export interface OrthographyOptions {
   enotikon?: EnotikonTransliteration;
   /** Beta transliteration. Defaults to `"b"`. */
   beta?: BetaTransliteration;
-  /** Eta transliteration: `"e-macron"` (`ē`) or `"i-macron"` (`ī`). Defaults to `"e-macron"`. */
+  /** Latin letter for eta, which carries the `longVowels` mark: `"e"` (`ē`) or `"i"` (`ī`). Defaults to `"e"`. */
   eta?: EtaTransliteration;
   /** Xi transliteration. Defaults to `"x"`. */
   xi?: XiTransliteration;
@@ -305,7 +315,7 @@ export interface DefaultConversionOptions {
     readonly hyphen: "ascii";
     readonly enotikon: "preserve";
     readonly beta: "b";
-    readonly eta: "e-macron";
+    readonly eta: "e";
     readonly xi: "x";
     readonly phi: "ph";
     readonly chi: "ch";
@@ -366,7 +376,9 @@ const freezeTable = <T>(table: OptionValueTable<T>): OptionValueTable<T> =>
  * Complete, immutable inventory of option keys and their accepted values.
  *
  * {@link resolveConversionOptions} rejects any key or value absent from this
- * table, so it is also the reference for user interfaces and validators.
+ * table, so it is also the reference for user interfaces and validators. It
+ * also rejects one combination of accepted values: `longVowels: "circumflex"`
+ * with `circumflexAccent: "circumflex"`.
  */
 export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
   orthography: freezeTable<OrthographyOptions>({
@@ -390,7 +402,7 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
     hyphen: ["ascii", "typographic"],
     enotikon: ["preserve", "hyphen"],
     beta: ["b", "v"],
-    eta: ["e-macron", "i-macron"],
+    eta: ["e", "i"],
     xi: ["x", "ks"],
     phi: ["ph", "f"],
     chi: ["ch", "kh"],
@@ -447,7 +459,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         hyphen: "ascii",
         enotikon: "preserve",
         beta: "b",
-        eta: "e-macron",
+        eta: "e",
         xi: "x",
         phi: "ph",
         chi: "ch",

@@ -74,16 +74,71 @@ Deno.test("rejects unknown option keys instead of ignoring them", () => {
   );
 });
 
+Deno.test("rejects a circumflex for both length and accent", () => {
+  // ῆ would be written ê̂ and read back as η without its accent.
+  const both = {
+    orthography: { longVowels: "circumflex", circumflexAccent: "circumflex" },
+  } as const;
+  assertThrows(() => resolveConversionOptions(both), RangeError);
+  assertThrows(
+    () => convert("ῆ", "greek", "transliteration", both),
+    RangeError,
+  );
+  assertThrows(
+    () =>
+      createConverter({ preset: "bnf-core" }).convert(
+        "ῆ",
+        "greek",
+        "transliteration",
+        { orthography: { longVowels: "circumflex" } },
+      ),
+    RangeError,
+  );
+  // A preset value counts as much as a custom one.
+  for (const preset of ["bnf-core", "iso-843-type-1"] as const) {
+    assertEquals(
+      assertThrows(
+        () =>
+          resolveConversionOptions({
+            preset,
+            orthography: { longVowels: "circumflex" },
+          }),
+        RangeError,
+      ).message,
+      'orthography.longVowels "circumflex" cannot be combined with ' +
+        `orthography.circumflexAccent "circumflex" (set by preset "${preset}"): ` +
+        "the length mark and the accent would be written alike.",
+    );
+  }
+  // Either circumflex alone is accepted.
+  resolveConversionOptions({ orthography: { longVowels: "circumflex" } });
+  resolveConversionOptions({
+    preset: "bnf-core",
+    orthography: { longVowels: "circumflex", circumflexAccent: "tilde" },
+  });
+});
+
 Deno.test("rejects invalid option values instead of applying defaults", () => {
   assertEquals(
     assertThrows(
       () =>
         convert("ἄνθρωπος", "greek", "transliteration", {
-          orthography: { eta: "e" as never },
+          orthography: { eta: "ē" as never },
         }),
       RangeError,
     ).message,
-    'Invalid value for orthography.eta: "e"; expected one of "e-macron", "i-macron".',
+    'Invalid value for orthography.eta: "ē"; expected one of "e", "i".',
+  );
+  // A value renamed before 1.0.0 names its replacement.
+  assertEquals(
+    assertThrows(
+      () =>
+        resolveConversionOptions({
+          orthography: { eta: "i-macron" as never },
+        }),
+      RangeError,
+    ).message,
+    'Invalid value for orthography.eta: "i-macron"; expected one of "e", "i". "i-macron" is now "i".',
   );
   assertThrows(
     () =>

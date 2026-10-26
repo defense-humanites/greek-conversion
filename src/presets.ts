@@ -216,7 +216,7 @@ const PRESET_DEFINITIONS = {
         circumflexAccent: "circumflex",
         coronis: "apostrophe",
         enotikon: "hyphen",
-        eta: "i-macron",
+        eta: "i",
         nasalGamma: "literal",
         phi: "f",
         smoothBreathing: "apostrophe",
@@ -380,10 +380,15 @@ export function getPresetOptions(preset: Preset): PresetOptions {
  * Options are validated strictly: an unknown option key, an unknown option
  * value, or a value of the wrong type is rejected rather than ignored, so a
  * misspelled policy cannot silently fall back to the engine default. A field
- * set to `undefined` is treated as absent.
+ * set to `undefined` is treated as absent. The merged options are then
+ * checked for the one incompatible pair of values: `longVowels: "circumflex"`
+ * with `circumflexAccent: "circumflex"`, which would write the length mark of
+ * eta and omega and the circumflex accent alike. A preset value counts, so
+ * `{ preset: "bnf-core", orthography: { longVowels: "circumflex" } }` is
+ * rejected too.
  *
- * @throws {RangeError} If `options.preset` is not registered at runtime, or
- * if an option key or value is unknown.
+ * @throws {RangeError} If `options.preset` is not registered at runtime, if
+ * an option key or value is unknown, or if two values are incompatible.
  * @throws {TypeError} If `options`, an option group, or `removeDiacritics`
  * has the wrong type.
  */
@@ -394,6 +399,7 @@ export function resolveConversionOptions(
   const { preset, ...custom } = options;
   const base = preset === undefined ? {} : registeredPreset(preset);
   const merged = mergeConversionOptions(base, custom);
+  assertCompatibleOptions(merged, preset);
 
   return {
     orthography: {
@@ -415,6 +421,34 @@ export function resolveConversionOptions(
       DEFAULT_CONVERSION_OPTIONS.removeDiacritics,
   };
 }
+
+/**
+ * Rejects `longVowels: "circumflex"` with `circumflexAccent: "circumflex"`:
+ * `ῆ` would be written `ê̂`, which reads back as `η` without its accent.
+ */
+function assertCompatibleOptions(
+  merged: PresetOptions,
+  preset: Preset | undefined,
+): void {
+  const orthography = merged.orthography;
+  if (
+    orthography?.longVowels !== "circumflex" ||
+    orthography.circumflexAccent !== "circumflex"
+  ) return;
+  throw new RangeError(
+    'orthography.longVowels "circumflex" cannot be combined with ' +
+      'orthography.circumflexAccent "circumflex"' +
+      (preset === undefined ? "" : ` (set by preset "${preset}")`) +
+      ": the length mark and the accent would be written alike.",
+  );
+}
+
+/** Values renamed before 1.0.0, named in the error for the old value. */
+const RENAMED_VALUES: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "orthography.eta": { "e-macron": "e", "i-macron": "i" },
+};
 
 function registeredPreset(preset: Preset): PresetOptions {
   return registeredDefinition(preset).options;
@@ -477,12 +511,21 @@ function validateConversionOptions(options: unknown): void {
         throw new RangeError(`Unknown conversion option: ${group}.${key}`);
       }
       if (!accepted.includes(choice as string)) {
+        const renames = RENAMED_VALUES[`${group}.${key}`];
+        const renamed = typeof choice === "string" && renames !== undefined &&
+            Object.hasOwn(renames, choice)
+          ? renames[choice]
+          : undefined;
         throw new RangeError(
           `Invalid value for ${group}.${key}: ${
             JSON.stringify(choice)
           }; expected one of ${
             accepted.map((v) => JSON.stringify(v)).join(", ")
-          }.`,
+          }.${
+            renamed === undefined
+              ? ""
+              : ` ${JSON.stringify(choice)} is now ${JSON.stringify(renamed)}.`
+          }`,
         );
       }
     }

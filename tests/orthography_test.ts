@@ -1,5 +1,7 @@
+import { assertEquals } from "@std/assert";
 import {
   convert,
+  convertDetailed,
   foldGreekVariants,
   transliterationToBetaCode,
   transliterationToGreek,
@@ -262,7 +264,7 @@ Deno.test("applies individual transliteration variants", () => {
   const variants = {
     orthography: {
       beta: "v",
-      eta: "i-macron",
+      eta: "i",
       xi: "ks",
       phi: "f",
       chi: "kh",
@@ -294,11 +296,44 @@ Deno.test("applies individual transliteration variants", () => {
     convert("vī̧̃", "transliteration", "greek", variants),
     "βῇ",
   );
+});
+
+Deno.test("eta takes its letter from eta and its mark from longVowels", () => {
+  const cases = [
+    [{ eta: "e", longVowels: "macron" }, "ē ō ḗ ē̃ ī ĩ"],
+    [{ eta: "e", longVowels: "circumflex" }, "ê ô ế ễ ī ĩ"],
+    [{ eta: "i", longVowels: "macron" }, "ī ō ī́ ī̃ ī ĩ"],
+    [{ eta: "i", longVowels: "circumflex" }, "î ô î́ î̃ ī ĩ"],
+  ] as const;
+  for (const [orthography, latin] of cases) {
+    const options = { orthography };
+    assertNfcEquals(
+      convert("η ω ή ῆ ῑ ῖ", "greek", "transliteration", options),
+      latin,
+    );
+    assertNfcEquals(
+      convert(latin, "transliteration", "transliteration", options),
+      latin,
+    );
+  }
+  // Under a circumflex length mark, ī is iota with a macron again, distinct
+  // from eta; under a macron, it is eta, and the quantity of iota is lost.
+  const circumflex = {
+    orthography: { eta: "i", longVowels: "circumflex" },
+  } as const;
   assertNfcEquals(
-    convert("ηω", "greek", "transliteration", {
-      orthography: { eta: "i-macron", longVowels: "circumflex" },
-    }),
-    "īô",
+    convert("τιμῇ ῑ̓ πῖ", "greek", "transliteration", circumflex),
+    "timî̧̃ ī pĩ",
+  );
+  assertNfcEquals(
+    convert("timî̧̃ ī pĩ", "transliteration", "greek", circumflex),
+    "τιμῇ ῑ πῖ",
+  );
+  assertEquals(
+    convertDetailed("ῑ", "greek", "transliteration", {
+      orthography: { eta: "i" },
+    }).losses.map((loss) => loss.code),
+    ["unrepresented-grapheme"],
   );
 });
 

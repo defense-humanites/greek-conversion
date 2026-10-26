@@ -477,8 +477,7 @@ function transliterationBase(
   let base: string;
   switch (letter) {
     case "eta":
-      if (options.orthography?.eta === "i-macron") return "i\u0304";
-      base = "e";
+      base = options.orthography?.eta === "i" ? "i" : "e";
       break;
     case "omega":
       base = "o";

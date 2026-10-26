@@ -232,7 +232,7 @@ Deno.test("selected transliteration variants retain recoverable letters", () => 
       orthography: {
         beta: "v",
         chi: "kh",
-        eta: "i-macron",
+        eta: "i",
         modernDigraphs: "phonetic",
         phi: "f",
         rho: "systematic",

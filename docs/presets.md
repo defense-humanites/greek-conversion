@@ -225,7 +225,7 @@ Type 1 transliteration of Greek characters into Latin characters.
     "circumflexAccent": "circumflex",
     "coronis": "apostrophe",
     "enotikon": "hyphen",
-    "eta": "i-macron",
+    "eta": "i",
     "nasalGamma": "literal",
     "phi": "f",
     "smoothBreathing": "apostrophe",

@@ -271,7 +271,7 @@ import { convert } from "@humanities/greek-conversion";
 convert("βηξφχυ", "greek", "transliteration", {
   orthography: {
     beta: "v",
-    eta: "i-macron",
+    eta: "i",
     xi: "ks",
     phi: "f",
     chi: "kh",
@@ -285,6 +285,11 @@ convert("τέχνη", "greek", "transliteration", {
 });
 // → tékhnê
 ```
+
+`eta` chooses the letter (`e` or `i`) and `longVowels` the mark it shares with
+omega (`ē`, `ī`, `ō` or `ê`, `î`, `ô`). The circumflex cannot mark both length
+and accent: `longVowels: "circumflex"` with `circumflexAccent: "circumflex"`
+throws a `RangeError`, since `ῆ` would be written like `η`.
 
 Further options cover nasal gamma, Modern Greek digraphs, systematic `rh`,
 double rho, the coronis, numerals, and more; every key and its accepted values
@@ -485,7 +490,7 @@ import { convert } from "@humanities/greek-conversion";
 
 const options = JSON.parse('{ "orthography": { "eta": "ē" } }');
 convert("λόγος", "greek", "transliteration", options);
-// throws RangeError: Invalid value for orthography.eta: "ē"; expected one of "e-macron", "i-macron".
+// throws RangeError: Invalid value for orthography.eta: "ē"; expected one of "e", "i".
 ```
 
 `FORMATS` and `CONVERSION_OPTION_VALUES` list everything that is accepted,
@@ -495,7 +500,7 @@ which is convenient for building a user interface:
 import { CONVERSION_OPTION_VALUES, FORMATS } from "@humanities/greek-conversion";
 
 FORMATS; // → ["greek","beta-code","transliteration"]
-CONVERSION_OPTION_VALUES.orthography.eta; // → ["e-macron","i-macron"]
+CONVERSION_OPTION_VALUES.orthography.eta; // → ["e","i"]
 ```
 
 ## Working with the canonical document

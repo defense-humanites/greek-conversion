@@ -7,7 +7,23 @@ change.
 
 ## [Unreleased]
 
+### Changed
+
+- `orthography.eta` takes `"e"` or `"i"` instead of `"e-macron"` or
+  `"i-macron"`: it chooses the Latin letter of eta, and `longVowels` its
+  mark, as for omega. `eta: "i"` with `longVowels: "circumflex"` now writes
+  `î` (`"i-macron"` kept `ī` whatever `longVowels` said) and reads it back as
+  eta; under that mark, `ī` is iota with a macron again, so `ῑ` is no longer
+  confused with eta. Other output is unchanged. An old value throws a
+  `RangeError` that names its replacement. See the migration guide.
+
 ### Fixed
+
+- `longVowels: "circumflex"` with `circumflexAccent: "circumflex"` wrote `ῆ`
+  as `ê̂`, which read back as `η` without its accent, so the output was not
+  idempotent. The combination is now rejected with a `RangeError`, including
+  when one value comes from a preset (`bnf-core`, and `iso-843-type-1` since
+  it writes the perispomeni as a circumflex).
 
 - `iso-843-type-1` writes the perispomeni as a circumflex, as ISO 843
   Table 3 prescribes for both types: `τοῦ` → `toû` (was `toũ`). The README

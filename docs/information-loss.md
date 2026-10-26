@@ -155,12 +155,16 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | The accent is recoverable; its scalar preference is not |
 | Greek question-mark or ano-teleia scalar | Selects a canonically unstable punctuation scalar | The punctuation meaning is recoverable; its scalar preference is not |
-| `doubleRho`, `medialBeta`, `finalSigma`, letter variants, `upsilon`, `longVowels` | Selects a canonical output spelling | The canonical letters normally remain recoverable, but `eta: "i-macron"` conflicts with long iota |
+| `doubleRho`, `medialBeta`, `finalSigma`, letter variants, `upsilon`, `longVowels` | Selects a canonical output spelling | The canonical letters normally remain recoverable, but `eta: "i"` with `longVowels: "macron"` writes eta like iota with a macron |
 
 `longVowels` chooses either a macron or a circumflex for structural eta and
-omega length. A separately encoded macron remains a philological diacritic: it
-is retained beside a structural circumflex and follows the ordinary quantity
-diacritic policy.
+omega length, on the letter that `eta` selects (`ē`/`ê` or `ī`/`î`). A
+separately encoded macron remains a philological diacritic: it is retained
+beside a structural circumflex and follows the ordinary quantity diacritic
+policy. Under `eta: "i"`, the macron therefore distinguishes `ῑ` from eta only
+when the length mark is the circumflex. `longVowels: "circumflex"` cannot be
+combined with `circumflexAccent: "circumflex"`: `ῆ` would be written `ê̂` and
+read back without its accent, so `resolveConversionOptions()` rejects the pair.
 
 `removeDiacritics` and the granular `diacritics` policy are applied during
 encoding, after contextual analysis. They therefore cannot manufacture a

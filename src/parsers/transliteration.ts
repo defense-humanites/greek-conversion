@@ -95,11 +95,11 @@ export function parseTransliteration(
   input: string,
   options: ConversionOptions = {},
 ): Document {
-  const chars = prioritizeEtaMacron(
+  const chars = prioritizeEtaMark(
     Array.from(input.normalize("NFD")),
     options,
   );
-  // Lowercased once, after prioritizeEtaMacron() has reordered the marks.
+  // Lowercased once, after prioritizeEtaMark() has reordered the marks.
   // Built with a loop rather than `chars.map()`: once this function is
   // optimized, V8's inlined `map` returns arrays of a different elements kind
   // from the builtin's, and the reads of `lowered` below then deoptimize the
@@ -282,11 +282,18 @@ export function parseTransliteration(
   return out;
 }
 
-function prioritizeEtaMacron(
+/**
+ * Under `eta: "i"`, the length mark makes the letter: `ī` (or `î` under
+ * `longVowels: "circumflex"`) is eta, not iota with a mark. The mark is moved
+ * to the front of the letter's marks so that the reader matches it with the
+ * `i` as one letter, whatever the order of marks in the input.
+ */
+function prioritizeEtaMark(
   input: string[],
   options: ConversionOptions,
 ): string[] {
-  if (options.orthography?.eta !== "i-macron") return input;
+  if (options.orthography?.eta !== "i") return input;
+  const mark = etaMark(options);
 
   const chars = [...input];
   for (let start = 0; start < chars.length; start++) {
@@ -295,14 +302,14 @@ function prioritizeEtaMacron(
     let end = start + 1;
     while (end < chars.length && /^\p{M}$/u.test(chars[end])) end++;
 
-    // Look for the macron inside this letter's marks only: scanning the rest
+    // Look for the mark inside this letter's marks only: scanning the rest
     // of the text at every `i` made parsing quadratic.
-    let macron = start + 1;
-    while (macron < end && chars[macron] !== "\u0304") macron++;
-    if (macron < end && macron > start + 1) {
-      // Move the macron to the front of the marks, shifting the others right.
-      for (let j = macron; j > start + 1; j--) chars[j] = chars[j - 1];
-      chars[start + 1] = "\u0304";
+    let found = start + 1;
+    while (found < end && chars[found] !== mark) found++;
+    if (found < end && found > start + 1) {
+      // Move the mark to the front of the marks, shifting the others right.
+      for (let j = found; j > start + 1; j--) chars[j] = chars[j - 1];
+      chars[start + 1] = mark;
     }
     start = end - 1;
   }
@@ -315,7 +322,7 @@ function transliterationTrie(options: ConversionOptions): Trie<Letter> {
   const orthography = options.orthography;
 
   if (orthography?.beta === "v") variants.push(["v", "beta"]);
-  if (orthography?.eta === "i-macron") variants.push(["i\u0304", "eta"]);
+  if (orthography?.eta === "i") variants.push([`i${etaMark(options)}`, "eta"]);
   if (orthography?.xi === "ks") variants.push(["ks", "xi"]);
   if (orthography?.phi === "f") variants.push(["f", "phi"]);
   if (orthography?.chi === "kh") variants.push(["kh", "chi"]);
@@ -323,6 +330,11 @@ function transliterationTrie(options: ConversionOptions): Trie<Letter> {
   return variants.length === 0
     ? TRIE
     : new Trie<Letter>([...CANONICAL_ENTRIES, ...variants]);
+}
+
+/** The combining mark that shows the length of eta and omega. */
+function etaMark(options: ConversionOptions): "\u0302" | "\u0304" {
+  return options.orthography?.longVowels === "circumflex" ? "\u0302" : "\u0304";
 }
 
 function markedArchaicLetter(

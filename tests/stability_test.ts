@@ -130,7 +130,7 @@ const PROFILES = [
       orthography: {
         beta: "v",
         chi: "kh",
-        eta: "i-macron",
+        eta: "i",
         modernDigraphs: "phonetic",
         phi: "f",
         rho: "systematic",

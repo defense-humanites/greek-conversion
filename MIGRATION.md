@@ -16,6 +16,26 @@ npm install @humanities/greek-conversion@next
 
 The package is ESM-only.
 
+## Updating from `1.0.0-rc.4`
+
+`orthography.eta` now names only the Latin letter of eta; the mark comes from
+`orthography.longVowels`, as it does for omega:
+
+| Before | After |
+| --- | --- |
+| `orthography.eta: "e-macron"` | `orthography.eta: "e"` |
+| `orthography.eta: "i-macron"` | `orthography.eta: "i"` |
+
+Output is unchanged, with one exception: `eta: "i"` with
+`longVowels: "circumflex"` writes `î`, where `"i-macron"` kept `ī`. The old
+values throw a `RangeError` that names the new one.
+
+`longVowels: "circumflex"` can no longer be combined with
+`circumflexAccent: "circumflex"`, whether set directly or by a preset
+(`bnf-core`, `iso-843-type-1`): `ῆ` was written `ê̂` and read back as `η`
+without its accent. The combination throws a `RangeError`; keep one of the two
+circumflexes, for instance `circumflexAccent: "tilde"`.
+
 ## Updating from `1.0.0-rc.1`
 
 `Grapheme.diacritics` in the `./document` entry point is now a
