@@ -26,6 +26,8 @@
     Menlo, Consolas, monospace;
 
   --radius: 6px;
+  /* Height shared by the selects and the swap button. */
+  --control-height: 46px;
   --external-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 7.5 8.5M12 9.5v3a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3'/%3E%3C/svg%3E");
   font-family: var(--face-ui);
   color: var(--ink);
@@ -118,7 +120,7 @@ code {
 .shell {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 40px 28px 32px;
+  padding: 22px 28px 32px;
 }
 
 /* Masthead */
@@ -127,7 +129,7 @@ code {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 22px;
+  margin-bottom: 34px;
 }
 .identity {
   /* The about text is placed from the start of the title, not the button. */
@@ -238,15 +240,15 @@ h1 {
 }
 select {
   width: 100%;
-  min-height: 40px;
-  padding: 7px 10px;
+  height: var(--control-height);
+  padding: 0 12px;
   border: 1px solid var(--strong-rule);
   border-radius: var(--radius);
   background: var(--surface);
 }
 .icon-button {
-  width: 40px;
-  height: 40px;
+  width: var(--control-height);
+  height: var(--control-height);
   border: 1px solid var(--strong-rule);
   border-radius: var(--radius);
   background: var(--surface);
@@ -598,12 +600,13 @@ footer p {
 
 @media (max-width: 640px) {
   .shell {
-    padding: 24px 16px;
+    padding: 16px 16px 24px;
   }
   .masthead {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+    margin-bottom: 26px;
   }
   .toolbar {
     grid-template-columns: minmax(0, 1fr);
