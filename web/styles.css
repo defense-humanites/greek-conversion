@@ -139,26 +139,9 @@ h1 {
   color: var(--muted);
   font-weight: 450;
 }
-.specimen {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.2em 0.55em;
-  margin: 14px 0 0;
-  font-size: clamp(1.9rem, 4.6vw, 3.1rem);
-  line-height: 1.15;
-}
-.specimen .face-beta-code {
-  font-size: 0.82em;
-  letter-spacing: -0.02em;
-}
-.specimen .arrow {
-  color: var(--accent);
-  font-size: 0.6em;
-}
 .intro {
   max-width: 62ch;
-  margin: 14px 0 0;
+  margin: 8px 0 0;
   color: var(--muted);
 }
 .links {
@@ -394,19 +377,13 @@ select {
   text-align: center;
 }
 
-/* Code */
-.snippet {
-  margin-top: 18px;
-}
-.snippet-label {
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 600;
-}
+/* Code: long lines wrap rather than run off a narrow screen. */
 pre {
   margin: 6px 0 0;
   padding: 12px 14px;
   overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   border-radius: var(--radius);
   background: var(--sunken);
   font-family: var(--face-code);
@@ -447,6 +424,9 @@ pre code {
 }
 .detail-body > .hint {
   margin: 10px 0 0;
+}
+.detail-body .pane-head .hint {
+  margin: 0;
 }
 .json-editor {
   display: block;

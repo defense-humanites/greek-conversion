@@ -17,14 +17,6 @@
       <header class="masthead">
         <div class="identity">
           <h1>greek-conversion <span class="product">playground</span></h1>
-          <p class="specimen"
-            aria-label="ἄνθρωπος in Greek, Beta Code, and transliteration">
-            <span class="face-greek" lang="grc">ἄνθρωπος</span>
-            <span class="arrow" aria-hidden="true">⇄</span>
-            <span class="face-beta-code">a)/nqrwpos</span>
-            <span class="arrow" aria-hidden="true">⇄</span>
-            <span class="face-transliteration">ánthrōpos</span>
-          </p>
           <p
             class="intro">Convert in any direction, follow a published standard, and see exactly what a conversion keeps. Everything runs in your browser.</p>
         </div>
@@ -102,15 +94,6 @@
               type="button">Copy link</button>
           </div>
           <div id="diagnostics" class="diagnostics" hidden></div>
-
-          <div class="snippet">
-            <div class="pane-head">
-              <span class="snippet-label">The same call in code</span>
-              <button id="copy-code" class="text-button"
-                type="button">Copy</button>
-            </div>
-            <pre><code id="code"></code></pre>
-          </div>
         </section>
 
         <section class="settings" aria-label="Settings">
@@ -142,6 +125,18 @@
                 class="check"><input id="strict" type="checkbox"> Reject characters outside the standard's repertoire instead of copying them through</label>
               <p
                 class="hint"><a target="_blank" rel="noopener" href="https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md">Character extensions and repertoires</a></p>
+            </div>
+          </details>
+          <details>
+            <summary>Code</summary>
+            <div class="detail-body">
+              <div class="pane-head">
+                <p
+                  class="hint">The same call with the library, input text included.</p>
+                <button id="copy-code" class="text-button"
+                  type="button">Copy</button>
+              </div>
+              <pre><code id="code"></code></pre>
             </div>
           </details>
           <details id="document-panel">

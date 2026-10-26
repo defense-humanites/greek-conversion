@@ -440,12 +440,15 @@ function showCode(
   const from = JSON.stringify(sourceFormat.value);
   const to = JSON.stringify(targetFormat.value);
   const bound = Object.keys(inventory).length > 0 || strict.checked;
+  // The input itself, so that the copied code reproduces this conversion.
+  const text = `const text = ${JSON.stringify(source.value)};\n`;
 
   if (!bound) {
     const all = { ...(preset ? { preset } : {}), ...options };
     const argument = Object.keys(all).length ? `, ${literalOf(all)}` : "";
     code.textContent =
       `import { convert } from "@humanities/greek-conversion";\n\n` +
+      text +
       `convert(text, ${from}, ${to}${argument});`;
     return;
   }
@@ -457,6 +460,7 @@ function showCode(
   const argument = Object.keys(options).length ? `, ${literalOf(options)}` : "";
   code.textContent =
     `import { createConverter } from "@humanities/greek-conversion";\n\n` +
+    text +
     `const converter = createConverter(${literalOf(configuration)});\n` +
     `converter.convert(text, ${from}, ${to}${argument});`;
 }
