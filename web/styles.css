@@ -134,15 +134,18 @@ code {
 .identity {
   /* The about text is placed from the start of the title, not the button. */
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+}
+/* The title and its question mark flow as text, so that the button stays
+   after the last word when the title wraps. */
+.identity h1 {
+  display: inline;
 }
 h1 {
   margin: 0;
-  font-size: 1.05rem;
-  font-weight: 650;
-  letter-spacing: -0.005em;
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
 }
 .product {
   color: var(--muted);
@@ -153,19 +156,21 @@ h1 {
  * focus, and stays open once clicked or tapped (see app.ts).
  */
 .about {
-  display: flex;
+  display: inline-flex;
+  margin-left: 8px;
+  vertical-align: 0.2em;
 }
 .about-button {
   display: grid;
   place-items: center;
-  width: 1.3rem;
-  height: 1.3rem;
+  width: 1.45rem;
+  height: 1.45rem;
   padding: 0;
   border: 1.5px solid var(--strong-rule);
   border-radius: 50%;
   background: transparent;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.86rem;
   font-weight: 700;
   line-height: 1;
 }
@@ -180,6 +185,9 @@ h1 {
   left: 0;
   z-index: 10;
   width: max-content;
+  /* At least as wide as the title and its button, so that the pointer can
+     go straight down from the button onto the text. */
+  min-width: 100%;
   max-width: min(36ch, calc(100vw - 32px));
   margin: 0;
   padding: 10px 12px;
@@ -198,8 +206,8 @@ h1 {
 .about-text::before {
   content: "";
   position: absolute;
-  inset: -9px 0 auto;
-  height: 9px;
+  inset: -14px 0 auto;
+  height: 14px;
 }
 .about:not([data-dismissed]):hover .about-text,
 .about:not([data-dismissed]):has(.about-button:focus-visible) .about-text,
@@ -321,6 +329,7 @@ select {
   min-width: 0;
 }
 .output-pane {
+  position: relative;
   border-left: 1px solid var(--rule);
   background: var(--sunken);
 }
@@ -337,8 +346,11 @@ select {
   font-size: 0.82rem;
   font-weight: 600;
 }
-.output-pane .pane-head {
-  padding-right: 8px;
+/* The Copy button keeps the same distance from the top and right edges. */
+.output-pane #copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
 }
 .output-pane .pane-head .pane-label {
   padding-bottom: 0;
@@ -607,6 +619,9 @@ footer p {
     align-items: flex-start;
     gap: 10px;
     margin-bottom: 26px;
+  }
+  h1 {
+    font-size: 1.25rem;
   }
   .toolbar {
     grid-template-columns: minmax(0, 1fr);
