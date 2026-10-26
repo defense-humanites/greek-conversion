@@ -46,10 +46,10 @@ const converter = createConverter({
 });
 ```
 
-Custom characters are opaque boundaries inside the Greek engine. The
-converter guarantees direct mapping, declared case, registry immutability, and
-stable round trips when the supplied forms are unambiguous. It does not infer
-that a custom character:
+Custom characters are opaque inside the Greek engine. The converter guarantees
+direct mapping, declared case, registry immutability, and stable round trips
+when the supplied forms are unambiguous. It does not infer that a custom
+character:
 
 - is a vowel or consonant;
 - accepts Greek diacritics;
@@ -62,6 +62,24 @@ in the source. General output options such as `letterCase` and `betaCodeCase`
 do not rewrite opaque forms; declare the exact forms required by the custom
 profile. Beta Code input remains ASCII-case-insensitive, and `*` remains the
 only semantic uppercase marker.
+
+### Word context
+
+A custom character stands for one letter of its word. The current
+implementation still treats it as a word boundary for the built-in letters
+around it: a sigma before it takes its final form, a vowel after it can
+receive an inferred smooth breathing, and a capital spelled with several Latin
+letters next to it is written with its first letter only in capitals (`ΘϷΑ` →
+`ThShA` for a custom `Ϸ` → `Sh`). These are limitations, not guarantees. A
+`1.x` release may let custom characters take part in their word, and such
+output would then change as a correction.
+
+The same applies to the case of a custom form. Among capitals, a multi-letter
+uppercase form may then be written in full capitals, as built-in letters are
+(`THSHA`): the `toUpperCase()` of the declared uppercase form, with the Greek
+locale for Greek forms, and that spelling will be read back. Declare forms
+that each represent one letter: for a form made of several words, or
+containing spaces or punctuation, no case or word behavior is guaranteed.
 
 Use an alias when a new spelling is semantically a known Greek letter. Use a
 custom character only when it represents a genuinely distinct inventory item.

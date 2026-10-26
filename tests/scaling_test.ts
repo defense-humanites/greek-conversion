@@ -33,8 +33,8 @@ const ATTEMPTS = 3;
 
 /**
  * A passage for searches that run ahead in the text. Until 1.0.0-rc.2,
- * reading transliteration under `eta: "i-macron"` looked for the next macron
- * anywhere in the rest of the text at every `i`. In PASSAGE, transliterated
+ * reading transliteration under `eta: "i-macron"` (now `"i"`) looked for the
+ * next macron anywhere in the rest of the text at every `i`. In PASSAGE, transliterated
  * under ISO 843, a macron follows within a word or two, so the search stopped
  * early and the ratio stayed near 9. This passage has no eta, no omega and no
  * long vowel, hence no macron at all: on 1.0.0-rc.1 its ratio was 36 to 55.

@@ -145,22 +145,31 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `numerals: "decimal"` | Replaces a valid marked alphabetic numeral group with decimal digits | No |
 | `dentalSigma: "assimilate"` | Deletes `τ`, `δ`, or `θ` before sigma in Greek output | No |
 | `nasalGamma: "nasal"` (default) | Converges nasal gamma and nu-before-velar transliteration spellings | No |
+| `nasalGamma: "nasal-except-kappa"` | As `"nasal"`, but writes `γκ` as `gk` (ISO 843 Type 2) | Yes for `γκ`; as `"nasal"` otherwise |
 | `coronis: "omit"` (default) | Omits coronis from transliteration | No |
 | `coronis: "apostrophe"` | Emits U+2019 as display punctuation | No |
 | `coronis: "greek"` | Emits semantic U+1FBD after the affected vowel | Yes for implemented coronis contexts |
 | `accentuation: "monotonic"` | Keeps diaeresis, maps every accent to acute, removes other polytonic marks, and unaccents monosyllables except `ή`, `πού`, `πώς` | No |
-| `modernDigraphs: "phonetic"` | Maps word-initial `μπ/ντ` to `b/d` in transliteration | No; `b/d` are also canonical spellings of beta/delta |
-| `modernDigraphs: "ala-lc"` | Maps initial `μπ/ντ` to `b/d̲` and contextual `γκ` to `gk/nk` | Yes with the coordinated ALA-LC letter options; `d̲` remains distinct from delta |
+| `muPi: "b-initial"` or `"b-initial-final"` | Writes `μπ` as `b` at the beginning of a word, or at either end (ISO 843 Type 2) | Yes with `beta: "v"`; otherwise `b` is also beta |
+| `nuTau: "d-initial"` | Writes word-initial `ντ` as `d` | No; `d` is also delta |
+| `nuTau: "d-underline-initial"` | Writes word-initial `ντ` as `d̲` (ALA-LC) | Yes; `d̲` remains distinct from delta |
+| `nasalGamma: "nasal-medial-kappa"` | Writes `γκ` as `nk` inside a word and `gk` at its edges (ALA-LC) | Yes |
+| `upsilon: "y-with-ou-v-f"` | Writes the upsilon of `αυ/ευ/ηυ` as `v` or `f` and moves its accent to the vowel (ISO 843 Type 2) | No: `v` and `f` read back as beta and phi (with `beta: "v"`, `phi: "f"`), and the accent stays on the vowel |
+| `longVowels: "omit"` | Writes eta and omega without a length mark (ISO 843 Type 2) | No: they read back as epsilon (or iota) and omicron, except where a circumflex or an iota subscript only fits the long vowel |
 | `rho: "systematic"` | Adds one final `h` to every contiguous rho group | The rho letters are recoverable; an explicit rough breathing is not |
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | The accent is recoverable; its scalar preference is not |
 | Greek question-mark or ano-teleia scalar | Selects a canonically unstable punctuation scalar | The punctuation meaning is recoverable; its scalar preference is not |
-| `doubleRho`, `medialBeta`, `finalSigma`, letter variants, `upsilon`, `longVowels` | Selects a canonical output spelling | The canonical letters normally remain recoverable, but `eta: "i-macron"` conflicts with long iota |
+| `doubleRho`, `medialBeta`, `finalSigma`, letter variants, `upsilon`, `longVowels` | Selects a canonical output spelling | The canonical letters normally remain recoverable, but `eta: "i"` with `longVowels: "macron"` writes eta like iota with a macron |
 
 `longVowels` chooses either a macron or a circumflex for structural eta and
-omega length. A separately encoded macron remains a philological diacritic: it
-is retained beside a structural circumflex and follows the ordinary quantity
-diacritic policy.
+omega length, on the letter that `eta` selects (`ē`/`ê` or `ī`/`î`). A
+separately encoded macron remains a philological diacritic: it is retained
+beside a structural circumflex and follows the ordinary quantity diacritic
+policy. Under `eta: "i"`, the macron therefore distinguishes `ῑ` from eta only
+when the length mark is the circumflex. `longVowels: "circumflex"` cannot be
+combined with `circumflexAccent: "circumflex"`: `ῆ` would be written `ê̂` and
+read back without its accent, so `resolveConversionOptions()` rejects the pair.
 
 `removeDiacritics` and the granular `diacritics` policy are applied during
 encoding, after contextual analysis. They therefore cannot manufacture a

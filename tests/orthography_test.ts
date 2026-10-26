@@ -1,5 +1,7 @@
+import { assertEquals } from "@std/assert";
 import {
   convert,
+  convertDetailed,
   foldGreekVariants,
   transliterationToBetaCode,
   transliterationToGreek,
@@ -103,7 +105,9 @@ Deno.test("combines uppercase output with ALA-LC digraphs", () => {
     orthography: {
       beta: "v",
       letterCase: "uppercase",
-      modernDigraphs: "ala-lc",
+      muPi: "b-initial",
+      nasalGamma: "nasal-medial-kappa",
+      nuTau: "d-underline-initial",
     },
   } as const;
 
@@ -262,7 +266,7 @@ Deno.test("applies individual transliteration variants", () => {
   const variants = {
     orthography: {
       beta: "v",
-      eta: "i-macron",
+      eta: "i",
       xi: "ks",
       phi: "f",
       chi: "kh",
@@ -294,17 +298,136 @@ Deno.test("applies individual transliteration variants", () => {
     convert("vī̧̃", "transliteration", "greek", variants),
     "βῇ",
   );
+});
+
+Deno.test("eta takes its letter from eta and its mark from longVowels", () => {
+  const cases = [
+    [{ eta: "e", longVowels: "macron" }, "ē ō ḗ ē̃ ī ĩ"],
+    [{ eta: "e", longVowels: "circumflex" }, "ê ô ế ễ ī ĩ"],
+    [{ eta: "i", longVowels: "macron" }, "ī ō ī́ ī̃ ī ĩ"],
+    [{ eta: "i", longVowels: "circumflex" }, "î ô î́ î̃ ī ĩ"],
+  ] as const;
+  for (const [orthography, latin] of cases) {
+    const options = { orthography };
+    assertNfcEquals(
+      convert("η ω ή ῆ ῑ ῖ", "greek", "transliteration", options),
+      latin,
+    );
+    assertNfcEquals(
+      convert(latin, "transliteration", "transliteration", options),
+      latin,
+    );
+  }
+  // Under a circumflex length mark, ī is iota with a macron again, distinct
+  // from eta; under a macron, it is eta, and the quantity of iota is lost.
+  const circumflex = {
+    orthography: { eta: "i", longVowels: "circumflex" },
+  } as const;
   assertNfcEquals(
-    convert("ηω", "greek", "transliteration", {
-      orthography: { eta: "i-macron", longVowels: "circumflex" },
+    convert("τιμῇ ῑ̓ πῖ", "greek", "transliteration", circumflex),
+    "timî̧̃ ī pĩ",
+  );
+  assertNfcEquals(
+    convert("timî̧̃ ī pĩ", "transliteration", "greek", circumflex),
+    "τιμῇ ῑ πῖ",
+  );
+  assertEquals(
+    convertDetailed("ῑ", "greek", "transliteration", {
+      orthography: { eta: "i" },
+    }).losses.map((loss) => loss.code),
+    ["unrepresented-grapheme"],
+  );
+});
+
+Deno.test("applies the ISO 843 Type 2 policies one by one", () => {
+  const cases = [
+    [
+      { longVowels: "omit" },
+      "ημέρα ῆ ῳ ῶ ϛ ϡ",
+      "eméra ẽ o̧ õ c̄ s̄",
+      // A circumflex or an iota subscript tells eta and omega back.
+      "ἐμέρα ἦ ᾠ ὦ ϛ ϡ",
+    ],
+    [
+      { longVowels: "omit", eta: "i" },
+      "ημέρα ῆ ῃ ῑ",
+      "iméra ĩ i̧ ī",
+      "ἰμέρα ἶ ᾐ ῑ",
+    ],
+    [
+      { nasalGamma: "nasal-except-kappa" },
+      "ἄγκυρα ἄγγελος ἐνκαλῶ",
+      "ágkura ángelos enkalō̃",
+      "ἄγκυρα ἄγγελος ἐνκαλῶ",
+    ],
+    [
+      { muPi: "b-initial-final", beta: "v" },
+      "μπαμπάς κλαμπ ΜΠΑΜΠΑΣ",
+      "bampás klab BAMPAS",
+      "μπαμπάς κλαμπ ΜΠΑΜΠΑΣ",
+    ],
+    [
+      { upsilon: "y-with-ou-v-f", beta: "v", phi: "f" },
+      "Εὔβοια αὐτός ηὗρον οὐ",
+      "Évvoia aftós hē̃vron ou",
+      "Ἔββοια ἀφτός ἧβρον οὐ",
+    ],
+  ] as const;
+  for (const [orthography, greek, latin, reread] of cases) {
+    const options = { orthography };
+    assertNfcEquals(convert(greek, "greek", "transliteration", options), latin);
+    assertNfcEquals(
+      convert(latin, "transliteration", "transliteration", options),
+      latin,
+    );
+    assertNfcEquals(
+      convert(latin, "transliteration", "greek", options),
+      reread,
+    );
+  }
+});
+
+Deno.test("μπ, ντ, and γκ follow one option each", () => {
+  // Each rule combines with the others: ISO 843's μπ with ALA-LC's ντ.
+  const mixed = {
+    orthography: {
+      beta: "v",
+      muPi: "b-initial-final",
+      nuTau: "d-underline-initial",
+      nasalGamma: "nasal-medial-kappa",
+    },
+  } as const;
+  assertNfcEquals(
+    convert(
+      "μπαμπάς κλαμπ ντομάτα πέντε γκρεμός πάγκος",
+      "greek",
+      "transliteration",
+      mixed,
+    ),
+    "bampás klab d̲omáta pénte gkremós pánkos",
+  );
+  assertNfcEquals(
+    convert(
+      "bampás klab d̲omáta pénte gkremós pánkos",
+      "transliteration",
+      "greek",
+      mixed,
+    ),
+    "μπαμπάς κλαμπ ντομάτα πέντε γκρεμός πάγκος",
+  );
+  // Under ala-lc-modern, γκ now follows nasalGamma like every other gamma.
+  assertNfcEquals(
+    convert("άγκυρα γκρεμός", "greek", "transliteration", {
+      preset: "ala-lc-modern",
+      orthography: { nasalGamma: "literal" },
     }),
-    "īô",
+    "agkyra gkremos",
   );
 });
 
 Deno.test("transliterates initial modern Greek digraphs phonetically", () => {
   const modern = {
-    orthography: { modernDigraphs: "phonetic" },
+    orthography: { muPi: "b-initial", nuTau: "d-initial" },
   } as const;
 
   assertNfcEquals(
@@ -328,7 +451,7 @@ Deno.test("transliterates initial modern Greek digraphs phonetically", () => {
 
 Deno.test("recognizes modern b when beta uses v", () => {
   const modern = {
-    orthography: { beta: "v", modernDigraphs: "phonetic" },
+    orthography: { beta: "v", muPi: "b-initial", nuTau: "d-initial" },
   } as const;
 
   assertNfcEquals(
@@ -345,7 +468,9 @@ Deno.test("applies contextual ALA-LC modern digraphs", () => {
   const alaLc = {
     orthography: {
       beta: "v",
-      modernDigraphs: "ala-lc",
+      muPi: "b-initial",
+      nasalGamma: "nasal-medial-kappa",
+      nuTau: "d-underline-initial",
     },
   } as const;
 
@@ -368,7 +493,9 @@ Deno.test("recognizes reversible ALA-LC digraph spellings", () => {
   const alaLc = {
     orthography: {
       beta: "v",
-      modernDigraphs: "ala-lc",
+      muPi: "b-initial",
+      nasalGamma: "nasal-medial-kappa",
+      nuTau: "d-underline-initial",
     },
   } as const;
 

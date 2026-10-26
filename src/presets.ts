@@ -139,7 +139,9 @@ const PRESET_DEFINITIONS = {
       diacritics: OMIT_NON_ROUGH_DIACRITICS,
       orthography: {
         beta: "v",
-        modernDigraphs: "ala-lc",
+        muPi: "b-initial",
+        nasalGamma: "nasal-medial-kappa",
+        nuTau: "d-underline-initial",
         numerals: "decimal",
         upsilon: "y-with-diphthong-u",
       },
@@ -216,11 +218,52 @@ const PRESET_DEFINITIONS = {
         circumflexAccent: "circumflex",
         coronis: "apostrophe",
         enotikon: "hyphen",
-        eta: "i-macron",
+        eta: "i",
         nasalGamma: "literal",
         phi: "f",
         smoothBreathing: "apostrophe",
         upsilon: "y-with-au-eu-ou",
+      },
+    },
+  },
+  "iso-843-type-2": {
+    metadata: {
+      id: "iso-843-type-2",
+      name: "ISO 843:1997 — Type 2",
+      authority: "International Organization for Standardization",
+      description:
+        "Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility (identity documents, road signs, maps).",
+      scope: ["Modern Greek", "Ancient Greek"],
+      coverage: "partial",
+      outOfScopeBehavior: "engine-default",
+      references: [{
+        title: "ISO 843:1997",
+        url:
+          "https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf",
+      }],
+      limitations: [
+        "A transcription is not reversible by design: the v and f of αυ, ευ, ηυ read back as beta and phi, i and o as iota and omicron, and b at the edge of a word as μπ; convertDetailed() reports these losses.",
+        "Reading back is designed for the preset's own output: an e with a circumflex is read as εῦ before v or f, where Type 2 writes it, and otherwise as epsilon with a circumflex, which validateDocument() rejects.",
+        "Notes 3 and 4 list the letters of the modern alphabet; before an archaic letter, the upsilon of αυ, ευ, ηυ follows that letter's sound (f before stigma, koppa, sampi; v before digamma and yot), and any non-letter after it counts as the end of the word.",
+        "An apostrophe for initial smooth breathing can also represent punctuation; reverse parsing does not infer it as a distinct breathing mark.",
+        "Note 2 reads a Latin s followed by a hyphen as medial sigma, for a word divided at the end of a line; the parser treats a hyphen as a word boundary and reads final sigma there.",
+        "ISO 843 names stigma, koppa, and sampi in its Greek repertoire but does not assign them Type 2 conversions; bound converters preserve or reject them for transliteration, while ordinary preset use retains engine defaults.",
+        "The standard's single named koppa cannot be identified unambiguously with the engine's separate archaic-koppa entry; bound transliteration reports this unresolved mapping.",
+      ],
+    },
+    options: {
+      orthography: {
+        beta: "v",
+        circumflexAccent: "circumflex",
+        coronis: "apostrophe",
+        enotikon: "hyphen",
+        eta: "i",
+        longVowels: "omit",
+        muPi: "b-initial-final",
+        nasalGamma: "nasal-except-kappa",
+        phi: "f",
+        smoothBreathing: "apostrophe",
+        upsilon: "y-with-ou-v-f",
       },
     },
   },
@@ -380,10 +423,15 @@ export function getPresetOptions(preset: Preset): PresetOptions {
  * Options are validated strictly: an unknown option key, an unknown option
  * value, or a value of the wrong type is rejected rather than ignored, so a
  * misspelled policy cannot silently fall back to the engine default. A field
- * set to `undefined` is treated as absent.
+ * set to `undefined` is treated as absent. The merged options are then
+ * checked for the one incompatible pair of values: `longVowels: "circumflex"`
+ * with `circumflexAccent: "circumflex"`, which would write the length mark of
+ * eta and omega and the circumflex accent alike. A preset value counts, so
+ * `{ preset: "bnf-core", orthography: { longVowels: "circumflex" } }` is
+ * rejected too.
  *
- * @throws {RangeError} If `options.preset` is not registered at runtime, or
- * if an option key or value is unknown.
+ * @throws {RangeError} If `options.preset` is not registered at runtime, if
+ * an option key or value is unknown, or if two values are incompatible.
  * @throws {TypeError} If `options`, an option group, or `removeDiacritics`
  * has the wrong type.
  */
@@ -394,6 +442,7 @@ export function resolveConversionOptions(
   const { preset, ...custom } = options;
   const base = preset === undefined ? {} : registeredPreset(preset);
   const merged = mergeConversionOptions(base, custom);
+  assertCompatibleOptions(merged, preset);
 
   return {
     orthography: {
@@ -415,6 +464,40 @@ export function resolveConversionOptions(
       DEFAULT_CONVERSION_OPTIONS.removeDiacritics,
   };
 }
+
+/**
+ * Rejects `longVowels: "circumflex"` with `circumflexAccent: "circumflex"`:
+ * `ῆ` would be written `ê̂`, which reads back as `η` without its accent.
+ */
+function assertCompatibleOptions(
+  merged: PresetOptions,
+  preset: Preset | undefined,
+): void {
+  const orthography = merged.orthography;
+  if (
+    orthography?.longVowels !== "circumflex" ||
+    orthography.circumflexAccent !== "circumflex"
+  ) return;
+  throw new RangeError(
+    'orthography.longVowels "circumflex" cannot be combined with ' +
+      'orthography.circumflexAccent "circumflex"' +
+      (preset === undefined ? "" : ` (set by preset "${preset}")`) +
+      ": the length mark and the accent would be written alike.",
+  );
+}
+
+/** Keys replaced before 1.0.0, explained in the error for the old key. */
+const REPLACED_KEYS: Readonly<Record<string, string>> = {
+  "orthography.modernDigraphs":
+    "(replaced by orthography.muPi, orthography.nuTau, and orthography.nasalGamma).",
+};
+
+/** Values renamed before 1.0.0, named in the error for the old value. */
+const RENAMED_VALUES: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = {
+  "orthography.eta": { "e-macron": "e", "i-macron": "i" },
+};
 
 function registeredPreset(preset: Preset): PresetOptions {
   return registeredDefinition(preset).options;
@@ -474,15 +557,29 @@ function validateConversionOptions(options: unknown): void {
       if (choice === undefined) continue;
       const accepted = Object.hasOwn(table, key) ? table[key] : undefined;
       if (accepted === undefined) {
-        throw new RangeError(`Unknown conversion option: ${group}.${key}`);
+        const replaced = Object.hasOwn(REPLACED_KEYS, `${group}.${key}`)
+          ? ` ${REPLACED_KEYS[`${group}.${key}`]}`
+          : "";
+        throw new RangeError(
+          `Unknown conversion option: ${group}.${key}${replaced}`,
+        );
       }
       if (!accepted.includes(choice as string)) {
+        const renames = RENAMED_VALUES[`${group}.${key}`];
+        const renamed = typeof choice === "string" && renames !== undefined &&
+            Object.hasOwn(renames, choice)
+          ? renames[choice]
+          : undefined;
         throw new RangeError(
           `Invalid value for ${group}.${key}: ${
             JSON.stringify(choice)
           }; expected one of ${
             accepted.map((v) => JSON.stringify(v)).join(", ")
-          }.`,
+          }.${
+            renamed === undefined
+              ? ""
+              : ` ${JSON.stringify(choice)} is now ${JSON.stringify(renamed)}.`
+          }`,
         );
       }
     }
@@ -513,12 +610,13 @@ export function isCharacterInPresetScope(
       return false;
     case "bnf-core":
     case "iso-843-type-1":
+    case "iso-843-type-2":
     case "tlg-core":
       return true;
   }
 }
 
-/** A recognized ISO source character without an established Type 1 mapping. */
+/** A recognized ISO source character without an established Type 1 or 2 mapping. */
 export function presetMappingIssue(
   preset: Preset,
   character: Letter,
@@ -527,7 +625,10 @@ export function presetMappingIssue(
   target: Format,
   options: ResolvedConversionOptions,
 ): "undefined-preset-mapping" | "unresolved-preset-mapping" | undefined {
-  if (preset !== "iso-843-type-1" || target !== "transliteration") {
+  if (
+    (preset !== "iso-843-type-1" && preset !== "iso-843-type-2") ||
+    target !== "transliteration"
+  ) {
     return undefined;
   }
   // ISO's separate numeral table permits decimal indexing when requested.

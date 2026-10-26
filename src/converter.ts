@@ -36,7 +36,12 @@ export interface CharacterAliasDefinition {
   override?: boolean;
 }
 
-/** Lowercase and optional uppercase spellings in one representation. */
+/**
+ * Lowercase and optional uppercase spellings in one representation. Each form
+ * should spell one letter: a later release may write a multi-letter uppercase
+ * form in full capitals among capitals, as built-in letters are (see
+ * `docs/character-extensions.md`, *Word context*).
+ */
 export interface CustomCharacterForms {
   /** Canonical lowercase spelling. */
   lowercase: string;
@@ -685,7 +690,7 @@ function mappingDiagnostic(
   behavior: ConverterOutOfScopeBehavior,
 ): CharacterScopeDiagnostic {
   const reason = code === "undefined-preset-mapping"
-    ? "has no ISO 843 Type 1 transliteration"
+    ? "has no ISO 843 conversion"
     : "cannot be identified unambiguously with ISO 843's koppa";
   return {
     code,

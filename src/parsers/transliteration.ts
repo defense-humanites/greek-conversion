@@ -8,6 +8,7 @@ import {
   isDiphthongAt,
   isGreekNumeralContext,
   isVowel,
+  isVowelUpsilonAt,
   isWordInitial,
 } from "../context.ts";
 import {
@@ -88,6 +89,8 @@ function markBit(char: string): number {
 }
 
 const ROUGH = diacriticBit("rough");
+const CIRCUMFLEX = diacriticBit("circumflex");
+const IOTA_SUBSCRIPT = diacriticBit("iota-subscript");
 const MACRON = diacriticBit("macron");
 const DIAERESIS = diacriticBit("diaeresis");
 
@@ -95,11 +98,11 @@ export function parseTransliteration(
   input: string,
   options: ConversionOptions = {},
 ): Document {
-  const chars = prioritizeEtaMacron(
+  const chars = prioritizeEtaMark(
     Array.from(input.normalize("NFD")),
     options,
   );
-  // Lowercased once, after prioritizeEtaMacron() has reordered the marks.
+  // Lowercased once, after prioritizeEtaMark() has reordered the marks.
   // Built with a loop rather than `chars.map()`: once this function is
   // optimized, V8's inlined `map` returns arrays of a different elements kind
   // from the builtin's, and the reads of `lowered` below then deoptimize the
@@ -113,13 +116,16 @@ export function parseTransliteration(
   // vowel is carried by a breathing on that vowel rather than by a diaeresis.
   const separatedByBreathing = new Set<number>();
   const orthography = options.orthography;
-  const digraphB = (orthography?.modernDigraphs === "phonetic" ||
-    orthography?.modernDigraphs === "ala-lc") &&
-    orthography.beta === "v";
-  const digraphD = orthography?.modernDigraphs === "ala-lc";
+  // `b` is μπ only where it cannot be beta; `d̲` is never delta.
+  const digraphB = orthography?.muPi !== undefined &&
+    orthography.muPi !== "mp" && orthography.beta === "v";
+  const digraphD = orthography?.nuTau === "d-underline-initial";
   const lunateC = orthography?.lunateSigma === "c";
   const systematicRho = orthography?.rho === "systematic";
   const circumflexAccent = orthography?.circumflexAccent === "circumflex";
+  // Without a length mark, e and o are epsilon and omicron, and a circumflex
+  // on them is an accent: one that only the long vowel can bear.
+  const omitLength = orthography?.longVowels === "omit";
   const upsilon = orthography?.upsilon;
 
   for (let i = 0; i < chars.length;) {
@@ -128,14 +134,20 @@ export function parseTransliteration(
 
     if (digraphB && lowered[i] === "b") {
       const uppercase = chars[i] !== lowered[i];
-      out.push(grapheme("mu", uppercase), grapheme("pi"));
+      out.push(
+        grapheme("mu", uppercase),
+        grapheme("pi", uppercase && capitalFollows(chars, lowered, i + 1)),
+      );
       i++;
       continue;
     }
 
     if (digraphD && lowered[i] === "d" && chars[i + 1] === "\u0332") {
       const uppercase = chars[i] !== lowered[i];
-      out.push(grapheme("nu", uppercase), grapheme("tau"));
+      out.push(
+        grapheme("nu", uppercase),
+        grapheme("tau", uppercase && capitalFollows(chars, lowered, i + 2)),
+      );
       i += 2;
       continue;
     }
@@ -197,6 +209,7 @@ export function parseTransliteration(
 
     while (i < chars.length) {
       if (
+        !omitLength &&
         chars[i] === "\u0302" &&
         (match.value === "epsilon" || match.value === "omicron") &&
         !((marks & MACRON) !== 0 && circumflexAccent)
@@ -211,7 +224,7 @@ export function parseTransliteration(
       i++;
     }
 
-    const letter = resolveLongVowel(
+    let letter = resolveLongVowel(
       match.value,
       (marks & MACRON) !== 0,
       structuralCircumflex,
@@ -219,18 +232,55 @@ export function parseTransliteration(
     // The macron of `ē` and `ō` makes the letter, not a mark.
     if (letter !== match.value && !structuralCircumflex) marks &= ~MACRON;
 
+    if (omitLength && (marks & IOTA_SUBSCRIPT) !== 0) {
+      // Only alpha, eta, and omega bear an iota subscript.
+      if (letter === "omicron") letter = "omega";
+      else if (
+        letter === (orthography?.eta === "i" ? "iota" : "epsilon")
+      ) letter = "eta";
+    }
+    if (omitLength && (marks & CIRCUMFLEX) !== 0) {
+      if (letter === "omicron") letter = "omega";
+      else if (letter === "epsilon" && orthography?.eta !== "i") {
+        letter = "eta";
+      } else if (
+        letter === "epsilon" && upsilon === "y-with-ou-v-f" &&
+        (lowered[i] === "v" || lowered[i] === "f")
+      ) {
+        // `εῦ`, whose accent ISO 843 Type 2 moves onto the e (note 10).
+        out.push(
+          ownedGrapheme(
+            letter,
+            roughUppercase || source !== sourceLower,
+            diacriticsFromMask(marks & ~CIRCUMFLEX),
+          ),
+          ownedGrapheme(
+            "upsilon",
+            chars[i] !== lowered[i],
+            diacriticsFromMask(CIRCUMFLEX),
+          ),
+        );
+        i++;
+        continue;
+      }
+    }
+
     if (
       letter === "upsilon" &&
-      (upsilon === "y-with-diphthong-u" || upsilon === "y-with-au-eu-ou") &&
+      (upsilon === "y-with-diphthong-u" || upsilon === "y-with-au-eu-ou" ||
+        upsilon === "y-with-ou-v-f") &&
       sourceLower === "y"
     ) {
       const pair = latinPair(
         out.at(-1),
         grapheme(letter, false, diacriticsFromMask(marks)),
       );
-      const wouldRenderU = upsilon === "y-with-au-eu-ou"
-        ? isAuEuOuAt(pair, 0)
-        : isDiphthongAt(pair, 0);
+      // Whether the pair, as a diphthong, would be written otherwise than
+      // with y (u, or v and f under ISO 843 Type 2).
+      const wouldRenderU = upsilon === "y-with-diphthong-u"
+        ? isDiphthongAt(pair, 0)
+        : isAuEuOuAt(pair, 0) ||
+          upsilon === "y-with-ou-v-f" && isVowelUpsilonAt(pair, 0);
       if (wouldRenderU) {
         // `y` says the pair is not a diphthong. Greek marks such a hiatus by
         // a breathing on the first vowel when the word starts there (ἀυτμή,
@@ -274,19 +324,27 @@ export function parseTransliteration(
     ));
   }
 
-  if (options.orthography?.nasalGamma !== "literal") {
-    inferNasalGammas(out);
+  const nasalGamma = options.orthography?.nasalGamma;
+  if (nasalGamma !== "literal") {
+    inferNasalGammas(out, nasalGamma === "nasal-except-kappa");
   }
   inferInitialBreathings(out, options, separatedByBreathing);
 
   return out;
 }
 
-function prioritizeEtaMacron(
+/**
+ * Under `eta: "i"`, the length mark makes the letter: `ī` (or `î` under
+ * `longVowels: "circumflex"`) is eta, not iota with a mark. The mark is moved
+ * to the front of the letter's marks so that the reader matches it with the
+ * `i` as one letter, whatever the order of marks in the input.
+ */
+function prioritizeEtaMark(
   input: string[],
   options: ConversionOptions,
 ): string[] {
-  if (options.orthography?.eta !== "i-macron") return input;
+  const mark = etaMark(options);
+  if (options.orthography?.eta !== "i" || mark === undefined) return input;
 
   const chars = [...input];
   for (let start = 0; start < chars.length; start++) {
@@ -295,14 +353,14 @@ function prioritizeEtaMacron(
     let end = start + 1;
     while (end < chars.length && /^\p{M}$/u.test(chars[end])) end++;
 
-    // Look for the macron inside this letter's marks only: scanning the rest
+    // Look for the mark inside this letter's marks only: scanning the rest
     // of the text at every `i` made parsing quadratic.
-    let macron = start + 1;
-    while (macron < end && chars[macron] !== "\u0304") macron++;
-    if (macron < end && macron > start + 1) {
-      // Move the macron to the front of the marks, shifting the others right.
-      for (let j = macron; j > start + 1; j--) chars[j] = chars[j - 1];
-      chars[start + 1] = "\u0304";
+    let found = start + 1;
+    while (found < end && chars[found] !== mark) found++;
+    if (found < end && found > start + 1) {
+      // Move the mark to the front of the marks, shifting the others right.
+      for (let j = found; j > start + 1; j--) chars[j] = chars[j - 1];
+      chars[start + 1] = mark;
     }
     start = end - 1;
   }
@@ -315,7 +373,10 @@ function transliterationTrie(options: ConversionOptions): Trie<Letter> {
   const orthography = options.orthography;
 
   if (orthography?.beta === "v") variants.push(["v", "beta"]);
-  if (orthography?.eta === "i-macron") variants.push(["i\u0304", "eta"]);
+  const mark = etaMark(options);
+  if (orthography?.eta === "i" && mark !== undefined) {
+    variants.push([`i${mark}`, "eta"]);
+  }
   if (orthography?.xi === "ks") variants.push(["ks", "xi"]);
   if (orthography?.phi === "f") variants.push(["f", "phi"]);
   if (orthography?.chi === "kh") variants.push(["kh", "chi"]);
@@ -323,6 +384,20 @@ function transliterationTrie(options: ConversionOptions): Trie<Letter> {
   return variants.length === 0
     ? TRIE
     : new Trie<Letter>([...CANONICAL_ENTRIES, ...variants]);
+}
+
+/** The combining mark that shows the length of eta and omega, if any. */
+function etaMark(
+  options: ConversionOptions,
+): "\u0302" | "\u0304" | undefined {
+  switch (options.orthography?.longVowels) {
+    case "circumflex":
+      return "\u0302";
+    case "omit":
+      return undefined;
+    default:
+      return "\u0304";
+  }
 }
 
 function markedArchaicLetter(
@@ -359,7 +434,7 @@ function markedArchaicLetter(
   }
 }
 
-function inferNasalGammas(tokens: Token[]) {
+function inferNasalGammas(tokens: Token[], exceptKappa: boolean) {
   for (let i = 0; i < tokens.length - 1; i++) {
     const token = tokens[i];
     const next = tokens[i + 1];
@@ -368,7 +443,7 @@ function inferNasalGammas(tokens: Token[]) {
       token.kind === "grapheme" &&
       token.letter === "nu" &&
       next.kind === "grapheme" &&
-      followsNasalGamma(next.letter)
+      followsNasalGamma(next.letter, exceptKappa)
     ) {
       token.letter = "gamma";
     }
@@ -382,6 +457,17 @@ function startsVowel(
 ) {
   const match = trie.longest(lowered, start);
   return !!match && isVowel(match.value);
+}
+
+/** Whether the next Latin character, from `start`, is an uppercase letter. */
+function capitalFollows(
+  chars: readonly string[],
+  lowered: readonly string[],
+  start: number,
+): boolean {
+  const char = chars[start];
+  return char !== undefined && char !== lowered[start] &&
+    /^\p{L}$/u.test(char);
 }
 
 function resolveLongVowel(

@@ -70,6 +70,7 @@ metadata or options.
 | `ala-lc-modern` | Romanization profile for Modern Greek after 1453. | Modern Greek after 1453 | partial | engine-default | [ALA-LC Romanization Tables: Greek (Modern)](https://www.loc.gov/catdir/cpso/romanization/greekm.pdf) |
 | `bnf-core` | Core mechanically expressible profile for the BnF adaptation of ISO 843 for Ancient Greek. | Ancient Greek; French library cataloguing | partial | engine-default | [Translittération du grec — Kitcat BnF](https://kitcat.bnf.fr/consignes-catalogage/translitteration-du-grec) |
 | `iso-843-type-1` | Type 1 transliteration of Greek characters into Latin characters. | Ancient Greek; Modern Greek | partial | engine-default | [ISO 843:1997](https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf) |
+| `iso-843-type-2` | Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility (identity documents, road signs, maps). | Modern Greek; Ancient Greek | partial | engine-default | [ISO 843:1997](https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf) |
 | `perseus` | Lowercase-ASCII subset of TLG Beta Code used by the Perseus Digital Library project. | Polytonic Greek; Perseus and Morpheus interchange | complete | engine-default | [The Care and Feeding of Morpheus](https://github.com/PerseusDL/morpheus/blob/master/doc/morpheus.html); [Perseids Tools Beta Code JSON mappings](https://github.com/perseids-tools/beta-code-json); [TLG Beta Code Quick Reference Guide](https://stephanus.tlg.uci.edu/encoding/quickbeta.pdf) |
 | `sbl-academic` | Academic transliteration retaining the engine's scientific diacritics. | Ancient Greek; Biblical studies | adapted | engine-default | [The SBL Handbook of Style, second edition](https://archive.org/details/sblhandbookofsty0000unse_g7i4/) |
 | `sbl-general` | Readable transliteration omitting most scholarly diacritics while retaining rough breathing and diaeresis. | Ancient Greek; Biblical studies; General readers | adapted | engine-default | [The SBL Handbook of Style, second edition](https://archive.org/details/sblhandbookofsty0000unse_g7i4/) |
@@ -135,7 +136,9 @@ Romanization profile for Modern Greek after 1453.
 {
   "orthography": {
     "beta": "v",
-    "modernDigraphs": "ala-lc",
+    "muPi": "b-initial",
+    "nasalGamma": "nasal-medial-kappa",
+    "nuTau": "d-underline-initial",
     "numerals": "decimal",
     "upsilon": "y-with-diphthong-u"
   },
@@ -225,7 +228,7 @@ Type 1 transliteration of Greek characters into Latin characters.
     "circumflexAccent": "circumflex",
     "coronis": "apostrophe",
     "enotikon": "hyphen",
-    "eta": "i-macron",
+    "eta": "i",
     "nasalGamma": "literal",
     "phi": "f",
     "smoothBreathing": "apostrophe",
@@ -240,6 +243,49 @@ Type 1 transliteration of Greek characters into Latin characters.
 - An apostrophe for initial smooth breathing can also represent punctuation; reverse parsing does not infer it as a distinct breathing mark.
 - Note 2 reads a Latin s followed by a hyphen as medial sigma, for a word divided at the end of a line; the parser treats a hyphen as a word boundary and reads final sigma there.
 - ISO 843 names stigma, koppa, and sampi in its Greek repertoire but does not assign them Type 1 conversions; bound converters preserve or reject them for transliteration, while ordinary preset use retains engine defaults.
+- The standard's single named koppa cannot be identified unambiguously with the engine's separate archaic-koppa entry; bound transliteration reports this unresolved mapping.
+
+### `iso-843-type-2` — ISO 843:1997 — Type 2
+
+- **Authority:** International Organization for Standardization
+- **Scope:** Modern Greek; Ancient Greek
+- **Coverage:** `partial`
+- **Out-of-scope behavior:** `engine-default`
+
+Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility (identity documents, road signs, maps).
+
+**References:**
+
+- [ISO 843:1997](https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf)
+
+**Contributed options:**
+
+```json
+{
+  "orthography": {
+    "beta": "v",
+    "circumflexAccent": "circumflex",
+    "coronis": "apostrophe",
+    "enotikon": "hyphen",
+    "eta": "i",
+    "longVowels": "omit",
+    "muPi": "b-initial-final",
+    "nasalGamma": "nasal-except-kappa",
+    "phi": "f",
+    "smoothBreathing": "apostrophe",
+    "upsilon": "y-with-ou-v-f"
+  }
+}
+```
+
+**Known limitations:**
+
+- A transcription is not reversible by design: the v and f of αυ, ευ, ηυ read back as beta and phi, i and o as iota and omicron, and b at the edge of a word as μπ; convertDetailed() reports these losses.
+- Reading back is designed for the preset's own output: an e with a circumflex is read as εῦ before v or f, where Type 2 writes it, and otherwise as epsilon with a circumflex, which validateDocument() rejects.
+- Notes 3 and 4 list the letters of the modern alphabet; before an archaic letter, the upsilon of αυ, ευ, ηυ follows that letter's sound (f before stigma, koppa, sampi; v before digamma and yot), and any non-letter after it counts as the end of the word.
+- An apostrophe for initial smooth breathing can also represent punctuation; reverse parsing does not infer it as a distinct breathing mark.
+- Note 2 reads a Latin s followed by a hyphen as medial sigma, for a word divided at the end of a line; the parser treats a hyphen as a word boundary and reads final sigma there.
+- ISO 843 names stigma, koppa, and sampi in its Greek repertoire but does not assign them Type 2 conversions; bound converters preserve or reject them for transliteration, while ordinary preset use retains engine defaults.
 - The standard's single named koppa cannot be identified unambiguously with the engine's separate archaic-koppa entry; bound transliteration reports this unresolved mapping.
 
 ### `perseus` — Perseus Beta Code — Core subset

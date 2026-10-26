@@ -129,6 +129,7 @@ Deno.test("preset Greek views remain valid across source formats", () => {
     "ala-lc-modern",
     "bnf-core",
     "iso-843-type-1",
+    "iso-843-type-2",
     "perseus",
     "sbl-academic",
     "sbl-general",

@@ -189,6 +189,53 @@ export function isAuEuOuAt(document: Document, start: number): boolean {
       first.letter === "omicron");
 }
 
+/**
+ * The three diphthongs whose upsilon ISO 843 Type 2 writes `v` or `f`: `αυ`,
+ * `ευ`, `ηυ`. Like every diphthong, they exclude a breathing or an accent on
+ * the first vowel and a diaeresis on the upsilon (note 9).
+ */
+export function isVowelUpsilonAt(document: Document, start: number): boolean {
+  if (!isDiphthongAt(document, start)) return false;
+  const first = document[start];
+  return first?.kind === "grapheme" &&
+    (first.letter === "alpha" || first.letter === "epsilon" ||
+      first.letter === "eta");
+}
+
+/**
+ * Letters after which ISO 843 Type 2 writes the upsilon of `αυ`, `ευ`, `ηυ`
+ * as `f` (note 4); the archaic letters follow their sound (stigma `στ`,
+ * koppa `κ`, sampi `σσ`). Any other letter, vowels included, gives `v`
+ * (note 3); the end of the word gives `f`.
+ */
+const VOICELESS = new Set<Letter>([
+  "theta",
+  "kappa",
+  "xi",
+  "pi",
+  "sigma",
+  "tau",
+  "phi",
+  "chi",
+  "psi",
+  "stigma",
+  "koppa",
+  "archaic-koppa",
+  "sampi",
+]);
+
+/** Whether the upsilon at `index` is followed by a voiced sound in its word. */
+export function precedesVoicedSound(
+  document: Document,
+  index: number,
+): boolean {
+  if (isWordFinal(document, index)) return false;
+  let next = index + 1;
+  while (isBoundaryTransparent(document[next])) next++;
+  const token = document[next];
+  return token?.kind === "grapheme" && !VOICELESS.has(token.letter);
+}
+
 export function breathingTarget(document: Document, start: number): number {
   return isDiphthongAt(document, start) ? start + 1 : start;
 }
@@ -240,18 +287,31 @@ export function classifyCoronides(tokens: Token[]): void {
   }
 }
 
-export function isNasalGamma(document: Document, index: number): boolean {
+/**
+ * Whether the gamma at `index` is nasal: before gamma, kappa, xi, or chi, or
+ * not before kappa when `exceptKappa` is set (ISO 843 Type 2 writes `γκ` as
+ * `gk`).
+ */
+export function isNasalGamma(
+  document: Document,
+  index: number,
+  exceptKappa = false,
+): boolean {
   const token = document[index];
   const next = document[index + 1];
 
   return token.kind === "grapheme" &&
     token.letter === "gamma" &&
     next?.kind === "grapheme" &&
-    NASAL_GAMMA_FOLLOWERS.has(next.letter);
+    followsNasalGamma(next.letter, exceptKappa);
 }
 
-export function followsNasalGamma(letter: Letter): boolean {
-  return NASAL_GAMMA_FOLLOWERS.has(letter);
+export function followsNasalGamma(
+  letter: Letter,
+  exceptKappa = false,
+): boolean {
+  return NASAL_GAMMA_FOLLOWERS.has(letter) &&
+    !(exceptKappa && letter === "kappa");
 }
 
 /**

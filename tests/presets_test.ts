@@ -17,6 +17,7 @@ Deno.test("exposes descriptive metadata for every preset", () => {
     "ala-lc-modern",
     "bnf-core",
     "iso-843-type-1",
+    "iso-843-type-2",
     "perseus",
     "sbl-academic",
     "sbl-general",
@@ -113,7 +114,9 @@ Deno.test("resolves custom options after nested preset options", () => {
     orthography: {
       ...DEFAULT_CONVERSION_OPTIONS.orthography,
       beta: "b",
-      modernDigraphs: "ala-lc",
+      muPi: "b-initial",
+      nasalGamma: "nasal-medial-kappa",
+      nuTau: "d-underline-initial",
       numerals: "decimal",
       upsilon: "y-with-diphthong-u",
       letterCase: "uppercase",

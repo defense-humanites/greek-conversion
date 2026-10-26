@@ -1,4 +1,4 @@
-# BnF and ISO 843 Type 1 conformance corpus
+# BnF and ISO 843 conformance corpus
 
 The spellings in the executable cases in
 [`tests/preset_conformance_test.ts`](../tests/preset_conformance_test.ts)
@@ -14,7 +14,10 @@ implements every rule. The BnF source describes both its main ISO-based
 transliteration (`β → v`, `η → ī`, `φ → f`) and optional ancient-Greek
 variants (`b`, `ē`, `ph`). `bnf-core` selects the latter. It cannot decide
 whether a catalogue record also needs the main form or an access-point
-variant. `iso-843-type-1` selects the main ISO forms.
+variant. `iso-843-type-1` selects the main ISO forms. `iso-843-type-2` is a
+transcription, not reversible by design (§ 1 of the standard): most of its
+cases report loss, and the test checks that the output is nevertheless
+stable.
 
 | Reference | Covered cases | Inverse assessment |
 | --- | --- | --- |
@@ -23,6 +26,9 @@ variant. `iso-843-type-1` selects the main ISO forms.
 | [ISO 843:1997, Table 1 and note 1](https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf) | `βηφ → vīf`, `αυ/ευ/ου → au/eu/ou` | The selected letter forms reparse without reported loss. |
 | ISO 843:1997, Table 1 and note 11 | Capitals `TH`, `CH`, `PS` among capitals (`ΘΑΛΑΣΣΑ → THALASSA`), `Th` before lowercase text, for every preset (`tests/orthography_test.ts`) | Full capitals reparse to the same capitals. |
 | ISO 843:1997, Tables 3–4 | Smooth and rough breathings, perispomeni as circumflex (`τοῦ → toû`), question mark versus ano teleia, iota subscript, enotikon, digamma and yot; missing archaic mappings in a bound strict converter | An apostrophe for smooth breathing and a hyphen for enotikon are insufficient to reconstruct those distinctions: both cases report loss. |
+| ISO 843:1997, Table 2, lines 5–7, 19–21, 24–26, notes 3, 4, 9, 10 (Type 2) | `αυ/ευ/ηυ → av/ev/iv` before a voiced sound, `af/ef/if` before a voiceless one or at the end of a word, `ay` after an accented vowel or before `ϋ`; the accent of that upsilon moves to the vowel (`Εύβοια → Évvoia`, `δεῦρο → dêvro`) | `v` and `f` reparse as beta and phi; loss is reported. A circumflex on `e` before `v` or `f` can only come from `εῦ` and reparses as such. |
+| ISO 843:1997, Table 2, lines 10–13, 32–35, 41–42, 48 (Type 2) | `γγ/γξ/γχ → ng/nx/nch`, `γκ → gk`; `μπ → b` at either end of a word and `mp` inside; `ντ → nt`; `ου → ou`, `oy` after an accented vowel; `υι → yi` | Reparse without reported loss. |
+| ISO 843:1997, Table 2, lines 23, 52, and Tables 1, 3 (Type 2) | `η → i`, `ω → o`, capitals (`ΕΥΡΩΠΗ → EVROPI`), perispomeni and ypogegrammeni (`ᾠδῇ → ’o̧dî̧`) | Eta and omega reparse as iota and omicron, except where a circumflex or an iota subscript only fits the long vowel (`tôn → τῶν`); loss is reported. |
 
 ## Rules still open
 
