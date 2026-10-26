@@ -35,7 +35,11 @@ import {
   withoutDiacritic,
 } from "./model.ts";
 import type { Diacritic, Document, Format, Grapheme } from "./model.ts";
-import type { ConversionOptions } from "./options.ts";
+import type {
+  ConversionOptions,
+  MuPiTransliteration,
+  NuTauTransliteration,
+} from "./options.ts";
 import { greekUpper } from "./case.ts";
 import { applyGreekOrthography } from "./orthography.ts";
 import { encodePunctuation } from "./punctuation.ts";
@@ -231,6 +235,11 @@ export function encodeTransliteration(
     "transliteration",
   );
   // Constant for the whole call: computed once, not at every token.
+  const digraphs: DigraphPolicy = {
+    muPi: options.orthography?.muPi ?? "mp",
+    nuTau: options.orthography?.nuTau ?? "nt",
+  };
+  const rewritesDigraphs = digraphs.muPi !== "mp" || digraphs.nuTau !== "nt";
   const preservesRough = preservesDiacritic(
     "rough",
     options,
@@ -288,12 +297,14 @@ export function encodeTransliteration(
         token.value;
     }
 
-    const modernDigraph = modernDigraphAt(doc, index, options);
-    if (modernDigraph !== undefined) {
-      const second = doc[index + 1];
-      return caseDigraph(modernDigraph, token, second);
+    if (rewritesDigraphs) {
+      const modernDigraph = modernDigraphAt(doc, index, digraphs);
+      if (modernDigraph !== undefined) {
+        const second = doc[index + 1];
+        return caseDigraph(modernDigraph, token, second);
+      }
+      if (modernDigraphAt(doc, index - 1, digraphs) !== undefined) return "";
     }
-    if (modernDigraphAt(doc, index - 1, options) !== undefined) return "";
 
     if (
       token.letter === "sigma" &&
@@ -406,14 +417,18 @@ function rendersLunateSigma(
  * `muPi` and `nuTau` policies, or undefined when they are written letter by
  * letter.
  */
+/** The `muPi` and `nuTau` policies, read once per encoding call. */
+interface DigraphPolicy {
+  muPi: MuPiTransliteration;
+  nuTau: NuTauTransliteration;
+}
+
 function modernDigraphAt(
   document: Document,
   index: number,
-  options: ConversionOptions,
+  { muPi, nuTau }: DigraphPolicy,
 ): string | undefined {
-  const muPi = options.orthography?.muPi ?? "mp";
-  const nuTau = options.orthography?.nuTau ?? "nt";
-  if ((muPi === "mp" && nuTau === "nt") || index < 0) return undefined;
+  if (index < 0) return undefined;
 
   const first = document[index];
   const second = document[index + 1];
