@@ -56,7 +56,7 @@ convert(thucydides, "greek", "beta-code");
 // → *(/ellhsin e)ge/neto kai\ me/rei tini\ tw=n barba/rwn, w(s de\ ei)pei=n kai\ e)pi\ plei=ston a)nqrw/pwn.
 
 convert(thucydides, "greek", "transliteration", { preset: "iso-843-type-1" });
-// → Héllīsin ’egéneto kaì mérei tinì tō̃n varvárōn, hōs dè ’eipeĩn kaì ’epì pleĩston ’anthrṓpōn.
+// → Héllīsin ’egéneto kaì mérei tinì tō̂n varvárōn, hōs dè ’eipeîn kaì ’epì pleîston ’anthrṓpōn.
 ```
 
 Without diacritics, the rough breathing stays as `h`: in Latin script it is a

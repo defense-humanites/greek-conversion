@@ -9,6 +9,10 @@ change.
 
 ### Fixed
 
+- `iso-843-type-1` writes the perispomeni as a circumflex, as ISO 843
+  Table 3 prescribes for both types: `τοῦ` → `toû` (was `toũ`). The README
+  quick start changes accordingly (`tō̂n`, `eipeîn`, `pleîston`).
+
 - A Greek capital spelled with several Latin letters is written in full
   capitals among capitals, for every preset and by default, after ISO 843
   (Table 1 and note 11): `ΘΑΛΑΣΣΑ` → `THALASSA` (was `ThALASSA`), `ΧΘΩΝ` →
@@ -22,6 +26,10 @@ change.
   spellings are still read as before. Compared with `1.0.0-rc.4` over 52,000
   conversions (13 option settings, mixed-case text): no other output changes,
   no new loss.
+
+- The `iso-843-type-1` metadata records that note 2 (a Latin `s` before a
+  hyphen is read back as medial sigma) is not followed: the parser takes the
+  hyphen as a word boundary.
 
 ## [1.0.0-rc.4] - 2026-10-25
 

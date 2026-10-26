@@ -99,6 +99,13 @@ const CASES = [
   },
   {
     preset: "iso-843-type-1",
+    rule: "Table 3: perispomeni becomes a circumflex",
+    greek: "τοῦ ᾠδῇ",
+    latin: "toû ’ō̧dī̧̂",
+    lossy: true,
+  },
+  {
+    preset: "iso-843-type-1",
     rule: "Table 3: initial rough rho",
     greek: "ῥ",
     latin: "rh",
