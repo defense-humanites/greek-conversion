@@ -103,8 +103,8 @@
         </section>
 
         <section class="settings" aria-label="Settings">
-          <!-- What shapes the input, left; what the library reads, right,
-               under the output that the diagnostics number by its tokens. -->
+          <!-- Settings, left; what they produce (the code, the document the
+               library read), right. Stacked, the order stays the same. -->
           <div class="settings-input">
             <details>
               <summary>Options</summary>
@@ -138,6 +138,8 @@
                   class="hint"><a target="_blank" rel="noopener" href="https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md">Character extensions and repertoires</a></p>
               </div>
             </details>
+          </div>
+          <div class="settings-output">
             <details>
               <summary>Code</summary>
               <div class="detail-body">
@@ -150,8 +152,6 @@
                 <pre><code id="code"></code></pre>
               </div>
             </details>
-          </div>
-          <div class="settings-output">
             <details id="document-panel">
               <summary>Canonical document</summary>
               <div class="detail-body">
