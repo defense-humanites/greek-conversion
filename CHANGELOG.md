@@ -21,14 +21,25 @@ change.
     (`tôn` → `τῶν`);
   - `nasalGamma: "nasal-except-kappa"` writes `γκ` as `gk` and the other nasal
     gammas as `n`;
-  - `modernDigraphs: "iso-843"` writes `μπ` as `b` at either end of a word;
+  - `muPi: "b-initial-final"` writes `μπ` as `b` at either end of a word (see
+    the split of `modernDigraphs` below);
   - `upsilon: "y-with-ou-v-f"` writes the upsilon of `αυ`, `ευ`, `ηυ` as `v`
     before a voiced sound and `f` before a voiceless one or at the end of a
     word, and moves its accent to the vowel; `ου` stays `ou`.
 
 ### Changed
 
-- Writing `μπ`, `ντ`, or `γκ` under `modernDigraphs` tests the two letters
+- `orthography.modernDigraphs` is replaced by one option per letter pair, so
+  that each rule can be combined with the others and no rule depends on a
+  preset's name: `muPi` (`"mp"`, `"b-initial"`, `"b-initial-final"`), `nuTau`
+  (`"nt"`, `"d-initial"`, `"d-underline-initial"`), and
+  `nasalGamma: "nasal-medial-kappa"` for the ALA-LC rule on `γκ`, which
+  `modernDigraphs: "ala-lc"` handled apart from `nasalGamma`. `ala-lc-modern`
+  is unchanged in output; overriding its `nasalGamma` now applies to `γκ` too.
+  The old key throws a `RangeError` that names the new ones. See the migration
+  guide.
+
+- Writing `μπ` or `ντ` as one letter tests the two letters
   before the costlier numeral context, and the accent transfer of
   `y-with-ou-v-f` looks only at upsilons and the vowels before them:
   `ala-lc-modern` and `iso-843-type-2` transliterate about a quarter faster

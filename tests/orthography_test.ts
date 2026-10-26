@@ -105,7 +105,9 @@ Deno.test("combines uppercase output with ALA-LC digraphs", () => {
     orthography: {
       beta: "v",
       letterCase: "uppercase",
-      modernDigraphs: "ala-lc",
+      muPi: "b-initial",
+      nasalGamma: "nasal-medial-kappa",
+      nuTau: "d-underline-initial",
     },
   } as const;
 
@@ -359,7 +361,7 @@ Deno.test("applies the ISO 843 Type 2 policies one by one", () => {
       "ἄγκυρα ἄγγελος ἐνκαλῶ",
     ],
     [
-      { modernDigraphs: "iso-843", beta: "v" },
+      { muPi: "b-initial-final", beta: "v" },
       "μπαμπάς κλαμπ ΜΠΑΜΠΑΣ",
       "bampás klab BAMPAS",
       "μπαμπάς κλαμπ ΜΠΑΜΠΑΣ",
@@ -385,9 +387,47 @@ Deno.test("applies the ISO 843 Type 2 policies one by one", () => {
   }
 });
 
+Deno.test("μπ, ντ, and γκ follow one option each", () => {
+  // Each rule combines with the others: ISO 843's μπ with ALA-LC's ντ.
+  const mixed = {
+    orthography: {
+      beta: "v",
+      muPi: "b-initial-final",
+      nuTau: "d-underline-initial",
+      nasalGamma: "nasal-medial-kappa",
+    },
+  } as const;
+  assertNfcEquals(
+    convert(
+      "μπαμπάς κλαμπ ντομάτα πέντε γκρεμός πάγκος",
+      "greek",
+      "transliteration",
+      mixed,
+    ),
+    "bampás klab d̲omáta pénte gkremós pánkos",
+  );
+  assertNfcEquals(
+    convert(
+      "bampás klab d̲omáta pénte gkremós pánkos",
+      "transliteration",
+      "greek",
+      mixed,
+    ),
+    "μπαμπάς κλαμπ ντομάτα πέντε γκρεμός πάγκος",
+  );
+  // Under ala-lc-modern, γκ now follows nasalGamma like every other gamma.
+  assertNfcEquals(
+    convert("άγκυρα γκρεμός", "greek", "transliteration", {
+      preset: "ala-lc-modern",
+      orthography: { nasalGamma: "literal" },
+    }),
+    "agkyra gkremos",
+  );
+});
+
 Deno.test("transliterates initial modern Greek digraphs phonetically", () => {
   const modern = {
-    orthography: { modernDigraphs: "phonetic" },
+    orthography: { muPi: "b-initial", nuTau: "d-initial" },
   } as const;
 
   assertNfcEquals(
@@ -411,7 +451,7 @@ Deno.test("transliterates initial modern Greek digraphs phonetically", () => {
 
 Deno.test("recognizes modern b when beta uses v", () => {
   const modern = {
-    orthography: { beta: "v", modernDigraphs: "phonetic" },
+    orthography: { beta: "v", muPi: "b-initial", nuTau: "d-initial" },
   } as const;
 
   assertNfcEquals(
@@ -428,7 +468,9 @@ Deno.test("applies contextual ALA-LC modern digraphs", () => {
   const alaLc = {
     orthography: {
       beta: "v",
-      modernDigraphs: "ala-lc",
+      muPi: "b-initial",
+      nasalGamma: "nasal-medial-kappa",
+      nuTau: "d-underline-initial",
     },
   } as const;
 
@@ -451,7 +493,9 @@ Deno.test("recognizes reversible ALA-LC digraph spellings", () => {
   const alaLc = {
     orthography: {
       beta: "v",
-      modernDigraphs: "ala-lc",
+      muPi: "b-initial",
+      nasalGamma: "nasal-medial-kappa",
+      nuTau: "d-underline-initial",
     },
   } as const;
 

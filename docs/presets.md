@@ -136,7 +136,9 @@ Romanization profile for Modern Greek after 1453.
 {
   "orthography": {
     "beta": "v",
-    "modernDigraphs": "ala-lc",
+    "muPi": "b-initial",
+    "nasalGamma": "nasal-medial-kappa",
+    "nuTau": "d-underline-initial",
     "numerals": "decimal",
     "upsilon": "y-with-diphthong-u"
   },
@@ -267,7 +269,7 @@ Type 2 transcription of Greek characters into Latin characters, favouring pronun
     "enotikon": "hyphen",
     "eta": "i",
     "longVowels": "omit",
-    "modernDigraphs": "iso-843",
+    "muPi": "b-initial-final",
     "nasalGamma": "nasal-except-kappa",
     "phi": "f",
     "smoothBreathing": "apostrophe",

@@ -21,11 +21,14 @@ export type QuantityTransliteration = "preserve" | "omit";
  *
  * `"nasal"` writes `n` for gamma before gamma, kappa, xi, and chi (`γγ` →
  * `ng`, `γκ` → `nk`); `"nasal-except-kappa"` does so except before kappa
- * (`γκ` → `gk`), as ISO 843 Type 2 does; `"literal"` always writes `g`.
+ * (`γκ` → `gk`), as ISO 843 Type 2 does; `"nasal-medial-kappa"` writes `γκ`
+ * as `nk` inside a word and `gk` at its beginning or end, as ALA-LC does for
+ * Modern Greek; `"literal"` always writes `g`.
  */
 export type NasalGammaTransliteration =
   | "nasal"
   | "nasal-except-kappa"
+  | "nasal-medial-kappa"
   | "literal";
 
 /** Selects standard, lunate, or source-preserving sigma glyphs. */
@@ -127,18 +130,19 @@ export type PhiTransliteration = "ph" | "f";
 export type ChiTransliteration = "ch" | "kh";
 
 /**
- * Selects preservation or a supported modern-Greek digraph policy.
- *
- * `"phonetic"` writes word-initial `μπ` and `ντ` as `b` and `d`; `"ala-lc"`
- * writes them `b` and `d̲` and `γκ` as `gk` or `nk` by position; `"iso-843"`
- * writes `μπ` as `b` at the beginning or end of a word (ISO 843 Type 2) and
- * leaves `ντ` as `nt`. Without `beta: "v"`, `b` is also the spelling of beta.
+ * Selects the transliteration of `μπ`: `mp` letter by letter, or `b` at the
+ * beginning of a word (`"b-initial"`, ALA-LC) or at either end of it
+ * (`"b-initial-final"`, ISO 843 Type 2), `mp` elsewhere. `b` is read back as
+ * `μπ` only under `beta: "v"`; otherwise it is also the spelling of beta.
  */
-export type ModernDigraphTransliteration =
-  | "preserve"
-  | "phonetic"
-  | "ala-lc"
-  | "iso-843";
+export type MuPiTransliteration = "mp" | "b-initial" | "b-initial-final";
+
+/**
+ * Selects the transliteration of `ντ`: `nt` letter by letter, or, at the
+ * beginning of a word, `d` (`"d-initial"`) or `d̲` (`"d-underline-initial"`,
+ * ALA-LC). Only `d̲` is read back as `ντ`, since `d` is also delta.
+ */
+export type NuTauTransliteration = "nt" | "d-initial" | "d-underline-initial";
 
 /** Selects contextual rho spelling or one final `h` per contiguous rho group. */
 export type RhoTransliteration = "contextual" | "systematic";
@@ -250,8 +254,10 @@ export interface OrthographyOptions {
   phi?: PhiTransliteration;
   /** Chi transliteration. Defaults to `"ch"`. */
   chi?: ChiTransliteration;
-  /** Modern-Greek digraph policy. Defaults to `"preserve"`. */
-  modernDigraphs?: ModernDigraphTransliteration;
+  /** Transliteration of `μπ`. Defaults to `"mp"`. */
+  muPi?: MuPiTransliteration;
+  /** Transliteration of `ντ`. Defaults to `"nt"`. */
+  nuTau?: NuTauTransliteration;
   /** Rho transliteration. Defaults to `"contextual"`. */
   rho?: RhoTransliteration;
   /** Semantic letter case applied to recognized graphemes. Defaults to `"preserve"`. */
@@ -355,7 +361,8 @@ export interface DefaultConversionOptions {
     readonly xi: "x";
     readonly phi: "ph";
     readonly chi: "ch";
-    readonly modernDigraphs: "preserve";
+    readonly muPi: "mp";
+    readonly nuTau: "nt";
     readonly rho: "contextual";
     readonly letterCase: "preserve";
     readonly betaCodeCase: "lowercase";
@@ -424,7 +431,12 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
     smoothBreathing: ["omit", "greek", "apostrophe"],
     circumflexAccent: ["tilde", "circumflex"],
     quantity: ["preserve", "omit"],
-    nasalGamma: ["nasal", "nasal-except-kappa", "literal"],
+    nasalGamma: [
+      "nasal",
+      "nasal-except-kappa",
+      "nasal-medial-kappa",
+      "literal",
+    ],
     sigma: ["standard", "lunate", "preserve"],
     lunateSigma: ["s", "c"],
     finalSigma: ["contextual", "medial", "preserve"],
@@ -448,7 +460,8 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
     xi: ["x", "ks"],
     phi: ["ph", "f"],
     chi: ["ch", "kh"],
-    modernDigraphs: ["preserve", "phonetic", "ala-lc", "iso-843"],
+    muPi: ["mp", "b-initial", "b-initial-final"],
+    nuTau: ["nt", "d-initial", "d-underline-initial"],
     rho: ["contextual", "systematic"],
     letterCase: ["preserve", "lowercase", "uppercase", "title"],
     betaCodeCase: ["lowercase", "uppercase"],
@@ -505,7 +518,8 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         xi: "x",
         phi: "ph",
         chi: "ch",
-        modernDigraphs: "preserve",
+        muPi: "mp",
+        nuTau: "nt",
         rho: "contextual",
         letterCase: "preserve",
         betaCodeCase: "lowercase",

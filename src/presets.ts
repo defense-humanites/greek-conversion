@@ -139,7 +139,9 @@ const PRESET_DEFINITIONS = {
       diacritics: OMIT_NON_ROUGH_DIACRITICS,
       orthography: {
         beta: "v",
-        modernDigraphs: "ala-lc",
+        muPi: "b-initial",
+        nasalGamma: "nasal-medial-kappa",
+        nuTau: "d-underline-initial",
         numerals: "decimal",
         upsilon: "y-with-diphthong-u",
       },
@@ -257,7 +259,7 @@ const PRESET_DEFINITIONS = {
         enotikon: "hyphen",
         eta: "i",
         longVowels: "omit",
-        modernDigraphs: "iso-843",
+        muPi: "b-initial-final",
         nasalGamma: "nasal-except-kappa",
         phi: "f",
         smoothBreathing: "apostrophe",
@@ -484,6 +486,12 @@ function assertCompatibleOptions(
   );
 }
 
+/** Keys replaced before 1.0.0, explained in the error for the old key. */
+const REPLACED_KEYS: Readonly<Record<string, string>> = {
+  "orthography.modernDigraphs":
+    "(replaced by orthography.muPi, orthography.nuTau, and orthography.nasalGamma).",
+};
+
 /** Values renamed before 1.0.0, named in the error for the old value. */
 const RENAMED_VALUES: Readonly<
   Record<string, Readonly<Record<string, string>>>
@@ -549,7 +557,12 @@ function validateConversionOptions(options: unknown): void {
       if (choice === undefined) continue;
       const accepted = Object.hasOwn(table, key) ? table[key] : undefined;
       if (accepted === undefined) {
-        throw new RangeError(`Unknown conversion option: ${group}.${key}`);
+        const replaced = Object.hasOwn(REPLACED_KEYS, `${group}.${key}`)
+          ? ` ${REPLACED_KEYS[`${group}.${key}`]}`
+          : "";
+        throw new RangeError(
+          `Unknown conversion option: ${group}.${key}${replaced}`,
+        );
       }
       if (!accepted.includes(choice as string)) {
         const renames = RENAMED_VALUES[`${group}.${key}`];

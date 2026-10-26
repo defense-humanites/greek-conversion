@@ -116,11 +116,10 @@ export function parseTransliteration(
   // vowel is carried by a breathing on that vowel rather than by a diaeresis.
   const separatedByBreathing = new Set<number>();
   const orthography = options.orthography;
-  const digraphB = (orthography?.modernDigraphs === "phonetic" ||
-    orthography?.modernDigraphs === "ala-lc" ||
-    orthography?.modernDigraphs === "iso-843") &&
-    orthography.beta === "v";
-  const digraphD = orthography?.modernDigraphs === "ala-lc";
+  // `b` is μπ only where it cannot be beta; `d̲` is never delta.
+  const digraphB = orthography?.muPi !== undefined &&
+    orthography.muPi !== "mp" && orthography.beta === "v";
+  const digraphD = orthography?.nuTau === "d-underline-initial";
   const lunateC = orthography?.lunateSigma === "c";
   const systematicRho = orthography?.rho === "systematic";
   const circumflexAccent = orthography?.circumflexAccent === "circumflex";

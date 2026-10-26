@@ -150,9 +150,10 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `coronis: "apostrophe"` | Emits U+2019 as display punctuation | No |
 | `coronis: "greek"` | Emits semantic U+1FBD after the affected vowel | Yes for implemented coronis contexts |
 | `accentuation: "monotonic"` | Keeps diaeresis, maps every accent to acute, removes other polytonic marks, and unaccents monosyllables except `ή`, `πού`, `πώς` | No |
-| `modernDigraphs: "phonetic"` | Maps word-initial `μπ/ντ` to `b/d` in transliteration | No; `b/d` are also canonical spellings of beta/delta |
-| `modernDigraphs: "ala-lc"` | Maps initial `μπ/ντ` to `b/d̲` and contextual `γκ` to `gk/nk` | Yes with the coordinated ALA-LC letter options; `d̲` remains distinct from delta |
-| `modernDigraphs: "iso-843"` | Maps `μπ` to `b` at either end of a word (ISO 843 Type 2) | Yes with `beta: "v"`; otherwise `b` is also beta |
+| `muPi: "b-initial"` or `"b-initial-final"` | Writes `μπ` as `b` at the beginning of a word, or at either end (ISO 843 Type 2) | Yes with `beta: "v"`; otherwise `b` is also beta |
+| `nuTau: "d-initial"` | Writes word-initial `ντ` as `d` | No; `d` is also delta |
+| `nuTau: "d-underline-initial"` | Writes word-initial `ντ` as `d̲` (ALA-LC) | Yes; `d̲` remains distinct from delta |
+| `nasalGamma: "nasal-medial-kappa"` | Writes `γκ` as `nk` inside a word and `gk` at its edges (ALA-LC) | Yes |
 | `upsilon: "y-with-ou-v-f"` | Writes the upsilon of `αυ/ευ/ηυ` as `v` or `f` and moves its accent to the vowel (ISO 843 Type 2) | No: `v` and `f` read back as beta and phi (with `beta: "v"`, `phi: "f"`), and the accent stays on the vowel |
 | `longVowels: "omit"` | Writes eta and omega without a length mark (ISO 843 Type 2) | No: they read back as epsilon (or iota) and omicron, except where a circumflex or an iota subscript only fits the long vowel |
 | `rho: "systematic"` | Adds one final `h` to every contiguous rho group | The rho letters are recoverable; an explicit rough breathing is not |

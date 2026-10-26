@@ -74,6 +74,19 @@ Deno.test("rejects unknown option keys instead of ignoring them", () => {
   );
 });
 
+Deno.test("names the options that replaced modernDigraphs", () => {
+  assertEquals(
+    assertThrows(
+      () =>
+        resolveConversionOptions({
+          orthography: { modernDigraphs: "ala-lc" } as never,
+        }),
+      RangeError,
+    ).message,
+    "Unknown conversion option: orthography.modernDigraphs (replaced by orthography.muPi, orthography.nuTau, and orthography.nasalGamma).",
+  );
+});
+
 Deno.test("rejects a circumflex for both length and accent", () => {
   // ῆ would be written ê̂ and read back as η without its accent.
   const both = {

@@ -131,7 +131,8 @@ const PROFILES = [
         beta: "v",
         chi: "kh",
         eta: "i",
-        modernDigraphs: "phonetic",
+        muPi: "b-initial",
+        nuTau: "d-initial",
         phi: "f",
         rho: "systematic",
         upsilon: "y",
@@ -145,7 +146,9 @@ const PROFILES = [
     options: {
       orthography: {
         beta: "v",
-        modernDigraphs: "ala-lc",
+        muPi: "b-initial",
+        nasalGamma: "nasal-medial-kappa",
+        nuTau: "d-underline-initial",
       },
     },
   },

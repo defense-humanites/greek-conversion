@@ -338,7 +338,8 @@ export function encodeTransliteration(
     const h = capitals ? "H" : "h";
     const nasalGamma = options.orthography?.nasalGamma;
     let base = nasalGamma !== "literal" &&
-        isNasalGamma(doc, index, nasalGamma === "nasal-except-kappa")
+        isNasalGamma(doc, index, nasalGamma === "nasal-except-kappa") &&
+        !(nasalGamma === "nasal-medial-kappa" && isEdgeGammaKappa(doc, index))
       ? "n"
       : transliterationBase(doc, index, token.letter, options);
     const bnfLowercaseNumeral = options.orthography?.keraia === "bnf" &&
@@ -400,25 +401,27 @@ function rendersLunateSigma(
       token.glyphVariant === "lunate-sigma";
 }
 
+/**
+ * The single Latin letter for `μπ` or `ντ` starting at `index`, under the
+ * `muPi` and `nuTau` policies, or undefined when they are written letter by
+ * letter.
+ */
 function modernDigraphAt(
   document: Document,
   index: number,
   options: ConversionOptions,
 ): string | undefined {
-  const policy = options.orthography?.modernDigraphs;
-  if (
-    (policy !== "phonetic" && policy !== "ala-lc" && policy !== "iso-843") ||
-    index < 0
-  ) {
-    return undefined;
-  }
+  const muPi = options.orthography?.muPi ?? "mp";
+  const nuTau = options.orthography?.nuTau ?? "nt";
+  if ((muPi === "mp" && nuTau === "nt") || index < 0) return undefined;
 
   const first = document[index];
   const second = document[index + 1];
   if (
     first?.kind !== "grapheme" ||
     second?.kind !== "grapheme" ||
-    !isModernDigraphPair(first.letter, second.letter, policy) ||
+    !(first.letter === "mu" && second.letter === "pi" && muPi !== "mp" ||
+      first.letter === "nu" && second.letter === "tau" && nuTau !== "nt") ||
     first.diacritics.size > 0 ||
     second.diacritics.size > 0 ||
     // Checked last: the numeral context is the costly test, and most pairs
@@ -429,36 +432,29 @@ function modernDigraphAt(
   }
 
   const initial = isWordInitial(document, index);
-  if (policy === "iso-843") {
+  if (first.letter === "mu") {
     // ISO 843 Type 2, notes 5 to 7: b at either end of the word, mp inside.
-    return first.letter === "mu" && second.letter === "pi" &&
-        (initial || isWordFinal(document, index + 1))
+    return initial ||
+        muPi === "b-initial-final" && isWordFinal(document, index + 1)
       ? "b"
       : undefined;
   }
-  if (first.letter === "mu" && second.letter === "pi" && initial) return "b";
-  if (first.letter === "nu" && second.letter === "tau" && initial) {
-    return policy === "ala-lc" ? "d\u0332" : "d";
-  }
-  if (
-    policy === "ala-lc" &&
-    first.letter === "gamma" &&
-    second.letter === "kappa"
-  ) {
-    return initial || isWordFinal(document, index + 1) ? "gk" : "nk";
-  }
-  return undefined;
+  if (!initial) return undefined;
+  return nuTau === "d-underline-initial" ? "d\u0332" : "d";
 }
 
-/** Whether two letters can form a digraph that `policy` rewrites. */
-function isModernDigraphPair(
-  first: Grapheme["letter"],
-  second: Grapheme["letter"],
-  policy: "phonetic" | "ala-lc" | "iso-843",
-): boolean {
-  if (first === "mu") return second === "pi";
-  if (first === "nu") return second === "tau" && policy !== "iso-843";
-  return first === "gamma" && second === "kappa" && policy === "ala-lc";
+/**
+ * Under `nasalGamma: "nasal-medial-kappa"` (ALA-LC), `γκ` at the beginning or
+ * end of a word keeps a literal `g`: `gk`, and `nk` inside the word.
+ */
+function isEdgeGammaKappa(document: Document, index: number): boolean {
+  const first = document[index];
+  const second = document[index + 1];
+  return first?.kind === "grapheme" && first.letter === "gamma" &&
+    second?.kind === "grapheme" && second.letter === "kappa" &&
+    first.diacritics.size === 0 && second.diacritics.size === 0 &&
+    !isGreekNumeralContext(document, index) &&
+    (isWordInitial(document, index) || isWordFinal(document, index + 1));
 }
 
 function caseDigraph(
