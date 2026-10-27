@@ -16,8 +16,38 @@ import type {
 import { applyNumeralOrthography, applyOrthography } from "./orthography.ts";
 import { parseBetaCode } from "./parsers/beta_code.ts";
 import { parseGreek } from "./parsers/greek.ts";
+import {
+  identityTargets,
+  outputSpans,
+  type ReadPositions,
+  readSpans,
+  type SpanTable,
+  type WrittenPositions,
+  writtenSpans,
+} from "./parsers/positions.ts";
 import { parseTransliteration } from "./parsers/transliteration.ts";
 import { resolveConversionOptions } from "./presets.ts";
+
+/** Where a token was read: a range of UTF-16 code units in the input. */
+export interface TokenSpan {
+  /** Offset of the first code unit of the token in the input as supplied. */
+  start: number;
+  /** Offset after the last one. */
+  end: number;
+}
+
+/** A parsed document with the position of each token in the input. */
+export interface ParseResult {
+  /** The canonical document. */
+  document: Document;
+  /**
+   * One span per token, in token order. Spans are in increasing order and
+   * cover the input without gaps. Tokens read from one character of the
+   * input (the jamo of a Hangul syllable, kept as literals; the two letters
+   * read from a modern-digraph `b`) share its span.
+   */
+  spans: readonly TokenSpan[];
+}
 
 /**
  * Parses one supported representation into the canonical document model.
@@ -40,6 +70,40 @@ export function parse(
 }
 
 /**
+ * {@link parse}, with the position of each token in the input.
+ *
+ * Positions are offsets in UTF-16 code units, the unit of `String.length`,
+ * `slice()` and editor selections, in the input exactly as supplied: the
+ * reader normalizes the text, but the spans are mapped back to the caller's
+ * string.
+ *
+ * @throws {TypeError} If `input` is not a string.
+ * @throws {RangeError} If `format` is not supported or an option is invalid.
+ */
+export function parseDetailed(
+  input: string,
+  format: Format,
+  options: ConversionOptions = {},
+): ParseResult {
+  assertTextInput(input);
+  assertFormat(format);
+  const read: ReadPositions = { text: "", starts: [] };
+  const document = parseResolved(
+    input,
+    format,
+    resolveConversionOptions(options),
+    false,
+    read,
+  );
+  const { starts, ends } = readSpans(input, read);
+  const spans: TokenSpan[] = new Array(document.length);
+  for (let index = 0; index < document.length; index++) {
+    spans[index] = { start: starts[index], end: ends[index] };
+  }
+  return { document, spans };
+}
+
+/**
  * {@link parse} for options that `resolveConversionOptions()` already returned
  * in this call, with input and format already checked. Library functions that
  * parse and encode with the same options use it so that the resolved object,
@@ -48,6 +112,8 @@ export function parse(
  *
  * With `share`, the Greek and Beta Code readers return shared tokens
  * (see `parsers/shared_tokens.ts`): for documents that never reach the caller.
+ * With `read`, the reader records where each token starts (see
+ * `parsers/positions.ts`).
  *
  * Internal: not exported by the package entry points.
  */
@@ -56,14 +122,15 @@ export function parseResolved(
   format: Format,
   options: ResolvedConversionOptions,
   share = false,
+  read?: ReadPositions,
 ): Document {
   switch (format) {
     case "greek":
-      return parseGreek(input, share);
+      return parseGreek(input, share, read);
     case "beta-code":
-      return parseBetaCode(input, share);
+      return parseBetaCode(input, share, read);
     case "transliteration":
-      return parseTransliteration(input, options);
+      return parseTransliteration(input, options, read);
   }
 }
 
@@ -109,4 +176,48 @@ export function encodeResolved(
     case "transliteration":
       return encodeTransliteration(prepared, options);
   }
+}
+
+/**
+ * {@link encodeResolved}, with the span in the output of each token of the
+ * document: the output of the rendered token it became, which several tokens
+ * may share (a Greek numeral written as one decimal number, a whitespace run
+ * collapsed to one space, the letters of a modern digraph), or an empty span
+ * where the output of the next token starts when the output has nothing for
+ * it (a leading or trailing whitespace run under `whitespace: "collapse"`).
+ *
+ * Internal: not exported by the package entry points.
+ */
+export function encodeTracked(
+  document: Document,
+  format: Format,
+  options: ResolvedConversionOptions,
+): { output: string; spans: SpanTable } {
+  const targets = identityTargets(document.length);
+  const prepared = format === "transliteration"
+    ? applyNumeralOrthography(document, options, targets)
+    : applyOrthography(document, options, targets);
+  const written: WrittenPositions = {
+    text: "",
+    starts: new Uint32Array(prepared.length),
+    ends: new Uint32Array(prepared.length),
+  };
+
+  let output: string;
+  let form: "NFC" | "NFD" = "NFC";
+  switch (format) {
+    case "greek":
+      output = encodeGreek(prepared, options, written);
+      if (options.unicode?.composition === "decomposed") form = "NFD";
+      break;
+    case "beta-code":
+      output = encodeBetaCode(prepared, options, written);
+      break;
+    case "transliteration":
+      output = encodeTransliteration(prepared, options, written);
+      break;
+  }
+
+  const rendered = writtenSpans(output, written, form);
+  return { output, spans: outputSpans(targets, rendered, output.length) };
 }

@@ -59,6 +59,8 @@ Deno.test("reports each removed diacritic at its source token", () => {
     {
       code: "removed-diacritic",
       index: 1,
+      offset: 1,
+      length: 1,
       diacritic: "smooth",
       message:
         "The target representation does not retain the smooth breathing.",
@@ -66,6 +68,8 @@ Deno.test("reports each removed diacritic at its source token", () => {
     {
       code: "removed-diacritic",
       index: 1,
+      offset: 1,
+      length: 1,
       diacritic: "acute",
       message: "The target representation does not retain the acute accent.",
     },
@@ -104,11 +108,15 @@ Deno.test("reports case changes separately from removed diacritics", () => {
     {
       code: "changed-case",
       index: 0,
+      offset: 0,
+      length: 1,
       message: "The target representation does not retain letter case.",
     },
     {
       code: "removed-diacritic",
       index: 0,
+      offset: 0,
+      length: 1,
       diacritic: "acute",
       message: "The target representation does not retain the acute accent.",
     },
@@ -148,6 +156,8 @@ Deno.test("removed lunate provenance is independent from lossy case folding", ()
   assertEquals(variants.losses, [{
     code: "removed-glyph-variant",
     index: 5,
+    offset: 5,
+    length: 1,
     message:
       "The target representation does not retain the source glyph variant.",
   }]);
@@ -189,12 +199,18 @@ Deno.test("tracks lunate provenance through all three formats", () => {
     { orthography: { lunateSigma: "c" } },
   );
 
-  assertEquals(greek, { output: "ϲ", lossy: false, losses: [] });
+  const span = { inputStart: 0, inputEnd: 1, outputStart: 0, outputEnd: 1 };
+  assertEquals(greek, { output: "ϲ", lossy: false, losses: [], spans: [span] });
   assertEquals(beta.output, "s");
   assertEquals(beta.losses.map(({ code }) => code), [
     "removed-glyph-variant",
   ]);
-  assertEquals(transliteration, { output: "c", lossy: false, losses: [] });
+  assertEquals(transliteration, {
+    output: "c",
+    lossy: false,
+    losses: [],
+    spans: [span],
+  });
 });
 
 Deno.test("Greek coronis scalar retains semantic provenance", () => {

@@ -17,6 +17,14 @@ export interface ConversionLoss {
   code: ConversionLossCode;
   /** Zero-based token index in the canonical source document. */
   index: number;
+  /**
+   * Offset, in UTF-16 code units, of the source token in the input as
+   * supplied: `spans[index].inputStart` of the result. Absent from the result
+   * of a bound converter, which does not report positions yet.
+   */
+  offset?: number;
+  /** Length of the source token in the input, in UTF-16 code units. */
+  length?: number;
   /** Human-readable English explanation. */
   message: string;
   /**
@@ -24,6 +32,29 @@ export interface ConversionLoss {
    * `"displaced-diacritic"`, or `"inferred-breathing"`.
    */
   diacritic?: Diacritic;
+}
+
+/**
+ * Where one source token was read in the input and where its output was
+ * written, as ranges of UTF-16 code units (the unit of `String.length`,
+ * `slice()` and editor selections), start included and end excluded.
+ *
+ * Input spans are in increasing order and cover the input without gaps.
+ * Output spans are in increasing order and cover the output; several tokens
+ * written as one share a span (a Greek numeral written as a decimal number,
+ * a whitespace run collapsed to one space, the two letters of a modern
+ * digraph), and a token the output has nothing for has an empty span where
+ * the output of the next token starts.
+ */
+export interface ConversionSpan {
+  /** Offset of the token's first code unit in the input as supplied. */
+  inputStart: number;
+  /** Offset after its last code unit in the input. */
+  inputEnd: number;
+  /** Offset of the first code unit of the token's output. */
+  outputStart: number;
+  /** Offset after the last code unit of the token's output. */
+  outputEnd: number;
 }
 
 /** Output and information-loss diagnostics returned by detailed conversion. */
@@ -34,6 +65,13 @@ export interface ConversionResult {
   lossy: boolean;
   /** Structured losses in source-token order. */
   losses: readonly ConversionLoss[];
+  /**
+   * One span per token of the parsed source, in token order: where it was
+   * read and where its output was written. Present on every result of
+   * `convertDetailed()`; absent from the result of a bound converter, which
+   * does not report positions yet.
+   */
+  spans?: readonly ConversionSpan[];
 }
 
 const ALIGNMENT_WINDOW = 16;

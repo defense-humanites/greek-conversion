@@ -415,11 +415,26 @@ monotonic.output; // → άνθρωπος
 monotonic.lossy; // → true
 monotonic.losses[0].code; // → removed-diacritic
 monotonic.losses[0].diacritic; // → smooth
+monotonic.losses[0].offset; // → 0
 
 // Monotonic or uncial Greek has no breathings; transliteration cannot tell
 // "no breathing" from "smooth breathing", so reading it back adds one.
 convertDetailed("άνθρωπος", "greek", "transliteration").losses[0].code;
 // → inferred-breathing
+```
+
+Each loss locates its token in the input (`offset`, `length`, in UTF-16 code
+units), and `spans` gives, for every token of the source, where it was read
+and where its output was written, so an application can highlight a loss or
+map a selection from one text to the other:
+
+```ts
+import { convertDetailed } from "@humanities/greek-conversion";
+
+const detailed = convertDetailed("ἄνθρωπος", "greek", "transliteration");
+const { inputStart, inputEnd, outputStart, outputEnd } = detailed.spans[2];
+"ἄνθρωπος".slice(inputStart, inputEnd); // → θ
+detailed.output.slice(outputStart, outputEnd); // → th
 ```
 
 When `lossy` is `false`, converting the output back with the same options
@@ -531,9 +546,10 @@ encode(document, "greek"); // → ἄνθρωπος
 encode(document, "transliteration"); // → ánthrōpos
 ```
 
-Parse once and encode as many times as you need. Validation checks the
-document, not the original spelling: a malformed source sequence can survive
-as a literal. The
+Parse once and encode as many times as you need. `parseDetailed()` also
+returns the position of each token in the input, as `spans`. Validation
+checks the document, not the original spelling: a malformed source sequence
+can survive as a literal. The
 [document API contract](https://github.com/defense-humanites/greek-conversion/blob/main/docs/document-api.md)
 describes ownership and editing rules, and
 [validation](https://github.com/defense-humanites/greek-conversion/blob/main/docs/validation.md)

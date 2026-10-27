@@ -7,6 +7,22 @@ change.
 
 ## [Unreleased]
 
+### Added
+
+- Positions. `convertDetailed()` returns `spans`, one per token of the parsed
+  source: where the token was read in the input (`inputStart`, `inputEnd`) and
+  where its output was written (`outputStart`, `outputEnd`), and each
+  `ConversionLoss` carries the `offset` and `length` of its token in the input.
+  The `./document` entry point gains `parseDetailed()`, which returns the
+  document with the input span of each token. Positions are offsets in UTF-16
+  code units in the input as supplied and in the output as returned; the
+  ordering and sharing rules (tokens read from one character, tokens written
+  as one, tokens with no output) are in the
+  [conversion-analysis contract](docs/conversion-analysis.md#positions). The
+  result of a bound converter does not carry positions yet. `convert()` is
+  unchanged in output and speed; `convertDetailed()` takes about a third
+  longer on long texts.
+
 ## [1.0.0-rc.5] - 2026-10-26
 
 Fifth release candidate for `1.0.0`. It brings transliteration closer to ISO 843

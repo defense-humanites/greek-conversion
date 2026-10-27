@@ -13,7 +13,13 @@
  * @module
  */
 
-export { encode, parse } from "./conversion.ts";
+export {
+  encode,
+  parse,
+  parseDetailed,
+  type ParseResult,
+  type TokenSpan,
+} from "./conversion.ts";
 import { sharedDiacritics } from "./model.ts";
 import type { Document } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";

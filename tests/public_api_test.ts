@@ -37,6 +37,7 @@ Deno.test("canonical-document runtime helpers stay in the advanced entry point",
     "grapheme",
     "literal",
     "parse",
+    "parseDetailed",
     "validateDocument",
   ]);
 });

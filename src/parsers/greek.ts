@@ -11,6 +11,7 @@ import {
 } from "../model.ts";
 import { parsePunctuation } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
+import type { ReadPositions } from "./positions.ts";
 import {
   LETTERS,
   sharedGrapheme,
@@ -72,15 +73,24 @@ const markBit = (unit: number): number =>
 
 /**
  * Reads Greek. With `share`, equal tokens are one shared object (see
- * `shared_tokens.ts`): only for documents that never reach the caller.
+ * `shared_tokens.ts`): only for documents that never reach the caller. With
+ * `positions`, records where each token starts in the text read (see
+ * `positions.ts`).
  */
-export function parseGreek(input: string, share = false): Document {
+export function parseGreek(
+  input: string,
+  share = false,
+  positions?: ReadPositions,
+): Document {
   const text = input.normalize("NFD");
   const out: Token[] = [];
+  const starts = positions?.starts;
+  if (positions !== undefined) positions.text = text;
 
   for (let i = 0; i < text.length;) {
     const unit = text.charCodeAt(i);
     const letter = letterOf(unit);
+    if (starts !== undefined) starts.push(i);
 
     if (letter === NOT_A_LETTER) {
       const source = codePointAt(text, i);
@@ -111,6 +121,8 @@ export function parseGreek(input: string, share = false): Document {
       ),
     );
   }
+
+  if (starts !== undefined) starts.push(text.length);
 
   classifyCoronides(out);
 

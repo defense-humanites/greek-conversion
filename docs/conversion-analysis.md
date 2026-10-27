@@ -14,9 +14,16 @@ const result = convertDetailed("ἄνθρωπος", "greek", "greek", {
 //   losses: [{
 //     code: "removed-diacritic",
 //     index: 0,
+//     offset: 0,
+//     length: 1,
 //     diacritic: "smooth",
 //     message: "The target representation does not retain the smooth breathing."
-//   }]
+//   }],
+//   spans: [
+//     { inputStart: 0, inputEnd: 1, outputStart: 0, outputEnd: 1 },
+//     { inputStart: 1, inputEnd: 2, outputStart: 1, outputEnd: 2 },
+//     // ... one per source token
+//   ]
 // }
 ```
 
@@ -48,8 +55,10 @@ for callers that only need to display a warning.
 
 ## Diagnostics
 
-`ConversionLoss.index` is the token index in the parsed source `Document`, not
-a UTF-16 offset or a code-point index in the input string.
+`ConversionLoss.index` is the token index in the parsed source `Document`.
+`offset` and `length` locate that token in the input string, in UTF-16 code
+units (see [Positions](#positions)); `input.slice(offset, offset + length)` is
+the text the loss is about.
 
 | Code | Meaning |
 | --- | --- |
@@ -64,6 +73,40 @@ a UTF-16 offset or a code-point index in the input string.
 The codes describe observable information loss rather than the implementation
 rule that caused it. A dental assimilation and an elision-induced consonant
 change can therefore both report `unrepresented-grapheme`.
+
+## Positions
+
+`spans` has one entry per token of the parsed source, in token order: where
+the token was read in the input (`inputStart`, `inputEnd`) and where its
+output was written (`outputStart`, `outputEnd`). All four are offsets in
+UTF-16 code units, the unit of `String.length`, `slice()`, and editor
+selections, in the input exactly as supplied and in the output exactly as
+returned. The readers and writers normalize the text (NFD on input, NFC or
+NFD on output), but the positions are mapped back to the caller's strings, so
+a precomposed `ἄ` is one unit and the same letter written as `α` plus two
+combining marks is three. A character outside the Basic Multilingual Plane
+is two units. Ends are exclusive.
+
+Input spans are in increasing order and cover the input without gaps. Tokens
+read from one character of the input share its span: the three jamo of a
+Hangul syllable, which the reader keeps as literals, or the two letters read
+from a modern-digraph `b` under ISO 843 Type 2.
+
+Output spans are in increasing order of start and cover the output. Several
+tokens written as one share a span: the letters and numeral sign of a Greek
+numeral written as a decimal number, a whitespace run collapsed to one space,
+the two letters of `μπ` written as `b`, a dental and the sigma it is
+assimilated to. A token the output has nothing for (a leading or trailing
+whitespace run under `whitespace: "collapse"`) has an empty span where the
+output of the next token starts, or at the end of the output. A combining
+mark that stands alone in the input, kept as a literal, is written after the
+previous token's output and joins its last character: its span is that
+character's, inside the previous token's.
+
+These positions describe one conversion. The loss analysis compares
+documents, not positions, so `spans` is also returned when `lossy` is
+`false`. The result of a bound converter (`createConverter()`) does not carry
+positions yet: its `spans` is absent and its losses have no `offset`.
 
 ## Static and dynamic questions
 

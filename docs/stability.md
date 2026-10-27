@@ -111,6 +111,13 @@ Diagnostic `code` values, their `index` semantics, and the fields that
 accompany them are part of the contract. Their `message` text is for humans
 and may change in any release; do not match on it.
 
+Positions (`ConversionLoss.offset` and `length`, `ConversionResult.spans`,
+`ParseResult.spans`) are offsets in UTF-16 code units in the input as
+supplied and in the output as returned, ends exclusive, with the ordering and
+sharing rules of the [conversion-analysis contract](conversion-analysis.md).
+A change of unit or of those rules is a break; a position that moves because
+a conversion's output changed follows the rules of that output change.
+
 For errors, the class (`RangeError`, `TypeError`, `CharacterScopeError`) and
 the documented condition are the contract; the message is not. The
 `diagnostics` of a `CharacterScopeError` follow the diagnostic rules above.

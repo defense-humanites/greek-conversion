@@ -27,6 +27,7 @@ import type { ConversionOptions } from "../options.ts";
 import { parsePunctuation } from "../punctuation.ts";
 import { Trie } from "../trie.ts";
 import { codeUnitTable } from "./code_units.ts";
+import type { ReadPositions } from "./positions.ts";
 
 const CANONICAL_ENTRIES = [
   ...Object.entries(ALPHABET)
@@ -94,14 +95,22 @@ const IOTA_SUBSCRIPT = diacriticBit("iota-subscript");
 const MACRON = diacriticBit("macron");
 const DIAERESIS = diacriticBit("diaeresis");
 
+/**
+ * Reads transliteration. With `positions`, records where each token starts
+ * in the text read (see `positions.ts`).
+ */
 export function parseTransliteration(
   input: string,
   options: ConversionOptions = {},
+  positions?: ReadPositions,
 ): Document {
-  const chars = prioritizeEtaMark(
-    Array.from(input.normalize("NFD")),
-    options,
-  );
+  const text = input.normalize("NFD");
+  const chars = prioritizeEtaMark(Array.from(text), options);
+  // Starts are recorded as indices in `chars` and converted to code units at
+  // the end. prioritizeEtaMark() only reorders the marks of a letter, which
+  // are one unit each, so the offset of a character in `text` is its offset
+  // in `chars` joined.
+  const starts = positions?.starts;
   // Lowercased once, after prioritizeEtaMark() has reordered the marks.
   // Built with a loop rather than `chars.map()`: once this function is
   // optimized, V8's inlined `map` returns arrays of a different elements kind
@@ -131,6 +140,7 @@ export function parseTransliteration(
   for (let i = 0; i < chars.length;) {
     let rough = false;
     let roughUppercase = false;
+    if (starts !== undefined) starts.push(i);
 
     if (digraphB && lowered[i] === "b") {
       const uppercase = chars[i] !== lowered[i];
@@ -138,6 +148,9 @@ export function parseTransliteration(
         grapheme("mu", uppercase),
         grapheme("pi", uppercase && capitalFollows(chars, lowered, i + 1)),
       );
+      // Two letters from one character: the same start, so that they share
+      // its span.
+      if (starts !== undefined) starts.push(i);
       i++;
       continue;
     }
@@ -148,6 +161,7 @@ export function parseTransliteration(
         grapheme("nu", uppercase),
         grapheme("tau", uppercase && capitalFollows(chars, lowered, i + 2)),
       );
+      if (starts !== undefined) starts.push(i);
       i += 2;
       continue;
     }
@@ -173,12 +187,17 @@ export function parseTransliteration(
           previous?.kind === "grapheme" && isVowel(previous.letter)
         ) {
           previous.diacritics = withDiacritic(previous.diacritics, "coronis");
+          // No token: the coronis joins the previous one's span.
+          if (starts !== undefined) starts.pop();
           i++;
           continue;
         }
       }
 
-      if (rough) out.push(literal(roughUppercase ? "H" : "h"));
+      if (rough) {
+        out.push(literal(roughUppercase ? "H" : "h"));
+        if (starts !== undefined) starts.push(i);
+      }
       out.push(
         literal(parsePunctuation(chars[i], "transliteration") ?? chars[i]),
       );
@@ -260,6 +279,7 @@ export function parseTransliteration(
             diacriticsFromMask(CIRCUMFLEX),
           ),
         );
+        if (starts !== undefined) starts.push(i);
         i++;
         continue;
       }
@@ -322,6 +342,20 @@ export function parseTransliteration(
       diacriticsFromMask(marks),
       lunateSigma ? "lunate-sigma" : undefined,
     ));
+  }
+
+  if (positions !== undefined && starts !== undefined) {
+    positions.text = text;
+    starts.push(chars.length);
+    // Character indices to code-unit offsets.
+    const offsets = new Uint32Array(chars.length + 1);
+    let offset = 0;
+    for (let k = 0; k < chars.length; k++) {
+      offsets[k] = offset;
+      offset += chars[k].length;
+    }
+    offsets[chars.length] = offset;
+    for (let k = 0; k < starts.length; k++) starts[k] = offsets[starts[k]];
   }
 
   const nasalGamma = options.orthography?.nasalGamma;
