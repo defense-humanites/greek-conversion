@@ -1,8 +1,14 @@
 import { ALPHABET } from "./alphabet.ts";
-import { encodeResolved, parse, parseResolved } from "./conversion.ts";
+import {
+  encodeResolved,
+  encodeTracked,
+  parse,
+  parseResolved,
+} from "./conversion.ts";
 import {
   type ConversionLoss,
   type ConversionResult,
+  type ConversionSpan,
   findConversionLosses,
 } from "./losses.ts";
 import { assertFormat, assertTextInput, grapheme, literal } from "./model.ts";
@@ -17,6 +23,14 @@ import {
   presetMappingIssue,
   resolveConversionOptions,
 } from "./presets.ts";
+import {
+  type ReadPositions,
+  readSpans,
+  type SegmentMap,
+  segmentMap,
+  spansIn,
+  type SpanTable,
+} from "./parsers/positions.ts";
 import { parsePunctuation } from "./punctuation.ts";
 
 /** Treatment of recognized characters outside this converter's repertoire. */
@@ -91,6 +105,14 @@ export interface CharacterScopeDiagnostic {
   code: CharacterScopeDiagnosticCode;
   /** Zero-based token index in the parsed source document. */
   index: number;
+  /**
+   * Offset, in UTF-16 code units, of the character in the input as supplied:
+   * the spelling the converter recognized (an alias, a custom form, or the
+   * built-in spelling).
+   */
+  offset: number;
+  /** Length of that spelling in the input, in UTF-16 code units. */
+  length: number;
   /** Built-in letter name or user-defined character identifier. */
   character: string;
   /** Human-readable English explanation. */
@@ -125,6 +147,14 @@ export interface ConverterConversionResult extends ConversionResult {
   diagnostics: readonly CharacterScopeDiagnostic[];
   /** Information losses inherited from the ordinary conversion contract. */
   losses: readonly ConversionLoss[];
+  /**
+   * One span per token of the prepared source document (the parsed input,
+   * with out-of-scope characters preserved as literals), as in
+   * `convertDetailed()`: positions are in the input as supplied, before the
+   * converter's own spellings are substituted, and in the output as
+   * returned, after the custom forms are written.
+   */
+  spans: readonly ConversionSpan[];
 }
 
 interface AliasEntry {
@@ -156,14 +186,34 @@ interface NormalizedCustomCharacter {
   override: boolean;
 }
 
+/**
+ * One spelling the preprocessing replaced: the units it covered in the
+ * normalized input and the units of its replacement in the preprocessed
+ * text. Outside the matches, the two texts run unit for unit.
+ */
+interface Match {
+  normalizedStart: number;
+  normalizedEnd: number;
+  valueStart: number;
+  valueEnd: number;
+}
+
 interface PreprocessedInput {
+  /** The text the reader receives: the input with the spellings replaced. */
   value: string;
   originals: ReadonlyMap<string, readonly string[]>;
+  /** What was supplied, its normalized form, and the replacements made. */
+  input: string;
+  normalized: string;
+  format: Format;
+  matches: readonly Match[];
 }
 
 interface PreparedSource {
   document: Document;
   diagnostics: readonly CharacterScopeDiagnostic[];
+  /** The span in the supplied input of each token of `document`, if asked. */
+  spans?: SpanTable;
 }
 
 const BUILTIN_LETTERS = new Set<string>(Object.keys(ALPHABET));
@@ -259,20 +309,45 @@ export class Converter {
     assertFormat(to);
     const resolved = this.#resolveOptions(options);
     const sourceInput = this.#preprocess(input, from, resolved);
-    const prepared = this.#prepareSource(sourceInput, from, resolved, to);
+    const prepared = this.#prepareSource(
+      sourceInput,
+      from,
+      resolved,
+      to,
+      "spans",
+    );
     this.#assertScope(prepared.diagnostics);
-    const encoded = encodeResolved(prepared.document, to, resolved);
-    const output = this.#postprocess(encoded, to);
+    const encoded = encodeTracked(prepared.document, to, resolved);
+    const { output, map } = this.#postprocess(encoded.output, to, true);
 
     const targetInput = this.#preprocess(output, to, resolved);
-    const target = this.#prepareSource(targetInput, to, resolved).document;
-    const losses = findConversionLosses(prepared.document, target);
+    const target =
+      this.#prepareSource(targetInput, to, resolved, undefined, "none")
+        .document;
+    const inputSpans = prepared.spans!;
+    const losses = findConversionLosses(prepared.document, target, inputSpans);
+    const outputSpans = map === undefined ? encoded.spans : spansIn(
+      encoded.spans.starts,
+      encoded.spans.ends,
+      prepared.document.length,
+      map,
+    );
+    const spans: ConversionSpan[] = new Array(prepared.document.length);
+    for (let index = 0; index < spans.length; index++) {
+      spans[index] = {
+        inputStart: inputSpans.starts[index],
+        inputEnd: inputSpans.ends[index],
+        outputStart: outputSpans.starts[index],
+        outputEnd: outputSpans.ends[index],
+      };
+    }
 
     return {
       output,
       lossy: losses.length > 0,
       losses,
       diagnostics: prepared.diagnostics,
+      spans,
     };
   }
 
@@ -287,10 +362,17 @@ export class Converter {
     assertFormat(to);
     const resolved = this.#resolveOptions(options);
     const preprocessed = this.#preprocess(input, from, resolved);
-    const prepared = this.#prepareSource(preprocessed, from, resolved, to);
+    // Only a rejection shows the diagnostics, in the error it throws.
+    const prepared = this.#prepareSource(
+      preprocessed,
+      from,
+      resolved,
+      to,
+      this.#outOfScopeBehavior === "reject" ? "diagnostics" : "none",
+    );
     this.#assertScope(prepared.diagnostics);
     const encoded = encodeResolved(prepared.document, to, resolved);
-    return { output: this.#postprocess(encoded, to) };
+    return { output: this.#postprocess(encoded, to).output };
   }
 
   #preprocess(
@@ -311,6 +393,17 @@ export class Converter {
     const output: string[] = [];
     const originals = new Map<string, string[]>();
     const entries = this.#entries[format];
+    const matches: Match[] = [];
+    // Code-unit offset of character `scanned` in the normalized input, and
+    // how much longer the output is so far than the input it replaces: only
+    // computed at a match, which is rare.
+    let scanned = 0;
+    let scannedOffset = 0;
+    let valueDelta = 0;
+    const offsetOf = (index: number): number => {
+      for (; scanned < index; scanned++) scannedOffset += chars[scanned].length;
+      return scannedOffset;
+    };
 
     for (let index = 0; index < chars.length;) {
       const match = entries.find((entry) =>
@@ -323,99 +416,223 @@ export class Converter {
         continue;
       }
 
+      let replacement: string;
       if (match.kind === "alias") {
-        output.push(encodeResolved(
+        replacement = encodeResolved(
           [grapheme(match.letter, match.uppercase)],
           format,
           options,
-        ));
+        );
       } else {
-        output.push(match.sentinel);
+        replacement = match.sentinel;
         const values = originals.get(match.sentinel) ?? [];
         values.push(
           chars.slice(index, index + match.normalized.length).join(""),
         );
         originals.set(match.sentinel, values);
       }
+      output.push(replacement);
+      const normalizedStart = offsetOf(index);
+      const normalizedEnd = offsetOf(index + match.normalized.length);
+      const valueStart = normalizedStart + valueDelta;
+      matches.push({
+        normalizedStart,
+        normalizedEnd,
+        valueStart,
+        valueEnd: valueStart + replacement.length,
+      });
+      valueDelta += replacement.length - (normalizedEnd - normalizedStart);
       index += match.normalized.length;
     }
 
-    return { value: output.join(""), originals };
+    return {
+      value: output.join(""),
+      originals,
+      input,
+      normalized: normalizedInput,
+      format,
+      matches,
+    };
   }
 
+  /**
+   * Parses the preprocessed input and preserves or rejects the characters
+   * outside the converter's scope. `positions` says which positions to
+   * report: those of the diagnostics only, computed when there are any by
+   * reading the text again with positions; those of every token of the
+   * document as well (`spans`); or none, for a target document that is only
+   * compared.
+   */
   #prepareSource(
     input: PreprocessedInput,
     format: Format,
     options: ResolvedConversionOptions,
     target?: Format,
+    positions: "diagnostics" | "spans" | "none" = "diagnostics",
   ): PreparedSource {
-    const parsed = parseResolved(input.value, format, options, true);
+    const track = positions === "spans";
+    const read: ReadPositions | undefined = track
+      ? { text: "", starts: [] }
+      : undefined;
+    const parsed = parseResolved(input.value, format, options, true, read);
     const diagnostics: CharacterScopeDiagnostic[] = [];
     const occurrences = new Map<string, number>();
+    // The parsed token each prepared token comes from.
+    const origins: number[] | undefined = track ? [] : undefined;
 
     const document = parsed.flatMap((token, index): readonly Token[] => {
-      if (token.kind === "grapheme") {
-        if (!this.#isAllowed(token.letter, parsed, index)) {
-          diagnostics.push(
-            scopeDiagnostic(index, token.letter, this.#outOfScopeBehavior),
-          );
-          return literalTokens(encodeResolved([token], format, options));
-        }
-        const issue = this.#preset !== undefined && target !== undefined
-          ? presetMappingIssue(
-            this.#preset,
-            token.letter,
-            parsed,
-            index,
-            target,
-            options,
-          )
-          : undefined;
-        if (issue === undefined) return [token];
+      const tokens = this.#prepareToken(
+        token,
+        index,
+        parsed,
+        input,
+        format,
+        options,
+        target,
+        diagnostics,
+        occurrences,
+      );
+      if (origins !== undefined) {
+        for (let k = 0; k < tokens.length; k++) origins.push(index);
+      }
+      return tokens;
+    });
+
+    if (!track && (positions === "none" || diagnostics.length === 0)) {
+      return { document, diagnostics };
+    }
+
+    // Where each parsed token was read, in the input as supplied.
+    const parsedSpans = parsedInputSpans(
+      input,
+      read ?? readAgain(input.value, format, options),
+    );
+    for (const diagnostic of diagnostics) {
+      diagnostic.offset = parsedSpans.starts[diagnostic.index];
+      diagnostic.length = parsedSpans.ends[diagnostic.index] -
+        diagnostic.offset;
+    }
+    if (origins === undefined) return { document, diagnostics };
+
+    // The literals an out-of-scope token became share its span.
+    const starts = new Uint32Array(document.length);
+    const ends = new Uint32Array(document.length);
+    for (let index = 0; index < document.length; index++) {
+      starts[index] = parsedSpans.starts[origins[index]];
+      ends[index] = parsedSpans.ends[origins[index]];
+    }
+    return { document, diagnostics, spans: { starts, ends } };
+  }
+
+  #prepareToken(
+    token: Token,
+    index: number,
+    parsed: Document,
+    input: PreprocessedInput,
+    format: Format,
+    options: ResolvedConversionOptions,
+    target: Format | undefined,
+    diagnostics: CharacterScopeDiagnostic[],
+    occurrences: Map<string, number>,
+  ): readonly Token[] {
+    if (token.kind === "grapheme") {
+      if (!this.#isAllowed(token.letter, parsed, index)) {
         diagnostics.push(
-          mappingDiagnostic(
-            index,
-            token.letter,
-            issue,
-            this.#outOfScopeBehavior,
-          ),
+          scopeDiagnostic(index, token.letter, this.#outOfScopeBehavior),
         );
         return literalTokens(encodeResolved([token], format, options));
       }
-
-      const custom = this.#sentinels.get(token.value);
-      if (
-        custom === undefined ||
-        this.#isAllowed(custom.character.id, parsed, index)
-      ) {
-        return [token];
-      }
-
+      const issue = this.#preset !== undefined && target !== undefined
+        ? presetMappingIssue(
+          this.#preset,
+          token.letter,
+          parsed,
+          index,
+          target,
+          options,
+        )
+        : undefined;
+      if (issue === undefined) return [token];
       diagnostics.push(
-        scopeDiagnostic(index, custom.character.id, this.#outOfScopeBehavior),
+        mappingDiagnostic(
+          index,
+          token.letter,
+          issue,
+          this.#outOfScopeBehavior,
+        ),
       );
-      const occurrence = occurrences.get(token.value) ?? 0;
-      occurrences.set(token.value, occurrence + 1);
-      const original = input.originals.get(token.value)?.[occurrence] ??
-        customForm(custom.character, format, custom.uppercase, options);
-      return literalTokens(original);
-    });
+      return literalTokens(encodeResolved([token], format, options));
+    }
 
-    return { document, diagnostics };
+    const custom = this.#sentinels.get(token.value);
+    if (
+      custom === undefined ||
+      this.#isAllowed(custom.character.id, parsed, index)
+    ) {
+      return [token];
+    }
+
+    diagnostics.push(
+      scopeDiagnostic(index, custom.character.id, this.#outOfScopeBehavior),
+    );
+    const occurrence = occurrences.get(token.value) ?? 0;
+    occurrences.set(token.value, occurrence + 1);
+    const original = input.originals.get(token.value)?.[occurrence] ??
+      customForm(custom.character, format, custom.uppercase, options);
+    return literalTokens(original);
   }
 
+  /**
+   * Writes the custom characters' forms in place of their sentinels. With
+   * `track`, also returns, for each unit of `input` (and its length), the
+   * range it became in the output: a sentinel's two units both become its
+   * form.
+   */
   #postprocess(
     input: string,
     format: Format,
-  ): string {
-    let output = input;
-    for (const [sentinel, { character, uppercase }] of this.#sentinels) {
-      output = output.replaceAll(
-        sentinel,
-        customForm(character, format, uppercase),
-      );
+    track = false,
+  ): { output: string; map?: SegmentMap } {
+    if (this.#sentinels.size === 0) return { output: input };
+    const starts = track ? new Uint32Array(input.length + 1) : undefined;
+    const ends = track ? new Uint32Array(input.length + 1) : undefined;
+    let output = "";
+    // Start of the run of ordinary units not yet copied to the output.
+    let run = 0;
+    // The units of a run keep their order: each becomes the one at the same
+    // distance from the run's start in the output.
+    const copyRun = (end: number) => {
+      if (starts !== undefined && ends !== undefined) {
+        const delta = output.length - run;
+        for (let k = run; k < end; k++) {
+          starts[k] = k + delta;
+          ends[k] = k + delta + 1;
+        }
+      }
+      output += input.slice(run, end);
+    };
+    for (let i = 0; i < input.length; i++) {
+      const unit = input.charCodeAt(i);
+      // Sentinels are private-use scalars of planes 15 and 16: a high
+      // surrogate in U+DB80–U+DBFF followed by a low one.
+      if (unit < 0xDB80 || unit > 0xDBFF || i + 1 >= input.length) continue;
+      const sentinel = this.#sentinels.get(input.slice(i, i + 2));
+      if (sentinel === undefined) continue;
+      copyRun(i);
+      const form = customForm(sentinel.character, format, sentinel.uppercase);
+      if (starts !== undefined && ends !== undefined) {
+        starts[i] = starts[i + 1] = output.length;
+        ends[i] = ends[i + 1] = output.length + form.length;
+      }
+      output += form;
+      i++;
+      run = i + 1;
     }
-    return output;
+    if (run === 0) return { output: input };
+    copyRun(input.length);
+    if (starts === undefined || ends === undefined) return { output };
+    starts[input.length] = ends[input.length] = output.length;
+    return { output, map: { starts, ends } };
   }
 
   #resolveOptions(options: ConversionOptions): ResolvedConversionOptions {
@@ -675,6 +892,8 @@ function scopeDiagnostic(
   return {
     code: "out-of-scope-character",
     index,
+    offset: 0,
+    length: 0,
     character,
     message:
       `Character ${character} is outside this converter's repertoire and was ${
@@ -695,6 +914,8 @@ function mappingDiagnostic(
   return {
     code,
     index,
+    offset: 0,
+    length: 0,
     character,
     message: `Character ${character} ${reason} and was ${
       behavior === "reject" ? "rejected" : "preserved literally"
@@ -704,4 +925,77 @@ function mappingDiagnostic(
 
 function literalTokens(value: string): readonly Token[] {
   return Array.from(value).map(literal);
+}
+
+/** Reads the preprocessed text again, for its positions only. */
+function readAgain(
+  value: string,
+  format: Format,
+  options: ResolvedConversionOptions,
+): ReadPositions {
+  const read: ReadPositions = { text: "", starts: [] };
+  parseResolved(value, format, options, true, read);
+  return read;
+}
+
+/**
+ * The span in the supplied input of each token read from the preprocessed
+ * text: the reader's positions are mapped to the preprocessed text, then
+ * through the replacements to the normalized input, then through the
+ * normalization to the input as supplied. The tokens read from one
+ * replacement (an alias written in its canonical spelling, a custom
+ * character's sentinel) share the span of the spelling it replaced.
+ */
+function parsedInputSpans(
+  input: PreprocessedInput,
+  read: ReadPositions,
+): SpanTable {
+  const inValue = readSpans(input.value, read);
+  const map = sourceMap(input);
+  return map === undefined
+    ? inValue
+    : spansIn(inValue.starts, inValue.ends, inValue.starts.length, map);
+}
+
+/**
+ * For each unit of the preprocessed text (and its length), the range of the
+ * supplied input it came from, or undefined when the two are the same text.
+ * Between the replacements the preprocessed and the normalized texts run unit
+ * for unit, and the normalized text is aligned with the supplied one segment
+ * by segment (Beta Code is only lowercased, unit for unit).
+ */
+function sourceMap(input: PreprocessedInput): SegmentMap | undefined {
+  const { value, normalized, matches, format } = input;
+  const nfd = format === "beta-code"
+    ? undefined
+    : segmentMap(normalized, input.input, "to", "NFD");
+  if (matches.length === 0) return nfd;
+
+  const starts = new Uint32Array(value.length + 1);
+  const ends = new Uint32Array(value.length + 1);
+  let v = 0;
+  let n = 0;
+  const copy = (until: number) => {
+    for (; v < until; v++, n++) {
+      starts[v] = nfd === undefined ? n : nfd.starts[n];
+      ends[v] = nfd === undefined ? n + 1 : nfd.ends[n];
+    }
+  };
+  for (const match of matches) {
+    copy(match.valueStart);
+    const start = nfd === undefined
+      ? match.normalizedStart
+      : nfd.starts[match.normalizedStart];
+    const end = nfd === undefined
+      ? match.normalizedEnd
+      : nfd.ends[match.normalizedEnd - 1];
+    for (; v < match.valueEnd; v++) {
+      starts[v] = start;
+      ends[v] = end;
+    }
+    n = match.normalizedEnd;
+  }
+  copy(value.length);
+  starts[value.length] = ends[value.length] = input.input.length;
+  return { starts, ends };
 }

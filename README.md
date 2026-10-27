@@ -488,6 +488,7 @@ const perseus = createConverter({ preset: "perseus" });
 const result = perseus.convertDetailed("ἄνθρωπος ϝ", "greek", "beta-code");
 result.output; // → a)/nqrwpos ϝ
 result.diagnostics[0].code; // → out-of-scope-character
+result.diagnostics[0].offset; // → 9
 
 const iso = createConverter({
   preset: "iso-843-type-1",

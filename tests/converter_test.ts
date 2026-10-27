@@ -447,6 +447,8 @@ Deno.test("character exclusions preserve source-format spelling", () => {
   assertEquals(detailed.diagnostics, [{
     code: "out-of-scope-character",
     index: 1,
+    offset: 1,
+    length: 1,
     character: "stigma",
     message:
       "Character stigma is outside this converter's repertoire and was preserved literally.",

@@ -280,7 +280,7 @@ export function convertDetailed(
   from: Format,
   to: Format,
   options: ConversionOptions = {},
-): Required<ConversionResult> {
+): ConversionResult {
   assertTextInput(input);
   assertFormat(from);
   assertFormat(to);
@@ -290,7 +290,7 @@ export function convertDetailed(
   const inputSpans = readSpans(input, read);
   const { output, spans: outputSpans } = encodeTracked(source, to, resolved);
   const target = parseResolved(output, to, resolved, true);
-  const losses = findConversionLosses(source, target);
+  const losses = findConversionLosses(source, target, inputSpans);
 
   const spans: ConversionSpan[] = new Array(source.length);
   for (let index = 0; index < source.length; index++) {
@@ -300,10 +300,6 @@ export function convertDetailed(
       outputStart: outputSpans.starts[index],
       outputEnd: outputSpans.ends[index],
     };
-  }
-  for (const loss of losses) {
-    loss.offset = inputSpans.starts[loss.index];
-    loss.length = inputSpans.ends[loss.index] - loss.offset;
   }
 
   return { output, lossy: losses.length > 0, losses, spans };

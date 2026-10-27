@@ -1,10 +1,13 @@
-import { assert, assertEquals } from "@std/assert";
+import { assert, assertEquals, assertThrows } from "@std/assert";
 import {
+  CharacterScopeError,
   CONVERSION_OPTION_VALUES,
   type ConversionOptions,
   type ConversionResult,
   convert,
   convertDetailed,
+  type Converter,
+  createConverter,
   type Format,
   listPresetMetadata,
 } from "../src/mod.ts";
@@ -261,6 +264,126 @@ Deno.test("literals read from one character share its span", () => {
   ]);
 });
 
+const SAN = {
+  id: "san",
+  forms: {
+    greek: { lowercase: "ϻ", uppercase: "Ϻ" },
+    "beta-code": { lowercase: "#711", uppercase: "*#711" },
+    transliteration: { lowercase: "ś", uppercase: "Ś" },
+  },
+  override: true,
+} as const;
+
+const CUSTOM = createConverter({
+  characters: [SAN],
+  aliases: [
+    { letter: "omega", format: "beta-code", spellings: ["v"], override: true },
+    { letter: "theta", format: "transliteration", spellings: ["þ"] },
+  ],
+});
+
+/** `Converter.convertDetailed()` with the input kept for slicing. */
+function detailedBy(
+  converter: Converter,
+  input: string,
+  from: Format,
+  to: Format,
+  options: ConversionOptions = {},
+) {
+  return { ...converter.convertDetailed(input, from, to, options), input };
+}
+
+Deno.test("a custom character's spellings are its token's spans", () => {
+  assertEquals(pieces(detailedBy(CUSTOM, "ἀϻ Ϻ", "greek", "beta-code")), [
+    ["ἀ", "a)"],
+    ["ϻ", "#711"],
+    [" ", " "],
+    ["Ϻ", "*#711"],
+  ]);
+  assertEquals(
+    pieces(detailedBy(CUSTOM, "a)#711 *#711", "beta-code", "greek")),
+    [["a)", "ἀ"], ["#711", "ϻ"], [" ", " "], ["*#711", "Ϻ"]],
+  );
+  assertEquals(
+    pieces(detailedBy(CUSTOM, "aś Ś", "transliteration", "beta-code")),
+    [["a", "a)"], ["ś", "#711"], [" ", " "], ["Ś", "*#711"]],
+  );
+});
+
+Deno.test("an alias spelling is its letter's span", () => {
+  assertEquals(pieces(detailedBy(CUSTOM, "*va", "beta-code", "greek")), [
+    ["*v", "Ω"],
+    ["a", "α"],
+  ]);
+  assertEquals(
+    pieces(detailedBy(CUSTOM, "þeós", "transliteration", "greek")),
+    [["þ", "θ"], ["e", "ε"], ["ó", "ό"], ["s", "ς"]],
+  );
+});
+
+Deno.test("the literals of a preserved out-of-scope character share its span", () => {
+  const converter = createConverter({ characters: [SAN], exclude: ["san"] });
+  const result = detailedBy(converter, "a#711b", "beta-code", "greek");
+
+  assertEquals(result.output, "α#711β");
+  assertEquals(pieces(result), [
+    ["a", "α"],
+    ["#711", "#"],
+    ["#711", "7"],
+    ["#711", "1"],
+    ["#711", "1"],
+    ["b", "β"],
+  ]);
+  assertEquals(
+    result.diagnostics.map(({ index, offset, length }) => [
+      index,
+      offset,
+      length,
+    ]),
+    [[1, 1, 4]],
+  );
+});
+
+Deno.test("scope diagnostics locate the character, in results and errors", () => {
+  const preserving = createConverter({ exclude: ["digamma"] });
+  const result = preserving.convertDetailed("αϝ β", "greek", "transliteration");
+  assertEquals(
+    result.diagnostics.map((
+      { code, offset, length },
+    ) => [code, offset, length]),
+    [["out-of-scope-character", 1, 1]],
+  );
+
+  const rejecting = createConverter({
+    exclude: ["digamma"],
+    outOfScopeBehavior: "reject",
+  });
+  const error = assertThrows(
+    () => rejecting.convert("αϝ β", "greek", "transliteration"),
+    CharacterScopeError,
+  );
+  assertEquals(error.diagnostics[0].offset, 1);
+  assertEquals(error.diagnostics[0].length, 1);
+});
+
+Deno.test("converter spans are in the input as supplied", () => {
+  // The converter lowercases Beta Code and decomposes the other formats
+  // before matching its spellings; positions are still those of the input.
+  assertEquals(pieces(detailedBy(CUSTOM, "A)#711B", "beta-code", "greek")), [
+    ["A)", "ἀ"],
+    ["#711", "ϻ"],
+    ["B", "β"],
+  ]);
+  assertEquals(pieces(detailedBy(CUSTOM, "ἄϻ", "greek", "transliteration")), [
+    ["ἄ", "á"],
+    ["ϻ", "ś"],
+  ]);
+  assertEquals(
+    pieces(detailedBy(CUSTOM, "α\u0313\u0301ϻ", "greek", "transliteration")),
+    [["α\u0313\u0301", "á"], ["ϻ", "ś"]],
+  );
+});
+
 /**
  * The invariants: one span per token; input spans in order, covering the
  * input, each either following the previous one or equal to it; output spans
@@ -268,37 +391,26 @@ Deno.test("literals read from one character share its span", () => {
  * equal to it, empty, or inside it (a stray combining mark the output joins
  * to the previous token's last character); losses at their token's span.
  */
-function checkInvariants(
+function checkSpans(
+  where: string,
   input: string,
-  from: Format,
-  to: Format,
-  options: ConversionOptions,
+  result: ConversionResult,
 ): void {
-  const where = `${JSON.stringify(input)} ${from} → ${to} ${
-    JSON.stringify(options)
-  }`;
-  const { document, spans: read } = parseDetailed(input, from, options);
-  const result = convertDetailed(input, from, to, options);
-  const spans = result.spans!;
-
-  assertEquals(read.length, document.length, where);
-  assertEquals(spans.length, document.length, where);
-  assertEquals(result.output, convert(input, from, to, options), where);
+  const { spans, output } = result;
 
   let previous: TokenSpan = { start: 0, end: 0 };
-  for (const [index, span] of read.entries()) {
+  for (const [index, span] of spans.entries()) {
     const here = `${where}, token ${index}`;
-    assert(span.start < span.end, `${here}: empty input span`);
+    const read = { start: span.inputStart, end: span.inputEnd };
+    assert(read.start < read.end, `${here}: empty input span`);
     assert(
-      span.start === previous.end ||
-        span.start === previous.start && span.end === previous.end,
-      `${here}: input span ${JSON.stringify(span)} after ${
+      read.start === previous.end ||
+        read.start === previous.start && read.end === previous.end,
+      `${here}: input span ${JSON.stringify(read)} after ${
         JSON.stringify(previous)
       }`,
     );
-    assertEquals(spans[index].inputStart, span.start, here);
-    assertEquals(spans[index].inputEnd, span.end, here);
-    previous = span;
+    previous = read;
   }
   assertEquals(previous.end, input.length, `${where}: input not covered`);
 
@@ -309,7 +421,7 @@ function checkInvariants(
     const start = span.outputStart;
     const end = span.outputEnd;
     assert(start <= end, `${here}: reversed output span`);
-    assert(end <= result.output.length, `${here}: output span out of range`);
+    assert(end <= output.length, `${here}: output span out of range`);
     assert(start >= last.start, `${here}: output span goes back`);
     const inside = start >= last.start && end <= last.end;
     assert(
@@ -324,12 +436,61 @@ function checkInvariants(
       assert(start >= covered || inside, `${here}: empty span behind`);
     }
   }
-  assertEquals(covered, result.output.length, `${where}: output not covered`);
+  assertEquals(covered, output.length, `${where}: output not covered`);
 
   for (const loss of result.losses) {
-    const span = read[loss.index];
-    assertEquals(loss.offset, span.start, `${where}: loss offset`);
-    assertEquals(loss.length, span.end - span.start, `${where}: loss length`);
+    const span = spans[loss.index];
+    assertEquals(loss.offset, span.inputStart, `${where}: loss offset`);
+    assertEquals(
+      loss.length,
+      span.inputEnd - span.inputStart,
+      `${where}: loss length`,
+    );
+  }
+}
+
+function checkInvariants(
+  input: string,
+  from: Format,
+  to: Format,
+  options: ConversionOptions,
+): void {
+  const where = `${JSON.stringify(input)} ${from} → ${to} ${
+    JSON.stringify(options)
+  }`;
+  const { document, spans: read } = parseDetailed(input, from, options);
+  const result = convertDetailed(input, from, to, options);
+
+  assertEquals(read.length, document.length, where);
+  assertEquals(result.spans.length, document.length, where);
+  assertEquals(result.output, convert(input, from, to, options), where);
+  for (const [index, span] of read.entries()) {
+    assertEquals(result.spans[index].inputStart, span.start, where);
+    assertEquals(result.spans[index].inputEnd, span.end, where);
+  }
+  checkSpans(where, input, result);
+}
+
+function checkConverterInvariants(
+  converter: Converter,
+  input: string,
+  from: Format,
+  to: Format,
+  options: ConversionOptions = {},
+): void {
+  const where = `converter ${JSON.stringify(input)} ${from} → ${to} ${
+    JSON.stringify(options)
+  }`;
+  const result = converter.convertDetailed(input, from, to, options);
+
+  assertEquals(result.output, converter.convert(input, from, to, options));
+  checkSpans(where, input, result);
+  for (const diagnostic of result.diagnostics) {
+    const { offset, length } = diagnostic;
+    assert(
+      length > 0 && offset + length <= input.length,
+      `${where}: diagnostic`,
+    );
   }
 }
 
@@ -431,6 +592,46 @@ Deno.test("span invariants hold across fixtures, formats and options", () => {
       for (const options of OPTION_SETS) {
         for (const to of FORMATS) {
           checkInvariants(input, from, to, options);
+        }
+      }
+    }
+  }
+});
+
+Deno.test("span invariants hold for bound converters", () => {
+  const converters = [
+    createConverter(),
+    CUSTOM,
+    createConverter({ characters: [SAN], exclude: ["san", "digamma"] }),
+    createConverter({ preset: "iso-843-type-2" }),
+    createConverter({ preset: "bnf-core", exclude: ["stigma"] }),
+  ];
+  const inputs = [
+    ...EDGE_CASES,
+    "ἀϻ Ϻ ϝ ϛ",
+    "a)#711 *#711 v *v #2",
+    "aś Ś þ",
+    "Θουκυδίδης Ἀθηναῖος ξυνέγραψε, ιβʹ ἔτη·",
+  ];
+  const optionSets: ConversionOptions[] = [
+    {},
+    { orthography: { whitespace: "collapse", numerals: "decimal" } },
+    { orthography: { betaCodeCase: "uppercase" } },
+    { unicode: { composition: "decomposed" } },
+  ];
+
+  for (const converter of converters) {
+    for (const input of inputs) {
+      for (const from of FORMATS) {
+        for (const to of FORMATS) {
+          for (const options of optionSets) {
+            try {
+              checkConverterInvariants(converter, input, from, to, options);
+            } catch (error) {
+              // A bound preset rejects options it does not accept.
+              if (!(error instanceof RangeError)) throw error;
+            }
+          }
         }
       }
     }

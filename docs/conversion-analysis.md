@@ -105,8 +105,17 @@ character's, inside the previous token's.
 
 These positions describe one conversion. The loss analysis compares
 documents, not positions, so `spans` is also returned when `lossy` is
-`false`. The result of a bound converter (`createConverter()`) does not carry
-positions yet: its `spans` is absent and its losses have no `offset`.
+`false`.
+
+A bound converter (`createConverter()`) reports the same positions. Its input
+spans are in the input as supplied, before the converter substitutes its own
+spellings: the span of a token read from an alias or a custom character is
+that of the spelling written in the input (`#711` for a custom character
+spelled so in Beta Code), and the literals that preserve an out-of-scope
+character share the span of its spelling. Its output spans are in the output
+as returned, after the custom characters' forms are written. The converter's
+`diagnostics` carry the `offset` and `length` of the character they report,
+in the same input, both in `convertDetailed()` and in a `CharacterScopeError`.
 
 ## Static and dynamic questions
 
