@@ -91,6 +91,26 @@ For multiple target formats, encode each from that same original document.
 Encoding a lossy orthographic view into a second format cannot restore the
 source distinctions removed by the view.
 
+`parseDetailed(input, format, options)` returns the same document together
+with `spans`, the range of each token in the input, as offsets in UTF-16 code
+units in the input exactly as supplied (the reader normalizes the text, but
+the spans are mapped back to the caller's string). Spans are in increasing
+order and cover the input; tokens read from one character share its span.
+The ranges let an application relate tokens to a selection or an editor
+position, or slice the input text of a token:
+
+```ts
+import { parseDetailed } from "@humanities/greek-conversion/document";
+
+const input = "ἄνθρωπος";
+const { document, spans } = parseDetailed(input, "greek");
+input.slice(spans[2].start, spans[2].end); // θ
+document[2]; // { kind: "grapheme", letter: "theta", ... }
+```
+
+`convertDetailed()` in the main entry point reports the same input spans
+together with the output span of each token.
+
 `validateDocument()` reports structural problems and invalid values on a
 typed or manually modified document. Its indices refer to token
 positions, not offsets into the source string. Validation is an explicit step:

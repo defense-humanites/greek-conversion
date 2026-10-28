@@ -15,6 +15,7 @@ import {
 } from "./model.ts";
 import type { Diacritic, Document, Grapheme, Letter, Token } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
+import { composeTargets } from "./parsers/positions.ts";
 
 const NUMERAL_VALUES = new Map<Letter, number>([
   ["alpha", 1],
@@ -48,11 +49,18 @@ const NUMERAL_VALUES = new Map<Letter, number>([
   ["sampi", 900],
 ]);
 
+/**
+ * Applies the orthography of Greek and Beta Code output. With `targets`,
+ * records where each token of the original document ends up (see
+ * `parsers/positions.ts`); only the passes that change the token count
+ * touch it.
+ */
 export function applyOrthography(
   document: Document,
   options: ConversionOptions = {},
+  targets?: Int32Array,
 ): Document {
-  const numbered = applyNumeralOrthography(document, options);
+  const numbered = applyNumeralOrthography(document, options, targets);
   if (options.orthography?.doubleRho !== "smooth-rough") return numbered;
 
   return numbered.map((token, index) => {
@@ -210,22 +218,30 @@ function keepsMonosyllableAccent(
 export function applyNumeralOrthography(
   document: Document,
   options: ConversionOptions = {},
+  targets?: Int32Array,
 ): Document {
-  const spaced = applyWhitespaceOrthography(document, options);
+  const spaced = applyWhitespaceOrthography(document, options, targets);
   const cased = applyLetterCaseOrthography(spaced, options);
   if (options.orthography?.numerals !== "decimal") return cased;
 
   const output: Token[] = [];
+  const next = targets === undefined ? undefined : new Int32Array(cased.length);
   for (let index = 0; index < cased.length;) {
     const numeral = readNumeral(cased, index);
     if (numeral === undefined) {
+      if (next !== undefined) next[index] = output.length;
       output.push(cased[index]);
       index++;
       continue;
     }
 
+    // The letters and keraiai of the numeral all become the one number.
+    if (next !== undefined) next.fill(output.length, index, numeral.end);
     output.push(literal(String(numeral.value)));
     index = numeral.end;
+  }
+  if (targets !== undefined && next !== undefined) {
+    composeTargets(targets, next);
   }
   return output;
 }
@@ -255,23 +271,39 @@ function applyLetterCaseOrthography(
 function applyWhitespaceOrthography(
   document: Document,
   options: ConversionOptions,
+  targets?: Int32Array,
 ): Document {
   if (options.orthography?.whitespace !== "collapse") return document;
 
   const output: Token[] = [];
+  const next = targets === undefined
+    ? undefined
+    : new Int32Array(document.length).fill(-1);
   let pendingSpace = false;
+  // Where the current whitespace run starts: its tokens all become the one
+  // space written for it, or nothing at either end of the text.
+  let runStart = 0;
 
-  for (const token of document) {
+  for (let index = 0; index < document.length; index++) {
+    const token = document[index];
     if (isWhitespace(token)) {
+      if (!pendingSpace) runStart = index;
       pendingSpace = output.length > 0;
       continue;
     }
 
-    if (pendingSpace) output.push(literal(" "));
+    if (pendingSpace) {
+      if (next !== undefined) next.fill(output.length, runStart, index);
+      output.push(literal(" "));
+    }
+    if (next !== undefined) next[index] = output.length;
     output.push(token);
     pendingSpace = false;
   }
 
+  if (targets !== undefined && next !== undefined) {
+    composeTargets(targets, next);
+  }
   return output;
 }
 

@@ -15,6 +15,7 @@ import {
 } from "../model.ts";
 import { parsePunctuation } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
+import type { ReadPositions } from "./positions.ts";
 import { LETTERS, sharedGrapheme, sharedLiteral } from "./shared_tokens.ts";
 
 /**
@@ -67,13 +68,22 @@ const HASH = 0x23;
 /**
  * Reads Beta Code. With `share`, equal tokens are one shared object
  * (see `shared_tokens.ts`): only for documents that never reach the caller.
+ * With `positions`, records where each token starts in the text, which is
+ * read as supplied (see `positions.ts`).
  */
-export function parseBetaCode(input: string, share = false): Document {
+export function parseBetaCode(
+  input: string,
+  share = false,
+  positions?: ReadPositions,
+): Document {
   const text = input;
   const out: Token[] = [];
+  const starts = positions?.starts;
+  if (positions !== undefined) positions.text = text;
 
   for (let i = 0; i < text.length;) {
     const start = i;
+    if (starts !== undefined) starts.push(start);
     let upper = false;
 
     if (text.charCodeAt(i) === ASTERISK && i + 1 < text.length) {
@@ -136,7 +146,10 @@ export function parseBetaCode(input: string, share = false): Document {
 
     if (letter === NOT_A_LETTER) {
       const source = codePointAt(text, i);
-      if (upper) out.push(literal(text.slice(start, i)));
+      if (upper) {
+        out.push(literal(text.slice(start, i)));
+        if (starts !== undefined) starts.push(i);
+      }
       out.push(share ? sharedLiteral(source) : literal(source));
       i += source.length;
       continue;
@@ -151,6 +164,8 @@ export function parseBetaCode(input: string, share = false): Document {
         : ownedGrapheme(LETTERS[letter], upper, diacriticsFromMask(marks)),
     );
   }
+
+  if (starts !== undefined) starts.push(text.length);
 
   classifyCoronides(out);
 

@@ -42,6 +42,7 @@ import type {
 } from "./options.ts";
 import { greekUpper } from "./case.ts";
 import { applyGreekOrthography } from "./orthography.ts";
+import { joinPieces, type WrittenPositions } from "./parsers/positions.ts";
 import { encodePunctuation } from "./punctuation.ts";
 import { applyGreekUnicode } from "./unicode.ts";
 
@@ -94,7 +95,16 @@ function byMarks<T>(
   };
 }
 
-export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
+/**
+ * Writes Greek. With `written`, records the range of each token's output in
+ * the text assembled before Unicode normalization (see
+ * `parsers/positions.ts`).
+ */
+export function encodeGreek(
+  doc: Document,
+  options: ConversionOptions = {},
+  written?: WrittenPositions,
+) {
   let out = "";
   const greekMarks = byMarks((token) =>
     marks(token, options, "greek").map((mark) => GREEK_FOR[mark]).join("")
@@ -104,12 +114,17 @@ export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
     options,
     "greek",
   );
+  const starts = written?.starts;
+  const ends = written?.ends;
 
   for (let i = 0; i < doc.length; i++) {
     const token = rendered[i];
+    const start = out.length;
+    if (starts !== undefined) starts[i] = start;
 
     if (token.kind === "literal") {
       out += encodePunctuation(token.value, "greek") ?? token.value;
+      if (ends !== undefined) ends[i] = out.length;
       continue;
     }
 
@@ -128,6 +143,11 @@ export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
             isWordFinal(doc, i + 1)
       ) base = "ς";
       out += assimilated.uppercase ? greekUpper(base) : base;
+      // The dental and the sigma it became are written as one letter.
+      if (starts !== undefined && ends !== undefined) {
+        starts[i + 1] = start;
+        ends[i] = ends[i + 1] = out.length;
+      }
       i++;
       continue;
     }
@@ -164,19 +184,26 @@ export function encodeGreek(doc: Document, options: ConversionOptions = {}) {
     if (token.uppercase) base = greekUpper(base);
 
     out += base + greekMarks(token);
+    if (ends !== undefined) ends[i] = out.length;
   }
 
+  if (written !== undefined) written.text = out;
   return applyGreekUnicode(out, options);
 }
 
+/**
+ * Writes Beta Code. With `written`, records the range of each token's output
+ * (see `parsers/positions.ts`).
+ */
 export function encodeBetaCode(
   doc: Document,
   options: ConversionOptions = {},
+  written?: WrittenPositions,
 ) {
   const rendered = prepareDiacriticsForRendering(doc, options, "beta-code");
   const betaMarks = byMarks((token) => marks(token, options, "beta-code"));
 
-  return rendered.map((token, index) => {
+  const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
       if (token.value === DEXIA_KERAIA) return "#";
       if (token.value === ARISTERI_KERAIA) return "#22";
@@ -213,12 +240,18 @@ export function encodeBetaCode(
       .join("");
     const afterLetter = renderedMarks.includes("iota-subscript") ? "|" : "";
     return `*${beforeLetter}${base}${afterLetter}`;
-  }).join("");
+  });
+  return written === undefined ? pieces.join("") : joinPieces(pieces, written);
 }
 
+/**
+ * Writes transliteration. With `written`, records the range of each token's
+ * output in the text assembled before NFC (see `parsers/positions.ts`).
+ */
 export function encodeTransliteration(
   doc: Document,
   options: ConversionOptions = {},
+  written?: WrittenPositions,
 ) {
   const uppercaseOutput = options.orthography?.letterCase === "uppercase";
   const rendered = prepareDiacriticsForRendering(
@@ -287,7 +320,7 @@ export function encodeTransliteration(
     return transliteratedMarks + coronis;
   };
 
-  return rendered.map((token, index) => {
+  const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
       if (options.orthography?.keraia === "bnf") {
         if (token.value === DEXIA_KERAIA) return "\u0301";
@@ -400,7 +433,9 @@ export function encodeTransliteration(
         transferredAccents(rendered, index, options) ?? token,
         separation,
       );
-  }).join("").normalize("NFC");
+  });
+  return (written === undefined ? pieces.join("") : joinPieces(pieces, written))
+    .normalize("NFC");
 }
 
 function rendersLunateSigma(

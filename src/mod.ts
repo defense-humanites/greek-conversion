@@ -9,7 +9,13 @@
  * @module
  */
 
-import { encode, encodeResolved, parse, parseResolved } from "./conversion.ts";
+import {
+  encode,
+  encodeResolved,
+  encodeTracked,
+  parse,
+  parseResolved,
+} from "./conversion.ts";
 export {
   CharacterScopeError,
   Converter,
@@ -26,7 +32,11 @@ export type {
   CustomCharacterDefinition,
   CustomCharacterForms,
 } from "./converter.ts";
-import { type ConversionResult, findConversionLosses } from "./losses.ts";
+import {
+  type ConversionResult,
+  type ConversionSpan,
+  findConversionLosses,
+} from "./losses.ts";
 import {
   assertFormat,
   assertTextInput,
@@ -38,6 +48,7 @@ import type {
   GreekUnicodeOptions,
   ResolvedConversionOptions,
 } from "./options.ts";
+import { type ReadPositions, readSpans } from "./parsers/positions.ts";
 import { resolveConversionOptions } from "./presets.ts";
 
 export { FORMATS } from "./model.ts";
@@ -55,6 +66,7 @@ export type {
   ConversionLoss,
   ConversionLossCode,
   ConversionResult,
+  ConversionSpan,
 } from "./losses.ts";
 export type {
   ArchaicKoppaTransliteration,
@@ -247,12 +259,17 @@ export function reencode(
 
 /**
  * Converts text and reports information that the target representation cannot
- * retain.
+ * retain, and where each source token was read and written.
  *
  * Unicode composition and tonos/oxia are representational differences and are
  * not reported as loss. Known lunate-sigma provenance is reported when an
  * output policy removes it. The conversion itself is executed once; only the
  * rendered target is parsed again for comparison.
+ *
+ * Positions ({@link ConversionResult.spans}, {@link ConversionLoss.offset})
+ * are offsets in UTF-16 code units in the input as supplied and in the
+ * output as returned: the readers and writers normalize the text, but the
+ * positions are mapped back to the caller's strings.
  *
  * @throws {TypeError} If `input` is not a string.
  * @throws {RangeError} If a format, preset, option key, or option value is
@@ -264,11 +281,28 @@ export function convertDetailed(
   to: Format,
   options: ConversionOptions = {},
 ): ConversionResult {
-  const { source, output, resolved } = runConversion(input, from, to, options);
+  assertTextInput(input);
+  assertFormat(from);
+  assertFormat(to);
+  const resolved = resolveConversionOptions(options);
+  const read: ReadPositions = { text: "", starts: [] };
+  const source = parseResolved(input, from, resolved, true, read);
+  const inputSpans = readSpans(input, read);
+  const { output, spans: outputSpans } = encodeTracked(source, to, resolved);
   const target = parseResolved(output, to, resolved, true);
-  const losses = findConversionLosses(source, target);
+  const losses = findConversionLosses(source, target, inputSpans);
 
-  return { output, lossy: losses.length > 0, losses };
+  const spans: ConversionSpan[] = new Array(source.length);
+  for (let index = 0; index < source.length; index++) {
+    spans[index] = {
+      inputStart: inputSpans.starts[index],
+      inputEnd: inputSpans.ends[index],
+      outputStart: outputSpans.starts[index],
+      outputEnd: outputSpans.ends[index],
+    };
+  }
+
+  return { output, lossy: losses.length > 0, losses, spans };
 }
 
 function runConversion(

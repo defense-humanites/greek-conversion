@@ -7,6 +7,33 @@ change.
 
 ## [Unreleased]
 
+### Added
+
+- Positions. `convertDetailed()` returns `spans`, one per token of the parsed
+  source: where the token was read in the input (`inputStart`, `inputEnd`) and
+  where its output was written (`outputStart`, `outputEnd`), and each
+  `ConversionLoss` carries the `offset` and `length` of its token in the input.
+  The `./document` entry point gains `parseDetailed()`, which returns the
+  document with the input span of each token. Positions are offsets in UTF-16
+  code units in the input as supplied and in the output as returned; the
+  ordering and sharing rules (tokens read from one character, tokens written
+  as one, tokens with no output) are in the
+  [conversion-analysis contract](docs/conversion-analysis.md#positions). A
+  bound converter reports the same positions, before its own spellings are
+  substituted on input and after its custom forms are written on output, and
+  its `CharacterScopeDiagnostic`s carry the `offset` and `length` of the
+  character they report, in results and in `CharacterScopeError`. `convert()`
+  is unchanged in output and speed; `convertDetailed()` takes about a third
+  longer on long texts.
+
+### Changed
+
+- `CharacterScopeDiagnostic.index` now indexes the source document as the
+  conversion prepared it, like `losses.index` and `spans`, rather than the
+  document as read: a character preserved as several literals is reported at
+  the first of them, and the diagnostics after it shift accordingly (see the
+  migration guide).
+
 ## [1.0.0-rc.5] - 2026-10-26
 
 Fifth release candidate for `1.0.0`. It brings transliteration closer to ISO 843

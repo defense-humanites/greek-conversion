@@ -1,5 +1,6 @@
 import { isVowel } from "./context.ts";
 import type { Diacritic, Document, Token } from "./model.ts";
+import type { SpanTable } from "./parsers/positions.ts";
 
 /** Machine-readable categories of information loss. */
 export type ConversionLossCode =
@@ -17,6 +18,13 @@ export interface ConversionLoss {
   code: ConversionLossCode;
   /** Zero-based token index in the canonical source document. */
   index: number;
+  /**
+   * Offset, in UTF-16 code units, of the source token in the input as
+   * supplied: `spans[index].inputStart` of the result.
+   */
+  offset: number;
+  /** Length of the source token in the input, in UTF-16 code units. */
+  length: number;
   /** Human-readable English explanation. */
   message: string;
   /**
@@ -24,6 +32,29 @@ export interface ConversionLoss {
    * `"displaced-diacritic"`, or `"inferred-breathing"`.
    */
   diacritic?: Diacritic;
+}
+
+/**
+ * Where one source token was read in the input and where its output was
+ * written, as ranges of UTF-16 code units (the unit of `String.length`,
+ * `slice()` and editor selections), start included and end excluded.
+ *
+ * Input spans are in increasing order and cover the input without gaps.
+ * Output spans are in increasing order and cover the output; several tokens
+ * written as one share a span (a Greek numeral written as a decimal number,
+ * a whitespace run collapsed to one space, the two letters of a modern
+ * digraph), and a token the output has nothing for has an empty span where
+ * the output of the next token starts.
+ */
+export interface ConversionSpan {
+  /** Offset of the token's first code unit in the input as supplied. */
+  inputStart: number;
+  /** Offset after its last code unit in the input. */
+  inputEnd: number;
+  /** Offset of the first code unit of the token's output. */
+  outputStart: number;
+  /** Offset after the last code unit of the token's output. */
+  outputEnd: number;
 }
 
 /** Output and information-loss diagnostics returned by detailed conversion. */
@@ -34,6 +65,11 @@ export interface ConversionResult {
   lossy: boolean;
   /** Structured losses in source-token order. */
   losses: readonly ConversionLoss[];
+  /**
+   * One span per token of the parsed source, in token order: where it was
+   * read and where its output was written.
+   */
+  spans: readonly ConversionSpan[];
 }
 
 const ALIGNMENT_WINDOW = 16;
@@ -53,11 +89,17 @@ const DIACRITIC_NAMES: Readonly<Record<Diacritic, string>> = {
   breve: "breve",
 };
 
+/**
+ * Compares the source document with the target read back from the output and
+ * reports what the target does not retain. `spans` gives the position of
+ * each source token in the input, carried by the losses.
+ */
 export function findConversionLosses(
   source: Document,
   target: Document,
+  spans: SpanTable,
 ): readonly ConversionLoss[] {
-  const losses: ConversionLoss[] = [];
+  const losses = new Losses(spans);
   let sourceIndex = 0;
   let targetIndex = 0;
 
@@ -109,7 +151,32 @@ export function findConversionLosses(
     if (targetIndex < target.length) targetIndex++;
   }
 
-  return losses;
+  return losses.all;
+}
+
+/** The losses found so far, each located at its source token. */
+class Losses {
+  readonly all: ConversionLoss[] = [];
+  readonly #spans: SpanTable;
+
+  constructor(spans: SpanTable) {
+    this.#spans = spans;
+  }
+
+  add(
+    code: ConversionLossCode,
+    index: number,
+    message: string,
+    diacritic?: Diacritic,
+  ): void {
+    const offset = this.#spans.starts[index];
+    const length = this.#spans.ends[index] - offset;
+    this.all.push(
+      diacritic === undefined
+        ? { code, index, offset, length, message }
+        : { code, index, offset, length, diacritic, message },
+    );
+  }
 }
 
 function nextAlignment(
@@ -142,7 +209,7 @@ function nextAlignment(
 }
 
 function addLosses(
-  losses: ConversionLoss[],
+  losses: Losses,
   source: Document,
   target: Document,
   sourceStart: number,
@@ -160,7 +227,7 @@ function addLosses(
 }
 
 function addTokenLoss(
-  losses: ConversionLoss[],
+  losses: Losses,
   sourceDocument: Document,
   targetDocument: Document,
   index: number,
@@ -179,11 +246,11 @@ function addTokenLoss(
     let changed = false;
     if (source.uppercase !== target.uppercase) {
       changed = true;
-      losses.push({
-        code: "changed-case",
+      losses.add(
+        "changed-case",
         index,
-        message: "The target representation does not retain letter case.",
-      });
+        "The target representation does not retain letter case.",
+      );
     }
 
     const removed = [...source.diacritics].filter((mark) =>
@@ -201,24 +268,24 @@ function addTokenLoss(
             targetIndex,
           )
         ) {
-          losses.push({
-            code: "displaced-diacritic",
+          losses.add(
+            "displaced-diacritic",
             index,
-            diacritic,
-            message: `The target representation moves the ${
+            `The target representation moves the ${
               DIACRITIC_NAMES[diacritic]
             } onto the next vowel; the hiatus it marked is read as a diphthong.`,
-          });
+            diacritic,
+          );
           continue;
         }
-        losses.push({
-          code: "removed-diacritic",
+        losses.add(
+          "removed-diacritic",
           index,
-          diacritic,
-          message: `The target representation does not retain the ${
+          `The target representation does not retain the ${
             DIACRITIC_NAMES[diacritic]
           }.`,
-        });
+          diacritic,
+        );
       }
     }
     if (
@@ -226,30 +293,29 @@ function addTokenLoss(
       source.glyphVariant !== target.glyphVariant
     ) {
       changed = true;
-      losses.push({
-        code: "removed-glyph-variant",
+      losses.add(
+        "removed-glyph-variant",
         index,
-        message:
-          "The target representation does not retain the source glyph variant.",
-      });
+        "The target representation does not retain the source glyph variant.",
+      );
     }
     if (changed) return;
   }
 
   if (source.kind === "grapheme") {
-    losses.push({
-      code: "unrepresented-grapheme",
+    losses.add(
+      "unrepresented-grapheme",
       index,
-      message: `The target representation does not retain ${source.letter}.`,
-    });
+      `The target representation does not retain ${source.letter}.`,
+    );
     return;
   }
 
-  losses.push({
-    code: "unrepresented-literal",
+  losses.add(
+    "unrepresented-literal",
     index,
-    message: "The target representation does not retain this literal token.",
-  });
+    "The target representation does not retain this literal token.",
+  );
 }
 
 function sameTokenIdentity(source: Token, target: Token): boolean {
@@ -285,7 +351,7 @@ function preservesToken(source: Token, target: Token): boolean {
  * from the previous vowel is reported there as displaced, not here.
  */
 function addInferredBreathing(
-  losses: ConversionLoss[],
+  losses: Losses,
   source: Document,
   target: Document,
   index: number,
@@ -310,13 +376,12 @@ function addInferredBreathing(
     );
   if (displaced) return;
 
-  losses.push({
-    code: "inferred-breathing",
+  losses.add(
+    "inferred-breathing",
     index,
-    diacritic: "smooth",
-    message:
-      "The target representation does not distinguish an unmarked initial vowel from one with a smooth breathing; the breathing is inferred when the target is read back.",
-  });
+    "The target representation does not distinguish an unmarked initial vowel from one with a smooth breathing; the breathing is inferred when the target is read back.",
+    "smooth",
+  );
 }
 
 /**
