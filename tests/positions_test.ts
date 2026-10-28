@@ -342,6 +342,19 @@ Deno.test("the literals of a preserved out-of-scope character share its span", (
     ]),
     [[1, 1, 4]],
   );
+
+  // A diagnostic's index is in the prepared document, like the losses' and
+  // the spans': after the four literals of #711, the digamma is token 6.
+  const both = createConverter({
+    characters: [SAN],
+    exclude: ["san", "digamma"],
+  });
+  const two = detailedBy(both, "a#711 V", "beta-code", "greek");
+  assertEquals(
+    two.diagnostics.map(({ index, character }) => [index, character]),
+    [[1, "san"], [6, "digamma"]],
+  );
+  assertEquals(pieces(two)[6], ["V", "v"]);
 });
 
 Deno.test("scope diagnostics locate the character, in results and errors", () => {

@@ -26,6 +26,14 @@ change.
   is unchanged in output and speed; `convertDetailed()` takes about a third
   longer on long texts.
 
+### Changed
+
+- `CharacterScopeDiagnostic.index` now indexes the source document as the
+  conversion prepared it, like `losses.index` and `spans`, rather than the
+  document as read: a character preserved as several literals is reported at
+  the first of them, and the diagnostics after it shift accordingly (see the
+  migration guide).
+
 ## [1.0.0-rc.5] - 2026-10-26
 
 Fifth release candidate for `1.0.0`. It brings transliteration closer to ISO 843

@@ -122,10 +122,12 @@ result.diagnostics[0].code; // out-of-scope-character
 result.diagnostics[0].offset; // 1, in UTF-16 code units of the input
 ```
 
-Each diagnostic carries the `index` of its token in the parsed source and the
-`offset` and `length` of the character's spelling in the input as supplied,
-whether the spelling is built in, an alias, or a custom form. The result's
-`losses` and `spans` follow the
+Each diagnostic carries the `index` of its token in the source document as
+the conversion prepared it, the document that `losses` and `spans` index as
+well (a character preserved as several literals is reported at the first of
+them), and the `offset` and `length` of the character's spelling in the input
+as supplied, whether the spelling is built in, an alias, or a custom form.
+The result's `losses` and `spans` follow the
 [conversion-analysis contract](conversion-analysis.md#positions).
 
 Literal preservation is not information loss, so it does not set `lossy`.

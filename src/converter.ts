@@ -103,7 +103,12 @@ export type CharacterScopeDiagnosticCode =
 export interface CharacterScopeDiagnostic {
   /** Stable category suitable for programmatic handling. */
   code: CharacterScopeDiagnosticCode;
-  /** Zero-based token index in the parsed source document. */
+  /**
+   * Zero-based token index in the source document as the conversion prepared
+   * it, the document that `losses` and `spans` index as well: a character
+   * preserved as several literals is reported at the first of them, and
+   * `spans[index]` is where the character was read.
+   */
   index: number;
   /**
    * Offset, in UTF-16 code units, of the character in the input as supplied:
@@ -476,11 +481,17 @@ export class Converter {
       : undefined;
     const parsed = parseResolved(input.value, format, options, true, read);
     const diagnostics: CharacterScopeDiagnostic[] = [];
+    // The parsed token each diagnostic reports: its index in the prepared
+    // document, where it may have become several literals, is the one the
+    // diagnostic carries, like the losses and the spans.
+    const reported: number[] = [];
     const occurrences = new Map<string, number>();
     // The parsed token each prepared token comes from.
     const origins: number[] | undefined = track ? [] : undefined;
+    let prepared = 0;
 
     const document = parsed.flatMap((token, index): readonly Token[] => {
+      const before = diagnostics.length;
       const tokens = this.#prepareToken(
         token,
         index,
@@ -492,9 +503,14 @@ export class Converter {
         diagnostics,
         occurrences,
       );
+      if (diagnostics.length > before) {
+        diagnostics[before].index = prepared;
+        reported.push(index);
+      }
       if (origins !== undefined) {
         for (let k = 0; k < tokens.length; k++) origins.push(index);
       }
+      prepared += tokens.length;
       return tokens;
     });
 
@@ -507,10 +523,9 @@ export class Converter {
       input,
       read ?? readAgain(input.value, format, options),
     );
-    for (const diagnostic of diagnostics) {
-      diagnostic.offset = parsedSpans.starts[diagnostic.index];
-      diagnostic.length = parsedSpans.ends[diagnostic.index] -
-        diagnostic.offset;
+    for (const [k, diagnostic] of diagnostics.entries()) {
+      diagnostic.offset = parsedSpans.starts[reported[k]];
+      diagnostic.length = parsedSpans.ends[reported[k]] - diagnostic.offset;
     }
     if (origins === undefined) return { document, diagnostics };
 

@@ -16,6 +16,19 @@ npm install @humanities/greek-conversion@next
 
 The package is ESM-only.
 
+## Updating from `1.0.0-rc.5`
+
+`CharacterScopeDiagnostic.index`, in a converter's `convertDetailed()` result
+and in `CharacterScopeError`, now indexes the source document as the
+conversion prepared it (the document that `losses.index` and the new `spans`
+index), where an out-of-scope character preserved literally may occupy
+several tokens; it indexed the document as read, where every character was
+one token. The two differ only after a preserved character whose spelling
+has several characters (`a)` in Beta Code, `th` in transliteration, a custom
+form): such a character is reported at its first literal, and the indices of
+the diagnostics that follow it grow by the number of extra literals. Use the
+new `offset` and `length` to locate a diagnostic in the input.
+
 ## Updating from `1.0.0-rc.4`
 
 `orthography.eta` now names only the Latin letter of eta; the mark comes from

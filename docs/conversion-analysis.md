@@ -115,7 +115,9 @@ spelled so in Beta Code), and the literals that preserve an out-of-scope
 character share the span of its spelling. Its output spans are in the output
 as returned, after the custom characters' forms are written. The converter's
 `diagnostics` carry the `offset` and `length` of the character they report,
-in the same input, both in `convertDetailed()` and in a `CharacterScopeError`.
+in the same input, both in `convertDetailed()` and in a `CharacterScopeError`;
+their `index`, like the losses', is in the prepared document, so
+`spans[diagnostic.index]` is where the character was read.
 
 ## Static and dynamic questions
 
