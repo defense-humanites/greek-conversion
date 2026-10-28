@@ -436,7 +436,11 @@ export class OptionError extends RangeError {
   readonly path: string;
   /** The value received, or undefined for an unknown key. */
   readonly received: unknown;
-  /** The accepted values of the option, or the accepted keys of its group. */
+  /**
+   * The accepted values of the option, or the accepted keys of its group.
+   * For two values that cannot be combined, the values accepted next to the
+   * other one.
+   */
   readonly accepted: readonly string[];
   /** The current path of a removed key, or the current spelling of a renamed value. */
   readonly replacement?: string;

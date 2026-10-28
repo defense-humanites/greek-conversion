@@ -60,8 +60,9 @@ also adds positions: where each token was read and written.
   `upsilon` is `"y-with-diphthong-u"` (`ψυχή` → `psychḗ`, `ὑΐδιον` → `hyḯdion`),
   as `sbl-academic`, `sbl-general`, and both ALA-LC presets already wrote it.
   About six words in a hundred of a classical text change; `perseus` and
-  `tlg-core`, which set nothing for Latin, follow the default. Reading is
-  unchanged.
+  `tlg-core`, which set nothing for Latin, follow the default. Reading follows:
+  `u` and `y` are both upsilon, and a `y` after a vowel is read as a hiatus, as
+  under `sbl-academic`.
 - `Converter` is exported as a type only: `createConverter()` is the one way to
   make one. `OutOfScopeBehavior`, the type of a preset's metadata, is renamed
   `PresetOutOfScopeBehavior`, next to `ConverterOutOfScopeBehavior`.

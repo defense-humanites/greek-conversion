@@ -30,18 +30,19 @@ Ten functions are removed; each was one call to `convert()` or `reencode()` with
 fixed arguments. `convert`, `convertDetailed`, `reencode`, and `createConverter`
 remain.
 
-| Before                                      | After                                                                                                                                                                                          |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `greekToBetaCode(input, options)`           | `convert(input, "greek", "beta-code", options)`                                                                                                                                                |
-| `greekToTransliteration(input, options)`    | `convert(input, "greek", "transliteration", options)`                                                                                                                                          |
-| `betaCodeToGreek(input, options)`           | `convert(input, "beta-code", "greek", options)`                                                                                                                                                |
-| `betaCodeToTransliteration(input, options)` | `convert(input, "beta-code", "transliteration", options)`                                                                                                                                      |
-| `transliterationToGreek(input, options)`    | `convert(input, "transliteration", "greek", options)`                                                                                                                                          |
-| `transliterationToBetaCode(input, options)` | `convert(input, "transliteration", "beta-code", options)`                                                                                                                                      |
-| `removeDiacritics(input, format, options)`  | `reencode(input, format, { ...options, diacritics: { all: "remove", roughBreathing: "preserve" }, greek: { sigma: "preserve", finalSigma: "preserve" } })` (see below for what the helper did) |
-| `foldGreekVariants(input, options)`         | `reencode(input, "greek", { ...options, greek: { medialBeta: "standard", sigma: "standard", finalSigma: "medial" } })`                                                                         |
-| `formatGreekUnicode(input, unicode)`        | `reencode(input, "greek", { greek: unicode })`                                                                                                                                                 |
-| `toUnicodeCodePoints(input)`                | `Array.from(input, (c) => "U+" + c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0"))`                                                                                               |
+| Before                                                         | After                                                                                                                                               |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `greekToBetaCode(input, options)`                              | `convert(input, "greek", "beta-code", options)`                                                                                                     |
+| `greekToTransliteration(input, options)`                       | `convert(input, "greek", "transliteration", options)`                                                                                               |
+| `betaCodeToGreek(input, options)`                              | `convert(input, "beta-code", "greek", options)`                                                                                                     |
+| `betaCodeToTransliteration(input, options)`                    | `convert(input, "beta-code", "transliteration", options)`                                                                                           |
+| `transliterationToGreek(input, options)`                       | `convert(input, "transliteration", "greek", options)`                                                                                               |
+| `transliterationToBetaCode(input, options)`                    | `convert(input, "transliteration", "beta-code", options)`                                                                                           |
+| `removeDiacritics(input, "transliteration", options)`          | `reencode(input, "transliteration", { ...options, diacritics: { all: "remove", roughBreathing: "preserve" } })` (see below for what the helper did) |
+| `removeDiacritics(input, format, options)`, Greek or Beta Code | `reencode(input, format, { ...options, diacritics: { all: "remove" }, greek: { sigma: "preserve", finalSigma: "preserve", ...options.greek } })`    |
+| `foldGreekVariants(input, options)`                            | `reencode(input, "greek", { ...options, greek: { ...options.greek, medialBeta: "standard", sigma: "standard", finalSigma: "medial" } })`            |
+| `formatGreekUnicode(input, unicode)`                           | `reencode(input, "greek", { greek: unicode })`                                                                                                      |
+| `toUnicodeCodePoints(input)`                                   | `Array.from(input, (c) => "U+" + c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0"))`                                                    |
 
 ### Option groups
 
@@ -77,9 +78,17 @@ one, and the other two are options you set when you want them:
 | Kept the rough breathing's `h` in transliteration                  | `diacritics: { all: "remove", roughBreathing: "preserve" }` — the class is now kept in every format, as a mark in Greek and Beta Code too |
 | Forced `sigma: "preserve"` and `finalSigma: "preserve"` unless set | `greek: { sigma: "preserve", finalSigma: "preserve" }`, to change nothing but the marks in Greek                                          |
 
+The helper `removeDiacritics(input, format, options)` kept the `h` only in
+transliteration, so its recipe above depends on the format, and removed every
+class whatever `options.diacritics` said (an explicit `roughBreathing: "remove"`
+removed the `h` as well); the sigma policies it forced yield to the ones in
+`options.greek`, hence the spread after them.
+
 `diacritics.all` is expanded where it is written: in the caller's options it
 overrides every class a preset set, and a class named with it is the exception.
-The `removeDiacritics` field of `ResolvedConversionOptions` is gone.
+So `removeDiacritics: false` is migrated by dropping the key, not by writing
+`all: "preserve"`, which would also cancel the classes a preset removes. The
+`removeDiacritics` field of `ResolvedConversionOptions` is gone.
 
 ### Default transliteration
 
@@ -88,8 +97,10 @@ default of `transliteration.upsilon` is `"y-with-diphthong-u"` (`y`, but `u` in
 a diphthong) instead of `"u"`, so `ψυχή` is written `psychḗ` rather than
 `psuchḗ`, `ὑΐδιον` `hyḯdion`, and `ῠ` `y̆`. The `sbl-academic` preset writes
 exactly what the defaults write; `perseus` and `tlg-core`, which set no
-transliteration option, follow the new default. Reading is unchanged: `u` and
-`y` are both read as upsilon. To keep the old spelling, set
+transliteration option, follow the new default. Reading follows: `u` and `y` are
+both read as upsilon, and a text written with the old default reads back as
+before, but a `y` after a vowel is now read as a hiatus, as under `sbl-academic`
+(`ay` → `ἀυ` rather than `αὐ`). To keep the old spelling and reading, set
 `transliteration: { upsilon: "u" }`.
 
 ### Errors
@@ -97,7 +108,8 @@ transliteration option, follow the new default. Reading is unchanged: `u` and
 Option errors are instances of `OptionError`, a `RangeError` with `path`,
 `received`, `accepted`, and, for a key or value of an earlier release candidate,
 `replacement`. Code that caught `RangeError` keeps working; an unknown format
-still throws a plain `RangeError`, and a value of the wrong type a `TypeError`.
+still throws a plain `RangeError`, and an option group of the wrong type a
+`TypeError`.
 
 ### Types and classes
 

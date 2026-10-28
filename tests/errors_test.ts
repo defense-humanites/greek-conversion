@@ -120,22 +120,31 @@ Deno.test("option errors are OptionErrors that locate the option", () => {
 });
 
 Deno.test("names the current path of the options of 1.0.0-rc.5", () => {
+  // `path` is the key `replacement` replaces: for an old group, its first key.
   const cases: [Record<string, unknown>, string, string][] = [
-    [{ orthography: { eta: "i" } }, "orthography", "transliteration.eta"],
-    [{ orthography: { sigma: "lunate" } }, "orthography", "greek.sigma"],
-    [{ orthography: { numerals: "decimal" } }, "orthography", "text.numerals"],
+    [{ orthography: { eta: "i" } }, "orthography.eta", "transliteration.eta"],
+    [{ orthography: { sigma: "lunate" } }, "orthography.sigma", "greek.sigma"],
+    [
+      { orthography: { numerals: "decimal" } },
+      "orthography.numerals",
+      "text.numerals",
+    ],
     [
       { orthography: { betaCodeCase: "uppercase" } },
-      "orthography",
+      "orthography.betaCodeCase",
       "betaCode.case",
     ],
-    [{ orthography: { betaCodeYot: "#401" } }, "orthography", "betaCode.yot"],
+    [
+      { orthography: { betaCodeYot: "#401" } },
+      "orthography.betaCodeYot",
+      "betaCode.yot",
+    ],
     [
       { orthography: { modernDigraphs: "ala-lc" } },
-      "orthography",
+      "orthography.modernDigraphs",
       "transliteration.muPi, transliteration.nuTau, and transliteration.nasalGamma",
     ],
-    [{ unicode: { acute: "oxia" } }, "unicode", "greek.acute"],
+    [{ unicode: { acute: "oxia" } }, "unicode.acute", "greek.acute"],
     [{ removeDiacritics: true }, "removeDiacritics", "diacritics.all"],
   ];
   for (const [options, path, replacement] of cases) {
@@ -144,6 +153,7 @@ Deno.test("names the current path of the options of 1.0.0-rc.5", () => {
       OptionError,
     );
     assertEquals(error.path, path, JSON.stringify(options));
+    assertEquals(error.received, undefined, JSON.stringify(options));
     assertEquals(error.replacement, replacement, JSON.stringify(options));
     assertEquals(error.message.includes(replacement), true, error.message);
   }
@@ -152,8 +162,34 @@ Deno.test("names the current path of the options of 1.0.0-rc.5", () => {
       () => resolveConversionOptions({ orthography: { eta: "i" } } as never),
       OptionError,
     ).message,
-    "Unknown conversion option: orthography (orthography.eta is now transliteration.eta)",
+    "Unknown conversion option: orthography.eta (orthography.eta is now transliteration.eta)",
   );
+  // A key of an old group that no release had is named without replacement,
+  // like the group itself when it is empty; a key the group never had is not
+  // given one either.
+  for (
+    const [options, path] of [
+      [
+        { orthography: { quantityTransliteration: "omit" } },
+        "orthography.quantityTransliteration",
+      ],
+      [{ orthography: {} }, "orthography"],
+      [{ orthography: "x" }, "orthography"],
+      [
+        { orthography: { composition: "decomposed" } },
+        "orthography.composition",
+      ],
+      [{ unicode: { eta: "i" } }, "unicode.eta"],
+    ] as const
+  ) {
+    const error = assertThrows(
+      () => resolveConversionOptions(options as never),
+      OptionError,
+    );
+    assertEquals(error.path, path, JSON.stringify(options));
+    assertEquals(error.replacement, undefined, JSON.stringify(options));
+    assertEquals(error.message, `Unknown conversion option: ${path}`);
+  }
   // A value renamed before 1.0.0 names its replacement too.
   assertEquals(
     assertThrows(
@@ -206,6 +242,21 @@ Deno.test("rejects a circumflex for both length and accent", () => {
         "the length mark and the accent would be written alike.",
     );
   }
+  // The preset is named only when one of the two values comes from it.
+  assertEquals(
+    assertThrows(
+      () =>
+        resolveConversionOptions({
+          preset: "perseus",
+          transliteration: {
+            longVowels: "circumflex",
+            circumflexAccent: "circumflex",
+          },
+        }),
+      OptionError,
+    ).message.includes("set by preset"),
+    false,
+  );
   // Either circumflex alone is accepted.
   resolveConversionOptions({ transliteration: { longVowels: "circumflex" } });
   resolveConversionOptions({

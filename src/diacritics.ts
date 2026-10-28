@@ -1,7 +1,6 @@
 import {
   diacriticBit,
   diacriticsFromMask,
-  NO_DIACRITICS,
   ORDER,
   sharedDiacritics,
   sharedMask,
@@ -70,19 +69,6 @@ export function preservesDiacritic(
   format: Format,
 ): boolean {
   return diacriticDisposition(diacritic, options, format) === "preserve";
-}
-
-/** Removes canonical diacritics without mutating the source document. */
-export function stripDiacritics(document: Document): Document {
-  let changed = false;
-  const stripped = document.map((token) => {
-    if (token.kind === "literal" || token.diacritics.size === 0) return token;
-
-    changed = true;
-    return { ...token, diacritics: NO_DIACRITICS };
-  });
-
-  return changed ? stripped : document;
 }
 
 /**

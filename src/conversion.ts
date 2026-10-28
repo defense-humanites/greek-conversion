@@ -54,9 +54,11 @@ export interface ParseResult {
  *
  * Unknown input is retained as literal tokens. Presets and custom options are
  * resolved before parsing because some transliteration spellings are
- * option-dependent: the `transliteration` group and `greek.accentuation`
- * decide how transliteration is read, while reading Greek or Beta Code
- * depends on no option. Every option is validated whatever the format.
+ * option-dependent: the `transliteration` group, `greek.accentuation`, and
+ * the disposition of the smooth breathing (`diacritics.smoothBreathing`, or
+ * `diacritics.all`) decide how transliteration is read, while reading Greek
+ * or Beta Code depends on no option. Every option is validated whatever the
+ * format.
  *
  * @throws {TypeError} If `input` is not a string.
  * @throws {RangeError} If `format` is not supported or an option is invalid.
@@ -210,7 +212,7 @@ export function encodeTracked(
   switch (format) {
     case "greek":
       output = encodeGreek(prepared, options, written);
-      if (options.greek?.composition === "decomposed") form = "NFD";
+      if (options.greek.composition === "decomposed") form = "NFD";
       break;
     case "beta-code":
       output = encodeBetaCode(prepared, options, written);

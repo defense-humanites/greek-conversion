@@ -405,10 +405,13 @@ export function getPresetMetadata(preset: Preset): PresetMetadata {
 /**
  * Returns a detached copy of one bundled preset configuration.
  *
+ * A preset written with `diacritics.all` is returned with the shorthand
+ * expanded into the seven classes, as `resolveConversionOptions()` reads it.
+ *
  * @throws {RangeError} If the identifier is not registered at runtime.
  */
 export function getPresetOptions(preset: Preset): PresetOptions {
-  return mergeConversionOptions({}, registeredPreset(preset));
+  return mergeConversionOptions(registeredPreset(preset), {});
 }
 
 /**
@@ -441,7 +444,7 @@ export function resolveConversionOptions(
   const { preset, ...custom } = options;
   const base = preset === undefined ? {} : registeredPreset(preset);
   const merged = mergeConversionOptions(base, custom);
-  assertCompatibleOptions(merged, preset);
+  assertCompatibleOptions(merged, preset, custom);
 
   return {
     transliteration: {
@@ -462,7 +465,7 @@ export function resolveConversionOptions(
     },
     diacritics: {
       ...DEFAULT_CONVERSION_OPTIONS.diacritics,
-      ...expandDiacritics(merged.diacritics),
+      ...merged.diacritics,
     },
   };
 }
@@ -470,20 +473,25 @@ export function resolveConversionOptions(
 /**
  * Rejects `longVowels: "circumflex"` with `circumflexAccent: "circumflex"`:
  * `ῆ` would be written `ê̂`, which reads back as `η` without its accent.
+ * The message names the preset when one of the two values comes from it.
  */
 function assertCompatibleOptions(
-  merged: PresetOptions,
+  merged: ExpandedOptions,
   preset: Preset | undefined,
+  custom: PresetOptions,
 ): void {
   const transliteration = merged.transliteration;
   if (
     transliteration?.longVowels !== "circumflex" ||
     transliteration.circumflexAccent !== "circumflex"
   ) return;
+  const fromPreset = preset !== undefined &&
+    (custom.transliteration?.longVowels !== "circumflex" ||
+      custom.transliteration?.circumflexAccent !== "circumflex");
   throw new OptionError(
     'transliteration.longVowels "circumflex" cannot be combined with ' +
       'transliteration.circumflexAccent "circumflex"' +
-      (preset === undefined ? "" : ` (set by preset "${preset}")`) +
+      (fromPreset ? ` (set by preset "${preset}")` : "") +
       ": the length mark and the accent would be written alike.",
     {
       path: "transliteration.longVowels",
@@ -508,9 +516,14 @@ const REPLACED_KEYS: Readonly<Record<string, string>> = {
     ) => [`orthography.${key}`, `transliteration.${key}`]),
   ),
   ...Object.fromEntries(
-    Object.keys(CONVERSION_OPTION_VALUES.greek).map((
-      key,
-    ) => [`orthography.${key}`, `greek.${key}`]),
+    [
+      "sigma",
+      "finalSigma",
+      "medialBeta",
+      "doubleRho",
+      "dentalSigma",
+      "accentuation",
+    ].map((key) => [`orthography.${key}`, `greek.${key}`]),
   ),
   ...Object.fromEntries(
     Object.keys(CONVERSION_OPTION_VALUES.text).map((
@@ -524,6 +537,19 @@ const REPLACED_KEYS: Readonly<Record<string, string>> = {
   ),
 };
 
+/** Options whose `diacritics.all` has been expanded into the classes. */
+type ExpandedOptions = Omit<PresetOptions, "diacritics"> & {
+  diacritics?: DiacriticClassOptions;
+};
+
+/** The seven diacritic classes, in the order of the defaults. */
+const DIACRITIC_CLASSES: readonly string[] = Object.keys(
+  DEFAULT_CONVERSION_OPTIONS.diacritics,
+);
+
+/** Each preset's options with `diacritics.all` expanded, filled on first use. */
+const EXPANDED_PRESETS = new Map<Preset, ExpandedOptions>();
+
 /** Values renamed before 1.0.0, named in the error for the old value. */
 const RENAMED_VALUES: Readonly<
   Record<string, Readonly<Record<string, string>>>
@@ -531,8 +557,15 @@ const RENAMED_VALUES: Readonly<
   "transliteration.eta": { "e-macron": "e", "i-macron": "i" },
 };
 
-function registeredPreset(preset: Preset): PresetOptions {
-  return registeredDefinition(preset).options;
+function registeredPreset(preset: Preset): ExpandedOptions {
+  const known = EXPANDED_PRESETS.get(preset);
+  if (known !== undefined) return known;
+  const expanded = mergeConversionOptions(
+    {},
+    registeredDefinition(preset).options,
+  );
+  EXPANDED_PRESETS.set(preset, expanded);
+  return expanded;
 }
 
 const OPTION_GROUPS = [
@@ -570,17 +603,15 @@ function validateConversionOptions(options: unknown): void {
     if (
       REPLACED_GROUPS.has(key) && value !== null && typeof value === "object"
     ) {
-      // Name the new path of the first key of the old group, which is what
-      // the caller has to move.
-      const first = Object.keys(value as object).find((inner) =>
-        Object.hasOwn(REPLACED_KEYS, `${key}.${inner}`)
-      );
-      throw unknownKey(
-        key,
-        first === undefined ? undefined : `${key}.${first}`,
-      );
+      // The error is about the first key of the old group, which is what the
+      // caller has to move: a key the group had is named with its new path.
+      const inner = Object.keys(value as object);
+      const first = inner.find((name) =>
+        Object.hasOwn(REPLACED_KEYS, `${key}.${name}`)
+      ) ?? inner[0];
+      throw unknownKey(first === undefined ? key : `${key}.${first}`);
     }
-    throw unknownKey(key, Object.hasOwn(REPLACED_KEYS, key) ? key : undefined);
+    throw unknownKey(key);
   }
   for (const group of OPTION_GROUPS) {
     const value = (options as Record<string, unknown>)[group];
@@ -638,22 +669,21 @@ function validateConversionOptions(options: unknown): void {
   }
 }
 
-/** The error for a top-level key that is not an option group. */
-function unknownKey(
-  key: string,
-  replacedPath: string | undefined,
-): OptionError {
-  const replacement = replacedPath === undefined
-    ? undefined
-    : REPLACED_KEYS[replacedPath];
+/**
+ * The error for a key outside the option groups: a top-level key, or a key
+ * of a group that `1.0.0-rc.5` had. A key the earlier release knew is named
+ * with its current path.
+ */
+function unknownKey(path: string): OptionError {
+  const replacement = Object.hasOwn(REPLACED_KEYS, path)
+    ? REPLACED_KEYS[path]
+    : undefined;
   return new OptionError(
-    `Unknown conversion option: ${key}${
-      replacement === undefined
-        ? ""
-        : ` (${replacedPath} is now ${replacement})`
+    `Unknown conversion option: ${path}${
+      replacement === undefined ? "" : ` (${path} is now ${replacement})`
     }`,
     {
-      path: key,
+      path,
       received: undefined,
       accepted: TOP_LEVEL_KEYS,
       ...(replacement === undefined ? {} : { replacement }),
@@ -663,19 +693,24 @@ function unknownKey(
 
 /**
  * Expands `diacritics.all` into the classes not named alongside it, so that
- * the shorthand applies at the level where it is written.
+ * the shorthand applies at the level where it is written. A class set to
+ * `undefined` is absent: it does not cancel the shorthand.
  */
 function expandDiacritics(
   diacritics: DiacriticOptions | undefined,
 ): DiacriticClassOptions | undefined {
   if (diacritics === undefined) return undefined;
-  const { all, ...classes } = diacritics;
-  if (all === undefined) return classes;
+  const all = diacritics.all;
+  // Without the shorthand, the classes are the group itself; the merge
+  // copies them and leaves out `all` with the other undefined fields.
+  if (all === undefined) return diacritics;
+  const classes = diacritics as Record<string, unknown>;
   const expanded: Record<string, unknown> = {};
-  for (const key of Object.keys(DEFAULT_CONVERSION_OPTIONS.diacritics)) {
-    expanded[key] = all;
+  for (const key of DIACRITIC_CLASSES) {
+    const value = classes[key];
+    expanded[key] = value === undefined ? all : value;
   }
-  return { ...expanded, ...classes } as DiacriticClassOptions;
+  return expanded as DiacriticClassOptions;
 }
 
 /** Returns whether one character occurrence is inside a bound preset's scope. */
@@ -757,15 +792,16 @@ function cloneMetadata(metadata: PresetMetadata): PresetMetadata {
 }
 
 /**
- * Merges two levels of options group by group. `diacritics.all` is expanded
- * at its own level first, so that the shorthand of one level overrides the
- * classes of the other.
+ * Merges two levels of options group by group, into new objects. The base
+ * (a preset) is already expanded; `diacritics.all` of the overrides is
+ * expanded at its own level first, so that the shorthand of one level
+ * overrides the classes of the other.
  */
 function mergeConversionOptions(
-  base: PresetOptions,
+  base: ExpandedOptions,
   overrides: PresetOptions,
-): PresetOptions {
-  const merged: PresetOptions = {};
+): ExpandedOptions {
+  const merged: ExpandedOptions = {};
   const transliteration = mergeGroup(
     base.transliteration,
     overrides.transliteration,
@@ -778,21 +814,26 @@ function mergeConversionOptions(
   const text = mergeGroup(base.text, overrides.text);
   if (text !== undefined) merged.text = text;
   const diacritics = mergeGroup(
-    expandDiacritics(base.diacritics),
+    base.diacritics,
     expandDiacritics(overrides.diacritics),
   );
   if (diacritics !== undefined) merged.diacritics = diacritics;
   return merged;
 }
 
+/** A copy of the base with the defined fields of the overrides on top. */
 function mergeGroup<T extends object>(
   base: T | undefined,
   overrides: T | undefined,
 ): T | undefined {
   if (base === undefined && overrides === undefined) return undefined;
 
-  const definedOverrides = overrides === undefined ? {} : Object.fromEntries(
-    Object.entries(overrides).filter(([, value]) => value !== undefined),
-  );
-  return { ...base, ...definedOverrides } as T;
+  const merged: Record<string, unknown> = { ...base };
+  if (overrides !== undefined) {
+    for (const key of Object.keys(overrides)) {
+      const value = (overrides as Record<string, unknown>)[key];
+      if (value !== undefined) merged[key] = value;
+    }
+  }
+  return merged as T;
 }

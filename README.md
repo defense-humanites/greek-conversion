@@ -564,8 +564,8 @@ A misspelled option never falls back silently to a default. An unknown key,
 value, or preset throws an `OptionError`, a `RangeError` that names the option
 (`path`), what it received, what it accepts, and the current spelling of a key
 or value an earlier release knew; an unknown format throws a plain `RangeError`,
-and a value of the wrong type a `TypeError`. This matters most when options come
-from a configuration file or a form:
+and an option group of the wrong type a `TypeError`. This matters most when
+options come from a configuration file or a form:
 
 ```ts
 import { convert, OptionError } from "@humanities/greek-conversion";

@@ -225,7 +225,8 @@ const BUILTIN_LETTERS = new Set<string>(Object.keys(ALPHABET));
 const SENTINEL_START = 0xF0000;
 
 /**
- * An immutable conversion engine with isolated character extensions.
+ * An immutable conversion engine with isolated character extensions. Create
+ * one with `createConverter()`: the class is exported as a type only.
  *
  * Aliases resolve to built-in letters and therefore receive the complete
  * contextual behavior of those letters. New characters are deliberately

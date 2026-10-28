@@ -5,8 +5,6 @@ import {
   reencode,
   resolveConversionOptions,
 } from "../src/mod.ts";
-import { stripDiacritics } from "../src/diacritics.ts";
-import { grapheme, literal } from "../src/model.ts";
 import { assertNfcEquals } from "./assertions.ts";
 
 /** Every class removed, the rough breathing's `h` included. */
@@ -132,6 +130,19 @@ Deno.test("a class named alongside all is the exception, not the rule", () => {
     convert("ἄ ἅ ΐ ᾷ ᾱ", "greek", "greek", exceptions),
     "ά ἅ ΐ ᾷ ᾱ",
   );
+  // A class set to `undefined` is absent, not an exception.
+  const absent = {
+    diacritics: {
+      all: "remove",
+      accents: undefined,
+      roughBreathing: undefined,
+    },
+  } as const;
+  assertEquals(
+    resolveConversionOptions(absent).diacritics,
+    resolveConversionOptions(WITHOUT_DIACRITICS).diacritics,
+  );
+  assertNfcEquals(convert("ἄ ἅ ΐ ᾷ ᾱ", "greek", "greek", absent), "α α ι α α");
 });
 
 Deno.test("removes the marks of every format with one recipe", () => {
@@ -298,18 +309,4 @@ Deno.test("render-only diacritic removal preserves semantic diphthong choices", 
     convert("αϋ αυ", "greek", "transliteration", options),
     "ay au",
   );
-});
-
-Deno.test("diacritic removal is immutable", () => {
-  const source = [
-    literal("["),
-    grapheme("alpha", false, ["smooth", "acute"]),
-    literal("]"),
-  ];
-  const stripped = stripDiacritics(source);
-
-  assertEquals(source[1], grapheme("alpha", false, ["smooth", "acute"]));
-  assertEquals(stripped[1], grapheme("alpha"));
-  assertEquals(stripped === source, false);
-  assertEquals(stripDiacritics([grapheme("alpha")])[0], grapheme("alpha"));
 });
