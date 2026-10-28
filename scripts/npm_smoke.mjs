@@ -18,7 +18,7 @@ assert.equal(
 );
 
 const detailed = convertDetailed("ἄνθρωπος", "greek", "greek", {
-  orthography: { accentuation: "monotonic" },
+  greek: { accentuation: "monotonic" },
 });
 assert.equal(detailed.lossy, true);
 
