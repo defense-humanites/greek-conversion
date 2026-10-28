@@ -84,11 +84,11 @@ export function encodePunctuation(
 ): string | undefined {
   if (
     format === "transliteration" && punctuation === HYPHEN &&
-    options.orthography?.hyphen === "typographic"
+    options.transliteration?.hyphen === "typographic"
   ) return HYPHEN;
   if (
     format === "transliteration" && punctuation === ENOTIKON &&
-    options.orthography?.enotikon === "hyphen"
+    options.transliteration?.enotikon === "hyphen"
   ) return "-";
   return OUTPUT[format].get(punctuation);
 }

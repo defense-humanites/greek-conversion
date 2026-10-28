@@ -74,12 +74,12 @@ Deno.test("every output respects its Unicode composition policy", () => {
   }
 
   const tonos = convert(source, "greek", "greek", {
-    unicode: { acute: "tonos" },
+    greek: { acute: "tonos" },
   });
   assertEquals(tonos, tonos.normalize("NFC"));
 
   const decomposed = convert(source, "greek", "greek", {
-    unicode: { composition: "decomposed" },
+    greek: { composition: "decomposed" },
   });
   assertEquals(decomposed, decomposed.normalize("NFD"));
 });

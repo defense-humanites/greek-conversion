@@ -9,45 +9,42 @@ import {
 import type { Diacritic, Document, Format, Token } from "./model.ts";
 import type { ConversionOptions, DiacriticDisposition } from "./options.ts";
 
+/**
+ * Whether a mark is written in the given format. The disposition of its
+ * class decides, `diacritics.all` standing for every class not named; the
+ * `quantity` spelling of transliteration can also omit the length marks.
+ */
 export function diacriticDisposition(
   diacritic: Diacritic,
   options: ConversionOptions,
   format: Format,
 ): DiacriticDisposition {
-  if (options.removeDiacritics) {
-    // Rough breathing is rendered as a Latin letter in transliteration.
-    // An explicit request to remove that class still takes precedence.
-    return diacritic === "rough" && format === "transliteration" &&
-        options.diacritics?.roughBreathing !== "remove"
-      ? "preserve"
-      : "remove";
-  }
-
   if (
     format === "transliteration" &&
     (diacritic === "macron" || diacritic === "breve") &&
-    options.orthography?.quantity === "omit"
+    options.transliteration?.quantity === "omit"
   ) return "remove";
 
   const policy = options.diacritics;
+  const all = policy?.all ?? "preserve";
   switch (diacritic) {
     case "acute":
     case "grave":
     case "circumflex":
-      return policy?.accents ?? "preserve";
+      return policy?.accents ?? all;
     case "smooth":
-      return policy?.smoothBreathing ?? "preserve";
+      return policy?.smoothBreathing ?? all;
     case "rough":
-      return policy?.roughBreathing ?? "preserve";
+      return policy?.roughBreathing ?? all;
     case "coronis":
-      return policy?.coronis ?? "preserve";
+      return policy?.coronis ?? all;
     case "diaeresis":
-      return policy?.diaeresis ?? "preserve";
+      return policy?.diaeresis ?? all;
     case "iota-subscript":
-      return policy?.iotaSubscript ?? "preserve";
+      return policy?.iotaSubscript ?? all;
     case "macron":
     case "breve":
-      return policy?.quantity ?? "preserve";
+      return policy?.quantity ?? all;
   }
 }
 
@@ -61,9 +58,9 @@ export function diacriticDisposition(
  * breathings at all (monotonic accentuation, removal policies).
  */
 export function infersSmoothBreathing(options: ConversionOptions): boolean {
-  return options.orthography?.smoothBreathing !== "greek" &&
-    options.orthography?.smoothBreathing !== "apostrophe" &&
-    options.orthography?.accentuation !== "monotonic" &&
+  return options.transliteration?.smoothBreathing !== "greek" &&
+    options.transliteration?.smoothBreathing !== "apostrophe" &&
+    options.greek?.accentuation !== "monotonic" &&
     preservesDiacritic("smooth", options, "greek");
 }
 

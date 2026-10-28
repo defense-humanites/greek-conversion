@@ -258,7 +258,7 @@ for (const preset of ["iso-843-type-1", "iso-843-type-2"] as const) {
     assertEquals(converter.convert("ϛ", "greek", "beta-code"), "#2");
     assertEquals(
       converter.convert("ϛʹ", "greek", "transliteration", {
-        orthography: { numerals: "decimal" },
+        text: { numerals: "decimal" },
       }),
       "6",
     );
@@ -331,7 +331,7 @@ Deno.test("bound preset options remain overridable but not replaceable", () => {
   assertEquals(converter.convert("ϙ", "greek", "transliteration"), "q");
   assertEquals(
     converter.convert("ϙ", "greek", "transliteration", {
-      orthography: { archaicKoppa: "k-dot-below" },
+      transliteration: { archaicKoppa: "k-dot-below" },
     }),
     "ḳ",
   );

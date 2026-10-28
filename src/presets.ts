@@ -2,7 +2,9 @@ import {
   CONVERSION_OPTION_VALUES,
   type ConversionOptions,
   DEFAULT_CONVERSION_OPTIONS,
+  type DiacriticClassOptions,
   type DiacriticOptions,
+  OptionError,
   type Preset,
   type ResolvedConversionOptions,
 } from "./options.ts";
@@ -16,7 +18,7 @@ export type PresetOptions = Omit<ConversionOptions, "preset">;
 export type PresetCoverage = "complete" | "partial" | "adapted" | "planned";
 
 /** Treatment of recognized content outside a preset's cited scope. */
-export type OutOfScopeBehavior =
+export type PresetOutOfScopeBehavior =
   | "engine-default"
   | "preserve"
   | "reject";
@@ -44,7 +46,7 @@ export interface PresetMetadata {
   /** Relationship between this implementation and the cited reference. */
   coverage: PresetCoverage;
   /** Treatment of recognized content outside the cited reference's scope. */
-  outOfScopeBehavior: OutOfScopeBehavior;
+  outOfScopeBehavior: PresetOutOfScopeBehavior;
   /** Normative or explanatory sources used to define the preset. */
   references: readonly PresetReference[];
   /** Known deviations, unsupported rules, and interpretation cautions. */
@@ -74,13 +76,8 @@ const ALA_LC_NUMERAL_ONLY = new Set<Letter>([
 ]);
 
 const OMIT_NON_ROUGH_DIACRITICS = {
-  accents: "remove",
-  smoothBreathing: "remove",
+  all: "remove",
   roughBreathing: "preserve",
-  coronis: "remove",
-  diaeresis: "remove",
-  iotaSubscript: "remove",
-  quantity: "remove",
 } as const satisfies DiacriticOptions;
 
 const PRESET_DEFINITIONS = {
@@ -108,9 +105,11 @@ const PRESET_DEFINITIONS = {
     },
     options: {
       diacritics: OMIT_NON_ROUGH_DIACRITICS,
-      orthography: {
-        numerals: "decimal",
+      transliteration: {
         upsilon: "y-with-diphthong-u",
+      },
+      text: {
+        numerals: "decimal",
       },
     },
   },
@@ -137,13 +136,15 @@ const PRESET_DEFINITIONS = {
     },
     options: {
       diacritics: OMIT_NON_ROUGH_DIACRITICS,
-      orthography: {
+      transliteration: {
         beta: "v",
         muPi: "b-initial",
         nasalGamma: "nasal-medial-kappa",
         nuTau: "d-underline-initial",
-        numerals: "decimal",
         upsilon: "y-with-diphthong-u",
+      },
+      text: {
+        numerals: "decimal",
       },
     },
   },
@@ -173,7 +174,7 @@ const PRESET_DEFINITIONS = {
       ],
     },
     options: {
-      orthography: {
+      transliteration: {
         archaicKoppa: "q",
         coronis: "greek",
         circumflexAccent: "circumflex",
@@ -184,7 +185,7 @@ const PRESET_DEFINITIONS = {
         smoothBreathing: "greek",
         upsilon: "y-with-au-eu-ou",
       },
-      unicode: {
+      greek: {
         questionMark: "greek",
       },
     },
@@ -213,7 +214,7 @@ const PRESET_DEFINITIONS = {
       ],
     },
     options: {
-      orthography: {
+      transliteration: {
         beta: "v",
         circumflexAccent: "circumflex",
         coronis: "apostrophe",
@@ -252,7 +253,7 @@ const PRESET_DEFINITIONS = {
       ],
     },
     options: {
-      orthography: {
+      transliteration: {
         beta: "v",
         circumflexAccent: "circumflex",
         coronis: "apostrophe",
@@ -298,8 +299,8 @@ const PRESET_DEFINITIONS = {
       ],
     },
     options: {
-      orthography: {
-        betaCodeCase: "lowercase",
+      betaCode: {
+        case: "lowercase",
       },
     },
   },
@@ -323,7 +324,7 @@ const PRESET_DEFINITIONS = {
       ],
     },
     options: {
-      orthography: {
+      transliteration: {
         upsilon: "y-with-diphthong-u",
       },
     },
@@ -349,15 +350,11 @@ const PRESET_DEFINITIONS = {
     },
     options: {
       diacritics: {
-        accents: "remove",
-        smoothBreathing: "remove",
+        all: "remove",
         roughBreathing: "preserve",
-        coronis: "remove",
         diaeresis: "preserve",
-        iotaSubscript: "remove",
-        quantity: "remove",
       },
-      orthography: {
+      transliteration: {
         upsilon: "y-with-diphthong-u",
       },
     },
@@ -381,9 +378,9 @@ const PRESET_DEFINITIONS = {
       ],
     },
     options: {
-      orthography: {
-        betaCodeCase: "uppercase",
-        betaCodeYot: "#401",
+      betaCode: {
+        case: "uppercase",
+        yot: "#401",
       },
     },
   },
@@ -423,17 +420,19 @@ export function getPresetOptions(preset: Preset): PresetOptions {
  * Options are validated strictly: an unknown option key, an unknown option
  * value, or a value of the wrong type is rejected rather than ignored, so a
  * misspelled policy cannot silently fall back to the engine default. A field
- * set to `undefined` is treated as absent. The merged options are then
- * checked for the one incompatible pair of values: `longVowels: "circumflex"`
- * with `circumflexAccent: "circumflex"`, which would write the length mark of
- * eta and omega and the circumflex accent alike. A preset value counts, so
- * `{ preset: "bnf-core", orthography: { longVowels: "circumflex" } }` is
- * rejected too.
+ * set to `undefined` is treated as absent. `diacritics.all` is expanded where
+ * it is written, in the preset or in the custom options, into the classes
+ * not named alongside it, before the two are merged. The merged options are
+ * then checked for the one incompatible pair of values: `longVowels:
+ * "circumflex"` with `circumflexAccent: "circumflex"`, which would write the
+ * length mark of eta and omega and the circumflex accent alike. A preset
+ * value counts, so `{ preset: "bnf-core", transliteration: { longVowels:
+ * "circumflex" } }` is rejected too.
  *
- * @throws {RangeError} If `options.preset` is not registered at runtime, if
- * an option key or value is unknown, or if two values are incompatible.
- * @throws {TypeError} If `options`, an option group, or `removeDiacritics`
- * has the wrong type.
+ * @throws {OptionError} If `options.preset` is not registered at runtime, if
+ * an option key or value is unknown, or if two values are incompatible. An
+ * `OptionError` is a `RangeError`.
+ * @throws {TypeError} If `options` or an option group has the wrong type.
  */
 export function resolveConversionOptions(
   options: ConversionOptions = {},
@@ -445,23 +444,26 @@ export function resolveConversionOptions(
   assertCompatibleOptions(merged, preset);
 
   return {
-    orthography: {
-      ...DEFAULT_CONVERSION_OPTIONS.orthography,
-      ...(merged.removeDiacritics
-        ? { sigma: "preserve" as const, finalSigma: "preserve" as const }
-        : {}),
-      ...merged.orthography,
+    transliteration: {
+      ...DEFAULT_CONVERSION_OPTIONS.transliteration,
+      ...merged.transliteration,
     },
-    unicode: {
-      ...DEFAULT_CONVERSION_OPTIONS.unicode,
-      ...merged.unicode,
+    greek: {
+      ...DEFAULT_CONVERSION_OPTIONS.greek,
+      ...merged.greek,
+    },
+    betaCode: {
+      ...DEFAULT_CONVERSION_OPTIONS.betaCode,
+      ...merged.betaCode,
+    },
+    text: {
+      ...DEFAULT_CONVERSION_OPTIONS.text,
+      ...merged.text,
     },
     diacritics: {
       ...DEFAULT_CONVERSION_OPTIONS.diacritics,
-      ...merged.diacritics,
+      ...expandDiacritics(merged.diacritics),
     },
-    removeDiacritics: merged.removeDiacritics ??
-      DEFAULT_CONVERSION_OPTIONS.removeDiacritics,
   };
 }
 
@@ -473,41 +475,79 @@ function assertCompatibleOptions(
   merged: PresetOptions,
   preset: Preset | undefined,
 ): void {
-  const orthography = merged.orthography;
+  const transliteration = merged.transliteration;
   if (
-    orthography?.longVowels !== "circumflex" ||
-    orthography.circumflexAccent !== "circumflex"
+    transliteration?.longVowels !== "circumflex" ||
+    transliteration.circumflexAccent !== "circumflex"
   ) return;
-  throw new RangeError(
-    'orthography.longVowels "circumflex" cannot be combined with ' +
-      'orthography.circumflexAccent "circumflex"' +
+  throw new OptionError(
+    'transliteration.longVowels "circumflex" cannot be combined with ' +
+      'transliteration.circumflexAccent "circumflex"' +
       (preset === undefined ? "" : ` (set by preset "${preset}")`) +
       ": the length mark and the accent would be written alike.",
+    {
+      path: "transliteration.longVowels",
+      received: "circumflex",
+      accepted: CONVERSION_OPTION_VALUES.transliteration.longVowels.filter((
+        value,
+      ) => value !== "circumflex"),
+    },
   );
 }
 
-/** Keys replaced before 1.0.0, explained in the error for the old key. */
+/** The current path of each option `1.0.0-rc.5` knew under another key. */
 const REPLACED_KEYS: Readonly<Record<string, string>> = {
+  removeDiacritics: "diacritics.all",
   "orthography.modernDigraphs":
-    "(replaced by orthography.muPi, orthography.nuTau, and orthography.nasalGamma).",
+    "transliteration.muPi, transliteration.nuTau, and transliteration.nasalGamma",
+  "orthography.betaCodeCase": "betaCode.case",
+  "orthography.betaCodeYot": "betaCode.yot",
+  ...Object.fromEntries(
+    Object.keys(CONVERSION_OPTION_VALUES.transliteration).map((
+      key,
+    ) => [`orthography.${key}`, `transliteration.${key}`]),
+  ),
+  ...Object.fromEntries(
+    Object.keys(CONVERSION_OPTION_VALUES.greek).map((
+      key,
+    ) => [`orthography.${key}`, `greek.${key}`]),
+  ),
+  ...Object.fromEntries(
+    Object.keys(CONVERSION_OPTION_VALUES.text).map((
+      key,
+    ) => [`orthography.${key}`, `text.${key}`]),
+  ),
+  ...Object.fromEntries(
+    ["composition", "acute", "questionMark", "anoTeleia"].map((
+      key,
+    ) => [`unicode.${key}`, `greek.${key}`]),
+  ),
 };
 
 /** Values renamed before 1.0.0, named in the error for the old value. */
 const RENAMED_VALUES: Readonly<
   Record<string, Readonly<Record<string, string>>>
 > = {
-  "orthography.eta": { "e-macron": "e", "i-macron": "i" },
+  "transliteration.eta": { "e-macron": "e", "i-macron": "i" },
 };
 
 function registeredPreset(preset: Preset): PresetOptions {
   return registeredDefinition(preset).options;
 }
 
-const OPTION_GROUPS = ["orthography", "unicode", "diacritics"] as const;
-const TOP_LEVEL_KEYS: ReadonlySet<string> = new Set([
-  "preset",
-  "removeDiacritics",
-  ...OPTION_GROUPS,
+const OPTION_GROUPS = [
+  "transliteration",
+  "greek",
+  "betaCode",
+  "text",
+  "diacritics",
+] as const;
+const TOP_LEVEL_KEYS: readonly string[] = ["preset", ...OPTION_GROUPS];
+
+/** The groups of `1.0.0-rc.5`, whose keys the error for them names. */
+const REPLACED_GROUPS: ReadonlySet<string> = new Set([
+  "orthography",
+  "unicode",
 ]);
 
 function validateConversionOptions(options: unknown): void {
@@ -526,14 +566,21 @@ function validateConversionOptions(options: unknown): void {
   }
   for (const [key, value] of Object.entries(options)) {
     if (value === undefined) continue;
-    if (!TOP_LEVEL_KEYS.has(key)) {
-      throw new RangeError(`Unknown conversion option: ${key}`);
-    }
-    if (key === "removeDiacritics" && typeof value !== "boolean") {
-      throw new TypeError(
-        `Expected removeDiacritics to be a boolean, received ${typeof value}.`,
+    if (TOP_LEVEL_KEYS.includes(key)) continue;
+    if (
+      REPLACED_GROUPS.has(key) && value !== null && typeof value === "object"
+    ) {
+      // Name the new path of the first key of the old group, which is what
+      // the caller has to move.
+      const first = Object.keys(value as object).find((inner) =>
+        Object.hasOwn(REPLACED_KEYS, `${key}.${inner}`)
+      );
+      throw unknownKey(
+        key,
+        first === undefined ? undefined : `${key}.${first}`,
       );
     }
+    throw unknownKey(key, Object.hasOwn(REPLACED_KEYS, key) ? key : undefined);
   }
   for (const group of OPTION_GROUPS) {
     const value = (options as Record<string, unknown>)[group];
@@ -557,12 +604,11 @@ function validateConversionOptions(options: unknown): void {
       if (choice === undefined) continue;
       const accepted = Object.hasOwn(table, key) ? table[key] : undefined;
       if (accepted === undefined) {
-        const replaced = Object.hasOwn(REPLACED_KEYS, `${group}.${key}`)
-          ? ` ${REPLACED_KEYS[`${group}.${key}`]}`
-          : "";
-        throw new RangeError(
-          `Unknown conversion option: ${group}.${key}${replaced}`,
-        );
+        throw new OptionError(`Unknown conversion option: ${group}.${key}`, {
+          path: `${group}.${key}`,
+          received: undefined,
+          accepted: Object.keys(table),
+        });
       }
       if (!accepted.includes(choice as string)) {
         const renames = RENAMED_VALUES[`${group}.${key}`];
@@ -570,7 +616,7 @@ function validateConversionOptions(options: unknown): void {
             Object.hasOwn(renames, choice)
           ? renames[choice]
           : undefined;
-        throw new RangeError(
+        throw new OptionError(
           `Invalid value for ${group}.${key}: ${
             JSON.stringify(choice)
           }; expected one of ${
@@ -580,10 +626,56 @@ function validateConversionOptions(options: unknown): void {
               ? ""
               : ` ${JSON.stringify(choice)} is now ${JSON.stringify(renamed)}.`
           }`,
+          {
+            path: `${group}.${key}`,
+            received: choice,
+            accepted,
+            ...(renamed === undefined ? {} : { replacement: renamed }),
+          },
         );
       }
     }
   }
+}
+
+/** The error for a top-level key that is not an option group. */
+function unknownKey(
+  key: string,
+  replacedPath: string | undefined,
+): OptionError {
+  const replacement = replacedPath === undefined
+    ? undefined
+    : REPLACED_KEYS[replacedPath];
+  return new OptionError(
+    `Unknown conversion option: ${key}${
+      replacement === undefined
+        ? ""
+        : ` (${replacedPath} is now ${replacement})`
+    }`,
+    {
+      path: key,
+      received: undefined,
+      accepted: TOP_LEVEL_KEYS,
+      ...(replacement === undefined ? {} : { replacement }),
+    },
+  );
+}
+
+/**
+ * Expands `diacritics.all` into the classes not named alongside it, so that
+ * the shorthand applies at the level where it is written.
+ */
+function expandDiacritics(
+  diacritics: DiacriticOptions | undefined,
+): DiacriticClassOptions | undefined {
+  if (diacritics === undefined) return undefined;
+  const { all, ...classes } = diacritics;
+  if (all === undefined) return classes;
+  const expanded: Record<string, unknown> = {};
+  for (const key of Object.keys(DEFAULT_CONVERSION_OPTIONS.diacritics)) {
+    expanded[key] = all;
+  }
+  return { ...expanded, ...classes } as DiacriticClassOptions;
 }
 
 /** Returns whether one character occurrence is inside a bound preset's scope. */
@@ -633,7 +725,7 @@ export function presetMappingIssue(
   }
   // ISO's separate numeral table permits decimal indexing when requested.
   if (
-    options.orthography.numerals === "decimal" &&
+    options.text.numerals === "decimal" &&
     isGreekNumeralContext(document, index)
   ) return undefined;
 
@@ -646,7 +738,11 @@ export function presetMappingIssue(
 
 function registeredDefinition(preset: Preset): PresetDefinition {
   if (!Object.hasOwn(PRESET_DEFINITIONS, preset)) {
-    throw new RangeError(`Unknown conversion preset: ${preset}`);
+    throw new OptionError(`Unknown conversion preset: ${preset}`, {
+      path: "preset",
+      received: preset,
+      accepted: Object.keys(PRESET_DEFINITIONS),
+    });
   }
   return PRESET_DEFINITIONS[preset];
 }
@@ -660,32 +756,33 @@ function cloneMetadata(metadata: PresetMetadata): PresetMetadata {
   };
 }
 
+/**
+ * Merges two levels of options group by group. `diacritics.all` is expanded
+ * at its own level first, so that the shorthand of one level overrides the
+ * classes of the other.
+ */
 function mergeConversionOptions(
   base: PresetOptions,
   overrides: PresetOptions,
 ): PresetOptions {
   const merged: PresetOptions = {};
-
-  assignDefined(merged, base);
-  assignDefined(merged, overrides);
-  merged.orthography = mergeGroup(base.orthography, overrides.orthography);
-  merged.unicode = mergeGroup(base.unicode, overrides.unicode);
-  merged.diacritics = mergeGroup(base.diacritics, overrides.diacritics);
-
-  if (merged.orthography === undefined) delete merged.orthography;
-  if (merged.unicode === undefined) delete merged.unicode;
-  if (merged.diacritics === undefined) delete merged.diacritics;
-
+  const transliteration = mergeGroup(
+    base.transliteration,
+    overrides.transliteration,
+  );
+  if (transliteration !== undefined) merged.transliteration = transliteration;
+  const greek = mergeGroup(base.greek, overrides.greek);
+  if (greek !== undefined) merged.greek = greek;
+  const betaCode = mergeGroup(base.betaCode, overrides.betaCode);
+  if (betaCode !== undefined) merged.betaCode = betaCode;
+  const text = mergeGroup(base.text, overrides.text);
+  if (text !== undefined) merged.text = text;
+  const diacritics = mergeGroup(
+    expandDiacritics(base.diacritics),
+    expandDiacritics(overrides.diacritics),
+  );
+  if (diacritics !== undefined) merged.diacritics = diacritics;
   return merged;
-}
-
-function assignDefined(
-  target: PresetOptions,
-  source: PresetOptions,
-): void {
-  if (source.removeDiacritics !== undefined) {
-    target.removeDiacritics = source.removeDiacritics;
-  }
 }
 
 function mergeGroup<T extends object>(

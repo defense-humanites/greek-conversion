@@ -94,7 +94,7 @@ Greek output keeps a labial or a velar before sigma as written: Greek has
 these pairs where a prefix meets a stem (`ἔκστασις`, `ἐκσῴζω`), so they are
 never contracted to `ψ` or `ξ`. Psi and xi are read from their own spellings
 (`y` and `c` in Beta Code, `ps` and `x` in transliteration); a transliterated
-`ks` is two letters unless `orthography.xi` is `"ks"`. Only the opt-in
+`ks` is two letters unless `transliteration.xi` is `"ks"`. Only the opt-in
 `dentalSigma: "assimilate"` merges a consonant with the following sigma.
 
 Greek output also applies the regular aspiration of an elided final `π`, `τ`,
@@ -111,7 +111,7 @@ Greek writes `ϊ` and `ϋ`.
 
 The inference belongs to the polytonic frame. It is not applied when the
 selected orthography does not write smooth breathings: `accentuation:
-"monotonic"`, `removeDiacritics: true`, `diacritics.smoothBreathing:
+"monotonic"`, `diacritics.all: "remove"`, `diacritics.smoothBreathing:
 "remove"`, or an explicit `smoothBreathing: "greek"` or `"apostrophe"`
 spelling. The canonical document then matches what the options describe, and
 monotonic text converts back and forth under those options without loss.
@@ -130,11 +130,11 @@ nu; this changes the accepted spelling contract for transliteration input.
 
 | Option | Effect | Reconstructible from output? |
 | --- | --- | --- |
-| `removeDiacritics: true` | Removes accents, coronis, diaeresis, explicit quantity, and iota subscript; removes breathings in Greek and Beta Code, but retains the rough breathing's `h` in transliteration | No |
+| `diacritics.all: "remove"` | Removes every semantic class, breathings included; a class named alongside is the exception, so `{ all: "remove", roughBreathing: "preserve" }` keeps the rough breathing and its `h` in transliteration | No |
 | `diacritics.<class>: "remove"` | Removes only the selected semantic class during rendering | No when that class occurs; unselected classes remain recoverable |
 | `letterCase: "lowercase"`, `"uppercase"`, or `"title"` | Applies deterministic case to recognized Greek graphemes | No when source case changes; unknown literals are untouched |
-| `betaCodeCase: "lowercase"` or `"uppercase"` | Selects the insignificant ASCII case of Beta Code letters without changing `*` markers | Yes; the canonical graphemes are unchanged |
-| `betaCodeYot: "#401"` | Uses the TLG character code instead of `j` for yot | Yes; both spellings parse as yot |
+| `betaCode.case: "lowercase"` or `"uppercase"` | Selects the insignificant ASCII case of Beta Code letters without changing `*` markers | Yes; the canonical graphemes are unchanged |
+| `betaCode.yot: "#401"` | Uses the TLG character code instead of `j` for yot | Yes; both spellings parse as yot |
 | `archaicKoppa: "q"` | Uses the same transliteration for both koppa forms | No; `q` parses as modern koppa |
 | `finalSigma: "medial"` | Uses `σ` instead of contextual `ς` in lowercase Greek output | Yes; both are the same canonical sigma letter |
 | `sigma: "standard"` (default) | Replaces a provenanced lunate sigma with the standard Greek or Beta Code glyph | No; `convertDetailed()` reports `removed-glyph-variant` |
@@ -171,13 +171,12 @@ when the length mark is the circumflex. `longVowels: "circumflex"` cannot be
 combined with `circumflexAccent: "circumflex"`: `ῆ` would be written `ê̂` and
 read back without its accent, so `resolveConversionOptions()` rejects the pair.
 
-`removeDiacritics` and the granular `diacritics` policy are applied during
-encoding, after contextual analysis. They therefore cannot manufacture a
-diphthong or enable a dental assimilation by first deleting a blocking mark.
-`removeDiacritics: true` dominates granular `"preserve"` settings. In
-transliteration, the rough breathing produces a letter (`h`, including in `rh`),
-so it survives this shortcut. An explicit
-`diacritics: { roughBreathing: "remove" }` still suppresses it. Structural
+The `diacritics` policy is applied during encoding, after contextual
+analysis. It therefore cannot manufacture a diphthong or enable a dental
+assimilation by first deleting a blocking mark. `all` sets every class and a
+class named alongside it is the exception; the rough breathing goes with its
+class in every format, as a mark in Greek and Beta Code and as the letter `h`
+(including in `rh`) in transliteration. Structural
 marks used to distinguish letters remain: `ē/ō`, `c̄/s̄`, and `ḳ` are not
 removable diacritics.
 

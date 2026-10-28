@@ -76,7 +76,7 @@ const CASES: readonly {
   {
     format: "greek",
     target: "greek",
-    options: { orthography: { accentuation: "monotonic" } },
+    options: { greek: { accentuation: "monotonic" } },
   },
 ];
 

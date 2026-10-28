@@ -124,18 +124,18 @@ export function parseTransliteration(
   // Upsilons read from a contextual `y` whose separation from the preceding
   // vowel is carried by a breathing on that vowel rather than by a diaeresis.
   const separatedByBreathing = new Set<number>();
-  const orthography = options.orthography;
+  const transliteration = options.transliteration;
   // `b` is μπ only where it cannot be beta; `d̲` is never delta.
-  const digraphB = orthography?.muPi !== undefined &&
-    orthography.muPi !== "mp" && orthography.beta === "v";
-  const digraphD = orthography?.nuTau === "d-underline-initial";
-  const lunateC = orthography?.lunateSigma === "c";
-  const systematicRho = orthography?.rho === "systematic";
-  const circumflexAccent = orthography?.circumflexAccent === "circumflex";
+  const digraphB = transliteration?.muPi !== undefined &&
+    transliteration.muPi !== "mp" && transliteration.beta === "v";
+  const digraphD = transliteration?.nuTau === "d-underline-initial";
+  const lunateC = transliteration?.lunateSigma === "c";
+  const systematicRho = transliteration?.rho === "systematic";
+  const circumflexAccent = transliteration?.circumflexAccent === "circumflex";
   // Without a length mark, e and o are epsilon and omicron, and a circumflex
   // on them is an accent: one that only the long vowel can bear.
-  const omitLength = orthography?.longVowels === "omit";
-  const upsilon = orthography?.upsilon;
+  const omitLength = transliteration?.longVowels === "omit";
+  const upsilon = transliteration?.upsilon;
 
   for (let i = 0; i < chars.length;) {
     let rough = false;
@@ -255,12 +255,12 @@ export function parseTransliteration(
       // Only alpha, eta, and omega bear an iota subscript.
       if (letter === "omicron") letter = "omega";
       else if (
-        letter === (orthography?.eta === "i" ? "iota" : "epsilon")
+        letter === (transliteration?.eta === "i" ? "iota" : "epsilon")
       ) letter = "eta";
     }
     if (omitLength && (marks & CIRCUMFLEX) !== 0) {
       if (letter === "omicron") letter = "omega";
-      else if (letter === "epsilon" && orthography?.eta !== "i") {
+      else if (letter === "epsilon" && transliteration?.eta !== "i") {
         letter = "eta";
       } else if (
         letter === "epsilon" && upsilon === "y-with-ou-v-f" &&
@@ -358,7 +358,7 @@ export function parseTransliteration(
     for (let k = 0; k < starts.length; k++) starts[k] = offsets[starts[k]];
   }
 
-  const nasalGamma = options.orthography?.nasalGamma;
+  const nasalGamma = options.transliteration?.nasalGamma;
   if (nasalGamma !== "literal") {
     inferNasalGammas(out, nasalGamma === "nasal-except-kappa");
   }
@@ -378,7 +378,7 @@ function prioritizeEtaMark(
   options: ConversionOptions,
 ): string[] {
   const mark = etaMark(options);
-  if (options.orthography?.eta !== "i" || mark === undefined) return input;
+  if (options.transliteration?.eta !== "i" || mark === undefined) return input;
 
   const chars = [...input];
   for (let start = 0; start < chars.length; start++) {
@@ -404,16 +404,16 @@ function prioritizeEtaMark(
 
 function transliterationTrie(options: ConversionOptions): Trie<Letter> {
   const variants: Array<readonly [string, Letter]> = [];
-  const orthography = options.orthography;
+  const transliteration = options.transliteration;
 
-  if (orthography?.beta === "v") variants.push(["v", "beta"]);
+  if (transliteration?.beta === "v") variants.push(["v", "beta"]);
   const mark = etaMark(options);
-  if (orthography?.eta === "i" && mark !== undefined) {
+  if (transliteration?.eta === "i" && mark !== undefined) {
     variants.push([`i${mark}`, "eta"]);
   }
-  if (orthography?.xi === "ks") variants.push(["ks", "xi"]);
-  if (orthography?.phi === "f") variants.push(["f", "phi"]);
-  if (orthography?.chi === "kh") variants.push(["kh", "chi"]);
+  if (transliteration?.xi === "ks") variants.push(["ks", "xi"]);
+  if (transliteration?.phi === "f") variants.push(["f", "phi"]);
+  if (transliteration?.chi === "kh") variants.push(["kh", "chi"]);
 
   return variants.length === 0
     ? TRIE
@@ -424,7 +424,7 @@ function transliterationTrie(options: ConversionOptions): Trie<Letter> {
 function etaMark(
   options: ConversionOptions,
 ): "\u0302" | "\u0304" | undefined {
-  switch (options.orthography?.longVowels) {
+  switch (options.transliteration?.longVowels) {
     case "circumflex":
       return "\u0302";
     case "omit":

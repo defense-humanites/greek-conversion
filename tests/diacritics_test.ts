@@ -3,15 +3,24 @@ import {
   convert,
   convertDetailed,
   reencode,
-  removeDiacritics,
+  resolveConversionOptions,
 } from "../src/mod.ts";
 import { stripDiacritics } from "../src/diacritics.ts";
 import { grapheme, literal } from "../src/model.ts";
 import { assertNfcEquals } from "./assertions.ts";
 
-const WITHOUT_DIACRITICS = { removeDiacritics: true } as const;
+/** Every class removed, the rough breathing's `h` included. */
+const WITHOUT_DIACRITICS = { diacritics: { all: "remove" } } as const;
+/** The recipe that keeps the `h`: the class is the exception to `all`. */
+const WITHOUT_MARKS = {
+  diacritics: { all: "remove", roughBreathing: "preserve" },
+} as const;
+/** The recipe that changes nothing but the marks in Greek. */
+const KEEP_SIGMA_SHAPES = {
+  greek: { sigma: "preserve", finalSigma: "preserve" },
+} as const;
 
-Deno.test("removes marks while retaining transliterated rough breathing", () => {
+Deno.test("diacritics.all removes every class in every format", () => {
   const greek = "ἄνθρωπος ᾆ ῑ";
 
   assertNfcEquals(
@@ -25,6 +34,44 @@ Deno.test("removes marks while retaining transliterated rough breathing", () => 
   assertNfcEquals(
     convert(greek, "greek", "transliteration", WITHOUT_DIACRITICS),
     "anthrōpos a i",
+  );
+});
+
+Deno.test("diacritics.all is expanded where it is written", () => {
+  // The caller's shorthand overrides every class a preset set.
+  assertEquals(
+    resolveConversionOptions({ preset: "sbl-general", ...WITHOUT_DIACRITICS })
+      .diacritics,
+    {
+      accents: "remove",
+      smoothBreathing: "remove",
+      roughBreathing: "remove",
+      coronis: "remove",
+      diaeresis: "remove",
+      iotaSubscript: "remove",
+      quantity: "remove",
+    },
+  );
+  // A class named alongside it is the exception, and a preset's classes
+  // survive a caller who names classes only.
+  assertEquals(
+    resolveConversionOptions({
+      preset: "sbl-general",
+      diacritics: { accents: "preserve" },
+    }).diacritics,
+    {
+      accents: "preserve",
+      smoothBreathing: "remove",
+      roughBreathing: "preserve",
+      coronis: "remove",
+      diaeresis: "preserve",
+      iotaSubscript: "remove",
+      quantity: "remove",
+    },
+  );
+  assertEquals(
+    resolveConversionOptions({ diacritics: { all: "preserve" } }).diacritics,
+    resolveConversionOptions().diacritics,
   );
 });
 
@@ -67,10 +114,12 @@ Deno.test("preserves unspecified diacritic classes by default", () => {
   );
 });
 
-Deno.test("removeDiacritics dominates selective preservation", () => {
-  const legacyShortcut = {
-    removeDiacritics: true,
+Deno.test("a class named alongside all is the exception, not the rule", () => {
+  // The old shortcut `removeDiacritics: true` removed every class whatever
+  // the classes said; `all` yields to the classes named with it.
+  const exceptions = {
     diacritics: {
+      all: "remove",
       accents: "preserve",
       roughBreathing: "preserve",
       diaeresis: "preserve",
@@ -80,97 +129,105 @@ Deno.test("removeDiacritics dominates selective preservation", () => {
   } as const;
 
   assertNfcEquals(
-    convert("ἄ ἅ ΐ ᾷ ᾱ", "greek", "greek", legacyShortcut),
-    "α α ι α α",
+    convert("ἄ ἅ ΐ ᾷ ᾱ", "greek", "greek", exceptions),
+    "ά ἅ ΐ ᾷ ᾱ",
   );
 });
 
-Deno.test("exposes format-aware diacritic removal as a public helper", () => {
+Deno.test("removes the marks of every format with one recipe", () => {
   assertNfcEquals(
-    removeDiacritics("ἄνθρωπος· ἀπ’", "greek"),
+    reencode("ἄνθρωπος· ἀπ’", "greek", WITHOUT_MARKS),
     "ανθρωπος· απ’",
   );
   assertNfcEquals(
-    removeDiacritics("a)/nqrwpos a)=| i& ap'", "beta-code"),
+    reencode("a)/nqrwpos a)=| i& ap'", "beta-code", WITHOUT_MARKS),
     "anqrwpos a i ap'",
   );
   assertNfcEquals(
-    removeDiacritics("hánthrōpos aĩ ī ḳ c̄ s̄", "transliteration"),
-    "hanthrōpos ai i ḳ c̄ s̄",
+    reencode("hánthrōpos aĩ ī ḳ c̄ s̄", "transliteration", WITHOUT_MARKS),
+    "hanthrōpos ai i ḳ c̄ s̄",
   );
 });
 
-Deno.test("removing Greek diacritics retains all source sigma glyphs", () => {
+Deno.test("removing Greek diacritics changes sigma shapes unless asked not to", () => {
   const input = "λόγος λόγοσ ὅϲοϲ ςόσ";
+  // Removing the marks alone: the recipe keeps every source sigma shape.
+  const marksOnly = { ...WITHOUT_DIACRITICS, ...KEEP_SIGMA_SHAPES };
   assertNfcEquals(
-    removeDiacritics(input, "greek"),
+    convert(input, "greek", "greek", marksOnly),
     "λογος λογοσ οϲοϲ ςοσ",
   );
   assertNfcEquals(
-    removeDiacritics(removeDiacritics(input, "greek"), "greek"),
+    convert(
+      convert(input, "greek", "greek", marksOnly),
+      "greek",
+      "greek",
+      marksOnly,
+    ),
     "λογος λογοσ οϲοϲ ςοσ",
   );
+  // Without the recipe the default sigma policies apply as in any conversion.
   assertNfcEquals(
-    removeDiacritics("λόγος ὅϲοϲ", "greek", {
-      orthography: { sigma: "standard", finalSigma: "medial" },
+    convert(input, "greek", "greek", WITHOUT_DIACRITICS),
+    "λογος λογος οσος σος",
+  );
+  assertNfcEquals(
+    convert("λόγος ὅϲοϲ", "greek", "greek", {
+      ...WITHOUT_DIACRITICS,
+      greek: { sigma: "standard", finalSigma: "medial" },
     }),
     "λογοσ οσοσ",
-  );
-  assertNfcEquals(
-    convert("λόγοσ", "greek", "greek", WITHOUT_DIACRITICS),
-    "λογοσ",
-  );
-  assertNfcEquals(
-    convert("ὅϲοϲ", "greek", "greek", WITHOUT_DIACRITICS),
-    "οϲοϲ",
   );
   assertEquals(convertDetailed("λόγοσ", "greek", "greek").losses, []);
 });
 
-Deno.test("keeps h in transliterated rough breathing and rh", () => {
+Deno.test("the rough breathing's h goes with its class", () => {
   const greek = "ὁδός ὀδός ῥυθμός";
-  const options = { removeDiacritics: true } as const;
 
+  // The class is the same in every format: kept, it is a mark in Greek and
+  // Beta Code and a letter in transliteration.
   assertNfcEquals(
-    convert(greek, "greek", "greek", options),
+    convert(greek, "greek", "greek", WITHOUT_MARKS),
+    "ὁδος οδος ῥυθμος",
+  );
+  assertNfcEquals(
+    convert(greek, "greek", "beta-code", WITHOUT_MARKS),
+    "o(dos odos r(uqmos",
+  );
+  assertNfcEquals(
+    convert(greek, "greek", "greek", WITHOUT_DIACRITICS),
     "οδος οδος ρυθμος",
   );
   assertNfcEquals(
-    convert(greek, "greek", "beta-code", options),
-    "odos odos ruqmos",
+    convert(greek, "greek", "transliteration", WITHOUT_MARKS),
+    "hodos odos rhythmos",
   );
   assertNfcEquals(
-    convert(greek, "greek", "transliteration", options),
-    "hodos odos rhuthmos",
+    reencode("hódos odós rhythmós", "transliteration", WITHOUT_MARKS),
+    "hodos odos rhythmos",
   );
   assertNfcEquals(
-    removeDiacritics("hódos odós rhuthmós", "transliteration"),
-    "hodos odos rhuthmos",
+    reencode("hódos-rhythmós", "transliteration", WITHOUT_MARKS),
+    "hodos-rhythmos",
   );
   assertNfcEquals(
-    reencode("hódos-rhuthmós", "transliteration", options),
-    "hodos-rhuthmos",
-  );
-  assertNfcEquals(
-    convert("ῥυθμός", "greek", "transliteration", {
-      removeDiacritics: true,
-      diacritics: { roughBreathing: "remove" },
-    }),
-    "ruthmos",
+    convert(greek, "greek", "transliteration", WITHOUT_DIACRITICS),
+    "odos odos rythmos",
   );
 });
 
 Deno.test("retains structural marks required to identify letters", () => {
   assertNfcEquals(
     convert("ῆ ῶ ϛ ϡ ϙ", "greek", "transliteration", {
-      removeDiacritics: true,
-      orthography: { longVowels: "circumflex" },
+      ...WITHOUT_DIACRITICS,
+      transliteration: { longVowels: "circumflex" },
     }),
-    "ê ô ĉ ŝ ḳ",
+    "ê ô ĉ ŝ ḳ",
   );
   assertNfcEquals(
-    removeDiacritics("ý", "transliteration", {
-      orthography: { upsilon: "y" },
+    reencode("ý", "transliteration", {
+      ...WITHOUT_DIACRITICS,
+      transliteration: { upsilon: "y" },
     }),
     "y",
   );
@@ -179,8 +236,8 @@ Deno.test("retains structural marks required to identify letters", () => {
 Deno.test("removes coronis regardless of its output policy", () => {
   assertNfcEquals(
     convert("κἀγώ", "greek", "transliteration", {
-      removeDiacritics: true,
-      orthography: { coronis: "apostrophe" },
+      ...WITHOUT_DIACRITICS,
+      transliteration: { coronis: "apostrophe" },
     }),
     "kagō",
   );
@@ -234,7 +291,7 @@ Deno.test("selective removal keeps hiatus marks on the first vowel", () => {
 Deno.test("render-only diacritic removal preserves semantic diphthong choices", () => {
   const options = {
     diacritics: { diaeresis: "remove" },
-    orthography: { upsilon: "y-with-diphthong-u" },
+    transliteration: { upsilon: "y-with-diphthong-u" },
   } as const;
 
   assertNfcEquals(

@@ -892,7 +892,7 @@ function customForm(
     const semanticPrefix = value.startsWith("*") ? "*" : "";
     const base = semanticPrefix === "" ? value : value.slice(1);
     value = semanticPrefix +
-      (options.orthography.betaCodeCase === "uppercase"
+      (options.betaCode.case === "uppercase"
         ? base.toUpperCase()
         : base.toLowerCase());
   }

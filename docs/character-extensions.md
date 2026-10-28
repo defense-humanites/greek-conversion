@@ -58,7 +58,7 @@ character:
 - belongs to any bundled preset.
 
 The lowercase or uppercase form is selected from the semantic case recognized
-in the source. General output options such as `letterCase` and `betaCodeCase`
+in the source. General output options such as `text.letterCase` and `betaCode.case`
 do not rewrite opaque forms; declare the exact forms required by the custom
 profile. Beta Code input remains ASCII-case-insensitive, and `*` remains the
 only semantic uppercase marker.

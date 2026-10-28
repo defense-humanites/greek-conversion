@@ -91,7 +91,7 @@ Deno.test("spans are in the input as supplied, composed or decomposed", () => {
   assertEquals(pieces(decomposed), [["ἄ", "a)/"], ["ν", "n"]]);
 
   const nfd = detailed("a)/n", "beta-code", "greek", {
-    unicode: { composition: "decomposed" },
+    greek: { composition: "decomposed" },
   });
   assertEquals(nfd.output, "ἄν");
   assertEquals(pieces(nfd), [["a)/", "ἄ"], ["n", "ν"]]);
@@ -151,7 +151,7 @@ Deno.test("the letters of a modern digraph share its character", () => {
 
 Deno.test("the tokens of a Greek numeral share its decimal number", () => {
   const result = detailed("ιβʹ ἔτος", "greek", "transliteration", {
-    orthography: { numerals: "decimal" },
+    text: { numerals: "decimal" },
   });
 
   assertEquals(result.output, "12 étos");
@@ -170,7 +170,7 @@ Deno.test("the tokens of a Greek numeral share its decimal number", () => {
 
 Deno.test("collapsed whitespace shares its space or has an empty span", () => {
   const result = detailed("  λόγος   καὶ  ", "greek", "greek", {
-    orthography: { whitespace: "collapse" },
+    text: { whitespace: "collapse" },
   });
 
   assertEquals(result.output, "λόγος καὶ");
@@ -196,7 +196,7 @@ Deno.test("collapsed whitespace shares its space or has an empty span", () => {
 
 Deno.test("an assimilated dental shares the sigma it became", () => {
   const result = detailed("ατσα", "greek", "greek", {
-    orthography: { dentalSigma: "assimilate" },
+    greek: { dentalSigma: "assimilate" },
   });
 
   assertEquals(result.output, "ασα");
@@ -212,7 +212,7 @@ Deno.test("an assimilated dental shares the sigma it became", () => {
 Deno.test("losses carry the offset and length of their token", () => {
   const result = detailed("Ἄβ", "greek", "greek", {
     diacritics: { accents: "remove" },
-    orthography: { letterCase: "lowercase" },
+    text: { letterCase: "lowercase" },
   });
 
   for (const loss of result.losses) {
@@ -569,22 +569,26 @@ const EDGE_CASES = [
 const OPTION_SETS: ConversionOptions[] = [
   {},
   ...listPresetMetadata().map(({ id }) => ({ preset: id })),
-  { removeDiacritics: true },
-  { orthography: { whitespace: "collapse" } },
-  { orthography: { numerals: "decimal" } },
-  { orthography: { whitespace: "collapse", numerals: "decimal" } },
-  { orthography: { dentalSigma: "assimilate" } },
-  { orthography: { letterCase: "uppercase" } },
+  { diacritics: { all: "remove" } },
+  { text: { whitespace: "collapse" } },
+  { text: { numerals: "decimal" } },
+  { text: { whitespace: "collapse", numerals: "decimal" } },
+  { greek: { dentalSigma: "assimilate" } },
+  { text: { letterCase: "uppercase" } },
   {
-    orthography: { muPi: "b-initial", nuTau: "d-underline-initial", beta: "v" },
+    transliteration: {
+      muPi: "b-initial",
+      nuTau: "d-underline-initial",
+      beta: "v",
+    },
   },
-  { orthography: { upsilon: "y-with-ou-v-f", longVowels: "omit" } },
-  { orthography: { keraia: "bnf", smoothBreathing: "apostrophe" } },
-  { orthography: { accentuation: "monotonic" }, unicode: { acute: "oxia" } },
-  { unicode: { composition: "decomposed" } },
+  { transliteration: { upsilon: "y-with-ou-v-f", longVowels: "omit" } },
+  { transliteration: { keraia: "bnf", smoothBreathing: "apostrophe" } },
+  { greek: { accentuation: "monotonic", acute: "oxia" } },
+  { greek: { composition: "decomposed" } },
   {
     preset: "iso-843-type-2",
-    orthography: { whitespace: "collapse", numerals: "decimal" },
+    text: { whitespace: "collapse", numerals: "decimal" },
   },
 ];
 
@@ -628,9 +632,9 @@ Deno.test("span invariants hold for bound converters", () => {
   ];
   const optionSets: ConversionOptions[] = [
     {},
-    { orthography: { whitespace: "collapse", numerals: "decimal" } },
-    { orthography: { betaCodeCase: "uppercase" } },
-    { unicode: { composition: "decomposed" } },
+    { text: { whitespace: "collapse", numerals: "decimal" } },
+    { betaCode: { case: "uppercase" } },
+    { greek: { composition: "decomposed" } },
   ];
 
   for (const converter of converters) {
@@ -660,8 +664,11 @@ Deno.test("span invariants hold for every value of every option", () => {
 
   for (
     const [group, keys] of [
-      ["orthography", CONVERSION_OPTION_VALUES.orthography],
-      ["unicode", CONVERSION_OPTION_VALUES.unicode],
+      ["transliteration", CONVERSION_OPTION_VALUES.transliteration],
+      ["greek", CONVERSION_OPTION_VALUES.greek],
+      ["betaCode", CONVERSION_OPTION_VALUES.betaCode],
+      ["text", CONVERSION_OPTION_VALUES.text],
+      ["diacritics", CONVERSION_OPTION_VALUES.diacritics],
     ] as const
   ) {
     for (const [key, values] of Object.entries(keys)) {

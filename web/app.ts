@@ -249,7 +249,7 @@ const EXAMPLES: readonly Example[] = [
     text: "Ποῦ εἶσαι; Ἢ ἐδῶ ἢ ἐκεῖ, καὶ ὄχι ἀλλοῦ.",
     from: "greek",
     to: "greek",
-    options: { orthography: { accentuation: "monotonic" } },
+    options: { greek: { accentuation: "monotonic" } },
   },
   {
     label: "Modern Greek, ALA-LC",
@@ -635,7 +635,7 @@ function update(): void {
   try {
     const options = parseSettings<ConversionOptions>(
       optionsInput,
-      ["orthography", "diacritics", "unicode", "removeDiacritics"],
+      ["transliteration", "greek", "betaCode", "text", "diacritics"],
       "Options",
     );
     const preset = presetSelect.value as Preset | "";

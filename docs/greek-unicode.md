@@ -7,11 +7,11 @@ the resulting Greek text is encoded.
 ## Accentuation systems
 
 Greek output is polytonic by default. Request the mechanical monotonic profile
-with `orthography.accentuation`:
+with `greek.accentuation`:
 
 ```ts
 convert("Ποῦ εἶσαι; Ἢ ἐδῶ ἢ ἐκεῖ, καὶ ὄχι ἀλλοῦ.", "greek", "greek", {
-  orthography: { accentuation: "monotonic" },
+  greek: { accentuation: "monotonic" },
 }); // Πού είσαι; Ή εδώ ή εκεί, και όχι αλλού.
 ```
 
@@ -56,12 +56,12 @@ Greek (`ā́`).
 
 ## Composed and decomposed output
 
-Greek output is composed by default. Set `unicode.composition` to
+Greek output is composed by default. Set `greek.composition` to
 `"decomposed"` to emit canonical base letters and combining marks:
 
 ```ts
 convert("ἄ", "greek", "greek", {
-  unicode: { composition: "decomposed" },
+  greek: { composition: "decomposed" },
 }); // U+03B1 U+0313 U+0301
 ```
 
@@ -71,7 +71,7 @@ singleton decompositions and are therefore not stable under NFC.
 
 ## Tonos and oxia
 
-`unicode.acute` accepts `"system"`, `"tonos"`, and `"oxia"`. The default
+`greek.acute` accepts `"system"`, `"tonos"`, and `"oxia"`. The default
 `"system"` policy selects oxia for polytonic output and tonos for monotonic
 output:
 
@@ -80,7 +80,7 @@ convert("ά", "greek", "greek");
 // ά — U+1F71 GREEK SMALL LETTER ALPHA WITH OXIA
 
 convert("ά", "greek", "greek", {
-  orthography: { accentuation: "monotonic" },
+  greek: { accentuation: "monotonic" },
 });
 // ά — U+03AC GREEK SMALL LETTER ALPHA WITH TONOS
 ```
@@ -98,29 +98,15 @@ U+0387 GREEK ANO TELEIA to U+00B7 MIDDLE DOT. The canonical forms remain the
 default. Exact Greek scalars can be requested after composition:
 
 ```ts
-formatGreekUnicode("ά;·", {
-  acute: "oxia",
-  questionMark: "greek",
-  anoTeleia: "greek",
+reencode("ά;·", "greek", {
+  greek: { acute: "oxia", questionMark: "greek", anoTeleia: "greek" },
 }); // ά;·
 ```
 
 The alternatives are `"semicolon"` and `"middle-dot"`; `"canonical"` is the
 default for both punctuation policies.
 
-`formatGreekUnicode()` parses its input as Greek and delegates to the same
-encoder as `convert()`. It therefore applies semantic Greek punctuation rules
-instead of blind character replacement.
-
-## Code-point inspection
-
-`toUnicodeCodePoints()` reports Unicode scalar values without modifying or
-normalizing its input:
-
-```ts
-toUnicodeCodePoints("ά;😀");
-// ["U+1F71", "U+037E", "U+1F600"]
-```
-
-Supplementary characters are returned as one code point, not as two UTF-16
-code units.
+These preferences belong to the `greek` option group and are applied by the
+Greek encoder itself, after the semantic punctuation rules, not by blind
+character replacement: `reencode(input, "greek", options)` is how a Greek
+string is restyled.

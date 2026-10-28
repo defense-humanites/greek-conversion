@@ -76,10 +76,12 @@ or conformity to a preset.
 ## Parse, validate, encode
 
 `parse(input, format, options)` interprets a representation into semantic
-tokens; some transliteration spellings depend on the selected options. It
-does not perform the target's orthographic transformations. Use the same
-preset and parsing options when encoding the result, unless a deliberate
-change of policy is intended:
+tokens; some transliteration spellings depend on the selected options. The
+options are validated for every format, but only the `transliteration` group
+and `greek.accentuation` change how text is read: reading Greek or Beta Code
+depends on no option. It does not perform the target's orthographic
+transformations. Use the same preset and parsing options when encoding the
+result, unless a deliberate change of policy is intended:
 
 ```ts
 const options = { preset: "bnf-core" } as const;

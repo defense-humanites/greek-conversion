@@ -157,12 +157,13 @@ Deno.test("sigma source variants survive case transformations", () => {
   const source = parse("σ ς ϲ", "greek");
   for (const letterCase of ["uppercase", "title"] as const) {
     const transformed = applyGreekOrthography(source, {
-      orthography: { letterCase },
+      text: { letterCase },
     });
     assertEquals(validateDocument(transformed), []);
   }
   const finalSigma = applyGreekOrthography(parse("ς", "greek"), {
-    orthography: { letterCase: "uppercase", finalSigma: "preserve" },
+    greek: { finalSigma: "preserve" },
+    text: { letterCase: "uppercase" },
   });
   assertEquals(validateDocument(finalSigma), []);
   assertEquals(encode(finalSigma, "greek"), "Σ");

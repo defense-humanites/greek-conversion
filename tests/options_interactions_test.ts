@@ -3,8 +3,8 @@ import { assertNfcEquals } from "./assertions.ts";
 
 Deno.test("classifies diphthongs before removing their diacritics", () => {
   const options = {
-    removeDiacritics: true,
-    orthography: { upsilon: "y-with-diphthong-u" },
+    diacritics: { all: "remove", roughBreathing: "preserve" },
+    transliteration: { upsilon: "y-with-diphthong-u" },
   } as const;
 
   assertNfcEquals(
@@ -16,7 +16,7 @@ Deno.test("classifies diphthongs before removing their diacritics", () => {
 Deno.test("classifies context before selective diacritic removal", () => {
   const options = {
     diacritics: { diaeresis: "remove" },
-    orthography: { upsilon: "y-with-diphthong-u" },
+    transliteration: { upsilon: "y-with-diphthong-u" },
   } as const;
 
   assertNfcEquals(
@@ -27,20 +27,20 @@ Deno.test("classifies context before selective diacritic removal", () => {
 
 Deno.test("does not create contractions by removing blocking marks", () => {
   const options = {
-    removeDiacritics: true,
-    orthography: { dentalSigma: "assimilate" },
+    diacritics: { all: "remove" },
+    greek: { dentalSigma: "assimilate" },
   } as const;
 
   assertNfcEquals(
     convert("βσ́ τσ́", "greek", "greek", options),
-    "βσ τσ",
+    "βς τς",
   );
 });
 
 Deno.test("selective removal does not create blocked contractions", () => {
   const options = {
     diacritics: { accents: "remove" },
-    orthography: { dentalSigma: "assimilate" },
+    greek: { dentalSigma: "assimilate" },
   } as const;
 
   assertNfcEquals(
@@ -51,8 +51,8 @@ Deno.test("selective removal does not create blocked contractions", () => {
 
 Deno.test("combines transliteration policies deterministically", () => {
   const options = {
-    removeDiacritics: true,
-    orthography: {
+    diacritics: { all: "remove", roughBreathing: "preserve" },
+    transliteration: {
       coronis: "apostrophe",
       longVowels: "circumflex",
       nasalGamma: "literal",
@@ -73,8 +73,8 @@ Deno.test("combines transliteration policies deterministically", () => {
 
 Deno.test("combines modern transliteration and whitespace policies", () => {
   const options = {
-    removeDiacritics: true,
-    orthography: {
+    diacritics: { all: "remove", roughBreathing: "preserve" },
+    transliteration: {
       beta: "v",
       chi: "kh",
       eta: "i",
@@ -83,9 +83,9 @@ Deno.test("combines modern transliteration and whitespace policies", () => {
       phi: "f",
       rho: "systematic",
       upsilon: "y",
-      whitespace: "collapse",
       xi: "ks",
     },
+    text: { whitespace: "collapse" },
   } as const;
 
   assertNfcEquals(
@@ -101,13 +101,9 @@ Deno.test("combines modern transliteration and whitespace policies", () => {
 
 Deno.test("numerals override interacting Greek glyph policies", () => {
   const options = {
-    removeDiacritics: true,
-    orthography: {
-      dentalSigma: "assimilate",
-      medialBeta: "symbol",
-      numerals: "decimal",
-      sigma: "lunate",
-    },
+    diacritics: { all: "remove", roughBreathing: "preserve" },
+    greek: { dentalSigma: "assimilate", medialBeta: "symbol", sigma: "lunate" },
+    text: { numerals: "decimal" },
   } as const;
 
   assertNfcEquals(
@@ -118,8 +114,8 @@ Deno.test("numerals override interacting Greek glyph policies", () => {
 
 Deno.test("diacritic removal dominates optional double-rho marks", () => {
   const options = {
-    removeDiacritics: true,
-    orthography: { doubleRho: "smooth-rough" },
+    diacritics: { all: "remove" },
+    greek: { doubleRho: "smooth-rough" },
   } as const;
 
   assertNfcEquals(
@@ -132,6 +128,14 @@ Deno.test("diacritic removal dominates optional double-rho marks", () => {
   );
   assertNfcEquals(
     convert("πολύρριζος", "greek", "transliteration", options),
-    "polurrhizos",
+    "polyrrhizos",
+  );
+  // A class kept as the exception keeps the marks the policy adds too.
+  assertNfcEquals(
+    convert("πολύρριζος", "greek", "greek", {
+      ...options,
+      diacritics: { all: "remove", roughBreathing: "preserve" },
+    }),
+    "πολυρῥιζος",
   );
 });

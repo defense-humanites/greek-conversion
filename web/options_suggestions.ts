@@ -1,9 +1,13 @@
-import {
-  CONVERSION_OPTION_VALUES,
-  DEFAULT_CONVERSION_OPTIONS,
-} from "../src/mod.ts";
+import { CONVERSION_OPTION_VALUES } from "../src/mod.ts";
 
-type Group = "orthography" | "diacritics" | "unicode";
+type Group = "transliteration" | "greek" | "betaCode" | "text" | "diacritics";
+const GROUPS: readonly Group[] = [
+  "transliteration",
+  "greek",
+  "betaCode",
+  "text",
+  "diacritics",
+];
 type Frame = {
   path: string;
   phase: "key" | "colon" | "value" | "after";
@@ -69,8 +73,7 @@ export function suggestOptions(value: string, caret: number): Suggestion[] {
   const frame = frames.at(-1);
   if (
     !frame ||
-    (frame.path !== "" &&
-      !["orthography", "diacritics", "unicode"].includes(frame.path))
+    (frame.path !== "" && !(GROUPS as readonly string[]).includes(frame.path))
   ) return [];
   const isKey = frame.phase === "key";
   if (!isKey && frame.phase !== "value") return [];
@@ -101,11 +104,9 @@ export function suggestOptions(value: string, caret: number): Suggestion[] {
   }
 
   const names = isKey
-    ? frame.path === ""
-      ? ["orthography", "diacritics", "unicode", "removeDiacritics"]
-      : Object.keys(DEFAULT_CONVERSION_OPTIONS[frame.path as Group])
+    ? frame.path === "" ? GROUPS : Object.keys(choices[frame.path as Group])
     : frame.path === ""
-    ? frame.key === "removeDiacritics" ? ["false", "true"] : []
+    ? []
     : (choices[frame.path as Group] as Record<string, readonly string[]>)[
       frame.key
     ] ?? [];
@@ -115,7 +116,7 @@ export function suggestOptions(value: string, caret: number): Suggestion[] {
   ).slice(0, 8).map((name) => {
     const suffix = value.slice(end).trimStart();
     const alreadyHasColon = isKey && suffix.startsWith(":");
-    const objectKey = isKey && frame.path === "" && name !== "removeDiacritics";
+    const objectKey = isKey && frame.path === "";
     const closeRoot = isKey && frame.path === "" &&
       value.slice(0, start).trim() === "{" && !suffix;
     const completion = isKey

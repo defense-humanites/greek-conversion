@@ -61,7 +61,7 @@ export function applyOrthography(
   targets?: Int32Array,
 ): Document {
   const numbered = applyNumeralOrthography(document, options, targets);
-  if (options.orthography?.doubleRho !== "smooth-rough") return numbered;
+  if (options.greek?.doubleRho !== "smooth-rough") return numbered;
 
   return numbered.map((token, index) => {
     if (token.kind !== "grapheme" || token.letter !== "rho") return token;
@@ -91,7 +91,7 @@ export function applyGreekOrthography(
   options: ConversionOptions = {},
 ): Document {
   const orthographic = applyOrthography(document, options);
-  if (options.orthography?.accentuation !== "monotonic") {
+  if (options.greek?.accentuation !== "monotonic") {
     return orthographic;
   }
 
@@ -222,7 +222,7 @@ export function applyNumeralOrthography(
 ): Document {
   const spaced = applyWhitespaceOrthography(document, options, targets);
   const cased = applyLetterCaseOrthography(spaced, options);
-  if (options.orthography?.numerals !== "decimal") return cased;
+  if (options.text?.numerals !== "decimal") return cased;
 
   const output: Token[] = [];
   const next = targets === undefined ? undefined : new Int32Array(cased.length);
@@ -250,7 +250,7 @@ function applyLetterCaseOrthography(
   document: Document,
   options: ConversionOptions,
 ): Document {
-  const policy = options.orthography?.letterCase ?? "preserve";
+  const policy = options.text?.letterCase ?? "preserve";
   if (policy === "preserve") return document;
 
   let changed = false;
@@ -273,7 +273,7 @@ function applyWhitespaceOrthography(
   options: ConversionOptions,
   targets?: Int32Array,
 ): Document {
-  if (options.orthography?.whitespace !== "collapse") return document;
+  if (options.text?.whitespace !== "collapse") return document;
 
   const output: Token[] = [];
   const next = targets === undefined

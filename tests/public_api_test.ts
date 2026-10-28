@@ -6,27 +6,17 @@ Deno.test("the main runtime API stays deliberately small", () => {
   assertEquals(Object.keys(mainApi).sort(), [
     "CONVERSION_OPTION_VALUES",
     "CharacterScopeError",
-    "Converter",
     "DEFAULT_CONVERSION_OPTIONS",
     "FORMATS",
-    "betaCodeToGreek",
-    "betaCodeToTransliteration",
+    "OptionError",
     "convert",
     "convertDetailed",
     "createConverter",
-    "foldGreekVariants",
-    "formatGreekUnicode",
     "getPresetMetadata",
     "getPresetOptions",
-    "greekToBetaCode",
-    "greekToTransliteration",
     "listPresetMetadata",
     "reencode",
-    "removeDiacritics",
     "resolveConversionOptions",
-    "toUnicodeCodePoints",
-    "transliterationToBetaCode",
-    "transliterationToGreek",
   ]);
 });
 

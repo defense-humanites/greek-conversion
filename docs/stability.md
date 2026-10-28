@@ -119,15 +119,20 @@ sharing rules of the [conversion-analysis contract](conversion-analysis.md).
 A change of unit or of those rules is a break; a position that moves because
 a conversion's output changed follows the rules of that output change.
 
-For errors, the class (`RangeError`, `TypeError`, `CharacterScopeError`) and
-the documented condition are the contract; the message is not. The
-`diagnostics` of a `CharacterScopeError` follow the diagnostic rules above.
+For errors, the class (`RangeError`, `TypeError`, `OptionError`,
+`CharacterScopeError`) and the documented condition are the contract; the
+message is not. The `diagnostics` of a `CharacterScopeError` follow the
+diagnostic rules above; the `path`, `received`, `accepted`, and `replacement`
+of an `OptionError` are part of the contract, and `replacement` is set only
+for keys and values that a `1.0.0` release candidate accepted.
 
 ## Options
 
 `ConversionOptions` is the input type: every field optional, unknown keys and
 values rejected at runtime. Adding a key or a value is a minor change; the
-default behavior of an existing call never changes in a minor release.
+default behavior of an existing call never changes in a minor release. The
+default transliteration is the SBL academic style: `sbl-academic` and the
+defaults write the same text, and both move together.
 
 `ResolvedConversionOptions` is an **output** type describing the effective
 configuration returned by `resolveConversionOptions()`. New fields appear in

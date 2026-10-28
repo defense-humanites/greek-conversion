@@ -5,7 +5,7 @@ information retained by the target representation:
 
 ```ts
 const result = convertDetailed("ἄνθρωπος", "greek", "greek", {
-  orthography: { accentuation: "monotonic" },
+  greek: { accentuation: "monotonic" },
 });
 
 // {

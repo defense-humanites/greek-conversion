@@ -46,7 +46,7 @@ Deno.test("a crasis read for conversion does not change other occurrences", () =
   // breathing, the ὔ of τοὔνομα becomes a coronis, and both are one shared
   // token when converted: changing it in place would change οὔ too.
   const text = "οὔ τοὔνομα οὔ";
-  const options = { orthography: { coronis: "apostrophe" as const } };
+  const options = { transliteration: { coronis: "apostrophe" as const } };
   assertEquals(
     convert(text, "greek", "transliteration", options),
     "oú toú’noma oú",
@@ -99,7 +99,7 @@ function conversionsPastTheLimit(): void {
     const options of [
       {},
       { preset: "ala-lc-ancient" as const },
-      { removeDiacritics: true },
+      { diacritics: { all: "remove" as const } },
     ]
   ) {
     for (const from of ["greek", "beta-code"] as const) {

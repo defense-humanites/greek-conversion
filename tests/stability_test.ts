@@ -9,7 +9,7 @@ interface OptionProfile {
 
 const PROFILES = [
   { name: "defaults", options: {} },
-  { name: "without diacritics", options: { removeDiacritics: true } },
+  { name: "without diacritics", options: { diacritics: { all: "remove" } } },
   {
     name: "without accents",
     options: { diacritics: { accents: "remove" } },
@@ -52,20 +52,20 @@ const PROFILES = [
   },
   {
     name: "lowercase output",
-    options: { orthography: { letterCase: "lowercase" } },
+    options: { text: { letterCase: "lowercase" } },
   },
   {
     name: "uppercase output",
-    options: { orthography: { letterCase: "uppercase" } },
+    options: { text: { letterCase: "uppercase" } },
   },
   {
     name: "title-case output",
-    options: { orthography: { letterCase: "title" } },
+    options: { text: { letterCase: "title" } },
   },
   {
     name: "circumflex long vowels and contextual upsilon",
     options: {
-      orthography: {
+      transliteration: {
         longVowels: "circumflex",
         upsilon: "y-with-diphthong-u",
       },
@@ -74,16 +74,13 @@ const PROFILES = [
   {
     name: "circumflex long vowels and universal y",
     options: {
-      orthography: {
-        longVowels: "circumflex",
-        upsilon: "y",
-      },
+      transliteration: { longVowels: "circumflex", upsilon: "y" },
     },
   },
   {
     name: "Greek glyph policies",
     options: {
-      orthography: {
+      greek: {
         doubleRho: "smooth-rough",
         medialBeta: "symbol",
         sigma: "lunate",
@@ -92,12 +89,12 @@ const PROFILES = [
   },
   {
     name: "uniform medial final sigma",
-    options: { orthography: { finalSigma: "medial" } },
+    options: { greek: { finalSigma: "medial" } },
   },
   {
     name: "literal transliteration policies",
     options: {
-      orthography: {
+      transliteration: {
         coronis: "apostrophe",
         nasalGamma: "literal",
         upsilon: "y",
@@ -106,28 +103,26 @@ const PROFILES = [
   },
   {
     name: "semantic Greek coronis transliteration",
-    options: { orthography: { coronis: "greek" } },
+    options: { transliteration: { coronis: "greek" } },
   },
   {
     name: "lossy output policies",
     options: {
-      removeDiacritics: true,
-      orthography: {
-        dentalSigma: "assimilate",
-        numerals: "decimal",
-      },
+      diacritics: { all: "remove" },
+      greek: { dentalSigma: "assimilate" },
+      text: { numerals: "decimal" },
     },
   },
   {
     name: "monotonic Greek with system acute",
     options: {
-      orthography: { accentuation: "monotonic" },
+      greek: { accentuation: "monotonic" },
     },
   },
   {
     name: "modern transliteration variants",
     options: {
-      orthography: {
+      transliteration: {
         beta: "v",
         chi: "kh",
         eta: "i",
@@ -136,15 +131,15 @@ const PROFILES = [
         phi: "f",
         rho: "systematic",
         upsilon: "y",
-        whitespace: "collapse",
         xi: "ks",
       },
+      text: { whitespace: "collapse" },
     },
   },
   {
     name: "ALA-LC modern digraphs",
     options: {
-      orthography: {
+      transliteration: {
         beta: "v",
         muPi: "b-initial",
         nasalGamma: "nasal-medial-kappa",
@@ -155,7 +150,7 @@ const PROFILES = [
   {
     name: "decomposed Greek with forced punctuation",
     options: {
-      unicode: {
+      greek: {
         composition: "decomposed",
         acute: "oxia",
         questionMark: "greek",
@@ -252,7 +247,7 @@ Deno.test("context-changing diacritic policies are stable for every target", () 
 Deno.test("Greek coronis provenance is stable for every target", () => {
   const profile = {
     name: "semantic Greek coronis transliteration",
-    options: { orthography: { coronis: "greek" } },
+    options: { transliteration: { coronis: "greek" } },
   } as const satisfies OptionProfile;
 
   for (const to of FORMATS) {

@@ -97,7 +97,8 @@ Deno.test("resolves custom options after nested preset options", () => {
   const resolved = resolveConversionOptions({
     preset: "ala-lc-modern",
     diacritics: { accents: "preserve" },
-    orthography: { beta: "b", letterCase: "uppercase" },
+    transliteration: { beta: "b" },
+    text: { letterCase: "uppercase" },
   });
 
   assertEquals(resolved, {
@@ -111,14 +112,17 @@ Deno.test("resolves custom options after nested preset options", () => {
       iotaSubscript: "remove",
       quantity: "remove",
     },
-    orthography: {
-      ...DEFAULT_CONVERSION_OPTIONS.orthography,
+    transliteration: {
+      ...DEFAULT_CONVERSION_OPTIONS.transliteration,
       beta: "b",
       muPi: "b-initial",
       nasalGamma: "nasal-medial-kappa",
       nuTau: "d-underline-initial",
-      numerals: "decimal",
       upsilon: "y-with-diphthong-u",
+    },
+    text: {
+      ...DEFAULT_CONVERSION_OPTIONS.text,
+      numerals: "decimal",
       letterCase: "uppercase",
     },
   });
@@ -126,22 +130,30 @@ Deno.test("resolves custom options after nested preset options", () => {
 
 Deno.test("publishes immutable effective defaults", () => {
   const longVowels: "macron" =
-    DEFAULT_CONVERSION_OPTIONS.orthography.longVowels;
+    DEFAULT_CONVERSION_OPTIONS.transliteration.longVowels;
 
   assertEquals(resolveConversionOptions(), DEFAULT_CONVERSION_OPTIONS);
   assertEquals(longVowels, "macron");
   assertEquals(Object.isFrozen(DEFAULT_CONVERSION_OPTIONS), true);
-  assertEquals(Object.isFrozen(DEFAULT_CONVERSION_OPTIONS.orthography), true);
-  assertEquals(Object.isFrozen(DEFAULT_CONVERSION_OPTIONS.unicode), true);
-  assertEquals(Object.isFrozen(DEFAULT_CONVERSION_OPTIONS.diacritics), true);
+  for (
+    const group of [
+      "transliteration",
+      "greek",
+      "betaCode",
+      "text",
+      "diacritics",
+    ] as const
+  ) {
+    assertEquals(Object.isFrozen(DEFAULT_CONVERSION_OPTIONS[group]), true);
+  }
 });
 
 Deno.test("returns detached preset option objects", () => {
   const first = getPresetOptions("ala-lc-modern");
   const second = getPresetOptions("ala-lc-modern");
 
-  first.orthography!.beta = "b";
-  assertEquals(second.orthography!.beta, "v");
+  first.transliteration!.beta = "b";
+  assertEquals(second.transliteration!.beta, "v");
 });
 
 Deno.test("rejects unknown preset names at runtime", () => {
@@ -220,7 +232,7 @@ Deno.test("BnF renders keraiai only in transliteration and reports their loss", 
   assertEquals(
     convert("αʹ", "greek", "transliteration", {
       preset: "bnf-core",
-      orthography: { numerals: "decimal" },
+      text: { numerals: "decimal" },
     }),
     "1",
   );
@@ -238,7 +250,7 @@ Deno.test("BnF renders keraiai only in transliteration and reports their loss", 
   assertNfcEquals(
     convert(greek, "greek", "transliteration", {
       preset: "bnf-core",
-      orthography: { keraia: "greek" },
+      transliteration: { keraia: "greek" },
     }),
     "bʹ ͵aʹ, bʹ",
   );
@@ -272,7 +284,7 @@ Deno.test("BnF distinguishes structural length from explicit quantity marks", ()
   assertNfcEquals(
     convert("ᾱ ᾰ", "greek", "transliteration", {
       preset: "bnf-core",
-      orthography: { quantity: "preserve" },
+      transliteration: { quantity: "preserve" },
     }),
     "ā ă",
   );
@@ -361,7 +373,7 @@ Deno.test("core presets remain conservative and mixable", () => {
   assertNfcEquals(
     convert("κἀγώ", "greek", "transliteration", {
       preset: "bnf-core",
-      orthography: { coronis: "greek" },
+      transliteration: { coronis: "greek" },
     }),
     "ka᾽gṓ",
   );
@@ -376,14 +388,14 @@ Deno.test("core presets remain conservative and mixable", () => {
   assertNfcEquals(
     convert("ϙ", "greek", "transliteration", {
       preset: "bnf-core",
-      orthography: { archaicKoppa: "k-dot-below" },
+      transliteration: { archaicKoppa: "k-dot-below" },
     }),
     "ḳ",
   );
   assertNfcEquals(
     convert("ϳ", "greek", "beta-code", {
       preset: "tlg-core",
-      orthography: { betaCodeYot: "j" },
+      betaCode: { yot: "j" },
     }),
     "J",
   );
@@ -423,4 +435,35 @@ Deno.test("convertDetailed reports losses introduced by presets", () => {
   assertEquals(bnfKoppa.losses.map((loss) => loss.code), [
     "unrepresented-grapheme",
   ]);
+});
+
+Deno.test("the default transliteration is the SBL academic style", () => {
+  const texts = [
+    "Θουκυδίδης Ἀθηναῖος ξυνέγραψε τὸν πόλεμον τῶν Πελοποννησίων καὶ Ἀθηναίων",
+    "ψυχή ῥήτωρ αὐτός Ἅιδης ὑΐδιον εὕρηκα οὗτος ἄϋλος Μοῦσα",
+    "ΑΙΑΣ Αἴας ᾍδης ῠ ῡ υἱός",
+  ];
+  for (const text of texts) {
+    for (const from of ["greek", "beta-code"] as const) {
+      const input = convert(text, "greek", from);
+      assertEquals(
+        convert(input, from, "transliteration"),
+        convert(input, from, "transliteration", { preset: "sbl-academic" }),
+        text,
+      );
+    }
+    const latin = convert(text, "greek", "transliteration");
+    assertEquals(
+      convert(latin, "transliteration", "greek"),
+      convert(latin, "transliteration", "greek", { preset: "sbl-academic" }),
+    );
+  }
+  assertEquals(
+    DEFAULT_CONVERSION_OPTIONS.transliteration.upsilon,
+    "y-with-diphthong-u",
+  );
+  assertEquals(
+    resolveConversionOptions({ preset: "sbl-academic" }),
+    resolveConversionOptions(),
+  );
 });

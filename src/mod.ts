@@ -9,23 +9,14 @@
  * @module
  */
 
-import {
-  encode,
-  encodeResolved,
-  encodeTracked,
-  parse,
-  parseResolved,
-} from "./conversion.ts";
-export {
-  CharacterScopeError,
-  Converter,
-  createConverter,
-} from "./converter.ts";
+import { encodeResolved, encodeTracked, parseResolved } from "./conversion.ts";
+export { CharacterScopeError, createConverter } from "./converter.ts";
 export type {
   CharacterAliasDefinition,
   CharacterRepertoireDefinition,
   CharacterScopeDiagnostic,
   CharacterScopeDiagnosticCode,
+  Converter,
   ConverterConfiguration,
   ConverterConversionResult,
   ConverterOutOfScopeBehavior,
@@ -45,7 +36,6 @@ import {
 } from "./model.ts";
 import type {
   ConversionOptions,
-  GreekUnicodeOptions,
   ResolvedConversionOptions,
 } from "./options.ts";
 import { type ReadPositions, readSpans } from "./parsers/positions.ts";
@@ -71,6 +61,7 @@ export type {
 export type {
   ArchaicKoppaTransliteration,
   BetaCodeCase,
+  BetaCodeOptions,
   BetaCodeYot,
   BetaTransliteration,
   ChiTransliteration,
@@ -80,6 +71,7 @@ export type {
   CoronisTransliteration,
   DefaultConversionOptions,
   DentalSigmaOrthography,
+  DiacriticClassOptions,
   DiacriticDisposition,
   DiacriticOptions,
   DoubleRhoOrthography,
@@ -89,8 +81,8 @@ export type {
   GreekAccentuation,
   GreekAcuteForm,
   GreekAnoTeleiaForm,
+  GreekOptions,
   GreekQuestionMarkForm,
-  GreekUnicodeOptions,
   HyphenTransliteration,
   KeraiaTransliteration,
   LetterCaseOrthography,
@@ -102,7 +94,6 @@ export type {
   NumeralOrthography,
   NuTauTransliteration,
   OptionValueTable,
-  OrthographyOptions,
   PhiTransliteration,
   Preset,
   QuantityTransliteration,
@@ -110,6 +101,8 @@ export type {
   RhoTransliteration,
   SigmaOrthography,
   SmoothBreathingTransliteration,
+  TextOptions,
+  TransliterationOptions,
   UnicodeComposition,
   UpsilonTransliteration,
   WhitespaceOrthography,
@@ -118,6 +111,7 @@ export type {
 export {
   CONVERSION_OPTION_VALUES,
   DEFAULT_CONVERSION_OPTIONS,
+  OptionError,
 } from "./options.ts";
 export {
   getPresetMetadata,
@@ -126,94 +120,12 @@ export {
   resolveConversionOptions,
 } from "./presets.ts";
 export type {
-  OutOfScopeBehavior,
   PresetCoverage,
   PresetMetadata,
   PresetOptions,
+  PresetOutOfScopeBehavior,
   PresetReference,
 } from "./presets.ts";
-export { toUnicodeCodePoints } from "./unicode.ts";
-
-/**
- * Removes removable marks and returns the canonical spelling of the selected
- * format. A rough breathing's `h` remains in transliteration because it is a
- * letter there; `diacritics.roughBreathing: "remove"` removes it explicitly.
- *
- * Structural distinctions required to identify a letter, such as `η → ē` and
- * `ω → ō`, are retained. Greek sigma glyphs are retained unless an explicit
- * orthographic policy overrides them. Context is analyzed before marks are
- * hidden.
- *
- * @example
- * ```ts
- * removeDiacritics("a)/nqrwpos", "beta-code"); // "anqrwpos"
- * ```
- */
-export function removeDiacritics(
-  input: string,
-  format: Format,
-  options: ConversionOptions = {},
-): string {
-  const resolved = resolveConversionOptions(options);
-  assertTextInput(input);
-  assertFormat(format);
-  return encodeResolved(
-    parseResolved(input, format, resolved, true),
-    format,
-    resolveConversionOptions({ ...options, removeDiacritics: true }),
-  );
-}
-
-/**
- * Folds Greek letter-shape variants to a uniform comparison spelling.
- *
- * Medial beta `ϐ` becomes `β`, lunate sigma `ϲ` becomes `σ`, and every
- * lowercase final sigma `ς` becomes medial `σ`. Case and semantic diacritics
- * are preserved by default. They remain independently controllable through
- * the ordinary conversion options.
- *
- * @example
- * ```ts
- * foldGreekVariants("ϐίος λόγος ϲῶμα"); // "βίοσ λόγοσ σῶμα"
- * foldGreekVariants("ϐΊΟΣ", {
- *   orthography: { letterCase: "lowercase" },
- * }); // "βίοσ"
- * ```
- */
-export function foldGreekVariants(
-  input: string,
-  options: ConversionOptions = {},
-): string {
-  const resolved = resolveConversionOptions(options);
-  assertTextInput(input);
-  return encodeResolved(
-    parseResolved(input, "greek", resolved, true),
-    "greek",
-    {
-      ...resolved,
-      orthography: {
-        ...resolved.orthography,
-        medialBeta: "standard",
-        sigma: "standard",
-        finalSigma: "medial",
-      },
-    },
-  );
-}
-
-/**
- * Re-encodes Greek text with explicit Unicode representation preferences.
- *
- * This helper does not change the Greek orthography. Forced oxia and Greek
- * punctuation scalars are applied after composition and may therefore produce
- * text that is canonically equivalent to NFC without itself being NFC.
- */
-export function formatGreekUnicode(
-  input: string,
-  options: GreekUnicodeOptions = {},
-): string {
-  return encode(parse(input, "greek"), "greek", { unicode: options });
-}
 
 /**
  * Converts text between Greek, Beta Code, and scientific transliteration.
@@ -222,9 +134,12 @@ export function formatGreekUnicode(
  * fixed formats and options, but a reverse conversion is not necessarily
  * lossless; use {@link convertDetailed} when that distinction matters.
  *
+ * Without a preset, transliteration follows the SBL academic style, which the
+ * `sbl-academic` preset names.
+ *
  * @throws {TypeError} If `input` is not a string.
- * @throws {RangeError} If a format, preset, option key, or option value is
- * unknown.
+ * @throws {RangeError} If a format is unknown; an {@link OptionError} (a
+ * `RangeError`) if a preset, an option key, or an option value is.
  */
 export function convert(
   input: string,
@@ -245,7 +160,7 @@ export function convert(
  * @example
  * ```ts
  * reencode("λόγος", "greek", {
- *   orthography: { finalSigma: "medial" },
+ *   greek: { finalSigma: "medial" },
  * }); // "λόγοσ"
  * ```
  */
@@ -272,8 +187,8 @@ export function reencode(
  * positions are mapped back to the caller's strings.
  *
  * @throws {TypeError} If `input` is not a string.
- * @throws {RangeError} If a format, preset, option key, or option value is
- * unknown.
+ * @throws {RangeError} If a format is unknown; an {@link OptionError} (a
+ * `RangeError`) if a preset, an option key, or an option value is.
  */
 export function convertDetailed(
   input: string,
@@ -317,52 +232,4 @@ function runConversion(
   const resolved = resolveConversionOptions(options);
   const source = parseResolved(input, from, resolved, true);
   return { source, output: encodeResolved(source, to, resolved), resolved };
-}
-
-/** Converts Greek text to canonical Beta Code. */
-export function greekToBetaCode(
-  input: string,
-  options: ConversionOptions = {},
-): string {
-  return convert(input, "greek", "beta-code", options);
-}
-
-/** Converts Greek text to scientific transliteration. */
-export function greekToTransliteration(
-  input: string,
-  options: ConversionOptions = {},
-): string {
-  return convert(input, "greek", "transliteration", options);
-}
-
-/** Converts Beta Code to canonical Greek text. */
-export function betaCodeToGreek(
-  input: string,
-  options: ConversionOptions = {},
-): string {
-  return convert(input, "beta-code", "greek", options);
-}
-
-/** Converts Beta Code to scientific transliteration. */
-export function betaCodeToTransliteration(
-  input: string,
-  options: ConversionOptions = {},
-): string {
-  return convert(input, "beta-code", "transliteration", options);
-}
-
-/** Converts scientific transliteration to canonical Greek text. */
-export function transliterationToGreek(
-  input: string,
-  options: ConversionOptions = {},
-): string {
-  return convert(input, "transliteration", "greek", options);
-}
-
-/** Converts scientific transliteration to canonical Beta Code. */
-export function transliterationToBetaCode(
-  input: string,
-  options: ConversionOptions = {},
-): string {
-  return convert(input, "transliteration", "beta-code", options);
 }

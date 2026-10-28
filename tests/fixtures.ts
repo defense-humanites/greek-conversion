@@ -14,12 +14,12 @@ export const EQUIVALENCES = [
   { greek: "αἵρεσις", betaCode: "ai(/resis", transliteration: "haíresis" },
   { greek: "εὕρηκα", betaCode: "eu(/rhka", transliteration: "heúrēka" },
   { greek: "οὗτος", betaCode: "ou(=tos", transliteration: "hoũtos" },
-  { greek: "ἄϋλος", betaCode: "a)/u+los", transliteration: "áülos" },
-  { greek: "ὑΐδιον", betaCode: "u(i+/dion", transliteration: "huḯdion" },
+  { greek: "ἄϋλος", betaCode: "a)/u+los", transliteration: "áÿlos" },
+  { greek: "ὑΐδιον", betaCode: "u(i+/dion", transliteration: "hyḯdion" },
   {
     greek: "πολύρριζος",
     betaCode: "polu/rrizos",
-    transliteration: "polúrrhizos",
+    transliteration: "polýrrhizos",
   },
   { greek: "ῥήτωρ", betaCode: "r(h/twr", transliteration: "rhḗtōr" },
   { greek: "ἄγγελος", betaCode: "a)/ggelos", transliteration: "ángelos" },
@@ -63,7 +63,7 @@ export const EQUIVALENCES = [
     betaCode:
       "*(/oti me\\n u(mei=s, w)= a)/ndres *)aqhnai=oi, pepo/nqate u(po\\ tw=n e)mw=n kathgo/rwn, ou)k oi)=da:",
     transliteration:
-      "Hóti mèn humeĩs, ō̃ ándres Athēnaĩoi, pepónthate hupò tō̃n emō̃n katēgórōn, ouk oĩda;",
+      "Hóti mèn hymeĩs, ō̃ ándres Athēnaĩoi, pepónthate hypò tō̃n emō̃n katēgórōn, ouk oĩda;",
   },
   // John 1:1.
   {
@@ -84,11 +84,11 @@ export const ACCEPTED_ALIASES = [
   { format: "greek", input: "βάρϐαρος", transliteration: "bárbaros" },
   { format: "greek", input: "ϲοϲ", transliteration: "sos" },
   { format: "beta-code", input: "S3oS3", transliteration: "sos" },
-  { format: "greek", input: "πολύῤῥιζος", transliteration: "polúrrhizos" },
+  { format: "greek", input: "πολύῤῥιζος", transliteration: "polýrrhizos" },
   {
     format: "beta-code",
     input: "polu/r)r(izos",
-    transliteration: "polúrrhizos",
+    transliteration: "polýrrhizos",
   },
 ] as const satisfies readonly {
   format: Format;
@@ -107,19 +107,19 @@ export interface LossyConversion {
 }
 
 const DENTAL_SIGMA_ASSIMILATION = {
-  orthography: { dentalSigma: "assimilate" },
+  greek: { dentalSigma: "assimilate" },
 } as const satisfies ConversionOptions;
 
 const DECIMAL_NUMERALS = {
-  orthography: { numerals: "decimal" },
+  text: { numerals: "decimal" },
 } as const satisfies ConversionOptions;
 
 const VISIBLE_CORONIS = {
-  orthography: { coronis: "apostrophe" },
+  transliteration: { coronis: "apostrophe" },
 } as const satisfies ConversionOptions;
 
 const MONOTONIC_GREEK = {
-  orthography: { accentuation: "monotonic" },
+  greek: { accentuation: "monotonic" },
 } as const satisfies ConversionOptions;
 
 export const LOSSY_CONVERSIONS = [
@@ -128,7 +128,7 @@ export const LOSSY_CONVERSIONS = [
     sourceFormat: "greek",
     intermediateFormat: "transliteration",
     source: "πολύῤῥιζος",
-    intermediate: "polúrrhizos",
+    intermediate: "polýrrhizos",
     canonicalRoundTrip: "πολύρριζος",
   },
   {
@@ -136,7 +136,7 @@ export const LOSSY_CONVERSIONS = [
     sourceFormat: "beta-code",
     intermediateFormat: "transliteration",
     source: "polu/r)r(izos",
-    intermediate: "polúrrhizos",
+    intermediate: "polýrrhizos",
     canonicalRoundTrip: "polu/rrizos",
   },
   {
@@ -224,7 +224,7 @@ export const LOSSY_CONVERSIONS = [
     source: "ἄνθρωπος",
     intermediate: "anthrōpos",
     canonicalRoundTrip: "ἀνθρωπος",
-    options: { removeDiacritics: true },
+    options: { diacritics: { all: "remove" } },
   },
   {
     name: "decimal numerals cannot reconstruct alphabetic notation",
@@ -247,11 +247,11 @@ export const LOSSY_CONVERSIONS = [
 ] as const satisfies readonly LossyConversion[];
 
 export const SMOOTH_ROUGH_DOUBLE_RHO = {
-  orthography: { doubleRho: "smooth-rough" },
+  greek: { doubleRho: "smooth-rough" },
 } as const satisfies ConversionOptions;
 
 export const MEDIAL_BETA_SYMBOL = {
-  orthography: { medialBeta: "symbol" },
+  greek: { medialBeta: "symbol" },
 } as const satisfies ConversionOptions;
 
 export const FORMATS = ["greek", "beta-code", "transliteration"] as const;
