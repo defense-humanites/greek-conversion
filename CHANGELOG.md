@@ -7,7 +7,24 @@ change.
 
 ## [Unreleased]
 
+Sixth release candidate for `1.0.0`. It settles the public API for the stable
+release: the ten convenience functions are removed, the options are regrouped by
+what they describe, the `removeDiacritics` flag becomes `diacritics.all`, the
+default transliteration is the SBL academic style, and option errors are
+`OptionError`s. Every removed function, key, and flag has a one-line replacement
+in the migration guide, and an old key or flag throws an error that names it. It
+also adds positions: where each token was read and written.
+
 ### Added
+
+- `diacritics.all`, which sets every diacritic class at once and yields to a
+  class named alongside it (`{ all: "remove", roughBreathing: "preserve" }`). It
+  is expanded where it is written, so a caller's `all` overrides every class a
+  preset set. The presets that remove most marks are written with it.
+- `OptionError`, a `RangeError` thrown for an unknown preset, option key, or
+  option value, and for the one incompatible pair of values, with the option's
+  `path`, what was `received`, what is `accepted`, and the `replacement` of a
+  key or value an earlier release candidate knew.
 
 - Positions. `convertDetailed()` returns `spans`, one per token of the parsed
   source: where the token was read in the input (`inputStart`, `inputEnd`) and
@@ -15,24 +32,63 @@ change.
   `ConversionLoss` carries the `offset` and `length` of its token in the input.
   The `./document` entry point gains `parseDetailed()`, which returns the
   document with the input span of each token. Positions are offsets in UTF-16
-  code units in the input as supplied and in the output as returned; the
-  ordering and sharing rules (tokens read from one character, tokens written
-  as one, tokens with no output) are in the
-  [conversion-analysis contract](docs/conversion-analysis.md#positions). A
-  bound converter reports the same positions, before its own spellings are
-  substituted on input and after its custom forms are written on output, and
-  its `CharacterScopeDiagnostic`s carry the `offset` and `length` of the
-  character they report, in results and in `CharacterScopeError`. `convert()`
-  is unchanged in output and speed; `convertDetailed()` takes about a third
-  longer on long texts.
+  code units in the input as supplied and in the output as returned: a
+  character that normalization leaves unchanged, or changes on its own, keeps
+  its own units, and the tokens of a group that it composes, decomposes, or
+  reorders share the group's range. Starts and ends
+  never decrease; the grouping and sharing rules (tokens read from one
+  character, a token read from part of a character inside the previous one's
+  span, tokens written as one, tokens with no output) are in the
+  [conversion-analysis contract](docs/conversion-analysis.md#positions). A bound
+  converter reports the same positions, before its own spellings are substituted
+  on input and after its custom forms are written on output, and its
+  `CharacterScopeDiagnostic`s carry the `offset` and `length` of the character
+  they report, in results and in `CharacterScopeError`. `convert()` is unchanged
+  in output and speed; `convertDetailed()` costs about a microsecond more than
+  in `1.0.0-rc.5` on a word (0.6 to 1.3 µs), 3 to 5 µs more on a sentence, and
+  10 to 25 % more on long texts.
 
 ### Changed
 
+- The options are grouped by what they describe. `orthography` and `unicode` are
+  replaced by `transliteration` (the Latin writing system, 20 keys), `greek`
+  (letter shapes, accentuation, assimilation, and the Unicode form of the
+  output; `sigma` and `doubleRho` reach Beta Code too), `betaCode` (`case`,
+  `yot`, formerly `betaCodeCase` and `betaCodeYot`), and `text` (`letterCase`,
+  `whitespace`, `numerals`, in every format); `diacritics` is unchanged. Keys
+  and values keep their names and meanings, and output is unchanged. The types
+  `OrthographyOptions` and `GreekUnicodeOptions` are replaced by
+  `TransliterationOptions`, `GreekOptions`, `BetaCodeOptions`, and
+  `TextOptions`; `DEFAULT_CONVERSION_OPTIONS`, `CONVERSION_OPTION_VALUES`, and
+  `ResolvedConversionOptions` follow.
+- Without a preset, transliteration follows the SBL academic style: the default
+  `upsilon` is `"y-with-diphthong-u"` (`ψυχή` → `psychḗ`, `ὑΐδιον` → `hyḯdion`),
+  as `sbl-academic`, `sbl-general`, and both ALA-LC presets already wrote it.
+  About six words in a hundred of a classical text change; `perseus` and
+  `tlg-core`, which set nothing for Latin, follow the default. Reading follows:
+  `u` and `y` are both upsilon, and a `y` after a vowel is read as a hiatus, as
+  under `sbl-academic`.
+- `Converter` is exported as a type only: `createConverter()` is the one way to
+  make one. `OutOfScopeBehavior`, the type of a preset's metadata, is renamed
+  `PresetOutOfScopeBehavior`, next to `ConverterOutOfScopeBehavior`.
 - `CharacterScopeDiagnostic.index` now indexes the source document as the
   conversion prepared it, like `losses.index` and `spans`, rather than the
-  document as read: a character preserved as several literals is reported at
-  the first of them, and the diagnostics after it shift accordingly (see the
+  document as read: a character preserved as several literals is reported at the
+  first of them, and the diagnostics after it shift accordingly (see the
   migration guide).
+
+### Removed
+
+- The ten convenience functions: `greekToBetaCode`, `greekToTransliteration`,
+  `betaCodeToGreek`, `betaCodeToTransliteration`, `transliterationToGreek`,
+  `transliterationToBetaCode`, `removeDiacritics()`, `foldGreekVariants()`,
+  `formatGreekUnicode()`, and the debugging helper `toUnicodeCodePoints()`. Each
+  was one call to `convert()` or `reencode()` with fixed arguments; the README's
+  recipes and the migration guide give those calls.
+- The `removeDiacritics: true` flag, replaced by `diacritics.all: "remove"`. The
+  flag also kept the rough breathing's `h` in transliteration and forced `sigma`
+  and `finalSigma` to `"preserve"`; both are now ordinary options, shown as
+  recipes in the README (_Remove all or some diacritics_).
 
 ## [1.0.0-rc.5] - 2026-10-26
 
@@ -83,9 +139,9 @@ same content.
   preset's name: `muPi` (`"mp"`, `"b-initial"`, `"b-initial-final"`), `nuTau`
   (`"nt"`, `"d-initial"`, `"d-underline-initial"`), and
   `nasalGamma: "nasal-medial-kappa"` for the ALA-LC rule on `γκ`, which
-  `modernDigraphs: "ala-lc"` handled apart from `nasalGamma`. `ala-lc-modern`
-  is unchanged in output; overriding its `nasalGamma` now applies to `γκ` too.
-  The old key throws a `RangeError` that names the new ones. See the migration
+  `modernDigraphs: "ala-lc"` handled apart from `nasalGamma`. `ala-lc-modern` is
+  unchanged in output; overriding its `nasalGamma` now applies to `γκ` too. The
+  old key throws a `RangeError` that names the new ones. See the migration
   guide.
 
 - The documentation of custom characters (`createConverter({ characters })`) no

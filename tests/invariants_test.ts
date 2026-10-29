@@ -116,7 +116,7 @@ Deno.test("orthographic transformations are immutable", () => {
     literal("]"),
   ];
   const transformed = applyOrthography(source, {
-    orthography: { doubleRho: "smooth-rough" },
+    greek: { doubleRho: "smooth-rough" },
   });
 
   assertEquals(source[1], grapheme("rho"));

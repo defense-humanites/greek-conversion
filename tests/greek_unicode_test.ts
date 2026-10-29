@@ -1,13 +1,9 @@
 import { assertEquals } from "@std/assert";
-import {
-  convert,
-  formatGreekUnicode,
-  toUnicodeCodePoints,
-} from "../src/mod.ts";
+import { convert } from "../src/mod.ts";
 import { applyGreekOrthography, parse } from "../src/document.ts";
 
-const POLYTONIC = { orthography: { accentuation: "polytonic" } } as const;
-const MONOTONIC = { orthography: { accentuation: "monotonic" } } as const;
+const POLYTONIC = { greek: { accentuation: "polytonic" } } as const;
+const MONOTONIC = { greek: { accentuation: "monotonic" } } as const;
 
 Deno.test("uses the accentuation system to select tonos or oxia", () => {
   // Polysyllables, because monotonic monosyllables carry no accent.
@@ -17,14 +13,14 @@ Deno.test("uses the accentuation system to select tonos or oxia", () => {
   assertEquals(
     convert("άβα ΐβα", "greek", "greek", {
       ...POLYTONIC,
-      unicode: { acute: "tonos" },
+      greek: { acute: "tonos" },
     }),
     "άβα ΐβα",
   );
   assertEquals(
     convert("άβα ΐβα", "greek", "greek", {
       ...MONOTONIC,
-      unicode: { acute: "oxia" },
+      greek: { acute: "oxia" },
     }),
     "άβα ΐβα",
   );
@@ -33,7 +29,7 @@ Deno.test("uses the accentuation system to select tonos or oxia", () => {
 Deno.test("keeps polytonic combinations without a tonos alternative", () => {
   assertEquals(
     convert("ἄ ᾴ", "greek", "greek", {
-      unicode: { acute: "tonos" },
+      greek: { acute: "tonos" },
     }),
     "ἄ ᾴ",
   );
@@ -107,10 +103,10 @@ Deno.test("monotonic rendering does not create blocked contractions", () => {
 
 Deno.test("decomposed output uses combining acute regardless of its form", () => {
   const tonos = convert("ά ΐ ἄ", "greek", "greek", {
-    unicode: { composition: "decomposed", acute: "tonos" },
+    greek: { composition: "decomposed", acute: "tonos" },
   });
   const oxia = convert("ά ΐ ἄ", "greek", "greek", {
-    unicode: { composition: "decomposed", acute: "oxia" },
+    greek: { composition: "decomposed", acute: "oxia" },
   });
 
   assertEquals(tonos, "α\u0301 ι\u0308\u0301 α\u0313\u0301");
@@ -119,29 +115,25 @@ Deno.test("decomposed output uses combining acute regardless of its form", () =>
 });
 
 Deno.test("forces canonically unstable Greek punctuation on demand", () => {
-  const formatted = formatGreekUnicode("ά;·", {
-    acute: "oxia",
-    questionMark: "greek",
-    anoTeleia: "greek",
+  const formatted = convert("\u03AC;\u00B7", "greek", "greek", {
+    greek: { acute: "oxia", questionMark: "greek", anoTeleia: "greek" },
   });
 
-  assertEquals(formatted, "ά\u037E\u0387");
-  assertEquals(toUnicodeCodePoints(formatted), ["U+1F71", "U+037E", "U+0387"]);
+  assertEquals(formatted, "\u1F71\u037E\u0387");
   assertEquals(formatted === formatted.normalize("NFC"), false);
 });
 
-Deno.test("formatGreekUnicode shares the Greek encoder policy", () => {
-  const unicode = {
-    acute: "tonos",
-    questionMark: "semicolon",
-    anoTeleia: "middle-dot",
-  } as const;
-
+Deno.test("the Unicode preferences keep the canonical scalars on demand", () => {
   assertEquals(
-    formatGreekUnicode("ά;·", unicode),
-    convert("ά;·", "greek", "greek", { unicode }),
+    convert("\u03AC;\u00B7", "greek", "greek", {
+      greek: {
+        acute: "tonos",
+        questionMark: "semicolon",
+        anoTeleia: "middle-dot",
+      },
+    }),
+    "\u03AC;\u00B7",
   );
-  assertEquals(formatGreekUnicode("ά;·", unicode), "ά;·");
 });
 
 Deno.test("Greek orthography is immutable", () => {
@@ -158,8 +150,4 @@ Deno.test("Greek orthography is immutable", () => {
   );
   assertEquals(transformed === source, false);
   assertEquals(applyGreekOrthography(source) === source, false);
-});
-
-Deno.test("reports Unicode scalar values instead of UTF-16 code units", () => {
-  assertEquals(toUnicodeCodePoints("A😀ϳ"), ["U+0041", "U+1F600", "U+03F3"]);
 });

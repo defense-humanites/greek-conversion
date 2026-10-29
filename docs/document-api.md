@@ -76,10 +76,13 @@ or conformity to a preset.
 ## Parse, validate, encode
 
 `parse(input, format, options)` interprets a representation into semantic
-tokens; some transliteration spellings depend on the selected options. It
-does not perform the target's orthographic transformations. Use the same
-preset and parsing options when encoding the result, unless a deliberate
-change of policy is intended:
+tokens; some transliteration spellings depend on the selected options. The
+options are validated for every format, but only the `transliteration` group,
+`greek.accentuation`, and the disposition of the smooth breathing
+(`diacritics.smoothBreathing`, or `diacritics.all`) change how text is read:
+reading Greek or Beta Code depends on no option. It does not perform the target's orthographic
+transformations. Use the same preset and parsing options when encoding the
+result, unless a deliberate change of policy is intended:
 
 ```ts
 const options = { preset: "bnf-core" } as const;
@@ -94,10 +97,13 @@ source distinctions removed by the view.
 `parseDetailed(input, format, options)` returns the same document together
 with `spans`, the range of each token in the input, as offsets in UTF-16 code
 units in the input exactly as supplied (the reader normalizes the text, but
-the spans are mapped back to the caller's string). Spans are in increasing
-order and cover the input; tokens read from one character share its span.
-The ranges let an application relate tokens to a selection or an editor
-position, or slice the input text of a token:
+the spans are mapped back to the caller's string). Spans are in order (their
+starts and their ends never decrease) and cover the input; tokens read from
+one character share its span, and a token read from part of a character that
+the previous token also draws on lies inside that token's span and ends with
+it (see [the positions contract](conversion-analysis.md#positions)). The ranges let
+an application relate tokens to a selection or an editor position, or slice
+the input text of a token:
 
 ```ts
 import { parseDetailed } from "@humanities/greek-conversion/document";

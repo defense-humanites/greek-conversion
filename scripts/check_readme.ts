@@ -9,7 +9,7 @@
  *     convert("a)/nqrwpos", "beta-code", "greek"); // → ἄνθρωπος
  *
  *     convert(text, "greek", "transliteration", {
- *       removeDiacritics: true,
+ *       diacritics: { all: "remove" },
  *     });
  *     // → Hellēsin egeneto …
  *

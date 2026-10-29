@@ -27,7 +27,7 @@ Deno.test("keeps ASCII hyphen in canonical transliteration unless typography is 
   );
   assertNfcEquals(
     convert("hodos-rhodos", "transliteration", "transliteration", {
-      orthography: { hyphen: "typographic" },
+      transliteration: { hyphen: "typographic" },
     }),
     "hodos‐rhodos",
   );

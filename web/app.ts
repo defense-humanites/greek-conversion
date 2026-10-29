@@ -3,6 +3,7 @@ import {
   createConverter,
   FORMATS,
   listPresetMetadata,
+  resolveConversionOptions,
 } from "../src/mod.ts";
 import type {
   ConversionLoss,
@@ -249,7 +250,7 @@ const EXAMPLES: readonly Example[] = [
     text: "Ποῦ εἶσαι; Ἢ ἐδῶ ἢ ἐκεῖ, καὶ ὄχι ἀλλοῦ.",
     from: "greek",
     to: "greek",
-    options: { orthography: { accentuation: "monotonic" } },
+    options: { greek: { accentuation: "monotonic" } },
   },
   {
     label: "Modern Greek, ALA-LC",
@@ -351,9 +352,14 @@ function showPreset(): void {
   presetBody.append(description, list, references);
 }
 
+/**
+ * Reads one JSON settings field. The keys are checked against `allowed`
+ * when a list is given; the conversion options pass none, so that the
+ * library's own error names the replacement of a key of an earlier release.
+ */
 function parseSettings<T>(
   input: HTMLTextAreaElement,
-  allowed: readonly string[],
+  allowed: readonly string[] | undefined,
   label: string,
 ): T {
   let value: unknown;
@@ -365,11 +371,13 @@ function parseSettings<T>(
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     throw new TypeError(`${label}: expected a JSON object.`);
   }
-  const unknown = Object.keys(value).filter((key) => !allowed.includes(key));
-  if (unknown.length) {
-    throw new TypeError(
-      `${label}: unsupported field (${unknown.join(", ")}).`,
-    );
+  if (allowed !== undefined) {
+    const unknown = Object.keys(value).filter((key) => !allowed.includes(key));
+    if (unknown.length) {
+      throw new TypeError(
+        `${label}: unsupported field (${unknown.join(", ")}).`,
+      );
+    }
   }
   return value as T;
 }
@@ -635,11 +643,12 @@ function update(): void {
   try {
     const options = parseSettings<ConversionOptions>(
       optionsInput,
-      ["orthography", "diacritics", "unicode", "removeDiacritics"],
+      undefined,
       "Options",
     );
     const preset = presetSelect.value as Preset | "";
     const withPreset = { ...options, ...(preset ? { preset } : {}) };
+    resolveConversionOptions(withPreset);
     inspectDocument(withPreset);
     const inventory = parseSettings<ConverterConfiguration>(
       inventoryInput,

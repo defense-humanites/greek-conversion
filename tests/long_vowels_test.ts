@@ -5,7 +5,7 @@ import { assertEquals } from "@std/assert";
 import { assertNfcEquals } from "./assertions.ts";
 
 const CIRCUMFLEX = {
-  orthography: { longVowels: "circumflex" },
+  transliteration: { longVowels: "circumflex" },
 } as const;
 
 Deno.test("selects the transliterated spelling of structural long vowels", () => {
@@ -13,11 +13,11 @@ Deno.test("selects the transliterated spelling of structural long vowels", () =>
 
   assertNfcEquals(
     convert(greek, "greek", "transliteration"),
-    "bē bō bā bī bū",
+    "bē bō bā bī bȳ",
   );
   assertNfcEquals(
     convert(greek, "greek", "transliteration", CIRCUMFLEX),
-    "bê bô bā bī bū",
+    "bê bô bā bī bȳ",
   );
 });
 
@@ -98,7 +98,7 @@ Deno.test("writes quantity before other marks in transliteration", () => {
     ["ᾱ́", "a\u0304\u0301"],
     ["ᾱ̀", "a\u0304\u0300"],
     ["ῑ́", "i\u0304\u0301"],
-    ["ῠ́", "u\u0306\u0301"],
+    ["ῠ́", "y\u0306\u0301"],
     ["ῑ̈", "i\u0304\u0308"],
     ["ᾱ̓́", "a\u0304\u0301"],
   ] as const;

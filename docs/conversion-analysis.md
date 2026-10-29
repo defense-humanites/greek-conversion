@@ -5,7 +5,7 @@ information retained by the target representation:
 
 ```ts
 const result = convertDetailed("ἄνθρωπος", "greek", "greek", {
-  orthography: { accentuation: "monotonic" },
+  greek: { accentuation: "monotonic" },
 });
 
 // {
@@ -87,21 +87,41 @@ a precomposed `ἄ` is one unit and the same letter written as `α` plus two
 combining marks is three. A character outside the Basic Multilingual Plane
 is two units. Ends are exclusive.
 
-Input spans are in increasing order and cover the input without gaps. Tokens
-read from one character of the input share its span: the three jamo of a
-Hangul syllable, which the reader keeps as literals, or the two letters read
-from a modern-digraph `b` under ISO 843 Type 2.
+The readers and writers normalize the text one group at a time: a character
+and the code points that continue it, which are the combining marks that
+follow it and, in two scripts, the letters that canonical composition joins to
+the letter before them (the vowel and final jamo of Hangul, the vowel signs E
+and AI of Kirat Rai; they continue the group of whatever character precedes
+them). Where normalization leaves a group unchanged, or changes its code
+points one at a time without moving them (the ohm sign read as an omega), each
+code unit keeps its own position. Where it composes, decomposes, or reorders
+the group's code points, the tokens read from it or written to it cannot be
+told apart in the caller's string, and each has the range of the whole group,
+even where its parts could have been separated. The span of a token therefore
+depends only on the groups it was read from or written to.
 
-Output spans are in increasing order of start and cover the output. Several
-tokens written as one share a span: the letters and numeral sign of a Greek
-numeral written as a decimal number, a whitespace run collapsed to one space,
-the two letters of `μπ` written as `b`, a dental and the sigma it is
-assimilated to. A token the output has nothing for (a leading or trailing
-whitespace run under `whitespace: "collapse"`) has an empty span where the
-output of the next token starts, or at the end of the output. A combining
-mark that stands alone in the input, kept as a literal, is written after the
-previous token's output and joins its last character: its span is that
-character's, inside the previous token's.
+Input spans are in order and cover the input without gaps: their starts and
+their ends never decrease, and each span starts where the previous one ends
+or lies inside it and ends with it. Tokens read from one character of the
+input share its span: the three jamo of a Hangul syllable, which the reader
+keeps as literals, or the two letters read from a modern-digraph `b` under ISO
+843 Type 2. A token read from part of a character that the previous token also
+draws on has that character's span, inside the previous token's: in `pḥ`
+written with a precomposed `ḥ`, the `h` belongs to the `ph` of phi, and the
+dot below, kept as a literal, has the span of `ḥ`.
+
+Output spans are in order and cover the output: their starts and their ends
+never decrease, and each span starts where the previous one ends, lies inside
+it and ends with it, or is empty. Several tokens written as one share a span:
+the letters and numeral sign of a Greek numeral written as a decimal number, a
+whitespace run collapsed to one space, the two letters of `μπ` written as `b`,
+a dental and the sigma it is assimilated to. A token the output has nothing
+for (a leading or trailing whitespace run under `whitespace: "collapse"`) has
+an empty span where the output of the next token starts, or at the end of the
+output. A combining mark that stands alone in the input, kept as a literal, is
+written after the previous token's output: its span is its own when the output
+keeps it apart, and that of the character it joins, inside the previous
+token's, when the output composes or reorders them (an acute after a vowel).
 
 These positions describe one conversion. The loss analysis compares
 documents, not positions, so `spans` is also returned when `lossy` is

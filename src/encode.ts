@@ -44,7 +44,11 @@ import { greekUpper } from "./case.ts";
 import { applyGreekOrthography } from "./orthography.ts";
 import { joinPieces, type WrittenPositions } from "./parsers/positions.ts";
 import { encodePunctuation } from "./punctuation.ts";
-import { applyGreekUnicode } from "./unicode.ts";
+import {
+  applyGreekUnicode,
+  normalizeGreek,
+  substituteGreekSigns,
+} from "./unicode.ts";
 
 /**
  * Canonical order of combining marks on a Latin vowel: quantity, breathing,
@@ -128,7 +132,7 @@ export function encodeGreek(
       continue;
     }
 
-    const assimilated = options.orthography?.dentalSigma === "assimilate"
+    const assimilated = options.greek?.dentalSigma === "assimilate"
       ? assimilatedDental(doc, i)
       : undefined;
 
@@ -136,10 +140,10 @@ export function encodeGreek(
       let base = ALPHABET.sigma.greek;
       if (rendersLunateSigma(assimilated, options)) base = "ϲ";
       else if (
-        options.orthography?.finalSigma === "preserve"
+        options.greek?.finalSigma === "preserve"
           ? assimilated.glyphVariant === "final-sigma" ||
             assimilated.glyphVariant === undefined && isWordFinal(doc, i + 1)
-          : options.orthography?.finalSigma !== "medial" &&
+          : options.greek?.finalSigma !== "medial" &&
             isWordFinal(doc, i + 1)
       ) base = "ς";
       out += assimilated.uppercase ? greekUpper(base) : base;
@@ -163,10 +167,10 @@ export function encodeGreek(
       base = "ϲ";
     } else if (
       token.letter === "sigma" &&
-      (options.orthography?.finalSigma === "preserve"
+      (options.greek?.finalSigma === "preserve"
         ? token.glyphVariant === "final-sigma" ||
           token.glyphVariant === undefined && isWordFinal(doc, i)
-        : options.orthography?.finalSigma !== "medial" &&
+        : options.greek?.finalSigma !== "medial" &&
           isWordFinal(doc, i)) &&
       !isGreekNumeralContext(doc, i)
     ) {
@@ -175,7 +179,7 @@ export function encodeGreek(
     if (
       token.letter === "beta" &&
       !token.uppercase &&
-      options.orthography?.medialBeta === "symbol" &&
+      options.greek?.medialBeta === "symbol" &&
       !isGreekNumeralContext(doc, i) &&
       !isWordInitial(doc, i)
     ) {
@@ -187,8 +191,14 @@ export function encodeGreek(
     if (ends !== undefined) ends[i] = out.length;
   }
 
-  if (written !== undefined) written.text = out;
-  return applyGreekUnicode(out, options);
+  if (written === undefined) return applyGreekUnicode(out, options);
+  // The positions are aligned on the normalized text: the substitutions that
+  // follow replace one code unit by one, and the alignment must compare the
+  // text with its exact normalization.
+  const normalized = normalizeGreek(out, options);
+  written.text = out;
+  written.normalized = normalized;
+  return substituteGreekSigns(normalized, options);
 }
 
 /**
@@ -218,12 +228,12 @@ export function encodeBetaCode(
       base = "s3";
     } else {
       base = token.letter === "yot" &&
-          options.orthography?.betaCodeYot === "#401"
+          options.betaCode?.yot === "#401"
         ? "#401"
         : ALPHABET[token.letter].beta;
     }
 
-    if (options.orthography?.betaCodeCase === "uppercase") {
+    if (options.betaCode?.case === "uppercase") {
       base = base.toUpperCase();
     } else {
       base = base.toLowerCase();
@@ -253,7 +263,7 @@ export function encodeTransliteration(
   options: ConversionOptions = {},
   written?: WrittenPositions,
 ) {
-  const uppercaseOutput = options.orthography?.letterCase === "uppercase";
+  const uppercaseOutput = options.text?.letterCase === "uppercase";
   const rendered = prepareDiacriticsForRendering(
     doc,
     options,
@@ -269,8 +279,8 @@ export function encodeTransliteration(
   );
   // Constant for the whole call: computed once, not at every token.
   const digraphs: DigraphPolicy = {
-    muPi: options.orthography?.muPi ?? "mp",
-    nuTau: options.orthography?.nuTau ?? "nt",
+    muPi: options.transliteration?.muPi ?? "mp",
+    nuTau: options.transliteration?.nuTau ?? "nt",
   };
   const rewritesDigraphs = digraphs.muPi !== "mp" || digraphs.nuTau !== "nt";
   const preservesRough = preservesDiacritic(
@@ -322,7 +332,7 @@ export function encodeTransliteration(
 
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
-      if (options.orthography?.keraia === "bnf") {
+      if (options.transliteration?.keraia === "bnf") {
         if (token.value === DEXIA_KERAIA) return "\u0301";
         if (token.value === ARISTERI_KERAIA) return ",";
       }
@@ -342,7 +352,7 @@ export function encodeTransliteration(
     if (
       token.letter === "sigma" &&
       token.glyphVariant === "lunate-sigma" &&
-      options.orthography?.lunateSigma === "c"
+      options.transliteration?.lunateSigma === "c"
     ) {
       return token.uppercase ? "C" : "c";
     }
@@ -380,13 +390,13 @@ export function encodeTransliteration(
           isAmongCapitals(doc, breathingIndex!)
         : token.uppercase && isAmongCapitals(doc, index));
     const h = capitals ? "H" : "h";
-    const nasalGamma = options.orthography?.nasalGamma;
+    const nasalGamma = options.transliteration?.nasalGamma;
     let base = nasalGamma !== "literal" &&
         isNasalGamma(doc, index, nasalGamma === "nasal-except-kappa") &&
         !(nasalGamma === "nasal-medial-kappa" && isEdgeGammaKappa(doc, index))
       ? "n"
       : transliterationBase(doc, index, token.letter, options);
-    const bnfLowercaseNumeral = options.orthography?.keraia === "bnf" &&
+    const bnfLowercaseNumeral = options.transliteration?.keraia === "bnf" &&
       token.uppercase &&
       (token.letter === "stigma" || token.letter === "sampi") &&
       isGreekNumeralContext(doc, index);
@@ -400,14 +410,14 @@ export function encodeTransliteration(
     }
     if (
       initialSmooth && index === breathingStart &&
-      options.orthography?.smoothBreathing === "apostrophe"
+      options.transliteration?.smoothBreathing === "apostrophe"
     ) base = "\u2019" + base;
     if (initialRough && index === breathingStart) {
       base = (groupUppercase ? "H" : "h") +
         (capitals ? base.toUpperCase() : base.toLowerCase());
     } else if (
       token.letter === "rho" &&
-      options.orthography?.rho === "systematic"
+      options.transliteration?.rho === "systematic"
     ) {
       if (next?.kind !== "grapheme" || next.letter !== "rho") base += h;
     } else if (
@@ -442,8 +452,8 @@ function rendersLunateSigma(
   token: Pick<Grapheme, "glyphVariant">,
   options: ConversionOptions,
 ): boolean {
-  return options.orthography?.sigma === "lunate" ||
-    options.orthography?.sigma === "preserve" &&
+  return options.greek?.sigma === "lunate" ||
+    options.greek?.sigma === "preserve" &&
       token.glyphVariant === "lunate-sigma";
 }
 
@@ -527,21 +537,21 @@ function transliterationBase(
 ): string {
   switch (letter) {
     case "archaic-koppa":
-      return options.orthography?.archaicKoppa === "q"
+      return options.transliteration?.archaicKoppa === "q"
         ? "q"
         : ALPHABET[letter].tr;
     case "beta":
-      return options.orthography?.beta ?? "b";
+      return options.transliteration?.beta ?? "b";
     case "xi":
-      return options.orthography?.xi ?? "x";
+      return options.transliteration?.xi ?? "x";
     case "phi":
-      return options.orthography?.phi ?? "ph";
+      return options.transliteration?.phi ?? "ph";
     case "chi":
-      return options.orthography?.chi ?? "ch";
+      return options.transliteration?.chi ?? "ch";
   }
 
   if (letter === "upsilon") {
-    switch (options.orthography?.upsilon) {
+    switch (options.transliteration?.upsilon) {
       case "y":
         return "y";
       case "y-with-ou-v-f": {
@@ -570,7 +580,7 @@ function transliterationBase(
   let base: string;
   switch (letter) {
     case "eta":
-      base = options.orthography?.eta === "i" ? "i" : "e";
+      base = options.transliteration?.eta === "i" ? "i" : "e";
       break;
     case "omega":
       base = "o";
@@ -585,7 +595,7 @@ function transliterationBase(
       return ALPHABET[letter].tr;
   }
 
-  switch (options.orthography?.longVowels) {
+  switch (options.transliteration?.longVowels) {
     case "circumflex":
       return `${base}\u0302`;
     case "omit":
@@ -609,7 +619,7 @@ function transferredAccents(
   index: number,
   options: ConversionOptions,
 ): Grapheme | undefined {
-  if (options.orthography?.upsilon !== "y-with-ou-v-f") return undefined;
+  if (options.transliteration?.upsilon !== "y-with-ou-v-f") return undefined;
   const token = rendered[index];
   if (token.kind !== "grapheme") return undefined;
   // Only an upsilon, or the vowel before one, can change its marks.
@@ -646,11 +656,13 @@ function trMark(mark: Diacritic, options: ConversionOptions) {
     case "grave":
       return "\u0300";
     case "circumflex":
-      return options.orthography?.circumflexAccent === "circumflex"
+      return options.transliteration?.circumflexAccent === "circumflex"
         ? "\u0302"
         : "\u0303";
     case "smooth":
-      return options.orthography?.smoothBreathing === "greek" ? "\u0313" : "";
+      return options.transliteration?.smoothBreathing === "greek"
+        ? "\u0313"
+        : "";
     case "diaeresis":
       return "\u0308";
     case "iota-subscript":
@@ -660,7 +672,7 @@ function trMark(mark: Diacritic, options: ConversionOptions) {
     case "breve":
       return "\u0306";
     case "coronis":
-      switch (options.orthography?.coronis) {
+      switch (options.transliteration?.coronis) {
         case "apostrophe":
           return "\u2019";
         case "greek":
@@ -687,7 +699,7 @@ function writesSeparationDiaeresis(
   index: number,
   options: ConversionOptions,
 ): boolean {
-  const upsilon = options.orthography?.upsilon;
+  const upsilon = options.transliteration?.upsilon;
   if (
     upsilon !== "y-with-au-eu-ou" && upsilon !== "y-with-diphthong-u" &&
     upsilon !== "y-with-ou-v-f"
@@ -724,7 +736,8 @@ function writesSeparationDiaeresis(
   if (
     first.diacritics.has("smooth") &&
     (infersSmoothBreathing(options) ||
-      (options.orthography?.smoothBreathing === "greek" && written("smooth")))
+      (options.transliteration?.smoothBreathing === "greek" &&
+        written("smooth")))
   ) return false;
   return true;
 }

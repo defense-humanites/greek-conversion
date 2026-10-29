@@ -149,7 +149,7 @@ no letter mapping for either type. It reports `archaic-koppa` separately as
 engine's two Unicode forms. Strict mode rejects these occurrences with their
 distinct codes. Digamma and yot use the defined Latin mappings; marked Greek
 numerals can use the standard's separate decimal correspondence if the caller
-explicitly sets `orthography.numerals: "decimal"`. This rule applies only when
+explicitly sets `text.numerals: "decimal"`. This rule applies only when
 the target is transliteration. It does not certify the rest of ISO 843 as fully
 implemented.
 

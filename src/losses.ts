@@ -39,12 +39,15 @@ export interface ConversionLoss {
  * written, as ranges of UTF-16 code units (the unit of `String.length`,
  * `slice()` and editor selections), start included and end excluded.
  *
- * Input spans are in increasing order and cover the input without gaps.
- * Output spans are in increasing order and cover the output; several tokens
- * written as one share a span (a Greek numeral written as a decimal number,
- * a whitespace run collapsed to one space, the two letters of a modern
- * digraph), and a token the output has nothing for has an empty span where
- * the output of the next token starts.
+ * Spans are in order: their starts and their ends never decrease. Input
+ * spans cover the input without gaps; a token read from part of a character
+ * that the previous token also draws on (a stray mark of a precomposed
+ * letter) has that character's span, inside the previous token's and ending
+ * with it. Output spans cover the output; several tokens written as one share
+ * a span (a Greek numeral written as a decimal number, a whitespace run
+ * collapsed to one space, the two letters of a modern digraph), and a token
+ * the output has nothing for has an empty span where the output of the next
+ * token starts. See the positions contract in `docs/conversion-analysis.md`.
  */
 export interface ConversionSpan {
   /** Offset of the token's first code unit in the input as supplied. */

@@ -50,7 +50,7 @@ Deno.test("every documented lossy conversion is detected", async (t) => {
 
 Deno.test("reports each removed diacritic at its source token", () => {
   const result = convertDetailed("[ἄ]", "greek", "greek", {
-    removeDiacritics: true,
+    diacritics: { all: "remove" },
   });
 
   assertEquals(result.output, "[α]");
@@ -99,7 +99,7 @@ Deno.test("reports only selectively removed diacritics", () => {
 Deno.test("reports case changes separately from removed diacritics", () => {
   const result = convertDetailed("Ἄβ", "greek", "greek", {
     diacritics: { accents: "remove" },
-    orthography: { letterCase: "lowercase" },
+    text: { letterCase: "lowercase" },
   });
 
   assertEquals(result.output, "ἀβ");
@@ -125,14 +125,10 @@ Deno.test("reports case changes separately from removed diacritics", () => {
 
 Deno.test("canonical Unicode variants are not information loss", () => {
   const oxia = convertDetailed("ά;·", "greek", "greek", {
-    unicode: {
-      acute: "oxia",
-      questionMark: "greek",
-      anoTeleia: "greek",
-    },
+    greek: { acute: "oxia", questionMark: "greek", anoTeleia: "greek" },
   });
   const decomposed = convertDetailed("ἄ", "greek", "greek", {
-    unicode: { composition: "decomposed" },
+    greek: { composition: "decomposed" },
   });
 
   assertEquals(oxia.lossy, false);
@@ -141,14 +137,11 @@ Deno.test("canonical Unicode variants are not information loss", () => {
 
 Deno.test("removed lunate provenance is independent from lossy case folding", () => {
   const variants = convertDetailed("ϐίος ϲῶμα", "greek", "greek", {
-    orthography: {
-      finalSigma: "medial",
-      medialBeta: "standard",
-      sigma: "standard",
-    },
+    greek: { finalSigma: "medial", medialBeta: "standard", sigma: "standard" },
   });
   const lowercase = convertDetailed("ΒΊΟΣ", "greek", "greek", {
-    orthography: { finalSigma: "medial", letterCase: "lowercase" },
+    greek: { finalSigma: "medial" },
+    text: { letterCase: "lowercase" },
   });
 
   assertEquals(variants.output, "βίοσ σῶμα");
@@ -173,10 +166,10 @@ Deno.test("removed lunate provenance is independent from lossy case folding", ()
 
 Deno.test("preserves lunate provenance and ignores deterministic styling", () => {
   const preserved = convertDetailed("σϲ ϹΣ", "greek", "transliteration", {
-    orthography: { lunateSigma: "c" },
+    transliteration: { lunateSigma: "c" },
   });
   const styled = convertDetailed("σος", "greek", "greek", {
-    orthography: { sigma: "lunate" },
+    greek: { sigma: "lunate" },
   });
 
   assertEquals(preserved.output, "sc CS");
@@ -189,14 +182,14 @@ Deno.test("preserves lunate provenance and ignores deterministic styling", () =>
 
 Deno.test("tracks lunate provenance through all three formats", () => {
   const greek = convertDetailed("ϲ", "greek", "greek", {
-    orthography: { sigma: "preserve" },
+    greek: { sigma: "preserve" },
   });
   const beta = convertDetailed("S3", "beta-code", "beta-code");
   const transliteration = convertDetailed(
     "c",
     "transliteration",
     "transliteration",
-    { orthography: { lunateSigma: "c" } },
+    { transliteration: { lunateSigma: "c" } },
   );
 
   const span = { inputStart: 0, inputEnd: 1, outputStart: 0, outputEnd: 1 };
@@ -218,7 +211,7 @@ Deno.test("Greek coronis scalar retains semantic provenance", () => {
     "κἀγώ",
     "greek",
     "transliteration",
-    { orthography: { coronis: "greek" } },
+    { transliteration: { coronis: "greek" } },
   );
 
   assertEquals(result.output, "ka\u1FBDgṓ");
@@ -231,7 +224,7 @@ Deno.test("deterministic added marks are not information loss", () => {
     "πολύρριζος",
     "greek",
     "greek",
-    { orthography: { doubleRho: "smooth-rough" } },
+    { greek: { doubleRho: "smooth-rough" } },
   );
 
   assertEquals(result.output, "πολύῤῥιζος");
@@ -245,7 +238,7 @@ Deno.test("selected transliteration variants retain recoverable letters", () => 
     "greek",
     "transliteration",
     {
-      orthography: {
+      transliteration: {
         beta: "v",
         chi: "kh",
         eta: "i",
@@ -270,7 +263,7 @@ Deno.test("ALA-LC modern digraph spellings retain recoverable letters", () => {
     "greek",
     "transliteration",
     {
-      orthography: {
+      transliteration: {
         beta: "v",
         muPi: "b-initial",
         nasalGamma: "nasal-medial-kappa",
@@ -316,9 +309,9 @@ Deno.test("reports the smooth breathing inferred on unmarked Greek", () => {
   // the same monotonic text converts back and forth without loss.
   for (
     const options of [
-      { orthography: { accentuation: "monotonic" } },
+      { greek: { accentuation: "monotonic" } },
       { diacritics: { smoothBreathing: "remove" } },
-      { removeDiacritics: true },
+      { diacritics: { all: "remove" } },
     ] as const
   ) {
     const result = convertDetailed(
@@ -351,16 +344,16 @@ Deno.test("reports the smooth breathing inferred on unmarked Greek", () => {
 
 Deno.test("reports destructive orthography policies from their actual input", () => {
   const whitespace = convertDetailed("  α\tβ  ", "greek", "greek", {
-    orthography: { whitespace: "collapse" },
+    text: { whitespace: "collapse" },
   });
   const modernNt = convertDetailed("ντο", "greek", "transliteration", {
-    orthography: { muPi: "b-initial", nuTau: "d-initial" },
+    transliteration: { muPi: "b-initial", nuTau: "d-initial" },
   });
   const systematicRoughRho = convertDetailed(
     "ῥ",
     "greek",
     "transliteration",
-    { orthography: { rho: "systematic" } },
+    { transliteration: { rho: "systematic" } },
   );
 
   assertEquals(whitespace.output, "α β");

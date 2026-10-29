@@ -2,34 +2,38 @@ import { assertEquals, assertExists } from "@std/assert";
 import { suggestOptions } from "../web/options_suggestions.ts";
 
 Deno.test("suggests nested option keys and valid values in partial JSON", () => {
-  const key = '{"orthography": {"accent';
+  const key = '{"greek": {"accent';
   assertEquals(suggestOptions(key, key.length).map(({ label }) => label), [
     "accentuation",
   ]);
 
-  const value = '{"orthography": {"accentuation": "m';
+  const value = '{"greek": {"accentuation": "m';
   assertEquals(suggestOptions(value, value.length).map(({ label }) => label), [
     "monotonic",
   ]);
 
-  const boolean = '{"removeDiacritics": t';
-  assertEquals(suggestOptions(boolean, boolean.length)[0].replacement, "true");
+  const all = '{"diacritics": {"a';
+  assertEquals(suggestOptions(all, all.length).map(({ label }) => label), [
+    "all",
+    "accents",
+  ]);
 });
 
 Deno.test("a suggestion replaces only the active token", () => {
-  const json = '{"orthography": {"accentuation": "mon", "sigma": "lunate"}}';
+  const json = '{"greek": {"accentuation": "mon", "sigma": "lunate"}}';
   const caret = json.indexOf("mon") + 3;
   const [suggestion] = suggestOptions(json, caret);
   const completed = json.slice(0, suggestion.start) + suggestion.replacement +
     json.slice(suggestion.end);
   assertEquals(JSON.parse(completed), {
-    orthography: { accentuation: "monotonic", sigma: "lunate" },
+    greek: { accentuation: "monotonic", sigma: "lunate" },
   });
 
   const beginning = "{";
-  const [group] = suggestOptions(beginning, 1);
-  assertEquals(group.label, "orthography");
-  assertEquals(group.replacement, '"orthography": {}}');
+  const group = suggestOptions(beginning, 1).find(({ label }) =>
+    label === "greek"
+  )!;
+  assertEquals(group.replacement, '"greek": {}}');
   assertEquals(group.cursor, group.start + group.replacement.length - 2);
 
   const withGroup = beginning.slice(0, group.start) + group.replacement;
@@ -46,10 +50,10 @@ Deno.test("a suggestion replaces only the active token", () => {
       withKey.slice(0, monotonic.start) + monotonic.replacement +
         withKey.slice(monotonic.end),
     ),
-    { orthography: { accentuation: "monotonic" } },
+    { greek: { accentuation: "monotonic" } },
   );
 
-  const unfinishedKey = '{"orthography": {"acc}';
+  const unfinishedKey = '{"greek": {"acc}';
   const [accentuation] = suggestOptions(
     unfinishedKey,
     unfinishedKey.indexOf("}"),
@@ -57,6 +61,6 @@ Deno.test("a suggestion replaces only the active token", () => {
   assertEquals(
     unfinishedKey.slice(0, accentuation.start) + accentuation.replacement +
       unfinishedKey.slice(accentuation.end),
-    '{"orthography": {"accentuation": }',
+    '{"greek": {"accentuation": }',
   );
 });

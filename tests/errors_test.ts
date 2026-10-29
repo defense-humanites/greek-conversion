@@ -6,6 +6,7 @@ import {
   createConverter,
   DEFAULT_CONVERSION_OPTIONS,
   FORMATS,
+  OptionError,
   resolveConversionOptions,
 } from "../src/mod.ts";
 import { encode, parse } from "../src/document.ts";
@@ -66,31 +67,167 @@ Deno.test("rejects unknown option keys instead of ignoring them", () => {
     assertThrows(
       () =>
         convert("ἄνθρωπος", "greek", "transliteration", {
-          orthography: { etaa: "ī" } as never,
+          transliteration: { etaa: "ī" } as never,
         }),
       RangeError,
     ).message,
-    "Unknown conversion option: orthography.etaa",
+    "Unknown conversion option: transliteration.etaa",
   );
 });
 
-Deno.test("names the options that replaced modernDigraphs", () => {
+Deno.test("option errors are OptionErrors that locate the option", () => {
+  const unknownKey = assertThrows(
+    () => resolveConversionOptions({ text: { foo: "bar" } } as never),
+    OptionError,
+  );
+  assertEquals(unknownKey instanceof RangeError, true);
+  assertEquals(unknownKey.name, "OptionError");
+  assertEquals(unknownKey.path, "text.foo");
+  assertEquals(unknownKey.received, undefined);
+  assertEquals(unknownKey.accepted, ["letterCase", "whitespace", "numerals"]);
+  assertEquals(unknownKey.replacement, undefined);
+
+  const badValue = assertThrows(
+    () => resolveConversionOptions({ greek: { sigma: "nope" } } as never),
+    OptionError,
+  );
+  assertEquals(badValue.path, "greek.sigma");
+  assertEquals(badValue.received, "nope");
+  assertEquals(badValue.accepted, ["standard", "lunate", "preserve"]);
+
+  const badPreset = assertThrows(
+    () => convert("α", "greek", "beta-code", { preset: "nope" } as never),
+    OptionError,
+  );
+  assertEquals(badPreset.path, "preset");
+  assertEquals(badPreset.received, "nope");
+  assertEquals(badPreset.accepted.includes("sbl-academic"), true);
+
+  const incompatible = assertThrows(
+    () =>
+      resolveConversionOptions({
+        transliteration: {
+          longVowels: "circumflex",
+          circumflexAccent: "circumflex",
+        },
+      }),
+    OptionError,
+  );
+  assertEquals(incompatible.path, "transliteration.longVowels");
+  assertEquals(incompatible.received, "circumflex");
+  assertEquals(incompatible.accepted, ["macron", "omit"]);
+  assertEquals(Object.isFrozen(incompatible.accepted), true);
+});
+
+Deno.test("an OptionError has a replacement only when there is one", () => {
+  // docs/stability.md: `replacement` is set only for keys and values that a
+  // release candidate accepted, so `"replacement" in error` tells them apart.
+  const unknown = assertThrows(
+    () => resolveConversionOptions({ unknownKey: 1 } as never),
+    OptionError,
+  );
+  assertEquals(Object.hasOwn(unknown, "replacement"), false);
+  assertEquals("replacement" in unknown, false);
+
+  const moved = assertThrows(
+    () => resolveConversionOptions({ orthography: { eta: "i" } } as never),
+    OptionError,
+  );
+  assertEquals(Object.hasOwn(moved, "replacement"), true);
+  assertEquals(moved.replacement, "transliteration.eta");
+});
+
+Deno.test("names the current path of the options of 1.0.0-rc.5", () => {
+  // `path` is the key `replacement` replaces: for an old group, its first key.
+  const cases: [Record<string, unknown>, string, string][] = [
+    [{ orthography: { eta: "i" } }, "orthography.eta", "transliteration.eta"],
+    [{ orthography: { sigma: "lunate" } }, "orthography.sigma", "greek.sigma"],
+    [
+      { orthography: { numerals: "decimal" } },
+      "orthography.numerals",
+      "text.numerals",
+    ],
+    [
+      { orthography: { betaCodeCase: "uppercase" } },
+      "orthography.betaCodeCase",
+      "betaCode.case",
+    ],
+    [
+      { orthography: { betaCodeYot: "#401" } },
+      "orthography.betaCodeYot",
+      "betaCode.yot",
+    ],
+    [
+      { orthography: { modernDigraphs: "ala-lc" } },
+      "orthography.modernDigraphs",
+      "transliteration.muPi, transliteration.nuTau, and transliteration.nasalGamma",
+    ],
+    [{ unicode: { acute: "oxia" } }, "unicode.acute", "greek.acute"],
+    [{ removeDiacritics: true }, "removeDiacritics", "diacritics.all"],
+  ];
+  for (const [options, path, replacement] of cases) {
+    const error = assertThrows(
+      () => resolveConversionOptions(options as never),
+      OptionError,
+    );
+    assertEquals(error.path, path, JSON.stringify(options));
+    assertEquals(error.received, undefined, JSON.stringify(options));
+    assertEquals(error.replacement, replacement, JSON.stringify(options));
+    assertEquals(error.message.includes(replacement), true, error.message);
+  }
+  assertEquals(
+    assertThrows(
+      () => resolveConversionOptions({ orthography: { eta: "i" } } as never),
+      OptionError,
+    ).message,
+    "Unknown conversion option: orthography.eta (orthography.eta is now transliteration.eta)",
+  );
+  // A key of an old group that no release had is named without replacement,
+  // like the group itself when it is empty; a key the group never had is not
+  // given one either.
+  for (
+    const [options, path] of [
+      [
+        { orthography: { quantityTransliteration: "omit" } },
+        "orthography.quantityTransliteration",
+      ],
+      [{ orthography: {} }, "orthography"],
+      [{ orthography: "x" }, "orthography"],
+      [
+        { orthography: { composition: "decomposed" } },
+        "orthography.composition",
+      ],
+      [{ unicode: { eta: "i" } }, "unicode.eta"],
+    ] as const
+  ) {
+    const error = assertThrows(
+      () => resolveConversionOptions(options as never),
+      OptionError,
+    );
+    assertEquals(error.path, path, JSON.stringify(options));
+    assertEquals(error.replacement, undefined, JSON.stringify(options));
+    assertEquals(error.message, `Unknown conversion option: ${path}`);
+  }
+  // A value renamed before 1.0.0 names its replacement too.
   assertEquals(
     assertThrows(
       () =>
         resolveConversionOptions({
-          orthography: { modernDigraphs: "ala-lc" } as never,
+          transliteration: { eta: "i-macron" as never },
         }),
-      RangeError,
-    ).message,
-    "Unknown conversion option: orthography.modernDigraphs (replaced by orthography.muPi, orthography.nuTau, and orthography.nasalGamma).",
+      OptionError,
+    ).replacement,
+    "i",
   );
 });
 
 Deno.test("rejects a circumflex for both length and accent", () => {
   // ῆ would be written ê̂ and read back as η without its accent.
   const both = {
-    orthography: { longVowels: "circumflex", circumflexAccent: "circumflex" },
+    transliteration: {
+      longVowels: "circumflex",
+      circumflexAccent: "circumflex",
+    },
   } as const;
   assertThrows(() => resolveConversionOptions(both), RangeError);
   assertThrows(
@@ -103,7 +240,7 @@ Deno.test("rejects a circumflex for both length and accent", () => {
         "ῆ",
         "greek",
         "transliteration",
-        { orthography: { longVowels: "circumflex" } },
+        { transliteration: { longVowels: "circumflex" } },
       ),
     RangeError,
   );
@@ -114,20 +251,35 @@ Deno.test("rejects a circumflex for both length and accent", () => {
         () =>
           resolveConversionOptions({
             preset,
-            orthography: { longVowels: "circumflex" },
+            transliteration: { longVowels: "circumflex" },
           }),
         RangeError,
       ).message,
-      'orthography.longVowels "circumflex" cannot be combined with ' +
-        `orthography.circumflexAccent "circumflex" (set by preset "${preset}"): ` +
+      'transliteration.longVowels "circumflex" cannot be combined with ' +
+        `transliteration.circumflexAccent "circumflex" (set by preset "${preset}"): ` +
         "the length mark and the accent would be written alike.",
     );
   }
+  // The preset is named only when one of the two values comes from it.
+  assertEquals(
+    assertThrows(
+      () =>
+        resolveConversionOptions({
+          preset: "perseus",
+          transliteration: {
+            longVowels: "circumflex",
+            circumflexAccent: "circumflex",
+          },
+        }),
+      OptionError,
+    ).message.includes("set by preset"),
+    false,
+  );
   // Either circumflex alone is accepted.
-  resolveConversionOptions({ orthography: { longVowels: "circumflex" } });
+  resolveConversionOptions({ transliteration: { longVowels: "circumflex" } });
   resolveConversionOptions({
     preset: "bnf-core",
-    orthography: { longVowels: "circumflex", circumflexAccent: "tilde" },
+    transliteration: { longVowels: "circumflex", circumflexAccent: "tilde" },
   });
 });
 
@@ -136,22 +288,22 @@ Deno.test("rejects invalid option values instead of applying defaults", () => {
     assertThrows(
       () =>
         convert("ἄνθρωπος", "greek", "transliteration", {
-          orthography: { eta: "ē" as never },
+          transliteration: { eta: "ē" as never },
         }),
       RangeError,
     ).message,
-    'Invalid value for orthography.eta: "ē"; expected one of "e", "i".',
+    'Invalid value for transliteration.eta: "ē"; expected one of "e", "i".',
   );
   // A value renamed before 1.0.0 names its replacement.
   assertEquals(
     assertThrows(
       () =>
         resolveConversionOptions({
-          orthography: { eta: "i-macron" as never },
+          transliteration: { eta: "i-macron" as never },
         }),
       RangeError,
     ).message,
-    'Invalid value for orthography.eta: "i-macron"; expected one of "e", "i". "i-macron" is now "i".',
+    'Invalid value for transliteration.eta: "i-macron"; expected one of "e", "i". "i-macron" is now "i".',
   );
   assertThrows(
     () =>
@@ -164,7 +316,7 @@ Deno.test("rejects invalid option values instead of applying defaults", () => {
         "ἄνθρωπος",
         "greek",
         "beta-code",
-        { unicode: { acute: "sharp" } } as never,
+        { greek: { acute: "sharp" } } as never,
       ),
     RangeError,
   );
@@ -174,11 +326,11 @@ Deno.test("rejects options of the wrong type with a TypeError", () => {
   assertThrows(() => resolveConversionOptions([] as never), TypeError);
   assertThrows(() => resolveConversionOptions(null as never), TypeError);
   assertThrows(
-    () => resolveConversionOptions({ orthography: "lowercase" } as never),
+    () => resolveConversionOptions({ text: "lowercase" } as never),
     TypeError,
   );
   assertThrows(
-    () => resolveConversionOptions({ removeDiacritics: "yes" } as never),
+    () => resolveConversionOptions({ diacritics: ["remove"] } as never),
     TypeError,
   );
 });
@@ -186,16 +338,24 @@ Deno.test("rejects options of the wrong type with a TypeError", () => {
 Deno.test("treats an undefined option field as absent", () => {
   assertEquals(
     resolveConversionOptions({
-      orthography: { eta: undefined },
-      unicode: undefined,
-      removeDiacritics: undefined,
+      transliteration: { eta: undefined },
+      greek: undefined,
+      diacritics: { all: undefined },
     }),
     DEFAULT_CONVERSION_OPTIONS,
   );
 });
 
 Deno.test("the option value table matches the defaults", () => {
-  for (const group of ["orthography", "unicode", "diacritics"] as const) {
+  for (
+    const group of [
+      "transliteration",
+      "greek",
+      "betaCode",
+      "text",
+      "diacritics",
+    ] as const
+  ) {
     const defaults = DEFAULT_CONVERSION_OPTIONS[group] as Record<
       string,
       string
@@ -204,7 +364,11 @@ Deno.test("the option value table matches the defaults", () => {
       string,
       readonly string[]
     >;
-    assertEquals(Object.keys(table).sort(), Object.keys(defaults).sort());
+    // `diacritics.all` is a shorthand with no default of its own.
+    assertEquals(
+      Object.keys(table).filter((key) => key !== "all").sort(),
+      Object.keys(defaults).sort(),
+    );
     for (const [key, value] of Object.entries(defaults)) {
       assertEquals(
         table[key].includes(value),

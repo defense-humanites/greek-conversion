@@ -186,8 +186,8 @@ export type Preset =
   | "sbl-general"
   | "tlg-core";
 
-/** Granular rendering policy for semantic diacritic classes. */
-export interface DiacriticOptions {
+/** Disposition of each semantic diacritic class. */
+export interface DiacriticClassOptions {
   /** Accent marks: acute, grave, and circumflex. Defaults to `"preserve"`. */
   accents?: DiacriticDisposition;
   /** Initial smooth breathing marks. Defaults to `"preserve"`. */
@@ -204,46 +204,27 @@ export interface DiacriticOptions {
   quantity?: DiacriticDisposition;
 }
 
-/** Orthographic and transliteration policies applied during rendering. */
-export interface OrthographyOptions {
-  /** Double-rho marks in Greek output. Defaults to `"unmarked"`. */
-  doubleRho?: DoubleRhoOrthography;
-  /** Medial lowercase beta glyph. Defaults to `"standard"`. */
-  medialBeta?: MedialBetaOrthography;
-  /** Coronis representation in transliteration. Defaults to `"omit"`. */
-  coronis?: CoronisTransliteration;
-  /** Smooth breathing in transliteration; `"apostrophe"` prefixes an initial vowel. Defaults to `"omit"`. */
-  smoothBreathing?: SmoothBreathingTransliteration;
-  /** Circumflex accent in transliteration. Defaults to `"tilde"` (U+0303); `"circumflex"` cannot be combined with `longVowels: "circumflex"`. */
-  circumflexAccent?: CircumflexTransliteration;
-  /** Explicit macron/breve in transliteration. Defaults to `"preserve"`. */
-  quantity?: QuantityTransliteration;
-  /** Nasal gamma spelling. Defaults to `"nasal"`. */
-  nasalGamma?: NasalGammaTransliteration;
-  /** Sigma glyph policy. Defaults to `"standard"`. */
-  sigma?: SigmaOrthography;
-  /** Provenanced lunate sigma transliteration. Defaults to `"s"`. */
-  lunateSigma?: LunateSigmaTransliteration;
-  /** Lowercase final sigma policy in Greek output. Defaults to `"contextual"`; `"preserve"` retains source Greek sigma shapes. */
-  finalSigma?: FinalSigmaOrthography;
-  /** Alphabetic or decimal numeral output. Defaults to `"alphabetic"`. */
-  numerals?: NumeralOrthography;
-  /** Keraia marks in transliteration. Defaults to `"greek"`; `"bnf"` is not always reversible. */
-  keraia?: KeraiaTransliteration;
-  /** Dental assimilation before sigma. Defaults to `"preserve"`. */
-  dentalSigma?: DentalSigmaOrthography;
-  /** Upsilon transliteration. Defaults to `"u"`; `"y-with-au-eu-ou"` uses `u` only in the three cited pairs. */
-  upsilon?: UpsilonTransliteration;
-  /** Length mark of eta and omega in transliteration: `"macron"`, `"circumflex"`, or `"omit"`. Defaults to `"macron"`; `"circumflex"` cannot be combined with `circumflexAccent: "circumflex"`. */
-  longVowels?: LongVowelTransliteration;
-  /** Greek accentuation system. Defaults to `"polytonic"`; `"monotonic"` follows the monotonic rules, monosyllables included, as far as the written text allows. */
-  accentuation?: GreekAccentuation;
-  /** Whitespace rendering. Defaults to `"preserve"`. */
-  whitespace?: WhitespaceOrthography;
-  /** Transliteration hyphen. Defaults to `"ascii"`. */
-  hyphen?: HyphenTransliteration;
-  /** Transliteration of Greek enotikon (U+203F). Defaults to `"preserve"`. */
-  enotikon?: EnotikonTransliteration;
+/**
+ * Which semantic diacritics are kept. `all` sets every class at once; a class
+ * named alongside it is the exception: `{ all: "remove", roughBreathing:
+ * "preserve" }`. The shorthand is expanded where it is written, so `all` in
+ * the caller's options overrides every class a preset set.
+ *
+ * Removing a class removes its marks from the output in every format. In
+ * transliteration the rough breathing is a letter, `h`: it goes with its
+ * class, so `{ all: "remove", roughBreathing: "preserve" }` keeps it.
+ */
+export interface DiacriticOptions extends DiacriticClassOptions {
+  /** Disposition of every class not named alongside. */
+  all?: DiacriticDisposition;
+}
+
+/**
+ * How the Latin writing system spells Greek: the spelling of each letter and
+ * mark, and what a Latin spelling is read back as. These options act when
+ * transliteration is written and when it is read.
+ */
+export interface TransliterationOptions {
   /** Beta transliteration. Defaults to `"b"`. */
   beta?: BetaTransliteration;
   /** Latin letter for eta, which carries the `longVowels` mark: `"e"` (`ē`) or `"i"` (`ī`). Defaults to `"e"`. */
@@ -254,24 +235,57 @@ export interface OrthographyOptions {
   phi?: PhiTransliteration;
   /** Chi transliteration. Defaults to `"ch"`. */
   chi?: ChiTransliteration;
+  /** Upsilon transliteration. Defaults to `"y-with-diphthong-u"`, the SBL academic spelling; `"y-with-au-eu-ou"` uses `u` only in the three cited pairs. */
+  upsilon?: UpsilonTransliteration;
   /** Transliteration of `μπ`. Defaults to `"mp"`. */
   muPi?: MuPiTransliteration;
   /** Transliteration of `ντ`. Defaults to `"nt"`. */
   nuTau?: NuTauTransliteration;
   /** Rho transliteration. Defaults to `"contextual"`. */
   rho?: RhoTransliteration;
-  /** Semantic letter case applied to recognized graphemes. Defaults to `"preserve"`. */
-  letterCase?: LetterCaseOrthography;
-  /** Insignificant ASCII letter case used only in Beta Code output. Defaults to `"lowercase"`. */
-  betaCodeCase?: BetaCodeCase;
-  /** Beta Code spelling of yot. Defaults to `"j"`; TLG uses `"#401"`. */
-  betaCodeYot?: BetaCodeYot;
+  /** Nasal gamma spelling. Defaults to `"nasal"`. */
+  nasalGamma?: NasalGammaTransliteration;
+  /** Length mark of eta and omega in transliteration: `"macron"`, `"circumflex"`, or `"omit"`. Defaults to `"macron"`; `"circumflex"` cannot be combined with `circumflexAccent: "circumflex"`. */
+  longVowels?: LongVowelTransliteration;
+  /** Circumflex accent in transliteration. Defaults to `"tilde"` (U+0303); `"circumflex"` cannot be combined with `longVowels: "circumflex"`. */
+  circumflexAccent?: CircumflexTransliteration;
+  /** Explicit macron/breve in transliteration. Defaults to `"preserve"`. */
+  quantity?: QuantityTransliteration;
+  /** Smooth breathing in transliteration; `"apostrophe"` prefixes an initial vowel. Defaults to `"omit"`. */
+  smoothBreathing?: SmoothBreathingTransliteration;
+  /** Coronis representation in transliteration. Defaults to `"omit"`. */
+  coronis?: CoronisTransliteration;
+  /** Transliteration hyphen. Defaults to `"ascii"`. */
+  hyphen?: HyphenTransliteration;
+  /** Keraia marks in transliteration. Defaults to `"greek"`; `"bnf"` is not always reversible. */
+  keraia?: KeraiaTransliteration;
+  /** Transliteration of Greek enotikon (U+203F). Defaults to `"preserve"`. */
+  enotikon?: EnotikonTransliteration;
+  /** Provenanced lunate sigma transliteration. Defaults to `"s"`. */
+  lunateSigma?: LunateSigmaTransliteration;
   /** Archaic-koppa transliteration. Defaults to `"k-dot-below"`; BnF uses `"q"`. */
   archaicKoppa?: ArchaicKoppaTransliteration;
 }
 
-/** Unicode representation preferences for Greek output. */
-export interface GreekUnicodeOptions {
+/**
+ * How Greek is written: letter shapes, accentuation, assimilation, and the
+ * Unicode form of the output. `sigma` and `doubleRho` also shape Beta Code,
+ * which writes Greek in ASCII; `accentuation` also decides whether reading
+ * transliteration infers a smooth breathing, which monotonic Greek has not.
+ */
+export interface GreekOptions {
+  /** Sigma glyph policy. Defaults to `"standard"`. */
+  sigma?: SigmaOrthography;
+  /** Lowercase final sigma policy in Greek output. Defaults to `"contextual"`; `"preserve"` retains source Greek sigma shapes. */
+  finalSigma?: FinalSigmaOrthography;
+  /** Medial lowercase beta glyph. Defaults to `"standard"`. */
+  medialBeta?: MedialBetaOrthography;
+  /** Double-rho marks in Greek output. Defaults to `"unmarked"`. */
+  doubleRho?: DoubleRhoOrthography;
+  /** Dental assimilation before sigma. Defaults to `"preserve"`. */
+  dentalSigma?: DentalSigmaOrthography;
+  /** Greek accentuation system. Defaults to `"polytonic"`; `"monotonic"` follows the monotonic rules, monosyllables included, as far as the written text allows. */
+  accentuation?: GreekAccentuation;
   /** Composed or decomposed output. Defaults to `"composed"`. */
   composition?: UnicodeComposition;
   /** Tonos/oxia preference for eligible acute vowels. Defaults to `"system"`. */
@@ -282,37 +296,51 @@ export interface GreekUnicodeOptions {
   anoTeleia?: GreekAnoTeleiaForm;
 }
 
+/** How Beta Code is written. */
+export interface BetaCodeOptions {
+  /** Insignificant ASCII letter case of Beta Code output. Defaults to `"lowercase"`. */
+  case?: BetaCodeCase;
+  /** Beta Code spelling of yot. Defaults to `"j"`; TLG uses `"#401"`. */
+  yot?: BetaCodeYot;
+}
+
+/** Transformations of the text as a whole, in every output format. */
+export interface TextOptions {
+  /** Semantic letter case applied to recognized graphemes. Defaults to `"preserve"`. */
+  letterCase?: LetterCaseOrthography;
+  /** Whitespace rendering. Defaults to `"preserve"`. */
+  whitespace?: WhitespaceOrthography;
+  /** Alphabetic or decimal numeral output. Defaults to `"alphabetic"`. */
+  numerals?: NumeralOrthography;
+}
+
 /**
- * Options shared by conversion functions, helpers, and converters.
+ * Options shared by the conversion functions and converters.
  *
- * The three option groups answer three different questions, which is why one
- * name can appear in two of them:
- *
- * - `diacritics.X` asks whether the mark class X is kept: `"preserve"` or
- *   `"remove"` from the document;
- * - `orthography.X` asks how X is written in the target format: a spelling
- *   (`"omit"` means not written in that format, `"greek"` the Greek scalar,
- *   a Latin spelling such as `"ph"`) or a policy such as `"contextual"`;
- * - `unicode.X` asks which Unicode scalar represents X in Greek output.
+ * The groups are named after what they describe: `transliteration` is the
+ * Latin writing system (how each letter and mark is spelled, written and
+ * read), `greek` the Greek one (shapes, accentuation, Unicode form; sigma
+ * and double rho reach Beta Code too), `betaCode` the Beta Code conventions,
+ * `text` the transformations of the whole text in every format, and
+ * `diacritics` which classes of marks are kept at all. A name can appear in
+ * two groups because the questions differ: `diacritics.coronis` asks whether
+ * the coronis is kept, `transliteration.coronis` how it is written in Latin.
  *
  * Every accepted value is ASCII; see {@link CONVERSION_OPTION_VALUES}.
  */
 export interface ConversionOptions {
   /** Named configuration applied before custom fields. */
   preset?: Preset;
-  /** Orthographic and transliteration policies. */
-  orthography?: OrthographyOptions;
-  /** Greek Unicode representation preferences. */
-  unicode?: GreekUnicodeOptions;
-  /** Selective diacritic rendering policies. */
+  /** The Latin writing system. */
+  transliteration?: TransliterationOptions;
+  /** The Greek writing system, and what reaches Beta Code. */
+  greek?: GreekOptions;
+  /** Beta Code conventions. */
+  betaCode?: BetaCodeOptions;
+  /** Transformations of the whole text, in every format. */
+  text?: TextOptions;
+  /** Which semantic diacritics are kept. */
   diacritics?: DiacriticOptions;
-  /**
-   * Removes removable marks, including breathings in Greek and Beta Code.
-   * In transliteration, the rough breathing's Latin `h` is retained unless
-   * `diacritics.roughBreathing` explicitly requests removal. Greek sigma
-   * glyphs are retained unless a sigma orthographic policy is selected.
-   */
-  removeDiacritics?: boolean;
 }
 
 /**
@@ -323,58 +351,66 @@ export interface ConversionOptions {
  * by hand; see the stability policy.
  */
 export interface ResolvedConversionOptions {
-  /** Effective orthographic and transliteration policies. */
-  orthography: Required<OrthographyOptions>;
-  /** Effective Greek Unicode representation preferences. */
-  unicode: Required<GreekUnicodeOptions>;
+  /** Effective transliteration spellings. */
+  transliteration: Required<TransliterationOptions>;
+  /** Effective Greek orthography and Unicode form. */
+  greek: Required<GreekOptions>;
+  /** Effective Beta Code conventions. */
+  betaCode: Required<BetaCodeOptions>;
+  /** Effective whole-text transformations. */
+  text: Required<TextOptions>;
   /** Effective disposition of every semantic diacritic class. */
-  diacritics: Required<DiacriticOptions>;
-  /** Whether removable marks are suppressed in the selected output format. */
-  removeDiacritics: boolean;
+  diacritics: Required<DiacriticClassOptions>;
 }
 
 /** Read-only view exposed by {@link DEFAULT_CONVERSION_OPTIONS}. */
 export interface DefaultConversionOptions {
-  /** Literal default values for orthographic and transliteration policies. */
-  readonly orthography: {
-    readonly doubleRho: "unmarked";
-    readonly medialBeta: "standard";
-    readonly coronis: "omit";
-    readonly smoothBreathing: "omit";
-    readonly circumflexAccent: "tilde";
-    readonly quantity: "preserve";
-    readonly nasalGamma: "nasal";
-    readonly sigma: "standard";
-    readonly lunateSigma: "s";
-    readonly finalSigma: "contextual";
-    readonly numerals: "alphabetic";
-    readonly keraia: "greek";
-    readonly dentalSigma: "preserve";
-    readonly upsilon: "u";
-    readonly longVowels: "macron";
-    readonly accentuation: "polytonic";
-    readonly whitespace: "preserve";
-    readonly hyphen: "ascii";
-    readonly enotikon: "preserve";
+  /** Literal default transliteration spellings: SBL academic style. */
+  readonly transliteration: {
     readonly beta: "b";
     readonly eta: "e";
     readonly xi: "x";
     readonly phi: "ph";
     readonly chi: "ch";
+    readonly upsilon: "y-with-diphthong-u";
     readonly muPi: "mp";
     readonly nuTau: "nt";
     readonly rho: "contextual";
-    readonly letterCase: "preserve";
-    readonly betaCodeCase: "lowercase";
-    readonly betaCodeYot: "j";
+    readonly nasalGamma: "nasal";
+    readonly longVowels: "macron";
+    readonly circumflexAccent: "tilde";
+    readonly quantity: "preserve";
+    readonly smoothBreathing: "omit";
+    readonly coronis: "omit";
+    readonly hyphen: "ascii";
+    readonly keraia: "greek";
+    readonly enotikon: "preserve";
+    readonly lunateSigma: "s";
     readonly archaicKoppa: "k-dot-below";
   };
-  /** Literal default values for Greek Unicode representation. */
-  readonly unicode: {
+  /** Literal default Greek orthography and Unicode form. */
+  readonly greek: {
+    readonly sigma: "standard";
+    readonly finalSigma: "contextual";
+    readonly medialBeta: "standard";
+    readonly doubleRho: "unmarked";
+    readonly dentalSigma: "preserve";
+    readonly accentuation: "polytonic";
     readonly composition: "composed";
     readonly acute: "system";
     readonly questionMark: "canonical";
     readonly anoTeleia: "canonical";
+  };
+  /** Literal default Beta Code conventions. */
+  readonly betaCode: {
+    readonly case: "lowercase";
+    readonly yot: "j";
+  };
+  /** Literal default whole-text transformations. */
+  readonly text: {
+    readonly letterCase: "preserve";
+    readonly whitespace: "preserve";
+    readonly numerals: "alphabetic";
   };
   /** Literal default disposition of every semantic diacritic class. */
   readonly diacritics: {
@@ -386,8 +422,52 @@ export interface DefaultConversionOptions {
     readonly iotaSubscript: "preserve";
     readonly quantity: "preserve";
   };
-  /** The default global diacritic-removal shortcut. */
-  readonly removeDiacritics: false;
+}
+
+/**
+ * Error raised for an option that cannot be resolved: an unknown key or
+ * preset, a value outside the accepted ones, or two values that cannot be
+ * combined. A `RangeError`, with the option named by `path` and what was
+ * received, what is accepted, and the replacement of a key or value that an
+ * earlier release knew, when there is one. The message is for humans.
+ */
+export class OptionError extends RangeError {
+  /** Dotted path of the option, such as `"transliteration.eta"` or `"preset"`. */
+  readonly path: string;
+  /** The value received, or undefined for an unknown key. */
+  readonly received: unknown;
+  /**
+   * The accepted values of the option, or the accepted keys of its group.
+   * For two values that cannot be combined, the values accepted next to the
+   * other one.
+   */
+  readonly accepted: readonly string[];
+  /**
+   * The current path of a removed key, or the current spelling of a renamed
+   * value. A property of the error only when there is one: declared without
+   * a field, which would set it to `undefined` on every error.
+   */
+  declare readonly replacement?: string;
+
+  /** Creates the error with its message and the details of the option. */
+  constructor(
+    message: string,
+    details: {
+      path: string;
+      received: unknown;
+      accepted: readonly string[];
+      replacement?: string;
+    },
+  ) {
+    super(message);
+    this.name = "OptionError";
+    this.path = details.path;
+    this.received = details.received;
+    this.accepted = Object.freeze([...details.accepted]);
+    if (details.replacement !== undefined) {
+      this.replacement = details.replacement;
+    }
+  }
 }
 
 /** Accepted values of every field of one option group. */
@@ -395,13 +475,17 @@ export type OptionValueTable<T> = {
   readonly [K in keyof T]-?: readonly NonNullable<T[K]>[];
 };
 
-/** Every accepted value of every string-valued conversion option, by group. */
+/** Every accepted value of every conversion option, by group. */
 export interface ConversionOptionValues {
-  /** Accepted values of each orthographic and transliteration policy. */
-  readonly orthography: OptionValueTable<OrthographyOptions>;
-  /** Accepted values of each Greek Unicode representation preference. */
-  readonly unicode: OptionValueTable<GreekUnicodeOptions>;
-  /** Accepted values of each semantic diacritic class disposition. */
+  /** Accepted values of each transliteration spelling. */
+  readonly transliteration: OptionValueTable<TransliterationOptions>;
+  /** Accepted values of each Greek orthography and Unicode preference. */
+  readonly greek: OptionValueTable<GreekOptions>;
+  /** Accepted values of each Beta Code convention. */
+  readonly betaCode: OptionValueTable<BetaCodeOptions>;
+  /** Accepted values of each whole-text transformation. */
+  readonly text: OptionValueTable<TextOptions>;
+  /** Accepted values of each semantic diacritic class disposition, and of `all`. */
   readonly diacritics: OptionValueTable<DiacriticOptions>;
 }
 
@@ -424,25 +508,12 @@ const freezeTable = <T>(table: OptionValueTable<T>): OptionValueTable<T> =>
  * with `circumflexAccent: "circumflex"`.
  */
 export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
-  orthography: freezeTable<OrthographyOptions>({
-    doubleRho: ["unmarked", "smooth-rough"],
-    medialBeta: ["standard", "symbol"],
-    coronis: ["omit", "apostrophe", "greek"],
-    smoothBreathing: ["omit", "greek", "apostrophe"],
-    circumflexAccent: ["tilde", "circumflex"],
-    quantity: ["preserve", "omit"],
-    nasalGamma: [
-      "nasal",
-      "nasal-except-kappa",
-      "nasal-medial-kappa",
-      "literal",
-    ],
-    sigma: ["standard", "lunate", "preserve"],
-    lunateSigma: ["s", "c"],
-    finalSigma: ["contextual", "medial", "preserve"],
-    numerals: ["alphabetic", "decimal"],
-    keraia: ["greek", "bnf"],
-    dentalSigma: ["preserve", "assimilate"],
+  transliteration: freezeTable<TransliterationOptions>({
+    beta: ["b", "v"],
+    eta: ["e", "i"],
+    xi: ["x", "ks"],
+    phi: ["ph", "f"],
+    chi: ["ch", "kh"],
     upsilon: [
       "u",
       "y",
@@ -450,31 +521,49 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
       "y-with-au-eu-ou",
       "y-with-ou-v-f",
     ],
-    longVowels: ["macron", "circumflex", "omit"],
-    accentuation: ["polytonic", "monotonic"],
-    whitespace: ["preserve", "collapse"],
-    hyphen: ["ascii", "typographic"],
-    enotikon: ["preserve", "hyphen"],
-    beta: ["b", "v"],
-    eta: ["e", "i"],
-    xi: ["x", "ks"],
-    phi: ["ph", "f"],
-    chi: ["ch", "kh"],
     muPi: ["mp", "b-initial", "b-initial-final"],
     nuTau: ["nt", "d-initial", "d-underline-initial"],
     rho: ["contextual", "systematic"],
-    letterCase: ["preserve", "lowercase", "uppercase", "title"],
-    betaCodeCase: ["lowercase", "uppercase"],
-    betaCodeYot: ["j", "#401"],
+    nasalGamma: [
+      "nasal",
+      "nasal-except-kappa",
+      "nasal-medial-kappa",
+      "literal",
+    ],
+    longVowels: ["macron", "circumflex", "omit"],
+    circumflexAccent: ["tilde", "circumflex"],
+    quantity: ["preserve", "omit"],
+    smoothBreathing: ["omit", "greek", "apostrophe"],
+    coronis: ["omit", "apostrophe", "greek"],
+    hyphen: ["ascii", "typographic"],
+    keraia: ["greek", "bnf"],
+    enotikon: ["preserve", "hyphen"],
+    lunateSigma: ["s", "c"],
     archaicKoppa: ["k-dot-below", "q"],
   }),
-  unicode: freezeTable<GreekUnicodeOptions>({
+  greek: freezeTable<GreekOptions>({
+    sigma: ["standard", "lunate", "preserve"],
+    finalSigma: ["contextual", "medial", "preserve"],
+    medialBeta: ["standard", "symbol"],
+    doubleRho: ["unmarked", "smooth-rough"],
+    dentalSigma: ["preserve", "assimilate"],
+    accentuation: ["polytonic", "monotonic"],
     composition: ["composed", "decomposed"],
     acute: ["system", "tonos", "oxia"],
     questionMark: ["canonical", "semicolon", "greek"],
     anoTeleia: ["canonical", "middle-dot", "greek"],
   }),
+  betaCode: freezeTable<BetaCodeOptions>({
+    case: ["lowercase", "uppercase"],
+    yot: ["j", "#401"],
+  }),
+  text: freezeTable<TextOptions>({
+    letterCase: ["preserve", "lowercase", "uppercase", "title"],
+    whitespace: ["preserve", "collapse"],
+    numerals: ["alphabetic", "decimal"],
+  }),
   diacritics: freezeTable<DiacriticOptions>({
+    all: ["preserve", "remove"],
     accents: ["preserve", "remove"],
     smoothBreathing: ["preserve", "remove"],
     roughBreathing: ["preserve", "remove"],
@@ -488,49 +577,54 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
 /**
  * Complete, immutable defaults used when no preset or custom option overrides
  * them. Inspect this value in an IDE to discover the engine's effective
- * baseline configuration.
+ * baseline configuration. The default transliteration is the SBL academic
+ * style: without a preset, `convert()` writes what `sbl-academic` writes.
  */
 export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
   .freeze(
     {
-      orthography: Object.freeze({
-        doubleRho: "unmarked",
-        medialBeta: "standard",
-        coronis: "omit",
-        smoothBreathing: "omit",
-        circumflexAccent: "tilde",
-        quantity: "preserve",
-        nasalGamma: "nasal",
-        sigma: "standard",
-        lunateSigma: "s",
-        finalSigma: "contextual",
-        numerals: "alphabetic",
-        keraia: "greek",
-        dentalSigma: "preserve",
-        upsilon: "u",
-        longVowels: "macron",
-        accentuation: "polytonic",
-        whitespace: "preserve",
-        hyphen: "ascii",
-        enotikon: "preserve",
+      transliteration: Object.freeze({
         beta: "b",
         eta: "e",
         xi: "x",
         phi: "ph",
         chi: "ch",
+        upsilon: "y-with-diphthong-u",
         muPi: "mp",
         nuTau: "nt",
         rho: "contextual",
-        letterCase: "preserve",
-        betaCodeCase: "lowercase",
-        betaCodeYot: "j",
+        nasalGamma: "nasal",
+        longVowels: "macron",
+        circumflexAccent: "tilde",
+        quantity: "preserve",
+        smoothBreathing: "omit",
+        coronis: "omit",
+        hyphen: "ascii",
+        keraia: "greek",
+        enotikon: "preserve",
+        lunateSigma: "s",
         archaicKoppa: "k-dot-below",
       }),
-      unicode: Object.freeze({
+      greek: Object.freeze({
+        sigma: "standard",
+        finalSigma: "contextual",
+        medialBeta: "standard",
+        doubleRho: "unmarked",
+        dentalSigma: "preserve",
+        accentuation: "polytonic",
         composition: "composed",
         acute: "system",
         questionMark: "canonical",
         anoTeleia: "canonical",
+      }),
+      betaCode: Object.freeze({
+        case: "lowercase",
+        yot: "j",
+      }),
+      text: Object.freeze({
+        letterCase: "preserve",
+        whitespace: "preserve",
+        numerals: "alphabetic",
       }),
       diacritics: Object.freeze({
         accents: "preserve",
@@ -541,6 +635,5 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         iotaSubscript: "preserve",
         quantity: "preserve",
       }),
-      removeDiacritics: false,
     } as const satisfies ResolvedConversionOptions,
   );

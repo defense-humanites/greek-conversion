@@ -10,13 +10,15 @@ convert(input, from, to, { preset: "ala-lc-modern" });
 ```
 
 Custom options can refine or override a preset. Resolution is recursive for
-the `orthography`, `diacritics`, and `unicode` groups:
+the `transliteration`, `greek`, `betaCode`, `text`, and `diacritics` groups,
+and `diacritics.all` is expanded where it is written, so the caller's `all`
+overrides every class a preset set:
 
 ```ts
 convert(input, from, to, {
   preset: "ala-lc-modern",
   diacritics: { accents: "preserve" },
-  orthography: { letterCase: "uppercase" },
+  text: { letterCase: "uppercase" },
 });
 ```
 
@@ -93,9 +95,11 @@ Romanization profile for Ancient and Medieval Greek before 1454.
 
 ```json
 {
-  "orthography": {
-    "numerals": "decimal",
+  "transliteration": {
     "upsilon": "y-with-diphthong-u"
+  },
+  "text": {
+    "numerals": "decimal"
   },
   "diacritics": {
     "accents": "remove",
@@ -134,13 +138,15 @@ Romanization profile for Modern Greek after 1453.
 
 ```json
 {
-  "orthography": {
+  "transliteration": {
     "beta": "v",
     "muPi": "b-initial",
     "nasalGamma": "nasal-medial-kappa",
     "nuTau": "d-underline-initial",
-    "numerals": "decimal",
     "upsilon": "y-with-diphthong-u"
+  },
+  "text": {
+    "numerals": "decimal"
   },
   "diacritics": {
     "accents": "remove",
@@ -179,7 +185,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
 
 ```json
 {
-  "orthography": {
+  "transliteration": {
     "archaicKoppa": "q",
     "coronis": "greek",
     "circumflexAccent": "circumflex",
@@ -190,7 +196,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
     "smoothBreathing": "greek",
     "upsilon": "y-with-au-eu-ou"
   },
-  "unicode": {
+  "greek": {
     "questionMark": "greek"
   }
 }
@@ -223,7 +229,7 @@ Type 1 transliteration of Greek characters into Latin characters.
 
 ```json
 {
-  "orthography": {
+  "transliteration": {
     "beta": "v",
     "circumflexAccent": "circumflex",
     "coronis": "apostrophe",
@@ -262,7 +268,7 @@ Type 2 transcription of Greek characters into Latin characters, favouring pronun
 
 ```json
 {
-  "orthography": {
+  "transliteration": {
     "beta": "v",
     "circumflexAccent": "circumflex",
     "coronis": "apostrophe",
@@ -307,8 +313,8 @@ Lowercase-ASCII subset of TLG Beta Code used by the Perseus Digital Library proj
 
 ```json
 {
-  "orthography": {
-    "betaCodeCase": "lowercase"
+  "betaCode": {
+    "case": "lowercase"
   }
 }
 ```
@@ -335,7 +341,7 @@ Academic transliteration retaining the engine's scientific diacritics.
 
 ```json
 {
-  "orthography": {
+  "transliteration": {
     "upsilon": "y-with-diphthong-u"
   }
 }
@@ -363,7 +369,7 @@ Readable transliteration omitting most scholarly diacritics while retaining roug
 
 ```json
 {
-  "orthography": {
+  "transliteration": {
     "upsilon": "y-with-diphthong-u"
   },
   "diacritics": {
@@ -400,9 +406,9 @@ Canonical Beta Code together with the TLG characters implemented by the engine.
 
 ```json
 {
-  "orthography": {
-    "betaCodeCase": "uppercase",
-    "betaCodeYot": "#401"
+  "betaCode": {
+    "case": "uppercase",
+    "yot": "#401"
   }
 }
 ```
@@ -426,7 +432,7 @@ DEFAULT_CONVERSION_OPTIONS;
 getPresetOptions("ala-lc-modern");
 resolveConversionOptions({
   preset: "ala-lc-modern",
-  orthography: { beta: "b" },
+  transliteration: { beta: "b" },
 });
 ```
 
@@ -451,7 +457,7 @@ separated upsilon where `u` would form a diphthong. This keeps preset output
 idempotent without lexical inference.
 
 The ISO Type 1 and BnF presets use the narrower
-`orthography.upsilon: "y-with-au-eu-ou"` rule: `αυ`, `ευ`, and `ου` produce
+`transliteration.upsilon: "y-with-au-eu-ou"` rule: `αυ`, `ευ`, and `ου` produce
 `au`, `eu`, and `ou`; isolated upsilon and other vowel pairs use `y`. A
 diaeresis prevents the three combinations. When reading `ay`, `ey`, or `oy`,
 the parser keeps the upsilon separated so a second conversion cannot silently
@@ -461,11 +467,11 @@ vowel carries the separation, as Greek writes a hiatus (`ay → ἀυ`,
 diaeresis carries it (`kay → kaÿ`), and the encoder writes that diaeresis at
 once so the output is canonical.
 
-`bnf-core` also selects `orthography.keraia: "bnf"` for transliteration: the
+`bnf-core` also selects `transliteration.keraia: "bnf"` for transliteration: the
 right numeral mark becomes an acute accent and the left numeral mark becomes
 a comma. This matches BnF spelling, but a vowel with an acute accent can be
 indistinguishable from a vowel followed by the right keraia. Forward
 conversion therefore reports information loss through `convertDetailed()`;
 the transliteration parser does not guess which character was intended.
 Canonical NFC output may compose the acute with a preceding Latin vowel.
-Set `orthography.keraia: "greek"` to keep the original numeral marks.
+Set `transliteration.keraia: "greek"` to keep the original numeral marks.

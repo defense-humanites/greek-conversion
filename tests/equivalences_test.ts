@@ -1,36 +1,39 @@
 import { assertEquals } from "@std/assert";
-import {
-  betaCodeToGreek,
-  betaCodeToTransliteration,
-  convert,
-  greekToBetaCode,
-  greekToTransliteration,
-  reencode,
-  transliterationToBetaCode,
-  transliterationToGreek,
-} from "../src/mod.ts";
+import { convert, reencode } from "../src/mod.ts";
 import { encode, parse } from "../src/document.ts";
 import { assertNfcEquals } from "./assertions.ts";
 import { EQUIVALENCES, FORMATS, valueFor } from "./fixtures.ts";
 
 Deno.test("canonical Greek and Beta Code equivalences", () => {
   for (const { greek, betaCode } of EQUIVALENCES) {
-    assertNfcEquals(greekToBetaCode(greek), betaCode);
-    assertNfcEquals(betaCodeToGreek(betaCode), greek);
+    assertNfcEquals(convert(greek, "greek", "beta-code"), betaCode);
+    assertNfcEquals(convert(betaCode, "beta-code", "greek"), greek);
   }
 });
 
 Deno.test("canonical Greek and transliteration equivalences", () => {
   for (const { greek, transliteration } of EQUIVALENCES) {
-    assertNfcEquals(greekToTransliteration(greek), transliteration);
-    assertNfcEquals(transliterationToGreek(transliteration), greek);
+    assertNfcEquals(
+      convert(greek, "greek", "transliteration"),
+      transliteration,
+    );
+    assertNfcEquals(
+      convert(transliteration, "transliteration", "greek"),
+      greek,
+    );
   }
 });
 
 Deno.test("canonical Beta Code and transliteration equivalences", () => {
   for (const { betaCode, transliteration } of EQUIVALENCES) {
-    assertNfcEquals(betaCodeToTransliteration(betaCode), transliteration);
-    assertNfcEquals(transliterationToBetaCode(transliteration), betaCode);
+    assertNfcEquals(
+      convert(betaCode, "beta-code", "transliteration"),
+      transliteration,
+    );
+    assertNfcEquals(
+      convert(transliteration, "transliteration", "beta-code"),
+      betaCode,
+    );
   }
 });
 
@@ -53,11 +56,15 @@ Deno.test("reencode is the same-format conversion facade", () => {
 
   assertNfcEquals(
     reencode("ϐΊΟΣ", "greek", {
-      orthography: { finalSigma: "medial", letterCase: "lowercase" },
+      greek: { finalSigma: "medial" },
+      text: { letterCase: "lowercase" },
     }),
     "βίοσ",
   );
 });
 
 Deno.test("preserves literals", () =>
-  assertNfcEquals(transliterationToGreek("logos 🙂 123"), "λογος 🙂 123"));
+  assertNfcEquals(
+    convert("logos 🙂 123", "transliteration", "greek"),
+    "λογος 🙂 123",
+  ));

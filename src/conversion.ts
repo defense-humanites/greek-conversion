@@ -17,11 +17,11 @@ import { applyNumeralOrthography, applyOrthography } from "./orthography.ts";
 import { parseBetaCode } from "./parsers/beta_code.ts";
 import { parseGreek } from "./parsers/greek.ts";
 import {
-  identityTargets,
   outputSpans,
   type ReadPositions,
   readSpans,
   type SpanTable,
+  type TokenTargets,
   type WrittenPositions,
   writtenSpans,
 } from "./parsers/positions.ts";
@@ -41,10 +41,13 @@ export interface ParseResult {
   /** The canonical document. */
   document: Document;
   /**
-   * One span per token, in token order. Spans are in increasing order and
-   * cover the input without gaps. Tokens read from one character of the
-   * input (the jamo of a Hangul syllable, kept as literals; the two letters
-   * read from a modern-digraph `b`) share its span.
+   * One span per token, in token order. Spans are in order (their starts and
+   * their ends never decrease) and cover the input without gaps. Tokens read
+   * from one character of the input (the jamo of a Hangul syllable, kept as
+   * literals; the two letters read from a modern-digraph `b`) share its span;
+   * a token read from part of a character that the previous token also draws
+   * on (the dot below of a precomposed `ḥ` after the `p` of `ph`) has that
+   * character's span, inside the previous token's and ending with it.
    */
   spans: readonly TokenSpan[];
 }
@@ -54,7 +57,11 @@ export interface ParseResult {
  *
  * Unknown input is retained as literal tokens. Presets and custom options are
  * resolved before parsing because some transliteration spellings are
- * option-dependent.
+ * option-dependent: the `transliteration` group, `greek.accentuation`, and
+ * the disposition of the smooth breathing (`diacritics.smoothBreathing`, or
+ * `diacritics.all`) decide how transliteration is read, while reading Greek
+ * or Beta Code depends on no option. Every option is validated whatever the
+ * format.
  *
  * @throws {TypeError} If `input` is not a string.
  * @throws {RangeError} If `format` is not supported or an option is invalid.
@@ -193,14 +200,14 @@ export function encodeTracked(
   format: Format,
   options: ResolvedConversionOptions,
 ): { output: string; spans: SpanTable } {
-  const targets = identityTargets(document.length);
+  const targets: TokenTargets = {};
   const prepared = format === "transliteration"
     ? applyNumeralOrthography(document, options, targets)
     : applyOrthography(document, options, targets);
   const written: WrittenPositions = {
     text: "",
-    starts: new Uint32Array(prepared.length),
-    ends: new Uint32Array(prepared.length),
+    starts: new Array<number>(prepared.length).fill(0),
+    ends: new Array<number>(prepared.length).fill(0),
   };
 
   let output: string;
@@ -208,7 +215,7 @@ export function encodeTracked(
   switch (format) {
     case "greek":
       output = encodeGreek(prepared, options, written);
-      if (options.unicode?.composition === "decomposed") form = "NFD";
+      if (options.greek.composition === "decomposed") form = "NFD";
       break;
     case "beta-code":
       output = encodeBetaCode(prepared, options, written);
@@ -219,5 +226,5 @@ export function encodeTracked(
   }
 
   const rendered = writtenSpans(output, written, form);
-  return { output, spans: outputSpans(targets, rendered, output.length) };
+  return { output, spans: outputSpans(targets.map, rendered, output.length) };
 }

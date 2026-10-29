@@ -225,7 +225,8 @@ const BUILTIN_LETTERS = new Set<string>(Object.keys(ALPHABET));
 const SENTINEL_START = 0xF0000;
 
 /**
- * An immutable conversion engine with isolated character extensions.
+ * An immutable conversion engine with isolated character extensions. Create
+ * one with `createConverter()`: the class is exported as a type only.
  *
  * Aliases resolve to built-in letters and therefore receive the complete
  * contextual behavior of those letters. New characters are deliberately
@@ -530,8 +531,8 @@ export class Converter {
     if (origins === undefined) return { document, diagnostics };
 
     // The literals an out-of-scope token became share its span.
-    const starts = new Uint32Array(document.length);
-    const ends = new Uint32Array(document.length);
+    const starts = new Array<number>(document.length).fill(0);
+    const ends = new Array<number>(document.length).fill(0);
     for (let index = 0; index < document.length; index++) {
       starts[index] = parsedSpans.starts[origins[index]];
       ends[index] = parsedSpans.ends[origins[index]];
@@ -609,8 +610,12 @@ export class Converter {
     track = false,
   ): { output: string; map?: SegmentMap } {
     if (this.#sentinels.size === 0) return { output: input };
-    const starts = track ? new Uint32Array(input.length + 1) : undefined;
-    const ends = track ? new Uint32Array(input.length + 1) : undefined;
+    const starts = track
+      ? new Array<number>(input.length + 1).fill(0)
+      : undefined;
+    const ends = track
+      ? new Array<number>(input.length + 1).fill(0)
+      : undefined;
     let output = "";
     // Start of the run of ordinary units not yet copied to the output.
     let run = 0;
@@ -892,7 +897,7 @@ function customForm(
     const semanticPrefix = value.startsWith("*") ? "*" : "";
     const base = semanticPrefix === "" ? value : value.slice(1);
     value = semanticPrefix +
-      (options.orthography.betaCodeCase === "uppercase"
+      (options.betaCode.case === "uppercase"
         ? base.toUpperCase()
         : base.toLowerCase());
   }
@@ -986,8 +991,8 @@ function sourceMap(input: PreprocessedInput): SegmentMap | undefined {
     : segmentMap(normalized, input.input, "to", "NFD");
   if (matches.length === 0) return nfd;
 
-  const starts = new Uint32Array(value.length + 1);
-  const ends = new Uint32Array(value.length + 1);
+  const starts = new Array<number>(value.length + 1).fill(0);
+  const ends = new Array<number>(value.length + 1).fill(0);
   let v = 0;
   let n = 0;
   const copy = (until: number) => {
