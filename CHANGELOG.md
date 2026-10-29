@@ -7,6 +7,8 @@ change.
 
 ## [Unreleased]
 
+## [1.0.0-rc.6] - 2026-10-29
+
 Sixth release candidate for `1.0.0`. It settles the public API for the stable
 release: the ten convenience functions are removed, the options are regrouped by
 what they describe, the `removeDiacritics` flag becomes `diacritics.all`, the
@@ -708,7 +710,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.5...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.6...HEAD
+[1.0.0-rc.6]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.5...v1.0.0-rc.6
 [1.0.0-rc.5]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.4...v1.0.0-rc.5
 [1.0.0-rc.4]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.3...v1.0.0-rc.4
 [1.0.0-rc.3]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.2...v1.0.0-rc.3
