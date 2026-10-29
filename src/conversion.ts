@@ -17,11 +17,11 @@ import { applyNumeralOrthography, applyOrthography } from "./orthography.ts";
 import { parseBetaCode } from "./parsers/beta_code.ts";
 import { parseGreek } from "./parsers/greek.ts";
 import {
-  identityTargets,
   outputSpans,
   type ReadPositions,
   readSpans,
   type SpanTable,
+  type TokenTargets,
   type WrittenPositions,
   writtenSpans,
 } from "./parsers/positions.ts";
@@ -197,14 +197,14 @@ export function encodeTracked(
   format: Format,
   options: ResolvedConversionOptions,
 ): { output: string; spans: SpanTable } {
-  const targets = identityTargets(document.length);
+  const targets: TokenTargets = {};
   const prepared = format === "transliteration"
     ? applyNumeralOrthography(document, options, targets)
     : applyOrthography(document, options, targets);
   const written: WrittenPositions = {
     text: "",
-    starts: new Uint32Array(prepared.length),
-    ends: new Uint32Array(prepared.length),
+    starts: new Array<number>(prepared.length).fill(0),
+    ends: new Array<number>(prepared.length).fill(0),
   };
 
   let output: string;
@@ -223,5 +223,5 @@ export function encodeTracked(
   }
 
   const rendered = writtenSpans(output, written, form);
-  return { output, spans: outputSpans(targets, rendered, output.length) };
+  return { output, spans: outputSpans(targets.map, rendered, output.length) };
 }

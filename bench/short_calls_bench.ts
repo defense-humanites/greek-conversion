@@ -11,6 +11,10 @@
  *
  * `parse()` is measured on its own because `convert()` adds a fixed cost per
  * call (options, encoder, loss check) that hides changes in the readers.
+ * `convertDetailed()` and `parseDetailed()` are measured too, on the clause
+ * and on one word: positions add a cost per call that `convert()` does not
+ * pay, and until 1.0.0-rc.6 the typed arrays they were kept in made it
+ * several times the conversion of a word. Compare with the previous release.
  * To look for deoptimizations behind a slower result, count them on both
  * versions; a few are normal while V8 warms up (17 on `main` for this
  * bench), a loop shows as hundreds (207 for the regression above):
@@ -22,8 +26,8 @@
  *
  * @module
  */
-import { convert } from "../src/mod.ts";
-import { parse } from "../src/document.ts";
+import { convert, convertDetailed } from "../src/mod.ts";
+import { parse, parseDetailed } from "../src/document.ts";
 import { THUCYDIDES_1_1_10 } from "./thucydides.ts";
 
 // "Θουκυδίδης Ἀθηναῖος ξυνέγραψε τὸν πόλεμον τῶν Πελοποννησίων καὶ Ἀθηναίων,"
@@ -56,4 +60,35 @@ Deno.bench("beta-code → greek", { group: "short convert" }, () => {
 });
 Deno.bench("transliteration → greek", { group: "short convert" }, () => {
   convert(LATIN, "transliteration", "greek");
+});
+
+Deno.bench(
+  "detailed greek → transliteration",
+  { group: "short detailed", baseline: true },
+  () => {
+    convertDetailed(GREEK, "greek", "transliteration");
+  },
+);
+Deno.bench("detailed greek → beta-code", { group: "short detailed" }, () => {
+  convertDetailed(GREEK, "greek", "beta-code");
+});
+Deno.bench("detailed beta-code → greek", { group: "short detailed" }, () => {
+  convertDetailed(BETA, "beta-code", "greek");
+});
+Deno.bench(
+  "detailed transliteration → greek",
+  { group: "short detailed" },
+  () => {
+    convertDetailed(LATIN, "transliteration", "greek");
+  },
+);
+Deno.bench(
+  "detailed one word, greek → transliteration",
+  { group: "short detailed" },
+  () => {
+    convertDetailed("ἄνθρωπος", "greek", "transliteration");
+  },
+);
+Deno.bench("parseDetailed greek", { group: "short detailed" }, () => {
+  parseDetailed(GREEK, "greek");
 });

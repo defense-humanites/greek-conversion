@@ -348,7 +348,7 @@ export function parseTransliteration(
     positions.text = text;
     starts.push(chars.length);
     // Character indices to code-unit offsets.
-    const offsets = new Uint32Array(chars.length + 1);
+    const offsets = new Array<number>(chars.length + 1).fill(0);
     let offset = 0;
     for (let k = 0; k < chars.length; k++) {
       offsets[k] = offset;

@@ -15,7 +15,7 @@ import {
 } from "./model.ts";
 import type { Diacritic, Document, Grapheme, Letter, Token } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
-import { composeTargets } from "./parsers/positions.ts";
+import { composeTargets, type TokenTargets } from "./parsers/positions.ts";
 
 const NUMERAL_VALUES = new Map<Letter, number>([
   ["alpha", 1],
@@ -58,7 +58,7 @@ const NUMERAL_VALUES = new Map<Letter, number>([
 export function applyOrthography(
   document: Document,
   options: ConversionOptions = {},
-  targets?: Int32Array,
+  targets?: TokenTargets,
 ): Document {
   const numbered = applyNumeralOrthography(document, options, targets);
   if (options.greek?.doubleRho !== "smooth-rough") return numbered;
@@ -218,14 +218,16 @@ function keepsMonosyllableAccent(
 export function applyNumeralOrthography(
   document: Document,
   options: ConversionOptions = {},
-  targets?: Int32Array,
+  targets?: TokenTargets,
 ): Document {
   const spaced = applyWhitespaceOrthography(document, options, targets);
   const cased = applyLetterCaseOrthography(spaced, options);
   if (options.text?.numerals !== "decimal") return cased;
 
   const output: Token[] = [];
-  const next = targets === undefined ? undefined : new Int32Array(cased.length);
+  const next = targets === undefined
+    ? undefined
+    : new Array<number>(cased.length).fill(0);
   for (let index = 0; index < cased.length;) {
     const numeral = readNumeral(cased, index);
     if (numeral === undefined) {
@@ -271,14 +273,14 @@ function applyLetterCaseOrthography(
 function applyWhitespaceOrthography(
   document: Document,
   options: ConversionOptions,
-  targets?: Int32Array,
+  targets?: TokenTargets,
 ): Document {
   if (options.text?.whitespace !== "collapse") return document;
 
   const output: Token[] = [];
   const next = targets === undefined
     ? undefined
-    : new Int32Array(document.length).fill(-1);
+    : new Array<number>(document.length).fill(-1);
   let pendingSpace = false;
   // Where the current whitespace run starts: its tokens all become the one
   // space written for it, or nothing at either end of the text.

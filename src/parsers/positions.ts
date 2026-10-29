@@ -21,12 +21,15 @@
 
 /**
  * Ranges of UTF-16 code units, one per token: `starts[i]` included and
- * `ends[i]` excluded. Two typed arrays rather than one object per token: a
- * long text has a hundred thousand tokens.
+ * `ends[i]` excluded. Two arrays rather than one object per token: a long
+ * text has a hundred thousand tokens. Plain arrays rather than typed ones,
+ * here and in the other tables of this module: a typed array costs about a
+ * microsecond to allocate, more than converting a word, and a conversion
+ * that reports positions allocates a dozen tables.
  */
 export interface SpanTable {
-  readonly starts: Uint32Array;
-  readonly ends: Uint32Array;
+  readonly starts: number[];
+  readonly ends: number[];
 }
 
 /**
@@ -48,8 +51,8 @@ export interface ReadPositions {
  */
 export interface WrittenPositions {
   text: string;
-  starts: Uint32Array;
-  ends: Uint32Array;
+  starts: number[];
+  ends: number[];
 }
 
 /**
@@ -82,8 +85,8 @@ function segmentEnd(text: string, index: number): number {
  * the start and the end in another text (`to`) of the segment it belongs to.
  */
 export interface SegmentMap {
-  readonly starts: Uint32Array;
-  readonly ends: Uint32Array;
+  readonly starts: number[];
+  readonly ends: number[];
 }
 
 /**
@@ -108,8 +111,8 @@ export function segmentMap(
   form: "NFC" | "NFD",
 ): SegmentMap | undefined {
   if (from === to) return undefined;
-  const starts = new Uint32Array(from.length + 1);
-  const ends = new Uint32Array(from.length + 1);
+  const starts = new Array<number>(from.length + 1).fill(0);
+  const ends = new Array<number>(from.length + 1).fill(0);
 
   let f = 0;
   let t = 0;
@@ -142,8 +145,8 @@ function segmentMapBySegment(
   to: string,
   original: "from" | "to",
   form: "NFC" | "NFD",
-  starts: Uint32Array,
-  ends: Uint32Array,
+  starts: number[],
+  ends: number[],
 ): SegmentMap {
   let f = 0;
   let t = 0;
@@ -194,8 +197,8 @@ export function spansIn(
   count: number,
   map: SegmentMap | undefined,
 ): SpanTable {
-  const mappedStarts = new Uint32Array(count);
-  const mappedEnds = new Uint32Array(count);
+  const mappedStarts = new Array<number>(count).fill(0);
+  const mappedEnds = new Array<number>(count).fill(0);
   for (let i = 0; i < count; i++) {
     const start = starts[i];
     const end = ends[i];
@@ -222,7 +225,7 @@ export function spansIn(
 export function readSpans(input: string, read: ReadPositions): SpanTable {
   const { starts } = read;
   const count = starts.length - 1;
-  const ends = new Uint32Array(count);
+  const ends = new Array<number>(count).fill(0);
   let end = read.text.length;
   for (let i = count - 1; i >= 0; i--) {
     if (starts[i + 1] > starts[i]) end = starts[i + 1];
@@ -235,7 +238,9 @@ export function readSpans(input: string, read: ReadPositions): SpanTable {
 /**
  * Spans in the final `output` of the rendered tokens an encoder wrote. The
  * encoder's ranges are in the text it assembled, of which `output` is the
- * normalization in `form`.
+ * normalization in `form`. When normalization changed nothing (Beta Code,
+ * or a text already in its form), they are the spans, and the encoder's
+ * arrays are returned as they are.
  */
 export function writtenSpans(
   output: string,
@@ -243,6 +248,7 @@ export function writtenSpans(
   form: "NFC" | "NFD",
 ): SpanTable {
   const map = segmentMap(written.text, output, "from", form);
+  if (map === undefined) return { starts: written.starts, ends: written.ends };
   return spansIn(written.starts, written.ends, written.starts.length, map);
 }
 
@@ -273,27 +279,34 @@ export function joinPieces(
 }
 
 /**
- * Where each token of the document an orthography pass received ended up in
- * the document it returned: an index there, or -1 when the pass dropped it.
- * Several tokens may end up in one (the tokens of a Greek numeral written as
- * one decimal literal, the whitespace run collapsed to one space).
+ * Where each token of a conversion's source document ended up after the
+ * orthography passes: `map[i]` is an index in the document the passes
+ * returned, or -1 when a pass dropped the token. Several tokens may end up
+ * in one (the tokens of a Greek numeral written as one decimal literal, the
+ * whitespace run collapsed to one space).
  *
- * A conversion keeps one such array for its source document and composes
- * into it the mapping of each pass that changes the token count.
+ * `map` stays undefined, the identity, until a pass changes the token count:
+ * only `whitespace: "collapse"` and `numerals: "decimal"` do, so most
+ * conversions never build it.
  */
-export function identityTargets(count: number): Int32Array {
-  const targets = new Int32Array(count);
-  for (let i = 0; i < count; i++) targets[i] = i;
-  return targets;
+export interface TokenTargets {
+  map?: number[];
 }
 
-export function composeTargets(
-  targets: Int32Array,
-  next: ArrayLike<number>,
-): void {
-  for (let i = 0; i < targets.length; i++) {
-    const target = targets[i];
-    if (target >= 0) targets[i] = next[target];
+/**
+ * Composes into `targets` the mapping `next` of a pass that changed the token
+ * count: `next[i]` is where token `i` of the document the pass received ended
+ * up in the document it returned.
+ */
+export function composeTargets(targets: TokenTargets, next: number[]): void {
+  const map = targets.map;
+  if (map === undefined) {
+    targets.map = next;
+    return;
+  }
+  for (let i = 0; i < map.length; i++) {
+    const target = map[i];
+    if (target >= 0) map[i] = next[target];
   }
 }
 
@@ -301,15 +314,17 @@ export function composeTargets(
  * The output span of each source token: that of the rendered token it ended
  * up in, or, for a token the output dropped, an empty span where the output
  * of the next token that has one starts (the end of the output after the
- * last).
+ * last). Without `targets` (no pass changed the token count), the source
+ * tokens are the rendered ones and their spans are `rendered`.
  */
 export function outputSpans(
-  targets: Int32Array,
+  targets: number[] | undefined,
   rendered: SpanTable,
   outputLength: number,
 ): SpanTable {
-  const starts = new Uint32Array(targets.length);
-  const ends = new Uint32Array(targets.length);
+  if (targets === undefined) return rendered;
+  const starts = new Array<number>(targets.length).fill(0);
+  const ends = new Array<number>(targets.length).fill(0);
   let next = outputLength;
   for (let i = targets.length - 1; i >= 0; i--) {
     const target = targets[i];
