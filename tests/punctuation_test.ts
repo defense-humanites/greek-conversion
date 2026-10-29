@@ -58,6 +58,8 @@ Deno.test("keeps format-specific semicolon semantics distinct", () => {
 });
 
 Deno.test("distinguishes Beta Code breve from apostrophe", () => {
-  assertNfcEquals(convert("a' p'", "beta-code", "greek"), "ᾰ π’");
-  assertNfcEquals(convert("ᾰ π’", "greek", "beta-code"), "a' p'");
+  assertNfcEquals(convert("a%27 p'", "beta-code", "greek"), "ᾰ π’");
+  assertNfcEquals(convert("ᾰ π’", "greek", "beta-code"), "a%27 p'");
+  // In TLG Beta Code, ' is the apostrophe after a vowel too.
+  assertNfcEquals(convert("a' a%27'", "beta-code", "greek"), "α’ ᾰ’");
 });

@@ -15,7 +15,8 @@ what they describe, the `removeDiacritics` flag becomes `diacritics.all`, the
 default transliteration is the SBL academic style, and option errors are
 `OptionError`s. Every removed function, key, and flag has a one-line replacement
 in the migration guide, and an old key or flag throws an error that names it. It
-also adds positions: where each token was read and written.
+also adds positions: where each token was read and written. Beta Code now
+writes and reads vowel quantity with the TLG codes.
 
 ### Added
 
@@ -78,6 +79,15 @@ also adds positions: where each token was read and written.
   document as read: a character preserved as several literals is reported at the
   first of them, and the diagnostics after it shift accordingly (see the
   migration guide).
+
+### Fixed
+
+- Beta Code writes and reads vowel quantity with the TLG codes, `%26` for the
+  macron and `%27` for the breve, as `0.14.x` did: `ᾱ` → `a%26`, `ᾰ` → `a%27`,
+  `ᾱ̓́` → `a)/%26`, for every preset, `tlg-core` included. The 1.0 prereleases
+  wrote `&` and `'`, which in TLG Beta Code shift to the Latin font and write
+  the apostrophe; they are now read that way: `&` is kept as text, and `'` is
+  the apostrophe after any letter (`a'` → `α’`, was `ᾰ`).
 
 ### Removed
 

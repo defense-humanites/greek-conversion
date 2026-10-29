@@ -139,8 +139,8 @@ Deno.test("writes quantity before other marks in Greek", () => {
     assertEquals(convert(output, "greek", "greek"), output);
   }
   // Beta Code keeps its TLG mark order and reads back the same Greek.
-  assertEquals(convert("\u1F04\u0304", "greek", "beta-code"), "a)/&");
-  assertEquals(convert("a)/&", "beta-code", "greek"), "\u1FB1\u0313\u0301");
+  assertEquals(convert("\u1F04\u0304", "greek", "beta-code"), "a)/%26");
+  assertEquals(convert("a)/%26", "beta-code", "greek"), "\u1FB1\u0313\u0301");
 });
 
 Deno.test("omits a quantity mark on epsilon and omicron in transliteration", () => {

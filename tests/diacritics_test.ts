@@ -151,7 +151,7 @@ Deno.test("removes the marks of every format with one recipe", () => {
     "ανθρωπος· απ’",
   );
   assertNfcEquals(
-    reencode("a)/nqrwpos a)=| i& ap'", "beta-code", WITHOUT_MARKS),
+    reencode("a)/nqrwpos a)=| i%26 ap'", "beta-code", WITHOUT_MARKS),
     "anqrwpos a i ap'",
   );
   assertNfcEquals(

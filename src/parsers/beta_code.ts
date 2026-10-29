@@ -20,8 +20,8 @@ import { LETTERS, sharedGrapheme, sharedLiteral } from "./shared_tokens.ts";
 
 /**
  * Like the Greek reader, this one works on UTF-16 code units. Every symbol
- * Beta Code gives a meaning to (asterisk, letters, marks, `#` codes,
- * punctuation) is a single BMP code unit, so code-unit indices make the same
+ * Beta Code gives a meaning to (asterisk, letters, marks, `#` and `%` codes,
+ * punctuation) is made of BMP code units, so code-unit indices make the same
  * comparisons as the code-point indices of `Array.from()`; only a character
  * outside the BMP needs two units, and it is always a literal.
  */
@@ -29,8 +29,6 @@ const LETTER_INDEX = new Map(LETTERS.map((letter, index) => [letter, index]));
 const SIGMA = LETTERS.indexOf("sigma");
 /** Variant flag of the lunate sigma (index 1 of VARIANTS, in bits 1–2). */
 const LUNATE = 1 << 1;
-const QUANTITY_LETTERS = new Set(["alpha", "iota", "upsilon"]);
-const ACCEPTS_BREVE = LETTERS.map((letter) => QUANTITY_LETTERS.has(letter));
 
 const NOT_A_LETTER = -1;
 
@@ -54,16 +52,31 @@ const ASCII_LETTER_OF = Int8Array.from(
 const letterOf = (unit: number): number =>
   unit < 0x80 ? ASCII_LETTER_OF[unit] : classify(unit);
 
-/** Marks are ASCII. */
+/** Marks of one ASCII unit: breathings, accents, diaeresis, iota subscript. */
 const MARK_BIT = codeUnitTable(
   0,
   0x80,
-  [...BETA_MARKS].map(([mark, diacritic]) => [mark, diacriticBit(diacritic)]),
+  [...BETA_MARKS]
+    .filter(([mark]) => mark.length === 1)
+    .map(([mark, diacritic]) => [mark, diacriticBit(diacritic)]),
+);
+
+/**
+ * Marks written as a TLG percent code, by number: `%26`, the macron, and
+ * `%27`, the breve. The number is every digit after `%`, so `%260` is not a
+ * macron followed by `0`; other percent codes are not marks.
+ */
+const PERCENT_MARK_BIT = new Map(
+  [...BETA_MARKS]
+    .filter(([mark]) => mark.startsWith("%"))
+    .map(([mark, diacritic]) => [mark.slice(1), diacriticBit(diacritic)]),
 );
 
 const ASTERISK = 0x2a;
-const APOSTROPHE = 0x27;
 const HASH = 0x23;
+const PERCENT = 0x25;
+const DIGIT_0 = 0x30;
+const DIGIT_9 = 0x39;
 
 /**
  * Reads Beta Code. With `share`, equal tokens are one shared object
@@ -92,7 +105,7 @@ export function parseBetaCode(
     }
 
     let marks = 0;
-    if (upper) [i, marks] = consumeMarks(text, i, true);
+    if (upper) [i, marks] = consumeMarks(text, i);
 
     if (text[i]?.toLowerCase() === "s" && text[i + 1] === "3") {
       out.push(
@@ -156,7 +169,7 @@ export function parseBetaCode(
     }
 
     i++;
-    [i, marks] = consumeMarks(text, i, ACCEPTS_BREVE[letter], marks);
+    [i, marks] = consumeMarks(text, i, marks);
 
     out.push(
       share
@@ -175,19 +188,35 @@ export function parseBetaCode(
 function consumeMarks(
   text: string,
   start: number,
-  acceptsBreve: boolean,
   marks = 0,
 ): [number, number] {
   let index = start;
   while (index < text.length) {
     const unit = text.charCodeAt(index);
-    if (unit === APOSTROPHE && !acceptsBreve) break;
+    if (unit === PERCENT) {
+      const end = digitsEnd(text, index + 1);
+      const bit = PERCENT_MARK_BIT.get(text.slice(index + 1, end));
+      if (bit === undefined) break;
+      marks |= bit;
+      index = end;
+      continue;
+    }
     const bit = unit < 0x80 ? MARK_BIT[unit] : 0;
     if (bit === 0) break;
     marks |= bit;
     index++;
   }
   return [index, marks];
+}
+
+function digitsEnd(text: string, start: number): number {
+  let index = start;
+  while (index < text.length) {
+    const unit = text.charCodeAt(index);
+    if (unit < DIGIT_0 || unit > DIGIT_9) break;
+    index++;
+  }
+  return index;
 }
 
 function additionalCharacter(
