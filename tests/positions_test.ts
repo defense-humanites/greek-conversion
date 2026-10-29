@@ -12,6 +12,7 @@ import {
   listPresetMetadata,
 } from "../src/mod.ts";
 import { parseDetailed, type TokenSpan } from "../src/document.ts";
+import { continuesSegment } from "../src/parsers/positions.ts";
 import { EQUIVALENCES, FORMATS, LOSSY_CONVERSIONS } from "./fixtures.ts";
 
 /**
@@ -261,6 +262,78 @@ Deno.test("literals read from one character share its span", () => {
     { start: 0, end: 1 },
     { start: 1, end: 2 },
     { start: 2, end: 3 },
+  ]);
+});
+
+Deno.test("segments are closed under normalization for every code point", () => {
+  // A segment is a character and the code points that continue it. The
+  // positions pair each segment of a text with one segment of its
+  // normalization, which holds when no code point decomposes into, composes
+  // across, or reorders across a segment boundary. Checked against the
+  // Unicode version of the runtime: an engine that adds a letter composing
+  // with the one before it fails here before positions drift.
+  const segments = (text: string) => {
+    let count = 0;
+    for (const char of text) {
+      if (count === 0 || !continuesSegment(char.codePointAt(0)!)) count++;
+    }
+    return count;
+  };
+  const failures: string[] = [];
+  for (let codePoint = 0; codePoint <= 0x10FFFF; codePoint++) {
+    if (codePoint >= 0xD800 && codePoint <= 0xDFFF) continue;
+    const char = String.fromCodePoint(codePoint);
+    const nfd = char.normalize("NFD");
+    const name = `U+${codePoint.toString(16).toUpperCase().padStart(4, "0")}`;
+    if (segments("a" + nfd) !== segments("a" + char)) {
+      failures.push(`${name} decomposes across a segment boundary`);
+    }
+    if (
+      nfd !== char && char.normalize("NFC") === char &&
+      [...nfd].slice(1).some((part) => !continuesSegment(part.codePointAt(0)!))
+    ) {
+      failures.push(`${name} composes across a segment boundary`);
+    }
+    // U+0334 has combining class 1 and U+0345 class 240: a character with
+    // another class than 0 changes places with one of them.
+    if (
+      nfd === char && !continuesSegment(codePoint) &&
+      (("a" + char + "\u{334}").normalize("NFD") !== "a" + char + "\u{334}" ||
+        ("a\u{345}" + char).normalize("NFD") !== "a\u{345}" + char)
+    ) {
+      failures.push(`${name} reorders across a segment boundary`);
+    }
+  }
+  assertEquals(failures.slice(0, 10), []);
+});
+
+Deno.test("spans after letters that composition joins across characters", () => {
+  // Hangul jamo, a Kaithi letter with nukta, a Kirat Rai vowel sign: the
+  // output composes what the reader read as several literals. Greek output
+  // writes the acute as oxia by default.
+  for (const prefix of ["한", "\u{1109A}", "\u{11099}\u{110BA}", "\u{16D68}"]) {
+    assertEquals(
+      pieces(detailed(`${prefix} λ\u{3CC}γος`, "greek", "greek")).slice(-5),
+      [["λ", "λ"], ["\u{3CC}", "\u{1F79}"], ["γ", "γ"], ["ο", "ο"], ["ς", "ς"]],
+      prefix,
+    );
+    assertEquals(
+      pieces(detailed(`${prefix} λ\u{3CC}γος`, "greek", "transliteration"))
+        .slice(-5),
+      [["λ", "l"], ["\u{3CC}", "\u{F3}"], ["γ", "g"], ["ο", "o"], ["ς", "s"]],
+      prefix,
+    );
+  }
+  // Read as two literals, written as the one character they compose.
+  assertEquals(pieces(detailed("\u{11099}\u{110BA}", "greek", "greek")), [
+    ["\u{11099}", "\u{1109A}"],
+    ["\u{110BA}", "\u{1109A}"],
+  ]);
+  // An astral combining mark is reordered with the marks around it.
+  assertEquals(parseDetailed("a\u{1E000}\u{323}", "greek").spans, [
+    { start: 0, end: 4 },
+    { start: 0, end: 4 },
+    { start: 0, end: 4 },
   ]);
 });
 
@@ -564,6 +637,11 @@ const EDGE_CASES = [
   "r(h rrh Rh",
   "ϐ ϲ ς σ",
   "πρὸς Σίμωνα",
+  "한 λόγος",
+  "\u{1109A} λόγος",
+  "\u{11099}\u{110BA} λόγος",
+  "\u{16D68} λόγος",
+  "a\u{1E000}\u{323} λ",
 ];
 
 const OPTION_SETS: ConversionOptions[] = [

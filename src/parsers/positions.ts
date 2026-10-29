@@ -6,10 +6,13 @@
  * input, NFC or NFD on output), while positions are reported in the text as
  * the caller supplied or receives it, in UTF-16 code units: what selections,
  * ranges and editors use. The two forms are aligned segment by segment. A
- * segment is a starter and the combining marks that follow it; normalization
- * never moves a mark from one segment to another, so one segment of the
- * supplied text becomes one segment of the normalized text, whatever happens
- * inside it (composition, decomposition, reordering of marks).
+ * segment is a character and the code points that continue it: the combining
+ * marks that follow it, and the few letters that canonical composition joins
+ * to the letter before them ({@link continuesSegment}). With that definition,
+ * normalization never moves a code point from one segment to another, so one
+ * segment of the supplied text becomes one segment of the normalized text,
+ * whatever happens inside it (composition, decomposition, reordering of
+ * marks); `tests/positions_test.ts` checks it for every code point.
  *
  * The readers record, for each token, where it starts in the text they read;
  * the encoders record where each rendered token's output starts and ends in
@@ -56,27 +59,64 @@ export interface WrittenPositions {
 }
 
 /**
- * Whether a BMP code unit is a combining mark (general category M), decided
- * once per unit with the Unicode property and remembered: 0 unknown, 1 mark,
- * 2 starter. The table is allocated on the first conversion that reports
- * positions. A low surrogate continues its pair, so it counts as a mark.
+ * Whether a code point continues the segment of the character before it: a
+ * combining mark (general category M), or one of the few letters that
+ * canonical composition joins to the letter before them (Hangul vowel and
+ * final jamo, the Kirat Rai vowel signs E and AI; AI decomposes into two E,
+ * so it continues a segment too, or its decomposed form would not). With this
+ * definition, normalization turns each segment of a text into exactly one
+ * segment, which `tests/positions_test.ts` checks for every code point.
  */
-let markClasses: Uint8Array | undefined;
-
-function isMark(unit: number): boolean {
-  if (unit >= 0xDC00 && unit <= 0xDFFF) return true;
-  const classes = markClasses ??= new Uint8Array(0x10000);
-  let kind = classes[unit];
-  if (kind === 0) {
-    kind = classes[unit] = /\p{M}/u.test(String.fromCharCode(unit)) ? 1 : 2;
-  }
-  return kind === 1;
+export function continuesSegment(codePoint: number): boolean {
+  return (codePoint >= 0x1161 && codePoint <= 0x1175) ||
+    (codePoint >= 0x11A8 && codePoint <= 0x11C2) ||
+    codePoint === 0x16D67 || codePoint === 0x16D68 ||
+    /\p{M}/u.test(String.fromCodePoint(codePoint));
 }
 
-/** Index of the unit after the segment that starts at `index`. */
+/**
+ * {@link continuesSegment} of each BMP unit, decided once per unit and
+ * remembered: 0 unknown, 1 continues, 2 starts a segment. The table is
+ * allocated on the first conversion that reports positions.
+ */
+let unitClasses: Uint8Array | undefined;
+/** {@link continuesSegment} of the astral code points met so far. */
+let astralClasses: Map<number, boolean> | undefined;
+
+/**
+ * Index of the unit after the segment that starts at `index`. Code points are
+ * classified whole: the high surrogate of an astral combining mark continues
+ * the segment like any mark.
+ */
 function segmentEnd(text: string, index: number): number {
   let end = index + 1;
-  while (end < text.length && isMark(text.charCodeAt(end))) end++;
+  while (end < text.length) {
+    const unit = text.charCodeAt(end);
+    // A low surrogate continues its pair (or stands alone).
+    if (unit >= 0xDC00 && unit <= 0xDFFF) {
+      end++;
+      continue;
+    }
+    if (unit >= 0xD800 && unit <= 0xDBFF) {
+      const low = text.charCodeAt(end + 1);
+      if (!(low >= 0xDC00 && low <= 0xDFFF)) break;
+      const codePoint = (unit - 0xD800) * 0x400 + (low - 0xDC00) + 0x10000;
+      const known = astralClasses ??= new Map();
+      let continues = known.get(codePoint);
+      if (continues === undefined) {
+        continues = continuesSegment(codePoint);
+        known.set(codePoint, continues);
+      }
+      if (!continues) break;
+      end += 2;
+      continue;
+    }
+    const classes = unitClasses ??= new Uint8Array(0x10000);
+    let kind = classes[unit];
+    if (kind === 0) kind = classes[unit] = continuesSegment(unit) ? 1 : 2;
+    if (kind !== 1) break;
+    end++;
+  }
   return end;
 }
 
@@ -97,12 +137,14 @@ export interface SegmentMap {
  * then need no mapping.
  *
  * The two texts are walked together, one segment at a time, which costs about
- * as much as the normalization itself. The walk is right whenever each
- * segment of the original is one segment of its normalization, which holds
- * for Greek, Latin and nearly every script. When it does not (a Hangul
- * syllable decomposes into three starters), the walk does not end on both
- * texts at once, and the map is rebuilt from the normalization of each
- * segment of the original on its own, which is slower.
+ * as much as the normalization itself. The walk pairs segments by their
+ * order, not their content, so it also holds when the other text is not
+ * exactly the normalization (Greek output rewrites the acute as oxia after
+ * NFC). It is right because each segment of the original is one segment of
+ * its normalization ({@link continuesSegment}). Should a later Unicode
+ * version add a letter that composes with the one before it, the walk would
+ * not end on both texts at once, and the map is then rebuilt by
+ * {@link segmentMapBySegment}.
  */
 export function segmentMap(
   from: string,
@@ -135,10 +177,12 @@ export function segmentMap(
 }
 
 /**
- * The slow alignment: each segment of the original text is normalized alone
- * to find how many units it makes in the other text. Exact unless several
- * starters compose into one (Hangul jamo under NFC), where the ranges stay
- * within bounds and in order but may be off by a few units.
+ * The fallback alignment, for a letter that composes with the one before it
+ * and that {@link continuesSegment} does not list yet (the test of every code
+ * point fails first): each segment of the original text is normalized alone
+ * to find how many units it makes in the other text. The ranges stay within
+ * bounds and in order, but after such a letter they may be off by a few
+ * units. It is not reached with the Unicode version the tests run on.
  */
 function segmentMapBySegment(
   from: string,
