@@ -121,8 +121,9 @@ function segmentEnd(text: string, index: number): number {
 }
 
 /**
- * For each code unit of one text (`from`), plus one entry for its length,
- * the start and the end in another text (`to`) of the segment it belongs to.
+ * For each code unit of one text (`from`), plus one entry for its length, a
+ * range in another text (`to`): the unit it corresponds to when its segment
+ * is the same in both texts, the whole segment otherwise.
  */
 export interface SegmentMap {
   readonly starts: number[];
@@ -131,10 +132,14 @@ export interface SegmentMap {
 
 /**
  * Aligns two texts, one the normalization of the other, segment by segment,
- * and returns for every unit of `from` the range in `to` of its segment.
- * `original` says which of the two is the text the other was normalized from,
- * and `form` how. The map is undefined when the texts are equal: positions
- * then need no mapping.
+ * and returns for every unit of `from` its range in `to`. A segment that
+ * normalization left unchanged is aligned unit for unit, so that its units
+ * keep their own positions; a segment it changed (composed, decomposed, or
+ * reordered) cannot be split, and each of its units maps to the whole
+ * segment. Positions are therefore as precise as the texts allow, whatever
+ * the rest of the text holds. `original` says which of the two is the text
+ * the other was normalized from, and `form` how. The map is undefined when
+ * the texts are equal: positions then need no mapping.
  *
  * The two texts are walked together, one segment at a time, which costs about
  * as much as the normalization itself. The walk pairs segments by their
@@ -161,9 +166,18 @@ export function segmentMap(
   while (f < from.length && t < to.length) {
     const fEnd = segmentEnd(from, f);
     const tEnd = segmentEnd(to, t);
-    for (let k = f; k < fEnd; k++) {
-      starts[k] = t;
-      ends[k] = tEnd;
+    // A segment of one unit maps to its counterpart either way; only longer
+    // ones are compared.
+    if (fEnd - f > 1 && sameUnits(from, f, to, t, fEnd - f, tEnd - t)) {
+      for (let k = f; k < fEnd; k++) {
+        starts[k] = t + (k - f);
+        ends[k] = t + (k - f) + 1;
+      }
+    } else {
+      for (let k = f; k < fEnd; k++) {
+        starts[k] = t;
+        ends[k] = tEnd;
+      }
     }
     f = fEnd;
     t = tEnd;
@@ -174,6 +188,22 @@ export function segmentMap(
   starts[from.length] = to.length;
   ends[from.length] = to.length;
   return { starts, ends };
+}
+
+/** Whether two ranges of units, of the given lengths, hold the same units. */
+function sameUnits(
+  a: string,
+  aStart: number,
+  b: string,
+  bStart: number,
+  aLength: number,
+  bLength: number,
+): boolean {
+  if (aLength !== bLength) return false;
+  for (let k = 0; k < aLength; k++) {
+    if (a.charCodeAt(aStart + k) !== b.charCodeAt(bStart + k)) return false;
+  }
+  return true;
 }
 
 /**
@@ -228,12 +258,14 @@ function segmentMapBySegment(
 
 /**
  * Maps the ranges `[starts[i], ends[i])` of one text to the other through a
- * segment map (or as they are, without one): a range becomes the start of the
- * segment holding its first unit to the end of the segment holding its last.
- * Ranges inside one segment therefore all become that segment's range: the
- * literals read from one precomposed character share it, as do a token and a
- * stray combining mark written right after it. An empty range stays empty,
- * at the start of its segment.
+ * segment map (or as they are, without one): a range goes from the start of
+ * the range its first unit maps to, to the end of the range its last unit
+ * maps to. Ranges inside a segment that normalization changed therefore all
+ * become that segment's range: the literals read from one precomposed
+ * character share it, and a token read from part of a character the previous
+ * token also draws on lies inside that token's range; so do a token and a
+ * stray combining mark written right after it that the output composes with
+ * it. An empty range stays empty, at the start of its unit's range.
  */
 export function spansIn(
   starts: ArrayLike<number>,
@@ -264,7 +296,10 @@ export function spansIn(
  * reader's starts are in the text it read, which is `input` normalized to NFD
  * (or `input` itself for Beta Code). A token ends where the next one starts;
  * tokens read from one character (the two letters of a modern digraph)
- * record the same start and share the character.
+ * record the same start and share the character. A token read from part of a
+ * precomposed character that the previous token also draws on (the dot below
+ * of `ḥ` after the `p` of `ph`) gets that character's span, inside the
+ * previous token's.
  */
 export function readSpans(input: string, read: ReadPositions): SpanTable {
   const { starts } = read;

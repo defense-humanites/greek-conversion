@@ -97,10 +97,13 @@ source distinctions removed by the view.
 `parseDetailed(input, format, options)` returns the same document together
 with `spans`, the range of each token in the input, as offsets in UTF-16 code
 units in the input exactly as supplied (the reader normalizes the text, but
-the spans are mapped back to the caller's string). Spans are in increasing
-order and cover the input; tokens read from one character share its span.
-The ranges let an application relate tokens to a selection or an editor
-position, or slice the input text of a token:
+the spans are mapped back to the caller's string). Spans are in order of
+start and cover the input; tokens read from one character share its span,
+and a token read from part of a character that the previous token also draws
+on lies inside that token's span (see
+[the positions contract](conversion-analysis.md#positions)). The ranges let
+an application relate tokens to a selection or an editor position, or slice
+the input text of a token:
 
 ```ts
 import { parseDetailed } from "@humanities/greek-conversion/document";

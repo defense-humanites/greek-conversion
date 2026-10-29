@@ -11,7 +11,7 @@ import {
   type Format,
   listPresetMetadata,
 } from "../src/mod.ts";
-import { parseDetailed, type TokenSpan } from "../src/document.ts";
+import { parse, parseDetailed, type TokenSpan } from "../src/document.ts";
 import { continuesSegment } from "../src/parsers/positions.ts";
 import { EQUIVALENCES, FORMATS, LOSSY_CONVERSIONS } from "./fixtures.ts";
 
@@ -337,6 +337,117 @@ Deno.test("spans after letters that composition joins across characters", () => 
   ]);
 });
 
+Deno.test("a character that normalization leaves unchanged keeps its own span", () => {
+  assertEquals(parseDetailed("e\u{332}", "greek").spans, [
+    { start: 0, end: 1 },
+    { start: 1, end: 2 },
+  ]);
+  // The same, after a character the reader decomposes.
+  assertEquals(parseDetailed("ἄe\u{332}", "greek").spans, [
+    { start: 0, end: 1 },
+    { start: 1, end: 2 },
+    { start: 2, end: 3 },
+  ]);
+  // In the output, a stray mark that is not composed has its own span.
+  assertEquals(pieces(detailed("Ο\u{332}b", "greek", "greek")), [
+    ["Ο", "Ο"],
+    ["\u{332}", "\u{332}"],
+    ["b", "b"],
+  ]);
+  assertEquals(
+    pieces(detailed("ὀʹ", "greek", "transliteration", { preset: "bnf-core" })),
+    [["ὀ", "o\u{313}"], ["ʹ", "\u{301}"]],
+  );
+});
+
+Deno.test("a character split between two tokens is inside the first one's span", () => {
+  // The h of ph and the dot below of a precomposed ḥ, kept as a literal.
+  assertEquals(parseDetailed("p\u{1E25}", "transliteration").spans, [
+    { start: 0, end: 2 },
+    { start: 1, end: 2 },
+  ]);
+  // Decomposed, the dot is a character of its own.
+  assertEquals(parseDetailed("ph\u{323}", "transliteration").spans, [
+    { start: 0, end: 2 },
+    { start: 2, end: 3 },
+  ]);
+});
+
+Deno.test("a token's spans do not depend on the text before it", () => {
+  // Prefixing a text with another and a space shifts the spans of its tokens
+  // by what was prefixed, in the input and in the output, whenever the text
+  // reads and writes the same after the prefix.
+  const prefixes: Record<Format, string[]> = {
+    greek: [
+      "ἄ",
+      "한",
+      "\u{1109A}",
+      "\u{11099}\u{110BA}",
+      "\u{16D68}",
+      "a\u{1E000}\u{323}",
+      "ΐ",
+      "😀",
+      "e\u{332}",
+    ],
+    "beta-code": ["a)/", "한", "\u{1109A}", "\u{16D68}"],
+    transliteration: [
+      "á",
+      "한",
+      "\u{1109A}",
+      "\u{16D68}",
+      "p\u{1E25}",
+      "e\u{332}",
+    ],
+  };
+  const texts: Record<Format, string[]> = {
+    greek: ["e\u{332}", "Ο\u{332}b", "λ\u{3CC}γος"],
+    "beta-code": [],
+    transliteration: ["ph\u{323}", "p\u{1E25}", "e\u{332}"],
+  };
+  for (const equivalence of EQUIVALENCES) {
+    texts.greek.push(equivalence.greek);
+    texts["beta-code"].push(equivalence.betaCode);
+    texts.transliteration.push(equivalence.transliteration);
+  }
+  // Diacritics are sets, which JSON.stringify() writes as {}.
+  const serialize = (value: unknown) =>
+    JSON.stringify(value, (_, v) => v instanceof Set ? [...v].sort() : v);
+
+  let checked = 0;
+  for (const from of FORMATS) {
+    for (const to of FORMATS) {
+      for (const prefix of prefixes[from]) {
+        for (const text of texts[from]) {
+          const head = `${prefix} `;
+          const alone = convertDetailed(text, from, to);
+          const joined = convertDetailed(head + text, from, to);
+          const count = alone.spans.length;
+          const comparable = joined.output.endsWith(alone.output) &&
+            serialize(parse(head + text, from).slice(-count)) ===
+              serialize(parse(text, from));
+          if (!comparable) continue;
+          checked++;
+          const inShift = head.length;
+          const outShift = joined.output.length - alone.output.length;
+          assertEquals(
+            joined.spans.slice(-count),
+            alone.spans.map((span) => ({
+              inputStart: span.inputStart + inShift,
+              inputEnd: span.inputEnd + inShift,
+              outputStart: span.outputStart + outShift,
+              outputEnd: span.outputEnd + outShift,
+            })),
+            `${from} → ${to}: ${JSON.stringify(prefix)} before ${
+              JSON.stringify(text)
+            }`,
+          );
+        }
+      }
+    }
+  }
+  assert(checked > 1000, `only ${checked} texts compared`);
+});
+
 const SAN = {
   id: "san",
   forms: {
@@ -472,10 +583,12 @@ Deno.test("converter spans are in the input as supplied", () => {
 
 /**
  * The invariants: one span per token; input spans in order, covering the
- * input, each either following the previous one or equal to it; output spans
- * in order of start, covering the output, each following the previous one,
- * equal to it, empty, or inside it (a stray combining mark the output joins
- * to the previous token's last character); losses at their token's span.
+ * input, each following the previous one or inside it (equal to it, or a
+ * token read from part of a character the previous token also draws on);
+ * output spans in order of start, covering the output, each following the
+ * previous one, equal to it, empty, or inside it (a stray combining mark the
+ * output joins to the previous token's last character); losses at their
+ * token's span.
  */
 function checkSpans(
   where: string,
@@ -489,14 +602,16 @@ function checkSpans(
     const here = `${where}, token ${index}`;
     const read = { start: span.inputStart, end: span.inputEnd };
     assert(read.start < read.end, `${here}: empty input span`);
+    // A token read from part of a character the previous token also draws on
+    // lies inside its span.
+    const inside = read.start >= previous.start && read.end <= previous.end;
     assert(
-      read.start === previous.end ||
-        read.start === previous.start && read.end === previous.end,
+      read.start === previous.end || inside,
       `${here}: input span ${JSON.stringify(read)} after ${
         JSON.stringify(previous)
       }`,
     );
-    previous = read;
+    if (!inside) previous = read;
   }
   assertEquals(previous.end, input.length, `${where}: input not covered`);
 
@@ -637,6 +752,12 @@ const EDGE_CASES = [
   "r(h rrh Rh",
   "ϐ ϲ ς σ",
   "πρὸς Σίμωνα",
+  "p\u{1E25}",
+  "ph\u{323}",
+  "ἄph\u{323}»",
+  "e\u{332}",
+  "ἄe\u{332}",
+  "Ο\u{332}b",
   "한 λόγος",
   "\u{1109A} λόγος",
   "\u{11099}\u{110BA} λόγος",

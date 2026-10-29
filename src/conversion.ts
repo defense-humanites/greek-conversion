@@ -41,10 +41,13 @@ export interface ParseResult {
   /** The canonical document. */
   document: Document;
   /**
-   * One span per token, in token order. Spans are in increasing order and
+   * One span per token, in token order. Spans are in order of start and
    * cover the input without gaps. Tokens read from one character of the
    * input (the jamo of a Hangul syllable, kept as literals; the two letters
-   * read from a modern-digraph `b`) share its span.
+   * read from a modern-digraph `b`) share its span; a token read from part of
+   * a character that the previous token also draws on (the dot below of a
+   * precomposed `ḥ` after the `p` of `ph`) has that character's span, inside
+   * the previous token's.
    */
   spans: readonly TokenSpan[];
 }
