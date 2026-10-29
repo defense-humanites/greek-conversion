@@ -44,7 +44,11 @@ import { greekUpper } from "./case.ts";
 import { applyGreekOrthography } from "./orthography.ts";
 import { joinPieces, type WrittenPositions } from "./parsers/positions.ts";
 import { encodePunctuation } from "./punctuation.ts";
-import { applyGreekUnicode } from "./unicode.ts";
+import {
+  applyGreekUnicode,
+  normalizeGreek,
+  substituteGreekSigns,
+} from "./unicode.ts";
 
 /**
  * Canonical order of combining marks on a Latin vowel: quantity, breathing,
@@ -187,8 +191,14 @@ export function encodeGreek(
     if (ends !== undefined) ends[i] = out.length;
   }
 
-  if (written !== undefined) written.text = out;
-  return applyGreekUnicode(out, options);
+  if (written === undefined) return applyGreekUnicode(out, options);
+  // The positions are aligned on the normalized text: the substitutions that
+  // follow replace one code unit by one, and the alignment must compare the
+  // text with its exact normalization.
+  const normalized = normalizeGreek(out, options);
+  written.text = out;
+  written.normalized = normalized;
+  return substituteGreekSigns(normalized, options);
 }
 
 /**

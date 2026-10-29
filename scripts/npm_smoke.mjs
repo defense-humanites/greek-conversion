@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { convert, convertDetailed, createConverter } from "../npm/esm/mod.js";
 import { encode, parse, validateDocument } from "../npm/esm/document.js";
+import { checkPositionsUnicode } from "./positions_unicode_check.mjs";
 
 const packageJson = JSON.parse(
   await readFile(new URL("../npm/package.json", import.meta.url), "utf8"),
@@ -31,5 +32,9 @@ assert.equal(
 const document = parse("a)/nqrwpos", "beta-code");
 assert.deepEqual(validateDocument(document), []);
 assert.equal(encode(document, "greek"), "ἄνθρωπος");
+
+// Positions under this runtime's Unicode version, which the Deno tests do not
+// see.
+assert.deepEqual(checkPositionsUnicode(convertDetailed), []);
 
 console.log("npm ESM smoke test passed");

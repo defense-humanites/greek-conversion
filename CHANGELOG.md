@@ -32,9 +32,11 @@ also adds positions: where each token was read and written.
   `ConversionLoss` carries the `offset` and `length` of its token in the input.
   The `./document` entry point gains `parseDetailed()`, which returns the
   document with the input span of each token. Positions are offsets in UTF-16
-  code units in the input as supplied and in the output as returned, as precise
-  as the strings allow: a character that normalization leaves unchanged keeps
-  its own units. The ordering and sharing rules (tokens read from one
+  code units in the input as supplied and in the output as returned: a
+  character that normalization leaves unchanged, or changes on its own, keeps
+  its own units, and the tokens of a group that it composes, decomposes, or
+  reorders share the group's range. Starts and ends
+  never decrease; the grouping and sharing rules (tokens read from one
   character, a token read from part of a character inside the previous one's
   span, tokens written as one, tokens with no output) are in the
   [conversion-analysis contract](docs/conversion-analysis.md#positions). A bound
@@ -43,7 +45,8 @@ also adds positions: where each token was read and written.
   `CharacterScopeDiagnostic`s carry the `offset` and `length` of the character
   they report, in results and in `CharacterScopeError`. `convert()` is unchanged
   in output and speed; `convertDetailed()` costs about a microsecond more than
-  in `1.0.0-rc.5` on a word (0.8 to 1.3 µs) and 13 to 21 % more on long texts.
+  in `1.0.0-rc.5` on a word (0.6 to 1.3 µs), 3 to 5 µs more on a sentence, and
+  10 to 25 % more on long texts.
 
 ### Changed
 

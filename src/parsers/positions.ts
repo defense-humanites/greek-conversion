@@ -26,9 +26,9 @@
  * Ranges of UTF-16 code units, one per token: `starts[i]` included and
  * `ends[i]` excluded. Two arrays rather than one object per token: a long
  * text has a hundred thousand tokens. Plain arrays rather than typed ones,
- * here and in the other tables of this module: a typed array costs about a
- * microsecond to allocate, more than converting a word, and a conversion
- * that reports positions allocates a dozen tables.
+ * here and in the other tables of this module: in V8 a typed array costs
+ * half a microsecond to allocate, ten times a plain array, and the dozen
+ * tables of a conversion cost more than converting a word.
  */
 export interface SpanTable {
   readonly starts: number[];
@@ -51,9 +51,16 @@ export interface ReadPositions {
  * sized to the document. The output of several tokens written as one (the
  * two letters of a modern digraph, a dental and the sigma it assimilates to)
  * is one range, recorded for each of them.
+ *
+ * `normalized` is set when the output is not the plain normalization of
+ * `text`: the Greek encoder substitutes signs after normalizing (oxia, the
+ * Greek question mark and ano teleia), one code unit for one, so that its
+ * positions are those of the output, and the alignment, which needs the
+ * exact normalization, is made with it.
  */
 export interface WrittenPositions {
   text: string;
+  normalized?: string;
   starts: number[];
   ends: number[];
 }
@@ -66,22 +73,43 @@ export interface WrittenPositions {
  * so it continues a segment too, or its decomposed form would not). With this
  * definition, normalization turns each segment of a text into exactly one
  * segment, which `tests/positions_test.ts` checks for every code point.
+ *
+ * The letters continue a segment whatever precedes them, even where they do
+ * not compose with it: the character before a Hangul vowel jamo or a Kirat
+ * Rai vowel sign shares their segment, and its span (the documented rule).
  */
 export function continuesSegment(codePoint: number): boolean {
+  return isComposingLetter(codePoint) ||
+    /\p{M}/u.test(String.fromCodePoint(codePoint));
+}
+
+/** The letters that canonical composition joins to the letter before them. */
+function isComposingLetter(codePoint: number): boolean {
   return (codePoint >= 0x1161 && codePoint <= 0x1175) ||
     (codePoint >= 0x11A8 && codePoint <= 0x11C2) ||
-    codePoint === 0x16D67 || codePoint === 0x16D68 ||
-    /\p{M}/u.test(String.fromCodePoint(codePoint));
+    codePoint === 0x16D67 || codePoint === 0x16D68;
 }
 
 /**
  * {@link continuesSegment} of each BMP unit, decided once per unit and
- * remembered: 0 unknown, 1 continues, 2 starts a segment. The table is
- * allocated on the first conversion that reports positions.
+ * remembered: 0 unknown, 1 continues, 2 starts a segment. The table, 64 KiB,
+ * is allocated on the first conversion that reports positions.
  */
 let unitClasses: Uint8Array | undefined;
-/** {@link continuesSegment} of the astral code points met so far. */
+
+/**
+ * {@link continuesSegment} of the astral code points met lately. Those of
+ * planes 2 to 13 (CJK ideographs, then unassigned) and 15 to 16 (private use)
+ * are no marks and never enter it; the others (emoji, historic scripts,
+ * mathematical letters) are remembered up to {@link ASTRAL_CACHE_SIZE}, after
+ * which the cache starts over, so that a text holding any of the million
+ * astral code points cannot make it grow.
+ */
 let astralClasses: Map<number, boolean> | undefined;
+const ASTRAL_CACHE_SIZE = 256;
+
+/** A combining mark at `lastIndex`, matched as a whole code point. */
+const MARK_AT = /\p{M}/uy;
 
 /**
  * Index of the unit after the segment that starts at `index`. Code points are
@@ -92,38 +120,44 @@ function segmentEnd(text: string, index: number): number {
   let end = index + 1;
   while (end < text.length) {
     const unit = text.charCodeAt(end);
-    // A low surrogate continues its pair (or stands alone).
-    if (unit >= 0xDC00 && unit <= 0xDFFF) {
+    if (unit < 0xD800 || unit > 0xDFFF) {
+      const classes = unitClasses ??= new Uint8Array(0x10000);
+      let kind = classes[unit];
+      if (kind === 0) kind = classes[unit] = continuesSegment(unit) ? 1 : 2;
+      if (kind !== 1) break;
       end++;
       continue;
     }
-    if (unit >= 0xD800 && unit <= 0xDBFF) {
-      const low = text.charCodeAt(end + 1);
-      if (!(low >= 0xDC00 && low <= 0xDFFF)) break;
-      const codePoint = (unit - 0xD800) * 0x400 + (low - 0xDC00) + 0x10000;
-      const known = astralClasses ??= new Map();
-      let continues = known.get(codePoint);
-      if (continues === undefined) {
-        continues = continuesSegment(codePoint);
-        known.set(codePoint, continues);
-      }
-      if (!continues) break;
-      end += 2;
+    // A low surrogate continues its pair (or stands alone).
+    if (unit >= 0xDC00) {
+      end++;
       continue;
     }
-    const classes = unitClasses ??= new Uint8Array(0x10000);
-    let kind = classes[unit];
-    if (kind === 0) kind = classes[unit] = continuesSegment(unit) ? 1 : 2;
-    if (kind !== 1) break;
-    end++;
+    const low = text.charCodeAt(end + 1);
+    if (!(low >= 0xDC00 && low <= 0xDFFF)) break;
+    const codePoint = (unit - 0xD800) * 0x400 + (low - 0xDC00) + 0x10000;
+    if (codePoint >= 0x20000 && codePoint < 0xE0000) break;
+    if (codePoint >= 0xF0000) break;
+    const known = astralClasses ??= new Map();
+    let continues = known.get(codePoint);
+    if (continues === undefined) {
+      MARK_AT.lastIndex = end;
+      continues = isComposingLetter(codePoint) || MARK_AT.test(text);
+      if (known.size >= ASTRAL_CACHE_SIZE) known.clear();
+      known.set(codePoint, continues);
+    }
+    if (!continues) break;
+    end += 2;
   }
   return end;
 }
 
 /**
  * For each code unit of one text (`from`), plus one entry for its length, a
- * range in another text (`to`): the unit it corresponds to when its segment
- * is the same in both texts, the whole segment otherwise.
+ * range in another text (`to`): the unit, or the character, it corresponds to
+ * when normalization left its segment unchanged or changed it one code point
+ * at a time without moving any, the whole segment otherwise
+ * ({@link alignGroup}).
  */
 export interface SegmentMap {
   readonly starts: number[];
@@ -131,25 +165,22 @@ export interface SegmentMap {
 }
 
 /**
- * Aligns two texts, one the normalization of the other, segment by segment,
- * and returns for every unit of `from` its range in `to`. A segment that
- * normalization left unchanged is aligned unit for unit, so that its units
- * keep their own positions; a segment it changed (composed, decomposed, or
- * reordered) cannot be split, and each of its units maps to the whole
- * segment. Positions are therefore as precise as the texts allow, whatever
- * the rest of the text holds. `original` says which of the two is the text
- * the other was normalized from, and `form` how. The map is undefined when
- * the texts are equal: positions then need no mapping.
+ * Aligns two texts, one the exact normalization of the other, segment by
+ * segment, and returns for every unit of `from` its range in `to`. A segment
+ * that normalization left unchanged, or changed one code point at a time, is
+ * aligned unit for unit, so that its units keep their own positions; a
+ * segment it composed, decomposed, or reordered cannot be split, and each of
+ * its units maps to the whole segment ({@link alignGroup}). `original` says which of the two is the text the other was
+ * normalized from, and `form` how. The map is undefined when the texts are
+ * equal: positions then need no mapping.
  *
  * The two texts are walked together, one segment at a time, which costs about
  * as much as the normalization itself. The walk pairs segments by their
- * order, not their content, so it also holds when the other text is not
- * exactly the normalization (Greek output rewrites the acute as oxia after
- * NFC). It is right because each segment of the original is one segment of
- * its normalization ({@link continuesSegment}). Should a later Unicode
+ * order, which is right because each segment of the original is one segment
+ * of its normalization ({@link continuesSegment}). Should a later Unicode
  * version add a letter that composes with the one before it, the walk would
  * not end on both texts at once, and the map is then rebuilt by
- * {@link segmentMapBySegment}.
+ * {@link segmentMapByGroups}.
  */
 export function segmentMap(
   from: string,
@@ -166,93 +197,191 @@ export function segmentMap(
   while (f < from.length && t < to.length) {
     const fEnd = segmentEnd(from, f);
     const tEnd = segmentEnd(to, t);
-    // A segment of one unit maps to its counterpart either way; only longer
-    // ones are compared.
-    if (fEnd - f > 1 && sameUnits(from, f, to, t, fEnd - f, tEnd - t)) {
-      for (let k = f; k < fEnd; k++) {
-        starts[k] = t + (k - f);
-        ends[k] = t + (k - f) + 1;
-      }
+    if (fEnd - f === 1) {
+      // Most segments are one unit, which maps to its counterpart.
+      starts[f] = t;
+      ends[f] = tEnd;
     } else {
-      for (let k = f; k < fEnd; k++) {
-        starts[k] = t;
-        ends[k] = tEnd;
-      }
+      alignGroup(from, f, fEnd, to, t, tEnd, original, form, starts, ends);
     }
     f = fEnd;
     t = tEnd;
   }
   if (f !== from.length || t !== to.length) {
-    return segmentMapBySegment(from, to, original, form, starts, ends);
+    return segmentMapByGroups(from, to, original, form);
   }
   starts[from.length] = to.length;
   ends[from.length] = to.length;
   return { starts, ends };
 }
 
-/** Whether two ranges of units, of the given lengths, hold the same units. */
+/**
+ * Writes the ranges of the units of a segment of `from`, or a group of
+ * segments, aligned with `to[t, tEnd)`. The units keep their own positions
+ * when the group is the same in both texts. So do the code points of a group
+ * that normalization changed one code point at a time, each into as many
+ * units (a singleton: the oxia `ά` read as the tonos `ά`, the ohm sign as an
+ * omega), each mapping to its counterpart. Otherwise (composition,
+ * decomposition, reordering), every unit maps to the whole group. A single
+ * character maps to its counterpart either way.
+ */
+function alignGroup(
+  from: string,
+  f: number,
+  fEnd: number,
+  to: string,
+  t: number,
+  tEnd: number,
+  original: "from" | "to",
+  form: "NFC" | "NFD",
+  starts: number[],
+  ends: number[],
+): void {
+  const length = fEnd - f;
+  if (length === tEnd - t && length > characterLength(from, f)) {
+    if (sameUnits(from, f, to, t, length)) {
+      for (let k = 0; k < length; k++) {
+        starts[f + k] = t + k;
+        ends[f + k] = t + k + 1;
+      }
+      return;
+    }
+    if (
+      normalizedCodePointByCodePoint(from, f, to, t, length, original, form)
+    ) {
+      for (let k = 0; k < length;) {
+        const size = characterLength(from, f + k);
+        for (let u = 0; u < size; u++) {
+          starts[f + k + u] = t + k;
+          ends[f + k + u] = t + k + size;
+        }
+        k += size;
+      }
+      return;
+    }
+  }
+  for (let k = f; k < fEnd; k++) {
+    starts[k] = t;
+    ends[k] = tEnd;
+  }
+}
+
+/** The number of units of the character at `index`: 2 for a surrogate pair. */
+function characterLength(text: string, index: number): number {
+  const unit = text.charCodeAt(index);
+  if (unit < 0xD800 || unit > 0xDBFF) return 1;
+  const low = text.charCodeAt(index + 1);
+  return low >= 0xDC00 && low <= 0xDFFF ? 2 : 1;
+}
+
+/**
+ * Whether the group of the original, normalized one code point at a time,
+ * gives the other group, each code point keeping its length: normalization
+ * changed code points but moved none.
+ */
+function normalizedCodePointByCodePoint(
+  from: string,
+  f: number,
+  to: string,
+  t: number,
+  length: number,
+  original: "from" | "to",
+  form: "NFC" | "NFD",
+): boolean {
+  const source = original === "from" ? from : to;
+  const target = original === "from" ? to : from;
+  const sourceStart = original === "from" ? f : t;
+  const targetStart = original === "from" ? t : f;
+  for (let k = 0; k < length;) {
+    const size = characterLength(source, sourceStart + k);
+    const normalized = source.slice(sourceStart + k, sourceStart + k + size)
+      .normalize(form);
+    if (
+      normalized.length !== size ||
+      normalized !== target.slice(targetStart + k, targetStart + k + size)
+    ) {
+      return false;
+    }
+    k += size;
+  }
+  return true;
+}
+
+/** Whether two ranges of units, of the same length, hold the same units. */
 function sameUnits(
   a: string,
   aStart: number,
   b: string,
   bStart: number,
-  aLength: number,
-  bLength: number,
+  length: number,
 ): boolean {
-  if (aLength !== bLength) return false;
-  for (let k = 0; k < aLength; k++) {
+  for (let k = 0; k < length; k++) {
     if (a.charCodeAt(aStart + k) !== b.charCodeAt(bStart + k)) return false;
   }
   return true;
 }
 
 /**
- * The fallback alignment, for a letter that composes with the one before it
- * and that {@link continuesSegment} does not list yet (the test of every code
- * point fails first): each segment of the original text is normalized alone
- * to find how many units it makes in the other text. The ranges stay within
- * bounds and in order, but after such a letter they may be off by a few
- * units. It is not reached with the Unicode version the tests run on.
+ * Beyond this many segments on one side without a match, the fallback takes
+ * the rest of both texts as one group.
  */
-function segmentMapBySegment(
+const MAX_GROUP_SEGMENTS = 64;
+
+/**
+ * The fallback alignment, for a text that the walk of {@link segmentMap}
+ * cannot pair one segment with one: a letter that composes with the one
+ * before it and that {@link continuesSegment} does not list yet. It is not
+ * reached with the Unicode version the tests run on, which check every code
+ * point.
+ *
+ * Groups of segments are grown on both sides until the group of the original,
+ * normalized, is the group of the other text: the shorter side takes one more
+ * segment. Each group is then aligned as the walk aligns a segment
+ * ({@link alignGroup}). Exact, since the two texts are exact normalizations of
+ * each other; should a group grow past {@link MAX_GROUP_SEGMENTS} segments
+ * without matching, the rest of both texts is one group, coarse but never
+ * wrong.
+ */
+export function segmentMapByGroups(
   from: string,
   to: string,
   original: "from" | "to",
   form: "NFC" | "NFD",
-  starts: number[],
-  ends: number[],
 ): SegmentMap {
+  const starts = new Array<number>(from.length + 1).fill(0);
+  const ends = new Array<number>(from.length + 1).fill(0);
   let f = 0;
   let t = 0;
-  if (original === "from") {
-    while (f < from.length) {
-      const fEnd = segmentEnd(from, f);
-      const length = from.slice(f, fEnd).normalize(form).length;
-      const tEnd = Math.min(t + length, to.length);
-      for (let k = f; k < fEnd; k++) {
-        starts[k] = t;
-        ends[k] = tEnd;
+  while (f < from.length || t < to.length) {
+    let fEnd = f < from.length ? segmentEnd(from, f) : f;
+    let tEnd = t < to.length ? segmentEnd(to, t) : t;
+    for (let grown = 0;; grown++) {
+      const a = original === "from"
+        ? from.slice(f, fEnd).normalize(form)
+        : from.slice(f, fEnd);
+      const b = original === "to"
+        ? to.slice(t, tEnd).normalize(form)
+        : to.slice(t, tEnd);
+      if (a === b || (fEnd === from.length && tEnd === to.length)) break;
+      if (grown === MAX_GROUP_SEGMENTS) {
+        fEnd = from.length;
+        tEnd = to.length;
+        break;
       }
-      f = fEnd;
-      t = tEnd;
-    }
-  } else {
-    while (t < to.length && f < from.length) {
-      const tEnd = segmentEnd(to, t);
-      const length = to.slice(t, tEnd).normalize(form).length;
-      const fEnd = Math.min(f + length, from.length);
-      for (let k = f; k < fEnd; k++) {
-        starts[k] = t;
-        ends[k] = tEnd;
+      if (tEnd === to.length || (a.length < b.length && fEnd < from.length)) {
+        fEnd = segmentEnd(from, fEnd);
+      } else {
+        tEnd = segmentEnd(to, tEnd);
       }
-      f = fEnd;
-      t = tEnd;
     }
+    if (fEnd > f) {
+      alignGroup(from, f, fEnd, to, t, tEnd, original, form, starts, ends);
+    }
+    f = fEnd;
+    t = tEnd;
   }
-  for (let k = f; k <= from.length; k++) {
-    starts[k] = to.length;
-    ends[k] = to.length;
-  }
+  starts[from.length] = to.length;
+  ends[from.length] = to.length;
   return { starts, ends };
 }
 
@@ -317,16 +446,18 @@ export function readSpans(input: string, read: ReadPositions): SpanTable {
 /**
  * Spans in the final `output` of the rendered tokens an encoder wrote. The
  * encoder's ranges are in the text it assembled, of which `output` is the
- * normalization in `form`. When normalization changed nothing (Beta Code,
- * or a text already in its form), they are the spans, and the encoder's
- * arrays are returned as they are.
+ * normalization in `form`, or `written.normalized` with signs substituted
+ * one code unit for one (Greek). When normalization changed nothing (Beta
+ * Code, or a text already in its form), they are the spans, and the
+ * encoder's arrays are returned as they are.
  */
 export function writtenSpans(
   output: string,
   written: WrittenPositions,
   form: "NFC" | "NFD",
 ): SpanTable {
-  const map = segmentMap(written.text, output, "from", form);
+  const normalized = written.normalized ?? output;
+  const map = segmentMap(written.text, normalized, "from", form);
   if (map === undefined) return { starts: written.starts, ends: written.ends };
   return spansIn(written.starts, written.ends, written.starts.length, map);
 }

@@ -12,7 +12,11 @@ import {
   listPresetMetadata,
 } from "../src/mod.ts";
 import { parse, parseDetailed, type TokenSpan } from "../src/document.ts";
-import { continuesSegment } from "../src/parsers/positions.ts";
+import {
+  continuesSegment,
+  segmentMap,
+  segmentMapByGroups,
+} from "../src/parsers/positions.ts";
 import { EQUIVALENCES, FORMATS, LOSSY_CONVERSIONS } from "./fixtures.ts";
 
 /**
@@ -338,6 +342,17 @@ Deno.test("spans after letters that composition joins across characters", () => 
 });
 
 Deno.test("a character that normalization leaves unchanged keeps its own span", () => {
+  // Changed alone, without moving: the ohm sign read as an omega, an oxia
+  // written as a tonos and back.
+  assertEquals(parseDetailed("\u{2126}\u{332}", "greek").spans, [
+    { start: 0, end: 1 },
+    { start: 1, end: 2 },
+  ]);
+  assertEquals(pieces(detailed("\u{1F71}\u{332}", "beta-code", "greek")), [
+    ["\u{1F71}", "\u{1F71}"],
+    ["\u{332}", "\u{332}"],
+  ]);
+
   assertEquals(parseDetailed("e\u{332}", "greek").spans, [
     { start: 0, end: 1 },
     { start: 1, end: 2 },
@@ -373,10 +388,150 @@ Deno.test("a character split between two tokens is inside the first one's span",
   ]);
 });
 
-Deno.test("a token's spans do not depend on the text before it", () => {
+Deno.test("a letter that composition joins to the one before shares its group", () => {
+  // The Kirat Rai vowel sign AI decomposes into two signs E, which continue
+  // the character before them: the x shares the range of the group that
+  // normalization changed.
+  assertEquals(parseDetailed("x\u{16D68}", "greek").spans, [
+    { start: 0, end: 3 },
+    { start: 0, end: 3 },
+    { start: 0, end: 3 },
+  ]);
+  // Already decomposed, the group is unchanged and each unit keeps its own.
+  assertEquals(parseDetailed("x\u{16D67}\u{16D67}", "greek").spans, [
+    { start: 0, end: 1 },
+    { start: 1, end: 3 },
+    { start: 3, end: 5 },
+  ]);
+  // A Hangul vowel jamo after a precomposed letter.
+  assertEquals(parseDetailed("\u{3AC}\u{1161}", "greek").spans, [
+    { start: 0, end: 2 },
+    { start: 0, end: 2 },
+  ]);
+});
+
+Deno.test("a stray mark after a substituted Greek sign keeps its own span", () => {
+  // The Greek question mark and ano teleia are substituted after
+  // normalization, one code unit for one.
+  for (
+    const [input, sign, options] of [
+      [";\u{332}", "\u{37E}", { greek: { questionMark: "greek" } }],
+      ["\u{B7}\u{332}", "\u{387}", { greek: { anoTeleia: "greek" } }],
+      ["\u{B7}\u{332}", "\u{387}", {
+        greek: { anoTeleia: "greek", composition: "decomposed" },
+      }],
+    ] as const
+  ) {
+    const result = detailed(input, "greek", "greek", options);
+    assertEquals(result.output, sign + "\u{332}");
+    assertEquals(pieces(result), [[input[0], sign], ["\u{332}", "\u{332}"]]);
+  }
+});
+
+Deno.test("segment maps align every code point with its normalization", () => {
+  // Every code point in two contexts, and those that normalization touches
+  // or that continue a segment in more: each run of units mapped to one range
+  // normalizes into exactly that range, the ranges tile the other text in
+  // order, and a unit mapped alone maps to its counterpart. The fallback
+  // alignment, which the walk never needs here, gives the same maps.
+  const contexts = [
+    (c: string) => "a" + c,
+    (c: string) => c + "a",
+    (c: string) => "a" + c + "\u{301}",
+    (c: string) => "\u{E9}" + c + "\u{323}",
+    (c: string) => "\u{1100}" + c,
+    (c: string) => "\u{AC00}" + c,
+    (c: string) => c + "\u{1161}\u{11AB}",
+    (c: string) => "\u{16D63}" + c + "\u{16D67}",
+    (c: string) => "\u{1F600}" + c + "\u{1F600}",
+  ];
+  const failures: string[] = [];
+  const check = (
+    from: string,
+    to: string,
+    original: "from" | "to",
+    form: "NFC" | "NFD",
+  ) => {
+    const map = segmentMap(from, to, original, form);
+    if (map === undefined) {
+      if (from !== to) failures.push(`no map for ${JSON.stringify(from)}`);
+      return;
+    }
+    const fallback = segmentMapByGroups(from, to, original, form);
+    if (
+      fallback.starts.join() !== map.starts.join() ||
+      fallback.ends.join() !== map.ends.join()
+    ) {
+      failures.push(`fallback differs for ${JSON.stringify(from)} ${form}`);
+    }
+    let covered = 0;
+    for (let k = 0; k < from.length;) {
+      const start = map.starts[k];
+      const end = map.ends[k];
+      let j = k + 1;
+      while (
+        j < from.length && map.starts[j] === start && map.ends[j] === end
+      ) j++;
+      const a = from.slice(k, j);
+      const b = to.slice(start, end);
+      const same = original === "from"
+        ? a.normalize(form) === b || a === b
+        : a === b.normalize(form) || a === b;
+      if (start !== covered || end <= start || !same) {
+        failures.push(
+          `${JSON.stringify(from)} → ${JSON.stringify(to)} ${form}: ` +
+            `units ${k}–${j} at [${start}, ${end})`,
+        );
+        return;
+      }
+      covered = end;
+      k = j;
+    }
+    if (covered !== to.length) failures.push(`${JSON.stringify(to)} uncovered`);
+  };
+  for (let codePoint = 0; codePoint <= 0x10FFFF; codePoint++) {
+    if (codePoint >= 0xD800 && codePoint <= 0xDFFF) continue;
+    const char = String.fromCodePoint(codePoint);
+    const active = continuesSegment(codePoint) ||
+      char.normalize("NFD") !== char || char.normalize("NFC") !== char;
+    for (const context of active ? contexts : contexts.slice(0, 2)) {
+      const text = context(char);
+      for (const form of ["NFC", "NFD"] as const) {
+        const normalized = text.normalize(form);
+        // Reading: the reader's text is the normalization of the input.
+        check(normalized, text, "to", form);
+        // Writing: the output is the normalization of the assembled text.
+        check(text, normalized, "from", form);
+      }
+    }
+    if (failures.length >= 10) break;
+  }
+  assertEquals(failures, []);
+});
+
+Deno.test("the fallback alignment stays coarse but right when texts do not match", () => {
+  // Not normalizations of each other: the rest of both texts is one group.
+  assertEquals(segmentMapByGroups("ab", "xy", "from", "NFC"), {
+    starts: [0, 0, 2],
+    ends: [2, 2, 2],
+  });
+  // A composition across what would be two segments, aligned by groups.
+  assertEquals(
+    segmentMapByGroups("\u{1100}\u{1161}b", "\u{AC00}b", "from", "NFC"),
+    {
+      starts: [0, 0, 1, 2],
+      ends: [1, 1, 2, 2],
+    },
+  );
+});
+
+Deno.test("a token's spans depend only on its groups, not on the text before", () => {
   // Prefixing a text with another and a space shifts the spans of its tokens
   // by what was prefixed, in the input and in the output, whenever the text
-  // reads and writes the same after the prefix.
+  // reads and writes the same after the prefix. A text that starts with a
+  // code point continuing the character before it (a stray mark, a Hangul
+  // vowel jamo) joins the group of the space, which the contract allows: it
+  // is not compared.
   const prefixes: Record<Format, string[]> = {
     greek: [
       "ἄ",
@@ -400,7 +555,14 @@ Deno.test("a token's spans do not depend on the text before it", () => {
     ],
   };
   const texts: Record<Format, string[]> = {
-    greek: ["e\u{332}", "Ο\u{332}b", "λ\u{3CC}γος"],
+    greek: [
+      "e\u{332}",
+      "Ο\u{332}b",
+      "λ\u{3CC}γος",
+      "\u{16D68} λ",
+      "\u{16D67}\u{16D67} λ",
+      "\u{301}α",
+    ],
     "beta-code": [],
     transliteration: ["ph\u{323}", "p\u{1E25}", "e\u{332}"],
   };
@@ -422,7 +584,8 @@ Deno.test("a token's spans do not depend on the text before it", () => {
           const alone = convertDetailed(text, from, to);
           const joined = convertDetailed(head + text, from, to);
           const count = alone.spans.length;
-          const comparable = joined.output.endsWith(alone.output) &&
+          const comparable = !continuesSegment(text.codePointAt(0)!) &&
+            joined.output.endsWith(alone.output) &&
             serialize(parse(head + text, from).slice(-count)) ===
               serialize(parse(text, from));
           if (!comparable) continue;
@@ -582,13 +745,14 @@ Deno.test("converter spans are in the input as supplied", () => {
 });
 
 /**
- * The invariants: one span per token; input spans in order, covering the
- * input, each following the previous one or inside it (equal to it, or a
- * token read from part of a character the previous token also draws on);
- * output spans in order of start, covering the output, each following the
- * previous one, equal to it, empty, or inside it (a stray combining mark the
- * output joins to the previous token's last character); losses at their
- * token's span.
+ * The invariants: one span per token; spans in order, their starts and their
+ * ends never decreasing; input spans covering the input, each starting where
+ * the previous one ends or lying inside it and ending with it (tokens sharing
+ * a span, or a token read from part of a character the previous token also
+ * draws on); output spans covering the output, each starting where the
+ * previous non-empty one ends, lying inside it and ending with it (tokens
+ * written as one, a stray combining mark the output joins to the previous
+ * token's last character), or empty; losses at their token's span.
  */
 function checkSpans(
   where: string,
@@ -602,42 +766,42 @@ function checkSpans(
     const here = `${where}, token ${index}`;
     const read = { start: span.inputStart, end: span.inputEnd };
     assert(read.start < read.end, `${here}: empty input span`);
-    // A token read from part of a character the previous token also draws on
-    // lies inside its span.
-    const inside = read.start >= previous.start && read.end <= previous.end;
+    const follows = read.start === previous.end;
+    const inside = read.start >= previous.start && read.end === previous.end;
     assert(
-      read.start === previous.end || inside,
+      follows || inside,
       `${here}: input span ${JSON.stringify(read)} after ${
         JSON.stringify(previous)
       }`,
     );
-    if (!inside) previous = read;
+    previous = read;
   }
   assertEquals(previous.end, input.length, `${where}: input not covered`);
 
   let last: TokenSpan = { start: 0, end: 0 };
-  let covered = 0;
+  let before: TokenSpan = { start: 0, end: 0 };
   for (const [index, span] of spans.entries()) {
     const here = `${where}, token ${index}`;
     const start = span.outputStart;
     const end = span.outputEnd;
     assert(start <= end, `${here}: reversed output span`);
     assert(end <= output.length, `${here}: output span out of range`);
-    assert(start >= last.start, `${here}: output span goes back`);
-    const inside = start >= last.start && end <= last.end;
     assert(
-      start >= last.end || inside,
-      `${here}: output span [${start}, ${end}) overlaps [${last.start}, ${last.end})`,
+      start >= before.start && end >= before.end,
+      `${here}: output span [${start}, ${end}) goes back from [${before.start}, ${before.end})`,
     );
     if (end > start) {
-      assert(start === covered || inside, `${here}: gap before ${start}`);
-      covered = Math.max(covered, end);
+      const follows = start === last.end;
+      const inside = start >= last.start && end === last.end;
+      assert(
+        follows || inside,
+        `${here}: output span [${start}, ${end}) after [${last.start}, ${last.end})`,
+      );
       last = { start, end };
-    } else {
-      assert(start >= covered || inside, `${here}: empty span behind`);
     }
+    before = { start, end };
   }
-  assertEquals(covered, output.length, `${where}: output not covered`);
+  assertEquals(last.end, output.length, `${where}: output not covered`);
 
   for (const loss of result.losses) {
     const span = spans[loss.index];

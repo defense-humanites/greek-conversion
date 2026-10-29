@@ -13,8 +13,9 @@
  * call (options, encoder, loss check) that hides changes in the readers.
  * `convertDetailed()` and `parseDetailed()` are measured too, on the clause
  * and on one word: positions add a cost per call that `convert()` does not
- * pay, and until 1.0.0-rc.6 the typed arrays they were kept in made it
- * several times the conversion of a word. Compare with the previous release.
+ * pay. Kept in typed arrays, as they first were while 1.0.0-rc.6 was being
+ * written, they made it several times the conversion of a word. Compare with
+ * the previous release.
  * To look for deoptimizations behind a slower result, count them on both
  * versions; a few are normal while V8 warms up (17 on `main` for this
  * bench), a loop shows as hundreds (207 for the regression above):
