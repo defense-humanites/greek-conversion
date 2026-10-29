@@ -12,7 +12,7 @@ import type {
   Format,
   Preset,
 } from "../src/mod.ts";
-import { encode, parse, validateDocument } from "../src/document.ts";
+import { parse, validateDocument } from "../src/document.ts";
 import { suggestInventory } from "./inventory_suggestions.ts";
 import { suggestOptions } from "./options_suggestions.ts";
 import type { Suggestion } from "./options_suggestions.ts";
@@ -382,42 +382,30 @@ function parseSettings<T>(
   return value as T;
 }
 
-/**
- * The text of each source token, for display beside its diagnostic. The
- * source is read once, on first use: reading it again for every affected
- * letter made a long lossy text quadratic (two seconds per keystroke for
- * 10,000 characters of Latin read as Greek).
- */
-function tokenTexts(
-  format: Format,
-  options: ConversionOptions,
-): (index: number) => string {
-  let tokens: ReturnType<typeof parse> | null | undefined;
-  return (index) => {
-    if (tokens === undefined) {
-      try {
-        tokens = parse(source.value, format, options);
-      } catch {
-        tokens = null;
-      }
-    }
-    const token = tokens?.[index];
-    if (token === undefined) return "";
-    return token.kind === "literal" ? token.value : encode([token], "greek");
-  };
-}
-
 /** Affected letters shown per kind of loss; the status gives the total. */
 const LETTERS_PER_ISSUE = 60;
 
+/** A loss or a scope diagnostic: what it says, and where in the input. */
+interface Issue {
+  code: string;
+  index: number;
+  offset: number;
+  length: number;
+  message: string;
+}
+
 /**
  * Lists diagnostics grouped by message, so that one kind of loss appears
- * once with every letter it affects rather than once per letter.
+ * once with every letter it affects rather than once per letter. Each letter
+ * is the text of the input at the diagnostic's offset, as typed: indices
+ * count the tokens of the document the conversion prepared, in which a
+ * character outside the repertoire may be several literals, so they do not
+ * match a reading of the input.
  */
 function showIssues(
   losses: readonly ConversionLoss[],
-  scope: readonly { code: string; index: number; message: string }[],
-  letters: ((index: number) => string) | undefined,
+  scope: readonly Issue[],
+  format: Format,
 ): void {
   diagnostics.replaceChildren();
   diagnostics.hidden = losses.length + scope.length === 0;
@@ -430,41 +418,43 @@ function showIssues(
     ] as const
   ) {
     if (!issues.length) continue;
-    const groups = new Map<string, { code: string; indices: number[] }>();
+    const groups = new Map<string, { code: string; issues: Issue[] }>();
     for (const issue of issues) {
       const group = groups.get(issue.message) ??
-        { code: issue.code, indices: [] };
-      group.indices.push(issue.index);
+        { code: issue.code, issues: [] };
+      group.issues.push(issue);
       groups.set(issue.message, group);
     }
 
     const heading = document.createElement("h2");
     heading.textContent = label;
     const list = document.createElement("ul");
-    for (const [message, { code: issueCode, indices }] of groups) {
+    for (const [message, { code: issueCode, issues: affected }] of groups) {
       const item = document.createElement("li");
       const text = document.createElement("p");
       const detail = document.createElement("span");
       detail.className = "code";
       detail.textContent = ` ${issueCode}`;
       text.append(message, detail);
-      const affected = document.createElement("p");
-      affected.className = "letters";
-      for (const index of indices.slice(0, LETTERS_PER_ISSUE)) {
+      const letters = document.createElement("p");
+      letters.className = "letters";
+      for (const issue of affected.slice(0, LETTERS_PER_ISSUE)) {
         const letter = document.createElement("span");
-        letter.className = "letter";
-        letter.lang = "grc";
-        letter.title = `Token ${index}`;
-        letter.textContent = letters?.(index) || `#${index}`;
-        affected.append(letter);
+        letter.className = `letter face-${format}`;
+        if (format === "greek") letter.lang = "grc";
+        letter.title = `Token ${issue.index}, at ${issue.offset}`;
+        letter.textContent =
+          source.value.slice(issue.offset, issue.offset + issue.length) ||
+          `#${issue.index}`;
+        letters.append(letter);
       }
-      if (indices.length > LETTERS_PER_ISSUE) {
+      if (affected.length > LETTERS_PER_ISSUE) {
         const more = document.createElement("span");
         more.className = "more";
-        more.textContent = `… and ${indices.length - LETTERS_PER_ISSUE} more`;
-        affected.append(more);
+        more.textContent = `… and ${affected.length - LETTERS_PER_ISSUE} more`;
+        letters.append(more);
       }
-      item.append(text, affected);
+      item.append(text, letters);
       list.append(item);
     }
     diagnostics.append(heading, list);
@@ -639,7 +629,6 @@ function update(): void {
   applyFaces();
   const from = selectedFormat(sourceFormat);
   const to = selectedFormat(targetFormat);
-  let letters: ((index: number) => string) | undefined;
   try {
     const options = parseSettings<ConversionOptions>(
       optionsInput,
@@ -656,10 +645,6 @@ function update(): void {
       "Character inventory",
     );
     showCode(preset, options, inventory);
-    // Token numbers match the built-in reading only without custom characters.
-    letters = Object.keys(inventory).length === 0
-      ? tokenTexts(from, withPreset)
-      : undefined;
     const converter = createConverter({
       ...inventory,
       ...(preset ? { preset } : {}),
@@ -684,7 +669,7 @@ function update(): void {
         outside === 1 ? "1 character is" : `${outside} characters are`
       } outside the repertoire and copied through.`;
     }
-    showIssues(result.losses, result.diagnostics, letters);
+    showIssues(result.losses, result.diagnostics, from);
   } catch (error) {
     output.value = "";
     copyButton.disabled = swapButton.disabled = true;
@@ -693,7 +678,7 @@ function update(): void {
     showIssues(
       [],
       error instanceof CharacterScopeError ? error.diagnostics : [],
-      letters,
+      from,
     );
   }
   saveState();

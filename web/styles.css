@@ -457,6 +457,12 @@ select {
   text-align: center;
 }
 
+/* Beta Code letters keep the code face of their input, scaled as in the text fields. */
+.letter.face-beta-code {
+  font-family: var(--face-code);
+  font-size: 0.96rem;
+}
+
 /* Code: long lines wrap rather than run off a narrow screen. */
 pre {
   margin: 6px 0 0;
