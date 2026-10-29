@@ -38,7 +38,7 @@ remain.
 | `betaCodeToTransliteration(input, options)`                    | `convert(input, "beta-code", "transliteration", options)`                                                                                           |
 | `transliterationToGreek(input, options)`                       | `convert(input, "transliteration", "greek", options)`                                                                                               |
 | `transliterationToBetaCode(input, options)`                    | `convert(input, "transliteration", "beta-code", options)`                                                                                           |
-| `removeDiacritics(input, "transliteration", options)`          | `reencode(input, "transliteration", { ...options, diacritics: { all: "remove", roughBreathing: "preserve" } })` (see below for what the helper did) |
+| `removeDiacritics(input, "transliteration", options)`          | `reencode(input, "transliteration", { ...options, diacritics: { all: "remove", roughBreathing: "preserve" } })` (exact form below)                  |
 | `removeDiacritics(input, format, options)`, Greek or Beta Code | `reencode(input, format, { ...options, diacritics: { all: "remove" }, greek: { sigma: "preserve", finalSigma: "preserve", ...options.greek } })`    |
 | `foldGreekVariants(input, options)`                            | `reencode(input, "greek", { ...options, greek: { ...options.greek, medialBeta: "standard", sigma: "standard", finalSigma: "medial" } })`            |
 | `formatGreekUnicode(input, unicode)`                           | `reencode(input, "greek", { greek: unicode })`                                                                                                      |
@@ -78,11 +78,30 @@ one, and the other two are options you set when you want them:
 | Kept the rough breathing's `h` in transliteration                  | `diacritics: { all: "remove", roughBreathing: "preserve" }` — the class is now kept in every format, as a mark in Greek and Beta Code too |
 | Forced `sigma: "preserve"` and `finalSigma: "preserve"` unless set | `greek: { sigma: "preserve", finalSigma: "preserve" }`, to change nothing but the marks in Greek                                          |
 
-The helper `removeDiacritics(input, format, options)` kept the `h` only in
-transliteration, so its recipe above depends on the format, and removed every
-class whatever `options.diacritics` said (an explicit `roughBreathing: "remove"`
-removed the `h` as well); the sigma policies it forced yield to the ones in
-`options.greek`, hence the spread after them.
+The helper `removeDiacritics(input, format, options)` read the input with
+`options` and wrote it with the flag. It kept the `h` only in transliteration,
+so its recipe depends on the format, and it removed every class whatever
+`options.diacritics` said, the `h` too when `roughBreathing` was `"remove"`; the
+sigma policies it forced yield to the ones in `options.greek`, hence the spread
+after them. In transliteration, the exact equivalent reads and writes in two
+steps, as the helper did:
+
+```ts
+import { encode, parse } from "@humanities/greek-conversion/document";
+
+const roughBreathing = options.diacritics?.roughBreathing === "remove"
+  ? "remove"
+  : "preserve";
+encode(parse(input, "transliteration", options), "transliteration", {
+  ...options,
+  diacritics: { all: "remove", roughBreathing },
+});
+```
+
+The one-call recipe in the table reads with `all: "remove"` as well: it keeps
+the `h` even when `options` removed the rough breathing, and infers no smooth
+breathing while reading, which in rare texts changes how a `y` after a vowel is
+read.
 
 `diacritics.all` is expanded where it is written: in the caller's options it
 overrides every class a preset set, and a class named with it is the exception.
@@ -131,6 +150,12 @@ grow by the number of extra literals. Use the new `offset` and `length` to
 locate a diagnostic in the input.
 
 ## Updating from `1.0.0-rc.4`
+
+The sections from here to
+[Formats and conversion functions](#formats-and-conversion-functions) name
+options as they were at the time: `1.0.0-rc.6` moved the `orthography` and
+`unicode` keys to the groups listed under [Option groups](#option-groups), so
+`orthography.eta` below is `transliteration.eta` today.
 
 `orthography.eta` now names only the Latin letter of eta; the mark comes from
 `orthography.longVowels`, as it does for omega:
@@ -317,18 +342,17 @@ toTransliteration(input, KeyType.GREEK);
 
 // 1.0
 convert(input, "greek", "transliteration");
-// or greekToTransliteration(input)
 ```
 
-| 0.14.x                    | 1.0                                                            |
-| ------------------------- | -------------------------------------------------------------- |
-| `KeyType.GREEK`           | `"greek"`                                                      |
-| `KeyType.BETA_CODE`       | `"beta-code"`                                                  |
-| `KeyType.TLG_BETA_CODE`   | `"beta-code"` with `preset: "tlg-core"`                        |
-| `KeyType.TRANSLITERATION` | `"transliteration"`                                            |
-| `toGreek()`               | `convert(..., ..., "greek")` or a directional helper           |
-| `toBetaCode()`            | `convert(..., ..., "beta-code")` or a directional helper       |
-| `toTransliteration()`     | `convert(..., ..., "transliteration")` or a directional helper |
+| 0.14.x                    | 1.0                                     |
+| ------------------------- | --------------------------------------- |
+| `KeyType.GREEK`           | `"greek"`                               |
+| `KeyType.BETA_CODE`       | `"beta-code"`                           |
+| `KeyType.TLG_BETA_CODE`   | `"beta-code"` with `preset: "tlg-core"` |
+| `KeyType.TRANSLITERATION` | `"transliteration"`                     |
+| `toGreek()`               | `convert(..., ..., "greek")`            |
+| `toBetaCode()`            | `convert(..., ..., "beta-code")`        |
+| `toTransliteration()`     | `convert(..., ..., "transliteration")`  |
 
 ## Presets and custom options
 
@@ -345,13 +369,14 @@ toTransliteration(input, KeyType.GREEK, [
 // 1.0
 convert(input, "greek", "transliteration", {
   preset: "ala-lc-ancient",
-  removeDiacritics: false,
+  diacritics: { all: "preserve" },
 });
 ```
 
 Custom fields override corresponding preset fields while unrelated preset fields
-remain active. See [docs/presets.md](docs/presets.md) for the exact
-configuration table.
+remain active: here `diacritics.all` keeps every class the preset removes, while
+its other options (upsilon, decimal numerals) still apply. See
+[docs/presets.md](docs/presets.md) for the exact configuration table.
 
 ## Reusable parsed documents
 
