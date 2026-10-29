@@ -313,7 +313,7 @@ Deno.test("quantity marks do not infer an initial smooth breathing", () => {
   );
   assertNfcEquals(
     convert("ā", "transliteration", "beta-code"),
-    "a&",
+    "a%26",
   );
   assertNfcEquals(
     convert("hā", "transliteration", "greek"),

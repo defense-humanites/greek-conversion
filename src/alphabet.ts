@@ -87,8 +87,10 @@ export const BETA_FOR: Record<Diacritic, string> = {
   circumflex: "=",
   diaeresis: "+",
   "iota-subscript": "|",
-  macron: "&",
-  breve: "'",
+  // TLG percent codes for the combining macron and breve. In TLG Beta Code,
+  // `&` shifts to the Latin font and `'` is the apostrophe.
+  macron: "%26",
+  breve: "%27",
 };
 
 export const BETA_MARKS = new Map(

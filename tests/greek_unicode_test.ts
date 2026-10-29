@@ -49,7 +49,7 @@ Deno.test("applies Greek accentuation only to Greek output", () => {
 
   assertEquals(
     convert(source, "greek", "beta-code", MONOTONIC),
-    "a)/ a)=| i&",
+    "a)/ a)=| i%26",
   );
   assertEquals(
     convert(source, "greek", "transliteration", MONOTONIC),

@@ -406,7 +406,9 @@ ASCII letter case carries no meaning in Beta Code input: only `*` marks a
 capital. Output follows the
 [TLG placement rules](https://stephanus.tlg.uci.edu/encoding.php): breathing,
 accent, then iota subscript, with the asterisk and marks before an uppercase
-letter.
+letter. Vowel quantity takes the TLG percent codes, `%26` for the macron and
+`%27` for the breve, after the accent. As in the TLG, `'` is the apostrophe;
+`&`, a shift to the Latin font, is kept as text.
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
@@ -414,6 +416,7 @@ import { convert } from "@humanities/greek-conversion";
 convert("A)/NQRWPOS", "beta-code", "greek"); // → ἄνθρωπος
 convert("*)/ANQRWPOS", "beta-code", "greek"); // → Ἄνθρωπος
 convert("ᾯ", "greek", "beta-code"); // → *(=w|
+convert("ᾱ ᾰ", "greek", "beta-code"); // → a%26 a%27
 convert("ἄνθρωπος", "greek", "beta-code", { preset: "tlg-core" }); // → A)/NQRWPOS
 ```
 

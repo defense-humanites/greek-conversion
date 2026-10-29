@@ -22,7 +22,8 @@ The package is ESM-only.
 functions, regroups the options by what they describe, replaces the
 `removeDiacritics` flag, aligns the default transliteration on the SBL academic
 style, and types option errors. Every old key, value, and flag throws an
-`OptionError` whose message and `replacement` name the new form.
+`OptionError` whose message and `replacement` name the new form. It also writes
+Beta Code quantity marks with the TLG codes.
 
 ### Convenience functions
 
@@ -30,19 +31,19 @@ Ten functions are removed; each was one call to `convert()` or `reencode()` with
 fixed arguments. `convert`, `convertDetailed`, `reencode`, and `createConverter`
 remain.
 
-| Before                                                         | After                                                                                                                                               |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `greekToBetaCode(input, options)`                              | `convert(input, "greek", "beta-code", options)`                                                                                                     |
-| `greekToTransliteration(input, options)`                       | `convert(input, "greek", "transliteration", options)`                                                                                               |
-| `betaCodeToGreek(input, options)`                              | `convert(input, "beta-code", "greek", options)`                                                                                                     |
-| `betaCodeToTransliteration(input, options)`                    | `convert(input, "beta-code", "transliteration", options)`                                                                                           |
-| `transliterationToGreek(input, options)`                       | `convert(input, "transliteration", "greek", options)`                                                                                               |
-| `transliterationToBetaCode(input, options)`                    | `convert(input, "transliteration", "beta-code", options)`                                                                                           |
-| `removeDiacritics(input, "transliteration", options)`          | `reencode(input, "transliteration", { ...options, diacritics: { all: "remove", roughBreathing: "preserve" } })` (exact form below)                  |
-| `removeDiacritics(input, format, options)`, Greek or Beta Code | `reencode(input, format, { ...options, diacritics: { all: "remove" }, greek: { sigma: "preserve", finalSigma: "preserve", ...options.greek } })`    |
-| `foldGreekVariants(input, options)`                            | `reencode(input, "greek", { ...options, greek: { ...options.greek, medialBeta: "standard", sigma: "standard", finalSigma: "medial" } })`            |
-| `formatGreekUnicode(input, unicode)`                           | `reencode(input, "greek", { greek: unicode })`                                                                                                      |
-| `toUnicodeCodePoints(input)`                                   | `Array.from(input, (c) => "U+" + c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0"))`                                                    |
+| Before                                                         | After                                                                                                                                            |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `greekToBetaCode(input, options)`                              | `convert(input, "greek", "beta-code", options)`                                                                                                  |
+| `greekToTransliteration(input, options)`                       | `convert(input, "greek", "transliteration", options)`                                                                                            |
+| `betaCodeToGreek(input, options)`                              | `convert(input, "beta-code", "greek", options)`                                                                                                  |
+| `betaCodeToTransliteration(input, options)`                    | `convert(input, "beta-code", "transliteration", options)`                                                                                        |
+| `transliterationToGreek(input, options)`                       | `convert(input, "transliteration", "greek", options)`                                                                                            |
+| `transliterationToBetaCode(input, options)`                    | `convert(input, "transliteration", "beta-code", options)`                                                                                        |
+| `removeDiacritics(input, "transliteration", options)`          | `reencode(input, "transliteration", { ...options, diacritics: { all: "remove", roughBreathing: "preserve" } })` (exact form below)               |
+| `removeDiacritics(input, format, options)`, Greek or Beta Code | `reencode(input, format, { ...options, diacritics: { all: "remove" }, greek: { sigma: "preserve", finalSigma: "preserve", ...options.greek } })` |
+| `foldGreekVariants(input, options)`                            | `reencode(input, "greek", { ...options, greek: { ...options.greek, medialBeta: "standard", sigma: "standard", finalSigma: "medial" } })`         |
+| `formatGreekUnicode(input, unicode)`                           | `reencode(input, "greek", { greek: unicode })`                                                                                                   |
+| `toUnicodeCodePoints(input)`                                   | `Array.from(input, (c) => "U+" + c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0"))`                                                 |
 
 ### Option groups
 
@@ -148,6 +149,22 @@ differ only after a preserved character whose spelling has several characters
 reported at its first literal, and the indices of the diagnostics that follow it
 grow by the number of extra literals. Use the new `offset` and `length` to
 locate a diagnostic in the input.
+
+### Beta Code quantity marks
+
+Beta Code writes and reads the macron and breve with the TLG percent codes:
+
+| Before                                       | After            |
+| -------------------------------------------- | ---------------- |
+| `&` (macron): `a&`, `a)/&`                   | `a%26`, `a)/%26` |
+| `'` after `a`, `i`, `u` (breve): `a'`, `*'a` | `a%27`, `*%27a`  |
+
+In TLG Beta Code, `&` shifts to the Latin font and `'` is the apostrophe, and
+they are now read that way: `a&` gives `α&`, the `&` kept as text, and `a'`
+gives `α’`. Beta Code that a 1.0 prerelease wrote with quantity marks therefore
+reads differently. In such text, every `&` is a macron, and a `'` after `a`,
+`i`, or `u` and their marks, or between `*` and one of these capitals, is a
+breve; replace them with `%26` and `%27`, or convert the Greek again.
 
 ## Updating from `1.0.0-rc.4`
 
