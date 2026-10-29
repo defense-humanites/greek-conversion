@@ -108,6 +108,12 @@ The [playground](https://defense-humanites.github.io/greek-conversion/) needs no
 installation. It is built from the `main` branch, so it may be ahead of the
 latest published release.
 
+The unscoped npm package `greek-conversion` is the deprecated `0.14.x` series,
+whose source is on the
+[`legacy`](https://github.com/defense-humanites/greek-conversion/tree/legacy)
+branch. To upgrade, follow the
+[migration guide](https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md#from-014x).
+
 ## How it works
 
 Three text formats are supported, each in both directions:
