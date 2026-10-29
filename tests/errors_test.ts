@@ -119,6 +119,24 @@ Deno.test("option errors are OptionErrors that locate the option", () => {
   assertEquals(Object.isFrozen(incompatible.accepted), true);
 });
 
+Deno.test("an OptionError has a replacement only when there is one", () => {
+  // docs/stability.md: `replacement` is set only for keys and values that a
+  // release candidate accepted, so `"replacement" in error` tells them apart.
+  const unknown = assertThrows(
+    () => resolveConversionOptions({ unknownKey: 1 } as never),
+    OptionError,
+  );
+  assertEquals(Object.hasOwn(unknown, "replacement"), false);
+  assertEquals("replacement" in unknown, false);
+
+  const moved = assertThrows(
+    () => resolveConversionOptions({ orthography: { eta: "i" } } as never),
+    OptionError,
+  );
+  assertEquals(Object.hasOwn(moved, "replacement"), true);
+  assertEquals(moved.replacement, "transliteration.eta");
+});
+
 Deno.test("names the current path of the options of 1.0.0-rc.5", () => {
   // `path` is the key `replacement` replaces: for an old group, its first key.
   const cases: [Record<string, unknown>, string, string][] = [

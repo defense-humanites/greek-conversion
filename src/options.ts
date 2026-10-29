@@ -442,8 +442,12 @@ export class OptionError extends RangeError {
    * other one.
    */
   readonly accepted: readonly string[];
-  /** The current path of a removed key, or the current spelling of a renamed value. */
-  readonly replacement?: string;
+  /**
+   * The current path of a removed key, or the current spelling of a renamed
+   * value. A property of the error only when there is one: declared without
+   * a field, which would set it to `undefined` on every error.
+   */
+  declare readonly replacement?: string;
 
   /** Creates the error with its message and the details of the option. */
   constructor(
