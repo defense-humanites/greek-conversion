@@ -1,7 +1,7 @@
 # greek-conversion
 
 > [!WARNING]
-> **This package is no longer maintained.** `greek-conversion` 0.x still works, but its successor is [`@humanities/greek-conversion`](https://www.npmjs.com/package/@humanities/greek-conversion) 1.0, a rewrite with a new API (ESM-only, Node.js ≥ 24). Migrating is optional; see the [migration guide](https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md).
+> **This package is no longer maintained.** `greek-conversion` 0.x still works, but its successor is [`@humanities/greek-conversion`](https://www.npmjs.com/package/@humanities/greek-conversion) 1.0, a rewrite with a new API (ESM-only, Node.js ≥ 24). Migrating is optional; see the [migration guide](https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md#from-014x).
 
 A small, yet powerful, JavaScript library for converting both polytonic and monotonic Greek from/into many representations.
 
