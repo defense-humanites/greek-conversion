@@ -254,10 +254,13 @@ export function roughDiphthongStarts(document: Document): Uint8Array {
     const token = document[i];
     // A diphthong ends in iota or upsilon: test the letter, which is cheap,
     // before the marks.
+    // Vowels pair from the left: a vowel that ends a diphthong does not
+    // begin another (`αυἱ` is αυ and ἱ).
     if (
       token.kind === "grapheme" &&
       (token.letter === "iota" || token.letter === "upsilon") &&
-      token.diacritics.has("rough") && isDiphthongAt(document, i - 1)
+      token.diacritics.has("rough") && isDiphthongAt(document, i - 1) &&
+      !isDiphthongAt(document, i - 2)
     ) starts[i - 1] = 1;
   }
   return starts;

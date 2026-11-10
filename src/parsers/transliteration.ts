@@ -15,6 +15,7 @@ import {
   diacriticBit,
   diacriticsFromMask,
   type Document,
+  type Grapheme,
   grapheme,
   type Letter,
   literal,
@@ -90,6 +91,7 @@ function markBit(char: string): number {
 }
 
 const ROUGH = diacriticBit("rough");
+const BREATHINGS = ROUGH | diacriticBit("smooth");
 const CIRCUMFLEX = diacriticBit("circumflex");
 const IOTA_SUBSCRIPT = diacriticBit("iota-subscript");
 const MACRON = diacriticBit("macron");
@@ -311,7 +313,8 @@ export function parseTransliteration(
         ? isDiphthongAt(pair, 0)
         : isAuEuOuAt(pair, 0) ||
           upsilon === "y-with-ou-v-f" && isVowelUpsilonAt(pair, 0);
-      if (wouldRenderU) {
+      // A diaeresis and a breathing never share a vowel (`hy` is ὑ).
+      if (wouldRenderU && (marks & BREATHINGS) === 0) {
         // `y` says the pair is not a diphthong. Greek marks such a hiatus by
         // a breathing on the first vowel when the word starts there (ἀυτμή,
         // ἁυ); the diaeresis is the fallback where no breathing will sit.
@@ -327,7 +330,9 @@ export function parseTransliteration(
     if (
       letter === "iota" &&
       upsilon === "y-with-diphthong-u" &&
-      contextualY.has(out.length - 1)
+      contextualY.has(out.length - 1) &&
+      // A diaeresis and a breathing never share a vowel (`yhi` is υἱ).
+      (marks & BREATHINGS) === 0
     ) {
       const pair = latinPair(
         out.at(-1),
@@ -569,6 +574,7 @@ function inferInitialBreathings(
         token.diacritics.has("rough") &&
         isVowel(token.letter) &&
         next?.kind === "grapheme" &&
+        !hasBreathing(next) &&
         !isGreekNumeralContext(tokens, i) &&
         breathingTarget(latinPair(token, next), 0) === 1
       ) {
@@ -586,7 +592,9 @@ function inferInitialBreathings(
       : tokens[i + breathingTarget(latinPair(token, tokens[i + 1]), 0)];
     if (target.kind !== "grapheme") continue;
 
-    if (token.diacritics.has("rough") && target !== token) {
+    if (
+      token.diacritics.has("rough") && target !== token && !hasBreathing(target)
+    ) {
       token.diacritics = withoutDiacritic(token.diacritics, "rough");
       target.diacritics = withDiacritic(target.diacritics, "rough");
     } else if (
@@ -601,6 +609,15 @@ function inferInitialBreathings(
       target.diacritics = withDiacritic(target.diacritics, "smooth");
     }
   }
+}
+
+/**
+ * Whether a vowel already carries a breathing, read from its own `h` (or
+ * written in place): the `h` before the previous vowel is then that vowel's,
+ * since a vowel group has only one breathing (`hahi` is ἁἱ).
+ */
+function hasBreathing(token: Grapheme): boolean {
+  return token.diacritics.has("rough") || token.diacritics.has("smooth");
 }
 
 /**

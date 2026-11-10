@@ -126,6 +126,8 @@ const WORDS = [
   "ἑωυτοῦ",
   "τοὔμπαλιν",
   "Θύιλλος",
+  "δῆσε(ν)",
+  "αυἱ",
 ] as const;
 
 const SEPARATORS = [" ", " ", ", ", "\n", " · "] as const;

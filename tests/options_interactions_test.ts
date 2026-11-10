@@ -410,3 +410,94 @@ Deno.test("vowel spelling options keep vowel pairs idempotent", () => {
   }
   assertEquals(failures, []);
 });
+
+Deno.test("keeps each rough breathing where the output reads it back", () => {
+  const t = (greek: string, options = {}) =>
+    convert(greek, "greek", "transliteration", options);
+  // Vowels pair from the left: after the diphthong αυ, ἱ keeps its own h.
+  assertNfcEquals(t("αυἱ"), "auhi");
+  // A vowel with its own breathing keeps the h before the previous vowel.
+  assertNfcEquals(t("ἁἱ"), "hahi");
+  assertNfcEquals(convert("hahi", "transliteration", "greek"), "ἁἱ");
+  // The h of ἁ merges into θ, so the pair reads back as αι: it is written so.
+  assertNfcEquals(t("τἁἱς"), "thais");
+  // A coronis written as an apostrophe stands between ω and ὑ.
+  assertNfcEquals(
+    t("τὠὑτό", { transliteration: { coronis: "apostrophe" } }),
+    "tō’hytó",
+  );
+  // No diaeresis on a vowel that carries a breathing, written or read.
+  assertNfcEquals(t("ὑἱός"), "hyhiós");
+  assertNfcEquals(convert("hyhiós", "transliteration", "greek"), "ὑἱός");
+});
+
+Deno.test("vowel pairs stay idempotent next to breathings, diphthongs, and capitals", () => {
+  // Pairs with a breathing on both vowels, after a diphthong, after a
+  // consonant whose Latin letter forms a digraph with h, and in capitals.
+  type Transliteration = NonNullable<ConversionOptions["transliteration"]>;
+  const values = CONVERSION_OPTION_VALUES.transliteration;
+  const words = new Set<string>();
+  for (const first of ["α", "ε", "η", "ο", "υ", "ω"]) {
+    for (const second of ["ι", "υ"]) {
+      for (const before of ["", "\u0313", "\u0314", "\u0301"]) {
+        for (const after of ["\u0313", "\u0314", "\u0314\u0342", "\u0301"]) {
+          const pair = (first + before).normalize() +
+            (second + after).normalize();
+          for (
+            const word of [
+              pair,
+              `τ${pair}ς`,
+              `ρ${pair}`,
+              `κ${pair}`,
+              `αυ${second}${after}`.normalize(),
+              pair.toUpperCase(),
+            ]
+          ) words.add(word);
+        }
+      }
+    }
+  }
+  const failures: string[] = [];
+  for (const eta of values.eta) {
+    for (const longVowels of values.longVowels) {
+      for (const upsilon of values.upsilon) {
+        for (const chi of values.chi) {
+          for (
+            const diacritics of [
+              {},
+              { accents: "remove" },
+              { smoothBreathing: "remove" },
+            ] as const
+          ) {
+            const transliteration: Transliteration = {
+              eta,
+              longVowels,
+              upsilon,
+              chi,
+              // v and f read back as beta and phi only with these.
+              ...(upsilon === "y-with-ou-v-f"
+                ? { beta: "v", phi: "f" } as const
+                : {}),
+            };
+            const options = { transliteration, diacritics };
+            for (const word of words) {
+              const written = convert(
+                word,
+                "greek",
+                "transliteration",
+                options,
+              );
+              const again = reencode(written, "transliteration", options);
+              if (again !== written) {
+                failures.push(
+                  `${JSON.stringify(options)}: ${word} → ${written} → ${again}`,
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  assertEquals(failures, []);
+});

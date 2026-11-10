@@ -141,8 +141,14 @@ export function parseBetaCode(
       continue;
     }
 
-    const parenthesis = upper ? undefined : parenthesisAt(text, i);
+    const parenthesis = parenthesisAt(text, i);
     if (parenthesis !== undefined) {
+      // After `*`, as before any character that is not a letter, the prefix
+      // is kept as text.
+      if (upper) {
+        out.push(literal(text.slice(start, i)));
+        if (starts !== undefined) starts.push(i);
+      }
       out.push(share ? sharedLiteral(parenthesis) : literal(parenthesis));
       i += 2;
       continue;

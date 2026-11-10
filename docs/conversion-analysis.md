@@ -29,8 +29,10 @@ const result = convertDetailed("ἄνθρωπος", "greek", "greek", {
 
 `convert()` continues to return only a string. Both functions share the same
 parse-and-encode execution; detailed conversion additionally parses the target
-output once to compare its canonical document with the source document. It does
-not encode the conversion a second time.
+output to compare its canonical document with the source document. When the two
+documents do not have the same letters, it reads the output a second time with
+positions, to pair each target token with the source token whose output range
+it starts in. It does not encode the conversion a second time.
 
 ## Definition of loss
 

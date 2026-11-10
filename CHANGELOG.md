@@ -9,6 +9,24 @@ change.
 
 ### Fixed
 
+- Transliteration no longer drops or misplaces a rough breathing in a few
+  vowel sequences that an independent audit found:
+  - after a diphthong, an iota or upsilon with a rough breathing keeps its
+    `h`: `αυἱ` gave `aui` and gives `auhi` (vowels pair from the left);
+  - a vowel that has its own breathing keeps the `h` before the previous
+    vowel: `ἁἱ` gave `hahi`, which read back as `αἱ`; it now reads back as
+    `ἁἱ`;
+  - where the `h` of the first vowel forms a digraph with the consonant before
+    it, the pair is written as it reads back: `τἁἱς` gave `thahis`, written
+    again `thhais`, and gives `thais`;
+  - a coronis written as an apostrophe keeps the next vowel's `h` on its side:
+    `τὠὑτό` gave `thō’ytó` and gives `tō’hytó`;
+  - no diaeresis is written or read on a vowel that carries a breathing:
+    `ὑἱός` gave `hyhïós`, which read back as an invalid `ὑἱ̈ός`, and gives
+    `hyhiós`.
+- In Beta Code, `*` before `[1` or `]1` is kept as text and the code read as a
+  parenthesis, as after `*` before any character that is not a letter:
+  `*[1a]1` gave `*[1α)` and gives `*(α)`.
 - Transliteration writes a vowel pair as it reads back, so that the output
   converted again stays the same. A dictionary corpus showed four cases where
   it did not:
@@ -17,7 +35,7 @@ change.
     and written again `heoÿtoû`; it gives `heoutoû`. More generally, under
     `longVowels: "omit"`, the choice of `u` or `y` and the place of the `h` of
     a rough breathing follow the letters as they read back (`ηἱ` gives `hei`,
-    like `εἱ`);
+    like `εἱ`, under the default `eta`);
   - under `iso-843-type-2`, the apostrophe written for a coronis reads back
     as punctuation, after which `μπ` counted as the start of a word:
     `τοὔμπαλιν` gave `toú’mpalin`, written again `toú’balin`; the `μπ` now
@@ -68,6 +86,9 @@ change.
   two vowels that can form a diphthong now gives the breathing to the
   diphthong: `mhaidēs` gave `μἁιδης` and gives `μαἱδης`, so `μἁιδης`, whose
   hiatus no accent marks, now reports `displaced-diacritic`, like `ἁι` → `hai`.
+
+### Changed
+
 - Under `phi: "f"`, as in both ISO 843 presets, `ph` reads as pi followed by a
   rough breathing, not as phi, so that the output is idempotent: `πἡ` is
   written `phī` (`iso-843-type-1`), which gave `fī` when converted again and
