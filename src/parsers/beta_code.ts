@@ -75,7 +75,10 @@ const PERCENT_MARK_BIT = new Map(
 const ASTERISK = 0x2a;
 const HASH = 0x23;
 const PERCENT = 0x25;
+const LEFT_BRACKET = 0x5b;
+const RIGHT_BRACKET = 0x5d;
 const DIGIT_0 = 0x30;
+const DIGIT_1 = 0x31;
 const DIGIT_9 = 0x39;
 
 /**
@@ -135,6 +138,13 @@ export function parseBetaCode(
     if (additional && marks === 0) {
       out.push(grapheme(additional.letter, upper));
       i += additional.length;
+      continue;
+    }
+
+    const parenthesis = upper ? undefined : parenthesisAt(text, i);
+    if (parenthesis !== undefined) {
+      out.push(share ? sharedLiteral(parenthesis) : literal(parenthesis));
+      i += 2;
       continue;
     }
 
@@ -217,6 +227,21 @@ function digitsEnd(text: string, start: number): number {
     index++;
   }
   return index;
+}
+
+/**
+ * The parenthesis that a TLG bracket code writes at `start`: `[1` or `]1`.
+ * The number is every digit after the bracket, so `[10` is another bracket,
+ * kept as text like the other bracket codes.
+ */
+function parenthesisAt(text: string, start: number): "(" | ")" | undefined {
+  const unit = text.charCodeAt(start);
+  if (unit !== LEFT_BRACKET && unit !== RIGHT_BRACKET) return undefined;
+  if (
+    text.charCodeAt(start + 1) !== DIGIT_1 ||
+    digitsEnd(text, start + 1) !== start + 2
+  ) return undefined;
+  return unit === LEFT_BRACKET ? "(" : ")";
 }
 
 function additionalCharacter(

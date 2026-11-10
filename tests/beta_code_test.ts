@@ -89,3 +89,35 @@ Deno.test("reads & and ' as TLG Beta Code does, not as quantity", () => {
   assertNfcEquals(convert("a& a' i&", "beta-code", "greek"), "α& α’ ι&");
   assertNfcEquals(reencode("a& a'", "beta-code"), "a& a'");
 });
+
+Deno.test("writes and reads parentheses with the TLG bracket codes", () => {
+  // In Beta Code, ( and ) are the breathings: the TLG writes the parentheses
+  // [1 and ]1, as the Bailly writes an optional letter or an apposition.
+  assertNfcEquals(convert("δῆσε(ν)", "greek", "beta-code"), "dh=se[1n]1");
+  assertNfcEquals(convert("dh=se[1n]1", "beta-code", "greek"), "δῆσε(ν)");
+  assertNfcEquals(
+    convert("ὁ (ὁ λόφος)", "greek", "beta-code", { preset: "tlg-core" }),
+    "O( [1O( LO/FOS]1",
+  );
+  assertEquals(convertDetailed("(βῆτα)", "greek", "beta-code").lossy, false);
+  // Where the smooth breathing is removed, the closing parenthesis no
+  // longer reads as one on the letter before it.
+  const options = { preset: "ala-lc-ancient" } as const;
+  const written = convert("δῆσε(ν)", "greek", "beta-code", options);
+  assertNfcEquals(written, "dhse[1n]1");
+  assertNfcEquals(reencode(written, "beta-code", options), written);
+  // The number is every digit after the bracket: [10 is another bracket,
+  // kept as text like the other bracket codes and the bare brackets.
+  assertNfcEquals(
+    convert("[10a]10 [2a]2 [a]", "beta-code", "greek"),
+    "[10α]10 [2α]2 [α]",
+  );
+  // ( and ) after a letter stay breathings.
+  assertNfcEquals(convert("a) a(", "beta-code", "greek"), "ἀ ἁ");
+  // A bracket code belongs to the span of its parenthesis.
+  const { spans } = convertDetailed("[1a]1", "beta-code", "greek");
+  assertEquals(
+    spans.map((span) => [span.inputStart, span.inputEnd]),
+    [[0, 2], [2, 3], [3, 5]],
+  );
+});

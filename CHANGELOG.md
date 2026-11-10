@@ -7,6 +7,16 @@ change.
 
 ## [Unreleased]
 
+### Fixed
+
+- Beta Code writes and reads parentheses with the TLG bracket codes `[1` and
+  `]1`. They were written `(` and `)`, which are the breathings: `δῆσε(ν)`
+  gave `dh=se(n)`, read back as `δῆσἑν̓` (a reported loss), and under the
+  presets that remove the smooth breathing (`ala-lc-*`, `sbl-general`), the
+  closing parenthesis disappeared when the output was converted again
+  (`dhse(n)` → `dhse(n`). It now gives `dh=se[1n]1`, which reads back as
+  `δῆσε(ν)`. The other TLG bracket codes (`[2`, `[10`…) are still kept as text.
+
 ## [1.0.0-rc.6] - 2026-10-29
 
 Sixth release candidate for `1.0.0`. It settles the public API for the stable
