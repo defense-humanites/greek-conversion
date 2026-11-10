@@ -9,6 +9,33 @@ change.
 
 ### Fixed
 
+- Transliteration writes a vowel pair as it reads back, so that the output
+  converted again stays the same. A dictionary corpus showed four cases where
+  it did not:
+  - under `iso-843-type-2`, omega is written `o`, and Ionic `ωυ` is now
+    written like `ου`: `ἑωυτοῦ` gave `heoytoû`, read back as the hiatus `οϋ`
+    and written again `heoÿtoû`; it gives `heoutoû`. More generally, under
+    `longVowels: "omit"`, the choice of `u` or `y` and the place of the `h` of
+    a rough breathing follow the letters as they read back (`ηἱ` gives `hei`,
+    like `εἱ`);
+  - under `iso-843-type-2`, the apostrophe written for a coronis reads back
+    as punctuation, after which `μπ` counted as the start of a word:
+    `τοὔμπαλιν` gave `toú’mpalin`, written again `toú’balin`; the `μπ` now
+    stays inside the word both times;
+  - under `sbl-general`, which removes the accent that marks the hiatus of
+    `υι`, `Θύιλλος` gave `Thyillos`, whose `yi` reads back as a hiatus and was
+    written again `Thyïllos`; the diaeresis is now written at once, as it
+    already was for a vowel followed by upsilon;
+  - such a diaeresis is written before the accent, where a diaeresis of the
+    source goes (`ÿ́`); it came after it (`ý̈`), and the two orders are
+    different texts.
+
+  A test now converts every pair of a vowel and iota or upsilon, with each
+  mark that tells a hiatus from a diphthong, under every combination of the
+  vowel options; it found the remaining cases, outside the presets: a
+  coronis written as an apostrophe after the first vowel of a diphthong
+  splits it in Latin (`τὠυτὸ` gives `to’ytò`), and a Greek coronis after an
+  upsilon written `v` or `f` is written as the apostrophe it reads back as.
 - Beta Code writes and reads parentheses with the TLG bracket codes `[1` and
   `]1`. They were written `(` and `)`, which are the breathings: `δῆσε(ν)`
   gave `dh=se(n)`, read back as `δῆσἑν̓` (a reported loss), and under the
