@@ -101,6 +101,14 @@ change.
   `"nasal-medial-kappa"`, `gkh` before a vowel reads as gamma, kappa, and a
   rough breathing, not as gamma and chi: `γκἡ` is written `gkhē`, which gave
   `nkhē` when converted again and now stays `gkhē`.
+- The project leaves Deno, whose development is to end in 2027, for Node.js 24:
+  tests run on `node:test`, types are checked by TypeScript, formatting is
+  done by dprint with Deno's style, and linting by oxlint. The library itself
+  is unchanged and still has no dependencies; JSR still serves it to Deno.
+- The npm package is built by the TypeScript compiler instead of dnt. Its
+  exports, declarations, and files are the same, without dnt's `Object.hasOwn`
+  polyfill module, which Node.js 24 does not need, and its `package.json`
+  declares `"type": "module"`.
 
 ## [1.0.0-rc.6] - 2026-10-29
 

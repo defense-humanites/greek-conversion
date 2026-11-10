@@ -27,11 +27,13 @@ Both registries use the same package name and version:
 
 ## Release checklist
 
-1. Update the version in `deno.json` and `CITATION.cff`, and replace
-   `Unreleased` in `CHANGELOG.md` with the release date. The publish workflow
-   refuses a release whose tag or citation version differs from `deno.json`.
-2. Run `deno task check`, `deno task test`, `deno task publish:check`, and
-   `deno task npm:check`.
+1. Update the version in `package.json` (`npm version --no-git-tag-version
+   <version>`, which updates `package-lock.json` too), `jsr.json`, and
+   `CITATION.cff`, and replace `Unreleased` in `CHANGELOG.md` with the release
+   date. `npm run check` fails while the four versions differ, and the publish
+   workflow refuses a release whose tag differs from `package.json`.
+2. Run `npm run check`, `npm test`, `npm run jsr:check`, and
+   `npm run npm:check`.
 3. Verify the generated npm archive, especially its ESM exports, declarations,
    license, README, migration guide, and documentation directory. This file is
    deliberately excluded from both packages.
@@ -51,7 +53,7 @@ Both registries use the same package name and version:
 
 ## A slow JSR step
 
-After `Publishing @humanities/greek-conversion@<version> ...`, `deno publish`
+After `Publishing @humanities/greek-conversion@<version> ...`, `jsr publish`
 waits for JSR to process the version, with no time limit. This usually takes
 seconds, but `1.0.0-rc.1` took about 12 minutes on 2026-10-19 while other
 packages published normally. Wait at least 30 minutes before cancelling, and

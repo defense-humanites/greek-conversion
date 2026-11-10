@@ -21,25 +21,21 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.release.tag_name }}
-      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
-        with:
-          deno-version: v2.x
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
+      - run: npm ci --ignore-scripts
       - name: Resolve release metadata
         id: release
-        run: >-
-          deno run --allow-read --allow-env --allow-write
-          scripts/release_metadata.ts
-          "${{ github.event.release.tag_name }}"
-      - run: deno task check
-      - run: deno task test
-      - run: deno task publish:check
-      - run: deno task npm:check
+        run: node scripts/release_metadata.ts "${{ github.event.release.tag_name }}"
+      - run: npm run check
+      - run: npm test
+      - run: npm run jsr:check
+      - run: npm run npm:check
       - name: Publish to JSR
-        run: deno publish --check=all
+        # Authenticated by the workflow's OIDC token, with provenance.
+        run: npx jsr publish
       - name: Install trusted-publishing npm client
         run: npm install --global npm@11.5.1
       - name: Publish to npm
