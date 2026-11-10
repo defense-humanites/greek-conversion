@@ -7,6 +7,17 @@ change.
 
 ## [Unreleased]
 
+## [1.0.0-rc.7] - 2026-11-10
+
+Seventh release candidate for `1.0.0`. The API does not change. Transliteration
+writes the `h` of a rough breathing before a whole diphthong inside a word, as
+ALA-LC prescribes (#44), and now reads back as it was written in the vowel
+sequences where it did not, which an independent audit and a dictionary corpus
+found. Beta Code writes parentheses with the TLG codes `[1` and `]1`, and
+`convertDetailed()` locates each loss at the token that lost something. The
+project leaves Deno for Node.js; the npm package is built by TypeScript. Unless
+a problem is found, `1.0.0` will have the same content.
+
 ### Fixed
 
 - Transliteration no longer drops or misplaces a rough breathing in a few
@@ -828,7 +839,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.6...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.7...HEAD
+[1.0.0-rc.7]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.6...v1.0.0-rc.7
 [1.0.0-rc.6]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.5...v1.0.0-rc.6
 [1.0.0-rc.5]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.4...v1.0.0-rc.5
 [1.0.0-rc.4]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.3...v1.0.0-rc.4
