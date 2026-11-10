@@ -7,6 +7,17 @@ change.
 
 ## [Unreleased]
 
+### Changed
+
+- Conversion to transliteration is faster, and its output is unchanged. The
+  Latin spelling of each set of marks is kept from one call to the next with
+  the same options, and the encoder follows the start of each word as it
+  writes, instead of looking for it at every letter. Measured under Node.js 24
+  against rc.7, a word or a sentence converts about 25 % faster, and a text of
+  10,000 characters about 6 % faster, as fast as in rc.6.
+  `convertDetailed()` also compares the source and the text read back faster,
+  by about 8 % on long texts in every direction.
+
 ## [1.0.0-rc.7] - 2026-11-10
 
 Seventh release candidate for `1.0.0`. The API does not change. Transliteration

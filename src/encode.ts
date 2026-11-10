@@ -12,9 +12,9 @@ import {
   DEXIA_KERAIA,
   elidedAspirate,
   hasHiatusMark,
-  initialBreathingStart,
   isAmongCapitals,
   isAuEuOuAt,
+  isBoundaryTransparent,
   isDiphthongAt,
   isElisionMark,
   isGreekNumeralContext,
@@ -307,9 +307,10 @@ export function encodeTransliteration(
   const smoothInPlace = preservesSmooth &&
     options.transliteration?.smoothBreathing === "greek";
   // The written marks of a token depend only on its marks, on whether it is
-  // epsilon or omicron, and on a separation diaeresis: memoized per call on
-  // those three for shared sets, as byMarks() does.
-  const markStrings: (string | undefined)[] = [];
+  // epsilon or omicron, on a separation diaeresis, and on whether it follows
+  // an upsilon written v or f: memoized on those four for shared sets, as
+  // byMarks() does, across calls with the same options (latinMarkStrings).
+  const markStrings = latinMarkStrings(options);
   const markString = (
     token: Grapheme,
     separation: boolean,
@@ -365,34 +366,23 @@ export function encodeTransliteration(
   // eta of `ηυ` keeps its letter where the upsilon is written v or f
   // (ISO 843 Type 2): the pair is no vowel group in Latin, and the breathing
   // goes before it (`ηὔδα` → `’ívda`).
+  // The group that starts a word is read back by initialBreathingTarget(),
+  // the rest of the document only for the rough diphthongs.
   const vowelUpsilonVF = options.transliteration?.upsilon === "y-with-ou-v-f";
-  const readBack = options.transliteration?.longVowels === "omit"
-    ? readBackBeforeBreathings(rendered, doc, options, vowelUpsilonVF)
-    : rendered;
   // The rough diphthongs inside a word, found once and only when a vowel
   // meets an iota or upsilon with a rough breathing: they are rare.
   let roughDiphthongs: Uint8Array | undefined;
-  const findRoughDiphthongs = (): Uint8Array => {
-    // The diphthongs are those the output reads back as.
-    const starts = roughDiphthongStarts(
-      marksAsReadBack(readBack, doc, options, preservesSmooth, digraphs),
-    );
-    // A coronis written as an apostrophe after the first vowel splits the
-    // pair (splitByCoronis): the second vowel keeps its own `h`.
-    if (options.transliteration?.coronis === "apostrophe") {
-      for (let index = 0; index < starts.length; index++) {
-        const token = readBack[index];
-        if (
-          starts[index] === 1 && token.kind === "grapheme" &&
-          splitByCoronis(token, options)
-        ) starts[index] = 0;
-      }
-    }
-    return starts;
-  };
+
+  // The tokens are written in order, so whether a letter starts a word is
+  // known from the ones before (isWordInitial): `afterLetter` tells whether
+  // the last token that is not transparent to word boundaries is a letter,
+  // and `wordStart` is the last letter that started a word.
+  let afterLetter = false;
+  let wordStart = -1;
 
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
+      if (!isBoundaryTransparent(token)) afterLetter = false;
       if (options.transliteration?.keraia === "bnf") {
         if (token.value === DEXIA_KERAIA) return "\u0301";
         if (token.value === ARISTERI_KERAIA) return ",";
@@ -400,6 +390,9 @@ export function encodeTransliteration(
       return encodePunctuation(token.value, "transliteration", options) ??
         token.value;
     }
+
+    if (!afterLetter) wordStart = index;
+    afterLetter = true;
 
     if (rewritesDigraphs) {
       const modernDigraph = modernDigraphAt(doc, index, digraphs);
@@ -420,18 +413,48 @@ export function encodeTransliteration(
 
     const previous = doc[index - 1];
     const next = doc[index + 1];
-    const initialStart = initialBreathingStart(readBack, index);
+    // initialBreathingStart() as the output reads back: a vowel that starts
+    // a word, or the second vowel of a diphthong that starts one.
+    const initialStart = wordStart === index
+      ? (isVowel(token.letter) ? index : undefined)
+      : wordStart === index - 1 &&
+          initialBreathingTarget(
+            rendered,
+            doc,
+            index - 1,
+            options,
+            vowelUpsilonVF,
+          ) === index
+      ? index - 1
+      : undefined;
     // The h of a rough breathing is written only when the breathing is kept.
     const breathingStart = initialStart ??
       (preservesRough && meetsRoughIotaOrUpsilon(rendered, index)
-        ? roughDiphthongStart(roughDiphthongs ??= findRoughDiphthongs(), index)
+        ? roughDiphthongStart(
+          roughDiphthongs ??= findRoughDiphthongs(
+            options.transliteration?.longVowels === "omit"
+              ? readBackBeforeBreathings(rendered, doc, options, vowelUpsilonVF)
+              : rendered,
+            doc,
+            options,
+            preservesSmooth,
+            digraphs,
+          ),
+          index,
+        )
         : undefined);
     // The breathing of a rough diphthong inside a word is on its second vowel.
     const breathingIndex = breathingStart === undefined
       ? undefined
       : initialStart === undefined
       ? breathingStart + 1
-      : breathingTarget(readBack, breathingStart);
+      : initialBreathingTarget(
+        rendered,
+        doc,
+        breathingStart,
+        options,
+        vowelUpsilonVF,
+      );
     const breathingToken = breathingIndex === undefined
       ? undefined
       : rendered[breathingIndex];
@@ -528,6 +551,58 @@ export function encodeTransliteration(
   });
   return (written === undefined ? pieces.join("") : joinPieces(pieces, written))
     .normalize("NFC");
+}
+
+/**
+ * The rough diphthongs inside a word (roughDiphthongStarts), as the output
+ * reads them back.
+ */
+function findRoughDiphthongs(
+  readBack: Document,
+  doc: Document,
+  options: ConversionOptions,
+  preservesSmooth: boolean,
+  digraphs: DigraphPolicy,
+): Uint8Array {
+  const starts = roughDiphthongStarts(
+    marksAsReadBack(readBack, doc, options, preservesSmooth, digraphs),
+  );
+  // A coronis written as an apostrophe after the first vowel splits the pair
+  // (splitByCoronis): the second vowel keeps its own `h`.
+  if (options.transliteration?.coronis === "apostrophe") {
+    for (let index = 0; index < starts.length; index++) {
+      const token = readBack[index];
+      if (
+        starts[index] === 1 && token.kind === "grapheme" &&
+        splitByCoronis(token, options)
+      ) starts[index] = 0;
+    }
+  }
+  return starts;
+}
+
+/**
+ * The Latin mark strings already written for shared diacritic sets, by the
+ * options they depend on: how transliteration writes the circumflex, the
+ * smooth breathing, and the coronis (trMark). Which marks it keeps does not
+ * enter the key: prepareDiacriticsForRendering() has removed the others from
+ * the tokens, whose sets are the rest of the key, and a separation diaeresis
+ * is added only where diaereses are kept. Kept across calls, since a short
+ * text has few tokens to share one call's strings; the options are resolved,
+ * so there are at most 18 keys.
+ */
+const LATIN_MARK_STRINGS = new Map<string, (string | undefined)[]>();
+
+function latinMarkStrings(options: ConversionOptions): (string | undefined)[] {
+  const transliteration = options.transliteration;
+  const key = transliteration?.circumflexAccent + " " +
+    transliteration?.smoothBreathing + " " + transliteration?.coronis;
+  let strings = LATIN_MARK_STRINGS.get(key);
+  if (strings === undefined) {
+    strings = [];
+    LATIN_MARK_STRINGS.set(key, strings);
+  }
+  return strings;
 }
 
 /** Whether a sigma is written `c` (`lunateSigma: "c"`). */
@@ -813,6 +888,61 @@ function readBackLetter(token: Grapheme, options: ConversionOptions): Letter {
     return options.transliteration?.eta === "i" ? "iota" : "epsilon";
   }
   return token.letter;
+}
+
+/**
+ * breathingTarget() for the vowel group that starts a word at `start`, with
+ * its two letters as they read back (readBackBeforeBreathings): only these
+ * two are read, so that the whole document need not be.
+ */
+function initialBreathingTarget(
+  rendered: Document,
+  doc: Document,
+  start: number,
+  options: ConversionOptions,
+  vowelUpsilonVF: boolean,
+): number {
+  if (options.transliteration?.longVowels !== "omit") {
+    return breathingTarget(rendered, start);
+  }
+  const first = readBackInitial(rendered, doc, start, options, vowelUpsilonVF);
+  const second = readBackInitial(
+    rendered,
+    doc,
+    start + 1,
+    options,
+    vowelUpsilonVF,
+  );
+  if (first === rendered[start] && second === rendered[start + 1]) {
+    return breathingTarget(rendered, start);
+  }
+  const pair: Token[] = second === undefined ? [first] : [first, second];
+  return start + breathingTarget(pair, 0);
+}
+
+/**
+ * The token at `index`, among the first two letters of a word, as
+ * readBackBeforeBreathings() gives it.
+ */
+function readBackInitial(
+  rendered: Document,
+  doc: Document,
+  index: number,
+  options: ConversionOptions,
+  vowelUpsilonVF: boolean,
+): Token {
+  const token = rendered[index];
+  if (
+    token?.kind !== "grapheme" ||
+    token.letter !== "eta" && token.letter !== "omega"
+  ) return token;
+  const letter = readBackLetter(token, options);
+  if (
+    letter === token.letter || vowelUpsilonVF && isVowelUpsilonAt(doc, index)
+  ) {
+    return token;
+  }
+  return { ...token, letter };
 }
 
 /**

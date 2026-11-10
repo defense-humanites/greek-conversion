@@ -1,4 +1,5 @@
 import { isVowel } from "./context.ts";
+import { sharedMask } from "./model.ts";
 import type { Diacritic, Document, Token } from "./model.ts";
 import type { SpanTable } from "./parsers/positions.ts";
 
@@ -311,7 +312,7 @@ function addTokenLoss(
 function sameTokenIdentity(source: Token, target: Token): boolean {
   if (source.kind !== target.kind) return false;
   if (source.kind === "literal" && target.kind === "literal") {
-    return source.value.normalize("NFD") === target.value.normalize("NFD");
+    return sameLiteral(source.value, target.value);
   }
   return source.kind === "grapheme" &&
     target.kind === "grapheme" &&
@@ -321,14 +322,35 @@ function sameTokenIdentity(source: Token, target: Token): boolean {
 function preservesToken(source: Token, target: Token): boolean {
   if (source.kind !== target.kind) return false;
   if (source.kind === "literal" && target.kind === "literal") {
-    return source.value.normalize("NFD") === target.value.normalize("NFD");
+    return sameLiteral(source.value, target.value);
   }
   if (source.kind !== "grapheme" || target.kind !== "grapheme") return false;
   return source.letter === target.letter &&
     source.uppercase === target.uppercase &&
     (source.glyphVariant !== "lunate-sigma" ||
       source.glyphVariant === target.glyphVariant) &&
-    [...source.diacritics].every((mark) => target.diacritics.has(mark));
+    includesMarks(target.diacritics, source.diacritics);
+}
+
+/** Whether two literals are canonically equivalent; most are equal. */
+function sameLiteral(source: string, target: string): boolean {
+  return source === target ||
+    source.normalize("NFD") === target.normalize("NFD");
+}
+
+/** Whether `marks` has every mark of `subset`; by mask for shared sets. */
+function includesMarks(
+  marks: ReadonlySet<Diacritic>,
+  subset: ReadonlySet<Diacritic>,
+): boolean {
+  if (marks === subset) return true;
+  const mask = sharedMask(marks);
+  const subsetMask = sharedMask(subset);
+  if (mask !== undefined && subsetMask !== undefined) {
+    return (subsetMask & ~mask) === 0;
+  }
+  for (const mark of subset) if (!marks.has(mark)) return false;
+  return true;
 }
 
 /**
