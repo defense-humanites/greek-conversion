@@ -22,6 +22,30 @@ change.
   lossy is not affected. On the 289,857 lines of a dictionary corpus, under
   every preset, each line now reports the same losses alone and within the
   text.
+- Transliteration writes the `h` of a rough breathing on the second vowel of a
+  diphthong before the whole diphthong inside a word, as at its start and as
+  ALA-LC prescribes ("the h precedes the romanized vowel or diphthong"):
+  `χοὗτος` gave `chohũtos` and gives `chhoũtos`, `χοἱ` gave `chohi` and gives
+  `chhoi` (#44). The reader follows: `chhoi` gave `χὁι`, a hiatus, and gives
+  `χοἱ`; under `ala-lc-ancient`, `chhoutos` gave `χὁυτος`, written back
+  `chhoytos`, and gives `χοὑτος`. After `t`, `p`, or `r`, the `h` now forms a
+  digraph, a loss that `convertDetailed()` reports: `τοὑ` gave `tohu` and gives
+  `thou`, which reads back as `θου`. As at the start of a word, an `h` before
+  two vowels that can form a diphthong now gives the breathing to the
+  diphthong: `mhaidēs` gave `μἁιδης` and gives `μαἱδης`, so `μἁιδης`, whose
+  hiatus no accent marks, now reports `displaced-diacritic`, like `ἁι` → `hai`.
+- Under `phi: "f"`, as in both ISO 843 presets, `ph` reads as pi followed by a
+  rough breathing, not as phi, so that the output is idempotent: `πἡ` is
+  written `phī` (`iso-843-type-1`), which gave `fī` when converted again and
+  now stays `phī`. A `ph` typed for phi in such text is no longer read as phi:
+  `philosophía` gave `φιλοσοφία` and gives `πἱλοσοπἵα`.
+- Under `chi: "kh"` with `lunateSigma: "c"`, `ch` reads as a lunate sigma
+  followed by a rough breathing, not as chi: `ϲἡ` is written `chē`, which gave
+  `khē` when converted again and now stays `chē`.
+- Under `chi: "kh"` with `nasalGamma: "nasal-except-kappa"` or
+  `"nasal-medial-kappa"`, `gkh` before a vowel reads as gamma, kappa, and a
+  rough breathing, not as gamma and chi: `γκἡ` is written `gkhē`, which gave
+  `nkhē` when converted again and now stays `gkhē`.
 
 ## [1.0.0-rc.6] - 2026-10-29
 

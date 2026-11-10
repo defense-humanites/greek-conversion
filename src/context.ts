@@ -240,6 +240,41 @@ export function breathingTarget(document: Document, start: number): number {
   return isDiphthongAt(document, start) ? start + 1 : start;
 }
 
+/**
+ * Marks the first vowel of every diphthong whose second vowel carries a rough
+ * breathing, anywhere in a word: `starts[i]` is 1 when such a diphthong begins
+ * at `i`. Transliteration writes the `h` before the whole diphthong inside a
+ * word as at its start (`χοἱ` → `chhoi`, like `οἱ` → `hoi`): "the h precedes
+ * the romanized vowel or diphthong" (ALA-LC). One pass over the document, so
+ * that the encoder reads a flag per token.
+ */
+export function roughDiphthongStarts(document: Document): Uint8Array {
+  const starts = new Uint8Array(document.length);
+  for (let i = 1; i < document.length; i++) {
+    const token = document[i];
+    // A diphthong ends in iota or upsilon: test the letter, which is cheap,
+    // before the marks.
+    if (
+      token.kind === "grapheme" &&
+      (token.letter === "iota" || token.letter === "upsilon") &&
+      token.diacritics.has("rough") && isDiphthongAt(document, i - 1)
+    ) starts[i - 1] = 1;
+  }
+  return starts;
+}
+
+/**
+ * The first vowel of the rough diphthong that the token at `index` belongs
+ * to, if any, from the flags of {@link roughDiphthongStarts}.
+ */
+export function roughDiphthongStart(
+  starts: Uint8Array,
+  index: number,
+): number | undefined {
+  if (starts[index] === 1) return index;
+  return index > 0 && starts[index - 1] === 1 ? index - 1 : undefined;
+}
+
 export function initialBreathingStart(
   document: Document,
   index: number,
