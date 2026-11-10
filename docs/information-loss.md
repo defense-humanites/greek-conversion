@@ -147,7 +147,7 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `nasalGamma: "nasal"` (default) | Converges nasal gamma and nu-before-velar transliteration spellings | No |
 | `nasalGamma: "nasal-except-kappa"` | As `"nasal"`, but writes `γκ` as `gk` (ISO 843 Type 2) | Yes for `γκ`; as `"nasal"` otherwise |
 | `coronis: "omit"` (default) | Omits coronis from transliteration | No |
-| `coronis: "apostrophe"` | Emits U+2019 as display punctuation | No |
+| `coronis: "apostrophe"` | Emits U+2019 as display punctuation; a letter right after it, as in `τοὔμπαλιν`, still counts as inside the word for the `μπ`, `ντ`, and `γκ` rules | No |
 | `coronis: "greek"` | Emits semantic U+1FBD after the affected vowel | Yes for implemented coronis contexts |
 | `accentuation: "monotonic"` | Keeps diaeresis, maps every accent to acute, removes other polytonic marks, and unaccents monosyllables except `ή`, `πού`, `πώς` | No |
 | `muPi: "b-initial"` or `"b-initial-final"` | Writes `μπ` as `b` at the beginning of a word, or at either end (ISO 843 Type 2) | Yes with `beta: "v"`; otherwise `b` is also beta |
@@ -155,7 +155,7 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `nuTau: "d-underline-initial"` | Writes word-initial `ντ` as `d̲` (ALA-LC) | Yes; `d̲` remains distinct from delta |
 | `nasalGamma: "nasal-medial-kappa"` | Writes `γκ` as `nk` inside a word and `gk` at its edges (ALA-LC) | Yes |
 | `upsilon: "y-with-ou-v-f"` | Writes the upsilon of `αυ/ευ/ηυ` as `v` or `f` and moves its accent to the vowel (ISO 843 Type 2) | No: `v` and `f` read back as beta and phi (with `beta: "v"`, `phi: "f"`), and the accent stays on the vowel |
-| `longVowels: "omit"` | Writes eta and omega without a length mark (ISO 843 Type 2) | No: they read back as epsilon (or iota) and omicron, except where a circumflex or an iota subscript only fits the long vowel |
+| `longVowels: "omit"` | Writes eta and omega without a length mark (ISO 843 Type 2); a vowel pair is written as it reads back, so `ωυ` is written like `ου` and `ηἱ` like `εἱ` | No: they read back as epsilon (or iota) and omicron, except where a circumflex or an iota subscript only fits the long vowel |
 | `rho: "systematic"` | Adds one final `h` to every contiguous rho group | The rho letters are recoverable; an explicit rough breathing is not |
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | The accent is recoverable; its scalar preference is not |

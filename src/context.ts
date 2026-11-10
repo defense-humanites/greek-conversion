@@ -345,7 +345,8 @@ export function elidedAspirate(
     : undefined;
 }
 
-function isElisionMark(token: Token | undefined): boolean {
+/** Whether a literal is an apostrophe: elision, or a coronis written so. */
+export function isElisionMark(token: Token | undefined): boolean {
   return token?.kind === "literal" && ELISION_MARKS.has(token.value);
 }
 

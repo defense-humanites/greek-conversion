@@ -16,8 +16,10 @@ import {
   isAmongCapitals,
   isAuEuOuAt,
   isDiphthongAt,
+  isElisionMark,
   isGreekNumeralContext,
   isNasalGamma,
+  isVowel,
   isVowelUpsilonAt,
   isWordFinal,
   isWordInitial,
@@ -34,7 +36,7 @@ import {
   withDiacritic,
   withoutDiacritic,
 } from "./model.ts";
-import type { Diacritic, Document, Format, Grapheme } from "./model.ts";
+import type { Diacritic, Document, Format, Grapheme, Letter } from "./model.ts";
 import type {
   ConversionOptions,
   MuPiTransliteration,
@@ -297,38 +299,70 @@ export function encodeTransliteration(
   // epsilon or omicron, and on a separation diaeresis: memoized per call on
   // those three for shared sets, as byMarks() does.
   const markStrings: (string | undefined)[] = [];
-  const markString = (token: Grapheme, separation: boolean): string => {
+  const markString = (
+    token: Grapheme,
+    separation: boolean,
+    consonant: boolean,
+  ): string => {
     const shortVowel = token.letter === "epsilon" ||
       token.letter === "omicron";
     const mask = sharedMask(token.diacritics);
     if (mask === undefined) {
-      return writeLatinMarks(token, shortVowel, separation);
+      return writeLatinMarks(token, shortVowel, separation, consonant);
     }
-    const key = mask << 2 | (shortVowel ? 2 : 0) | (separation ? 1 : 0);
-    return markStrings[key] ??= writeLatinMarks(token, shortVowel, separation);
+    const key = mask << 3 | (consonant ? 4 : 0) | (shortVowel ? 2 : 0) |
+      (separation ? 1 : 0);
+    return markStrings[key] ??= writeLatinMarks(
+      token,
+      shortVowel,
+      separation,
+      consonant,
+    );
   };
   const writeLatinMarks = (
     token: Grapheme,
     shortVowel: boolean,
     separation: boolean,
+    consonant: boolean,
   ): string => {
+    // The separation diaeresis takes the place a written one would, before
+    // the accent (`ÿ́`), so that the output reads back as itself.
+    const marked = separation && !token.diacritics.has("diaeresis")
+      ? { ...token, diacritics: withDiacritic(token.diacritics, "diaeresis") }
+      : token;
     // Latin `ē` and `ō` are eta and omega, so a quantity mark on epsilon or
     // omicron has no transliteration; convertDetailed() reports its removal.
-    const tokenMarks = latinMarks(token).filter(
+    const tokenMarks = latinMarks(marked).filter(
       (mark) => !(mark === "macron" || mark === "breve") || !shortVowel,
     );
-    if (separation && !tokenMarks.includes("diaeresis")) {
-      tokenMarks.push("diaeresis");
-    }
     const transliteratedMarks = tokenMarks
       .filter((mark) => mark !== "coronis")
       .map((mark) => trMark(mark, options))
       .join("");
-    const coronis = tokenMarks.includes("coronis")
-      ? trMark("coronis", options)
-      : "";
+    // The Greek coronis U+1FBD reads back as one only right after a vowel;
+    // after an upsilon written v or f, it is the apostrophe it reads as.
+    const coronis = !tokenMarks.includes("coronis")
+      ? ""
+      : consonant && options.transliteration?.coronis === "greek"
+      ? "\u2019"
+      : trMark("coronis", options);
     return transliteratedMarks + coronis;
   };
+
+  // Where the h of a rough breathing goes depends on the vowel group as it
+  // reads back: under `longVowels: "omit"`, `ηἱ` is written like `εἱ`. The
+  // eta of `ηυ` keeps its letter where the upsilon is written v or f
+  // (ISO 843 Type 2): the pair is no vowel group in Latin, and the breathing
+  // goes before it (`ηὔδα` → `’ívda`).
+  const vowelUpsilonVF = options.transliteration?.upsilon === "y-with-ou-v-f";
+  const readBack = options.transliteration?.longVowels === "omit"
+    ? rendered.map((token, index) =>
+      token.kind === "grapheme" &&
+        !(vowelUpsilonVF && isVowelUpsilonAt(doc, index))
+        ? { ...token, letter: readBackLetter(token, options) }
+        : token
+    )
+    : rendered;
 
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
@@ -359,10 +393,10 @@ export function encodeTransliteration(
 
     const previous = doc[index - 1];
     const next = doc[index + 1];
-    const breathingStart = initialBreathingStart(rendered, index);
+    const breathingStart = initialBreathingStart(readBack, index);
     const breathingIndex = breathingStart === undefined
       ? undefined
-      : breathingTarget(rendered, breathingStart);
+      : breathingTarget(readBack, breathingStart);
     const breathingToken = breathingIndex === undefined
       ? undefined
       : rendered[breathingIndex];
@@ -442,6 +476,8 @@ export function encodeTransliteration(
       markString(
         transferredAccents(rendered, index, options) ?? token,
         separation,
+        vowelUpsilonVF && token.letter === "upsilon" &&
+          isVowelUpsilonAt(doc, index - 1),
       );
   });
   return (written === undefined ? pieces.join("") : joinPieces(pieces, written))
@@ -491,7 +527,8 @@ function modernDigraphAt(
     return undefined;
   }
 
-  const initial = isWordInitial(document, index);
+  const initial = isWordInitial(document, index) &&
+    !followsCoronisApostrophe(document, index);
   if (first.letter === "mu") {
     // ISO 843 Type 2, notes 5 to 7: b at either end of the word, mp inside.
     return initial ||
@@ -514,7 +551,25 @@ function isEdgeGammaKappa(document: Document, index: number): boolean {
     second?.kind === "grapheme" && second.letter === "kappa" &&
     first.diacritics.size === 0 && second.diacritics.size === 0 &&
     !isGreekNumeralContext(document, index) &&
-    (isWordInitial(document, index) || isWordFinal(document, index + 1));
+    (isWordInitial(document, index) &&
+        !followsCoronisApostrophe(document, index) ||
+      isWordFinal(document, index + 1));
+}
+
+/**
+ * Whether the letter at `index` follows a vowel and an apostrophe with no
+ * space between them: a coronis written as an apostrophe
+ * (`coronis: "apostrophe"`), read back as punctuation. An elision apostrophe
+ * follows a consonant, and a space follows it. The letter stays inside the
+ * word for the rules that tell the start of a word from its middle, as it was
+ * when the coronis was a mark: `toú’mpalin` (`τοὔμπαλιν`) is read back as
+ * `τού’μπαλιν`, which must not be written `toú’balin`.
+ */
+function followsCoronisApostrophe(document: Document, index: number): boolean {
+  const mark = document[index - 1];
+  const vowel = document[index - 2];
+  return isElisionMark(mark) && vowel?.kind === "grapheme" &&
+    isVowel(vowel.letter);
 }
 
 function caseDigraph(
@@ -560,16 +615,22 @@ function transliterationBase(
         }
         const previous = document[index - 1];
         return previous?.kind === "grapheme" &&
-            previous.letter === "omicron" &&
+            readBackLetter(previous, options) === "omicron" &&
+            !splitByCoronis(previous, options) &&
             isDiphthongAt(document, index - 1)
           ? "u"
           : "y";
       }
       case "y-with-au-eu-ou":
-        return isAuEuOuAt(document, index - 1) ? "u" : "y";
+        return isDiphthongAt(document, index - 1) &&
+            isAuEuOuAt(readBackPair(document, index - 1, options), 0)
+          ? "u"
+          : "y";
       case "y-with-diphthong-u":
-        return isDiphthongAt(document, index - 1) ||
-            isDiphthongAt(document, index)
+        return isDiphthongAt(document, index - 1) &&
+              isDiphthongAt(readBackPair(document, index - 1, options), 0) ||
+            isDiphthongAt(document, index) &&
+              isDiphthongAt(readBackPair(document, index, options), 0)
           ? "u"
           : "y";
       default:
@@ -694,6 +755,86 @@ function trMark(mark: Diacritic, options: ConversionOptions) {
  * reading, the separation would be reread as a diaeresis, so the diaeresis
  * is written at once and the output is idempotent.
  */
+/**
+ * The letter a vowel reads back as. Under `longVowels: "omit"`, eta and omega
+ * are written like epsilon (or iota, under `eta: "i"`) and omicron; with an
+ * iota subscript they keep their letter, which only they can bear.
+ */
+function readBackLetter(token: Grapheme, options: ConversionOptions): Letter {
+  if (
+    options.transliteration?.longVowels !== "omit" ||
+    token.diacritics.has("iota-subscript")
+  ) return token.letter;
+  if (token.letter === "omega") return "omicron";
+  if (token.letter === "eta") {
+    return options.transliteration?.eta === "i" ? "iota" : "epsilon";
+  }
+  return token.letter;
+}
+
+/**
+ * The pair at `start` as it reads back: its first vowel as readBackLetter
+ * gives it, and no pair at all when a coronis written as an apostrophe after
+ * the first vowel stands between the two (splitByCoronis).
+ */
+function readBackPair(
+  document: Document,
+  start: number,
+  options: ConversionOptions,
+): Document {
+  const first = document[start];
+  const second = document[start + 1];
+  if (
+    first?.kind !== "grapheme" || second === undefined ||
+    splitByCoronis(first, options)
+  ) return [];
+  return [{ ...first, letter: readBackLetter(first, options) }, second];
+}
+
+/**
+ * Whether the apostrophe of a coronis on this vowel, written after it under
+ * `coronis: "apostrophe"`, separates it from the next one: `τὠυτὸ` is
+ * written `to’` and then the upsilon, which reads back as a vowel of its own.
+ */
+function splitByCoronis(token: Grapheme, options: ConversionOptions): boolean {
+  return token.diacritics.has("coronis") &&
+    options.transliteration?.coronis === "apostrophe" &&
+    preservesDiacritic("coronis", options, "transliteration");
+}
+
+/**
+ * Whether an iota after an upsilon written `y` needs the diaeresis that the
+ * reader would otherwise add, under `upsilon: "y-with-diphthong-u"`: `y`
+ * before `i` says "not the diphthong υι", which Greek marks on the upsilon
+ * (`Θύιλλος`, `ὑι`). The rough breathing does not keep the hiatus, since
+ * its `h` stands before the group; an accent or a smooth breathing written
+ * in place does.
+ */
+function separatesIotaAfterY(
+  document: Document,
+  index: number,
+  options: ConversionOptions,
+): boolean {
+  const first = document[index - 1];
+  if (
+    first?.kind !== "grapheme" || first.letter !== "upsilon" ||
+    splitByCoronis(first, options)
+  ) return false;
+  // An upsilon that ends a diphthong is written u.
+  if (
+    isDiphthongAt(document, index - 2) &&
+    isDiphthongAt(readBackPair(document, index - 2, options), 0)
+  ) return false;
+  const written = (mark: Diacritic) =>
+    first.diacritics.has(mark) &&
+    preservesDiacritic(mark, options, "transliteration");
+  if (written("acute") || written("grave") || written("circumflex")) {
+    return false;
+  }
+  return !(options.transliteration?.smoothBreathing === "greek" &&
+    written("smooth"));
+}
+
 function writesSeparationDiaeresis(
   document: Document,
   index: number,
@@ -709,14 +850,23 @@ function writesSeparationDiaeresis(
   const token = document[index];
   const first = document[index - 1];
   if (
-    token?.kind !== "grapheme" || token.letter !== "upsilon" ||
-    first?.kind !== "grapheme" || !hasHiatusMark(first)
+    token?.kind !== "grapheme" || first?.kind !== "grapheme" ||
+    !hasHiatusMark(first)
   ) return false;
+  if (token.letter === "iota") {
+    return upsilon === "y-with-diphthong-u" &&
+      separatesIotaAfterY(document, index, options);
+  }
+  if (token.letter !== "upsilon") return false;
 
   // Without its hiatus mark the pair would be a diphthong rendered with u
   // (or with v or f).
   const unmarked: Document = [
-    { ...first, diacritics: NO_DIACRITICS },
+    {
+      ...first,
+      letter: readBackLetter(first, options),
+      diacritics: NO_DIACRITICS,
+    },
     token,
   ];
   const wouldBeDiphthong = upsilon === "y-with-diphthong-u"
