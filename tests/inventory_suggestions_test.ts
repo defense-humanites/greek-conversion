@@ -1,11 +1,12 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals } from "./assertions.ts";
 import { suggestInventory } from "../web/inventory_suggestions.ts";
 
 function labels(json: string): string[] {
   return suggestInventory(json, json.length).map(({ label }) => label);
 }
 
-Deno.test("inventory suggestions follow nested objects and arrays", () => {
+test("inventory suggestions follow nested objects and arrays", () => {
   assertEquals(labels("{"), ["aliases", "characters", "repertoire", "exclude"]);
   assertEquals(labels('{"aliases": ['), ["New alias"]);
   assertEquals(labels('{"aliases": [{"for'), ["format"]);
@@ -19,7 +20,7 @@ Deno.test("inventory suggestions follow nested objects and arrays", () => {
   assertEquals(labels('{"characters": [{"id": "s'), []);
 });
 
-Deno.test("inventory completion preserves delimiters and custom IDs", () => {
+test("inventory completion preserves delimiters and custom IDs", () => {
   const beginning = "{";
   const exclude = suggestInventory(beginning, 1).find(({ label }) =>
     label === "exclude"

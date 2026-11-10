@@ -1,9 +1,9 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import { convert, type Format } from "../src/mod.ts";
-import { assertNfcEquals } from "./assertions.ts";
 import { EQUIVALENCES, FORMATS } from "./fixtures.ts";
 
-Deno.test("canonical and decomposed Greek input convert identically", () => {
+test("canonical and decomposed Greek input convert identically", () => {
   for (const { greek } of EQUIVALENCES) {
     for (const target of FORMATS) {
       assertNfcEquals(
@@ -14,7 +14,7 @@ Deno.test("canonical and decomposed Greek input convert identically", () => {
   }
 });
 
-Deno.test("canonicalizes adversarial combining-mark order and duplicates", () => {
+test("canonicalizes adversarial combining-mark order and duplicates", () => {
   const adversarial = "α\u0301\u0314 α\u0314\u0314\u0301\u0301";
 
   assertNfcEquals(convert(adversarial, "greek", "greek"), "ἅ ἅ");
@@ -28,7 +28,7 @@ Deno.test("canonicalizes adversarial combining-mark order and duplicates", () =>
   );
 });
 
-Deno.test("preserves non-BMP and unrecognized Unicode literals", () => {
+test("preserves non-BMP and unrecognized Unicode literals", () => {
   const literals = "😀 𝄞 𐀀 \u2066§\u2069";
 
   for (const source of FORMATS) {
@@ -38,7 +38,7 @@ Deno.test("preserves non-BMP and unrecognized Unicode literals", () => {
   }
 });
 
-Deno.test("keeps unrecognized combining marks literal", () => {
+test("keeps unrecognized combining marks literal", () => {
   const rareMark = "\u1AB0";
 
   for (const format of FORMATS) {
@@ -49,7 +49,7 @@ Deno.test("keeps unrecognized combining marks literal", () => {
   }
 });
 
-Deno.test("handles transparent controls at final-sigma boundaries", () => {
+test("handles transparent controls at final-sigma boundaries", () => {
   const transparent = ["\u0323", "\u200C", "\u200D", "\u2060", "\uFEFF"];
 
   for (const suffix of transparent) {
@@ -61,7 +61,7 @@ Deno.test("handles transparent controls at final-sigma boundaries", () => {
   }
 });
 
-Deno.test("every output respects its Unicode composition policy", () => {
+test("every output respects its Unicode composition policy", () => {
   const source = "Ἄϊδα—κἀγώ· ϳ ϙ ϡʹ 😀";
 
   for (const format of FORMATS as readonly Format[]) {

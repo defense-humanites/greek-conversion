@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals } from "./assertions.ts";
 import { CharacterScopeError, convert, createConverter } from "../src/mod.ts";
 
 const SAN = {
@@ -11,7 +12,7 @@ const SAN = {
   override: true,
 } as const;
 
-Deno.test("the default converter preserves the functional contract", () => {
+test("the default converter preserves the functional contract", () => {
   const converter = createConverter();
   const cases = [
     ["ἄνθρωπος", "greek", "beta-code"],
@@ -27,7 +28,7 @@ Deno.test("the default converter preserves the functional contract", () => {
   }
 });
 
-Deno.test("bound presets apply their options and audited scope", () => {
+test("bound presets apply their options and audited scope", () => {
   const perseus = createConverter({ preset: "perseus" });
   const perseusResult = perseus.convertDetailed(
     "Ἄνθρωπος ϝ",
@@ -53,7 +54,7 @@ Deno.test("bound presets apply their options and audited scope", () => {
   );
 });
 
-Deno.test("rejects all out-of-scope source characters with structured diagnostics", () => {
+test("rejects all out-of-scope source characters with structured diagnostics", () => {
   const converter = createConverter({
     preset: "perseus",
     outOfScopeBehavior: "reject",
@@ -109,7 +110,7 @@ Deno.test("rejects all out-of-scope source characters with structured diagnostic
   assertEquals(converter.convert("α☃", "greek", "beta-code"), "a☃");
 });
 
-Deno.test("strict ALA-LC accepts marked numerals but rejects unmarked letters", () => {
+test("strict ALA-LC accepts marked numerals but rejects unmarked letters", () => {
   const converter = createConverter({
     preset: "ala-lc-modern",
     outOfScopeBehavior: "reject",
@@ -133,7 +134,7 @@ Deno.test("strict ALA-LC accepts marked numerals but rejects unmarked letters", 
   );
 });
 
-Deno.test("strict repertoire exclusions cover custom and Beta Code forms", () => {
+test("strict repertoire exclusions cover custom and Beta Code forms", () => {
   const converter = createConverter({
     preset: "perseus",
     characters: [SAN],
@@ -170,7 +171,7 @@ Deno.test("strict repertoire exclusions cover custom and Beta Code forms", () =>
   assertEquals(beta.convert("ab", "beta-code", "greek"), "αβ");
 });
 
-Deno.test("rejects invalid out-of-scope policies at construction", () => {
+test("rejects invalid out-of-scope policies at construction", () => {
   let error: unknown;
   try {
     createConverter({ outOfScopeBehavior: "unknown" as never });
@@ -184,7 +185,7 @@ Deno.test("rejects invalid out-of-scope policies at construction", () => {
   );
 });
 
-Deno.test("bound preset scopes match the audited additional-letter matrix", () => {
+test("bound preset scopes match the audited additional-letter matrix", () => {
   const source = "αϝϳϛϟϙϡ";
   const cases = [
     ["ala-lc-ancient", ["yot", "stigma", "koppa", "sampi"]],
@@ -225,7 +226,7 @@ Deno.test("bound preset scopes match the audited additional-letter matrix", () =
 });
 
 for (const preset of ["iso-843-type-1", "iso-843-type-2"] as const) {
-  Deno.test(`${preset} preserves in-scope characters without defined letter mappings`, () => {
+  test(`${preset} preserves in-scope characters without defined letter mappings`, () => {
     const converter = createConverter({ preset });
     const result = converter.convertDetailed(
       "ϝϳϛϟϙϡ",
@@ -265,7 +266,7 @@ for (const preset of ["iso-843-type-1", "iso-843-type-2"] as const) {
   });
 }
 
-Deno.test("strict ISO Type 1 rejects missing mappings separately from exclusions", () => {
+test("strict ISO Type 1 rejects missing mappings separately from exclusions", () => {
   const converter = createConverter({
     preset: "iso-843-type-1",
     exclude: ["digamma"],
@@ -309,7 +310,7 @@ Deno.test("strict ISO Type 1 rejects missing mappings separately from exclusions
   );
 });
 
-Deno.test("strict repertoire rejection does not promise lossless conversion", () => {
+test("strict repertoire rejection does not promise lossless conversion", () => {
   const bnf = createConverter({
     preset: "bnf-core",
     outOfScopeBehavior: "reject",
@@ -325,7 +326,7 @@ Deno.test("strict repertoire rejection does not promise lossless conversion", ()
   assertEquals(markedNumeral.losses.length > 0, true);
 });
 
-Deno.test("bound preset options remain overridable but not replaceable", () => {
+test("bound preset options remain overridable but not replaceable", () => {
   const converter = createConverter({ preset: "bnf-core" });
 
   assertEquals(converter.convert("ϙ", "greek", "transliteration"), "q");
@@ -350,7 +351,7 @@ Deno.test("bound preset options remain overridable but not replaceable", () => {
   );
 });
 
-Deno.test("custom characters remain explicit preset extensions", () => {
+test("custom characters remain explicit preset extensions", () => {
   const converter = createConverter({ preset: "perseus", characters: [SAN] });
   const result = converter.convertDetailed("ϻϝ", "greek", "beta-code");
 
@@ -361,7 +362,7 @@ Deno.test("custom characters remain explicit preset extensions", () => {
   );
 });
 
-Deno.test("aliases receive the semantics of their built-in letter", () => {
+test("aliases receive the semantics of their built-in letter", () => {
   const converter = createConverter({
     aliases: [{
       letter: "theta",
@@ -380,7 +381,7 @@ Deno.test("aliases receive the semantics of their built-in letter", () => {
   );
 });
 
-Deno.test("custom characters map directly without acquiring Greek rules", () => {
+test("custom characters map directly without acquiring Greek rules", () => {
   const converter = createConverter({ characters: [SAN] });
 
   assertEquals(converter.convert("ϻ", "greek", "beta-code"), "#9");
@@ -405,7 +406,7 @@ Deno.test("custom characters map directly without acquiring Greek rules", () => 
   assertEquals(detailed.diagnostics, []);
 });
 
-Deno.test("custom Beta Code spellings ignore ASCII case", () => {
+test("custom Beta Code spellings ignore ASCII case", () => {
   const converter = createConverter({
     characters: [{
       id: "custom",
@@ -422,7 +423,7 @@ Deno.test("custom Beta Code spellings ignore ASCII case", () => {
   assertEquals(converter.convert("*X9", "beta-code", "greek"), "Ꙗ");
 });
 
-Deno.test("character exclusions preserve source-format spelling", () => {
+test("character exclusions preserve source-format spelling", () => {
   const converter = createConverter({ exclude: ["stigma"] });
 
   assertEquals(
@@ -455,7 +456,7 @@ Deno.test("character exclusions preserve source-format spelling", () => {
   }]);
 });
 
-Deno.test("allow-lists apply to built-in and custom characters", () => {
+test("allow-lists apply to built-in and custom characters", () => {
   const converter = createConverter({
     characters: [SAN],
     repertoire: ["alpha", "beta"],
@@ -472,7 +473,7 @@ Deno.test("allow-lists apply to built-in and custom characters", () => {
   );
 });
 
-Deno.test("converter construction rejects ambiguous registries", () => {
+test("converter construction rejects ambiguous registries", () => {
   let message = "";
   try {
     createConverter({
@@ -495,7 +496,7 @@ Deno.test("converter construction rejects ambiguous registries", () => {
   );
 });
 
-Deno.test("custom characters may be spelled outside the BMP", () => {
+test("custom characters may be spelled outside the BMP", () => {
   // The readers must keep a surrogate pair as one literal, as Array.from()
   // does; otherwise this spelling would seem to have a meaning and require
   // override, and its sentinel would not be found again after parsing.
@@ -526,7 +527,7 @@ Deno.test("custom characters may be spelled outside the BMP", () => {
   }
 });
 
-Deno.test("spellings that a reader folds onto a letter already have a meaning", () => {
+test("spellings that a reader folds onto a letter already have a meaning", () => {
   // The Beta Code reader does not normalize and lowercases the Kelvin sign
   // to `k`, kappa; the Greek reader's NFD turns the ohm sign into omega.
   const neutral = "";
@@ -560,7 +561,7 @@ Deno.test("spellings that a reader folds onto a letter already have a meaning", 
   );
 });
 
-Deno.test("converter configuration is copied before use", () => {
+test("converter configuration is copied before use", () => {
   const forms = {
     greek: { lowercase: "ϻ", uppercase: "Ϻ" },
     "beta-code": { lowercase: "#9", uppercase: "*#9" },

@@ -1,6 +1,7 @@
 /**
- * Executes the TypeScript examples of README.md and compares their results
- * with the documented ones, so that the README cannot drift from the code.
+ * Checks the TypeScript examples of README.md, so that the README cannot
+ * drift from the code: each ```ts block is type-checked as a module of its
+ * own, then executed, and its results are compared with the documented ones.
  *
  * Inside a ```ts block, an expected result is written as a comment that
  * starts with an arrow, either after a one-line statement or on the line
@@ -20,12 +21,20 @@
  * Links to files of this repository, and to headings in them or in the
  * README, must exist in the working tree.
  *
- * Run with `deno run --allow-read scripts/check_readme.ts`.
+ * Run with `node scripts/check_readme.ts`.
  */
+import { execFileSync } from "node:child_process";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const README = new URL("../README.md", import.meta.url);
-const MAIN = new URL("../src/mod.ts", import.meta.url).href;
-const DOCUMENT = new URL("../src/document.ts", import.meta.url).href;
+const MAIN = new URL("../src/mod.ts", import.meta.url);
+const DOCUMENT = new URL("../src/document.ts", import.meta.url);
+const TSC = fileURLToPath(
+  new URL("../node_modules/typescript/bin/tsc", import.meta.url),
+);
 
 const ARROW = /^\/\/ → (.*)$/;
 const THROWS = /^\/\/ throws (\w+): (.*)$/;
@@ -76,35 +85,44 @@ interface Expectation {
   line: number;
 }
 
-const source = await Deno.readTextFile(README);
+const source = await readFile(README, "utf8");
 const lines = source.split("\n");
+const blocks = [...codeBlocks(lines)];
 const failures: string[] = [];
 let checked = 0;
 
-for (const block of codeBlocks(lines)) {
-  const expectations: Expectation[] = [];
-  const program = translate(block.lines, block.start, expectations);
-  if (expectations.length === 0) continue;
+const directory = await mkdtemp(join(tmpdir(), "greek-conversion-readme-"));
+try {
+  failures.push(...await typeCheck(blocks, directory));
 
-  const results: { ok: boolean; detail: string }[] = [];
-  (globalThis as Record<string, unknown>).__readme = results;
-  const url = `data:application/typescript;base64,${
-    toBase64(rewriteImports(program))
-  }`;
-  try {
-    await import(url);
-  } catch (error) {
-    failures.push(
-      `README.md:${block.start}: the example failed to run: ${error}`,
-    );
-    continue;
-  }
-  results.forEach((result, index) => {
-    checked++;
-    if (!result.ok) {
-      failures.push(`README.md:${expectations[index].line}: ${result.detail}`);
+  for (const [number, block] of blocks.entries()) {
+    const expectations: Expectation[] = [];
+    const program = translate(block.lines, block.start, expectations);
+    if (expectations.length === 0) continue;
+
+    const results: { ok: boolean; detail: string }[] = [];
+    (globalThis as Record<string, unknown>).__readme = results;
+    const file = join(directory, `run-${number}.mts`);
+    await writeFile(file, rewriteImports(program, (url) => url.href));
+    try {
+      await import(pathToFileURL(file).href);
+    } catch (error) {
+      failures.push(
+        `README.md:${block.start}: the example failed to run: ${error}`,
+      );
+      continue;
     }
-  });
+    results.forEach((result, index) => {
+      checked++;
+      if (!result.ok) {
+        failures.push(
+          `README.md:${expectations[index].line}: ${result.detail}`,
+        );
+      }
+    });
+  }
+} finally {
+  await rm(directory, { recursive: true, force: true });
 }
 
 // Links to this repository point at main, because the README is also shown on
@@ -128,7 +146,7 @@ for (const [index, line] of lines.entries()) {
 
     let text: string;
     try {
-      text = await Deno.readTextFile(new URL(`../${file}`, import.meta.url));
+      text = await readFile(new URL(`../${file}`, import.meta.url), "utf8");
     } catch {
       failures.push(`README.md:${index + 1}: no such file: ${file}`);
       continue;
@@ -146,7 +164,7 @@ for (const [index, line] of lines.entries()) {
 if (failures.length > 0) {
   console.error(failures.join("\n"));
   console.error(`\n${failures.length} README problem(s) found.`);
-  Deno.exit(1);
+  process.exit(1);
 }
 console.log(`${checked} README results and links check out.`);
 
@@ -237,16 +255,81 @@ function startsStatement(line: string): boolean {
   return line.length > 0 && !/^[\s})\]]/.test(line) && !line.startsWith("//");
 }
 
-function rewriteImports(program: string): string {
+function rewriteImports(
+  program: string,
+  specifier: (url: URL) => string,
+): string {
   return program
-    .replaceAll('"@humanities/greek-conversion/document"', `"${DOCUMENT}"`)
-    .replaceAll('"@humanities/greek-conversion"', `"${MAIN}"`);
+    .replaceAll(
+      '"@humanities/greek-conversion/document"',
+      JSON.stringify(specifier(DOCUMENT)),
+    )
+    .replaceAll(
+      '"@humanities/greek-conversion"',
+      JSON.stringify(specifier(MAIN)),
+    );
 }
 
-function toBase64(text: string): string {
-  let binary = "";
-  for (const byte of new TextEncoder().encode(text)) {
-    binary += String.fromCharCode(byte);
+function toPath(url: URL): string {
+  return fileURLToPath(url).replaceAll("\\", "/");
+}
+
+/**
+ * Type-checks each block as a module of its own, as written, and returns the
+ * errors with their README line numbers.
+ */
+async function typeCheck(
+  all: readonly { start: number; lines: string[] }[],
+  directory: string,
+): Promise<string[]> {
+  const files: string[] = [];
+  for (const [number, block] of all.entries()) {
+    const file = `check-${number}.mts`;
+    await writeFile(
+      join(directory, file),
+      // TypeScript resolves paths, not file URLs.
+      rewriteImports(block.lines.join("\n"), toPath),
+    );
+    files.push(file);
   }
-  return btoa(binary);
+  await writeFile(
+    join(directory, "tsconfig.json"),
+    JSON.stringify({
+      compilerOptions: {
+        target: "ES2022",
+        lib: ["ES2022"],
+        module: "NodeNext",
+        moduleResolution: "NodeNext",
+        types: [],
+        strict: true,
+        allowImportingTsExtensions: true,
+        noEmit: true,
+      },
+      files,
+    }),
+  );
+  try {
+    execFileSync(process.execPath, [
+      TSC,
+      "--project",
+      directory,
+      "--pretty",
+      "false",
+    ], {
+      encoding: "utf8",
+    });
+    return [];
+  } catch (error) {
+    const output = String((error as { stdout?: string }).stdout ?? error);
+    return output.split("\n").filter((line) => line.trim() !== "").map(
+      (line) =>
+        line.replace(
+          /^(?:.*[\\/])?check-(\d+)\.mts\((\d+),(\d+)\)/,
+          (_, number: string, row: string, column: string) =>
+            `README.md:${
+              all[Number(number)].start + Number(row) - 1
+            }:${column}`,
+        ),
+    );
+  }
 }

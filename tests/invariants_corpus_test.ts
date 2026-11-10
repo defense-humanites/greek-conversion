@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import {
   type ConversionOptions,
   convert,
@@ -9,7 +10,6 @@ import {
   type Preset,
 } from "../src/mod.ts";
 import { parse, validateDocument } from "../src/document.ts";
-import { assertNfcEquals } from "./assertions.ts";
 
 /**
  * Property checks of the documented guarantees over a deterministic corpus of
@@ -180,7 +180,7 @@ const CONFIGURATIONS: readonly { label: string; options: ConversionOptions }[] =
     })),
   ];
 
-Deno.test("every word of the corpus is a valid Greek document", () => {
+test("every word of the corpus is a valid Greek document", () => {
   for (const word of WORDS) {
     assertEquals(
       validateDocument(parse(word, "greek")).map((d) => d.code),
@@ -190,7 +190,7 @@ Deno.test("every word of the corpus is a valid Greek document", () => {
   }
 });
 
-Deno.test("canonical output is idempotent for every configuration and format pair", () => {
+test("canonical output is idempotent for every configuration and format pair", () => {
   for (const { label, options } of CONFIGURATIONS) {
     for (const sample of samples()) {
       for (const from of FORMATS) {
@@ -209,7 +209,7 @@ Deno.test("canonical output is idempotent for every configuration and format pai
   }
 });
 
-Deno.test("reparsed output is a valid document outside the documented boundaries", () => {
+test("reparsed output is a valid document outside the documented boundaries", () => {
   // Returns whether the produced text reads back as a valid document, or as
   // a documented boundary that the producing conversion reported as lossy.
   const check = (
@@ -257,7 +257,7 @@ Deno.test("reparsed output is a valid document outside the documented boundaries
   }
 });
 
-Deno.test("a conversion reported as lossless converts back to the same canonical source", () => {
+test("a conversion reported as lossless converts back to the same canonical source", () => {
   for (const { label, options } of CONFIGURATIONS) {
     for (const sample of samples()) {
       for (const from of FORMATS) {

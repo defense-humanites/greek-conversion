@@ -1,10 +1,10 @@
+import { test } from "node:test";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import { convert, convertDetailed } from "../src/mod.ts";
 import { encode, parse, validateDocument } from "../src/document.ts";
 import { grapheme } from "../src/model.ts";
-import { assertEquals } from "@std/assert";
-import { assertNfcEquals } from "./assertions.ts";
 
-Deno.test("preserves case when transliterating nasal gamma", () => {
+test("preserves case when transliterating nasal gamma", () => {
   assertNfcEquals(
     convert("ΓΓ ΓΚ ΓΞ ΓΧ", "greek", "transliteration"),
     "NG NK NX NCH",
@@ -17,7 +17,7 @@ Deno.test("preserves case when transliterating nasal gamma", () => {
   }
 });
 
-Deno.test("makes nasal-gamma transliteration optional", () => {
+test("makes nasal-gamma transliteration optional", () => {
   const literal = { transliteration: { nasalGamma: "literal" } } as const;
 
   assertNfcEquals(
@@ -38,7 +38,7 @@ Deno.test("makes nasal-gamma transliteration optional", () => {
   );
 });
 
-Deno.test("aspirates an elided final mute before a rough breathing", () => {
+test("aspirates an elided final mute before a rough breathing", () => {
   assertNfcEquals(
     convert("ap’ hēmō̃n", "transliteration", "greek"),
     "ἀφ’ ἡμῶν",
@@ -53,7 +53,7 @@ Deno.test("aspirates an elided final mute before a rough breathing", () => {
   );
 });
 
-Deno.test("recognizes common Unicode elision marks", () => {
+test("recognizes common Unicode elision marks", () => {
   for (const mark of ["'", "\u02BC", "\u1FBD", "\u2019"]) {
     assertNfcEquals(
       convert(`ap${mark} hēmō̃n`, "transliteration", "greek"),
@@ -62,7 +62,7 @@ Deno.test("recognizes common Unicode elision marks", () => {
   }
 });
 
-Deno.test("does not aspirate outside the elision context", () => {
+test("does not aspirate outside the elision context", () => {
   assertNfcEquals(
     convert("ap’ emoũ", "transliteration", "greek"),
     "ἀπ’ ἐμοῦ",
@@ -77,7 +77,7 @@ Deno.test("does not aspirate outside the elision context", () => {
   );
 });
 
-Deno.test("places initial breathings on the diphthong target", () => {
+test("places initial breathings on the diphthong target", () => {
   assertNfcEquals(
     convert("haíresis", "transliteration", "greek"),
     "αἵρεσις",
@@ -96,7 +96,7 @@ Deno.test("places initial breathings on the diphthong target", () => {
   );
 });
 
-Deno.test("diaeresis prevents an initial diphthong", () => {
+test("diaeresis prevents an initial diphthong", () => {
   assertNfcEquals(
     convert("huḯdion", "transliteration", "greek"),
     "ὑΐδιον",
@@ -111,7 +111,7 @@ Deno.test("diaeresis prevents an initial diphthong", () => {
   );
 });
 
-Deno.test("handles rare omega-upsilon as an initial diphthong", () => {
+test("handles rare omega-upsilon as an initial diphthong", () => {
   assertNfcEquals(
     convert("hōu", "transliteration", "greek"),
     "ωὑ",
@@ -122,7 +122,7 @@ Deno.test("handles rare omega-upsilon as an initial diphthong", () => {
   );
 });
 
-Deno.test("marks on the first vowel of a pair signal hiatus and are kept", () => {
+test("marks on the first vowel of a pair signal hiatus and are kept", () => {
   // A breathing or accent on the first vowel means the pair is not a
   // diphthong: iota adscript after a capital, or two syllables.
   assertNfcEquals(convert("ἁι", "greek", "greek"), "ἁι");
@@ -184,11 +184,11 @@ Deno.test("marks on the first vowel of a pair signal hiatus and are kept", () =>
   assertNfcEquals(convert("hai", "transliteration", "greek"), "αἱ");
 });
 
-Deno.test("does not infer breathings on internal vowel groups", () => {
+test("does not infer breathings on internal vowel groups", () => {
   assertNfcEquals(convert("kau", "transliteration", "greek"), "καυ");
 });
 
-Deno.test("writes an internal rough breathing before its diphthong", () => {
+test("writes an internal rough breathing before its diphthong", () => {
   // "The h precedes the romanized vowel or diphthong" (ALA-LC), inside a
   // word as at its start: χοἱ like οἱ (issue #44).
   for (
@@ -229,7 +229,7 @@ Deno.test("writes an internal rough breathing before its diphthong", () => {
   assertNfcEquals(convert("mháidēs", "transliteration", "greek"), "μἅιδης");
 });
 
-Deno.test("iota subscript prevents grouping with a following vowel", () => {
+test("iota subscript prevents grouping with a following vowel", () => {
   assertNfcEquals(
     encode([
       grapheme("alpha", false, ["rough", "iota-subscript"]),
@@ -239,7 +239,7 @@ Deno.test("iota subscript prevents grouping with a following vowel", () => {
   );
 });
 
-Deno.test("uses final sigma before Unicode separators and punctuation", () => {
+test("uses final sigma before Unicode separators and punctuation", () => {
   const boundaries = [
     " ",
     "\u00A0",
@@ -269,7 +269,7 @@ Deno.test("uses final sigma before Unicode separators and punctuation", () => {
   }
 });
 
-Deno.test("ignores combining marks and join controls at word boundaries", () => {
+test("ignores combining marks and join controls at word boundaries", () => {
   for (const transparent of ["\u0323", "\u200C", "\u200D", "\u2060"]) {
     assertNfcEquals(
       convert(`ασ${transparent}α`, "greek", "greek"),
@@ -282,7 +282,7 @@ Deno.test("ignores combining marks and join controls at word boundaries", () => 
   }
 });
 
-Deno.test("shares transparent boundaries with medial beta", () => {
+test("shares transparent boundaries with medial beta", () => {
   assertNfcEquals(
     convert("α\u200Dβ", "greek", "greek", {
       greek: { medialBeta: "symbol" },
@@ -291,7 +291,7 @@ Deno.test("shares transparent boundaries with medial beta", () => {
   );
 });
 
-Deno.test("converts additional Greek letters in every format", () => {
+test("converts additional Greek letters in every format", () => {
   assertNfcEquals(
     convert("ϝ ϳ ϛ ϟ ϙ ϡ", "greek", "beta-code"),
     "v j #2 #1 #3 #5",
@@ -314,7 +314,7 @@ Deno.test("converts additional Greek letters in every format", () => {
   );
 });
 
-Deno.test("preserves Greek alphabetic numeral notation", () => {
+test("preserves Greek alphabetic numeral notation", () => {
   const greek = "αʹ ͵α ϛʹ ϟʹ ϡʹ σʹ";
   const betaCode = "a# #22a #2# #1# #5# s#";
   const transliteration = "aʹ ͵a c̄ʹ qʹ s̄ʹ sʹ";
@@ -337,7 +337,7 @@ Deno.test("preserves Greek alphabetic numeral notation", () => {
   );
 });
 
-Deno.test("quantity marks do not infer an initial smooth breathing", () => {
+test("quantity marks do not infer an initial smooth breathing", () => {
   assertNfcEquals(
     convert("ā ĭ ī ŭ ū", "transliteration", "greek"),
     "ᾱ ῐ ῑ ῠ ῡ",
@@ -360,7 +360,7 @@ Deno.test("quantity marks do not infer an initial smooth breathing", () => {
   );
 });
 
-Deno.test(
+test(
   "distinguishes internal coronis from initial smooth breathing",
   () => {
     assertNfcEquals(convert("κἀγώ", "greek", "beta-code"), "ka)gw/");
@@ -372,14 +372,14 @@ Deno.test(
   },
 );
 
-Deno.test("preserves crasis while transliteration remains lossy", () => {
+test("preserves crasis while transliteration remains lossy", () => {
   assertNfcEquals(convert("τοὔνομα", "greek", "beta-code"), "tou)/noma");
   assertNfcEquals(convert("tou)/noma", "beta-code", "greek"), "τοὔνομα");
   assertNfcEquals(convert("τοὔνομα", "greek", "transliteration"), "toúnoma");
   assertNfcEquals(convert("toúnoma", "transliteration", "greek"), "τούνομα");
 });
 
-Deno.test("keeps a labial or velar before sigma as written", () => {
+test("keeps a labial or velar before sigma as written", () => {
   // Greek writes these pairs where a prefix meets a stem (ἔκστασις, ἐκσῴζω);
   // ψ and ξ are read from their own spellings, never contracted.
   assertNfcEquals(
@@ -412,7 +412,7 @@ Deno.test("keeps a labial or velar before sigma as written", () => {
   assertNfcEquals(convert("ἔκστασις", "greek", "beta-code"), "e)/kstasis");
 });
 
-Deno.test("assimilates dentals before sigma only on demand", () => {
+test("assimilates dentals before sigma only on demand", () => {
   const assimilate = {
     greek: { dentalSigma: "assimilate" },
   } as const;
@@ -451,7 +451,7 @@ Deno.test("assimilates dentals before sigma only on demand", () => {
   );
 });
 
-Deno.test("does not contract separated, marked, or numeric pairs", () => {
+test("does not contract separated, marked, or numeric pairs", () => {
   const assimilate = {
     greek: { dentalSigma: "assimilate" },
   } as const;
@@ -472,7 +472,7 @@ Deno.test("does not contract separated, marked, or numeric pairs", () => {
   );
 });
 
-Deno.test("does not infer a breathing on an initial vowel with diaeresis", () => {
+test("does not infer a breathing on an initial vowel with diaeresis", () => {
   for (
     const [latin, greek] of [
       ["ḯdios", "ΐδιος"],

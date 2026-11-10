@@ -1,0 +1,19 @@
+{
+  "name": "@humanities/greek-conversion",
+  "version": "1.0.0-rc.6",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/mod.ts",
+    "./document": "./src/document.ts"
+  },
+  "publish": {
+    "include": [
+      "README.md",
+      "LICENSE",
+      "CHANGELOG.md",
+      "MIGRATION.md",
+      "docs/**/*.md",
+      "src/**/*.ts"
+    ]
+  }
+}

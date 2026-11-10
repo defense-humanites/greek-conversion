@@ -13,8 +13,7 @@ keeps.**
 digital-humanities developers. It handles polytonic and monotonic Greek,
 implements published conventions (ALA-LC, BnF, ISO 843, SBL, TLG, Perseus) as
 ready-made presets, and tells you when a conversion loses information instead of
-quietly guessing. It has no dependencies and runs on Deno, Node.js, and in
-bundled browser code.
+quietly guessing. It has no dependencies and uses no runtime-specific API.
 
 [**Try it in the playground →**](https://defense-humanites.github.io/greek-conversion/)
 
@@ -97,11 +96,11 @@ The package is published as `@humanities/greek-conversion` on
 named exports in both. It is ESM-only and ships its own type declarations.
 
 ```sh
-# Deno 2 or later
-deno add jsr:@humanities/greek-conversion
-
-# Node.js 24 or later
+# npm
 npm install @humanities/greek-conversion
+
+# JSR, whose package page gives the command for each runtime
+npx jsr add @humanities/greek-conversion
 ```
 
 The [playground](https://defense-humanites.github.io/greek-conversion/) needs no
@@ -688,17 +687,19 @@ reference are released as patches; see the
 
 ## Development
 
-The library is developed with [Deno](https://deno.com/) 2:
+The library is developed with [Node.js](https://nodejs.org/) 24 or later,
+which runs its TypeScript sources directly:
 
 ```sh
-deno task check      # formatting, lint, types, docs, README examples
-deno task test       # unit, conformance, and property tests
-deno task bench      # throughput baseline
-deno task site:build # builds the playground into _site/
+npm ci               # installs the development tools
+npm run check        # formatting, lint, types, API docs, README examples
+npm test             # unit, conformance, and property tests
+npm run bench        # throughput baseline
+npm run site:build   # builds the playground into _site/
 ```
 
-Every TypeScript example in this README is executed by `deno task check`, and
-its output must match the `// →` comment. Bug reports and suggestions are
+Every TypeScript example in this README is type-checked and executed by
+`npm run check`, and its output must match the `// →` comment. Bug reports and suggestions are
 welcome in the
 [issue tracker](https://github.com/defense-humanites/greek-conversion/issues).
 

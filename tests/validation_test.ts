@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals } from "./assertions.ts";
 import {
   applyGreekOrthography,
   type Diacritic,
@@ -83,7 +84,7 @@ const INVALID_CASES = [
   },
 ] as const satisfies readonly InvalidCase[];
 
-Deno.test("canonical fixtures produce no validation diagnostics", () => {
+test("canonical fixtures produce no validation diagnostics", () => {
   for (const equivalence of EQUIVALENCES) {
     for (const format of FORMATS) {
       assertEquals(
@@ -98,9 +99,9 @@ Deno.test("canonical fixtures produce no validation diagnostics", () => {
   assertEquals(validateDocument(parse("ka)gw/", "beta-code")), []);
 });
 
-Deno.test("invalid graphemes produce structured diagnostics", async (t) => {
+test("invalid graphemes produce structured diagnostics", async (t) => {
   for (const invalid of INVALID_CASES) {
-    await t.step(`${invalid.letter}: ${invalid.codes.join(", ")}`, () => {
+    await t.test(`${invalid.letter}: ${invalid.codes.join(", ")}`, () => {
       const diagnostics = validateDocument([
         literal("prefix"),
         grapheme(invalid.letter, false, invalid.diacritics),
@@ -119,7 +120,7 @@ Deno.test("invalid graphemes produce structured diagnostics", async (t) => {
   }
 });
 
-Deno.test("validation is pure", () => {
+test("validation is pure", () => {
   const document = [grapheme("alpha", false, ["acute", "grave"])];
   const before = new Set(document[0].diacritics);
 
@@ -128,7 +129,7 @@ Deno.test("validation is pure", () => {
   assertEquals(document[0].diacritics, before);
 });
 
-Deno.test("validation catches invalid manually modified document values", () => {
+test("validation catches invalid manually modified document values", () => {
   const letter = grapheme("alpha");
   letter.letter = "unknown" as Letter;
   // An unknown value cannot be shared; grapheme() keeps it for validation.
@@ -153,7 +154,7 @@ Deno.test("validation catches invalid manually modified document values", () => 
   );
 });
 
-Deno.test("sigma source variants survive case transformations", () => {
+test("sigma source variants survive case transformations", () => {
   const source = parse("σ ς ϲ", "greek");
   for (const letterCase of ["uppercase", "title"] as const) {
     const transformed = applyGreekOrthography(source, {
@@ -169,7 +170,7 @@ Deno.test("sigma source variants survive case transformations", () => {
   assertEquals(encode(finalSigma, "greek"), "Σ");
 });
 
-Deno.test("validation diagnoses malformed tokens before contextual checks", () => {
+test("validation diagnoses malformed tokens before contextual checks", () => {
   const malformed = [
     null,
     { kind: "other" },
@@ -190,7 +191,8 @@ Deno.test("validation diagnoses malformed tokens before contextual checks", () =
   );
 });
 
-Deno.test("validation diagnoses holes in a constructed document", () => {
+test("validation diagnoses holes in a constructed document", () => {
+  // oxlint-disable-next-line no-sparse-arrays -- the hole is under test.
   const sparse = [grapheme("alpha"), , grapheme("alpha")];
   const document = sparse as unknown as Document;
   assertEquals(

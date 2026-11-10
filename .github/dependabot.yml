@@ -1,5 +1,6 @@
-# Keeps the SHA-pinned GitHub Actions current. Each update arrives as a pull
-# request that CI validates before it can be merged.
+# Keeps the SHA-pinned GitHub Actions and the exactly pinned development
+# dependencies current. Each update arrives as a pull request that CI
+# validates before it can be merged.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -10,3 +11,10 @@ updates:
       actions:
         patterns:
           - "*"
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      development:
+        dependency-type: development

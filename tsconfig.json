@@ -1,0 +1,24 @@
+{
+  // Type checks the sources, tests, scripts, and benches, which Node runs
+  // directly: only erasable TypeScript syntax, and imports with their `.ts`
+  // extension. `tsconfig.build.json` checks the library on its own, without
+  // the Node types, and emits the npm package; `web/tsconfig.json` checks the
+  // playground against the DOM.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2024"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "strict": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["src", "tests", "scripts", "bench"]
+}

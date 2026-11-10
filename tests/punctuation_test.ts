@@ -1,7 +1,8 @@
-import { convert } from "../src/mod.ts";
+import { test } from "node:test";
 import { assertNfcEquals } from "./assertions.ts";
+import { convert } from "../src/mod.ts";
 
-Deno.test("converts Greek punctuation semantically between formats", () => {
+test("converts Greek punctuation semantically between formats", () => {
   const greek = "; · ‿ ‐ ’";
 
   assertNfcEquals(convert(greek, "greek", "beta-code"), "; : ‿ - '");
@@ -16,7 +17,7 @@ Deno.test("converts Greek punctuation semantically between formats", () => {
   );
 });
 
-Deno.test("keeps ASCII hyphen in canonical transliteration unless typography is requested", () => {
+test("keeps ASCII hyphen in canonical transliteration unless typography is requested", () => {
   assertNfcEquals(
     convert("ὁδός-ῥόδος", "greek", "transliteration"),
     "hodós-rhódos",
@@ -33,7 +34,7 @@ Deno.test("keeps ASCII hyphen in canonical transliteration unless typography is 
   );
 });
 
-Deno.test("canonicalizes Unicode punctuation aliases", () => {
+test("canonicalizes Unicode punctuation aliases", () => {
   for (const question of [";", "\u037E", "?"]) {
     assertNfcEquals(convert(question, "greek", "greek"), ";");
   }
@@ -51,13 +52,13 @@ Deno.test("canonicalizes Unicode punctuation aliases", () => {
   }
 });
 
-Deno.test("keeps format-specific semicolon semantics distinct", () => {
+test("keeps format-specific semicolon semantics distinct", () => {
   assertNfcEquals(convert(";", "greek", "transliteration"), "?");
   assertNfcEquals(convert(";", "transliteration", "greek"), "·");
   assertNfcEquals(convert(";", "beta-code", "greek"), ";");
 });
 
-Deno.test("distinguishes Beta Code breve from apostrophe", () => {
+test("distinguishes Beta Code breve from apostrophe", () => {
   assertNfcEquals(convert("a%27 p'", "beta-code", "greek"), "ᾰ π’");
   assertNfcEquals(convert("ᾰ π’", "greek", "beta-code"), "a%27 p'");
   // In TLG Beta Code, ' is the apostrophe after a vowel too.

@@ -1,17 +1,17 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import { convert, reencode } from "../src/mod.ts";
 import { encode, parse } from "../src/document.ts";
-import { assertNfcEquals } from "./assertions.ts";
 import { EQUIVALENCES, FORMATS, valueFor } from "./fixtures.ts";
 
-Deno.test("canonical Greek and Beta Code equivalences", () => {
+test("canonical Greek and Beta Code equivalences", () => {
   for (const { greek, betaCode } of EQUIVALENCES) {
     assertNfcEquals(convert(greek, "greek", "beta-code"), betaCode);
     assertNfcEquals(convert(betaCode, "beta-code", "greek"), greek);
   }
 });
 
-Deno.test("canonical Greek and transliteration equivalences", () => {
+test("canonical Greek and transliteration equivalences", () => {
   for (const { greek, transliteration } of EQUIVALENCES) {
     assertNfcEquals(
       convert(greek, "greek", "transliteration"),
@@ -24,7 +24,7 @@ Deno.test("canonical Greek and transliteration equivalences", () => {
   }
 });
 
-Deno.test("canonical Beta Code and transliteration equivalences", () => {
+test("canonical Beta Code and transliteration equivalences", () => {
   for (const { betaCode, transliteration } of EQUIVALENCES) {
     assertNfcEquals(
       convert(betaCode, "beta-code", "transliteration"),
@@ -37,7 +37,7 @@ Deno.test("canonical Beta Code and transliteration equivalences", () => {
   }
 });
 
-Deno.test("canonical documents survive encode-parse round trips", () => {
+test("canonical documents survive encode-parse round trips", () => {
   for (const equivalence of EQUIVALENCES) {
     for (const format of FORMATS) {
       const document = parse(valueFor(equivalence, format), format);
@@ -46,7 +46,7 @@ Deno.test("canonical documents survive encode-parse round trips", () => {
   }
 });
 
-Deno.test("reencode is the same-format conversion facade", () => {
+test("reencode is the same-format conversion facade", () => {
   for (const equivalence of EQUIVALENCES) {
     for (const format of FORMATS) {
       const input = valueFor(equivalence, format);
@@ -63,7 +63,7 @@ Deno.test("reencode is the same-format conversion facade", () => {
   );
 });
 
-Deno.test("preserves literals", () =>
+test("preserves literals", () =>
   assertNfcEquals(
     convert("logos 🙂 123", "transliteration", "greek"),
     "λογος 🙂 123",

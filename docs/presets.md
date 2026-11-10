@@ -60,7 +60,7 @@ diagnostic codes; this applies only when transliteration is the target.
 ## Available presets
 
 The following reference is generated from the same typed registry as the
-runtime configurations. Run `deno task docs:presets` after changing preset
+runtime configurations. Run `npm run docs:presets` after changing preset
 metadata or options.
 
 <!-- BEGIN GENERATED PRESET REFERENCE -->

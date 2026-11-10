@@ -1,8 +1,8 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import { convert, convertDetailed, reencode } from "../src/mod.ts";
-import { assertNfcEquals } from "./assertions.ts";
 
-Deno.test("ignores ASCII case when parsing Beta Code letters", () => {
+test("ignores ASCII case when parsing Beta Code letters", () => {
   for (const input of ["a)/nqrwpos", "A)/NQRWPOS", "a)/NqRwPoS"]) {
     assertNfcEquals(convert(input, "beta-code", "greek"), "ἄνθρωπος");
     assertNfcEquals(
@@ -12,19 +12,19 @@ Deno.test("ignores ASCII case when parsing Beta Code letters", () => {
   }
 });
 
-Deno.test("uses only the asterisk as the Beta Code uppercase marker", () => {
+test("uses only the asterisk as the Beta Code uppercase marker", () => {
   assertNfcEquals(convert("a A", "beta-code", "greek"), "α α");
   assertNfcEquals(convert("*a *A", "beta-code", "greek"), "Α Α");
 });
 
-Deno.test("places and orders Beta Code diacritics canonically", () => {
+test("places and orders Beta Code diacritics canonically", () => {
   assertNfcEquals(convert("w|=(", "beta-code", "greek"), "ᾧ");
   assertNfcEquals(reencode("w|=(", "beta-code"), "w(=|");
   assertNfcEquals(convert("*(=W|", "beta-code", "greek"), "ᾯ");
   assertNfcEquals(reencode("*(=W|", "beta-code"), "*(=w|");
 });
 
-Deno.test("separates semantic case from Beta Code ASCII case", () => {
+test("separates semantic case from Beta Code ASCII case", () => {
   assertNfcEquals(
     convert("Ἄνθρωπος", "greek", "beta-code", { preset: "perseus" }),
     "*)/anqrwpos",
@@ -35,7 +35,7 @@ Deno.test("separates semantic case from Beta Code ASCII case", () => {
   );
 });
 
-Deno.test("preserves incomplete uppercase Beta Code prefixes", () => {
+test("preserves incomplete uppercase Beta Code prefixes", () => {
   for (const input of ["*(", "*(?", "*(#1", "*#22", "*%26"]) {
     assertNfcEquals(reencode(input, "beta-code"), input);
   }
@@ -43,7 +43,7 @@ Deno.test("preserves incomplete uppercase Beta Code prefixes", () => {
   assertNfcEquals(convert("*(/A", "beta-code", "greek"), "Ἅ");
 });
 
-Deno.test("recognizes TLG yot and selects its canonical output", () => {
+test("recognizes TLG yot and selects its canonical output", () => {
   assertNfcEquals(convert("#401", "beta-code", "greek"), "ϳ");
   assertNfcEquals(convert("ϳ", "greek", "beta-code"), "j");
   assertNfcEquals(
@@ -56,7 +56,7 @@ Deno.test("recognizes TLG yot and selects its canonical output", () => {
   );
 });
 
-Deno.test("reads and writes vowel quantity with the TLG percent codes", () => {
+test("reads and writes vowel quantity with the TLG percent codes", () => {
   // TLG Beta Code: %26 is the combining macron, %27 the combining breve.
   assertNfcEquals(
     convert("a%26 a%27 i%26 u%27", "beta-code", "greek"),
@@ -83,14 +83,14 @@ Deno.test("reads and writes vowel quantity with the TLG percent codes", () => {
   );
 });
 
-Deno.test("reads & and ' as TLG Beta Code does, not as quantity", () => {
+test("reads & and ' as TLG Beta Code does, not as quantity", () => {
   // & shifts to the Latin font, which the engine does not interpret: it is
   // kept as a literal. ' is the apostrophe.
   assertNfcEquals(convert("a& a' i&", "beta-code", "greek"), "α& α’ ι&");
   assertNfcEquals(reencode("a& a'", "beta-code"), "a& a'");
 });
 
-Deno.test("writes and reads parentheses with the TLG bracket codes", () => {
+test("writes and reads parentheses with the TLG bracket codes", () => {
   // In Beta Code, ( and ) are the breathings: the TLG writes the parentheses
   // [1 and ]1, as the Bailly writes an optional letter or an apposition.
   assertNfcEquals(convert("δῆσε(ν)", "greek", "beta-code"), "dh=se[1n]1");
@@ -122,7 +122,7 @@ Deno.test("writes and reads parentheses with the TLG bracket codes", () => {
   );
 });
 
-Deno.test("reads a bracket code after an asterisk, and reports a digit after a bracket", () => {
+test("reads a bracket code after an asterisk, and reports a digit after a bracket", () => {
   // As before any character that is not a letter, * is kept as text.
   assertNfcEquals(convert("*[1a]1", "beta-code", "greek"), "*(α)");
   // The number after a bracket is read whole, as in the TLG: [11 is another

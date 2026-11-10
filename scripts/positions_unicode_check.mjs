@@ -1,11 +1,11 @@
 /**
  * Checks, through the public API alone, that positions do not drift under the
- * Unicode version of the runtime: Node and browsers have their own, which the
- * Deno test suite (tests/positions_test.ts checks every code point there)
- * does not see. A character that normalization changes, written before a
- * Greek word, must shift the spans of the word by its own length and change
- * nothing else; a letter that composes with the one before it and that the
- * library does not know would shift them wrongly, as Hangul jamo did.
+ * Unicode version of the runtime: each Node version and each browser has its
+ * own, and tests/positions_test.ts checks every code point under the Node
+ * versions of the CI only. A character that normalization changes, written
+ * before a Greek word, must shift the spans of the word by its own length and
+ * change nothing else; a letter that composes with the one before it and that
+ * the library does not know would shift them wrongly, as Hangul jamo did.
  *
  * Run by scripts/npm_smoke.mjs on the npm build, under each Node version of
  * the CI.

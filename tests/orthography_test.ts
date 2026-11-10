@@ -1,9 +1,9 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import { convert, convertDetailed } from "../src/mod.ts";
-import { assertNfcEquals } from "./assertions.ts";
 import { MEDIAL_BETA_SYMBOL, SMOOTH_ROUGH_DOUBLE_RHO } from "./fixtures.ts";
 
-Deno.test("collapses Unicode whitespace on demand", () => {
+test("collapses Unicode whitespace on demand", () => {
   const collapse = { text: { whitespace: "collapse" } } as const;
   const input = "\u2003\tἄνθρωπος\n\u00A0  λόγος\u2029";
 
@@ -22,7 +22,7 @@ Deno.test("collapses Unicode whitespace on demand", () => {
   assertNfcEquals(convert(input, "greek", "greek"), input);
 });
 
-Deno.test("applies deterministic letter-case policies", () => {
+test("applies deterministic letter-case policies", () => {
   const source = "ΦΙΛΗΒΟΣ Η ΠΕΡΙ ΗΔΟΝΗΣ";
 
   assertNfcEquals(
@@ -45,7 +45,7 @@ Deno.test("applies deterministic letter-case policies", () => {
   );
 });
 
-Deno.test("applies letter case to every output format", () => {
+test("applies letter case to every output format", () => {
   const title = { text: { letterCase: "title" } } as const;
   const uppercase = { text: { letterCase: "uppercase" } } as const;
 
@@ -63,7 +63,7 @@ Deno.test("applies letter case to every output format", () => {
   );
 });
 
-Deno.test("writes Latin digraphs in full capitals among capitals", () => {
+test("writes Latin digraphs in full capitals among capitals", () => {
   // ISO 843, Table 1 (TH, CH, PS) and note 11: the second letter may be
   // lowercase only before lowercase text.
   const cases = [
@@ -94,7 +94,7 @@ Deno.test("writes Latin digraphs in full capitals among capitals", () => {
   );
 });
 
-Deno.test("combines uppercase output with ALA-LC digraphs", () => {
+test("combines uppercase output with ALA-LC digraphs", () => {
   const options = {
     transliteration: {
       beta: "v",
@@ -111,7 +111,7 @@ Deno.test("combines uppercase output with ALA-LC digraphs", () => {
   );
 });
 
-Deno.test("applies double-rho orthography on demand", () => {
+test("applies double-rho orthography on demand", () => {
   assertNfcEquals(
     convert("polúrrhizos", "transliteration", "greek", SMOOTH_ROUGH_DOUBLE_RHO),
     "πολύῤῥιζος",
@@ -136,7 +136,7 @@ Deno.test("applies double-rho orthography on demand", () => {
   );
 });
 
-Deno.test("transliterates every rho with one final h per group", () => {
+test("transliterates every rho with one final h per group", () => {
   const systematic = { transliteration: { rho: "systematic" } } as const;
 
   assertNfcEquals(
@@ -163,7 +163,7 @@ Deno.test("transliterates every rho with one final h per group", () => {
   );
 });
 
-Deno.test("applies the beta symbol only to medial lowercase beta", () => {
+test("applies the beta symbol only to medial lowercase beta", () => {
   assertNfcEquals(
     convert("bárbaros", "transliteration", "greek"),
     "βάρβαρος",
@@ -182,7 +182,7 @@ Deno.test("applies the beta symbol only to medial lowercase beta", () => {
   );
 });
 
-Deno.test("applies the requested upsilon transliteration", () => {
+test("applies the requested upsilon transliteration", () => {
   const greek = "υ αυ ευ ηυ ου υι ωυ αϋ";
 
   // The default is the SBL academic spelling, `y-with-diphthong-u`.
@@ -267,7 +267,7 @@ Deno.test("applies the requested upsilon transliteration", () => {
   );
 });
 
-Deno.test("applies individual transliteration variants", () => {
+test("applies individual transliteration variants", () => {
   const variants = {
     transliteration: {
       beta: "v",
@@ -305,7 +305,7 @@ Deno.test("applies individual transliteration variants", () => {
   );
 });
 
-Deno.test("eta takes its letter from eta and its mark from longVowels", () => {
+test("eta takes its letter from eta and its mark from longVowels", () => {
   const cases = [
     [{ eta: "e", longVowels: "macron" }, "ē ō ḗ ē̃ ī ĩ"],
     [{ eta: "e", longVowels: "circumflex" }, "ê ô ế ễ ī ĩ"],
@@ -344,7 +344,7 @@ Deno.test("eta takes its letter from eta and its mark from longVowels", () => {
   );
 });
 
-Deno.test("applies the ISO 843 Type 2 policies one by one", () => {
+test("applies the ISO 843 Type 2 policies one by one", () => {
   const cases = [
     [
       { longVowels: "omit" },
@@ -392,7 +392,7 @@ Deno.test("applies the ISO 843 Type 2 policies one by one", () => {
   }
 });
 
-Deno.test("μπ, ντ, and γκ follow one option each", () => {
+test("μπ, ντ, and γκ follow one option each", () => {
   // Each rule combines with the others: ISO 843's μπ with ALA-LC's ντ.
   const mixed = {
     transliteration: {
@@ -430,7 +430,7 @@ Deno.test("μπ, ντ, and γκ follow one option each", () => {
   );
 });
 
-Deno.test("transliterates initial modern Greek digraphs phonetically", () => {
+test("transliterates initial modern Greek digraphs phonetically", () => {
   const modern = {
     transliteration: { muPi: "b-initial", nuTau: "d-initial" },
   } as const;
@@ -454,7 +454,7 @@ Deno.test("transliterates initial modern Greek digraphs phonetically", () => {
   );
 });
 
-Deno.test("recognizes modern b when beta uses v", () => {
+test("recognizes modern b when beta uses v", () => {
   const modern = {
     transliteration: { beta: "v", muPi: "b-initial", nuTau: "d-initial" },
   } as const;
@@ -469,7 +469,7 @@ Deno.test("recognizes modern b when beta uses v", () => {
   );
 });
 
-Deno.test("applies contextual ALA-LC modern digraphs", () => {
+test("applies contextual ALA-LC modern digraphs", () => {
   const alaLc = {
     transliteration: {
       beta: "v",
@@ -494,7 +494,7 @@ Deno.test("applies contextual ALA-LC modern digraphs", () => {
   );
 });
 
-Deno.test("recognizes reversible ALA-LC digraph spellings", () => {
+test("recognizes reversible ALA-LC digraph spellings", () => {
   const alaLc = {
     transliteration: {
       beta: "v",
@@ -514,7 +514,7 @@ Deno.test("recognizes reversible ALA-LC digraph spellings", () => {
   );
 });
 
-Deno.test("applies the requested coronis transliteration", () => {
+test("applies the requested coronis transliteration", () => {
   assertNfcEquals(convert("κἀγώ", "greek", "transliteration"), "kagṓ");
   assertNfcEquals(
     convert("κἀγώ", "greek", "transliteration", {
@@ -554,7 +554,7 @@ Deno.test("applies the requested coronis transliteration", () => {
   );
 });
 
-Deno.test("preserves the provenance of the Greek coronis scalar", () => {
+test("preserves the provenance of the Greek coronis scalar", () => {
   const greekCoronis = { transliteration: { coronis: "greek" } } as const;
   const transliteration = convert(
     "κἀγώ",
@@ -579,7 +579,7 @@ Deno.test("preserves the provenance of the Greek coronis scalar", () => {
   );
 });
 
-Deno.test("does not infer coronis from ordinary apostrophe punctuation", () => {
+test("does not infer coronis from ordinary apostrophe punctuation", () => {
   assertNfcEquals(
     convert("ka’gṓ", "transliteration", "greek", {
       transliteration: { coronis: "greek" },
@@ -594,7 +594,7 @@ Deno.test("does not infer coronis from ordinary apostrophe punctuation", () => {
   );
 });
 
-Deno.test("applies lunate sigma orthography on demand", () => {
+test("applies lunate sigma orthography on demand", () => {
   const lunate = { greek: { sigma: "lunate" } } as const;
 
   assertNfcEquals(convert("σος ΣΟΣ", "greek", "greek"), "σος ΣΟΣ");
@@ -621,7 +621,7 @@ Deno.test("applies lunate sigma orthography on demand", () => {
   assertNfcEquals(convert("ϲοϲ", "greek", "transliteration"), "sos");
 });
 
-Deno.test("preserves known lunate sigma glyphs across formats", () => {
+test("preserves known lunate sigma glyphs across formats", () => {
   const preserve = { greek: { sigma: "preserve" } } as const;
 
   assertNfcEquals(
@@ -638,7 +638,7 @@ Deno.test("preserves known lunate sigma glyphs across formats", () => {
   );
 });
 
-Deno.test("transliterates only provenanced lunate sigma as c", () => {
+test("transliterates only provenanced lunate sigma as c", () => {
   const options = {
     transliteration: { lunateSigma: "c" },
     greek: { sigma: "preserve" },
@@ -662,7 +662,7 @@ Deno.test("transliterates only provenanced lunate sigma as c", () => {
   assertNfcEquals(convert("c", "transliteration", "greek"), "c");
 });
 
-Deno.test("lunate c does not shadow marked stigma or sampi", () => {
+test("lunate c does not shadow marked stigma or sampi", () => {
   const options = {
     transliteration: { longVowels: "circumflex", lunateSigma: "c" },
     greek: { sigma: "preserve" },
@@ -672,7 +672,7 @@ Deno.test("lunate c does not shadow marked stigma or sampi", () => {
   assertNfcEquals(convert("ϛϡ ϲ", "greek", "transliteration", options), "ĉŝ c");
 });
 
-Deno.test("selects contextual or uniform medial final sigma", () => {
+test("selects contextual or uniform medial final sigma", () => {
   const medial = { greek: { finalSigma: "medial" } } as const;
 
   assertNfcEquals(convert("σος ΣΟΣ", "greek", "greek"), "σος ΣΟΣ");
@@ -692,7 +692,7 @@ Deno.test("selects contextual or uniform medial final sigma", () => {
   );
 });
 
-Deno.test("folds Greek variants while keeping letter case independent", () => {
+test("folds Greek variants while keeping letter case independent", () => {
   // The recipe for a comparison spelling: standard beta and sigma, medial
   // sigma everywhere.
   const fold = {
@@ -718,7 +718,7 @@ Deno.test("folds Greek variants while keeping letter case independent", () => {
   );
 });
 
-Deno.test("converts marked alphabetic numerals to decimal on demand", () => {
+test("converts marked alphabetic numerals to decimal on demand", () => {
   const decimal = { text: { numerals: "decimal" } } as const;
   const greek = "αʹ ͵βκγʹ ϛʹ ϝʹ ϟʹ ϙʹ ϡʹ σʹ";
 
@@ -748,7 +748,7 @@ Deno.test("converts marked alphabetic numerals to decimal on demand", () => {
   );
 });
 
-Deno.test("numeral glyphs override contextual letter styling", () => {
+test("numeral glyphs override contextual letter styling", () => {
   const styled = {
     greek: { medialBeta: "symbol", sigma: "lunate" },
   } as const;

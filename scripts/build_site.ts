@@ -1,25 +1,29 @@
-/** Builds the static playground from this checkout's public library entry point. */
-await Deno.mkdir("_site", { recursive: true });
+/**
+ * Builds the static playground into `_site/` from this checkout's public
+ * library entry points. `web/tsconfig.json` type-checks it beforehand, in
+ * `npm run site:build` and in `npm run check`.
+ *
+ * Run with `npm run site:build`.
+ */
+import { cp, mkdir } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { build } from "esbuild";
 
+const ROOT = new URL("../", import.meta.url);
+const SITE = new URL("_site/", ROOT);
+
+await mkdir(SITE, { recursive: true });
 for (const name of ["index.html", "styles.css"]) {
-  await Deno.copyFile(`web/${name}`, `_site/${name}`);
+  await cp(new URL(`web/${name}`, ROOT), new URL(name, SITE));
 }
 
-const build = new Deno.Command(Deno.execPath(), {
-  args: [
-    "bundle",
-    "--config",
-    "web/deno.json",
-    "--platform=browser",
-    "--minify",
-    "--check",
-    "-o",
-    "_site/app.js",
-    "web/app.ts",
-  ],
-  stdout: "inherit",
-  stderr: "inherit",
+await build({
+  entryPoints: [fileURLToPath(new URL("web/app.ts", ROOT))],
+  outfile: fileURLToPath(new URL("app.js", SITE)),
+  bundle: true,
+  format: "esm",
+  platform: "browser",
+  target: "es2022",
+  minify: true,
+  logLevel: "warning",
 });
-
-const { success } = await build.output();
-if (!success) Deno.exit(1);

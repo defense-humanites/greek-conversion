@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals } from "./assertions.ts";
 import { BY_BETA, BY_GREEK } from "../src/alphabet.ts";
 import { greekLower } from "../src/case.ts";
 import { parse } from "../src/document.ts";
@@ -14,7 +15,7 @@ import { parse } from "../src/document.ts";
 const hex = (unit: number) =>
   "U+" + unit.toString(16).toUpperCase().padStart(4, "0");
 
-Deno.test("the Greek reader classifies every BMP code unit as greekLower does", () => {
+test("the Greek reader classifies every BMP code unit as greekLower does", () => {
   const mismatches: string[] = [];
   for (let unit = 0; unit < 0x10000; unit++) {
     const char = String.fromCharCode(unit);
@@ -51,7 +52,7 @@ Deno.test("the Greek reader classifies every BMP code unit as greekLower does", 
   assertEquals(mismatches, []);
 });
 
-Deno.test("the Beta Code reader classifies every BMP code unit as toLowerCase does", () => {
+test("the Beta Code reader classifies every BMP code unit as toLowerCase does", () => {
   const mismatches: string[] = [];
   for (let unit = 0; unit < 0x10000; unit++) {
     const char = String.fromCharCode(unit);

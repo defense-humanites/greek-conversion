@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals } from "./assertions.ts";
 import { ALPHABET } from "../src/alphabet.ts";
 import type { Format } from "../src/mod.ts";
 import {
@@ -78,7 +79,7 @@ function assertRoundTrip(document: Document, format: Format): void {
   );
 }
 
-Deno.test("every letter and case survives every format", () => {
+test("every letter and case survives every format", () => {
   for (const letter of LETTERS) {
     for (const uppercase of CASES) {
       for (const format of FORMATS) {
@@ -88,7 +89,7 @@ Deno.test("every letter and case survives every format", () => {
   }
 });
 
-Deno.test("valid diacritics and combinations survive every format", () => {
+test("valid diacritics and combinations survive every format", () => {
   for (const token of [...DIACRITIC_CASES, ...COMBINATION_CASES]) {
     for (const uppercase of CASES) {
       for (const format of FORMATS) {
@@ -98,7 +99,7 @@ Deno.test("valid diacritics and combinations survive every format", () => {
   }
 });
 
-Deno.test("explicit smooth breathings survive Greek and Beta Code", () => {
+test("explicit smooth breathings survive Greek and Beta Code", () => {
   for (const token of SMOOTH_CASES) {
     for (const uppercase of CASES) {
       for (const format of ["greek", "beta-code"] as const) {
@@ -108,7 +109,7 @@ Deno.test("explicit smooth breathings survive Greek and Beta Code", () => {
   }
 });
 
-Deno.test("orthographic transformations are immutable", () => {
+test("orthographic transformations are immutable", () => {
   const source: Document = [
     literal("["),
     grapheme("rho"),

@@ -1,6 +1,6 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import { convert, convertDetailed } from "../src/mod.ts";
-import { assertNfcEquals } from "./assertions.ts";
 
 // Published ALA-LC ancient and modern tables: see docs/ala-lc-conformance-corpus.md.
 const CASES = [
@@ -91,7 +91,7 @@ const CASES = [
 ] as const;
 
 for (const { preset, rule, greek, latin, lossy } of CASES) {
-  Deno.test(`${preset}: ${rule}`, () => {
+  test(`${preset}: ${rule}`, () => {
     const options = { preset };
     const result = convertDetailed(greek, "greek", "transliteration", options);
     assertNfcEquals(result.output, latin);
@@ -103,7 +103,7 @@ for (const { preset, rule, greek, latin, lossy } of CASES) {
   });
 }
 
-Deno.test("ALA-LC thousands and six variants apply in both presets", () => {
+test("ALA-LC thousands and six variants apply in both presets", () => {
   for (const preset of ["ala-lc-ancient", "ala-lc-modern"] as const) {
     assertEquals(
       convert("͵α ͵αα ͵αβ στʹ", "greek", "transliteration", { preset }),

@@ -33,8 +33,7 @@ const document = parse("a)/nqrwpos", "beta-code");
 assert.deepEqual(validateDocument(document), []);
 assert.equal(encode(document, "greek"), "ἄνθρωπος");
 
-// Positions under this runtime's Unicode version, which the Deno tests do not
-// see.
+// Positions under this runtime's Unicode version, through the built package.
 assert.deepEqual(checkPositionsUnicode(convertDetailed), []);
 
 console.log("npm ESM smoke test passed");
