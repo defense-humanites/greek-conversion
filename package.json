@@ -1,6 +1,6 @@
 {
   "name": "@humanities/greek-conversion",
-  "version": "1.0.0-rc.6",
+  "version": "1.0.0-rc.7",
   "private": true,
   "description": "Bidirectional conversion between Greek, Beta Code, and transliteration, with standards-based presets and information-loss diagnostics.",
   "keywords": [

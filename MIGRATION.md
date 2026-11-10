@@ -5,13 +5,13 @@ the `0.14.x` API.
 
 ## Installation
 
-The release candidate `1.0.0-rc.6` is published on JSR, and on npm under the
+The release candidate `1.0.0-rc.7` is published on JSR, and on npm under the
 `next` distribution tag; the stable `1.0.0` will follow with the same content
 unless a problem is found:
 
 ```sh
 npm install @humanities/greek-conversion@next
-npx jsr add @humanities/greek-conversion@1.0.0-rc.6
+npx jsr add @humanities/greek-conversion@1.0.0-rc.7
 ```
 
 The package is ESM-only.
