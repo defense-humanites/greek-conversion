@@ -104,7 +104,12 @@ change.
 - The project leaves Deno, whose development is to end in 2027, for Node.js 24:
   tests run on `node:test`, types are checked by TypeScript, formatting is
   done by dprint with Deno's style, and linting by oxlint. The library itself
-  is unchanged and still has no dependencies; JSR still serves it to Deno.
+  is unchanged and still has no dependencies; it is still published on JSR and
+  npm.
+- The README and the [stability policy](docs/stability.md) no longer list
+  supported runtimes: the library is standard ECMAScript 2022, with no
+  runtime-specific API. The npm `engines` field still declares the Node.js
+  versions on which the test suite runs.
 - The npm package is built by the TypeScript compiler instead of dnt. Its
   exports, declarations, and files are the same, without dnt's `Object.hasOwn`
   polyfill module, which Node.js 24 does not need, and its `package.json`

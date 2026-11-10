@@ -10,8 +10,8 @@ The release candidate `1.0.0-rc.6` is published on JSR, and on npm under the
 unless a problem is found:
 
 ```sh
-deno add jsr:@humanities/greek-conversion@1.0.0-rc.6
 npm install @humanities/greek-conversion@next
+npx jsr add @humanities/greek-conversion@1.0.0-rc.6
 ```
 
 The package is ESM-only.

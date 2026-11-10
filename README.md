@@ -13,8 +13,7 @@ keeps.**
 digital-humanities developers. It handles polytonic and monotonic Greek,
 implements published conventions (ALA-LC, BnF, ISO 843, SBL, TLG, Perseus) as
 ready-made presets, and tells you when a conversion loses information instead of
-quietly guessing. It has no dependencies and runs on Deno, Node.js, and in
-bundled browser code.
+quietly guessing. It has no dependencies and uses no runtime-specific API.
 
 [**Try it in the playground →**](https://defense-humanites.github.io/greek-conversion/)
 
@@ -97,11 +96,11 @@ The package is published as `@humanities/greek-conversion` on
 named exports in both. It is ESM-only and ships its own type declarations.
 
 ```sh
-# Node.js 24 or later
+# npm
 npm install @humanities/greek-conversion
 
-# Deno 2 or later
-deno add jsr:@humanities/greek-conversion
+# JSR, whose package page gives the command for each runtime
+npx jsr add @humanities/greek-conversion
 ```
 
 The [playground](https://defense-humanites.github.io/greek-conversion/) needs no

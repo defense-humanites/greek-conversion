@@ -65,7 +65,7 @@ Not covered, and free to change in any release:
   a promise that the input stays unrecognized.
 - Changes to a preset's option contents that extend its coverage of the cited
   reference without changing output for input the preset already handled.
-- Raising the minimum supported runtime version.
+- Raising the minimum Node.js version declared in the npm `engines` field.
 
 ### Corrections (patch)
 
@@ -194,10 +194,11 @@ with a migration note.
 
 ## Runtimes and Unicode
 
-Supported runtimes are those declared in the published package metadata (Deno 2
-and the Node.js versions in the npm `engines` field). The library relies on the
-runtime's `String.prototype.normalize`, so recognition of characters introduced
-by a newer Unicode version depends on the runtime.
+The library is standard ECMAScript 2022, with no dependencies and no
+runtime-specific API. The npm `engines` field declares the Node.js versions on
+which its test suite runs. The library relies on the runtime's
+`String.prototype.normalize`, so recognition of characters introduced by a newer
+Unicode version depends on the runtime.
 
 ## Pre-releases
 
