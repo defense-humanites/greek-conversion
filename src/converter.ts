@@ -834,9 +834,10 @@ function validateEntries(
     const spelling = entry.normalized.join("");
     const parsed = parse(spelling, entry.format);
     const rawLiterals = Array.from(spelling);
-    const shadowsMeaning = rawLiterals.some((value) =>
-      parsePunctuation(value, entry.format) !== undefined
-    ) || parsed.length !== rawLiterals.length ||
+    const shadowsMeaning =
+      rawLiterals.some((value) =>
+        parsePunctuation(value, entry.format) !== undefined
+      ) || parsed.length !== rawLiterals.length ||
       parsed.some((token, index) =>
         token.kind !== "literal" || token.value !== rawLiterals[index]
       );

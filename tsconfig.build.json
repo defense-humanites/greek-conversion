@@ -1,0 +1,19 @@
+{
+  // The library alone, as published on npm: no Node types, so that `src/`
+  // cannot depend on a runtime, and the ES2022 library that the package's
+  // TypeScript consumers are assumed to have.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": [],
+    "noEmit": false,
+    "rewriteRelativeImportExtensions": true,
+    "rootDir": "src",
+    "outDir": "npm/esm",
+    "declaration": true,
+    "declarationDir": "npm/types",
+    "declarationMap": true,
+    "skipLibCheck": false
+  },
+  "include": ["src"]
+}

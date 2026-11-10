@@ -606,9 +606,9 @@ function validateConversionOptions(options: unknown): void {
       // The error is about the first key of the old group, which is what the
       // caller has to move: a key the group had is named with its new path.
       const inner = Object.keys(value as object);
-      const first = inner.find((name) =>
-        Object.hasOwn(REPLACED_KEYS, `${key}.${name}`)
-      ) ?? inner[0];
+      const first =
+        inner.find((name) => Object.hasOwn(REPLACED_KEYS, `${key}.${name}`)) ??
+          inner[0];
       throw unknownKey(first === undefined ? key : `${key}.${first}`);
     }
     throw unknownKey(key);

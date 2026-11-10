@@ -1,0 +1,66 @@
+{
+  "name": "@humanities/greek-conversion",
+  "version": "1.0.0-rc.6",
+  "private": true,
+  "description": "Bidirectional conversion between Greek, Beta Code, and transliteration, with standards-based presets and information-loss diagnostics.",
+  "keywords": [
+    "greek",
+    "polytonic",
+    "monotonic",
+    "ancient-greek",
+    "modern-greek",
+    "beta-code",
+    "transliteration",
+    "romanization",
+    "unicode",
+    "humanities",
+    "classics",
+    "ala-lc",
+    "bnf",
+    "iso-843",
+    "sbl",
+    "tlg"
+  ],
+  "homepage": "https://github.com/defense-humanites/greek-conversion#readme",
+  "bugs": {
+    "url": "https://github.com/defense-humanites/greek-conversion/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/defense-humanites/greek-conversion.git"
+  },
+  "license": "MIT",
+  "author": "Antoine Boquet",
+  "type": "module",
+  "scripts": {
+    "check": "npm run check:format && npm run check:lint && npm run check:types && npm run check:docs",
+    "check:format": "dprint check",
+    "check:lint": "oxlint --deny-warnings",
+    "check:types": "tsc -p tsconfig.json && tsc -p tsconfig.build.json --noEmit && tsc -p web",
+    "check:docs": "node scripts/check_api_docs.ts && node scripts/check_readme.ts && node scripts/generate_preset_docs.ts --check && node scripts/check_metadata.ts",
+    "format": "dprint fmt",
+    "test": "node --test \"tests/**/*_test.ts\"",
+    "bench": "node bench/main.ts",
+    "docs:presets": "node scripts/generate_preset_docs.ts",
+    "npm:build": "node scripts/build_npm.ts",
+    "npm:check": "npm run npm:build && node scripts/npm_smoke.mjs && node scripts/npm_types_smoke.mjs && npm pack ./npm --dry-run",
+    "jsr:check": "jsr publish --dry-run",
+    "site:build": "tsc -p web && node scripts/build_site.ts"
+  },
+  "devDependencies": {
+    "@dprint/json": "0.26.0",
+    "@dprint/typescript": "0.99.2",
+    "@types/node": "24.19.2",
+    "dprint": "0.64.3",
+    "dprint-plugin-yaml": "0.6.0",
+    "esbuild": "0.28.2",
+    "jsr": "0.14.3",
+    "mitata": "1.0.34",
+    "oxlint": "1.93.0",
+    "typedoc": "0.28.20",
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

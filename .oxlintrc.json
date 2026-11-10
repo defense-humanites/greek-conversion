@@ -1,0 +1,33 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "node"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    // The rules of `deno lint`'s recommended set that oxlint does not enable
+    // by default, which the code base followed until 1.0.0-rc.7.
+    "eslint/no-array-constructor": "error",
+    "eslint/no-case-declarations": "error",
+    "eslint/no-empty": "error",
+    "eslint/no-fallthrough": "error",
+    "eslint/no-inner-declarations": "error",
+    "eslint/no-prototype-builtins": "error",
+    "eslint/no-redeclare": "error",
+    "eslint/no-regex-spaces": "error",
+    "eslint/no-var": "error",
+    "eslint/prefer-const": "error",
+    "eslint/require-await": "error",
+    "eslint/require-yield": "error",
+    "typescript/ban-ts-comment": "error",
+    "typescript/no-empty-interface": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-inferrable-types": "error",
+    "typescript/no-namespace": "error",
+    "typescript/prefer-namespace-keyword": "error",
+    // The engine preallocates its position arrays with `new Array(length)`
+    // on purpose: `Array.from({ length })` is slower on the hot paths.
+    "unicorn/no-new-array": "off"
+  },
+  "ignorePatterns": ["npm/", "_site/", "node_modules/"]
+}

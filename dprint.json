@@ -1,0 +1,26 @@
+{
+  "typescript": {
+    "deno": true
+  },
+  "json": {
+    "deno": true
+  },
+  "yaml": {},
+  "includes": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "scripts/**/*.{ts,mjs}",
+    "web/**/*.ts",
+    "bench/**/*.ts",
+    ".github/**/*.yml",
+    "*.json"
+  ],
+  "excludes": [
+    "package-lock.json"
+  ],
+  "plugins": [
+    "./node_modules/@dprint/typescript/plugin.wasm",
+    "./node_modules/@dprint/json/plugin.wasm",
+    "./node_modules/dprint-plugin-yaml/plugin.wasm"
+  ]
+}
