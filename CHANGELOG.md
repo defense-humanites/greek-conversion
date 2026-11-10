@@ -9,6 +9,13 @@ change.
 
 ### Fixed
 
+- Beta Code writes and reads parentheses with the TLG bracket codes `[1` and
+  `]1`. They were written `(` and `)`, which are the breathings: `δῆσε(ν)`
+  gave `dh=se(n)`, read back as `δῆσἑν̓` (a reported loss), and under the
+  presets that remove the smooth breathing (`ala-lc-*`, `sbl-general`), the
+  closing parenthesis disappeared when the output was converted again
+  (`dhse(n)` → `dhse(n`). It now gives `dh=se[1n]1`, which reads back as
+  `δῆσε(ν)`. The other TLG bracket codes (`[2`, `[10`…) are still kept as text.
 - `convertDetailed()` reports each loss at the token that lost something, and
   with what it lost. When the output read back did not have the same letters
   as the source, the comparison guessed where the two agreed again, and could

@@ -60,6 +60,10 @@ const OUTPUT: Record<Format, ReadonlyMap<string, string>> = {
     [ENOTIKON, ENOTIKON],
     [HYPHEN, "-"],
     [APOSTROPHE, "'"],
+    // In Beta Code, ( and ) are the breathings; the TLG writes the
+    // parentheses [1 and ]1 (parsers/beta_code.ts reads them).
+    ["(", "[1"],
+    [")", "]1"],
   ]),
   transliteration: new Map([
     [EROTIMATIKO, "?"],

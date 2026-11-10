@@ -16,6 +16,17 @@ npm install @humanities/greek-conversion@next
 
 The package is ESM-only.
 
+## Updating from `1.0.0-rc.6`
+
+### Beta Code parentheses
+
+Beta Code writes and reads parentheses with the TLG codes `[1` and `]1`:
+`δῆσε(ν)` gives `dh=se[1n]1`, where it gave `dh=se(n)`. Earlier releases wrote
+`(` and `)`, which Beta Code reads as breathings after a letter, so such text
+does not read back as it was written. In Beta Code that these releases wrote, a
+`(` or `)` that stands for a parenthesis cannot be told apart from a breathing
+by the text alone; convert the Greek again where it is available.
+
 ## Updating from `1.0.0-rc.5`
 
 `1.0.0-rc.6` settles the public API for `1.0.0`. It removes the convenience
