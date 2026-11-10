@@ -7,6 +7,22 @@ change.
 
 ## [Unreleased]
 
+### Fixed
+
+- `convertDetailed()` reports each loss at the token that lost something, and
+  with what it lost. When the output read back did not have the same letters
+  as the source, the comparison guessed where the two agreed again, and could
+  guess wrong: under `iso-843-type-2`, `παιδαγωγῶν` reported `γ` and `ῶ`
+  instead of `ω`, and in a longer text a loss could land on another line, or
+  on a token that lost nothing. Source and target tokens are now paired by
+  their place in the output. Some codes become more precise: under the ISO 843
+  presets, `ἄλφα` reports the smooth breathing it loses (`removed-diacritic`)
+  instead of an unrepresented `ἄ`; under `ala-lc-ancient`, the `ὺ` of `ἐνγὺς`
+  reports its grave accent instead of the letter. Whether a conversion is
+  lossy is not affected. On the 289,857 lines of a dictionary corpus, under
+  every preset, each line now reports the same losses alone and within the
+  text.
+
 ## [1.0.0-rc.6] - 2026-10-29
 
 Sixth release candidate for `1.0.0`. It settles the public API for the stable

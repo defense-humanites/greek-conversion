@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { convert, convertDetailed } from "../src/mod.ts";
+import { convert, convertDetailed, type Preset } from "../src/mod.ts";
 import {
   EQUIVALENCES,
   FORMATS,
@@ -74,6 +74,51 @@ Deno.test("reports each removed diacritic at its source token", () => {
       message: "The target representation does not retain the acute accent.",
     },
   ]);
+});
+
+Deno.test("reports a replaced letter at its own token", () => {
+  // ISO 843 type 2 writes omega as o. The unmarked ω must not be matched with
+  // the ῶ two tokens later, which would move the loss onto γ and ῶ.
+  const options = { preset: "iso-843-type-2" } as const;
+  const located = (input: string) =>
+    convertDetailed(input, "greek", "transliteration", options).losses.map((
+      { code, offset, length },
+    ) => [code, input.slice(offset, offset + length)]);
+  assertEquals(located("παιδαγωγῶν"), [["unrepresented-grapheme", "ω"]]);
+  // In a longer text, the loss stays on its line.
+  assertEquals(located("παύουσι\nπαιδαγωγῶν"), [
+    ["unrepresented-grapheme", "ύ"],
+    ["unrepresented-grapheme", "ω"],
+  ]);
+});
+
+Deno.test("pairs source and target tokens by their place in the output", () => {
+  const located = (input: string, preset: Preset) =>
+    convertDetailed(input, "greek", "transliteration", { preset }).losses.map((
+      { code, offset, length, diacritic },
+    ) => [code, input.slice(offset, offset + length), diacritic ?? ""]);
+  // The apostrophe written for the smooth breathing reads back as a literal
+  // before the vowel: the vowel lost its breathing, not its letter.
+  assertEquals(located("ἄλφα", "iso-843-type-1"), [
+    ["removed-diacritic", "ἄ", "smooth"],
+  ]);
+  // ν before γ reads back as a nasal gamma; the next vowel only lost its
+  // grave accent, and χ is kept.
+  assertEquals(located("ἐνγὺς", "ala-lc-ancient"), [
+    ["removed-diacritic", "ἐ", "smooth"],
+    ["unrepresented-grapheme", "ν", ""],
+    ["removed-diacritic", "ὺ", "grave"],
+  ]);
+  assertEquals(located("θρασυσπλάνχνως", "sbl-academic"), [
+    ["unrepresented-grapheme", "ν", ""],
+  ]);
+  // The same losses at the same places, alone or within a text.
+  const text = ["ὅρκῳ", "ἔμ’", "δευόμενον", "κἤτι", "ἐτίθεον"];
+  for (const preset of ["iso-843-type-1", "iso-843-type-2"] as const) {
+    const together = located(text.join("\n"), preset);
+    const alone = text.flatMap((word) => located(word, preset));
+    assertEquals(together, alone);
+  }
 });
 
 Deno.test("reports only selectively removed diacritics", () => {
