@@ -18,3 +18,11 @@ updates:
     groups:
       development:
         dependency-type: development
+    ignore:
+      # TypeDoc, which lints the API documentation, accepts TypeScript up to
+      # 6.0; move to a new major together with it.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      # The Node.js types follow the oldest version of the engines field.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
