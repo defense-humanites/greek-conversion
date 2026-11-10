@@ -334,6 +334,12 @@ double rho, the coronis, numerals, and more; every key and its accepted values
 are listed in `CONVERSION_OPTION_VALUES`. Supply the same options when reading
 transliteration back, and the chosen spellings are recognized.
 
+A reader follows the convention of its options and does not guess another one:
+under `phi: "f"`, `ph` is pi followed by a rough breathing, which is how `πἡ` is
+written (`phē`), so that the output reads back as itself. The
+[stability policy](docs/stability.md#reading) states which spellings each
+reader accepts.
+
 ### Keep or fold letter variants
 
 Lunate sigma has two independent controls: `sigma` picks the Greek and Beta Code
@@ -407,8 +413,9 @@ capital. Output follows the
 [TLG placement rules](https://stephanus.tlg.uci.edu/encoding.php): breathing,
 accent, then iota subscript, with the asterisk and marks before an uppercase
 letter. Vowel quantity takes the TLG percent codes, `%26` for the macron and
-`%27` for the breve, after the accent. As in the TLG, `'` is the apostrophe;
-`&`, a shift to the Latin font, is kept as text.
+`%27` for the breve, after the accent. As in the TLG, `'` is the apostrophe,
+`[1` and `]1` are the parentheses (`(` and `)` being the breathings), and `&`, a
+shift to the Latin font, is kept as text.
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
@@ -417,6 +424,7 @@ convert("A)/NQRWPOS", "beta-code", "greek"); // → ἄνθρωπος
 convert("*)/ANQRWPOS", "beta-code", "greek"); // → Ἄνθρωπος
 convert("ᾯ", "greek", "beta-code"); // → *(=w|
 convert("ᾱ ᾰ", "greek", "beta-code"); // → a%26 a%27
+convert("δῆσε(ν)", "greek", "beta-code"); // → dh=se[1n]1
 convert("ἄνθρωπος", "greek", "beta-code", { preset: "tlg-core" }); // → A)/NQRWPOS
 ```
 

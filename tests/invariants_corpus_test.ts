@@ -23,7 +23,8 @@ import { assertNfcEquals } from "./assertions.ts";
  *
  * The corpus deliberately contains hiatus and iota-adscript forms, initial
  * diaeresis, explicit quantity marks, archaic letters and numerals, lunate
- * and medial variants, monotonic and uncial text, and Greek punctuation.
+ * and medial variants, monotonic and uncial text, Greek punctuation, and
+ * rough breathings inside a word, where the h meets a consonant.
  */
 const WORDS = [
   "ἄνθρωπος",
@@ -115,6 +116,13 @@ const WORDS = [
   "ΐδιος",
   "προϊόν",
   "ἀϋπνία",
+  "χοὗτος",
+  "χοἱ",
+  "πἡ",
+  "ποὑ",
+  "ἀροἱ",
+  "ϲἡ",
+  "γκἡ",
   "ἑωυτοῦ",
   "τοὔμπαλιν",
   "Θύιλλος",

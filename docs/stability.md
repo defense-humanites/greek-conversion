@@ -103,6 +103,34 @@ selection is a minor change when all of the following hold:
 
 Otherwise it is a break.
 
+## Reading
+
+A reader reads the convention that its format and options define:
+
+- the spellings the encoder writes under those options;
+- their Unicode equivalents (composition and combining-mark order);
+- the variant spellings this documentation lists, such as `j` and `#401` for
+  yot in Beta Code, or `ϐ` and `ϲ` in Greek.
+
+These spellings are protected like output: a release that stops reading one
+of them, or reads it as another document, follows the change classes above.
+
+A reader may accept a spelling from another convention as well, such as `ch`
+for chi under `chi: "kh"`, provided that the encoder never writes the same
+letters with another meaning under the same options. Otherwise reading its own
+output back would change it, and the output would no longer be idempotent.
+Such spellings are a convenience, not documented variants: a minor release may
+stop accepting them, or leave them to a separate repair step.
+
+Hence, under `phi: "f"`, `ph` is pi followed by a rough breathing, which is how
+`πἡ` is written (`phē`), and not phi. Under `chi: "kh"` with
+`lunateSigma: "c"`, `ch` is a lunate sigma followed by a rough breathing
+(`ϲἡ` → `chē`). Where gamma stays `g` before kappa but becomes `n` before chi
+(`nasalGamma: "nasal-except-kappa"` or `"nasal-medial-kappa"`), `gkh` under
+`chi: "kh"` is gamma, kappa, and a rough breathing (`γκἡ` → `gkhē`). A text
+that mixes conventions is not guessed: it is read by the convention of the
+options.
+
 ## Diagnostics and errors
 
 Diagnostic `code` values, their `index` semantics, and the fields that accompany

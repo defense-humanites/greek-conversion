@@ -24,6 +24,8 @@ import {
   isWordFinal,
   isWordInitial,
   precedesVoicedSound,
+  roughDiphthongStart,
+  roughDiphthongStarts,
 } from "./context.ts";
 import {
   infersSmoothBreathing,
@@ -363,8 +365,12 @@ export function encodeTransliteration(
   // goes before it (`ηὔδα` → `’ívda`).
   const vowelUpsilonVF = options.transliteration?.upsilon === "y-with-ou-v-f";
   const readBack = options.transliteration?.longVowels === "omit"
-    ? readBackInitials(rendered, doc, options, vowelUpsilonVF)
+    ? readBackBeforeBreathings(rendered, doc, options, vowelUpsilonVF)
     : rendered;
+  // The h of a rough breathing is written only when the breathing is kept.
+  const roughDiphthongs = preservesRough
+    ? roughDiphthongStarts(readBack)
+    : undefined;
 
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
@@ -395,7 +401,8 @@ export function encodeTransliteration(
 
     const previous = doc[index - 1];
     const next = doc[index + 1];
-    const breathingStart = initialBreathingStart(readBack, index);
+    const breathingStart = initialBreathingStart(readBack, index) ??
+      (roughDiphthongs && roughDiphthongStart(roughDiphthongs, index));
     const breathingIndex = breathingStart === undefined
       ? undefined
       : breathingTarget(readBack, breathingStart);
@@ -775,11 +782,12 @@ function readBackLetter(token: Grapheme, options: ConversionOptions): Letter {
 }
 
 /**
- * `rendered` with the eta and omega of the first two letters of each word
- * as they read back (readBackLetter), the only ones on which the place of a
- * breathing depends. Copied only if one changes.
+ * `rendered` with the eta and omega on which the place of a breathing depends
+ * as they read back (readBackLetter): those among the first two letters of a
+ * word, and those before a vowel with a rough breathing. Copied only if one
+ * changes.
  */
-function readBackInitials(
+function readBackBeforeBreathings(
   rendered: Document,
   doc: Document,
   options: ConversionOptions,
@@ -793,11 +801,13 @@ function readBackInitials(
       token.letter !== "eta" && token.letter !== "omega"
     ) continue;
     const letter = readBackLetter(token, options);
+    if (letter === token.letter) continue;
+    const next = rendered[index + 1];
     if (
-      letter === token.letter ||
-      !isWordInitial(rendered, index) && !isWordInitial(rendered, index - 1) ||
-      vowelUpsilonVF && isVowelUpsilonAt(doc, index)
+      !isWordInitial(rendered, index) && !isWordInitial(rendered, index - 1) &&
+      !(next?.kind === "grapheme" && next.diacritics.has("rough"))
     ) continue;
+    if (vowelUpsilonVF && isVowelUpsilonAt(doc, index)) continue;
     copy ??= rendered.slice();
     copy[index] = { ...token, letter };
   }

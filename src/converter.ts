@@ -331,12 +331,22 @@ export class Converter {
       this.#prepareSource(targetInput, to, resolved, undefined, "none")
         .document;
     const inputSpans = prepared.spans!;
-    const losses = findConversionLosses(prepared.document, target, inputSpans);
     const outputSpans = map === undefined ? encoded.spans : spansIn(
       encoded.spans.starts,
       encoded.spans.ends,
       prepared.document.length,
       map,
+    );
+    const losses = findConversionLosses(
+      prepared.document,
+      target,
+      inputSpans,
+      // Reading the output again with positions, only if the losses need it.
+      () => ({
+        written: outputSpans,
+        read: this.#prepareSource(targetInput, to, resolved, undefined, "spans")
+          .spans!,
+      }),
     );
     const spans: ConversionSpan[] = new Array(prepared.document.length);
     for (let index = 0; index < spans.length; index++) {

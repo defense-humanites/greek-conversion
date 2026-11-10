@@ -136,6 +136,12 @@ export function parseTransliteration(
   // on them is an accent: one that only the long vowel can bear.
   const omitLength = transliteration?.longVowels === "omit";
   const upsilon = transliteration?.upsilon;
+  const nasalGamma = transliteration?.nasalGamma;
+  // Where gamma stays `g` before kappa but is `n` before chi, `kh` after `g`
+  // is kappa followed by a rough breathing (`γκἡ` → `gkhē`), not chi.
+  const kappaAfterG = transliteration?.chi === "kh" &&
+    (nasalGamma === "nasal-except-kappa" ||
+      nasalGamma === "nasal-medial-kappa");
 
   for (let i = 0; i < chars.length;) {
     let rough = false;
@@ -175,7 +181,11 @@ export function parseTransliteration(
     }
 
     const archaic = markedArchaicLetter(chars, lowered, i);
-    const ordinary = trie.longest(lowered, i);
+    const ordinary = kappaAfterG && lowered[i] === "k" &&
+        lowered[i + 1] === "h" && followsGamma(out) &&
+        startsVowel(lowered, i + 2, trie)
+      ? KAPPA
+      : trie.longest(lowered, i);
     const lunateSigma = !archaic && !ordinary && lunateC && lowered[i] === "c";
     const match = archaic ?? ordinary ??
       (lunateSigma ? { value: "sigma" as const, length: 1 } : undefined);
@@ -358,7 +368,6 @@ export function parseTransliteration(
     for (let k = 0; k < starts.length; k++) starts[k] = offsets[starts[k]];
   }
 
-  const nasalGamma = options.transliteration?.nasalGamma;
   if (nasalGamma !== "literal") {
     inferNasalGammas(out, nasalGamma === "nasal-except-kappa");
   }
@@ -412,12 +421,25 @@ function transliterationTrie(options: ConversionOptions): Trie<Letter> {
     variants.push([`i${mark}`, "eta"]);
   }
   if (transliteration?.xi === "ks") variants.push(["ks", "xi"]);
-  if (transliteration?.phi === "f") variants.push(["f", "phi"]);
-  if (transliteration?.chi === "kh") variants.push(["kh", "chi"]);
+  // A spelling that an option replaces is still read, unless the encoder
+  // writes the same letters with another meaning under these options: then
+  // reading it back would change the output (docs/stability.md, "Reading").
+  const replaced = new Set<string>();
+  if (transliteration?.phi === "f") {
+    variants.push(["f", "phi"]);
+    // π followed by a rough breathing: `πἡ` → `phē`.
+    replaced.add("ph");
+  }
+  if (transliteration?.chi === "kh") {
+    variants.push(["kh", "chi"]);
+    // The lunate sigma `c` followed by a rough breathing: `ϲἡ` → `chē`.
+    if (transliteration.lunateSigma === "c") replaced.add("ch");
+  }
 
-  return variants.length === 0
-    ? TRIE
-    : new Trie<Letter>([...CANONICAL_ENTRIES, ...variants]);
+  return variants.length === 0 ? TRIE : new Trie<Letter>([
+    ...CANONICAL_ENTRIES.filter(([spelling]) => !replaced.has(spelling)),
+    ...variants,
+  ]);
 }
 
 /** The combining mark that shows the length of eta and omega, if any. */
@@ -484,6 +506,14 @@ function inferNasalGammas(tokens: Token[], exceptKappa: boolean) {
   }
 }
 
+const KAPPA = { value: "kappa", length: 1 } as const;
+
+/** Whether the last token read is a gamma. */
+function followsGamma(tokens: readonly Token[]): boolean {
+  const previous = tokens.at(-1);
+  return previous?.kind === "grapheme" && previous.letter === "gamma";
+}
+
 function startsVowel(
   lowered: readonly string[],
   start: number,
@@ -531,7 +561,22 @@ function inferInitialBreathings(
       continue;
     }
 
-    if (!wordStart) continue;
+    if (!wordStart) {
+      // An `h` inside a word precedes its vowel group too (`chhoi` → χοἱ):
+      // the rough breathing goes to the second vowel of a diphthong.
+      const next = tokens[i + 1];
+      if (
+        token.diacritics.has("rough") &&
+        isVowel(token.letter) &&
+        next?.kind === "grapheme" &&
+        !isGreekNumeralContext(tokens, i) &&
+        breathingTarget(latinPair(token, next), 0) === 1
+      ) {
+        token.diacritics = withoutDiacritic(token.diacritics, "rough");
+        next.diacritics = withDiacritic(next.diacritics, "rough");
+      }
+      continue;
+    }
     wordStart = false;
 
     if (!isVowel(token.letter) || isGreekNumeralContext(tokens, i)) continue;
