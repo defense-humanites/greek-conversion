@@ -205,7 +205,13 @@ export function convertDetailed(
   const inputSpans = readSpans(input, read);
   const { output, spans: outputSpans } = encodeTracked(source, to, resolved);
   const target = parseResolved(output, to, resolved, true);
-  const losses = findConversionLosses(source, target, inputSpans);
+  // Where the target tokens were read, only if the losses need it: reading
+  // the output again with positions costs less than recording them each time.
+  const losses = findConversionLosses(source, target, inputSpans, () => {
+    const reread: ReadPositions = { text: "", starts: [] };
+    parseResolved(output, to, resolved, true, reread);
+    return { written: outputSpans, read: readSpans(output, reread) };
+  });
 
   const spans: ConversionSpan[] = new Array(source.length);
   for (let index = 0; index < source.length; index++) {

@@ -334,6 +334,12 @@ double rho, the coronis, numerals, and more; every key and its accepted values
 are listed in `CONVERSION_OPTION_VALUES`. Supply the same options when reading
 transliteration back, and the chosen spellings are recognized.
 
+A reader follows the convention of its options and does not guess another one:
+under `phi: "f"`, `ph` is pi followed by a rough breathing, which is how `πἡ` is
+written (`phē`), so that the output reads back as itself. The
+[stability policy](docs/stability.md#reading) states which spellings each
+reader accepts.
+
 ### Keep or fold letter variants
 
 Lunate sigma has two independent controls: `sigma` picks the Greek and Beta Code

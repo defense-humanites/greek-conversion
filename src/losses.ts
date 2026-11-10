@@ -75,8 +75,6 @@ export interface ConversionResult {
   spans: readonly ConversionSpan[];
 }
 
-const ALIGNMENT_WINDOW = 16;
-
 const BREATHINGS: readonly Diacritic[] = ["smooth", "rough"];
 
 const DIACRITIC_NAMES: Readonly<Record<Diacritic, string>> = {
@@ -92,69 +90,105 @@ const DIACRITIC_NAMES: Readonly<Record<Diacritic, string>> = {
   breve: "breve",
 };
 
+/** Where the output was written and read again, in output code units. */
+export interface OutputPositions {
+  /** The range each source token was written to. */
+  written: SpanTable;
+  /** Where each target token was read from. */
+  read: SpanTable;
+}
+
 /**
  * Compares the source document with the target read back from the output and
  * reports what the target does not retain. `spans` gives the position of
  * each source token in the input, carried by the losses.
+ *
+ * When both documents have the same tokens letter for letter, each source
+ * token is compared with the target token at the same index. Otherwise they
+ * are paired by position in the output, which `positions` gives on demand: a
+ * target token belongs to the source token whose output range it starts in.
+ * When several do (a breathing written as an apostrophe, a coronis after its
+ * vowel), the one that keeps most of the source token stands for it: one that
+ * keeps it whole, then one with the same letter, then one of the same kind. A
+ * target token starting in no range is not paired. Pairing by content instead
+ * would have to guess where the documents agree again after a change, and
+ * could guess wrong: `παιδαγωγῶν` under `iso-843-type-2` reported its loss on
+ * `γ` and `ῶ` instead of `ω`, and a loss in a long text could land on another
+ * line.
  */
 export function findConversionLosses(
   source: Document,
   target: Document,
   spans: SpanTable,
+  positions: () => OutputPositions,
 ): readonly ConversionLoss[] {
   const losses = new Losses(spans);
-  let sourceIndex = 0;
-  let targetIndex = 0;
+  const counterparts = sameLetters(source, target)
+    ? undefined
+    : pairByPosition(source, target, positions());
 
-  while (sourceIndex < source.length) {
+  for (let index = 0; index < source.length; index++) {
+    const counterpart = counterparts === undefined
+      ? index
+      : counterparts[index] < 0
+      ? undefined
+      : counterparts[index];
     if (
-      targetIndex < target.length &&
-      preservesToken(source[sourceIndex], target[targetIndex])
+      counterpart !== undefined &&
+      preservesToken(source[index], target[counterpart])
     ) {
-      addInferredBreathing(losses, source, target, sourceIndex, targetIndex);
-      sourceIndex++;
-      targetIndex++;
-      continue;
+      addInferredBreathing(losses, source, target, index, counterpart);
+    } else {
+      addTokenLoss(losses, source, target, index, counterpart);
     }
-
-    if (
-      targetIndex < target.length &&
-      sameTokenIdentity(source[sourceIndex], target[targetIndex])
-    ) {
-      addTokenLoss(losses, source, target, sourceIndex, targetIndex);
-      sourceIndex++;
-      targetIndex++;
-      continue;
-    }
-
-    const alignment = nextAlignment(source, target, sourceIndex, targetIndex);
-    if (alignment !== undefined) {
-      addLosses(
-        losses,
-        source,
-        target,
-        sourceIndex,
-        alignment.source,
-        targetIndex,
-        alignment.target,
-      );
-      sourceIndex = alignment.source;
-      targetIndex = alignment.target;
-      continue;
-    }
-
-    addTokenLoss(
-      losses,
-      source,
-      target,
-      sourceIndex,
-      targetIndex < target.length ? targetIndex : undefined,
-    );
-    sourceIndex++;
-    if (targetIndex < target.length) targetIndex++;
   }
 
   return losses.all;
+}
+
+/** Whether both documents have the same tokens, letter for letter. */
+function sameLetters(source: Document, target: Document): boolean {
+  if (source.length !== target.length) return false;
+  for (let index = 0; index < source.length; index++) {
+    if (!sameTokenIdentity(source[index], target[index])) return false;
+  }
+  return true;
+}
+
+/** The target token paired with each source token, or -1. */
+function pairByPosition(
+  source: Document,
+  target: Document,
+  { written, read }: OutputPositions,
+): Int32Array {
+  const counterparts = new Int32Array(source.length).fill(-1);
+  let first = 0;
+  for (let index = 0; index < source.length; index++) {
+    const start = written.starts[index];
+    const end = written.ends[index];
+    while (first < target.length && read.starts[first] < start) first++;
+
+    let closeness = -1;
+    for (
+      let targetIndex = first;
+      targetIndex < target.length && read.starts[targetIndex] < end;
+      targetIndex++
+    ) {
+      const candidate = target[targetIndex];
+      const score = preservesToken(source[index], candidate)
+        ? 3
+        : sameTokenIdentity(source[index], candidate)
+        ? 2
+        : candidate.kind === source[index].kind
+        ? 1
+        : 0;
+      if (score > closeness) {
+        counterparts[index] = targetIndex;
+        closeness = score;
+      }
+    }
+  }
+  return counterparts;
 }
 
 /** The losses found so far, each located at its source token. */
@@ -179,53 +213,6 @@ class Losses {
         ? { code, index, offset, length, message }
         : { code, index, offset, length, diacritic, message },
     );
-  }
-}
-
-function nextAlignment(
-  source: Document,
-  target: Document,
-  sourceStart: number,
-  targetStart: number,
-): { source: number; target: number } | undefined {
-  const sourceEnd = Math.min(source.length, sourceStart + ALIGNMENT_WINDOW + 1);
-  const targetEnd = Math.min(target.length, targetStart + ALIGNMENT_WINDOW + 1);
-  let best: { source: number; target: number; distance: number } | undefined;
-
-  for (let sourceIndex = sourceStart; sourceIndex < sourceEnd; sourceIndex++) {
-    for (
-      let targetIndex = targetStart;
-      targetIndex < targetEnd;
-      targetIndex++
-    ) {
-      if (sourceIndex === sourceStart && targetIndex === targetStart) continue;
-      if (!preservesToken(source[sourceIndex], target[targetIndex])) continue;
-
-      const distance = sourceIndex - sourceStart + targetIndex - targetStart;
-      if (best === undefined || distance < best.distance) {
-        best = { source: sourceIndex, target: targetIndex, distance };
-      }
-    }
-  }
-
-  return best;
-}
-
-function addLosses(
-  losses: Losses,
-  source: Document,
-  target: Document,
-  sourceStart: number,
-  sourceEnd: number,
-  targetStart: number,
-  targetEnd: number,
-): void {
-  for (let index = sourceStart; index < sourceEnd; index++) {
-    const targetOffset = index - sourceStart;
-    const targetIndex = targetStart + targetOffset < targetEnd
-      ? targetStart + targetOffset
-      : undefined;
-    addTokenLoss(losses, source, target, index, targetIndex);
   }
 }
 

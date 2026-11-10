@@ -6,7 +6,7 @@ import { join } from "node:path";
 const directory = await mkdtemp(join(tmpdir(), "greek-conversion-types-"));
 
 try {
-  const packed = JSON.parse(execFileSync("npm", [
+  const report = JSON.parse(execFileSync("npm", [
     "pack",
     "./npm",
     "--json",
@@ -14,6 +14,8 @@ try {
     "--pack-destination",
     directory,
   ], { encoding: "utf8" }));
+  // npm 12 keys the report by package name; earlier versions return an array.
+  const [packed] = Array.isArray(report) ? report : Object.values(report);
 
   execFileSync("npm", [
     "install",
@@ -22,7 +24,7 @@ try {
     "--ignore-scripts",
     "--prefix",
     directory,
-    join(directory, packed[0].filename),
+    join(directory, packed.filename),
     "typescript@5.9.3",
   ], { stdio: "inherit" });
 

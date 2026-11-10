@@ -130,6 +130,17 @@ Deno.test("a rough breathing's h belongs to its vowel", () => {
   assertEquals(pieces(detailed("ῥ", "greek", "transliteration")), [
     ["ῥ", "rh"],
   ]);
+  // Before a diphthong, it belongs to the first vowel, inside a word too.
+  assertEquals(pieces(detailed("χοἱ", "greek", "transliteration")), [
+    ["χ", "ch"],
+    ["ο", "ho"],
+    ["ἱ", "i"],
+  ]);
+  assertEquals(pieces(detailed("chhoi", "transliteration", "greek")), [
+    ["ch", "χ"],
+    ["ho", "ο"],
+    ["i", "ἱ"],
+  ]);
 });
 
 Deno.test("the letters of a modern digraph share its character", () => {
