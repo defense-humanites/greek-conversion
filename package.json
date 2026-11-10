@@ -50,7 +50,7 @@
   "devDependencies": {
     "@dprint/json": "0.26.0",
     "@dprint/typescript": "0.99.2",
-    "@types/node": "24.19.2",
+    "@types/node": "26.6.6",
     "dprint": "0.64.3",
     "dprint-plugin-yaml": "0.6.0",
     "esbuild": "0.28.2",
@@ -58,7 +58,7 @@
     "mitata": "1.0.34",
     "oxlint": "1.93.0",
     "typedoc": "0.28.20",
-    "typescript": "6.0.3"
+    "typescript": "7.0.2"
   },
   "engines": {
     "node": ">=24"
