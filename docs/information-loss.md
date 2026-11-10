@@ -22,7 +22,7 @@ the row format to the column format and parsing the result again.
 
 | From \ To | Greek | Beta Code | Transliteration |
 | --- | --- | --- | --- |
-| **Greek** | Selected glyph, accent, punctuation, and composition policies; lunate provenance unless preserved | Canonical spelling and mark order; lunate provenance unless preserved | Lunate provenance by default; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; the absence of a breathing on an initial vowel (monotonic or uncial text), which reads back as a smooth breathing; `ν` before a velar under nasal-gamma inference |
+| **Greek** | Selected glyph, accent, punctuation, and composition policies; lunate provenance unless preserved | Canonical spelling and mark order; lunate provenance unless preserved | Lunate provenance by default; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; the absence of a breathing on an initial vowel (monotonic or uncial text), which reads back as a smooth breathing; `ν` before a velar under nasal-gamma inference; `τ`, `π`, or `ρ` before a rough breathing inside a word, which merges with its `h` |
 | **Beta Code** | Canonical Greek glyphs; lunate provenance unless preserved | Canonical ASCII case, asterisk placement, mark order, aliases, and punctuation; lunate provenance unless preserved | Same transliteration losses as Greek, including lunate provenance, coronis, and marked double rho |
 | **Transliteration** | Initial smooth breathing is inferred where quantity is not explicit; an elided mute may be aspirated before rough breathing | Initial smooth breathing is inferred where quantity is not explicit; accepted aliases converge to canonical Beta Code | Accepted aliases, punctuation, combining-mark order, NFC, and orthographic spelling converge |
 
@@ -77,6 +77,23 @@ Default transliteration has these intrinsic ambiguities:
   (`Ἅιδῃ → Háidȩ̄`) keeps it as well;
 - with the default `nasalGamma: "nasal"`, Greek gamma and nu before a velar can
   both be read as nasal gamma after transliteration;
+- the `h` of a rough breathing precedes its vowel or diphthong inside a word as
+  at its start (`χοἱ` → `chhoi`, like `οἱ` → `hoi`). After `t`, `p` (except
+  under `phi: "f"`, where `ph` reads as pi and a rough breathing), or `r`, it
+  forms `th`, `ph`, or `rh`, which read back as theta, phi, or a rough rho:
+  `τἡ` → `thē` → `θη`, `ποὑ` → `phou` → `φου`, `ἀροἱ` → `arhoi` → `ἀῥοι`, and
+  `convertDetailed()` reports the loss. The same holds after `k` under
+  `chi: "kh"`, and after a lunate `c` under `lunateSigma: "c"` with the default
+  `chi`. Such forms are rare (crasis in some editions and inscriptions), and no
+  cited standard separates the consonant from the `h`;
+- for the same reason, an `h` before two vowels that can form a diphthong
+  gives the breathing to the diphthong, inside a word as at its start. A rough
+  breathing on the first vowel, marking a hiatus or an iota adscript without an
+  accent or a diaeresis to show it, reads back on the second:
+  `μἁιδης` → `mhaidēs` → `μαἱδης`, like `ἁι` → `hai` → `αἱ`, and
+  `convertDetailed()` reports `displaced-diacritic`. An accent on the first
+  vowel or a diaeresis on the second keeps the hiatus (`μἅιδης` → `mháidēs`,
+  `μἁΐδης` → `mhaḯdēs`);
 - a macron or breve on epsilon or omicron is omitted, because `ē` and `ō`
   denote eta and omega; such a document is already invalid for
   `validateDocument()`, and `convertDetailed()` reports the removed mark.
