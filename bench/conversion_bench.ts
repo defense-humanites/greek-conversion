@@ -1,6 +1,6 @@
 /**
  * Throughput baseline for the main conversion paths. Run with
- * `deno task bench`; compare against a previous run before releasing a
+ * `npm run bench`; compare against a previous run before releasing a
  * change to the parsers or encoders.
  *
  * The input is a real passage of about 10,500 characters, Thucydides
@@ -10,6 +10,7 @@
  * Compare runs made on the same input only.
  */
 import { convert, convertDetailed, createConverter } from "../src/mod.ts";
+import { bench } from "./harness.ts";
 import { THUCYDIDES_1_1_10 } from "./thucydides.ts";
 
 const GREEK = THUCYDIDES_1_1_10;
@@ -17,27 +18,31 @@ const BETA = convert(GREEK, "greek", "beta-code");
 const LATIN = convert(GREEK, "greek", "transliteration");
 const tlg = createConverter({ preset: "tlg-core" });
 
-Deno.bench(
+bench(
   "greek → transliteration",
   { group: "convert", baseline: true },
-  () => {
-    convert(GREEK, "greek", "transliteration");
-  },
+  () => convert(GREEK, "greek", "transliteration"),
 );
-Deno.bench("greek → beta-code", { group: "convert" }, () => {
-  convert(GREEK, "greek", "beta-code");
-});
-Deno.bench("beta-code → greek", { group: "convert" }, () => {
-  convert(BETA, "beta-code", "greek");
-});
-Deno.bench("transliteration → greek", { group: "convert" }, () => {
-  convert(LATIN, "transliteration", "greek");
-});
-Deno.bench("greek → transliteration, detailed", { group: "detailed" }, () => {
-  convertDetailed(GREEK, "greek", "transliteration");
-});
-Deno.bench("greek → beta-code, bound tlg-core converter", {
+bench(
+  "greek → beta-code",
+  { group: "convert" },
+  () => convert(GREEK, "greek", "beta-code"),
+);
+bench(
+  "beta-code → greek",
+  { group: "convert" },
+  () => convert(BETA, "beta-code", "greek"),
+);
+bench(
+  "transliteration → greek",
+  { group: "convert" },
+  () => convert(LATIN, "transliteration", "greek"),
+);
+bench(
+  "greek → transliteration, detailed",
+  { group: "detailed" },
+  () => convertDetailed(GREEK, "greek", "transliteration"),
+);
+bench("greek → beta-code, bound tlg-core converter", {
   group: "converter",
-}, () => {
-  tlg.convert(GREEK, "greek", "beta-code");
-});
+}, () => tlg.convert(GREEK, "greek", "beta-code"));

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { convert, convertDetailed, createConverter } from "../npm/esm/mod.js";
-import { encode, parse, validateDocument } from "../npm/esm/document.js";
-import { checkPositionsUnicode } from "./positions_unicode_check.mjs";
+import * as main from "../npm/esm/mod.js";
+import * as document from "../npm/esm/document.js";
+import { runSmokeChecks } from "./smoke_checks.mjs";
 
 const packageJson = JSON.parse(
   await readFile(new URL("../npm/package.json", import.meta.url), "utf8"),
@@ -10,31 +10,6 @@ const packageJson = JSON.parse(
 assert.equal(packageJson.name, "@humanities/greek-conversion");
 assert.equal(packageJson.license, "MIT");
 
-assert.equal(convert("a)/nqrwpos", "beta-code", "greek"), "ἄνθρωπος");
-assert.equal(
-  convert("Βίος Μπάλα", "greek", "transliteration", {
-    preset: "ala-lc-modern",
-  }),
-  "Vios Bala",
-);
-
-const detailed = convertDetailed("ἄνθρωπος", "greek", "greek", {
-  greek: { accentuation: "monotonic" },
-});
-assert.equal(detailed.lossy, true);
-
-const restricted = createConverter({ exclude: ["stigma"] });
-assert.equal(
-  restricted.convert("αϛβ", "greek", "transliteration"),
-  "aϛb",
-);
-
-const document = parse("a)/nqrwpos", "beta-code");
-assert.deepEqual(validateDocument(document), []);
-assert.equal(encode(document, "greek"), "ἄνθρωπος");
-
-// Positions under this runtime's Unicode version, which the Deno tests do not
-// see.
-assert.deepEqual(checkPositionsUnicode(convertDetailed), []);
+runSmokeChecks(main, document);
 
 console.log("npm ESM smoke test passed");

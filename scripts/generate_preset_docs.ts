@@ -1,3 +1,4 @@
+import { readFile, writeFile } from "node:fs/promises";
 import {
   getPresetOptions,
   listPresetMetadata,
@@ -8,19 +9,19 @@ const START = "<!-- BEGIN GENERATED PRESET REFERENCE -->";
 const END = "<!-- END GENERATED PRESET REFERENCE -->";
 const DOCUMENT = new URL("../docs/presets.md", import.meta.url);
 
-const source = await Deno.readTextFile(DOCUMENT);
+const source = await readFile(DOCUMENT, "utf8");
 const generated = renderPresetReference(listPresetMetadata());
 const expected = replaceGeneratedSection(source, generated);
 
-if (Deno.args.includes("--check")) {
+if (process.argv.includes("--check")) {
   if (source !== expected) {
     console.error(
-      "docs/presets.md is out of date; run `deno task docs:presets`.",
+      "docs/presets.md is out of date; run `npm run docs:presets`.",
     );
-    Deno.exit(1);
+    process.exit(1);
   }
 } else {
-  await Deno.writeTextFile(DOCUMENT, expected);
+  await writeFile(DOCUMENT, expected);
 }
 
 function replaceGeneratedSection(source: string, generated: string): string {
