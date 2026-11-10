@@ -18,6 +18,48 @@ The package is ESM-only.
 
 ## Updating from `1.0.0-rc.6`
 
+The API does not change. Some output and some readings do: text that rc.6
+wrote and stored may convert differently, and a few conversions that were
+reported lossless now report a loss, or the reverse. The
+[changelog](CHANGELOG.md) gives every case with its before and after.
+
+### Transliteration output
+
+- The `h` of a rough breathing on the second vowel of a diphthong goes before
+  the whole diphthong inside a word too: `χοἱ` gives `chhoi` (rc.6: `chohi`).
+  After `t`, `p`, or `r`, it now forms `th`, `ph`, or `rh`, a reported loss:
+  `τοὑ` gives `thou`, which reads back as `θου` (rc.6: `tohu`, lossless).
+- Under `iso-843-type-2`, Ionic `ωυ` is written like `ου`: `ἑωυτοῦ` gives
+  `heoutoû` (rc.6: `heoytoû`).
+- Where a hiatus is marked by an accent that the options remove, the diaeresis
+  that `y` already implies is written: `Θύιλλος` gives `Thyïllos` under
+  `sbl-general` (rc.6: `Thyillos`). Such a diaeresis now precedes the accent
+  (`ÿ́`, rc.6: `ý̈`).
+
+Transliteration that rc.6 wrote still reads back as it did, except as below.
+
+### Reading transliteration
+
+- An `h` inside a word before two vowels that can form a diphthong gives the
+  breathing to the diphthong, as at the start of a word: `chhoi` reads as
+  `χοἱ` (rc.6: `χὁι`), and `mhaidēs` as `μαἱδης` (rc.6: `μἁιδης`).
+- A reader no longer accepts a spelling of another convention that its own
+  output uses with another meaning. Under `phi: "f"`, as in both ISO 843
+  presets, `ph` is pi followed by a rough breathing: `philosophía` reads as
+  `πἱλοσοπἵα` (rc.6: `φιλοσοφία`). Under `chi: "kh"` with `lunateSigma: "c"`,
+  `ch` is a lunate sigma and a rough breathing; under `chi: "kh"` with a
+  `nasalGamma` value ending in `-kappa`, `gkh` before a vowel is gamma, kappa,
+  and a rough breathing. Text that mixes conventions should be rewritten in the
+  convention of its options before it is read.
+
+### Losses
+
+`convertDetailed()` locates each loss at the token that lost something, and
+some codes are more precise: under the ISO 843 presets, `ἄλφα` reports a
+removed smooth breathing (`removed-diacritic`) where rc.6 reported an
+unrepresented `ἄ`. Code that reads `losses` by position or by code may see
+different values for the same input.
+
 ### Beta Code parentheses
 
 Beta Code writes and reads parentheses with the TLG codes `[1` and `]1`:
@@ -25,7 +67,10 @@ Beta Code writes and reads parentheses with the TLG codes `[1` and `]1`:
 `(` and `)`, which Beta Code reads as breathings after a letter, so such text
 does not read back as it was written. In Beta Code that these releases wrote, a
 `(` or `)` that stands for a parenthesis cannot be told apart from a breathing
-by the text alone; convert the Greek again where it is available.
+by the text alone; convert the Greek again where it is available. As in the
+TLG, the number after a bracket is read whole, so a parenthesis or square
+bracket followed by a digit does not read back (`(1)` is written `[11]1`,
+which reads as `[11)`); the loss is reported.
 
 ## Updating from `1.0.0-rc.5`
 

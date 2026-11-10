@@ -121,3 +121,13 @@ Deno.test("writes and reads parentheses with the TLG bracket codes", () => {
     [[0, 2], [2, 3], [3, 5]],
   );
 });
+
+Deno.test("reads a bracket code after an asterisk, and reports a digit after a bracket", () => {
+  // As before any character that is not a letter, * is kept as text.
+  assertNfcEquals(convert("*[1a]1", "beta-code", "greek"), "*(α)");
+  // The number after a bracket is read whole, as in the TLG: [11 is another
+  // bracket, so a parenthesis before a digit does not read back.
+  assertNfcEquals(convert("(1)", "greek", "beta-code"), "[11]1");
+  assertNfcEquals(convert("[11]1", "beta-code", "greek"), "[11)");
+  assertEquals(convertDetailed("(1)", "greek", "beta-code").lossy, true);
+});

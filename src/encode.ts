@@ -304,6 +304,8 @@ export function encodeTransliteration(
     options,
     "transliteration",
   );
+  const smoothInPlace = preservesSmooth &&
+    options.transliteration?.smoothBreathing === "greek";
   // The written marks of a token depend only on its marks, on whether it is
   // epsilon or omicron, and on a separation diaeresis: memoized per call on
   // those three for shared sets, as byMarks() does.
@@ -367,10 +369,27 @@ export function encodeTransliteration(
   const readBack = options.transliteration?.longVowels === "omit"
     ? readBackBeforeBreathings(rendered, doc, options, vowelUpsilonVF)
     : rendered;
-  // The h of a rough breathing is written only when the breathing is kept.
-  const roughDiphthongs = preservesRough
-    ? roughDiphthongStarts(readBack)
-    : undefined;
+  // The rough diphthongs inside a word, found once and only when a vowel
+  // meets an iota or upsilon with a rough breathing: they are rare.
+  let roughDiphthongs: Uint8Array | undefined;
+  const findRoughDiphthongs = (): Uint8Array => {
+    // The diphthongs are those the output reads back as.
+    const starts = roughDiphthongStarts(
+      marksAsReadBack(readBack, doc, options, preservesSmooth, digraphs),
+    );
+    // A coronis written as an apostrophe after the first vowel splits the
+    // pair (splitByCoronis): the second vowel keeps its own `h`.
+    if (options.transliteration?.coronis === "apostrophe") {
+      for (let index = 0; index < starts.length; index++) {
+        const token = readBack[index];
+        if (
+          starts[index] === 1 && token.kind === "grapheme" &&
+          splitByCoronis(token, options)
+        ) starts[index] = 0;
+      }
+    }
+    return starts;
+  };
 
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
@@ -401,10 +420,17 @@ export function encodeTransliteration(
 
     const previous = doc[index - 1];
     const next = doc[index + 1];
-    const breathingStart = initialBreathingStart(readBack, index) ??
-      (roughDiphthongs && roughDiphthongStart(roughDiphthongs, index));
+    const initialStart = initialBreathingStart(readBack, index);
+    // The h of a rough breathing is written only when the breathing is kept.
+    const breathingStart = initialStart ??
+      (preservesRough && meetsRoughIotaOrUpsilon(rendered, index)
+        ? roughDiphthongStart(roughDiphthongs ??= findRoughDiphthongs(), index)
+        : undefined);
+    // The breathing of a rough diphthong inside a word is on its second vowel.
     const breathingIndex = breathingStart === undefined
       ? undefined
+      : initialStart === undefined
+      ? breathingStart + 1
       : breathingTarget(readBack, breathingStart);
     const breathingToken = breathingIndex === undefined
       ? undefined
@@ -455,9 +481,13 @@ export function encodeTransliteration(
       initialSmooth && index === breathingStart &&
       options.transliteration?.smoothBreathing === "apostrophe"
     ) base = "\u2019" + base;
+    // Whether an `h` stands right before this vowel, which then reads back
+    // with a rough breathing.
+    let hBefore = false;
     if (initialRough && index === breathingStart) {
       base = (groupUppercase ? "H" : "h") +
         (capitals ? base.toUpperCase() : base.toLowerCase());
+      hBefore = true;
     } else if (
       token.letter === "rho" &&
       options.transliteration?.rho === "systematic"
@@ -470,7 +500,11 @@ export function encodeTransliteration(
       if (token.letter === "rho") base += h;
       else if (token.uppercase) {
         base = "H" + (capitals ? base.toUpperCase() : base.toLowerCase());
-      } else base = "h" + base;
+        hBefore = true;
+      } else {
+        base = "h" + base;
+        hBefore = true;
+      }
     } else if (
       token.letter === "rho" &&
       previous?.kind === "grapheme" &&
@@ -478,8 +512,11 @@ export function encodeTransliteration(
     ) {
       base += h;
     }
+    // A diaeresis and a breathing never share a vowel: none is written where
+    // the vowel reads back with one (ὑἱός: `hyhiós`).
     const separation = writesSeparationDiaeresis(doc, index, options) &&
-      preservesDiaeresis;
+      preservesDiaeresis && !hBefore &&
+      !(smoothInPlace && token.diacritics.has("smooth"));
 
     return base +
       markString(
@@ -491,6 +528,12 @@ export function encodeTransliteration(
   });
   return (written === undefined ? pieces.join("") : joinPieces(pieces, written))
     .normalize("NFC");
+}
+
+/** Whether a sigma is written `c` (`lunateSigma: "c"`). */
+function rendersLunateC(token: Grapheme, options: ConversionOptions): boolean {
+  return token.glyphVariant === "lunate-sigma" &&
+    options.transliteration?.lunateSigma === "c";
 }
 
 function rendersLunateSigma(
@@ -632,14 +675,14 @@ function transliterationBase(
       }
       case "y-with-au-eu-ou":
         return isDiphthongAt(document, index - 1) &&
-            isAuEuOuAt(readBackPair(document, index - 1, options), 0)
+            readsBack(document, index - 1, options, isAuEuOuAt)
           ? "u"
           : "y";
       case "y-with-diphthong-u":
         return isDiphthongAt(document, index - 1) &&
-              isDiphthongAt(readBackPair(document, index - 1, options), 0) ||
+              readsBack(document, index - 1, options, isDiphthongAt) ||
             isDiphthongAt(document, index) &&
-              isDiphthongAt(readBackPair(document, index, options), 0)
+              readsBack(document, index, options, isDiphthongAt)
           ? "u"
           : "y";
       default:
@@ -756,15 +799,6 @@ function trMark(mark: Diacritic, options: ConversionOptions) {
 }
 
 /**
- * Whether a contextual `y` must carry a diaeresis to keep its separation.
- *
- * Under the contextual upsilon rules, `y` after a vowel already means "not a
- * diphthong". Greek marks that hiatus by a breathing on the first vowel; when
- * this orthography neither writes that breathing in place nor infers it on
- * reading, the separation would be reread as a diaeresis, so the diaeresis
- * is written at once and the output is idempotent.
- */
-/**
  * The letter a vowel reads back as. Under `longVowels: "omit"`, eta and omega
  * are written like epsilon (or iota, under `eta: "i"`) and omicron; with an
  * iota subscript they keep their letter, which only they can bear.
@@ -815,22 +849,120 @@ function readBackBeforeBreathings(
 }
 
 /**
- * The pair at `start` as it reads back: its first vowel as readBackLetter
- * gives it, and no pair at all when a coronis written as an apostrophe after
- * the first vowel stands between the two (splitByCoronis).
+ * Whether the letter at `index` is, or comes right before, an iota or upsilon
+ * with a rough breathing: only then can it belong to a rough diphthong inside
+ * a word. Called for every letter, so it compares letters before marks.
  */
-function readBackPair(
+function meetsRoughIotaOrUpsilon(document: Document, index: number): boolean {
+  const token = document[index] as Grapheme;
+  if (isRoughIotaOrUpsilon(token)) return true;
+  const next = document[index + 1];
+  return next !== undefined && next.kind === "grapheme" &&
+    isRoughIotaOrUpsilon(next);
+}
+
+function isRoughIotaOrUpsilon(token: Grapheme): boolean {
+  return (token.letter === "iota" || token.letter === "upsilon") &&
+    token.diacritics.has("rough");
+}
+
+/**
+ * `document` with the marks that tell a hiatus from a diphthong as the output
+ * reads them back, for the rough diphthongs inside a word:
+ * - a smooth breathing is not read back unless written in place
+ *   (`smoothBreathing: "greek"`);
+ * - nor a rough breathing whose `h` forms a digraph with the consonant before
+ *   it (`τἁ` → `tha`, read as θα).
+ * Copied only if one changes.
+ */
+function marksAsReadBack(
+  document: Document,
+  doc: Document,
+  options: ConversionOptions,
+  preservesSmooth: boolean,
+  digraphs: DigraphPolicy,
+): Document {
+  const smoothInPlace = preservesSmooth &&
+    options.transliteration?.smoothBreathing === "greek";
+  let copy: Token[] | undefined;
+  for (let index = 0; index < document.length; index++) {
+    const token = document[index];
+    if (token.kind !== "grapheme" || !isVowel(token.letter)) continue;
+    let diacritics = token.diacritics;
+    if (diacritics.has("smooth") && !smoothInPlace) {
+      diacritics = withoutDiacritic(diacritics, "smooth");
+    }
+    if (
+      diacritics.has("rough") && mergesWithH(doc, index - 1, options, digraphs)
+    ) diacritics = withoutDiacritic(diacritics, "rough");
+    if (diacritics === token.diacritics) continue;
+    copy ??= document.slice();
+    copy[index] = { ...token, diacritics };
+  }
+  return copy ?? document;
+}
+
+/**
+ * Whether the consonant at `index` and the `h` of a rough breathing after it
+ * read back as one letter: `th` (θ), `ph` (φ, except under `phi: "f"`), `rh`
+ * (ῥ), `kh` under `chi: "kh"` (χ, except after a gamma written `g`), and the
+ * lunate `c` under `lunateSigma: "c"` with the default `chi` (`ch`, χ).
+ */
+function mergesWithH(
+  doc: Document,
+  index: number,
+  options: ConversionOptions,
+  digraphs: DigraphPolicy,
+): boolean {
+  const token = doc[index];
+  if (token?.kind !== "grapheme") return false;
+  const transliteration = options.transliteration;
+  switch (token.letter) {
+    case "tau":
+    case "pi":
+      // A consonant written within one Latin letter (μπ as `b`, ντ as `d`)
+      // has no `t` or `p` of its own.
+      if (modernDigraphAt(doc, index - 1, digraphs) !== undefined) return false;
+      return token.letter === "tau" || transliteration?.phi !== "f";
+    case "rho":
+      return true;
+    case "kappa": {
+      if (transliteration?.chi !== "kh") return false;
+      const previous = doc[index - 1];
+      return !(previous?.kind === "grapheme" && previous.letter === "gamma" &&
+        (transliteration.nasalGamma === "nasal-except-kappa" ||
+          transliteration.nasalGamma === "nasal-medial-kappa"));
+    }
+    case "sigma":
+      return rendersLunateC(token, options) && transliteration?.chi !== "kh";
+    default:
+      return false;
+  }
+}
+
+/**
+ * Whether `test` holds for the pair at `start` as it reads back: its first
+ * vowel as readBackLetter gives it, and no pair at all when a coronis written
+ * as an apostrophe after the first vowel stands between the two
+ * (splitByCoronis). The pair is copied only when its letter reads back
+ * differently, which happens only when long vowels are omitted.
+ */
+function readsBack(
   document: Document,
   start: number,
   options: ConversionOptions,
-): Document {
+  test: (document: Document, start: number) => boolean,
+): boolean {
   const first = document[start];
   const second = document[start + 1];
   if (
     first?.kind !== "grapheme" || second === undefined ||
     splitByCoronis(first, options)
-  ) return [];
-  return [{ ...first, letter: readBackLetter(first, options) }, second];
+  ) return false;
+  const letter = readBackLetter(first, options);
+  return letter === first.letter
+    ? test(document, start)
+    : test([{ ...first, letter }, second], 0);
 }
 
 /**
@@ -865,7 +997,7 @@ function separatesIotaAfterY(
   // An upsilon that ends a diphthong is written u.
   if (
     isDiphthongAt(document, index - 2) &&
-    isDiphthongAt(readBackPair(document, index - 2, options), 0)
+    readsBack(document, index - 2, options, isDiphthongAt)
   ) return false;
   const written = (mark: Diacritic) =>
     first.diacritics.has(mark) &&
@@ -877,6 +1009,15 @@ function separatesIotaAfterY(
     written("smooth"));
 }
 
+/**
+ * Whether a contextual `y` must carry a diaeresis to keep its separation.
+ *
+ * Under the contextual upsilon rules, `y` after a vowel already means "not a
+ * diphthong". Greek marks that hiatus by a breathing on the first vowel; when
+ * this orthography neither writes that breathing in place nor infers it on
+ * reading, the separation would be reread as a diaeresis, so the diaeresis
+ * is written at once and the output is idempotent.
+ */
 function writesSeparationDiaeresis(
   document: Document,
   index: number,
@@ -891,9 +1032,11 @@ function writesSeparationDiaeresis(
   }
   const token = document[index];
   const first = document[index - 1];
+  // The letter first: it is cheaper than the marks, and rarely iota or upsilon.
   if (
-    token?.kind !== "grapheme" || first?.kind !== "grapheme" ||
-    !hasHiatusMark(first)
+    token?.kind !== "grapheme" ||
+    token.letter !== "iota" && token.letter !== "upsilon" ||
+    first?.kind !== "grapheme" || !hasHiatusMark(first)
   ) return false;
   if (token.letter === "iota") {
     return upsilon === "y-with-diphthong-u" &&
