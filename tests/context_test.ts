@@ -186,8 +186,47 @@ Deno.test("marks on the first vowel of a pair signal hiatus and are kept", () =>
 
 Deno.test("does not infer breathings on internal vowel groups", () => {
   assertNfcEquals(convert("kau", "transliteration", "greek"), "καυ");
-  assertNfcEquals(convert("καὑ", "greek", "transliteration"), "kahu");
-  assertNfcEquals(convert("kahu", "transliteration", "greek"), "καὑ");
+});
+
+Deno.test("writes an internal rough breathing before its diphthong", () => {
+  // "The h precedes the romanized vowel or diphthong" (ALA-LC), inside a
+  // word as at its start: χοἱ like οἱ (issue #44).
+  for (
+    const [greek, latin] of [
+      ["χοὗτος", "chhoũtos"],
+      ["χοἱ", "chhoi"],
+      ["Χοἱ", "Chhoi"],
+      ["ΧΟἹ", "CHHOI"],
+      ["καὑ", "khau"],
+    ]
+  ) {
+    assertNfcEquals(convert(greek, "greek", "transliteration"), latin);
+    assertNfcEquals(convert(latin, "transliteration", "greek"), greek);
+  }
+  for (const preset of ["ala-lc-ancient", "ala-lc-modern"] as const) {
+    assertNfcEquals(
+      convert("χοὗτος", "greek", "transliteration", { preset }),
+      "chhoutos",
+    );
+    // Not a hiatus χὁυ, which would give chhoytos.
+    assertNfcEquals(
+      convert("chhoutos", "transliteration", "greek", { preset }),
+      "χοὑτος",
+    );
+  }
+  // A marked hiatus is not a diphthong: the h stays before the second vowel.
+  assertNfcEquals(convert("χάἱ", "greek", "transliteration"), "cháhi");
+  assertNfcEquals(convert("cháhi", "transliteration", "greek"), "χάἱ");
+  // An h before an unmarked pair goes to the diphthong, as ἁι → hai → αἱ at
+  // the start of a word; an accent on the first vowel keeps the hiatus.
+  const unmarked = convertDetailed("μἁιδης", "greek", "transliteration");
+  assertNfcEquals(unmarked.output, "mhaidēs");
+  assertEquals(unmarked.losses.map((loss) => loss.code), [
+    "displaced-diacritic",
+  ]);
+  assertNfcEquals(convert("mhaidēs", "transliteration", "greek"), "μαἱδης");
+  assertNfcEquals(convert("μἅιδης", "greek", "transliteration"), "mháidēs");
+  assertNfcEquals(convert("mháidēs", "transliteration", "greek"), "μἅιδης");
 });
 
 Deno.test("iota subscript prevents grouping with a following vowel", () => {

@@ -22,6 +22,8 @@ import {
   isWordFinal,
   isWordInitial,
   precedesVoicedSound,
+  roughDiphthongStart,
+  roughDiphthongStarts,
 } from "./context.ts";
 import {
   infersSmoothBreathing,
@@ -330,6 +332,11 @@ export function encodeTransliteration(
     return transliteratedMarks + coronis;
   };
 
+  // The h of a rough breathing is written only when the breathing is kept.
+  const roughDiphthongs = preservesRough
+    ? roughDiphthongStarts(rendered)
+    : undefined;
+
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
       if (options.transliteration?.keraia === "bnf") {
@@ -359,7 +366,8 @@ export function encodeTransliteration(
 
     const previous = doc[index - 1];
     const next = doc[index + 1];
-    const breathingStart = initialBreathingStart(rendered, index);
+    const breathingStart = initialBreathingStart(rendered, index) ??
+      (roughDiphthongs && roughDiphthongStart(roughDiphthongs, index));
     const breathingIndex = breathingStart === undefined
       ? undefined
       : breathingTarget(rendered, breathingStart);
