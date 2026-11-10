@@ -1,11 +1,12 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals } from "./assertions.ts";
 import { convert } from "../src/mod.ts";
 import { applyGreekOrthography, parse } from "../src/document.ts";
 
 const POLYTONIC = { greek: { accentuation: "polytonic" } } as const;
 const MONOTONIC = { greek: { accentuation: "monotonic" } } as const;
 
-Deno.test("uses the accentuation system to select tonos or oxia", () => {
+test("uses the accentuation system to select tonos or oxia", () => {
   // Polysyllables, because monotonic monosyllables carry no accent.
   assertEquals(convert("άβα ΐβα", "greek", "greek", POLYTONIC), "άβα ΐβα");
   assertEquals(convert("άβα ΐβα", "greek", "greek", MONOTONIC), "άβα ΐβα");
@@ -26,7 +27,7 @@ Deno.test("uses the accentuation system to select tonos or oxia", () => {
   );
 });
 
-Deno.test("keeps polytonic combinations without a tonos alternative", () => {
+test("keeps polytonic combinations without a tonos alternative", () => {
   assertEquals(
     convert("ἄ ᾴ", "greek", "greek", {
       greek: { acute: "tonos" },
@@ -35,7 +36,7 @@ Deno.test("keeps polytonic combinations without a tonos alternative", () => {
   );
 });
 
-Deno.test("converts polytonic marks to the mechanical monotonic profile", () => {
+test("converts polytonic marks to the mechanical monotonic profile", () => {
   const source = "Ἄνθρωπὸς ᾆ ῑ ἄϋλος κἀγώ πολύῤῥιζος";
 
   assertEquals(
@@ -44,7 +45,7 @@ Deno.test("converts polytonic marks to the mechanical monotonic profile", () => 
   );
 });
 
-Deno.test("applies Greek accentuation only to Greek output", () => {
+test("applies Greek accentuation only to Greek output", () => {
   const source = "ἄ ᾆ ῑ";
 
   assertEquals(
@@ -57,7 +58,7 @@ Deno.test("applies Greek accentuation only to Greek output", () => {
   );
 });
 
-Deno.test("monotonic monosyllables carry no accent except ή, πού, and πώς", () => {
+test("monotonic monosyllables carry no accent except ή, πού, and πώς", () => {
   assertEquals(
     convert(
       "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων, ὡς δὲ εἰπεῖν",
@@ -94,14 +95,14 @@ Deno.test("monotonic monosyllables carry no accent except ή, πού, and πώς
   assertEquals(convert("αʹ ιβʹ", "greek", "greek", MONOTONIC), "αʹ ιβʹ");
 });
 
-Deno.test("monotonic rendering does not create blocked contractions", () => {
+test("monotonic rendering does not create blocked contractions", () => {
   assertEquals(
     convert("βσ̓ κσ̓", "greek", "greek", MONOTONIC),
     "βς κς",
   );
 });
 
-Deno.test("decomposed output uses combining acute regardless of its form", () => {
+test("decomposed output uses combining acute regardless of its form", () => {
   const tonos = convert("ά ΐ ἄ", "greek", "greek", {
     greek: { composition: "decomposed", acute: "tonos" },
   });
@@ -114,7 +115,7 @@ Deno.test("decomposed output uses combining acute regardless of its form", () =>
   assertEquals(tonos, tonos.normalize("NFD"));
 });
 
-Deno.test("forces canonically unstable Greek punctuation on demand", () => {
+test("forces canonically unstable Greek punctuation on demand", () => {
   const formatted = convert("\u03AC;\u00B7", "greek", "greek", {
     greek: { acute: "oxia", questionMark: "greek", anoTeleia: "greek" },
   });
@@ -123,7 +124,7 @@ Deno.test("forces canonically unstable Greek punctuation on demand", () => {
   assertEquals(formatted === formatted.normalize("NFC"), false);
 });
 
-Deno.test("the Unicode preferences keep the canonical scalars on demand", () => {
+test("the Unicode preferences keep the canonical scalars on demand", () => {
   assertEquals(
     convert("\u03AC;\u00B7", "greek", "greek", {
       greek: {
@@ -136,7 +137,7 @@ Deno.test("the Unicode preferences keep the canonical scalars on demand", () => 
   );
 });
 
-Deno.test("Greek orthography is immutable", () => {
+test("Greek orthography is immutable", () => {
   const source = parse("ἄρα", "greek");
   const transformed = applyGreekOrthography(source, MONOTONIC);
 

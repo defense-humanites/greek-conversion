@@ -1,10 +1,11 @@
-import { convert } from "../src/mod.ts";
+import { test } from "node:test";
 import { assertNfcEquals } from "./assertions.ts";
+import { convert } from "../src/mod.ts";
 import { LOSSY_CONVERSIONS } from "./fixtures.ts";
 
-Deno.test("lossy conversions return their documented canonical form", async (t) => {
+test("lossy conversions return their documented canonical form", async (t) => {
   for (const conversion of LOSSY_CONVERSIONS) {
-    await t.step(conversion.name, () => {
+    await t.test(conversion.name, () => {
       const intermediate = convert(
         conversion.source,
         conversion.sourceFormat,

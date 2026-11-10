@@ -1,4 +1,5 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals, assertThrows } from "./assertions.ts";
 import {
   CONVERSION_OPTION_VALUES,
   convert,
@@ -11,7 +12,7 @@ import {
 } from "../src/mod.ts";
 import { encode, parse } from "../src/document.ts";
 
-Deno.test("rejects an unknown format with a RangeError", () => {
+test("rejects an unknown format with a RangeError", () => {
   const unknown = "latin" as never;
   for (
     const run of [
@@ -30,7 +31,7 @@ Deno.test("rejects an unknown format with a RangeError", () => {
   assertEquals([...FORMATS], ["greek", "beta-code", "transliteration"]);
 });
 
-Deno.test("rejects non-string input with a TypeError", () => {
+test("rejects non-string input with a TypeError", () => {
   for (
     const [input, received] of [
       [null, "null"],
@@ -55,7 +56,7 @@ Deno.test("rejects non-string input with a TypeError", () => {
   );
 });
 
-Deno.test("rejects unknown option keys instead of ignoring them", () => {
+test("rejects unknown option keys instead of ignoring them", () => {
   assertEquals(
     assertThrows(
       () => resolveConversionOptions({ foo: true } as never),
@@ -75,7 +76,7 @@ Deno.test("rejects unknown option keys instead of ignoring them", () => {
   );
 });
 
-Deno.test("option errors are OptionErrors that locate the option", () => {
+test("option errors are OptionErrors that locate the option", () => {
   const unknownKey = assertThrows(
     () => resolveConversionOptions({ text: { foo: "bar" } } as never),
     OptionError,
@@ -119,7 +120,7 @@ Deno.test("option errors are OptionErrors that locate the option", () => {
   assertEquals(Object.isFrozen(incompatible.accepted), true);
 });
 
-Deno.test("an OptionError has a replacement only when there is one", () => {
+test("an OptionError has a replacement only when there is one", () => {
   // docs/stability.md: `replacement` is set only for keys and values that a
   // release candidate accepted, so `"replacement" in error` tells them apart.
   const unknown = assertThrows(
@@ -137,7 +138,7 @@ Deno.test("an OptionError has a replacement only when there is one", () => {
   assertEquals(moved.replacement, "transliteration.eta");
 });
 
-Deno.test("names the current path of the options of 1.0.0-rc.5", () => {
+test("names the current path of the options of 1.0.0-rc.5", () => {
   // `path` is the key `replacement` replaces: for an old group, its first key.
   const cases: [Record<string, unknown>, string, string][] = [
     [{ orthography: { eta: "i" } }, "orthography.eta", "transliteration.eta"],
@@ -221,7 +222,7 @@ Deno.test("names the current path of the options of 1.0.0-rc.5", () => {
   );
 });
 
-Deno.test("rejects a circumflex for both length and accent", () => {
+test("rejects a circumflex for both length and accent", () => {
   // ῆ would be written ê̂ and read back as η without its accent.
   const both = {
     transliteration: {
@@ -283,7 +284,7 @@ Deno.test("rejects a circumflex for both length and accent", () => {
   });
 });
 
-Deno.test("rejects invalid option values instead of applying defaults", () => {
+test("rejects invalid option values instead of applying defaults", () => {
   assertEquals(
     assertThrows(
       () =>
@@ -322,7 +323,7 @@ Deno.test("rejects invalid option values instead of applying defaults", () => {
   );
 });
 
-Deno.test("rejects options of the wrong type with a TypeError", () => {
+test("rejects options of the wrong type with a TypeError", () => {
   assertThrows(() => resolveConversionOptions([] as never), TypeError);
   assertThrows(() => resolveConversionOptions(null as never), TypeError);
   assertThrows(
@@ -335,7 +336,7 @@ Deno.test("rejects options of the wrong type with a TypeError", () => {
   );
 });
 
-Deno.test("treats an undefined option field as absent", () => {
+test("treats an undefined option field as absent", () => {
   assertEquals(
     resolveConversionOptions({
       transliteration: { eta: undefined },
@@ -346,7 +347,7 @@ Deno.test("treats an undefined option field as absent", () => {
   );
 });
 
-Deno.test("the option value table matches the defaults", () => {
+test("the option value table matches the defaults", () => {
   for (
     const group of [
       "transliteration",

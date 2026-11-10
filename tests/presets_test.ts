@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import {
   convert,
   convertDetailed,
@@ -9,9 +10,8 @@ import {
   resolveConversionOptions,
 } from "../src/mod.ts";
 import { parse } from "../src/document.ts";
-import { assertNfcEquals } from "./assertions.ts";
 
-Deno.test("exposes descriptive metadata for every preset", () => {
+test("exposes descriptive metadata for every preset", () => {
   assertEquals(listPresetMetadata().map(({ id }) => id), [
     "ala-lc-ancient",
     "ala-lc-modern",
@@ -77,7 +77,7 @@ Deno.test("exposes descriptive metadata for every preset", () => {
   });
 });
 
-Deno.test("returns detached preset metadata", () => {
+test("returns detached preset metadata", () => {
   const first = getPresetMetadata("tlg-core");
   const second = getPresetMetadata("tlg-core");
 
@@ -93,7 +93,7 @@ Deno.test("returns detached preset metadata", () => {
   assertEquals(second.limitations.length, 1);
 });
 
-Deno.test("resolves custom options after nested preset options", () => {
+test("resolves custom options after nested preset options", () => {
   const resolved = resolveConversionOptions({
     preset: "ala-lc-modern",
     diacritics: { accents: "preserve" },
@@ -128,7 +128,7 @@ Deno.test("resolves custom options after nested preset options", () => {
   });
 });
 
-Deno.test("publishes immutable effective defaults", () => {
+test("publishes immutable effective defaults", () => {
   const longVowels: "macron" =
     DEFAULT_CONVERSION_OPTIONS.transliteration.longVowels;
 
@@ -148,7 +148,7 @@ Deno.test("publishes immutable effective defaults", () => {
   }
 });
 
-Deno.test("returns detached preset option objects", () => {
+test("returns detached preset option objects", () => {
   const first = getPresetOptions("ala-lc-modern");
   const second = getPresetOptions("ala-lc-modern");
 
@@ -156,7 +156,7 @@ Deno.test("returns detached preset option objects", () => {
   assertEquals(second.transliteration!.beta, "v");
 });
 
-Deno.test("rejects unknown preset names at runtime", () => {
+test("rejects unknown preset names at runtime", () => {
   let error: unknown;
   try {
     resolveConversionOptions({ preset: "unknown" as never });
@@ -176,7 +176,7 @@ Deno.test("rejects unknown preset names at runtime", () => {
   assertEquals(error instanceof RangeError, true);
 });
 
-Deno.test("applies ISO 843 Type 1 spellings", () => {
+test("applies ISO 843 Type 1 spellings", () => {
   assertNfcEquals(
     convert("βήτα ἄγγελος φύσις κἀγώ", "greek", "transliteration", {
       preset: "iso-843-type-1",
@@ -185,7 +185,7 @@ Deno.test("applies ISO 843 Type 1 spellings", () => {
   );
 });
 
-Deno.test("ISO and BnF restrict upsilon-u to au, eu, and ou", () => {
+test("ISO and BnF restrict upsilon-u to au, eu, and ou", () => {
   const greek = "υ αυ ευ ου ηυ υι ωυ αϋ άυ";
   assertNfcEquals(
     convert(greek, "greek", "transliteration", {
@@ -209,7 +209,7 @@ Deno.test("ISO and BnF restrict upsilon-u to au, eu, and ou", () => {
   }
 });
 
-Deno.test("BnF renders keraiai only in transliteration and reports their loss", () => {
+test("BnF renders keraiai only in transliteration and reports their loss", () => {
   const greek = "βʹ ͵αʹ, βʹ";
   const options = { preset: "bnf-core" } as const;
   const result = convertDetailed(greek, "greek", "transliteration", options);
@@ -256,7 +256,7 @@ Deno.test("BnF renders keraiai only in transliteration and reports their loss", 
   );
 });
 
-Deno.test("BnF distinguishes structural length from explicit quantity marks", () => {
+test("BnF distinguishes structural length from explicit quantity marks", () => {
   const options = { preset: "bnf-core" } as const;
 
   assertNfcEquals(
@@ -294,7 +294,7 @@ Deno.test("BnF distinguishes structural length from explicit quantity marks", ()
   );
 });
 
-Deno.test("ISO Type 1 uses apostrophe and distinct punctuation for cited marks", () => {
+test("ISO Type 1 uses apostrophe and distinct punctuation for cited marks", () => {
   const options = { preset: "iso-843-type-1" } as const;
 
   assertNfcEquals(
@@ -310,7 +310,7 @@ Deno.test("ISO Type 1 uses apostrophe and distinct punctuation for cited marks",
   assertEquals(convert(";·", "greek", "transliteration", options), "?;");
 });
 
-Deno.test("applies ancient ALA-LC policies without inferring breathings", () => {
+test("applies ancient ALA-LC policies without inferring breathings", () => {
   assertNfcEquals(
     convert(
       "Ἡσίοδου ἄϋλος υἱός κἀγώ βʹ",
@@ -322,7 +322,7 @@ Deno.test("applies ancient ALA-LC policies without inferring breathings", () => 
   );
 });
 
-Deno.test("contextual y retains an omitted diaeresis semantically", () => {
+test("contextual y retains an omitted diaeresis semantically", () => {
   const options = { preset: "ala-lc-ancient" } as const;
   const once = convert("ἄϋλος", "greek", "transliteration", options);
 
@@ -338,7 +338,7 @@ Deno.test("contextual y retains an omitted diaeresis semantically", () => {
   }
 });
 
-Deno.test("applies modern ALA-LC contextual spellings", () => {
+test("applies modern ALA-LC contextual spellings", () => {
   assertNfcEquals(
     convert(
       "Βίος Μπάλα ΝΤΟ αγκά αγκ βʹ",
@@ -350,7 +350,7 @@ Deno.test("applies modern ALA-LC contextual spellings", () => {
   );
 });
 
-Deno.test("distinguishes academic and general SBL diacritics", () => {
+test("distinguishes academic and general SBL diacritics", () => {
   assertNfcEquals(
     convert("ἄϋλος υἱός", "greek", "transliteration", {
       preset: "sbl-academic",
@@ -365,7 +365,7 @@ Deno.test("distinguishes academic and general SBL diacritics", () => {
   );
 });
 
-Deno.test("core presets remain conservative and mixable", () => {
+test("core presets remain conservative and mixable", () => {
   assertNfcEquals(
     convert("ϲοϲ", "greek", "beta-code", { preset: "tlg-core" }),
     "SOS",
@@ -401,14 +401,14 @@ Deno.test("core presets remain conservative and mixable", () => {
   );
 });
 
-Deno.test("Perseus emits lowercase Beta Code", () => {
+test("Perseus emits lowercase Beta Code", () => {
   assertNfcEquals(
     convert("Ἄνθρωπος", "greek", "beta-code", { preset: "perseus" }),
     "*)/anqrwpos",
   );
 });
 
-Deno.test("convertDetailed reports losses introduced by presets", () => {
+test("convertDetailed reports losses introduced by presets", () => {
   const result = convertDetailed(
     "ἄνθρωπος",
     "greek",
@@ -437,7 +437,7 @@ Deno.test("convertDetailed reports losses introduced by presets", () => {
   ]);
 });
 
-Deno.test("the default transliteration is the SBL academic style", () => {
+test("the default transliteration is the SBL academic style", () => {
   const texts = [
     "Θουκυδίδης Ἀθηναῖος ξυνέγραψε τὸν πόλεμον τῶν Πελοποννησίων καὶ Ἀθηναίων",
     "ψυχή ῥήτωρ αὐτός Ἅιδης ὑΐδιον εὕρηκα οὗτος ἄϋλος Μοῦσα",

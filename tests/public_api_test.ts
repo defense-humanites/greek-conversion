@@ -1,8 +1,9 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals } from "./assertions.ts";
 import * as documentApi from "../src/document.ts";
 import * as mainApi from "../src/mod.ts";
 
-Deno.test("the main runtime API stays deliberately small", () => {
+test("the main runtime API stays deliberately small", () => {
   assertEquals(Object.keys(mainApi).sort(), [
     "CONVERSION_OPTION_VALUES",
     "CharacterScopeError",
@@ -20,7 +21,7 @@ Deno.test("the main runtime API stays deliberately small", () => {
   ]);
 });
 
-Deno.test("canonical-document runtime helpers stay in the advanced entry point", () => {
+test("canonical-document runtime helpers stay in the advanced entry point", () => {
   assertEquals(Object.keys(documentApi).sort(), [
     "applyGreekOrthography",
     "encode",

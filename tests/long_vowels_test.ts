@@ -1,14 +1,14 @@
+import { test } from "node:test";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import { convert, convertDetailed } from "../src/mod.ts";
 import { encode } from "../src/document.ts";
 import { grapheme } from "../src/model.ts";
-import { assertEquals } from "@std/assert";
-import { assertNfcEquals } from "./assertions.ts";
 
 const CIRCUMFLEX = {
   transliteration: { longVowels: "circumflex" },
 } as const;
 
-Deno.test("selects the transliterated spelling of structural long vowels", () => {
+test("selects the transliterated spelling of structural long vowels", () => {
   const greek = "βη βω βᾱ βῑ βῡ";
 
   assertNfcEquals(
@@ -21,7 +21,7 @@ Deno.test("selects the transliterated spelling of structural long vowels", () =>
   );
 });
 
-Deno.test("accepts every structural long-vowel spelling on input", () => {
+test("accepts every structural long-vowel spelling on input", () => {
   assertNfcEquals(
     convert(
       "be bê bē bê̄ bo bô bō bô̄",
@@ -44,7 +44,7 @@ Deno.test("accepts every structural long-vowel spelling on input", () => {
   );
 });
 
-Deno.test("applies the structural marker policy to stigma and sampi", () => {
+test("applies the structural marker policy to stigma and sampi", () => {
   const greek = "ϛ ϡ ϛʹ ϡʹ";
 
   assertNfcEquals(
@@ -63,7 +63,7 @@ Deno.test("applies the structural marker policy to stigma and sampi", () => {
   }
 });
 
-Deno.test("keeps structural length distinct from Greek circumflex accent", () => {
+test("keeps structural length distinct from Greek circumflex accent", () => {
   const greek = "βῆ βῶ βᾶ βᾱ";
 
   assertNfcEquals(
@@ -93,7 +93,7 @@ Deno.test("keeps structural length distinct from Greek circumflex accent", () =>
   );
 });
 
-Deno.test("writes quantity before other marks in transliteration", () => {
+test("writes quantity before other marks in transliteration", () => {
   const cases = [
     ["ᾱ́", "a\u0304\u0301"],
     ["ᾱ̀", "a\u0304\u0300"],
@@ -121,7 +121,7 @@ Deno.test("writes quantity before other marks in transliteration", () => {
   assertEquals(convert(once, "transliteration", "transliteration", iso), once);
 });
 
-Deno.test("writes quantity before other marks in Greek", () => {
+test("writes quantity before other marks in Greek", () => {
   // The macron or breve sits on the vowel, the breathing and accent above
   // it: NFC keeps the precomposed long vowel and adds the other marks.
   const cases = [
@@ -143,7 +143,7 @@ Deno.test("writes quantity before other marks in Greek", () => {
   assertEquals(convert("a)/%26", "beta-code", "greek"), "\u1FB1\u0313\u0301");
 });
 
-Deno.test("omits a quantity mark on epsilon and omicron in transliteration", () => {
+test("omits a quantity mark on epsilon and omicron in transliteration", () => {
   const result = convertDetailed("ἔ̄ ὄ̄", "greek", "transliteration");
   assertNfcEquals(result.output, "é ó");
   assertEquals(

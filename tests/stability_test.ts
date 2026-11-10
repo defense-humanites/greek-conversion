@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals } from "./assertions.ts";
 import { type ConversionOptions, convert, type Format } from "../src/mod.ts";
 import { EQUIVALENCES, FORMATS, valueFor } from "./fixtures.ts";
 
@@ -183,7 +184,7 @@ function assertStable(
   );
 }
 
-Deno.test("canonical outputs are idempotent for every format pair", () => {
+test("canonical outputs are idempotent for every format pair", () => {
   for (const equivalence of EQUIVALENCES) {
     for (const from of FORMATS) {
       for (const to of FORMATS) {
@@ -196,7 +197,7 @@ Deno.test("canonical outputs are idempotent for every format pair", () => {
   }
 });
 
-Deno.test("pathological Unicode remains stable under self-conversion", () => {
+test("pathological Unicode remains stable under self-conversion", () => {
   const cases = [
     {
       format: "greek",
@@ -219,7 +220,7 @@ Deno.test("pathological Unicode remains stable under self-conversion", () => {
   }
 });
 
-Deno.test("context-changing diacritic policies are stable for every target", () => {
+test("context-changing diacritic policies are stable for every target", () => {
   const cases = [
     {
       source: "ἄϋλος",
@@ -244,7 +245,7 @@ Deno.test("context-changing diacritic policies are stable for every target", () 
   }
 });
 
-Deno.test("Greek coronis provenance is stable for every target", () => {
+test("Greek coronis provenance is stable for every target", () => {
   const profile = {
     name: "semantic Greek coronis transliteration",
     options: { transliteration: { coronis: "greek" } },

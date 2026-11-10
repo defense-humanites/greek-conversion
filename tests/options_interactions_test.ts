@@ -1,3 +1,5 @@
+import { test } from "node:test";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import {
   CONVERSION_OPTION_VALUES,
   type ConversionOptions,
@@ -5,10 +7,8 @@ import {
   convertDetailed,
   reencode,
 } from "../src/mod.ts";
-import { assertEquals } from "@std/assert";
-import { assertNfcEquals } from "./assertions.ts";
 
-Deno.test("classifies diphthongs before removing their diacritics", () => {
+test("classifies diphthongs before removing their diacritics", () => {
   const options = {
     diacritics: { all: "remove", roughBreathing: "preserve" },
     transliteration: { upsilon: "y-with-diphthong-u" },
@@ -20,7 +20,7 @@ Deno.test("classifies diphthongs before removing their diacritics", () => {
   );
 });
 
-Deno.test("classifies context before selective diacritic removal", () => {
+test("classifies context before selective diacritic removal", () => {
   const options = {
     diacritics: { diaeresis: "remove" },
     transliteration: { upsilon: "y-with-diphthong-u" },
@@ -32,7 +32,7 @@ Deno.test("classifies context before selective diacritic removal", () => {
   );
 });
 
-Deno.test("does not create contractions by removing blocking marks", () => {
+test("does not create contractions by removing blocking marks", () => {
   const options = {
     diacritics: { all: "remove" },
     greek: { dentalSigma: "assimilate" },
@@ -44,7 +44,7 @@ Deno.test("does not create contractions by removing blocking marks", () => {
   );
 });
 
-Deno.test("selective removal does not create blocked contractions", () => {
+test("selective removal does not create blocked contractions", () => {
   const options = {
     diacritics: { accents: "remove" },
     greek: { dentalSigma: "assimilate" },
@@ -56,7 +56,7 @@ Deno.test("selective removal does not create blocked contractions", () => {
   );
 });
 
-Deno.test("combines transliteration policies deterministically", () => {
+test("combines transliteration policies deterministically", () => {
   const options = {
     diacritics: { all: "remove", roughBreathing: "preserve" },
     transliteration: {
@@ -78,7 +78,7 @@ Deno.test("combines transliteration policies deterministically", () => {
   );
 });
 
-Deno.test("combines modern transliteration and whitespace policies", () => {
+test("combines modern transliteration and whitespace policies", () => {
   const options = {
     diacritics: { all: "remove", roughBreathing: "preserve" },
     transliteration: {
@@ -106,7 +106,7 @@ Deno.test("combines modern transliteration and whitespace policies", () => {
   );
 });
 
-Deno.test("numerals override interacting Greek glyph policies", () => {
+test("numerals override interacting Greek glyph policies", () => {
   const options = {
     diacritics: { all: "remove", roughBreathing: "preserve" },
     greek: { dentalSigma: "assimilate", medialBeta: "symbol", sigma: "lunate" },
@@ -119,7 +119,7 @@ Deno.test("numerals override interacting Greek glyph policies", () => {
   );
 });
 
-Deno.test("diacritic removal dominates optional double-rho marks", () => {
+test("diacritic removal dominates optional double-rho marks", () => {
   const options = {
     diacritics: { all: "remove" },
     greek: { doubleRho: "smooth-rough" },
@@ -147,7 +147,7 @@ Deno.test("diacritic removal dominates optional double-rho marks", () => {
   );
 });
 
-Deno.test("under phi: f, ph is pi followed by a rough breathing", () => {
+test("under phi: f, ph is pi followed by a rough breathing", () => {
   // ph is not an ISO 843 spelling of phi: π + ἡ is written phī, which must
   // read back as π + ἡ for the output to be idempotent.
   for (const preset of ["iso-843-type-1", "iso-843-type-2"] as const) {
@@ -161,7 +161,7 @@ Deno.test("under phi: f, ph is pi followed by a rough breathing", () => {
   assertNfcEquals(convert("fē", "transliteration", "greek", options), "φη");
 });
 
-Deno.test("under chi: kh and lunateSigma: c, ch is lunate sigma and a rough breathing", () => {
+test("under chi: kh and lunateSigma: c, ch is lunate sigma and a rough breathing", () => {
   const options = { transliteration: { chi: "kh", lunateSigma: "c" } } as const;
   for (const greek of ["ϲἡ", "ϲοἱ"]) {
     const latin = convert(greek, "greek", "transliteration", options);
@@ -179,7 +179,7 @@ Deno.test("under chi: kh and lunateSigma: c, ch is lunate sigma and a rough brea
   );
 });
 
-Deno.test("where gamma before chi is n, gkh is gamma, kappa, and a rough breathing", () => {
+test("where gamma before chi is n, gkh is gamma, kappa, and a rough breathing", () => {
   for (
     const nasalGamma of ["nasal-except-kappa", "nasal-medial-kappa"] as const
   ) {
@@ -215,7 +215,7 @@ const LETTER_OPTIONS = [
   "archaicKoppa",
 ] as const;
 
-Deno.test("letter spelling options keep consonants before a rough breathing idempotent, alone and in pairs", () => {
+test("letter spelling options keep consonants before a rough breathing idempotent, alone and in pairs", () => {
   // A consonant and the h of a rough breathing can spell another letter
   // (th, ph, kh, ch...): the merge is a reported loss, but the output must
   // read back as what it writes again.
@@ -278,7 +278,7 @@ Deno.test("letter spelling options keep consonants before a rough breathing idem
   assertEquals(failures, []);
 });
 
-Deno.test("writes vowel pairs as they read back, under the ISO and SBL presets", () => {
+test("writes vowel pairs as they read back, under the ISO and SBL presets", () => {
   const iso = { preset: "iso-843-type-2" } as const;
   // Omega is written o: Ionic ωυ is written like ου, not oy, which reads
   // back as the hiatus οϋ.
@@ -328,7 +328,7 @@ Deno.test("writes vowel pairs as they read back, under the ISO and SBL presets",
   );
 });
 
-Deno.test("vowel spelling options keep vowel pairs idempotent", () => {
+test("vowel spelling options keep vowel pairs idempotent", () => {
   // Every pair of a vowel and iota or upsilon, bare or with a breathing, an
   // accent, a coronis, or a diaeresis, alone and inside a word, under every
   // combination of the options that spell vowels and the policies that remove
@@ -411,7 +411,7 @@ Deno.test("vowel spelling options keep vowel pairs idempotent", () => {
   assertEquals(failures, []);
 });
 
-Deno.test("keeps each rough breathing where the output reads it back", () => {
+test("keeps each rough breathing where the output reads it back", () => {
   const t = (greek: string, options = {}) =>
     convert(greek, "greek", "transliteration", options);
   // Vowels pair from the left: after the diphthong αυ, ἱ keeps its own h.
@@ -431,7 +431,7 @@ Deno.test("keeps each rough breathing where the output reads it back", () => {
   assertNfcEquals(convert("hyhiós", "transliteration", "greek"), "ὑἱός");
 });
 
-Deno.test("vowel pairs stay idempotent next to breathings, diphthongs, and capitals", () => {
+test("vowel pairs stay idempotent next to breathings, diphthongs, and capitals", () => {
   // Pairs with a breathing on both vowels, after a diphthong, after a
   // consonant whose Latin letter forms a digraph with h, and in capitals.
   type Transliteration = NonNullable<ConversionOptions["transliteration"]>;

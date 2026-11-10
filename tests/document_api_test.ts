@@ -1,4 +1,5 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals, assertNfcEquals, assertThrows } from "./assertions.ts";
 import {
   applyGreekOrthography,
   type Diacritic,
@@ -7,9 +8,8 @@ import {
   parse,
   validateDocument,
 } from "../src/document.ts";
-import { assertNfcEquals } from "./assertions.ts";
 
-Deno.test("parsed and constructed graphemes share read-only diacritic sets", () => {
+test("parsed and constructed graphemes share read-only diacritic sets", () => {
   const first = parse("ἄ", "greek");
   const second = parse("ἄ", "greek");
   assertEquals(first === second, false);
@@ -45,7 +45,7 @@ Deno.test("parsed and constructed graphemes share read-only diacritic sets", () 
   assertEquals(token.diacritics === marks, false);
 });
 
-Deno.test("encoding and validation leave an edited document unchanged", () => {
+test("encoding and validation leave an edited document unchanged", () => {
   const original = parse("ἄνθρωπος", "greek");
   const edited = original.map((token) =>
     token.kind === "grapheme"
@@ -70,13 +70,13 @@ Deno.test("encoding and validation leave an edited document unchanged", () => {
   assertNfcEquals(encode(original, "greek"), "ἄνθρωπος");
 });
 
-Deno.test("document parsing and encoding share transliteration options", () => {
+test("document parsing and encoding share transliteration options", () => {
   const options = { preset: "bnf-core" } as const;
   const document = parse("Chará", "transliteration", options);
   assertNfcEquals(encode(document, "greek", options), "Χαρά");
 });
 
-Deno.test("the public Greek orthography helper resolves preset options", () => {
+test("the public Greek orthography helper resolves preset options", () => {
   const original = parse("αʹ", "greek");
   const transformed = applyGreekOrthography(original, {
     preset: "ala-lc-modern",
@@ -85,7 +85,7 @@ Deno.test("the public Greek orthography helper resolves preset options", () => {
   assertNfcEquals(encode(original, "greek"), "αʹ");
 });
 
-Deno.test("a Greek orthographic view does not replace the reusable source", () => {
+test("a Greek orthographic view does not replace the reusable source", () => {
   const source = parse("ἄρα", "greek");
   const monotonic = applyGreekOrthography(source, {
     greek: { accentuation: "monotonic" },
@@ -96,7 +96,7 @@ Deno.test("a Greek orthographic view does not replace the reusable source", () =
   assertNfcEquals(encode(source, "beta-code"), "a)/ra");
 });
 
-Deno.test("Greek orthographic views own all tokens", () => {
+test("Greek orthographic views own all tokens", () => {
   const source = parse("ἄβ!", "greek");
   const views = [
     applyGreekOrthography(source),
@@ -123,7 +123,7 @@ Deno.test("Greek orthographic views own all tokens", () => {
   }
 });
 
-Deno.test("preset Greek views remain valid across source formats", () => {
+test("preset Greek views remain valid across source formats", () => {
   const presets = [
     "ala-lc-ancient",
     "ala-lc-modern",

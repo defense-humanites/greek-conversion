@@ -1,4 +1,5 @@
-import { assert, assertEquals, assertThrows } from "@std/assert";
+import { test } from "node:test";
+import { assert, assertEquals, assertThrows } from "./assertions.ts";
 import {
   CharacterScopeError,
   CONVERSION_OPTION_VALUES,
@@ -44,7 +45,7 @@ function pieces(result: ReturnType<typeof detailed>): [string, string][] {
   ]);
 }
 
-Deno.test("spans give each token's input and output text", () => {
+test("spans give each token's input and output text", () => {
   assertEquals(pieces(detailed("ἄνθρωπος", "greek", "beta-code")), [
     ["ἄ", "a)/"],
     ["ν", "n"],
@@ -77,7 +78,7 @@ Deno.test("spans give each token's input and output text", () => {
   ]);
 });
 
-Deno.test("spans are in the input as supplied, composed or decomposed", () => {
+test("spans are in the input as supplied, composed or decomposed", () => {
   const composed = detailed("ἄν", "greek", "beta-code");
   const decomposed = detailed("ἄν", "greek", "beta-code");
 
@@ -102,7 +103,7 @@ Deno.test("spans are in the input as supplied, composed or decomposed", () => {
   assertEquals(pieces(nfd), [["a)/", "ἄ"], ["n", "ν"]]);
 });
 
-Deno.test("spans count UTF-16 code units", () => {
+test("spans count UTF-16 code units", () => {
   const result = detailed("ἀ\u{1018A}β", "greek", "beta-code");
 
   assertEquals(result.output, "a)\u{1018A}b");
@@ -113,7 +114,7 @@ Deno.test("spans count UTF-16 code units", () => {
   ]);
 });
 
-Deno.test("a rough breathing's h belongs to its vowel", () => {
+test("a rough breathing's h belongs to its vowel", () => {
   assertEquals(pieces(detailed("hodós", "transliteration", "greek")), [
     ["ho", "ὁ"],
     ["d", "δ"],
@@ -143,7 +144,7 @@ Deno.test("a rough breathing's h belongs to its vowel", () => {
   ]);
 });
 
-Deno.test("the letters of a modern digraph share its character", () => {
+test("the letters of a modern digraph share its character", () => {
   const read = detailed("boukáli", "transliteration", "greek", {
     preset: "iso-843-type-2",
   });
@@ -165,7 +166,7 @@ Deno.test("the letters of a modern digraph share its character", () => {
   ]);
 });
 
-Deno.test("the tokens of a Greek numeral share its decimal number", () => {
+test("the tokens of a Greek numeral share its decimal number", () => {
   const result = detailed("ιβʹ ἔτος", "greek", "transliteration", {
     text: { numerals: "decimal" },
   });
@@ -184,7 +185,7 @@ Deno.test("the tokens of a Greek numeral share its decimal number", () => {
   ]);
 });
 
-Deno.test("collapsed whitespace shares its space or has an empty span", () => {
+test("collapsed whitespace shares its space or has an empty span", () => {
   const result = detailed("  λόγος   καὶ  ", "greek", "greek", {
     text: { whitespace: "collapse" },
   });
@@ -210,7 +211,7 @@ Deno.test("collapsed whitespace shares its space or has an empty span", () => {
   assertEquals(spans[14].outputEnd, 9);
 });
 
-Deno.test("an assimilated dental shares the sigma it became", () => {
+test("an assimilated dental shares the sigma it became", () => {
   const result = detailed("ατσα", "greek", "greek", {
     greek: { dentalSigma: "assimilate" },
   });
@@ -225,7 +226,7 @@ Deno.test("an assimilated dental shares the sigma it became", () => {
   assertEquals(result.spans![1].outputStart, result.spans![2].outputStart);
 });
 
-Deno.test("losses carry the offset and length of their token", () => {
+test("losses carry the offset and length of their token", () => {
   const result = detailed("Ἄβ", "greek", "greek", {
     diacritics: { accents: "remove" },
     text: { letterCase: "lowercase" },
@@ -241,7 +242,7 @@ Deno.test("losses carry the offset and length of their token", () => {
   }
 });
 
-Deno.test("parseDetailed gives the input span of each token", () => {
+test("parseDetailed gives the input span of each token", () => {
   const { document, spans } = parseDetailed("ἄνθρωπος", "greek");
 
   assertEquals(document.length, 8);
@@ -266,7 +267,7 @@ Deno.test("parseDetailed gives the input span of each token", () => {
   ]);
 });
 
-Deno.test("literals read from one character share its span", () => {
+test("literals read from one character share its span", () => {
   // A Hangul syllable decomposes into three jamo, each a literal.
   const { document, spans } = parseDetailed("한 α", "greek");
 
@@ -280,7 +281,7 @@ Deno.test("literals read from one character share its span", () => {
   ]);
 });
 
-Deno.test("segments are closed under normalization for every code point", () => {
+test("segments are closed under normalization for every code point", () => {
   // A segment is a character and the code points that continue it. The
   // positions pair each segment of a text with one segment of its
   // normalization, which holds when no code point decomposes into, composes
@@ -322,7 +323,7 @@ Deno.test("segments are closed under normalization for every code point", () => 
   assertEquals(failures.slice(0, 10), []);
 });
 
-Deno.test("spans after letters that composition joins across characters", () => {
+test("spans after letters that composition joins across characters", () => {
   // Hangul jamo, a Kaithi letter with nukta, a Kirat Rai vowel sign: the
   // output composes what the reader read as several literals. Greek output
   // writes the acute as oxia by default.
@@ -352,7 +353,7 @@ Deno.test("spans after letters that composition joins across characters", () => 
   ]);
 });
 
-Deno.test("a character that normalization leaves unchanged keeps its own span", () => {
+test("a character that normalization leaves unchanged keeps its own span", () => {
   // Changed alone, without moving: the ohm sign read as an omega, an oxia
   // written as a tonos and back.
   assertEquals(parseDetailed("\u{2126}\u{332}", "greek").spans, [
@@ -386,7 +387,7 @@ Deno.test("a character that normalization leaves unchanged keeps its own span", 
   );
 });
 
-Deno.test("a character split between two tokens is inside the first one's span", () => {
+test("a character split between two tokens is inside the first one's span", () => {
   // The h of ph and the dot below of a precomposed ḥ, kept as a literal.
   assertEquals(parseDetailed("p\u{1E25}", "transliteration").spans, [
     { start: 0, end: 2 },
@@ -399,7 +400,7 @@ Deno.test("a character split between two tokens is inside the first one's span",
   ]);
 });
 
-Deno.test("a letter that composition joins to the one before shares its group", () => {
+test("a letter that composition joins to the one before shares its group", () => {
   // The Kirat Rai vowel sign AI decomposes into two signs E, which continue
   // the character before them: the x shares the range of the group that
   // normalization changed.
@@ -421,7 +422,7 @@ Deno.test("a letter that composition joins to the one before shares its group", 
   ]);
 });
 
-Deno.test("a stray mark after a substituted Greek sign keeps its own span", () => {
+test("a stray mark after a substituted Greek sign keeps its own span", () => {
   // The Greek question mark and ano teleia are substituted after
   // normalization, one code unit for one.
   for (
@@ -439,7 +440,7 @@ Deno.test("a stray mark after a substituted Greek sign keeps its own span", () =
   }
 });
 
-Deno.test("segment maps align every code point with its normalization", () => {
+test("segment maps align every code point with its normalization", () => {
   // Every code point in two contexts, and those that normalization touches
   // or that continue a segment in more: each run of units mapped to one range
   // normalizes into exactly that range, the ranges tile the other text in
@@ -520,7 +521,7 @@ Deno.test("segment maps align every code point with its normalization", () => {
   assertEquals(failures, []);
 });
 
-Deno.test("the fallback alignment stays coarse but right when texts do not match", () => {
+test("the fallback alignment stays coarse but right when texts do not match", () => {
   // Not normalizations of each other: the rest of both texts is one group.
   assertEquals(segmentMapByGroups("ab", "xy", "from", "NFC"), {
     starts: [0, 0, 2],
@@ -536,7 +537,7 @@ Deno.test("the fallback alignment stays coarse but right when texts do not match
   );
 });
 
-Deno.test("a token's spans depend only on its groups, not on the text before", () => {
+test("a token's spans depend only on its groups, not on the text before", () => {
   // Prefixing a text with another and a space shifts the spans of its tokens
   // by what was prefixed, in the input and in the output, whenever the text
   // reads and writes the same after the prefix. A text that starts with a
@@ -651,7 +652,7 @@ function detailedBy(
   return { ...converter.convertDetailed(input, from, to, options), input };
 }
 
-Deno.test("a custom character's spellings are its token's spans", () => {
+test("a custom character's spellings are its token's spans", () => {
   assertEquals(pieces(detailedBy(CUSTOM, "ἀϻ Ϻ", "greek", "beta-code")), [
     ["ἀ", "a)"],
     ["ϻ", "#711"],
@@ -668,7 +669,7 @@ Deno.test("a custom character's spellings are its token's spans", () => {
   );
 });
 
-Deno.test("an alias spelling is its letter's span", () => {
+test("an alias spelling is its letter's span", () => {
   assertEquals(pieces(detailedBy(CUSTOM, "*va", "beta-code", "greek")), [
     ["*v", "Ω"],
     ["a", "α"],
@@ -679,7 +680,7 @@ Deno.test("an alias spelling is its letter's span", () => {
   );
 });
 
-Deno.test("the literals of a preserved out-of-scope character share its span", () => {
+test("the literals of a preserved out-of-scope character share its span", () => {
   const converter = createConverter({ characters: [SAN], exclude: ["san"] });
   const result = detailedBy(converter, "a#711b", "beta-code", "greek");
 
@@ -715,7 +716,7 @@ Deno.test("the literals of a preserved out-of-scope character share its span", (
   assertEquals(pieces(two)[6], ["V", "v"]);
 });
 
-Deno.test("scope diagnostics locate the character, in results and errors", () => {
+test("scope diagnostics locate the character, in results and errors", () => {
   const preserving = createConverter({ exclude: ["digamma"] });
   const result = preserving.convertDetailed("αϝ β", "greek", "transliteration");
   assertEquals(
@@ -737,7 +738,7 @@ Deno.test("scope diagnostics locate the character, in results and errors", () =>
   assertEquals(error.diagnostics[0].length, 1);
 });
 
-Deno.test("converter spans are in the input as supplied", () => {
+test("converter spans are in the input as supplied", () => {
   // The converter lowercases Beta Code and decomposes the other formats
   // before matching its spellings; positions are still those of the input.
   assertEquals(pieces(detailedBy(CUSTOM, "A)#711B", "beta-code", "greek")), [
@@ -966,7 +967,7 @@ const OPTION_SETS: ConversionOptions[] = [
   },
 ];
 
-Deno.test("span invariants hold across fixtures, formats and options", () => {
+test("span invariants hold across fixtures, formats and options", () => {
   const inputs = new Set<string>(EDGE_CASES);
   for (const equivalence of EQUIVALENCES) {
     inputs.add(equivalence.greek);
@@ -989,7 +990,7 @@ Deno.test("span invariants hold across fixtures, formats and options", () => {
   }
 });
 
-Deno.test("span invariants hold for bound converters", () => {
+test("span invariants hold for bound converters", () => {
   const converters = [
     createConverter(),
     CUSTOM,
@@ -1029,7 +1030,7 @@ Deno.test("span invariants hold for bound converters", () => {
   }
 });
 
-Deno.test("span invariants hold for every value of every option", () => {
+test("span invariants hold for every value of every option", () => {
   const inputs = [
     "Θουκυδίδης Ἀθηναῖος ξυνέγραψε τὸν πόλεμον, ιβʹ ἔτη· μπα ντο γκ;",
     "*qoukudi/dhs *)aqhnai=os cune/graye to\\n po/lemon, ib# e)/th: mpa nto gk;",

@@ -1,7 +1,7 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import { convert, convertDetailed, createConverter } from "../src/mod.ts";
 import { parse } from "../src/document.ts";
-import { assertNfcEquals } from "./assertions.ts";
 
 // Expected spellings come from the cited tables and examples, not from the
 // engine. See docs/preset-conformance-corpus.md for scope and pending cases.
@@ -242,7 +242,7 @@ const CASES = [
 ] as const;
 
 for (const { preset, rule, greek, latin, lossy } of CASES) {
-  Deno.test(`${preset}: ${rule}`, () => {
+  test(`${preset}: ${rule}`, () => {
     const options = { preset };
     const result = convertDetailed(greek, "greek", "transliteration", options);
     assertNfcEquals(result.output, latin);
@@ -254,14 +254,14 @@ for (const { preset, rule, greek, latin, lossy } of CASES) {
   });
 }
 
-Deno.test("BnF unmarked uppercase archaic letters retain their case", () => {
+test("BnF unmarked uppercase archaic letters retain their case", () => {
   assertNfcEquals(
     convert("Ϛ Ϡ", "greek", "transliteration", { preset: "bnf-core" }),
     "C̄ S̄",
   );
 });
 
-Deno.test("enotikon transliteration only affects Latin output", () => {
+test("enotikon transliteration only affects Latin output", () => {
   const options = { preset: "iso-843-type-1" } as const;
   assertNfcEquals(convert("‿", "greek", "greek", options), "‿");
   assertNfcEquals(convert("‿", "greek", "beta-code", options), "‿");
@@ -274,7 +274,7 @@ Deno.test("enotikon transliteration only affects Latin output", () => {
   );
 });
 
-Deno.test("BnF chi digram wins over standalone lunate sigma", () => {
+test("BnF chi digram wins over standalone lunate sigma", () => {
   const letters = parse("ch c c̄", "transliteration", { preset: "bnf-core" })
     .filter((token) => token.kind === "grapheme")
     .map((token) => token.letter);
@@ -289,7 +289,7 @@ Deno.test("BnF chi digram wins over standalone lunate sigma", () => {
   );
 });
 
-Deno.test("ISO undefined archaic mappings are rejected by a bound converter", () => {
+test("ISO undefined archaic mappings are rejected by a bound converter", () => {
   const converter = createConverter({
     preset: "iso-843-type-1",
     outOfScopeBehavior: "reject",

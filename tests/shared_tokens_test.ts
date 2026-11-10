@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals } from "./assertions.ts";
 import { GREEK_MARKS } from "../src/alphabet.ts";
 import { encode, parse } from "../src/document.ts";
 import type { Format, Grapheme } from "../src/model.ts";
@@ -16,12 +17,12 @@ import { resolveConversionOptions } from "../src/presets.ts";
  * `convert()` and the other functions that read text for themselves share
  * equal tokens (src/parsers/shared_tokens.ts); `parse()` does not. These tests
  * check that the two paths agree, that a caller's document stays its own, and
- * that the cache stays bounded. `deno test` gives each file its own module
- * state, so the cache is empty when this file starts; the tests that fill it
+ * that the cache stays bounded. `node --test` runs each file in a process of
+ * its own, so the cache is empty when this file starts; the tests that fill it
  * empty it again, so that the next test of this file starts from scratch.
  */
 
-Deno.test("parse() returns tokens of its own, which the caller may modify", () => {
+test("parse() returns tokens of its own, which the caller may modify", () => {
   for (
     const [text, format] of [
       ["ἀνὰ ἀνὰ", "greek"],
@@ -41,7 +42,7 @@ Deno.test("parse() returns tokens of its own, which the caller may modify", () =
   }
 });
 
-Deno.test("a crasis read for conversion does not change other occurrences", () => {
+test("a crasis read for conversion does not change other occurrences", () => {
   // The coronis is classified after reading. The ὔ of οὔ keeps its smooth
   // breathing, the ὔ of τοὔνομα becomes a coronis, and both are one shared
   // token when converted: changing it in place would change οὔ too.
@@ -78,7 +79,7 @@ function everyMarkCombination(): string {
   return words.join(" ");
 }
 
-Deno.test("conversions past the cache limit equal encode(parse()), and the cache stays bounded", () => {
+test("conversions past the cache limit equal encode(parse()), and the cache stays bounded", () => {
   resetSharedTokens();
   try {
     conversionsPastTheLimit();
@@ -121,7 +122,7 @@ function conversionsPastTheLimit(): void {
   assertEquals(sharedTokenCounts().graphemes, SHARED_GRAPHEME_LIMIT);
 }
 
-Deno.test("non-Greek text cannot use up the room of Greek tokens in the cache", () => {
+test("non-Greek text cannot use up the room of Greek tokens in the cache", () => {
   resetSharedTokens();
   try {
     // 5,000 distinct CJK characters: one literal each, more than the cache

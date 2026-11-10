@@ -1,7 +1,8 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals, assertExists } from "./assertions.ts";
 import { suggestOptions } from "../web/options_suggestions.ts";
 
-Deno.test("suggests nested option keys and valid values in partial JSON", () => {
+test("suggests nested option keys and valid values in partial JSON", () => {
   const key = '{"greek": {"accent';
   assertEquals(suggestOptions(key, key.length).map(({ label }) => label), [
     "accentuation",
@@ -19,7 +20,7 @@ Deno.test("suggests nested option keys and valid values in partial JSON", () => 
   ]);
 });
 
-Deno.test("a suggestion replaces only the active token", () => {
+test("a suggestion replaces only the active token", () => {
   const json = '{"greek": {"accentuation": "mon", "sigma": "lunate"}}';
   const caret = json.indexOf("mon") + 3;
   const [suggestion] = suggestOptions(json, caret);

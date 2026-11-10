@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import { assertEquals } from "./assertions.ts";
 import {
   type ConversionOptions,
   convert,
@@ -80,7 +81,7 @@ const CASES: readonly {
   },
 ];
 
-Deno.test("conversion cost grows linearly with the input", () => {
+test("conversion cost grows linearly with the input", () => {
   for (const { format, target, options, passage = PASSAGE } of CASES) {
     const small = convert(passage.repeat(SMALL), "greek", format, options);
     const large = convert(passage.repeat(LARGE), "greek", format, options);
