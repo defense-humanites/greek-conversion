@@ -36,7 +36,14 @@ import {
   withDiacritic,
   withoutDiacritic,
 } from "./model.ts";
-import type { Diacritic, Document, Format, Grapheme, Letter } from "./model.ts";
+import type {
+  Diacritic,
+  Document,
+  Format,
+  Grapheme,
+  Letter,
+  Token,
+} from "./model.ts";
 import type {
   ConversionOptions,
   MuPiTransliteration,
@@ -356,12 +363,7 @@ export function encodeTransliteration(
   // goes before it (`ηὔδα` → `’ívda`).
   const vowelUpsilonVF = options.transliteration?.upsilon === "y-with-ou-v-f";
   const readBack = options.transliteration?.longVowels === "omit"
-    ? rendered.map((token, index) =>
-      token.kind === "grapheme" &&
-        !(vowelUpsilonVF && isVowelUpsilonAt(doc, index))
-        ? { ...token, letter: readBackLetter(token, options) }
-        : token
-    )
+    ? readBackInitials(rendered, doc, options, vowelUpsilonVF)
     : rendered;
 
   const pieces = rendered.map((token, index) => {
@@ -770,6 +772,36 @@ function readBackLetter(token: Grapheme, options: ConversionOptions): Letter {
     return options.transliteration?.eta === "i" ? "iota" : "epsilon";
   }
   return token.letter;
+}
+
+/**
+ * `rendered` with the eta and omega of the first two letters of each word
+ * as they read back (readBackLetter), the only ones on which the place of a
+ * breathing depends. Copied only if one changes.
+ */
+function readBackInitials(
+  rendered: Document,
+  doc: Document,
+  options: ConversionOptions,
+  vowelUpsilonVF: boolean,
+): Document {
+  let copy: Token[] | undefined;
+  for (let index = 0; index < rendered.length; index++) {
+    const token = rendered[index];
+    if (
+      token.kind !== "grapheme" ||
+      token.letter !== "eta" && token.letter !== "omega"
+    ) continue;
+    const letter = readBackLetter(token, options);
+    if (
+      letter === token.letter ||
+      !isWordInitial(rendered, index) && !isWordInitial(rendered, index - 1) ||
+      vowelUpsilonVF && isVowelUpsilonAt(doc, index)
+    ) continue;
+    copy ??= rendered.slice();
+    copy[index] = { ...token, letter };
+  }
+  return copy ?? rendered;
 }
 
 /**
