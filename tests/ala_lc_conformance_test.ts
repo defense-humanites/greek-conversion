@@ -71,7 +71,7 @@ const CASES = [
     preset: "ala-lc-modern",
     rule: "notes: rho takes h only with a source rough breathing",
     greek: "Ῥ ῥ Ρ ρ",
-    latin: "Rh rh R r",
+    latin: "RH rh R r",
     lossy: false,
   },
   {

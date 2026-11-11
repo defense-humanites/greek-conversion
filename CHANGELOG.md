@@ -17,9 +17,26 @@ change.
   `Λογος`. In the document that `parse()` returns, `Σ` has no `glyphVariant`,
   as `*s` read from Beta Code; the capital lunate `Ϲ` is still
   `lunate-sigma`. Lowercase source shapes are kept as before.
+### Added
+
+- The symbol forms of letters are read as those letters in Greek, as `ϐ`
+  already was: `ϑ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, and the capital `ϒ`, with its
+  accented forms `ϓ` and `ϔ` (#47). They were kept as text: `ϑεός` gave
+  `ϑeós` in transliteration, its `ε` taken for the start of a word; it now
+  gives `theós`, and `θεός` in Greek output, which writes the ordinary
+  letters, as for `ϐ` ([Greek Unicode](docs/greek-unicode.md#letter-forms)).
 
 ### Changed
 
+- A capital consonant that stands alone, as a letter name, a numeral, or a
+  siglum, is written in full capitals in transliteration, like the capitals
+  of a word in capitals (#47): `Θ` → `TH` (was `Th`), `ΘΕΟΣ Θ` → `THEOS TH`
+  (was `THEOS Th`), `Ῥ` → `RH`, `Θʹ` → `THʹ`. Followed by a period, it is an
+  abbreviated initial and keeps its first letter only: `Θ. Δημητρίου` →
+  `Th. Dēmētríou`, as before. A vowel with a rough breathing on its own can be
+  a word, such as the article at the head of a sentence, and is unchanged:
+  `Ὁ δὲ` → `Ho dè`. Under `letterCase: "title"`, a lone capital keeps its
+  first letter only. Both spellings read back as the same capital.
 - Conversion to transliteration is faster, and its output is unchanged. The
   Latin spelling of each set of marks is kept from one call to the next with
   the same options, and the encoder follows the start of each word as it

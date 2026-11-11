@@ -95,6 +95,42 @@ test("writes Latin digraphs in full capitals among capitals", () => {
   );
 });
 
+test("writes a capital that stands alone in full capitals", () => {
+  // A capital consonant on its own is a letter name, a numeral, a siglum, or
+  // a label (#47); followed by a period, it is an abbreviated initial.
+  const cases = [
+    ["Θ Φ Χ Ψ Ῥ", "TH PH CH PS RH"],
+    ["ΘΕΟΣ Θ", "THEOS TH"],
+    ["Θ, θ", "TH, th"],
+    ["(Ψ) Θʹ Χ1", "(PS) THʹ CH1"],
+    ["Θ. Δημητρίου", "Th. Dēmētríou"],
+    ["Ῥ.", "Rh."],
+    // A vowel with a rough breathing can be a word on its own, such as the
+    // article at the head of a sentence.
+    ["Ὁ δὲ", "Ho dè"],
+  ] as const;
+  for (const [greek, latin] of cases) {
+    assertNfcEquals(convert(greek, "greek", "transliteration"), latin);
+    assertNfcEquals(
+      convert(latin, "transliteration", "transliteration"),
+      latin,
+    );
+  }
+  assertNfcEquals(
+    convert("Ξ Χ", "greek", "transliteration", {
+      transliteration: { xi: "ks", chi: "kh" },
+    }),
+    "KS KH",
+  );
+  // Title case asks for the first letter only.
+  assertNfcEquals(
+    convert("θ ψ", "greek", "transliteration", {
+      text: { letterCase: "title" },
+    }),
+    "Th Ps",
+  );
+});
+
 test("combines uppercase output with ALA-LC digraphs", () => {
   const options = {
     transliteration: {
@@ -147,7 +183,7 @@ test("transliterates every rho with one final h per group", () => {
       "transliteration",
       systematic,
     ),
-    "rh arh rrh rrrh rh rrh Rh RRH",
+    "rh arh rrh rrrh rh rrh RH RRH",
   );
   assertNfcEquals(
     convert(

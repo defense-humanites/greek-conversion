@@ -16,6 +16,22 @@ npx jsr add @humanities/greek-conversion@1.0.0-rc.7
 
 The package is ESM-only.
 
+## Updating from `1.0.0-rc.7`
+
+The API does not change. Two kinds of input convert differently:
+
+- A capital consonant that stands alone is written in full capitals in
+  transliteration, as a letter name, a numeral, or a siglum: `Θ` gives `TH`
+  and `ΘΕΟΣ Θ` gives `THEOS TH` (rc.7: `Th`, `THEOS Th`). Followed by a
+  period, it is an initial and keeps its first letter only (`Θ.` gives
+  `Th.`, as before); so does a vowel with a rough breathing (`Ὁ δὲ` gives
+  `Ho dè`), and every lone letter under `letterCase: "title"`. Both spellings
+  read back as the same capital.
+- The symbol forms `ϑ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, and the capital `ϒ`, with its
+  accented forms `ϓ` and `ϔ`, are read as their letters, as `ϐ` already was.
+  rc.7 kept them as text: `ϑεός` gave `ϑeós` in transliteration and kept its
+  `ϑ` in Greek; it now gives `theós`, and `θεός` in Greek.
+
 ## Updating from `1.0.0-rc.6`
 
 The API does not change. Some output and some readings do: text that rc.6

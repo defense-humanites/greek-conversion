@@ -112,3 +112,24 @@ These preferences belong to the `greek` option group and are applied by the
 Greek encoder itself, after the semantic punctuation rules, not by blind
 character replacement: `reencode(input, "greek", options)` is how a Greek
 string is restyled.
+
+## Letter forms
+
+The Greek reader reads the symbol forms of letters as those letters, which is
+how Unicode folds them under compatibility normalization (NFKC): `ϐ` as beta,
+`ϑ` as theta, `ϕ` as phi, `ϖ` as pi, `ϰ` as kappa, `ϱ` as rho, `ϵ` as
+epsilon, and the capitals `ϴ` as theta and `ϒ` as upsilon, with its accented
+forms `ϓ` and `ϔ`. Greek output writes the ordinary letters, except that
+`greek.medialBeta: "symbol"` writes `ϐ` inside a word; the change of form is
+not a loss:
+
+```ts
+reencode("ϐίος ϑεός", "greek"); // βίος θεός
+reencode("ἅϐα", "greek", { greek: { medialBeta: "symbol" } }); // ἅϐα
+```
+
+The lunate sigma `ϲ` (`Ϲ`) is different: it is read as sigma and remembered,
+so that Greek output can keep it (`greek.sigma: "preserve"`) and
+transliteration can write it `c` (`transliteration.lunateSigma: "c"`). By
+default Greek output writes `σ` or `ς`, and `convertDetailed()` reports the
+change (`removed-glyph-variant`).

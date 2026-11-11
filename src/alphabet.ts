@@ -51,6 +51,19 @@ export const BY_BETA = reverse("beta");
 
 BY_GREEK.set("ϐ", "beta");
 BY_GREEK.set("ϲ", "sigma");
+// The symbol forms of letters, which Unicode folds to them under NFKC, are
+// read as those letters, as ϐ is (U+03D2, a capital upsilon, through
+// greekLower). The capital theta symbol U+03F4 already lowercases to θ.
+for (
+  const [symbol, letter] of [
+    ["\u03D1", "theta"], // ϑ
+    ["\u03D5", "phi"], // ϕ
+    ["\u03D6", "pi"], // ϖ
+    ["\u03F0", "kappa"], // ϰ
+    ["\u03F1", "rho"], // ϱ
+    ["\u03F5", "epsilon"], // ϵ
+  ] as const
+) BY_GREEK.set(symbol, letter);
 
 export const GREEK_MARKS = new Map<string, Diacritic>([
   ["\u0313", "smooth"],
