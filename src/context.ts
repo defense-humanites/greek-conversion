@@ -83,7 +83,7 @@ export function isWordFinal(document: Document, index: number): boolean {
  * the same word, after it or else before it, is uppercase. A Latin spelling
  * of several letters for one Greek capital (`TH`, `CH`, `PS`, the `H` of a
  * rough breathing) is then written in full capitals; before lowercase text,
- * or for a lone letter, only its first letter is (ISO 843, Table 1, note 11).
+ * only its first letter is, which ISO 843 allows (note 11).
  */
 export function isAmongCapitals(document: Document, index: number): boolean {
   const neighbour = adjacentGrapheme(document, index, 1) ??
@@ -91,17 +91,50 @@ export function isAmongCapitals(document: Document, index: number): boolean {
   return neighbour?.uppercase === true;
 }
 
-function adjacentGrapheme(
+/**
+ * Whether the letter at `index` is a word of one letter that is not an
+ * initial: nothing that spells a letter is next to it, and no period follows
+ * it. A capital consonant on its own is a letter name, a numeral, a siglum,
+ * or a label, and its Latin spelling is written in full capitals (`Θ` →
+ * `TH`); followed by a period, it is an abbreviated initial (`Θ.` → `Th.`).
+ */
+export function standsAlone(document: Document, index: number): boolean {
+  const next = adjacentToken(document, index, 1);
+  return !spellsLetter(adjacentToken(document, index, -1)) &&
+    !spellsLetter(next) &&
+    !(next?.kind === "literal" && next.value.startsWith("."));
+}
+
+function adjacentToken(
   document: Document,
   index: number,
   step: 1 | -1,
-): Grapheme | undefined {
+): Token | undefined {
   let position = index + step;
   while (
     position >= 0 && position < document.length &&
     isBoundaryTransparent(document[position])
   ) position += step;
-  const token = document[position];
+  return document[position];
+}
+
+/**
+ * A Greek letter, or a literal letter: a Latin one, or a custom character,
+ * which a conversion carries as a private-use scalar. Modifier letters, such
+ * as the keraia U+0374, are signs.
+ */
+function spellsLetter(token: Token | undefined): boolean {
+  return token?.kind === "grapheme" ||
+    token?.kind === "literal" &&
+      /[\p{Lu}\p{Ll}\p{Lt}\p{Lo}\p{Co}]/u.test(token.value);
+}
+
+function adjacentGrapheme(
+  document: Document,
+  index: number,
+  step: 1 | -1,
+): Grapheme | undefined {
+  const token = adjacentToken(document, index, step);
   return token?.kind === "grapheme" ? token : undefined;
 }
 
