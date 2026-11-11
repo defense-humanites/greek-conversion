@@ -49,8 +49,19 @@ for (let index = 0; index < LETTERS_SIZE; index++) {
   const letter = BY_GREEK.get(lower === "ς" ? "σ" : lower);
   if (letter === undefined) continue;
   LETTER_OF[index] = LETTER_INDEX.get(letter)!;
-  FLAGS_OF[index] = (source !== lower ? 1 : 0) |
-    (lower === "ϲ" ? 1 : lower === "ς" ? 2 : lower === "σ" ? 3 : 0) << 1;
+  const uppercase = source !== lower;
+  // A capital sigma has no final or medial shape to keep; the capital lunate
+  // sigma Ϲ is still lunate.
+  FLAGS_OF[index] = (uppercase ? 1 : 0) |
+    (lower === "ϲ"
+      ? 1
+      : uppercase
+      ? 0
+      : lower === "ς"
+      ? 2
+      : lower === "σ"
+      ? 3
+      : 0) << 1;
 }
 
 const letterOf = (unit: number): number =>

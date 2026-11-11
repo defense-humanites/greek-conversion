@@ -7,6 +7,17 @@ change.
 
 ## [Unreleased]
 
+### Fixed
+
+- A capital sigma no longer records a medial shape when Greek is read. It
+  has none, but the reader recorded `medial-sigma` for `Σ`, so that under
+  `greek.finalSigma: "preserve"` a word in capitals lowercased by
+  `text.letterCase` kept a medial sigma at its end: `ΛΟΓΟΣ` gave `λογοσ` under
+  `"lowercase"` and `Λογοσ` under `"title"`; it now gives `λογος` and
+  `Λογος`. In the document that `parse()` returns, `Σ` has no `glyphVariant`,
+  as `*s` read from Beta Code; the capital lunate `Ϲ` is still
+  `lunate-sigma`. Lowercase source shapes are kept as before.
+
 ### Changed
 
 - Conversion to transliteration is faster, and its output is unchanged. The
