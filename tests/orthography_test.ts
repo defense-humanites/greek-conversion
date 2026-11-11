@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import { convert, convertDetailed } from "../src/mod.ts";
+import { parse } from "../src/document.ts";
 import { MEDIAL_BETA_SYMBOL, SMOOTH_ROUGH_DOUBLE_RHO } from "./fixtures.ts";
 
 test("collapses Unicode whitespace on demand", () => {
@@ -726,6 +727,26 @@ test("selects contextual or uniform medial final sigma", () => {
     }),
     "ϲοϲ σʹ",
   );
+});
+
+test("keeps no sigma shape for a capital", () => {
+  // A capital Σ has no final or medial shape: lowercased, it takes the shape
+  // of its place, even where the source shapes are preserved.
+  const preserve = {
+    greek: { sigma: "preserve", finalSigma: "preserve" },
+    text: { letterCase: "lowercase" },
+  } as const;
+  assertNfcEquals(
+    convert("ΛΟΓΟΣ ΣΩΜΑ", "greek", "greek", preserve),
+    "λογος σωμα",
+  );
+  // Lowercase source shapes are kept as written, and a capital lunate sigma
+  // stays lunate.
+  assertNfcEquals(
+    convert("λόγοσ ςῶμα ϹΩΜΑ", "greek", "greek", preserve),
+    "λόγοσ ςῶμα ϲωμα",
+  );
+  assertEquals(parse("Σ", "greek")[0], parse("*s", "beta-code")[0]);
 });
 
 test("folds Greek variants while keeping letter case independent", () => {

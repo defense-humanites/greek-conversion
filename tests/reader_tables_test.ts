@@ -30,8 +30,11 @@ test("the Greek reader classifies every BMP code unit as greekLower does", () =>
     if (actual !== expected) {
       mismatches.push(`${hex(unit)}: ${actual} instead of ${expected}`);
     } else if (token.kind === "grapheme") {
+      // A capital Σ has no final or medial shape; Ϲ is a lunate capital.
       const variant = lower === "ϲ"
         ? "lunate-sigma"
+        : char !== lower
+        ? undefined
         : lower === "ς"
         ? "final-sigma"
         : lower === "σ"
