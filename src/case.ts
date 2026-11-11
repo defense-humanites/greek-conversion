@@ -6,7 +6,9 @@
  * characters over and over, so caching the results removes that cost
  * without changing them.
  */
-const LOWER = new Map<string, string>();
+// The upsilon with hook symbol, U+03D2, is a capital upsilon (its accented
+// forms U+03D3 and U+03D4 decompose to it) but has no lowercase in Unicode.
+const LOWER = new Map<string, string>([["\u03D2", "υ"]]);
 const UPPER = new Map<string, string>();
 
 /** Lowercases one character or short string with Greek rules. */

@@ -110,7 +110,8 @@ A reader reads the convention that its format and options define:
 - the spellings the encoder writes under those options;
 - their Unicode equivalents (composition and combining-mark order);
 - the variant spellings this documentation lists, such as `j` and `#401` for
-  yot in Beta Code, or `ϐ` and `ϲ` in Greek.
+  yot in Beta Code, or `ϐ`, `ϲ`, and the other
+  [letter forms](greek-unicode.md#letter-forms) in Greek.
 
 These spellings are protected like output: a release that stops reading one
 of them, or reads it as another document, follows the change classes above.

@@ -26,6 +26,7 @@ import {
   precedesVoicedSound,
   roughDiphthongStart,
   roughDiphthongStarts,
+  standsAlone,
 } from "./context.ts";
 import {
   infersSmoothBreathing,
@@ -275,6 +276,7 @@ export function encodeTransliteration(
   written?: WrittenPositions,
 ) {
   const uppercaseOutput = options.text?.letterCase === "uppercase";
+  const titleCase = options.text?.letterCase === "title";
   const rendered = prepareDiacriticsForRendering(
     doc,
     options,
@@ -472,15 +474,20 @@ export function encodeTransliteration(
         breathingToken.uppercase);
     // A Greek capital whose Latin spelling has several letters is written in
     // full capitals among capitals (`ΘΑΛΑΣΣΑ` → `THALASSA`, `ἙΛΛΑΣ` →
-    // `HELLAS`), and with its first letter only before lowercase text or
-    // alone (`Θάλασσα` → `Thálassa`, `Θ.` → `Th.`). A rough-breathing group
-    // is capitalized as a whole: every letter of it must be uppercase.
+    // `HELLAS`) or on its own (`Θ` → `TH`), and with its first letter only
+    // before lowercase text or a period (`Θάλασσα` → `Thálassa`, `Θ.` →
+    // `Th.`). A rough-breathing group is capitalized as a whole: every
+    // letter of it must be uppercase; on its own, it is a word, such as the
+    // article at the head of a sentence (`Ὁ δὲ` → `Ho dè`). Title case asks
+    // for the first letter only.
     const capitals = uppercaseOutput ||
       (groupUppercase
         ? groupStart?.kind === "grapheme" && groupStart.uppercase &&
           breathingToken.uppercase &&
           isAmongCapitals(doc, breathingIndex!)
-        : token.uppercase && isAmongCapitals(doc, index));
+        : token.uppercase &&
+          (isAmongCapitals(doc, index) ||
+            !titleCase && standsAlone(doc, index)));
     const h = capitals ? "H" : "h";
     const nasalGamma = options.transliteration?.nasalGamma;
     let base = nasalGamma !== "literal" &&
