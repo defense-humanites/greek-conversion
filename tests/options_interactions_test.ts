@@ -8,6 +8,28 @@ import {
   reencode,
 } from "../src/mod.ts";
 
+test("writes the marks of each call with its own options", () => {
+  // The Latin spelling of each set of marks is kept across calls, by the
+  // options it depends on: calls that alternate must not see each other's.
+  const cases: readonly [ConversionOptions, string][] = [
+    [{}, "kagṑ oũn ā́r"],
+    [{ transliteration: { circumflexAccent: "circumflex" } }, "kagṑ oûn ā́r"],
+    [{ diacritics: { accents: "remove" } }, "kagō oun ār"],
+    [{ transliteration: { smoothBreathing: "greek" } }, "kagṑ ou̓̃n ā̓́r"],
+    [{ transliteration: { coronis: "apostrophe" } }, "ka’gṑ oũn ā́r"],
+    [{ transliteration: { quantity: "omit" } }, "kagṑ oũn ár"],
+  ];
+  for (let round = 0; round < 2; round++) {
+    for (const [options, expected] of cases) {
+      assertNfcEquals(
+        convert("κἀγὼ οὖν ᾱ̓́ρ", "greek", "transliteration", options),
+        expected,
+        JSON.stringify(options),
+      );
+    }
+  }
+});
+
 test("classifies diphthongs before removing their diacritics", () => {
   const options = {
     diacritics: { all: "remove", roughBreathing: "preserve" },
