@@ -7,16 +7,17 @@ change.
 
 ## [Unreleased]
 
-### Fixed
+## [1.0.0-rc.8] - 2026-11-11
 
-- A capital sigma no longer records a medial shape when Greek is read. It
-  has none, but the reader recorded `medial-sigma` for `Σ`, so that under
-  `greek.finalSigma: "preserve"` a word in capitals lowercased by
-  `text.letterCase` kept a medial sigma at its end: `ΛΟΓΟΣ` gave `λογοσ` under
-  `"lowercase"` and `Λογοσ` under `"title"`; it now gives `λογος` and
-  `Λογος`. In the document that `parse()` returns, `Σ` has no `glyphVariant`,
-  as `*s` read from Beta Code; the capital lunate `Ϲ` is still
-  `lunate-sigma`. Lowercase source shapes are kept as before.
+Eighth release candidate for `1.0.0`. The API does not change. Following #47,
+a capital consonant that stands alone is written in full capitals in
+transliteration (`Θ` → `TH`), and the symbol forms of letters, such as `ϑ`,
+are read as those letters. Conversion to transliteration is faster again, back
+to rc.6 on long texts and about a quarter faster on words and sentences. A
+capital sigma no longer records a medial shape. The next release candidate is
+planned to keep glyph variants, such as `ϲ` and `ϐ`, in Greek output by
+default.
+
 ### Added
 
 - The symbol forms of letters are read as those letters in Greek, as `ϐ`
@@ -45,6 +46,17 @@ change.
   10,000 characters about 6 % faster, as fast as in rc.6.
   `convertDetailed()` also compares the source and the text read back faster,
   by about 8 % on long texts in every direction.
+
+### Fixed
+
+- A capital sigma no longer records a medial shape when Greek is read. It
+  has none, but the reader recorded `medial-sigma` for `Σ`, so that under
+  `greek.finalSigma: "preserve"` a word in capitals lowercased by
+  `text.letterCase` kept a medial sigma at its end: `ΛΟΓΟΣ` gave `λογοσ` under
+  `"lowercase"` and `Λογοσ` under `"title"`; it now gives `λογος` and
+  `Λογος`. In the document that `parse()` returns, `Σ` has no `glyphVariant`,
+  as `*s` read from Beta Code; the capital lunate `Ϲ` is still
+  `lunate-sigma`. Lowercase source shapes are kept as before.
 
 ## [1.0.0-rc.7] - 2026-11-10
 
@@ -878,7 +890,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.7...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.8...HEAD
+[1.0.0-rc.8]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.7...v1.0.0-rc.8
 [1.0.0-rc.7]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.6...v1.0.0-rc.7
 [1.0.0-rc.6]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.5...v1.0.0-rc.6
 [1.0.0-rc.5]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.4...v1.0.0-rc.5

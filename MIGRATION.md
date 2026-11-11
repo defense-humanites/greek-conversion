@@ -5,20 +5,21 @@ the `0.14.x` API.
 
 ## Installation
 
-The release candidate `1.0.0-rc.7` is published on JSR, and on npm under the
+The release candidate `1.0.0-rc.8` is published on JSR, and on npm under the
 `next` distribution tag; the stable `1.0.0` will follow with the same content
 unless a problem is found:
 
 ```sh
 npm install @humanities/greek-conversion@next
-npx jsr add @humanities/greek-conversion@1.0.0-rc.7
+npx jsr add @humanities/greek-conversion@1.0.0-rc.8
 ```
 
 The package is ESM-only.
 
 ## Updating from `1.0.0-rc.7`
 
-The API does not change. Two kinds of input convert differently:
+The API does not change. Two kinds of input convert differently, and the
+document of a capital sigma changes:
 
 - A capital consonant that stands alone is written in full capitals in
   transliteration, as a letter name, a numeral, or a siglum: `Θ` gives `TH`
@@ -31,6 +32,11 @@ The API does not change. Two kinds of input convert differently:
   accented forms `ϓ` and `ϔ`, are read as their letters, as `ϐ` already was.
   rc.7 kept them as text: `ϑεός` gave `ϑeós` in transliteration and kept its
   `ϑ` in Greek; it now gives `theós`, and `θεός` in Greek.
+- In the document that `parse()` returns, a capital `Σ` no longer has
+  `glyphVariant: "medial-sigma"`: a capital has no final or medial shape. The
+  capital lunate `Ϲ` keeps `"lunate-sigma"`. Under
+  `greek.finalSigma: "preserve"`, a word in capitals lowercased by
+  `text.letterCase` now ends with `ς`.
 
 ## Updating from `1.0.0-rc.6`
 
