@@ -1,0 +1,17 @@
+greek-conversion marks
+
+Copyright (c) 2026 Antoine Boquet. All rights reserved.
+
+This notice covers the greek-conversion logos and the tessera symbol they
+contain, including the files under docs/assets/ that name
+LicenseRef-greek-conversion-marks in their .license sidecar. These files are
+not licensed under the MIT License that covers the rest of the repository.
+
+You may reproduce these files without modification to refer to the
+greek-conversion project, for example in a README, a package page, an article
+or a presentation about it. Any other use, including modification, use as or
+in another mark, or any use suggesting endorsement, requires prior written
+permission.
+
+The name "greek conversion" and the letters of the symbol are drawn from
+Bricolage Grotesque, licensed under the SIL Open Font License, Version 1.1.

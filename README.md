@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/defense-humanites/greek-conversion/main/docs/assets/greek-conversion-logo-sombre.svg">
+    <img src="https://raw.githubusercontent.com/defense-humanites/greek-conversion/main/docs/assets/greek-conversion-logo-clair.svg" alt="greek conversion" width="240">
+  </picture>
+</p>
+
 # greek-conversion
 
 [![JSR](https://jsr.io/badges/@humanities/greek-conversion)](https://jsr.io/@humanities/greek-conversion)
@@ -723,3 +730,7 @@ benchmark input,
 (Thucydides 1.1–1.10, from the Perseus Digital Library), is under
 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) and is not part
 of the published packages.
+
+The greek-conversion logos under `docs/assets/` are not covered by these
+licenses: all rights are reserved, as recorded in
+[`LicenseRef-greek-conversion-marks`](https://github.com/defense-humanites/greek-conversion/blob/main/LICENSES/LicenseRef-greek-conversion-marks.txt).
