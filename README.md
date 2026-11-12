@@ -18,6 +18,8 @@
   <a href="https://github.com/defense-humanites/greek-conversion/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
 </p>
 
+<br>
+
 `greek-conversion` is a TypeScript library for classicists, librarians, and
 digital-humanities developers. It handles polytonic and monotonic Greek,
 implements published conventions (ALA-LC, BnF, ISO 843, SBL, TLG, Perseus) as
