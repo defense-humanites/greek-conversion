@@ -5,16 +5,18 @@
   </picture>
 </p>
 
-# greek-conversion
+<p align="center">
+  Convert Greek text between Unicode Greek, Beta Code, and scientific
+  transliteration, in every direction, and know exactly what each conversion
+  keeps.
+</p>
 
-[![JSR](https://jsr.io/badges/@humanities/greek-conversion)](https://jsr.io/@humanities/greek-conversion)
-[![npm](https://img.shields.io/npm/v/@humanities/greek-conversion)](https://www.npmjs.com/package/@humanities/greek-conversion)
-[![CI](https://github.com/defense-humanites/greek-conversion/actions/workflows/ci.yml/badge.svg)](https://github.com/defense-humanites/greek-conversion/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/defense-humanites/greek-conversion/blob/main/LICENSE)
-
-**Convert Greek text between Unicode Greek, Beta Code, and scientific
-transliteration, in every direction, and know exactly what each conversion
-keeps.**
+<p align="center">
+  <a href="https://jsr.io/@humanities/greek-conversion"><img src="https://jsr.io/badges/@humanities/greek-conversion" alt="JSR"></a>
+  <a href="https://www.npmjs.com/package/@humanities/greek-conversion"><img src="https://img.shields.io/npm/v/@humanities/greek-conversion" alt="npm"></a>
+  <a href="https://github.com/defense-humanites/greek-conversion/actions/workflows/ci.yml"><img src="https://github.com/defense-humanites/greek-conversion/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/defense-humanites/greek-conversion/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+</p>
 
 `greek-conversion` is a TypeScript library for classicists, librarians, and
 digital-humanities developers. It handles polytonic and monotonic Greek,
