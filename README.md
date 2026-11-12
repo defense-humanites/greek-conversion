@@ -730,3 +730,7 @@ benchmark input,
 (Thucydides 1.1–1.10, from the Perseus Digital Library), is under
 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) and is not part
 of the published packages.
+
+The greek-conversion logos under `docs/assets/` are not covered by these
+licenses: all rights are reserved, as recorded in
+[`LicenseRef-greek-conversion-marks`](https://github.com/defense-humanites/greek-conversion/blob/main/LICENSES/LicenseRef-greek-conversion-marks.txt).
