@@ -184,9 +184,27 @@ function attachSuggestions(
   });
 }
 
+/**
+ * Short names for the standard menu, so that the settings sentence fits on
+ * one line; the full name opens the description under it.
+ */
+const SHORT_NAMES: Readonly<Record<Preset, string>> = {
+  "ala-lc-ancient": "ALA-LC Ancient",
+  "ala-lc-modern": "ALA-LC Modern",
+  "bnf-core": "BnF",
+  "iso-843-type-1": "ISO 843 Type 1",
+  "iso-843-type-2": "ISO 843 Type 2",
+  perseus: "Perseus",
+  "sbl-academic": "SBL Academic",
+  "sbl-general": "SBL General",
+  "tlg-core": "TLG",
+};
+
 const presets = listPresetMetadata();
 for (const metadata of presets) {
-  presetSelect.add(new Option(metadata.name, metadata.id));
+  const option = new Option(SHORT_NAMES[metadata.id], metadata.id);
+  option.title = metadata.name;
+  presetSelect.add(option);
 }
 
 /* Source and target formats */
@@ -256,8 +274,11 @@ function showPreset(): void {
   presetLimits.hidden = true;
   if (metadata === undefined) return;
 
+  const name = document.createElement("strong");
+  name.textContent = `${metadata.name}.`;
   presetSummary.append(
-    `${metadata.description} · ${
+    name,
+    ` ${metadata.description} · ${
       metadata.coverage === "partial" ? "Partial" : "Full"
     } coverage`,
   );
@@ -768,9 +789,7 @@ function update(): void {
     ? `${[...source.value].length} characters`
     : "";
   const preset = currentPreset();
-  outputMeta.textContent = preset
-    ? (presets.find(({ id }) => id === preset)?.name.split(" — ")[0] ?? "")
-    : "";
+  outputMeta.textContent = preset ? SHORT_NAMES[preset] : "";
   let options: ConversionOptions = {};
   let inventory: ConverterConfiguration = {};
   try {

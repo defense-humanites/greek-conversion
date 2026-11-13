@@ -316,14 +316,21 @@ h1 span {
   align-items: center;
   gap: 12px;
 }
+/*
+ * The standard takes the rest of the line, so that the sentence fills the
+ * width; where less than about 320 px remain, it moves to a line of its own,
+ * still full width.
+ */
 .sentence .group {
-  display: inline-flex;
+  display: flex;
+  flex: 1 1 320px;
   align-items: center;
   gap: 12px;
   min-width: 0;
   max-width: 100%;
 }
 .sentence .group .chip-select {
+  flex: 1;
   min-width: 0;
 }
 .sentence .group select {
@@ -420,6 +427,10 @@ h1 span {
 .targets label:has(input:focus-visible) {
   outline: 2px solid var(--from);
   outline-offset: 2px;
+}
+.preset-line strong {
+  font-weight: 600;
+  color: var(--ink);
 }
 .preset-line p {
   margin: 0;
