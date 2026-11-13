@@ -21,7 +21,9 @@ change.
   `ἔχουσ’ ἐγώ` gave `ἔχους’ ἐγώ`, the Modern Greek `σ’ αγαπώ` gave `ς’ αγαπώ`,
   and the Beta Code `a)gge/llous'` gave `ἀγγέλλους’`. The sigma is final only
   before an apostrophe that closes a quotation opened by `‘` on the same line,
-  and that no word beginning with a vowel follows (‘λόγος’). A straight
+  and that no word beginning with a vowel follows on that line (‘λόγος’). A
+  sigma on its own (`σ’ το πω`) is always medial, and an apostrophe after
+  punctuation or a digit always closes the quotation (‘ναί.’). A straight
   quotation mark opens nothing, since it cannot be told from an aphaeresis:
   `'λόγος'` now gives `’λόγοσ’`. This applies wherever the position decides
   the shape: under the default `finalSigma: "contextual"`, and under
