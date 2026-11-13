@@ -102,6 +102,13 @@ const CASES = [
     latin: "16 26",
     lossy: true,
   },
+  {
+    preset: "ala-lc-modern",
+    rule: "numerals: στ after a unit or after a bare thousands sign stays text",
+    greek: "αστʹ εστʹ ͵στʹ",
+    latin: "astʹ estʹ ͵stʹ",
+    lossy: false,
+  },
 ] as const;
 
 for (const { preset, rule, greek, latin, lossy } of CASES) {
