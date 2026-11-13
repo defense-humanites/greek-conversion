@@ -56,20 +56,20 @@
           <div class="sentence">
             <span class="word" id="verb">Convert</span>
             <div class="segments sources" role="radiogroup"
-              aria-labelledby="verb">
-              <label data-label="Auto" class="auto-choice"
-                title="Detect the format from the text"><input type="radio"
-                  name="source" value="auto" checked>
-                <span>Auto</span><span id="detected-note"
-                  class="visually-hidden"></span></label>
+              aria-labelledby="verb" aria-describedby="source-hint">
               <label data-label="Greek"><input type="radio" name="source"
-                  value="greek"> <span>Greek</span></label>
+                  value="greek" checked> <span>Greek</span><span
+                  class="visually-hidden source-note"></span></label>
               <label data-label="Beta Code"><input type="radio" name="source"
-                  value="beta-code"> <span>Beta Code</span></label>
+                  value="beta-code"> <span>Beta Code</span><span
+                  class="visually-hidden source-note"></span></label>
               <label data-label="Transliteration"><input type="radio"
                   name="source" value="transliteration">
-                <span>Transliteration</span></label>
+                <span>Transliteration</span><span
+                  class="visually-hidden source-note"></span></label>
             </div>
+            <p id="source-hint" class="visually-hidden">The format is detected
+              from the text until you choose one. Choose it again to detect it.</p>
             <span class="target-group">
             <span class="word" id="target-word">to</span>
             <div class="segments targets" role="radiogroup"

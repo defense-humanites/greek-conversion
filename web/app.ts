@@ -291,14 +291,23 @@ function syncPresets(from: Format, to: Format): boolean {
 /** The last format read from the text, kept while the text gives no clue. */
 let detected: Format = "greek";
 
+/** Whether the source format is detected rather than chosen. */
+let sourceAuto = true;
+/** The source format checked when the settings were last shown. */
+let shownSource: Format = "greek";
+
 /** The reader's choice of source format, or "auto" to detect it. */
 function sourceChoice(): Format | "auto" {
+  if (sourceAuto) return "auto";
   const checked = sourceInputs.find((input) => input.checked);
-  return (checked?.value ?? "auto") as Format | "auto";
+  return (checked?.value ?? detected) as Format;
 }
 
 function setSourceChoice(choice: Format | "auto"): void {
-  for (const input of sourceInputs) input.checked = input.value === choice;
+  sourceAuto = choice === "auto";
+  if (choice !== "auto") {
+    for (const input of sourceInputs) input.checked = input.value === choice;
+  }
 }
 
 /**
@@ -312,30 +321,32 @@ function sourceFormat(): Format {
   return detectFormat(source.value) ?? detected;
 }
 
-const detectedNote = element<HTMLSpanElement>("detected-note");
-
 /**
- * Under "Auto", frames the detected format with a dashed border, where a
- * chosen one has a solid border, and names it in the Auto choice for screen
- * readers: "Auto, Greek detected".
+ * Checks the source format and says how it was set: a dashed border and the
+ * source colour when detected, a solid border when chosen. Screen readers
+ * hear "Greek (detected)".
  */
 function showDetection(): void {
   const found = detectFormat(source.value);
   if (found !== undefined) detected = found;
-  const auto = sourceChoice() === "auto";
+  const format = sourceFormat();
   const note = found === undefined ? "assumed" : "detected";
-  detectedNote.textContent = `, ${FORMAT_NAMES[detected]} ${note}`;
   for (const input of sourceInputs) {
+    input.checked = input.value === format;
     const label = input.parentElement as HTMLLabelElement;
-    const shown = auto && input.value === detected;
-    label.classList.toggle("detected", shown);
-    if (input.value === "auto") continue;
-    label.title = shown
+    const guessed = sourceAuto && input.checked;
+    label.classList.toggle("detected", guessed);
+    const spoken = label.querySelector(".source-note");
+    if (spoken) spoken.textContent = guessed ? ` (${note})` : "";
+    label.title = !input.checked
+      ? ""
+      : sourceAuto
       ? found === undefined
-        ? "Assumed: the text has no letters yet"
-        : "Detected from the text"
-      : "";
+        ? "Assumed: the text has no letters yet. Choose it to keep it."
+        : "Detected from the text. Choose it to keep it."
+      : "Chosen. Choose it again to detect the format from the text.";
   }
+  shownSource = format;
 }
 
 function targetFormat(): Format {
@@ -1393,7 +1404,30 @@ async function share(): Promise<void> {
   shareTimer = setTimeout(() => (shareNote.textContent = ""), 6000);
 }
 
-for (const input of sourceInputs) input.addEventListener("change", update);
+for (const input of sourceInputs) {
+  // Choosing the format already shown keeps it, or, once kept, goes back to
+  // detecting it; choosing another one keeps that one.
+  input.addEventListener("click", () => {
+    if (input.value === shownSource) {
+      sourceAuto = !sourceAuto;
+      update();
+    }
+  });
+  // Space on the checked format does nothing natively.
+  input.addEventListener("keydown", (event) => {
+    if (event.key === " " && input.value === shownSource) {
+      event.preventDefault();
+      sourceAuto = !sourceAuto;
+      update();
+      // Detection may check another format: the focus follows it.
+      sourceInputs.find((other) => other.checked)?.focus();
+    }
+  });
+  input.addEventListener("change", () => {
+    sourceAuto = false;
+    update();
+  });
+}
 for (const input of targetInputs) input.addEventListener("change", update);
 presetSelect.addEventListener("change", () => {
   choosePreset(currentPreset());

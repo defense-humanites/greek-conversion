@@ -462,21 +462,11 @@ h1 span {
   border-radius: 3px;
   background: var(--accent);
 }
-/* Detected rather than chosen: the border says it is a guess. */
-.segments label.detected {
+/* Detected rather than chosen: a dashed border, the text in the source
+   colour. */
+.sources label.detected {
   border-style: dashed;
-}
-/* Auto, when on, names no format itself: the dashed frame shows the one. */
-.segments label.auto-choice:has(input:checked) {
-  border-color: transparent;
-  background: none;
   color: var(--from);
-}
-.segments label.auto-choice:has(input:checked)::before {
-  display: none;
-}
-.segments label.auto-choice:has(input:checked) > span {
-  justify-self: center;
 }
 .segments label:has(input:focus-visible) {
   outline: 2px solid var(--from);
