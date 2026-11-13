@@ -55,7 +55,10 @@
         <section class="controls" aria-label="Conversion">
           <div class="sentence">
             <label class="word" for="source-format">Convert</label>
-            <span class="chip-select from">
+            <span class="chip-select from" id="source-chip">
+              <span class="chip-face" aria-hidden="true"><span
+                  id="source-face-name">Greek</span>
+                <span id="source-face-note" class="chip-note">detected</span></span>
               <select id="source-format">
                 <option value="auto">Detected</option>
                 <option value="greek">Greek</option>

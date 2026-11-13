@@ -374,17 +374,48 @@ h1 span {
   appearance: none;
 }
 /*
- * A menu is as wide as its longest option; the source menu takes the width
- * of the format it shows instead (by script where `field-sizing` is not
- * supported), so that the sentence keeps to one line.
+ * The source menu: a native menu, transparent, over a drawn face that sets
+ * the width and can mix styles ("Greek" bold, "detected" lighter), which an
+ * option's text cannot. The menu keeps the clicks, the keyboard, the
+ * system's list of options and what screen readers announce; the face is
+ * hidden from them.
  */
-.chip-select.from select {
-  border-color: var(--from);
+.chip-select.from {
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 38px 0 14px;
+  border: 2px solid var(--from);
+  border-radius: var(--radius);
   background: var(--raised);
-  field-sizing: content;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+.chip-select.from .chip-note {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.chip-select.from select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  /* At least 16 px, or iOS zooms in on the menu. */
+  font-size: 16px;
+}
+.chip-select.from:has(select:focus-visible) {
+  outline: 2px solid var(--from);
+  outline-offset: 2px;
 }
 /* Detected rather than chosen: the border says it is a guess. */
-.chip-select.from select.auto {
+.chip-select.from.auto {
   border-style: dashed;
 }
 .chip-select.standard select {

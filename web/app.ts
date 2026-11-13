@@ -224,37 +224,24 @@ function sourceFormat(): Format {
   return detectFormat(source.value) ?? detected;
 }
 
+const sourceChip = element<HTMLSpanElement>("source-chip");
+const sourceFaceName = element<HTMLSpanElement>("source-face-name");
+const sourceFaceNote = element<HTMLSpanElement>("source-face-note");
+
+/**
+ * Shows the source format on the menu's face, and in the text of its first
+ * option, which is what screen readers announce: "Greek · detected".
+ */
 function showDetection(): void {
   const found = detectFormat(source.value);
   if (found !== undefined) detected = found;
-  autoOption.textContent = `${FORMAT_NAMES[detected]} · ${
-    found === undefined ? "assumed" : "detected"
-  }`;
-  sourceSelect.classList.toggle("auto", sourceSelect.value === "auto");
-  fitSelect(sourceSelect);
-}
-
-const measure = document.createElement("canvas").getContext("2d");
-
-/** Fits a menu to the option it shows, as `field-sizing: content` would. */
-function fitSelect(select: HTMLSelectElement): void {
-  if (measure === null || CSS.supports("field-sizing", "content")) return;
-  const style = getComputedStyle(select);
-  measure.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-  const text = select.selectedOptions[0]?.text ?? "";
-  const frame = [
-    "paddingLeft",
-    "paddingRight",
-    "borderLeftWidth",
-    "borderRightWidth",
-  ]
-    .reduce((sum, side) =>
-      sum + parseFloat(style.getPropertyValue(
-        side.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`),
-      )), 0);
-  select.style.width = `${
-    Math.ceil(measure.measureText(text).width + frame)
-  }px`;
+  const auto = sourceSelect.value === "auto";
+  const note = found === undefined ? "assumed" : "detected";
+  autoOption.textContent = `${FORMAT_NAMES[detected]} · ${note}`;
+  sourceFaceName.textContent = FORMAT_NAMES[sourceFormat()];
+  sourceFaceNote.textContent = auto ? note : "";
+  sourceFaceNote.hidden = !auto;
+  sourceChip.classList.toggle("auto", auto);
 }
 
 function targetFormat(): Format {
@@ -984,9 +971,6 @@ addEventListener("hashchange", () => {
   renderExamples();
   update();
 });
-
-// The menu is measured again once its typeface has loaded.
-void document.fonts.ready.then(() => fitSelect(sourceSelect));
 
 restoreTab();
 restoreState();
