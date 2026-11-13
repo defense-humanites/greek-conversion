@@ -318,12 +318,26 @@ h1 span {
   align-items: center;
   gap: 12px;
 }
-/* "to" stays with the targets when the line wraps. */
+/*
+ * The first line takes the full width: the two groups share what is left
+ * after the words, and their formats share each group's width. "to" stays
+ * with the targets when the line wraps.
+ */
+.sentence .sources,
+.target-group {
+  flex: 1 1 auto;
+}
 .target-group {
   display: inline-flex;
   align-items: center;
   gap: 12px;
   max-width: 100%;
+}
+.target-group .segments {
+  flex: 1 1 auto;
+}
+.sentence .segments label {
+  flex: 1 1 0;
 }
 /* The second line: the standard, then the options. */
 .option-line .group {
@@ -423,18 +437,19 @@ h1 span {
   color: var(--ink);
 }
 /*
- * Each target keeps the width of its selected form, bold and with its
- * square, so that the group does not change width as the selection moves:
- * a hidden copy of the label, stacked with it, sets the width. Unselected,
- * the label is centred in that width; selected, it moves right of the
- * square.
+ * Each format keeps at least the width of its selected form, bold and with
+ * its square, so that the group does not change width as the selection
+ * moves: a hidden copy of the label, stacked with it, sets that width. The
+ * name, and the square before it when selected, are centred.
  */
 .segments label {
   position: relative;
   display: inline-grid;
 }
 .segments label > span {
+  display: inline-flex;
   grid-area: 1 / 1;
+  align-items: center;
   justify-self: center;
 }
 .segments label::after {
@@ -446,19 +461,12 @@ h1 span {
   font-weight: 700;
   visibility: hidden;
 }
-.segments label:has(input:checked) > span,
-.segments label.detected > span {
-  justify-self: end;
-}
-.segments label:has(input:checked)::before,
-.segments label.detected::before {
+.segments label:has(input:checked) > span:first-of-type::before,
+.segments label.detected > span:first-of-type::before {
   content: "";
-  position: absolute;
-  top: 50%;
-  left: 14px;
   width: 10px;
   height: 10px;
-  margin-top: -5px;
+  margin-right: 8px;
   border-radius: 3px;
   background: var(--accent);
 }
@@ -1237,8 +1245,9 @@ footer strong {
     flex-wrap: nowrap;
     width: 100%;
   }
-  .segments label {
-    flex: auto;
+  .sentence .segments label {
+    flex: 1 1 auto;
+    white-space: nowrap;
     justify-content: center;
     padding: 0 8px;
     font-size: 15px;
@@ -1247,13 +1256,9 @@ footer strong {
   .segments label::after {
     padding-left: 0;
   }
-  .segments label:has(input:checked)::before,
-  .segments label.detected::before {
+  .segments label:has(input:checked) > span:first-of-type::before,
+  .segments label.detected > span:first-of-type::before {
     display: none;
-  }
-  .segments label:has(input:checked) > span,
-  .segments label.detected > span {
-    justify-self: center;
   }
 
   .links {
