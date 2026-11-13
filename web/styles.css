@@ -320,12 +320,12 @@ h1 span {
 }
 /*
  * The standard takes the rest of the line, so that the sentence fills the
- * width; where less than about 320 px remain, it moves to a line of its own,
+ * width; where less than about 240 px remain, it moves to a line of its own,
  * still full width.
  */
 .sentence .group {
   display: flex;
-  flex: 1 1 320px;
+  flex: 1 1 240px;
   align-items: center;
   gap: 12px;
   min-width: 0;
@@ -373,9 +373,15 @@ h1 span {
   text-overflow: ellipsis;
   appearance: none;
 }
+/*
+ * A menu is as wide as its longest option; the source menu takes the width
+ * of the format it shows instead (by script where `field-sizing` is not
+ * supported), so that the sentence keeps to one line.
+ */
 .chip-select.from select {
   border-color: var(--from);
   background: var(--raised);
+  field-sizing: content;
 }
 /* Detected rather than chosen: the border says it is a guess. */
 .chip-select.from select.auto {

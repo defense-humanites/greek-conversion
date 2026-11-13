@@ -231,6 +231,30 @@ function showDetection(): void {
     found === undefined ? "assumed" : "detected"
   }`;
   sourceSelect.classList.toggle("auto", sourceSelect.value === "auto");
+  fitSelect(sourceSelect);
+}
+
+const measure = document.createElement("canvas").getContext("2d");
+
+/** Fits a menu to the option it shows, as `field-sizing: content` would. */
+function fitSelect(select: HTMLSelectElement): void {
+  if (measure === null || CSS.supports("field-sizing", "content")) return;
+  const style = getComputedStyle(select);
+  measure.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+  const text = select.selectedOptions[0]?.text ?? "";
+  const frame = [
+    "paddingLeft",
+    "paddingRight",
+    "borderLeftWidth",
+    "borderRightWidth",
+  ]
+    .reduce((sum, side) =>
+      sum + parseFloat(style.getPropertyValue(
+        side.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`),
+      )), 0);
+  select.style.width = `${
+    Math.ceil(measure.measureText(text).width + frame)
+  }px`;
 }
 
 function targetFormat(): Format {
@@ -960,6 +984,9 @@ addEventListener("hashchange", () => {
   renderExamples();
   update();
 });
+
+// The menu is measured again once its typeface has loaded.
+void document.fonts.ready.then(() => fitSelect(sourceSelect));
 
 restoreTab();
 restoreState();
