@@ -294,7 +294,7 @@ h1 span {
 }
 /* Half the width, clear of the links and the Share button. */
 .intro {
-  max-width: max(50%, 340px);
+  max-width: max(55%, 340px);
   text-wrap: pretty;
   margin: -12px 0 0;
   font-size: 18px;
