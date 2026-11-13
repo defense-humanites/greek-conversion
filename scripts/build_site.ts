@@ -21,7 +21,7 @@ for (const name of ["index.html", "styles.css"]) {
 for (
   const name of [
     "bricolage-grotesque.woff2",
-    "literata-gc-regular.woff2",
+    "literata-gc-light.woff2",
     "noto-serif-greek-symbols.woff2",
   ]
 ) {

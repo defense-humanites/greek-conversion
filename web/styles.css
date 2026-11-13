@@ -1,9 +1,9 @@
 /*
  * The greek-conversion design system: Papier (light) and Nuit (dark), the
  * cobalt of the Greek half of the tessera for the source, the orange of its
- * Latin half for the target. Bricolage Grotesque for the interface, Literata
- * for the texts, a monospace face for Beta Code, whose punctuation marks are
- * letters.
+ * Latin half for the target. Bricolage Grotesque for the interface;
+ * Literata, one step lighter than Regular, for the texts in all three
+ * formats, Beta Code included; a monospace face for code.
  */
 @font-face {
   font-family: "Bricolage Grotesque";
@@ -13,8 +13,8 @@
 }
 @font-face {
   font-family: "Literata GC";
-  src: url("./fonts/literata-gc-regular.woff2") format("woff2");
-  font-weight: 400;
+  src: url("./fonts/literata-gc-light.woff2") format("woff2");
+  font-weight: 300;
   font-display: swap;
 }
 /*
@@ -25,7 +25,7 @@
 @font-face {
   font-family: "Literata GC";
   src: url("./fonts/noto-serif-greek-symbols.woff2") format("woff2");
-  font-weight: 400;
+  font-weight: 300;
   font-display: swap;
   size-adjust: 95%;
   unicode-range: U+037B-037D, U+03D0-03D6, U+03F0-03F1, U+03F5, U+03FD-03FF;
@@ -551,13 +551,12 @@ h1 span {
   color: var(--muted);
 }
 
-/* One typeface per text format */
+/* One typeface for the texts, whatever their format */
 .face-greek,
-.face-transliteration {
-  font-family: var(--face-text);
-}
+.face-transliteration,
 .face-beta-code {
-  font-family: var(--face-code);
+  font-family: var(--face-text);
+  font-weight: 300;
 }
 
 /* The two fields: the source in cobalt, the target in orange */
@@ -643,10 +642,6 @@ h1 span {
   resize: vertical;
   /* The field grows with its text where browsers allow it. */
   field-sizing: content;
-}
-.text.face-beta-code {
-  font-size: 20px;
-  line-height: 1.75;
 }
 .text:focus-visible {
   outline: none;
@@ -780,10 +775,6 @@ textarea.text::placeholder {
   font-family: var(--face-text);
   font-size: 26px;
   line-height: 1;
-}
-.letter.face-beta-code {
-  font-family: var(--face-code);
-  font-size: 16px;
 }
 .diagnostics .more {
   align-self: center;
