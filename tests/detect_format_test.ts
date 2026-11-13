@@ -10,11 +10,17 @@ test("detects Greek, Beta Code, and transliteration from their characters", () =
   assertEquals(detectFormat("w)|dh/"), "beta-code");
   assertEquals(detectFormat("Hóti mèn humeĩs, ō̃ ándres"), "transliteration");
   assertEquals(detectFormat("Hellēsin (egeneto)"), "transliteration");
+  assertEquals(detectFormat("pháos) hó|"), "transliteration");
 });
 
-test("leaves plain Latin letters and empty text undecided", () => {
-  assertEquals(detectFormat("logos"), undefined);
-  assertEquals(detectFormat("LOGOS"), undefined);
+test("takes plain Latin letters as a transliteration", () => {
+  assertEquals(detectFormat("logos"), "transliteration");
+  assertEquals(detectFormat("LOGOS"), "transliteration");
+  assertEquals(detectFormat("Menin aeide thea, 12"), "transliteration");
+  assertEquals(detectFormat("*logos"), "beta-code");
+});
+
+test("leaves text without letters undecided", () => {
   assertEquals(detectFormat(""), undefined);
   assertEquals(detectFormat("  , ; 12"), undefined);
 });

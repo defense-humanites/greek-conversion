@@ -273,9 +273,8 @@ let detected: Format = "greek";
 
 /**
  * The source format: the reader's choice, or, by default, the one the text
- * shows (`detectFormat`). Plain unaccented Latin letters read the same in
- * Beta Code and in transliteration; the last detected format then stays,
- * marked as assumed.
+ * shows (`detectFormat`). A text without letters gives no clue; the last
+ * detected format then stays, marked as assumed.
  */
 function sourceFormat(): Format {
   if (sourceSelect.value !== "auto") return sourceSelect.value as Format;

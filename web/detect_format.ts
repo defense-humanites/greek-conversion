@@ -8,18 +8,20 @@ const BETA_CODE = /[A-Za-z][()/\\=|+]|\*[()/\\=|+]*[A-Za-z]/;
 // Latin letters with diacritics, precomposed or combining, as a
 // transliteration writes them (`ē`, `á`, `ō̃`).
 const TRANSLITERATION = /[À-ɏḀ-ỿ]|[A-Za-z][̀-ͯ]/u;
+const LATIN = /[A-Za-z]/;
 
 /**
- * Guesses the format of a text from its characters: Greek script, Beta Code
- * marks against letters, or Latin letters with diacritics. Returns
- * `undefined` when the text gives no clue, as plain unaccented Latin letters
- * (`logos`) read the same in Beta Code and in transliteration.
+ * Guesses the format of a text from its characters. Greek script makes it
+ * Greek. Latin letters with diacritics make it a transliteration, even beside
+ * a parenthesis that would read as a breathing, since Beta Code is plain
+ * ASCII. Beta Code marks against letters make it Beta Code. Any other Latin
+ * letters (`logos`) are taken as a transliteration. Returns `undefined` when
+ * the text has no letter at all.
  */
 export function detectFormat(text: string): Format | undefined {
   if (GREEK.test(text)) return "greek";
-  // Beta Code is plain ASCII: a Latin letter with a diacritic rules it out,
-  // even beside a parenthesis that would otherwise read as a breathing.
   if (TRANSLITERATION.test(text)) return "transliteration";
   if (BETA_CODE.test(text)) return "beta-code";
+  if (LATIN.test(text)) return "transliteration";
   return undefined;
 }
