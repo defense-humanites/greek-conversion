@@ -737,6 +737,11 @@ textarea.text::placeholder {
   text-underline-offset: 0.25em;
   text-decoration-skip-ink: none;
 }
+/* Copied as is, but read back as Greek: nothing of the Greek is lost */
+.marks mark.literal {
+  text-decoration-style: dotted;
+  text-decoration-color: var(--from);
+}
 
 /* The verdict: the halves of the tessera meet when nothing is lost */
 .verdict {

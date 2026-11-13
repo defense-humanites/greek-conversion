@@ -513,38 +513,97 @@ function issueTitle(message: string, code: string): string {
 }
 
 /**
+ * A loss about a literal token: a character of another script, copied as it
+ * is, that the target format cannot set apart from Greek, so that converting
+ * back reads it as a Greek letter. Nothing of the Greek is lost.
+ */
+function readAsGreek(issue: Issue): boolean {
+  return issue.code === "unrepresented-literal";
+}
+
+/**
  * Underlines, in a copy of the input laid out under it, the letters whose
- * distinctions the conversion loses. Offsets count UTF-16 code units of the
- * input as typed.
+ * distinctions the conversion loses, and dots those it copies but would read
+ * back as Greek. Offsets count UTF-16 code units of the input as typed.
  */
 function showMarks(issues: readonly Issue[]): void {
   const text = source.value;
   const ranges = issues
-    .map(({ offset, length }) => [offset, offset + Math.max(length, 1)])
-    .sort((a, b) => a[0] - b[0]);
+    .map((issue) => ({
+      start: issue.offset,
+      end: issue.offset + Math.max(issue.length, 1),
+      literal: readAsGreek(issue),
+    }))
+    .sort((a, b) => a.start - b.start);
   sourceMarks.replaceChildren();
   let position = 0;
-  for (const [start, end] of ranges) {
+  for (const { start, end, literal } of ranges) {
     if (end <= position) continue;
     const from = Math.max(start, position);
     sourceMarks.append(text.slice(position, from));
     const mark = document.createElement("mark");
+    if (literal) mark.className = "literal";
     mark.textContent = text.slice(from, end);
     sourceMarks.append(mark);
     position = end;
   }
   // A final newline needs a character after it to take up its line.
-  sourceMarks.append(text.slice(position) + "​");
+  sourceMarks.append(text.slice(position) + "\u200b");
   sourceMarks.scrollTop = source.scrollTop;
 }
 
 /**
- * Lists diagnostics grouped by message, so that one kind of loss appears
- * once with every letter it affects rather than once per letter. Each letter
- * is the text of the input at the diagnostic's offset, as typed: indices
- * count the tokens of the document the conversion prepared, in which a
- * character outside the repertoire may be several literals, so they do not
- * match a reading of the input.
+ * Joins the issues of adjacent tokens into runs, so that a word of another
+ * script shows as one word rather than letter by letter.
+ */
+function runsOf(issues: readonly Issue[]): Issue[] {
+  const runs: Issue[] = [];
+  for (const issue of [...issues].sort((a, b) => a.offset - b.offset)) {
+    const last = runs.at(-1);
+    if (last && last.offset + last.length === issue.offset) {
+      runs[runs.length - 1] = { ...last, length: last.length + issue.length };
+    } else {
+      runs.push(issue);
+    }
+  }
+  return runs;
+}
+
+/** One card of the diagnostics: a kind of issue and the text it affects. */
+interface IssueCard {
+  title: string;
+  count: number;
+  text: string;
+  code: string;
+  affected: readonly Issue[];
+}
+
+/** Groups issues by message: one card per kind, with every letter it affects. */
+function cardsByMessage(issues: readonly Issue[]): IssueCard[] {
+  const groups = new Map<string, { code: string; issues: Issue[] }>();
+  for (const issue of issues) {
+    const group = groups.get(issue.message) ??
+      { code: issue.code, issues: [] };
+    group.issues.push(issue);
+    groups.set(issue.message, group);
+  }
+  return [...groups].map(([message, { code, issues: affected }]) => ({
+    title: issueTitle(message, code),
+    count: affected.length,
+    text: message,
+    code,
+    affected,
+  }));
+}
+
+/**
+ * Lists diagnostics in three sections: the distinctions the target does not
+ * keep; the letters of another script it copies but would read back as
+ * Greek; and the characters outside the repertoire. Each letter is the text
+ * of the input at the diagnostic's offset, as typed: indices count the
+ * tokens of the document the conversion prepared, in which a character
+ * outside the repertoire may be several literals, so they do not match a
+ * reading of the input.
  */
 function showIssues(
   losses: readonly ConversionLoss[],
@@ -555,32 +614,41 @@ function showIssues(
   diagnostics.hidden = losses.length + scope.length === 0;
   if (diagnostics.hidden) return;
 
-  for (
-    const [label, issues] of [
-      ["What the target does not keep", losses],
-      ["Characters outside the repertoire", scope],
-    ] as const
-  ) {
-    if (!issues.length) continue;
-    const groups = new Map<string, { code: string; issues: Issue[] }>();
-    for (const issue of issues) {
-      const group = groups.get(issue.message) ??
-        { code: issue.code, issues: [] };
-      group.issues.push(issue);
-      groups.set(issue.message, group);
-    }
+  const literals = losses.filter(readAsGreek);
+  const sections: [string, IssueCard[]][] = [
+    [
+      "What the target does not keep",
+      cardsByMessage(losses.filter((loss) => !readAsGreek(loss))),
+    ],
+    [
+      "Copied as is, read back as Greek",
+      literals.length
+        ? [{
+          title: "Letters of another script",
+          count: literals.length,
+          text:
+            "The target writes them as they are but cannot set them apart from Greek: converting the result back turns them into Greek letters.",
+          code: "unrepresented-literal",
+          affected: runsOf(literals),
+        }]
+        : [],
+    ],
+    ["Characters outside the repertoire", cardsByMessage(scope)],
+  ];
 
+  for (const [label, cards] of sections) {
+    if (!cards.length) continue;
     const heading = document.createElement("h2");
     heading.textContent = label;
     const list = document.createElement("ul");
-    for (const [message, { code: issueCode, issues: affected }] of groups) {
+    for (const { title: name, count, text, code, affected } of cards) {
       const item = document.createElement("li");
       const title = document.createElement("h3");
-      const count = document.createElement("span");
-      count.textContent = String(affected.length);
-      title.append(issueTitle(message, issueCode), count);
-      const text = document.createElement("p");
-      text.textContent = message;
+      const total = document.createElement("span");
+      total.textContent = String(count);
+      title.append(name, total);
+      const paragraph = document.createElement("p");
+      paragraph.textContent = text;
       const letters = document.createElement("div");
       letters.className = "letters";
       for (const issue of affected.slice(0, LETTERS_PER_ISSUE)) {
@@ -599,10 +667,10 @@ function showIssues(
         more.textContent = `… and ${affected.length - LETTERS_PER_ISSUE} more`;
         letters.append(more);
       }
-      const name = document.createElement("code");
-      name.className = "code-name";
-      name.textContent = issueCode;
-      item.append(title, text, letters, name);
+      const codeName = document.createElement("code");
+      codeName.className = "code-name";
+      codeName.textContent = code;
+      item.append(title, paragraph, letters, codeName);
       list.append(item);
     }
     diagnostics.append(heading, list);
@@ -899,8 +967,16 @@ function update(): void {
 
     output.value = result.output;
     copyButton.disabled = swapButton.disabled = false;
-    const lost = result.losses.length;
+    const literals = result.losses.filter(readAsGreek).length;
+    const lost = result.losses.length - literals;
     const outside = result.diagnostics.length;
+    const literalText = literals
+      ? ` ${
+        literals === 1
+          ? "1 letter of another script is"
+          : `${literals} letters of another script are`
+      } copied as is but would read back as Greek (dotted).`
+      : "";
     const outsideText = outside
       ? ` ${
         outside === 1 ? "1 character is" : `${outside} characters are`
@@ -913,7 +989,13 @@ function update(): void {
         "lossy",
         `${lost === 1 ? "1 distinction" : `${lost} distinctions`} lost.`,
         "Converting the result back will not give the same text. Underlined letters lose a distinction." +
-          outsideText,
+          literalText + outsideText,
+      );
+    } else if (literals) {
+      showVerdict(
+        "ok",
+        "No distinction lost.",
+        literalText.trimStart() + outsideText,
       );
     } else {
       showVerdict(
