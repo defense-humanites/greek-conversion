@@ -749,6 +749,125 @@ test("keeps no sigma shape for a capital", () => {
   assertEquals(parse("Σ", "greek")[0], parse("*s", "beta-code")[0]);
 });
 
+test("places a lunate sigma written as a standard sigma by its position", () => {
+  // A lunate sigma notes no position: when it is written as a standard sigma,
+  // the end of the word decides between ς and σ, even where the source shapes
+  // are preserved.
+  const standard = {
+    greek: { sigma: "standard", finalSigma: "preserve" },
+  } as const;
+  assertNfcEquals(convert("ϲῶμαϲ", "greek", "greek", standard), "σῶμας");
+  assertNfcEquals(
+    convert("lo/gos3", "beta-code", "greek", standard),
+    "λόγος",
+  );
+  assertNfcEquals(
+    convert("logoc", "transliteration", "greek", {
+      preset: "bnf-core",
+      greek: { finalSigma: "preserve" },
+    }),
+    "λογος",
+  );
+  assertNfcEquals(
+    convert("ΛΟΓΟϹ", "greek", "greek", {
+      ...standard,
+      text: { letterCase: "lowercase" },
+    }),
+    "λογος",
+  );
+  // The same holds for the sigma a dental is assimilated into.
+  assertNfcEquals(
+    convert("ἐλπίδϲ", "greek", "greek", {
+      greek: { ...standard.greek, dentalSigma: "assimilate" },
+    }),
+    "ἐλπίς",
+  );
+  // Noted shapes are still kept as written.
+  assertNfcEquals(
+    convert("λόγοσ ςῶμα ϲῶμαϲ", "greek", "greek", {
+      greek: { sigma: "preserve", finalSigma: "preserve" },
+    }),
+    "λόγοσ ςῶμα ϲῶμαϲ",
+  );
+});
+
+test("keeps a sigma before an elision apostrophe medial", () => {
+  // The apostrophe stands for the elided vowel, so the word goes on.
+  for (
+    const [input, expected] of [
+      ["σ’ αγαπώ", "σ’ αγαπώ"],
+      ["σ' αγαπώ", "σ’ αγαπώ"],
+      ["ἔχουσ’ ἐγώ", "ἔχουσ’ ἐγώ"],
+      ["ἔχους’ ἐγώ", "ἔχουσ’ ἐγώ"],
+      ["ἀγγέλλουσ’", "ἀγγέλλουσ’"],
+      ["« ἔχουσ’ ἐγώ »", "« ἔχουσ’ ἐγώ »"],
+      // An elision before punctuation, after an aphaeresis on the same line.
+      ["εἰ ’κεῖνος ἐλθοῦσ’, ἤν", "εἰ ’κεῖνος ἐλθοῦσ’, ἤν"],
+      // Every elision mark is read as the apostrophe.
+      ["ἔχουσʼ ἐγώ", "ἔχουσ’ ἐγώ"],
+      ["ἔχουσ᾽ ἐγώ", "ἔχουσ’ ἐγώ"],
+      // A sigma on its own is σε or σου, which Modern Greek also elides
+      // before a consonant, or the letter quoted.
+      ["θα σ’ το πω.", "θα σ’ το πω."],
+      ["‘σ’", "‘σ’"],
+    ]
+  ) assertNfcEquals(convert(input, "greek", "greek"), expected);
+  assertNfcEquals(
+    convert("a)gge/llous'", "beta-code", "greek"),
+    "ἀγγέλλουσ’",
+  );
+  assertNfcEquals(
+    convert("angéllous’", "transliteration", "greek"),
+    "ἀγγέλλουσ’",
+  );
+  // A position decides the shape under `preserve` too, when none is noted.
+  assertNfcEquals(
+    convert("a)gge/llous'", "beta-code", "greek", {
+      greek: { finalSigma: "preserve" },
+    }),
+    "ἀγγέλλουσ’",
+  );
+  assertNfcEquals(
+    convert("ἐλπίδσ’ ἐγώ", "greek", "greek", {
+      greek: { dentalSigma: "assimilate" },
+    }),
+    "ἐλπίσ’ ἐγώ",
+  );
+});
+
+test("ends a word with ς before an apostrophe that closes a quotation", () => {
+  for (
+    const [input, expected] of [
+      ["‘λόγος’ est", "‘λόγος’ est"],
+      ["‘λόγοσ’.", "‘λόγος’."],
+      // An apostrophe before a vowel is an elision, even inside a quotation.
+      ["‘οὐκ ἔστ’ ἔτυμος λόγος οὗτος’", "‘οὐκ ἔστ’ ἔτυμος λόγος οὗτος’"],
+      ["‘ἔχουσ’ ἐγώ’", "‘ἔχουσ’ ἐγώ’"],
+      // A quotation closed earlier on the line, or on another line, is over.
+      ["‘a’ puis ἔχουσ’", "‘a’ puis ἔχουσ’"],
+      ["‘a\nἔχουσ’", "‘a\nἔχουσ’"],
+      ["‘a\r\nἔχουσ’", "‘a\r\nἔχουσ’"],
+      ["‘a\u0085ἔχουσ’", "‘a\u0085ἔχουσ’"],
+      ["‘a\u2028ἔχουσ’", "‘a\u2028ἔχουσ’"],
+      // After punctuation or a digit, an apostrophe closes the quotation.
+      ["‘ναί.’ ἐλθοῦσ’, ἤν", "‘ναί.’ ἐλθοῦσ’, ἤν"],
+      ["‘Ναι,’ είπε· θα σ’ το πω.", "‘Ναι,’ είπε· θα σ’ το πω."],
+      ["‘1821’ θα σ’ το πω.", "‘1821’ θα σ’ το πω."],
+      // A word on the next line does not follow the apostrophe.
+      ["‘λόγος’\nἐστί", "‘λόγος’\nἐστί"],
+    ]
+  ) assertNfcEquals(convert(input, "greek", "greek"), expected);
+  // Two documented limits. A straight quotation mark cannot be told from an
+  // aphaeresis and opens nothing. An apostrophe before a vowel is read as an
+  // elision, so the quotation stays open for the rest of the line.
+  assertNfcEquals(convert("'λόγος' est", "greek", "greek"), "’λόγοσ’ est");
+  assertNfcEquals(convert("‘λόγος’ ἐστί", "greek", "greek"), "‘λόγοσ’ ἐστί");
+  assertNfcEquals(
+    convert("‘Ναι’ είπε ἐλθοῦσ’.", "greek", "greek"),
+    "‘Ναι’ είπε ἐλθοῦς’.",
+  );
+});
+
 test("folds Greek variants while keeping letter case independent", () => {
   // The recipe for a comparison spelling: standard beta and sigma, medial
   // sigma everywhere.
@@ -813,4 +932,137 @@ test("numeral glyphs override contextual letter styling", () => {
   assertNfcEquals(convert("βίος σός", "greek", "greek", styled), "βίοϲ ϲόϲ");
   assertNfcEquals(convert("βʹ σʹ", "greek", "greek", styled), "βʹ σʹ");
   assertNfcEquals(convert("βʹ σʹ", "greek", "beta-code", styled), "b# s#");
+});
+
+test("writes the iota subscript below the line or on it", () => {
+  const source = "τῷ ᾠδῷ, ᾨδῇ ᾍδης ᾼ";
+  const policies = {
+    subscript: "τῷ ᾠδῷ, ᾨδῇ ᾍδης ᾼ",
+    "capital-adscript": "τῷ ᾠδῷ, Ὠιδῇ Ἅιδης Αι",
+    adscript: "τῶι ὠιδῶι, Ὠιδῆι Ἅιδης Αι",
+  } as const;
+  for (const [iotaSubscript, expected] of Object.entries(policies)) {
+    const options = {
+      greek: { iotaSubscript: iotaSubscript as keyof typeof policies },
+    };
+    assertNfcEquals(convert(source, "greek", "greek", options), expected);
+    // The output converts again to itself.
+    assertNfcEquals(convert(expected, "greek", "greek", options), expected);
+    // Beta Code and transliteration keep their own spelling.
+    assertNfcEquals(convert("τῷ", "greek", "beta-code", options), "tw=|");
+  }
+  // Among capitals the iota is a capital, after an initial capital it is small.
+  const capitals = {
+    diacritics: { all: "remove", iotaSubscript: "preserve" },
+    greek: { iotaSubscript: "capital-adscript" },
+  } as const;
+  assertNfcEquals(
+    convert("τῇ ᾠδῇ", "greek", "greek", {
+      ...capitals,
+      text: { letterCase: "uppercase" },
+    }),
+    "ΤΗΙ ΩΙΔΗΙ",
+  );
+  assertNfcEquals(
+    convert("τῇ ᾠδῇ ᾗ", "greek", "greek", {
+      ...capitals,
+      text: { letterCase: "title" },
+    }),
+    "Τῃ Ωιδῃ Ηι",
+  );
+  assertNfcEquals(
+    convert("ᾗ", "greek", "greek", {
+      ...capitals,
+      text: { letterCase: "uppercase" },
+    }),
+    "ΗΙ",
+  );
+  // A removed subscript is not written at all.
+  assertNfcEquals(
+    convert("τῷ", "greek", "greek", {
+      diacritics: { iotaSubscript: "remove" },
+      greek: { iotaSubscript: "adscript" },
+    }),
+    "τῶ",
+  );
+});
+
+test("reports the iota subscript written on the line as lost", () => {
+  const result = convertDetailed("τῷ ᾨδῇ", "greek", "greek", {
+    greek: { iotaSubscript: "adscript" },
+  });
+  assertNfcEquals(result.output, "τῶι Ὠιδῆι");
+  assertEquals(result.lossy, true);
+  assertEquals(
+    result.losses.map((loss) => [loss.code, loss.diacritic, loss.offset]),
+    [
+      ["removed-diacritic", "iota-subscript", 1],
+      ["removed-diacritic", "iota-subscript", 3],
+      ["removed-diacritic", "iota-subscript", 5],
+    ],
+  );
+  // Below the line, nothing is lost.
+  assertEquals(
+    convertDetailed("τῷ ᾨδῇ", "greek", "greek", {
+      greek: { iotaSubscript: "capital-adscript" },
+    }).losses.map((loss) => loss.offset),
+    [3],
+  );
+});
+
+test("writes the iota on the line in Greek output only", () => {
+  const source = "τῷ ᾨδῇ ᾍδης";
+  for (const iotaSubscript of ["capital-adscript", "adscript"] as const) {
+    // Beta Code and transliteration ignore the option, under every preset.
+    for (
+      const preset of [undefined, "ala-lc-ancient", "sbl-academic"] as const
+    ) {
+      const base = preset === undefined ? {} : { preset };
+      for (const to of ["beta-code", "transliteration"] as const) {
+        assertEquals(
+          convert(source, "greek", to, { ...base, greek: { iotaSubscript } }),
+          convert(source, "greek", to, base),
+        );
+      }
+    }
+    // Other Greek output choices still apply.
+    const greek = (options: object) =>
+      convert(source, "greek", "greek", {
+        ...options,
+        greek: { ...(options as { greek?: object }).greek, iotaSubscript },
+      });
+    assertEquals(
+      greek({ greek: { composition: "decomposed" } }),
+      greek({}).normalize("NFD"),
+    );
+    // Monotonic Greek has no iota subscript to write.
+    assertNfcEquals(
+      greek({ greek: { accentuation: "monotonic" } }),
+      "τω Ωδή Άδης",
+    );
+    assertNfcEquals(
+      greek({ text: { letterCase: "lowercase" } }),
+      iotaSubscript === "adscript" ? "τῶι ὠιδῆι ἅιδης" : "τῷ ᾠδῇ ᾅδης",
+    );
+  }
+  // The added iota belongs to its vowel's output range.
+  const result = convertDetailed("τῷ ᾨ", "greek", "greek", {
+    greek: { iotaSubscript: "adscript" },
+  });
+  assertNfcEquals(result.output, "τῶι Ὠι");
+  assertEquals(
+    result.spans.map((span) => [span.outputStart, span.outputEnd]),
+    [[0, 1], [1, 3], [3, 4], [4, 6]],
+  );
+});
+
+test("writes Greek in the uncial style", () => {
+  assertNfcEquals(
+    convert("τῷ λόγῳ ἐστὶν ἀγαθός", "greek", "greek", {
+      text: { letterCase: "uppercase" },
+      diacritics: { all: "remove", iotaSubscript: "preserve" },
+      greek: { sigma: "lunate", iotaSubscript: "adscript" },
+    }),
+    "ΤΩΙ ΛΟΓΩΙ ΕϹΤΙΝ ΑΓΑΘΟϹ",
+  );
 });

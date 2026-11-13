@@ -84,6 +84,7 @@ export type {
   GreekOptions,
   GreekQuestionMarkForm,
   HyphenTransliteration,
+  IotaSubscriptOrthography,
   KeraiaTransliteration,
   LetterCaseOrthography,
   LongVowelTransliteration,

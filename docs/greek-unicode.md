@@ -113,6 +113,19 @@ Greek encoder itself, after the semantic punctuation rules, not by blind
 character replacement: `reencode(input, "greek", options)` is how a Greek
 string is restyled.
 
+## Iota subscript
+
+Greek output writes a kept iota subscript below the line, and after a capital
+as the prosgegrammeni (`ᾼ`, U+1FBC), which is what Unicode's titlecase mapping
+gives. `greek.iotaSubscript: "capital-adscript"` writes it on the line after a
+capital instead (`Ὠιδῇ`, `ΤΩΙ`), as Smyth describes (§ 5) and as Unicode's
+uppercase mapping does (`ᾳ` → `ΑΙ`). `"adscript"` writes it on the line after
+every vowel (`τῶι`). The iota is a capital among capitals and in text set in
+capitals, and small after a capital that begins a lowercase word or stands
+alone. Written on the line, it is a letter: it reads back as iota, and the
+conversion reports the loss of the subscript. Monotonic output has no iota
+subscript to write.
+
 ## Letter forms
 
 The Greek reader reads the symbol forms of letters as those letters, which is
@@ -133,3 +146,26 @@ so that Greek output can keep it (`greek.sigma: "preserve"`) and
 transliteration can write it `c` (`transliteration.lunateSigma: "c"`). By
 default Greek output writes `σ` or `ς`, and `convertDetailed()` reports the
 change (`removed-glyph-variant`).
+
+Where its position decides the shape of a sigma (`greek.finalSigma:
+"contextual"`, or `"preserve"` for a sigma whose shape the source does not
+note), a sigma before an apostrophe stays medial: the apostrophe stands for an
+elided vowel, and the word goes on (`ἔχουσ’ ἐγώ`, `σ’ αγαπώ`). The sigma is
+final only when the apostrophe closes a quotation that `‘` opened on the same
+line, and no word that begins with a vowel follows it on that line, since
+Greek elides only before a vowel. A sigma on its own is always medial: it is
+the elided σε or σου, which Modern Greek also elides before a consonant
+(`σ’ το πω`), or the letter quoted (‘σ’).
+
+```ts
+reencode("ἔχους’ ἐγώ", "greek"); // ἔχουσ’ ἐγώ
+reencode("‘λόγος’ est", "greek"); // ‘λόγος’ est
+```
+
+An apostrophe after punctuation or a digit cannot be an elision, and closes
+the quotation (‘ναί.’, ‘1821’). A straight quotation mark opens nothing, since
+it cannot be told from an aphaeresis (`’στιν`): `'λόγος'` gives `’λόγοσ’`. A
+closing quotation mark followed by a word that begins with a vowel is read as
+an elision: `‘λόγος’ ἐστί` gives `‘λόγοσ’ ἐστί`, and the quotation stays open
+for the rest of the line, so that `‘Ναι’ είπε ἐλθοῦσ’.` gives
+`‘Ναι’ είπε ἐλθοῦς’.`

@@ -4,6 +4,23 @@ export type DoubleRhoOrthography = "unmarked" | "smooth-rough";
 /** Selects standard beta or the medial lowercase symbol `ϐ` in Greek output. */
 export type MedialBetaOrthography = "standard" | "symbol";
 
+/**
+ * Selects where Greek output writes a kept iota subscript.
+ *
+ * `"subscript"` writes it below the line, and after a capital as the
+ * prosgegrammeni (`ᾳ`, `ᾼ`). `"capital-adscript"` writes it on the line after
+ * a capital, as Smyth (§ 5) describes and as Unicode's uppercase mapping does
+ * (`ᾨδῇ` → `Ὠιδῇ`, `ΤΗΙ ΩΙΔΗΙ`), and below the line elsewhere; `"adscript"`
+ * writes it on the line after every vowel (`τῶι`), as some editions and
+ * papyrological transcriptions do. An iota written on the line reads back as
+ * the letter iota, so a conversion that writes one reports the loss of the
+ * subscript.
+ */
+export type IotaSubscriptOrthography =
+  | "subscript"
+  | "capital-adscript"
+  | "adscript";
+
 /** Selects how a semantic coronis is represented in transliteration. */
 export type CoronisTransliteration = "omit" | "apostrophe" | "greek";
 
@@ -276,10 +293,12 @@ export interface TransliterationOptions {
 export interface GreekOptions {
   /** Sigma glyph policy. Defaults to `"standard"`. */
   sigma?: SigmaOrthography;
-  /** Lowercase final sigma policy in Greek output. Defaults to `"contextual"`; `"preserve"` retains source Greek sigma shapes. */
+  /** Lowercase final sigma policy in Greek output. Defaults to `"contextual"`; `"preserve"` retains source Greek sigma shapes and places any other sigma by its position, such as a lunate sigma written as a standard sigma. A sigma before an elision apostrophe is not at the end of its word. */
   finalSigma?: FinalSigmaOrthography;
   /** Medial lowercase beta glyph. Defaults to `"standard"`. */
   medialBeta?: MedialBetaOrthography;
+  /** Where a kept iota subscript is written. Defaults to `"subscript"`; whether it is kept is `diacritics.iotaSubscript`. */
+  iotaSubscript?: IotaSubscriptOrthography;
   /** Double-rho marks in Greek output. Defaults to `"unmarked"`. */
   doubleRho?: DoubleRhoOrthography;
   /** Dental assimilation before sigma. Defaults to `"preserve"`. */
@@ -393,6 +412,7 @@ export interface DefaultConversionOptions {
     readonly sigma: "standard";
     readonly finalSigma: "contextual";
     readonly medialBeta: "standard";
+    readonly iotaSubscript: "subscript";
     readonly doubleRho: "unmarked";
     readonly dentalSigma: "preserve";
     readonly accentuation: "polytonic";
@@ -545,6 +565,7 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
     sigma: ["standard", "lunate", "preserve"],
     finalSigma: ["contextual", "medial", "preserve"],
     medialBeta: ["standard", "symbol"],
+    iotaSubscript: ["subscript", "capital-adscript", "adscript"],
     doubleRho: ["unmarked", "smooth-rough"],
     dentalSigma: ["preserve", "assimilate"],
     accentuation: ["polytonic", "monotonic"],
@@ -609,6 +630,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         sigma: "standard",
         finalSigma: "contextual",
         medialBeta: "standard",
+        iotaSubscript: "subscript",
         doubleRho: "unmarked",
         dentalSigma: "preserve",
         accentuation: "polytonic",
