@@ -913,3 +913,90 @@ test("numeral glyphs override contextual letter styling", () => {
   assertNfcEquals(convert("βʹ σʹ", "greek", "greek", styled), "βʹ σʹ");
   assertNfcEquals(convert("βʹ σʹ", "greek", "beta-code", styled), "b# s#");
 });
+
+test("writes the iota subscript below the line or on it", () => {
+  const source = "τῷ ᾠδῷ, ᾨδῇ ᾍδης ᾼ";
+  const policies = {
+    subscript: "τῷ ᾠδῷ, ᾨδῇ ᾍδης ᾼ",
+    "capital-adscript": "τῷ ᾠδῷ, Ὠιδῇ Ἅιδης Αι",
+    adscript: "τῶι ὠιδῶι, Ὠιδῆι Ἅιδης Αι",
+  } as const;
+  for (const [iotaSubscript, expected] of Object.entries(policies)) {
+    const options = {
+      greek: { iotaSubscript: iotaSubscript as keyof typeof policies },
+    };
+    assertNfcEquals(convert(source, "greek", "greek", options), expected);
+    // The output converts again to itself.
+    assertNfcEquals(convert(expected, "greek", "greek", options), expected);
+    // Beta Code and transliteration keep their own spelling.
+    assertNfcEquals(convert("τῷ", "greek", "beta-code", options), "tw=|");
+  }
+  // Among capitals the iota is a capital, after an initial capital it is small.
+  const capitals = {
+    diacritics: { all: "remove", iotaSubscript: "preserve" },
+    greek: { iotaSubscript: "capital-adscript" },
+  } as const;
+  assertNfcEquals(
+    convert("τῇ ᾠδῇ", "greek", "greek", {
+      ...capitals,
+      text: { letterCase: "uppercase" },
+    }),
+    "ΤΗΙ ΩΙΔΗΙ",
+  );
+  assertNfcEquals(
+    convert("τῇ ᾠδῇ ᾗ", "greek", "greek", {
+      ...capitals,
+      text: { letterCase: "title" },
+    }),
+    "Τῃ Ωιδῃ Ηι",
+  );
+  assertNfcEquals(
+    convert("ᾗ", "greek", "greek", {
+      ...capitals,
+      text: { letterCase: "uppercase" },
+    }),
+    "ΗΙ",
+  );
+  // A removed subscript is not written at all.
+  assertNfcEquals(
+    convert("τῷ", "greek", "greek", {
+      diacritics: { iotaSubscript: "remove" },
+      greek: { iotaSubscript: "adscript" },
+    }),
+    "τῶ",
+  );
+});
+
+test("reports the iota subscript written on the line as lost", () => {
+  const result = convertDetailed("τῷ ᾨδῇ", "greek", "greek", {
+    greek: { iotaSubscript: "adscript" },
+  });
+  assertNfcEquals(result.output, "τῶι Ὠιδῆι");
+  assertEquals(result.lossy, true);
+  assertEquals(
+    result.losses.map((loss) => [loss.code, loss.diacritic, loss.offset]),
+    [
+      ["removed-diacritic", "iota-subscript", 1],
+      ["removed-diacritic", "iota-subscript", 3],
+      ["removed-diacritic", "iota-subscript", 5],
+    ],
+  );
+  // Below the line, nothing is lost.
+  assertEquals(
+    convertDetailed("τῷ ᾨδῇ", "greek", "greek", {
+      greek: { iotaSubscript: "capital-adscript" },
+    }).losses.map((loss) => loss.offset),
+    [3],
+  );
+});
+
+test("writes Greek in the uncial style", () => {
+  assertNfcEquals(
+    convert("τῷ λόγῳ ἐστὶν ἀγαθός", "greek", "greek", {
+      text: { letterCase: "uppercase" },
+      diacritics: { all: "remove", iotaSubscript: "preserve" },
+      greek: { sigma: "lunate", iotaSubscript: "adscript" },
+    }),
+    "ΤΩΙ ΛΟΓΩΙ ΕϹΤΙΝ ΑΓΑΘΟϹ",
+  );
+});

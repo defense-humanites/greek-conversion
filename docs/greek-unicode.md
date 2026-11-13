@@ -113,6 +113,18 @@ Greek encoder itself, after the semantic punctuation rules, not by blind
 character replacement: `reencode(input, "greek", options)` is how a Greek
 string is restyled.
 
+## Iota subscript
+
+Greek output writes a kept iota subscript below the line, and after a capital
+as the prosgegrammeni (`ᾼ`, U+1FBC), which is what Unicode's titlecase mapping
+gives. `greek.iotaSubscript: "capital-adscript"` writes it on the line after a
+capital instead (`Ὠιδῇ`, `ΤΩΙ`), as Smyth describes (§ 5) and as Unicode's
+uppercase mapping does (`ᾳ` → `ΑΙ`). `"adscript"` writes it on the line after
+every vowel (`τῶι`). The iota is a capital among capitals and in text set in
+capitals, and small after a capital that begins a lowercase word or stands
+alone. Written on the line, it is a letter: it
+reads back as iota, and the conversion reports the loss of the subscript.
+
 ## Letter forms
 
 The Greek reader reads the symbol forms of letters as those letters, which is

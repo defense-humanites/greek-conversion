@@ -7,6 +7,18 @@ change.
 
 ## [Unreleased]
 
+### Added
+
+- `greek.iotaSubscript` decides where Greek output writes a kept iota
+  subscript. `"subscript"`, the default, writes it below the line as before.
+  `"capital-adscript"` writes it on the line after a capital, as Smyth
+  describes (§ 5) and as Unicode's uppercase mapping does: `ᾨδῇ` gives `Ὠιδῇ`,
+  and `τῇ ᾠδῇ` in capitals gives `ΤΗΙ ΩΙΔΗΙ` once the other marks are
+  removed. `"adscript"` writes it on the line after every vowel (`τῶι`). An
+  iota on the line reads back as a letter, and `convertDetailed()` reports the
+  loss of the subscript. The README gives a recipe for Greek in the uncial
+  style, with this option.
+
 ### Fixed
 
 - Under `greek.finalSigma: "preserve"`, a lunate sigma written as a standard
