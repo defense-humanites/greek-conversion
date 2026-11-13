@@ -2,6 +2,7 @@ import {
   CharacterScopeError,
   createConverter,
   FORMATS,
+  getPresetOptions,
   listPresetMetadata,
   resolveConversionOptions,
 } from "../src/mod.ts";
@@ -201,10 +202,67 @@ const SHORT_NAMES: Readonly<Record<Preset, string>> = {
 };
 
 const presets = listPresetMetadata();
-for (const metadata of presets) {
-  const option = new Option(SHORT_NAMES[metadata.id], metadata.id);
-  option.title = metadata.name;
-  presetSelect.add(option);
+
+/**
+ * The format a standard governs: Beta Code for the presets that set Beta
+ * Code options, transliteration for the others. A standard is offered only
+ * when the source or the target is in its format.
+ */
+function presetFormat(preset: Preset): Format {
+  return "betaCode" in getPresetOptions(preset)
+    ? "beta-code"
+    : "transliteration";
+}
+
+/** The reader's standard, kept when the formats hide it for a while. */
+let chosenPreset: Preset | "" = "";
+/** The last standard chosen for each format, offered again on return. */
+const lastPreset: Partial<Record<Format, Preset>> = {};
+
+const PRESET_GROUPS: Readonly<Partial<Record<Format, string>>> = {
+  transliteration: "Transliteration",
+  "beta-code": "Beta Code",
+};
+
+/**
+ * Lists the standards that apply to the formats in use, grouped by format
+ * when both apply (Beta Code to transliteration). A standard that no longer
+ * applies gives way to the last one chosen for the new format, or to none.
+ * Returns whether the standard in use changed.
+ */
+function syncPresets(from: Format, to: Format): boolean {
+  const formats: Format[] = [...new Set([from, to])].filter((format) =>
+    format !== "greek"
+  );
+  const before = presetSelect.value;
+  const none = new Option("No standard", "");
+  presetSelect.replaceChildren(none);
+  for (const format of formats) {
+    const parent = formats.length > 1
+      ? document.createElement("optgroup")
+      : presetSelect;
+    if (parent instanceof HTMLOptGroupElement) {
+      parent.label = PRESET_GROUPS[format] ?? format;
+      presetSelect.append(parent);
+    }
+    for (const metadata of presets) {
+      if (presetFormat(metadata.id) !== format) continue;
+      const option = new Option(SHORT_NAMES[metadata.id], metadata.id);
+      option.title = metadata.name;
+      parent.append(option);
+    }
+  }
+  const applies = (preset: Preset | "" | undefined): preset is Preset =>
+    preset !== undefined && preset !== "" &&
+    formats.includes(presetFormat(preset));
+  const fallback = formats.map((format) => lastPreset[format]).find(applies);
+  presetSelect.value = applies(chosenPreset) ? chosenPreset : fallback ?? "";
+  // Greek to Greek: no standard applies.
+  presetSelect.disabled = formats.length === 0;
+  presetSelect.title = presetSelect.disabled
+    ? "Standards apply to transliteration and Beta Code"
+    : "";
+  return presetSelect.value !== before;
 }
 
 /* Source and target formats */
@@ -275,6 +333,11 @@ function applyFaces(from: Format, to: Format): void {
 
 function currentPreset(): Preset | "" {
   return presetSelect.value as Preset | "";
+}
+
+function choosePreset(preset: Preset | ""): void {
+  chosenPreset = preset;
+  if (preset) lastPreset[presetFormat(preset)] = preset;
 }
 
 function showPreset(): void {
@@ -771,10 +834,8 @@ function restoreState(): void {
   const to = state.get("to");
   sourceSelect.value = known(from) ? from : "auto";
   if (known(to)) setTarget(to);
-  const preset = state.get("preset");
-  presetSelect.value = preset && presets.some(({ id }) => id === preset)
-    ? preset
-    : "";
+  const preset = presets.find(({ id }) => id === state.get("preset"))?.id;
+  choosePreset(preset ?? "");
   if (state.has("text")) source.value = state.get("text") ?? "";
   optionsInput.value = state.get("options") ?? "";
   inventoryInput.value = state.get("characters") ?? "";
@@ -803,6 +864,10 @@ function update(): void {
   showDetection();
   const from = sourceFormat();
   const to = targetFormat();
+  if (syncPresets(from, to)) {
+    showPreset();
+    renderExamples();
+  }
   applyFaces(from, to);
   sourceMeta.textContent = source.value
     ? `${[...source.value].length} characters`
@@ -918,6 +983,7 @@ async function share(): Promise<void> {
 sourceSelect.addEventListener("change", update);
 for (const input of targetInputs) input.addEventListener("change", update);
 presetSelect.addEventListener("change", () => {
+  choosePreset(currentPreset());
   showPreset();
   renderExamples();
   update();

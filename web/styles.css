@@ -418,6 +418,13 @@ h1 span {
 .chip-select.from.auto {
   border-style: dashed;
 }
+.chip-select select:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+.chip-select:has(select:disabled)::after {
+  opacity: 0.4;
+}
 .chip-select.standard select {
   border-width: 1.5px;
   font-weight: 600;
