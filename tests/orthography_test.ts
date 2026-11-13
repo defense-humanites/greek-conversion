@@ -803,6 +803,13 @@ test("keeps a sigma before an elision apostrophe medial", () => {
       ["« ἔχουσ’ ἐγώ »", "« ἔχουσ’ ἐγώ »"],
       // An elision before punctuation, after an aphaeresis on the same line.
       ["εἰ ’κεῖνος ἐλθοῦσ’, ἤν", "εἰ ’κεῖνος ἐλθοῦσ’, ἤν"],
+      // Every elision mark is read as the apostrophe.
+      ["ἔχουσʼ ἐγώ", "ἔχουσ’ ἐγώ"],
+      ["ἔχουσ᾽ ἐγώ", "ἔχουσ’ ἐγώ"],
+      // A sigma on its own is σε or σου, which Modern Greek also elides
+      // before a consonant, or the letter quoted.
+      ["θα σ’ το πω.", "θα σ’ το πω."],
+      ["‘σ’", "‘σ’"],
     ]
   ) assertNfcEquals(convert(input, "greek", "greek"), expected);
   assertNfcEquals(
@@ -839,13 +846,26 @@ test("ends a word with ς before an apostrophe that closes a quotation", () => {
       // A quotation closed earlier on the line, or on another line, is over.
       ["‘a’ puis ἔχουσ’", "‘a’ puis ἔχουσ’"],
       ["‘a\nἔχουσ’", "‘a\nἔχουσ’"],
+      ["‘a\r\nἔχουσ’", "‘a\r\nἔχουσ’"],
+      ["‘a\u0085ἔχουσ’", "‘a\u0085ἔχουσ’"],
+      ["‘a\u2028ἔχουσ’", "‘a\u2028ἔχουσ’"],
+      // After punctuation or a digit, an apostrophe closes the quotation.
+      ["‘ναί.’ ἐλθοῦσ’, ἤν", "‘ναί.’ ἐλθοῦσ’, ἤν"],
+      ["‘Ναι,’ είπε· θα σ’ το πω.", "‘Ναι,’ είπε· θα σ’ το πω."],
+      ["‘1821’ θα σ’ το πω.", "‘1821’ θα σ’ το πω."],
+      // A word on the next line does not follow the apostrophe.
+      ["‘λόγος’\nἐστί", "‘λόγος’\nἐστί"],
     ]
   ) assertNfcEquals(convert(input, "greek", "greek"), expected);
   // Two documented limits. A straight quotation mark cannot be told from an
-  // aphaeresis and opens nothing, and an apostrophe before a vowel is read as
-  // an elision.
+  // aphaeresis and opens nothing. An apostrophe before a vowel is read as an
+  // elision, so the quotation stays open for the rest of the line.
   assertNfcEquals(convert("'λόγος' est", "greek", "greek"), "’λόγοσ’ est");
   assertNfcEquals(convert("‘λόγος’ ἐστί", "greek", "greek"), "‘λόγοσ’ ἐστί");
+  assertNfcEquals(
+    convert("‘Ναι’ είπε ἐλθοῦσ’.", "greek", "greek"),
+    "‘Ναι’ είπε ἐλθοῦς’.",
+  );
 });
 
 test("folds Greek variants while keeping letter case independent", () => {

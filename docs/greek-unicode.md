@@ -151,15 +151,20 @@ Where its position decides the shape of a sigma (`greek.finalSigma:
 note), a sigma before an apostrophe stays medial: the apostrophe stands for an
 elided vowel, and the word goes on (`ἔχουσ’ ἐγώ`, `σ’ αγαπώ`). The sigma is
 final only when the apostrophe closes a quotation that `‘` opened on the same
-line, and no word that begins with a vowel follows it, since Greek elides only
-before a vowel:
+line, and no word that begins with a vowel follows it on that line, since
+Greek elides only before a vowel. A sigma on its own is always medial: it is
+the elided σε or σου, which Modern Greek also elides before a consonant
+(`σ’ το πω`), or the letter quoted (‘σ’).
 
 ```ts
 reencode("ἔχους’ ἐγώ", "greek"); // ἔχουσ’ ἐγώ
 reencode("‘λόγος’ est", "greek"); // ‘λόγος’ est
 ```
 
-A straight quotation mark opens nothing, since it cannot be told from an
-aphaeresis (`’στιν`): `'λόγος'` gives `’λόγοσ’`. A closing quotation mark
-followed by a word that begins with a vowel is read as an elision too:
-`‘λόγος’ ἐστί` gives `‘λόγοσ’ ἐστί`.
+An apostrophe after punctuation or a digit cannot be an elision, and closes
+the quotation (‘ναί.’, ‘1821’). A straight quotation mark opens nothing, since
+it cannot be told from an aphaeresis (`’στιν`): `'λόγος'` gives `’λόγοσ’`. A
+closing quotation mark followed by a word that begins with a vowel is read as
+an elision: `‘λόγος’ ἐστί` gives `‘λόγοσ’ ἐστί`, and the quotation stays open
+for the rest of the line, so that `‘Ναι’ είπε ἐλθοῦσ’.` gives
+`‘Ναι’ είπε ἐλθοῦς’.`

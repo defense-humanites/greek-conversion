@@ -18,7 +18,7 @@ The package is ESM-only.
 
 ## Updating from `1.0.0-rc.8`
 
-The API does not change. Two kinds of input convert differently:
+The API does not change. Three kinds of input convert differently:
 
 - In Greek output, a sigma before an elision apostrophe is medial:
   `ἔχουσ’ ἐγώ` and `σ’ αγαπώ` keep their `σ`, and the Beta Code
@@ -27,6 +27,10 @@ The API does not change. Two kinds of input convert differently:
   the sigma stays final (‘λόγος’). A Greek word in straight quotation marks,
   `'λόγος'`, now gives `’λόγοσ’`: use `‘` and `’` to quote, or keep the source
   shapes with `greek.finalSigma: "preserve"`.
+- Under `greek.finalSigma: "preserve"`, a lunate sigma written as a standard
+  sigma takes `ς` at the end of a word, as any sigma whose shape the source
+  does not note already did: with `sigma: "standard"`, `ϲῶμαϲ` gives `σῶμας`
+  and the Beta Code `lo/gos3` gives `λόγος` (rc.8: `σῶμασ`, `λόγοσ`).
 - Under `text.numerals: "decimal"`, as in the ALA-LC presets, `στʹ` is the
   units of a longer numeral too: `ΙΣΤʹ` gives `16` (rc.8: `ISTʹ`).
 
