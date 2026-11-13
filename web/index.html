@@ -6,9 +6,13 @@
     <meta name="description"
       content="Convert between Greek, Beta Code, and transliteration in your browser, with standards-based presets and a report of what each conversion loses.">
     <meta name="color-scheme" content="light dark">
-    <title>greek-conversion playground</title>
-    <link rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232b4c9b'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' text-anchor='middle' fill='white'%3E%CE%B1%3C/text%3E%3C/svg%3E">
+    <title>greek conversion playground</title>
+    <link rel="icon" type="image/svg+xml"
+      href="./assets/greek-conversion-favicon.svg">
+    <link rel="preload" href="./fonts/bricolage-grotesque.woff2" as="font"
+      type="font/woff2" crossorigin>
+    <link rel="preload" href="./fonts/literata-gc-regular.woff2" as="font"
+      type="font/woff2" crossorigin>
     <link rel="stylesheet" href="./styles.css">
     <script type="module" src="./app.js"></script>
   </head>
@@ -16,161 +20,210 @@
     <div class="shell">
       <header class="masthead">
         <div class="identity">
-          <h1>greek-conversion <span class="product">playground</span></h1>
-          <div class="about" id="about">
-            <button id="about-button" class="about-button" type="button"
-              aria-label="About this playground" aria-expanded="false"
-              aria-controls="about-text"
-              aria-describedby="about-text">?</button>
-            <p id="about-text"
-              class="about-text">Convert in any direction, follow a published standard, and see exactly what a conversion keeps. Everything runs in your browser.</p>
-          </div>
+          <picture>
+            <source media="(prefers-color-scheme: dark)"
+              srcset="./assets/greek-conversion-symbol-sombre.svg">
+            <img src="./assets/greek-conversion-symbol-clair.svg" alt=""
+              width="48" height="48">
+          </picture>
+          <h1>greek <span>conversion</span></h1>
+          <span class="product">playground</span>
         </div>
         <nav class="links" aria-label="Project">
-          <a target="_blank" rel="noopener"
+          <a
             href="https://github.com/defense-humanites/greek-conversion#readme">Documentation</a>
-          <a target="_blank" rel="noopener"
-            href="https://github.com/defense-humanites/greek-conversion">Source</a>
+          <a href="https://github.com/defense-humanites/greek-conversion">Source</a>
+          <a href="https://www.npmjs.com/package/@humanities/greek-conversion">npm</a>
+          <a href="https://jsr.io/@humanities/greek-conversion">JSR</a>
         </nav>
+        <div class="share">
+          <button id="share" class="button" type="button"
+            aria-describedby="share-help">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
+                d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path
+                d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></svg>
+            <span class="button-label">Share</span>
+          </button>
+          <p id="share-help" class="share-note" role="status"
+            aria-live="polite"></p>
+        </div>
       </header>
 
+      <p class="intro">Convert in any direction, follow a published standard, and see exactly what a conversion keeps. Everything runs in your browser.</p>
+
       <main>
-        <section class="workspace" aria-label="Conversion">
-          <div class="toolbar">
-            <div class="direction">
-              <label class="field">
-                <span>From</span>
-                <select id="source-format">
-                  <option value="greek">Greek</option>
-                  <option value="beta-code">Beta Code</option>
-                  <option value="transliteration">Transliteration</option>
+        <section class="controls" aria-label="Conversion">
+          <div class="sentence">
+            <label class="word" for="source-format">Convert</label>
+            <span class="chip-select from">
+              <select id="source-format">
+                <option value="auto">Detected</option>
+                <option value="greek">Greek</option>
+                <option value="beta-code">Beta Code</option>
+                <option value="transliteration">Transliteration</option>
+              </select>
+            </span>
+            <span class="word" id="target-word">to</span>
+            <div class="targets" role="radiogroup"
+              aria-labelledby="target-word">
+              <label><input type="radio" name="target"
+                  value="transliteration" checked> Transliteration</label>
+              <label><input type="radio" name="target" value="beta-code">
+                Beta Code</label>
+              <label><input type="radio" name="target" value="greek">
+                Greek</label>
+            </div>
+            <span class="group">
+              <label class="word" for="preset">following</label>
+              <span class="chip-select standard">
+                <select id="preset">
+                  <option value="">No standard (library defaults)</option>
                 </select>
-              </label>
-              <button id="swap" class="icon-button" type="button"
-                title="Swap formats and convert the output back"
-                aria-label="Swap formats and convert the output back">⇄</button>
-              <label class="field">
-                <span>To</span>
-                <select id="target-format">
-                  <option value="transliteration">Transliteration</option>
-                  <option value="greek">Greek</option>
-                  <option value="beta-code">Beta Code</option>
-                </select>
-              </label>
-            </div>
-            <label class="field preset-field">
-              <span>Standard</span>
-              <select
-                id="preset"><option value="">None (library defaults)</option></select>
-            </label>
-            <label class="field example-field">
-              <span>Example</span>
-              <select id="examples"></select>
-            </label>
+              </span>
+            </span>
           </div>
-
-          <details id="preset-info" class="preset-info" hidden>
-            <summary id="preset-summary"></summary>
-            <div id="preset-body" class="preset-body"></div>
-          </details>
-
-          <div class="panes">
-            <div class="pane">
-              <label class="pane-label" for="source"
-                id="source-label">Greek</label>
-              <textarea id="source" class="text face-greek" spellcheck="false"
-                autocomplete="off" autocapitalize="off"
-                placeholder="Type or paste text, or choose an example.">Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων, ὡς δὲ εἰπεῖν καὶ ἐπὶ πλεῖστον ἀνθρώπων.</textarea>
-            </div>
-            <div class="pane output-pane">
-              <div class="pane-head">
-                <label class="pane-label" for="output"
-                  id="output-label">Transliteration</label>
-                <button id="copy" class="text-button"
-                  type="button">Copy</button>
-              </div>
-              <textarea id="output" class="text face-transliteration" readonly
-                spellcheck="false" aria-describedby="status"></textarea>
-            </div>
+          <div class="preset-line" id="preset-line" hidden>
+            <p id="preset-summary"></p>
+            <ul id="preset-limits" class="preset-limits" hidden></ul>
           </div>
-
-          <div class="verdict">
-            <p id="status" role="status" aria-live="polite"></p>
-            <button id="share" class="text-button"
-              type="button">Copy link</button>
+          <div class="examples">
+            <h2 id="examples-title" class="label">Examples</h2>
+            <div id="examples" class="example-list" role="group"
+              aria-labelledby="examples-title"></div>
           </div>
-          <div id="diagnostics" class="diagnostics" hidden></div>
         </section>
 
-        <section class="settings" aria-label="Settings">
-          <!-- Settings, left; what they produce (the code, the document the
-               library read), right. Stacked, the order stays the same. -->
-          <div class="settings-input">
-            <details id="options-panel" open>
-              <summary>Options</summary>
-              <div class="detail-body">
-                <label
-                  for="options">JSON options <span class="hint">Your options override the standard field by field. Type <code>{</code> to browse every option; use ↑ and ↓, then Enter.</span></label>
-                <textarea id="options" class="json-editor" spellcheck="false"
-                  aria-autocomplete="list" aria-controls="options-suggestions"
-                  placeholder='{"greek":{"accentuation":"monotonic"}}'></textarea>
-                <div id="options-suggestions" class="suggestions" role="listbox"
-                  aria-label="Available conversion options" hidden></div>
-                <p
-                  class="hint"><a target="_blank" rel="noopener" href="https://github.com/defense-humanites/greek-conversion#recipes">Option recipes</a></p>
-              </div>
-            </details>
-            <details id="characters-panel" open>
-              <summary>Characters</summary>
-              <div class="detail-body">
-                <label
-                  for="inventory">JSON character inventory <span class="hint">Add spellings, define characters, or restrict the repertoire. Type <code>{</code> to browse <code>aliases</code>, <code>characters</code>, <code>repertoire</code>, and <code>exclude</code>.</span></label>
-                <textarea id="inventory" class="json-editor" spellcheck="false"
-                  aria-autocomplete="list" aria-controls="inventory-suggestions"
-                  placeholder='{"exclude":["stigma","koppa","sampi"]}'></textarea>
-                <div id="inventory-suggestions" class="suggestions"
-                  role="listbox"
-                  aria-label="Available inventory fields and values"
-                  hidden></div>
-                <label
-                  class="check"><input id="strict" type="checkbox"> Reject characters outside the standard's repertoire instead of copying them through</label>
-                <p
-                  class="hint"><a target="_blank" rel="noopener" href="https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md">Character extensions and repertoires</a></p>
-              </div>
-            </details>
+        <section class="fields" aria-label="Text">
+          <div class="field from">
+            <div class="field-head">
+              <label for="source" class="field-label"><span id="source-label"
+                  class="label">Greek</span>
+                <span id="source-meta" class="meta"></span></label>
+              <button id="clear" class="button small" type="button">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
+                    d="M6 6l12 12M18 6L6 18" /></svg>
+                Clear
+              </button>
+            </div>
+            <div class="editor">
+              <div id="source-marks" class="text marks" aria-hidden="true"></div>
+              <textarea id="source" class="text" spellcheck="false"
+                autocomplete="off" autocapitalize="off"
+                aria-describedby="status"
+                placeholder="Type or paste text, or choose an example.">Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων, ὡς δὲ εἰπεῖν καὶ ἐπὶ πλεῖστον ἀνθρώπων.</textarea>
+            </div>
           </div>
-          <div class="settings-output">
-            <details id="code-panel" open>
-              <summary>Code</summary>
-              <div class="detail-body">
-                <div class="pane-head">
-                  <p
-                    class="hint">The same call with the library, input text included.</p>
-                  <button id="copy-code" class="text-button"
-                    type="button">Copy</button>
-                </div>
-                <pre><code id="code"></code></pre>
+          <div class="field to">
+            <div class="field-head">
+              <label for="output" class="field-label"><span id="output-label"
+                  class="label">Transliteration</span>
+                <span id="output-meta" class="meta"></span></label>
+              <div class="field-actions">
+                <button id="swap" class="button small" type="button"
+                  title="Convert the result back: it becomes the text to convert">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
+                      d="M9 14L4 9l5-5" /><path
+                      d="M4 9h11a5 5 0 0 1 0 10h-3" /></svg>
+                  Convert back
+                </button>
+                <button id="copy" class="button small primary" type="button">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect
+                      x="8" y="8" width="12" height="12" rx="2" /><path
+                      d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></svg>
+                  <span class="button-label">Copy</span>
+                </button>
               </div>
-            </details>
-            <details id="document-panel" open>
-              <summary>Canonical document</summary>
-              <div class="detail-body">
-                <p
-                  class="hint">How the library reads the input with its built-in alphabet: letters, case, and diacritics, independent of spelling. Diagnostic token numbers refer to this list.</p>
-                <pre id="document-preview"></pre>
-                <div id="document-limit" class="document-limit" hidden>
-                  <p id="document-limit-text" class="hint"></p>
-                  <button id="document-show-all" class="text-button"
-                    type="button">Show all</button>
-                </div>
-              </div>
-            </details>
+            </div>
+            <div class="editor">
+              <textarea id="output" class="text" readonly spellcheck="false"
+                aria-describedby="status"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <div class="verdict">
+          <svg id="tessera" class="tessera" viewBox="0 0 28 28"
+            aria-hidden="true"><path class="half grec"
+              d="M4 6h9l2 5-3 4 2 7H4z" /><path class="half latin"
+              d="M13 6h11v16h-10l-2-7 3-4z" /></svg>
+          <p id="status" role="status" aria-live="polite"></p>
+        </div>
+
+        <section id="diagnostics" class="diagnostics" aria-label="Diagnostics"
+          hidden></section>
+
+        <section class="settings" aria-label="Settings and output">
+          <div class="tabs" role="tablist" aria-label="Settings and output">
+            <button id="tab-options" role="tab" type="button"
+              aria-controls="panel-options">Options</button>
+            <button id="tab-characters" role="tab" type="button"
+              aria-controls="panel-characters">Characters</button>
+            <button id="tab-code" role="tab" type="button"
+              aria-controls="panel-code">Code</button>
+            <button id="tab-document" role="tab" type="button"
+              aria-controls="panel-document">Canonical document</button>
+          </div>
+
+          <div id="panel-options" class="panel" role="tabpanel"
+            aria-labelledby="tab-options" tabindex="0" hidden>
+            <label
+              for="options">JSON options <span class="hint">Your options override the standard field by field. Type <code>{</code> to browse every option; use ↑ and ↓, then Enter.</span></label>
+            <textarea id="options" class="json-editor" spellcheck="false"
+              aria-autocomplete="list" aria-controls="options-suggestions"
+              placeholder='{"greek":{"accentuation":"monotonic"}}'></textarea>
+            <div id="options-suggestions" class="suggestions" role="listbox"
+              aria-label="Available conversion options" hidden></div>
+            <p
+              class="hint"><a href="https://github.com/defense-humanites/greek-conversion#recipes">Option recipes</a></p>
+          </div>
+
+          <div id="panel-characters" class="panel" role="tabpanel"
+            aria-labelledby="tab-characters" tabindex="0" hidden>
+            <label
+              for="inventory">JSON character inventory <span class="hint">Add spellings, define characters, or restrict the repertoire. Type <code>{</code> to browse <code>aliases</code>, <code>characters</code>, <code>repertoire</code>, and <code>exclude</code>.</span></label>
+            <textarea id="inventory" class="json-editor" spellcheck="false"
+              aria-autocomplete="list" aria-controls="inventory-suggestions"
+              placeholder='{"exclude":["stigma","koppa","sampi"]}'></textarea>
+            <div id="inventory-suggestions" class="suggestions" role="listbox"
+              aria-label="Available inventory fields and values" hidden></div>
+            <label
+              class="check"><input id="strict" type="checkbox"> Reject characters outside the standard's repertoire instead of copying them through</label>
+            <p
+              class="hint"><a href="https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md">Character extensions and repertoires</a></p>
+          </div>
+
+          <div id="panel-code" class="panel" role="tabpanel"
+            aria-labelledby="tab-code" tabindex="0" hidden>
+            <div class="panel-head">
+              <p
+                class="hint">The same call with the library, input text included. The comment shows what it returns.</p>
+              <button id="copy-code" class="button" type="button">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect
+                    x="8" y="8" width="12" height="12" rx="2" /><path
+                    d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></svg>
+                <span class="button-label">Copy code</span>
+              </button>
+            </div>
+            <pre class="code"><code id="code"></code></pre>
+          </div>
+
+          <div id="panel-document" class="panel" role="tabpanel"
+            aria-labelledby="tab-document" tabindex="0" hidden>
+            <p
+              class="hint">How the library reads the input with its built-in alphabet: letters, case, and diacritics, independent of spelling. Diagnostic token numbers refer to this list.</p>
+            <pre id="document-preview" class="code"></pre>
+            <div id="document-limit" class="document-limit" hidden>
+              <p id="document-limit-text" class="hint"></p>
+              <button id="document-show-all" class="button" type="button">Show
+                all</button>
+            </div>
           </div>
         </section>
       </main>
 
       <footer>
-        <p>Presets implement what their standards allow without a dictionary; each one documents its scope and limits. <a target="_blank" rel="noopener" href="https://github.com/defense-humanites/greek-conversion/issues">Report a conversion that looks wrong</a>.</p>
+        <p>Presets implement what their standards allow without a dictionary; each one documents its scope and limits. <a href="https://github.com/defense-humanites/greek-conversion/issues">Report a conversion that looks wrong</a>.</p>
+        <p class="package"><strong>@humanities/greek-conversion</strong> on npm and JSR · MIT licensed</p>
       </footer>
     </div>
   </body>

@@ -7,6 +7,19 @@ change.
 
 ## [Unreleased]
 
+### Changed
+
+- The playground has a new design, in the project's identity (tessera
+  symbol, Bricolage Grotesque, Papier and Nuit themes). The source format is
+  detected from the text and can still be chosen; only the target is picked.
+  Examples now go with the selected standard, each with a note on the rule it
+  shows, and are checked against the library by
+  `tests/playground_examples_test.ts`. Letters whose distinctions the target
+  loses are underlined in the source, settings and output sit in tabs, and the
+  generated code is highlighted and shows the result. Greek and transliteration
+  are set in Literata, served by the playground with the letters it lacked
+  (`web/fonts/README.md`).
+
 ## [1.0.0-rc.8] - 2026-11-11
 
 Eighth release candidate for `1.0.0`. The API does not change. Following #47,
