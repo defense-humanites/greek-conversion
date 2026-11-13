@@ -133,3 +133,21 @@ so that Greek output can keep it (`greek.sigma: "preserve"`) and
 transliteration can write it `c` (`transliteration.lunateSigma: "c"`). By
 default Greek output writes `σ` or `ς`, and `convertDetailed()` reports the
 change (`removed-glyph-variant`).
+
+Where its position decides the shape of a sigma (`greek.finalSigma:
+"contextual"`, or `"preserve"` for a sigma whose shape the source does not
+note), a sigma before an apostrophe stays medial: the apostrophe stands for an
+elided vowel, and the word goes on (`ἔχουσ’ ἐγώ`, `σ’ αγαπώ`). The sigma is
+final only when the apostrophe closes a quotation that `‘` opened on the same
+line, and no word that begins with a vowel follows it, since Greek elides only
+before a vowel:
+
+```ts
+reencode("ἔχους’ ἐγώ", "greek"); // ἔχουσ’ ἐγώ
+reencode("‘λόγος’ est", "greek"); // ‘λόγος’ est
+```
+
+A straight quotation mark opens nothing, since it cannot be told from an
+aphaeresis (`’στιν`): `'λόγος'` gives `’λόγοσ’`. A closing quotation mark
+followed by a word that begins with a vowel is read as an elision too:
+`‘λόγος’ ἐστί` gives `‘λόγοσ’ ἐστί`.

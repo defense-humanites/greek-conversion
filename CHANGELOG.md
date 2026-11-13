@@ -16,6 +16,16 @@ change.
   `ϲῶμαϲ` gave `σῶμασ` and now gives `σῶμας`; the Beta Code `lo/gos3` and
   `logoc` under `bnf-core` gave `λόγοσ` and `λογοσ`. The default
   `finalSigma: "contextual"` was not affected.
+- A sigma before an elision apostrophe stays medial in Greek output: the
+  apostrophe stands for the elided vowel. Every apostrophe ended the word, so
+  `ἔχουσ’ ἐγώ` gave `ἔχους’ ἐγώ`, the Modern Greek `σ’ αγαπώ` gave `ς’ αγαπώ`,
+  and the Beta Code `a)gge/llous'` gave `ἀγγέλλους’`. The sigma is final only
+  before an apostrophe that closes a quotation opened by `‘` on the same line,
+  and that no word beginning with a vowel follows (‘λόγος’). A straight
+  quotation mark opens nothing, since it cannot be told from an aphaeresis:
+  `'λόγος'` now gives `’λόγοσ’`. This applies wherever the position decides
+  the shape: under the default `finalSigma: "contextual"`, and under
+  `"preserve"` for a sigma whose shape the source does not note.
 
 ## [1.0.0-rc.8] - 2026-11-11
 

@@ -16,6 +16,16 @@ npx jsr add @humanities/greek-conversion@1.0.0-rc.8
 
 The package is ESM-only.
 
+## Updating from `1.0.0-rc.8`
+
+The API does not change. In Greek output, a sigma before an elision apostrophe
+is medial: `ἔχουσ’ ἐγώ` and `σ’ αγαπώ` keep their `σ`, and the Beta Code
+`a)gge/llous'` gives `ἀγγέλλουσ’` (rc.8: `ἔχους’`, `ς’ αγαπώ`,
+`ἀγγέλλους’`). Before an apostrophe that closes a quotation opened by `‘`, the
+sigma stays final (‘λόγος’). A Greek word in straight quotation marks,
+`'λόγος'`, now gives `’λόγοσ’`: use `‘` and `’` to quote, or keep the source
+shapes with `greek.finalSigma: "preserve"`.
+
 ## Updating from `1.0.0-rc.7`
 
 The API does not change. Two kinds of input convert differently, and the

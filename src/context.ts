@@ -79,6 +79,78 @@ export function isWordFinal(document: Document, index: number): boolean {
 }
 
 /**
+ * The apostrophes of a document that close a quotation, found once for all
+ * the sigmas of a conversion that need them (see `sigmaEndsWord()`).
+ */
+export interface QuotationContext {
+  closingQuotes?: Uint8Array;
+}
+
+/**
+ * Whether the sigma at `index` ends its word, for the choice between `σ` and
+ * `ς`. An apostrophe after the sigma stands for an elided vowel, so the sigma
+ * stays medial (`ἔχουσ’ ἐγώ`, `σ’ αγαπώ`), unless the apostrophe closes a
+ * quotation (‘λόγος’).
+ */
+export function sigmaEndsWord(
+  document: Document,
+  index: number,
+  quotations: QuotationContext,
+): boolean {
+  if (!isWordFinal(document, index)) return false;
+  const next = adjacentIndex(document, index, 1);
+  if (!isElisionMark(document[next])) return true;
+  if (precedesVowelWord(document, next)) return false;
+  quotations.closingQuotes ??= closingQuotes(document);
+  return quotations.closingQuotes[next] === 1;
+}
+
+const LEFT_QUOTATION_MARK = "‘";
+const LINE_BREAKS = new Set(["\n", "\r", " ", " "]);
+
+/**
+ * Marks the apostrophes that close a quotation. Such an apostrophe follows a
+ * letter, comes while a quotation opened by ‘ on the same line is open, and
+ * is not followed by a word that begins with a vowel: Greek elides only
+ * before a vowel, so an apostrophe there is an elision, even inside a
+ * quotation (‘οὐκ ἔστ’ ἔτυμος λόγος οὗτος’). Only ‘ opens a quotation: an
+ * apostrophe before a word may be an aphaeresis (`’στιν`), and a straight
+ * quotation mark cannot be told from one. This is one pass, made only when a
+ * sigma before an apostrophe needs it; searching back from each such sigma
+ * would make a conversion quadratic.
+ */
+function closingQuotes(document: Document): Uint8Array {
+  const closing = new Uint8Array(document.length);
+  let open = 0;
+  for (let i = 0; i < document.length; i++) {
+    const token = document[i];
+    if (token.kind !== "literal") continue;
+    if (LINE_BREAKS.has(token.value)) open = 0;
+    else if (token.value === LEFT_QUOTATION_MARK) open++;
+    else if (
+      open > 0 && isElisionMark(token) &&
+      spellsLetter(adjacentToken(document, i, -1)) &&
+      !precedesVowelWord(document, i)
+    ) {
+      closing[i] = 1;
+      open--;
+    }
+  }
+  return closing;
+}
+
+/** Whether a word that begins with a vowel follows `index`, past spaces. */
+function precedesVowelWord(document: Document, index: number): boolean {
+  let next = index + 1;
+  while (
+    next < document.length &&
+    (isWhitespace(document[next]) || isBoundaryTransparent(document[next]))
+  ) next++;
+  const token = document[next];
+  return token?.kind === "grapheme" && isVowel(token.letter);
+}
+
+/**
  * Whether the letter at `index` stands among capitals: the nearest letter of
  * the same word, after it or else before it, is uppercase. A Latin spelling
  * of several letters for one Greek capital (`TH`, `CH`, `PS`, the `H` of a
@@ -110,12 +182,20 @@ function adjacentToken(
   index: number,
   step: 1 | -1,
 ): Token | undefined {
+  return document[adjacentIndex(document, index, step)];
+}
+
+function adjacentIndex(
+  document: Document,
+  index: number,
+  step: 1 | -1,
+): number {
   let position = index + step;
   while (
     position >= 0 && position < document.length &&
     isBoundaryTransparent(document[position])
   ) position += step;
-  return document[position];
+  return position;
 }
 
 /**
