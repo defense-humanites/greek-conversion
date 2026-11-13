@@ -505,6 +505,199 @@ h1 span {
   outline: 2px solid var(--from);
   outline-offset: 2px;
 }
+/* Options: one pill per departure from the standard, then a picker */
+.option-line {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+/* The pills flow with "with" and the button, on the same lines. */
+.option-pills {
+  display: contents;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.option-pills[hidden] {
+  display: none;
+}
+.option-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 4px 0 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 15px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.option-pill.idle {
+  border-style: dashed;
+  color: var(--muted);
+}
+.pill-name {
+  color: var(--muted);
+}
+.pill-value {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 4px;
+  font-weight: 700;
+}
+.pill-value::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin: -3px 2px 0 4px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+.pill-value select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  opacity: 0;
+  /* At least 16 px, or iOS zooms in on the menu. */
+  font-size: 16px;
+  cursor: pointer;
+}
+.pill-value:has(select:focus-visible) {
+  border-radius: 6px;
+  outline: 2px solid var(--from);
+  outline-offset: 1px;
+}
+.pill-remove {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+}
+.pill-remove:hover {
+  background: var(--raised);
+  color: var(--ink);
+}
+.pill-remove .icon {
+  width: 16px;
+  height: 16px;
+}
+.add-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px 0 10px;
+  border: 1.5px dashed var(--to);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+}
+.add-option:hover,
+.add-option[aria-expanded="true"] {
+  border-style: solid;
+}
+/* Same format on both sides and nothing set yet: the options are the point. */
+.add-option.prompt {
+  border-style: solid;
+  background: color-mix(in srgb, var(--to) 12%, transparent);
+}
+.add-option .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--to);
+}
+.same-format-hint {
+  flex-basis: 100%;
+}
+.option-picker {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(340px, 100%);
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+  box-shadow: var(--shadow);
+}
+.option-picker[hidden] {
+  display: none;
+}
+.option-picker input {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 16px;
+}
+.option-picker input:focus-visible {
+  outline: 2px solid var(--from);
+  outline-offset: 0;
+}
+.option-step {
+  margin: 2px 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.option-list {
+  max-height: 300px;
+  overflow: auto;
+}
+.option-group {
+  padding: 8px 8px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.option-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.option-item[aria-selected="true"],
+.option-item:hover {
+  background: var(--surface);
+}
+.option-values {
+  overflow: hidden;
+  font-family: var(--face-code);
+  font-size: 12px;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.option-empty {
+  padding: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
 .preset-line strong {
   font-weight: 600;
   color: var(--ink);

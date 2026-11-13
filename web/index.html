@@ -54,7 +54,7 @@
       <main>
         <section class="controls" aria-label="Conversion">
           <div class="sentence">
-            <label class="word" for="source-format">Convert</label>
+            <label class="word" for="source-format" id="verb">Convert</label>
             <span class="chip-select from" id="source-chip">
               <span class="chip-face" aria-hidden="true"><span
                   id="source-face-name">Greek</span>
@@ -85,6 +85,29 @@
                 </select>
               </span>
             </span>
+          </div>
+          <div class="option-line" id="option-line">
+            <span class="word" id="options-word">with</span>
+            <ul id="option-pills" class="option-pills" role="list"
+              aria-labelledby="options-word"></ul>
+            <button id="add-option" class="add-option" type="button"
+              aria-expanded="false" aria-controls="option-picker">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
+                  d="M12 5v14M5 12h14" /></svg>
+              option
+            </button>
+            <div id="option-picker" class="option-picker" hidden>
+              <input id="option-search" type="text" role="combobox"
+                aria-expanded="true" aria-controls="option-list"
+                aria-autocomplete="list" autocomplete="off" spellcheck="false"
+                aria-label="Find an option" placeholder="Find an option">
+              <p id="option-step" class="option-step" hidden></p>
+              <div id="option-list" class="option-list" role="listbox"
+                aria-label="Conversion options"></div>
+            </div>
+            <p id="same-format-hint" class="hint same-format-hint" hidden>Same
+              format on both sides: only the standard and the options change
+              the text.</p>
           </div>
           <div class="preset-line" id="preset-line" hidden>
             <p id="preset-summary"></p>
@@ -158,27 +181,12 @@
 
         <section class="settings" aria-label="Settings and output">
           <div class="tabs" role="tablist" aria-label="Settings and output">
-            <button id="tab-options" role="tab" type="button"
-              aria-controls="panel-options">Options</button>
             <button id="tab-characters" role="tab" type="button"
               aria-controls="panel-characters">Characters</button>
             <button id="tab-code" role="tab" type="button"
               aria-controls="panel-code">Code</button>
             <button id="tab-document" role="tab" type="button"
               aria-controls="panel-document">Canonical document</button>
-          </div>
-
-          <div id="panel-options" class="panel" role="tabpanel"
-            aria-labelledby="tab-options" tabindex="0" hidden>
-            <label
-              for="options">JSON options <span class="hint">Your options override the standard field by field. Type <code>{</code> to browse every option; use ↑ and ↓, then Enter.</span></label>
-            <textarea id="options" class="json-editor" spellcheck="false"
-              aria-autocomplete="list" aria-controls="options-suggestions"
-              placeholder='{"greek":{"accentuation":"monotonic"}}'></textarea>
-            <div id="options-suggestions" class="suggestions" role="listbox"
-              aria-label="Available conversion options" hidden></div>
-            <p
-              class="hint"><a href="https://github.com/defense-humanites/greek-conversion#recipes">Option recipes</a></p>
           </div>
 
           <div id="panel-characters" class="panel" role="tabpanel"

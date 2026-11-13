@@ -18,8 +18,21 @@ import { detectFormat } from "./detect_format.ts";
 import { EXAMPLES } from "./examples.ts";
 import type { Example } from "./examples.ts";
 import { suggestInventory } from "./inventory_suggestions.ts";
-import { suggestOptions } from "./options_suggestions.ts";
-import type { Suggestion } from "./options_suggestions.ts";
+import type { Suggestion } from "./inventory_suggestions.ts";
+import {
+  findEntry,
+  GROUP_NAMES,
+  isAmbiguous,
+  knownOptions,
+  matchEntries,
+  OPTION_ENTRIES,
+  relevantGroups,
+  sameOptions,
+  settingsOf,
+  standardValue,
+  withSetting,
+} from "./option_catalogue.ts";
+import type { OptionEntry } from "./option_catalogue.ts";
 
 function element<T extends HTMLElement>(id: string): T {
   const found = document.getElementById(id);
@@ -43,8 +56,14 @@ const sourceLabel = element<HTMLSpanElement>("source-label");
 const outputLabel = element<HTMLSpanElement>("output-label");
 const sourceMeta = element<HTMLSpanElement>("source-meta");
 const outputMeta = element<HTMLSpanElement>("output-meta");
-const optionsInput = element<HTMLTextAreaElement>("options");
-const optionsSuggestions = element<HTMLDivElement>("options-suggestions");
+const verb = element<HTMLLabelElement>("verb");
+const optionPills = element<HTMLUListElement>("option-pills");
+const addOptionButton = element<HTMLButtonElement>("add-option");
+const optionPicker = element<HTMLDivElement>("option-picker");
+const optionSearch = element<HTMLInputElement>("option-search");
+const optionStep = element<HTMLParagraphElement>("option-step");
+const optionList = element<HTMLDivElement>("option-list");
+const sameFormatHint = element<HTMLParagraphElement>("same-format-hint");
 const inventoryInput = element<HTMLTextAreaElement>("inventory");
 const inventorySuggestions = element<HTMLDivElement>("inventory-suggestions");
 const strict = element<HTMLInputElement>("strict");
@@ -395,8 +414,7 @@ function activeExample(): Example | undefined {
     example.text === source.value &&
     example.to === targetFormat() &&
     example.from === sourceFormat() &&
-    (example.options ? JSON.stringify(example.options) : "") ===
-      optionsInput.value.trim()
+    sameOptions(example.options ?? {}, conversionOptions)
   );
 }
 
@@ -452,18 +470,14 @@ function loadExample(example: Example): void {
     ? "auto"
     : example.from;
   setTarget(example.to);
-  optionsInput.value = example.options ? JSON.stringify(example.options) : "";
+  conversionOptions = knownOptions(example.options ?? {});
   update();
 }
 
-/**
- * Reads one JSON settings field. The keys are checked against `allowed`
- * when a list is given; the conversion options pass none, so that the
- * library's own error names the replacement of a key of an earlier release.
- */
+/** Reads one JSON settings field, its keys checked against `allowed`. */
 function parseSettings<T>(
   input: HTMLTextAreaElement,
-  allowed: readonly string[] | undefined,
+  allowed: readonly string[],
   label: string,
 ): T {
   let value: unknown;
@@ -475,13 +489,11 @@ function parseSettings<T>(
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     throw new TypeError(`${label}: expected a JSON object.`);
   }
-  if (allowed !== undefined) {
-    const unknown = Object.keys(value).filter((key) => !allowed.includes(key));
-    if (unknown.length) {
-      throw new TypeError(
-        `${label}: unsupported field (${unknown.join(", ")}).`,
-      );
-    }
+  const unknown = Object.keys(value).filter((key) => !allowed.includes(key));
+  if (unknown.length) {
+    throw new TypeError(
+      `${label}: unsupported field (${unknown.join(", ")}).`,
+    );
   }
   return value as T;
 }
@@ -885,7 +897,9 @@ function saveState(): void {
     text: source.value,
   });
   if (presetSelect.value) state.set("preset", presetSelect.value);
-  if (optionsInput.value.trim()) state.set("options", optionsInput.value);
+  if (settingsOf(conversionOptions).length) {
+    state.set("options", JSON.stringify(conversionOptions));
+  }
   if (inventoryInput.value.trim()) {
     state.set("characters", inventoryInput.value);
   }
@@ -904,12 +918,16 @@ function restoreState(): void {
   const preset = presets.find(({ id }) => id === state.get("preset"))?.id;
   choosePreset(preset ?? "");
   if (state.has("text")) source.value = state.get("text") ?? "";
-  optionsInput.value = state.get("options") ?? "";
+  conversionOptions = {};
+  try {
+    conversionOptions = knownOptions(JSON.parse(state.get("options") ?? "{}"));
+  } catch {
+    // A damaged link keeps the rest of its settings.
+  }
   inventoryInput.value = state.get("characters") ?? "";
   strict.checked = state.get("strict") === "1";
   // A link that carries settings opens on them.
-  if (optionsInput.value) selectTab("tab-options");
-  else if (inventoryInput.value || strict.checked) selectTab("tab-characters");
+  if (inventoryInput.value || strict.checked) selectTab("tab-characters");
 }
 
 /*
@@ -923,6 +941,305 @@ function fitHeight(field: HTMLTextAreaElement): void {
   field.style.height = "auto";
   field.style.height = `${field.scrollHeight}px`;
 }
+
+/*
+ * Conversion options, as pills after the sentence: one per option that
+ * departs from the standard, its value a menu, and a picker to add one.
+ */
+
+let conversionOptions: ConversionOptions = {};
+
+function setOption(
+  entry: OptionEntry,
+  value: string | undefined,
+): void {
+  // The standard's own value is no departure from it.
+  const standard = standardValue(currentPreset(), entry.group, entry.key);
+  conversionOptions = withSetting(
+    conversionOptions,
+    entry.group,
+    entry.key,
+    value === standard ? undefined : value,
+  );
+  update();
+}
+
+/** "Smooth breathing", or "Diacritics: smooth breathing" when both exist. */
+function optionName(entry: OptionEntry): string {
+  return isAmbiguous(entry)
+    ? `${GROUP_NAMES[entry.group]}: ${entry.label.toLowerCase()}`
+    : entry.label;
+}
+
+/**
+ * Draws a pill per option set. The value is a native menu, transparent over
+ * a drawn face, as for the source format: the menu keeps the keyboard and
+ * what screen readers announce.
+ */
+function showOptions(from: Format, to: Format): void {
+  const preset = currentPreset();
+  const pills = settingsOf(conversionOptions).flatMap(
+    ({ group, key, value }) => {
+      const entry = findEntry(group, key);
+      if (entry === undefined) return [];
+      const name = optionName(entry);
+      const item = document.createElement("li");
+      item.className = "option-pill";
+      item.dataset.option = `${group}.${key}`;
+      if (!relevantGroups(from, to).has(group)) {
+        item.classList.add("idle");
+        item.title = "No effect on this conversion";
+      }
+      const label = document.createElement("span");
+      label.className = "pill-name";
+      label.textContent = name;
+
+      const choice = document.createElement("span");
+      choice.className = "pill-value";
+      const face = document.createElement("span");
+      face.setAttribute("aria-hidden", "true");
+      face.textContent = value;
+      const menu = document.createElement("select");
+      menu.setAttribute("aria-label", name);
+      const standard = standardValue(preset, group, key);
+      for (const option of entry.values) {
+        const element = document.createElement("option");
+        element.value = option;
+        element.textContent = option === standard
+          ? `${option} (standard)`
+          : option;
+        menu.append(element);
+      }
+      menu.value = value;
+      menu.addEventListener("change", () => {
+        const removed = menu.value === standard;
+        setOption(entry, menu.value);
+        if (removed) addOptionButton.focus();
+        else {
+          optionPills.querySelector<HTMLSelectElement>(
+            `[data-option="${group}.${key}"] select`,
+          )?.focus();
+        }
+      });
+      choice.append(face, menu);
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "pill-remove";
+      remove.setAttribute("aria-label", `Remove ${name}`);
+      remove.innerHTML =
+        '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>';
+      remove.addEventListener("click", () => {
+        setOption(entry, undefined);
+        addOptionButton.focus();
+      });
+      item.append(label, choice, remove);
+      return [item];
+    },
+  );
+  // Rebuilt only when it changes, so that a menu in use keeps its focus.
+  const signature = JSON.stringify([
+    settingsOf(conversionOptions),
+    preset,
+    [...relevantGroups(from, to)],
+  ]);
+  if (optionPills.dataset.signature !== signature) {
+    optionPills.dataset.signature = signature;
+    optionPills.replaceChildren(...pills);
+  }
+  optionPills.hidden = pills.length === 0;
+
+  const same = from === to;
+  verb.textContent = same ? "Restyle" : "Convert";
+  sameFormatHint.hidden = !same;
+  addOptionButton.classList.toggle("prompt", same && pills.length === 0);
+}
+
+/* The picker: find an option, then choose its value */
+
+let pickerEntry: OptionEntry | undefined;
+let pickerItems: { label: string; detail: string; pick: () => void }[] = [];
+let pickerActive = 0;
+
+function openPicker(): void {
+  pickerEntry = undefined;
+  optionSearch.value = "";
+  optionPicker.hidden = false;
+  addOptionButton.setAttribute("aria-expanded", "true");
+  placePicker();
+  showPickerItems();
+  optionSearch.focus();
+}
+
+function closePicker(focusButton: boolean): void {
+  if (optionPicker.hidden) return;
+  optionPicker.hidden = true;
+  addOptionButton.setAttribute("aria-expanded", "false");
+  if (focusButton) addOptionButton.focus();
+}
+
+/** Under the button, kept inside the settings. */
+function placePicker(): void {
+  const line = optionPicker.parentElement as HTMLElement;
+  const room = line.clientWidth - optionPicker.offsetWidth;
+  optionPicker.style.left = `${
+    Math.max(0, Math.min(addOptionButton.offsetLeft, room))
+  }px`;
+  optionPicker.style.top = `${
+    addOptionButton.offsetTop + addOptionButton.offsetHeight + 6
+  }px`;
+}
+
+function showPickerItems(): void {
+  const from = sourceFormat();
+  const to = targetFormat();
+  const preset = currentPreset();
+  optionList.replaceChildren();
+  pickerItems = [];
+
+  if (pickerEntry === undefined) {
+    optionStep.hidden = true;
+    optionSearch.placeholder = "Find an option";
+    const set = new Set(
+      settingsOf(conversionOptions).map(({ group, key }) => `${group}.${key}`),
+    );
+    const groups = relevantGroups(from, to);
+    const offered = OPTION_ENTRIES.filter((entry) =>
+      groups.has(entry.group) && !set.has(`${entry.group}.${entry.key}`)
+    );
+    let group = "";
+    for (const entry of matchEntries(offered, optionSearch.value)) {
+      if (entry.group !== group) {
+        group = entry.group;
+        const heading = document.createElement("div");
+        heading.className = "option-group";
+        heading.setAttribute("role", "presentation");
+        heading.textContent = GROUP_NAMES[entry.group];
+        optionList.append(heading);
+      }
+      pickerItems.push({
+        label: entry.label,
+        detail: entry.values.join(" · "),
+        pick: () => {
+          pickerEntry = entry;
+          optionSearch.value = "";
+          showPickerItems();
+        },
+      });
+      optionList.append(pickerItem(pickerItems.length - 1));
+    }
+  } else {
+    const entry = pickerEntry;
+    const standard = standardValue(preset, entry.group, entry.key);
+    optionStep.hidden = false;
+    optionStep.textContent = `${optionName(entry)}${
+      standard ? ` · standard: ${standard}` : ""
+    }`;
+    optionSearch.placeholder = "Choose a value";
+    const needle = optionSearch.value.trim().toLowerCase();
+    for (const value of entry.values) {
+      if (value === standard || !value.toLowerCase().includes(needle)) {
+        continue;
+      }
+      pickerItems.push({
+        label: value,
+        detail: "",
+        pick: () => {
+          closePicker(true);
+          setOption(entry, value);
+        },
+      });
+      optionList.append(pickerItem(pickerItems.length - 1));
+    }
+  }
+
+  if (!pickerItems.length) {
+    const empty = document.createElement("div");
+    empty.className = "option-empty";
+    empty.setAttribute("role", "presentation");
+    empty.textContent = pickerEntry ? "No other value" : "No option matches";
+    optionList.append(empty);
+  }
+  setPickerActive(0);
+}
+
+function pickerItem(index: number): HTMLDivElement {
+  const { label, detail, pick } = pickerItems[index];
+  const item = document.createElement("div");
+  item.id = `option-item-${index}`;
+  item.className = "option-item";
+  item.setAttribute("role", "option");
+  const name = document.createElement("span");
+  name.textContent = label;
+  item.append(name);
+  if (detail) {
+    const values = document.createElement("span");
+    values.className = "option-values";
+    values.textContent = detail;
+    item.append(values);
+  }
+  // Keeps the focus in the search field.
+  item.addEventListener("mousedown", (event) => event.preventDefault());
+  item.addEventListener("click", pick);
+  return item;
+}
+
+function setPickerActive(index: number): void {
+  pickerActive = pickerItems.length
+    ? (index + pickerItems.length) % pickerItems.length
+    : 0;
+  for (const item of optionList.querySelectorAll('[role="option"]')) {
+    item.setAttribute(
+      "aria-selected",
+      String(item.id === `option-item-${pickerActive}`),
+    );
+  }
+  const active = document.getElementById(`option-item-${pickerActive}`);
+  if (active) {
+    optionSearch.setAttribute("aria-activedescendant", active.id);
+    active.scrollIntoView({ block: "nearest" });
+  } else {
+    optionSearch.removeAttribute("aria-activedescendant");
+  }
+}
+
+addOptionButton.addEventListener("click", () => {
+  if (optionPicker.hidden) openPicker();
+  else closePicker(true);
+});
+optionSearch.addEventListener("input", showPickerItems);
+optionSearch.addEventListener("keydown", (event) => {
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    event.preventDefault();
+    setPickerActive(pickerActive + (event.key === "ArrowDown" ? 1 : -1));
+  } else if (event.key === "Enter") {
+    event.preventDefault();
+    pickerItems[pickerActive]?.pick();
+  } else if (event.key === "Escape") {
+    event.preventDefault();
+    if (pickerEntry) {
+      pickerEntry = undefined;
+      optionSearch.value = "";
+      showPickerItems();
+    } else {
+      closePicker(true);
+    }
+  } else if (
+    event.key === "Backspace" && pickerEntry && optionSearch.value === ""
+  ) {
+    pickerEntry = undefined;
+    showPickerItems();
+  }
+});
+optionPicker.addEventListener("focusout", (event) => {
+  const next = event.relatedTarget as Node | null;
+  if (next === null || !optionPicker.contains(next)) {
+    if (next !== addOptionButton) closePicker(false);
+  }
+});
+addEventListener("resize", () => {
+  if (!optionPicker.hidden) placePicker();
+});
 
 /* Conversion */
 
@@ -941,14 +1258,11 @@ function update(): void {
     : "";
   const preset = currentPreset();
   outputMeta.textContent = preset ? SHORT_NAMES[preset] : "";
+  showOptions(from, to);
   let options: ConversionOptions = {};
   let inventory: ConverterConfiguration = {};
   try {
-    options = parseSettings<ConversionOptions>(
-      optionsInput,
-      undefined,
-      "Options",
-    );
+    options = conversionOptions;
     const withPreset = { ...options, ...(preset ? { preset } : {}) };
     resolveConversionOptions(withPreset);
     inspectDocument(withPreset, from);
@@ -1075,10 +1389,7 @@ new ResizeObserver(showExampleFades).observe(exampleList);
 source.addEventListener("scroll", () => {
   sourceMarks.scrollTop = source.scrollTop;
 });
-for (const field of [optionsInput, inventoryInput]) {
-  field.addEventListener("input", update);
-}
-attachSuggestions(optionsInput, optionsSuggestions, suggestOptions);
+inventoryInput.addEventListener("input", update);
 attachSuggestions(inventoryInput, inventorySuggestions, suggestInventory);
 strict.addEventListener("change", update);
 documentShowAll.addEventListener("click", () => {
