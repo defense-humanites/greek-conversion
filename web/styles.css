@@ -292,9 +292,10 @@ h1 span {
 .share-note:empty {
   display: none;
 }
-/* A third of the width, clear of the links and the Share button. */
+/* Half the width, clear of the links and the Share button. */
 .intro {
-  max-width: max(calc(100% / 3), 340px);
+  max-width: max(50%, 340px);
+  text-wrap: pretty;
   margin: -12px 0 0;
   font-size: 18px;
   line-height: 27px;
@@ -419,23 +420,42 @@ h1 span {
   color: var(--ink);
 }
 /*
- * Each target keeps the width of its bold, selected form, so that the group
- * does not change width as the selection moves: the hidden bold copy of the
- * label sets the width.
+ * Each target keeps the width of its selected form, bold and with its
+ * square, so that the group does not change width as the selection moves:
+ * a hidden copy of the label, stacked with it, sets the width. Unselected,
+ * the label is centred in that width; selected, it moves right of the
+ * square.
  */
-.targets label span {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
+.targets label {
+  position: relative;
+  display: inline-grid;
 }
-.targets label span::after {
+.targets label > span {
+  grid-area: 1 / 1;
+  justify-self: center;
+}
+.targets label::after {
   content: attr(data-label);
+  grid-area: 1 / 1;
   height: 0;
+  padding-left: 18px;
   overflow: hidden;
   font-weight: 700;
   visibility: hidden;
-  user-select: none;
-  pointer-events: none;
+}
+.targets label:has(input:checked) > span {
+  justify-self: end;
+}
+.targets label:has(input:checked)::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 3px;
+  background: var(--to);
 }
 .targets label:has(input:focus-visible) {
   outline: 2px solid var(--from);
@@ -981,6 +1001,16 @@ footer strong {
     justify-content: center;
     padding: 0 8px;
     font-size: 15px;
+  }
+  /* No room for the square: the orange border marks the target. */
+  .targets label::after {
+    padding-left: 0;
+  }
+  .targets label:has(input:checked)::before {
+    display: none;
+  }
+  .targets label:has(input:checked) > span {
+    justify-self: center;
   }
 
   .links {
