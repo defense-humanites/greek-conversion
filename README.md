@@ -713,7 +713,11 @@ npm run check        # formatting, lint, types, API docs, README examples
 npm test             # unit, conformance, and property tests
 npm run bench        # throughput baseline
 npm run site:build   # builds the playground into _site/
+npm run site:options # updates which options the playground offers per conversion
 ```
+
+`npm run check` fails when a change to the options leaves
+`web/option_relevance.ts` out of date.
 
 Every TypeScript example in this README is type-checked and executed by
 `npm run check`, and its output must match the `// →` comment. Bug reports and suggestions are

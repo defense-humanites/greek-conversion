@@ -3,6 +3,7 @@ import {
   resolveConversionOptions,
 } from "../src/mod.ts";
 import type { ConversionOptions, Format, Preset } from "../src/mod.ts";
+import { OPTION_RELEVANCE } from "./option_relevance.ts";
 
 /** A field of `ConversionOptions` that holds options. */
 export type OptionGroup = Exclude<keyof ConversionOptions, "preset">;
@@ -78,22 +79,20 @@ export function findEntry(
 }
 
 /**
- * The groups that act on a conversion: the transliteration options where
- * transliteration is read or written, the Greek options where Greek is
- * written, directly or through Beta Code, the Beta Code options where Beta
- * Code is written; the text and the diacritics in every case.
+ * Whether an option acts on a conversion: whether one of its values changes
+ * the result of the probe texts (`scripts/generate_option_relevance.ts`).
+ * Options govern reading as well as writing, so an option of the target
+ * format may also act on reading the source, or on nothing at all when
+ * both sides share a format.
  */
-export function relevantGroups(
+export function actsOn(
+  entry: Pick<OptionEntry, "group" | "key">,
   from: Format,
   to: Format,
-): ReadonlySet<OptionGroup> {
-  const groups = new Set<OptionGroup>(["text", "diacritics"]);
-  if (from === "transliteration" || to === "transliteration") {
-    groups.add("transliteration");
-  }
-  if (to === "greek" || to === "beta-code") groups.add("greek");
-  if (to === "beta-code") groups.add("betaCode");
-  return groups;
+): boolean {
+  return OPTION_RELEVANCE[`${entry.group}.${entry.key}`]?.includes(
+    `${from}>${to}`,
+  ) ?? false;
 }
 
 /** The options set in `options`, in the order of `OPTION_ENTRIES`. */

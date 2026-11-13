@@ -662,7 +662,12 @@ h1 span {
 .option-item:hover {
   background: var(--surface);
 }
+.option-item > span:first-child {
+  flex: none;
+  white-space: nowrap;
+}
 .option-values {
+  min-width: 0;
   overflow: hidden;
   font-family: var(--face-code);
   font-size: 12px;

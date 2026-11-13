@@ -10,13 +10,14 @@ change.
 ### Changed
 
 - The playground has a new design, in the project's identity (tessera
-  symbol, Bricolage Grotesque, Papier and Nuit themes). The source format is
-  detected from the text, plain Latin letters reading as transliteration, and
-  can still be chosen; only the target is picked, and the standards offered
-  are those of the formats in use. Conversion options are pills after the
-  settings sentence, added from a searchable list of the options that act on
-  the formats in use, instead of a JSON field; the sentence says "Restyle"
-  when both sides share a format. Examples now go with the selected standard,
+  symbol, Bricolage Grotesque, Papier and Nuit themes). Source and target are
+  chosen from two segmented groups; the source is detected from the text by
+  default, plain Latin letters reading as transliteration. The standards
+  offered are those of the formats in use. Conversion options are pills after
+  the standard, added from a searchable list of the options that change the
+  result of the conversion in use (measured by `npm run site:options`),
+  instead of a JSON field; the sentence says "Restyle" when both sides share
+  a format. Examples now go with the selected standard,
   each with a note on the rule it shows, and are checked against the library
   by `tests/playground_examples_test.ts`. Letters whose distinctions the
   target loses are underlined in the source; letters of another script,

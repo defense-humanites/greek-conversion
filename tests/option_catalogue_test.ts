@@ -1,13 +1,15 @@
 import { test } from "node:test";
 import { assertEquals } from "./assertions.ts";
 import { CONVERSION_OPTION_VALUES } from "../src/mod.ts";
+import type { Format } from "../src/mod.ts";
+import { OPTION_RELEVANCE } from "../web/option_relevance.ts";
 import {
+  actsOn,
   findEntry,
   isAmbiguous,
   knownOptions,
   matchEntries,
   OPTION_ENTRIES,
-  relevantGroups,
   sameOptions,
   settingsOf,
   standardValue,
@@ -30,19 +32,35 @@ test("offers every option of the library, with a name for people", () => {
   assertEquals(isAmbiguous(findEntry("transliteration", "upsilon")!), false);
 });
 
-test("offers the groups that act on the formats in use", () => {
+test("offers the options that act on a conversion", () => {
+  const acts = (group: string, key: string, from: Format, to: Format) =>
+    actsOn(findEntry(group, key)!, from, to);
   assertEquals(
-    [...relevantGroups("greek", "transliteration")].sort(),
-    ["diacritics", "text", "transliteration"],
+    acts("transliteration", "upsilon", "greek", "transliteration"),
+    true,
   );
+  assertEquals(acts("transliteration", "upsilon", "greek", "beta-code"), false);
+  assertEquals(acts("greek", "doubleRho", "greek", "beta-code"), true);
+  assertEquals(acts("greek", "accentuation", "greek", "beta-code"), false);
+  assertEquals(acts("greek", "accentuation", "greek", "greek"), true);
+  assertEquals(acts("betaCode", "case", "greek", "beta-code"), true);
+  assertEquals(acts("betaCode", "case", "greek", "greek"), false);
+  assertEquals(acts("text", "letterCase", "beta-code", "greek"), true);
+  // Options read as they write: a Latin spelling they replace is no
+  // longer read, so restyling cannot change it.
   assertEquals(
-    [...relevantGroups("transliteration", "beta-code")].sort(),
-    ["betaCode", "diacritics", "greek", "text", "transliteration"],
+    acts("transliteration", "phi", "transliteration", "transliteration"),
+    false,
   );
-  assertEquals(
-    [...relevantGroups("beta-code", "greek")].sort(),
-    ["diacritics", "greek", "text"],
-  );
+});
+
+test("has a relevance entry for every option", () => {
+  for (const entry of OPTION_ENTRIES) {
+    assertEquals(
+      Array.isArray(OPTION_RELEVANCE[`${entry.group}.${entry.key}`]),
+      true,
+    );
+  }
 });
 
 test("sets, removes, and compares options", () => {

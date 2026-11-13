@@ -20,13 +20,13 @@ import type { Example } from "./examples.ts";
 import { suggestInventory } from "./inventory_suggestions.ts";
 import type { Suggestion } from "./inventory_suggestions.ts";
 import {
+  actsOn,
   findEntry,
   GROUP_NAMES,
   isAmbiguous,
   knownOptions,
   matchEntries,
   OPTION_ENTRIES,
-  relevantGroups,
   sameOptions,
   settingsOf,
   standardValue,
@@ -1004,7 +1004,7 @@ function showOptions(from: Format, to: Format): void {
       const item = document.createElement("li");
       item.className = "option-pill";
       item.dataset.option = `${group}.${key}`;
-      if (!relevantGroups(from, to).has(group)) {
+      if (!actsOn(entry, from, to)) {
         item.classList.add("idle");
         item.title = "No effect on this conversion";
       }
@@ -1059,7 +1059,8 @@ function showOptions(from: Format, to: Format): void {
   const signature = JSON.stringify([
     settingsOf(conversionOptions),
     preset,
-    [...relevantGroups(from, to)],
+    from,
+    to,
   ]);
   if (optionPills.dataset.signature !== signature) {
     optionPills.dataset.signature = signature;
@@ -1121,9 +1122,8 @@ function showPickerItems(): void {
     const set = new Set(
       settingsOf(conversionOptions).map(({ group, key }) => `${group}.${key}`),
     );
-    const groups = relevantGroups(from, to);
     const offered = OPTION_ENTRIES.filter((entry) =>
-      groups.has(entry.group) && !set.has(`${entry.group}.${entry.key}`)
+      actsOn(entry, from, to) && !set.has(`${entry.group}.${entry.key}`)
     );
     let group = "";
     for (const entry of matchEntries(offered, optionSearch.value)) {
