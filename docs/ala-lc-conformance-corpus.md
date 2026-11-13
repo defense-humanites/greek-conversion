@@ -16,7 +16,7 @@ marks or replaces alphabetic numerals with decimal numbers.
 | --- | --- | --- |
 | Ancient table, alphabet and examples | `β → b`, `η → ē`, `φ → ph`, `γγ/γκ/γξ/γχ → ng/nk/nx/nch`, archaic koppa `ϙ → ḳ`, digamma `ϝ → w`, lunate sigma `ϲ → s`, rough breathing on vowels and rho, and contextual `y/u` with omitted diaeresis | Unmarked letters and the selected consonant pairs re-encode stably. Source accents, smooth breathing, coronis, diaeresis, and iota subscript can disappear; those examples report loss. |
 | Modern table, alphabet and notes | `β → v`, initial `μπ → b`, initial `ντ → d̲`, positional `γκ → gk/nk/gk`, nasal gamma, `Ῥ/ῥ → Rh/rh` only when marked, and omitted polytonic and monotonic marks | The selected consonant combinations re-encode stably. Omitted source marks report loss; unmarked rho does not acquire an inferred rough breathing. |
-| Both tables, numeral lists | `ϝʹ/ϛʹ/στʹ → 6`, `ϙʹ/ϟʹ → 90`, `ϡʹ → 900`, and `͵α/͵αα/͵αβ → 1000/1001/1002` | Decimal output re-encodes stably as decimal text but does not retain the Greek numeral spelling; `convertDetailed()` reports loss. A prefixed sequence that violates the descending numeral order is left untouched. |
+| Both tables, numeral lists | `ϝʹ/ϛʹ/στʹ → 6`, with `στ` also the units of a longer numeral (`ιστʹ → 16`), `ϙʹ/ϟʹ → 90`, `ϡʹ → 900`, and `͵α/͵αα/͵αβ → 1000/1001/1002` | Decimal output re-encodes stably as decimal text but does not retain the Greek numeral spelling; `convertDetailed()` reports loss. A prefixed sequence that violates the descending numeral order is left untouched. |
 
 ## Boundaries still open
 

@@ -24,8 +24,10 @@ import {
   isWordFinal,
   isWordInitial,
   precedesVoicedSound,
+  type QuotationContext,
   roughDiphthongStart,
   roughDiphthongStarts,
+  sigmaEndsWord,
   standsAlone,
 } from "./context.ts";
 import {
@@ -132,6 +134,7 @@ export function encodeGreek(
   );
   const starts = written?.starts;
   const ends = written?.ends;
+  const quotations: QuotationContext = {};
 
   for (let i = 0; i < doc.length; i++) {
     const token = rendered[i];
@@ -154,9 +157,10 @@ export function encodeGreek(
       else if (
         options.greek?.finalSigma === "preserve"
           ? assimilated.glyphVariant === "final-sigma" ||
-            assimilated.glyphVariant === undefined && isWordFinal(doc, i + 1)
+            assimilated.glyphVariant !== "medial-sigma" &&
+              sigmaEndsWord(doc, i + 1, quotations)
           : options.greek?.finalSigma !== "medial" &&
-            isWordFinal(doc, i + 1)
+            sigmaEndsWord(doc, i + 1, quotations)
       ) base = "ς";
       out += assimilated.uppercase ? greekUpper(base) : base;
       // The dental and the sigma it became are written as one letter.
@@ -181,9 +185,10 @@ export function encodeGreek(
       token.letter === "sigma" &&
       (options.greek?.finalSigma === "preserve"
         ? token.glyphVariant === "final-sigma" ||
-          token.glyphVariant === undefined && isWordFinal(doc, i)
+          token.glyphVariant !== "medial-sigma" &&
+            sigmaEndsWord(doc, i, quotations)
         : options.greek?.finalSigma !== "medial" &&
-          isWordFinal(doc, i)) &&
+          sigmaEndsWord(doc, i, quotations)) &&
       !isGreekNumeralContext(doc, i)
     ) {
       base = "ς";
