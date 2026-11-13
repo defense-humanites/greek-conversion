@@ -319,25 +319,23 @@ h1 span {
   gap: 12px;
 }
 /*
- * The first line takes the full width: the two groups share what is left
- * after the words, and their formats share each group's width. "to" stays
- * with the targets when the line wraps.
+ * "to" stays with the targets when the line wraps. Where the line has room,
+ * the words and the two groups spread over its width, so that the space
+ * goes between them and the groups keep their own width.
  */
-.sentence .sources,
-.target-group {
-  flex: 1 1 auto;
-}
 .target-group {
   display: inline-flex;
   align-items: center;
   gap: 12px;
   max-width: 100%;
 }
-.target-group .segments {
-  flex: 1 1 auto;
-}
-.sentence .segments label {
-  flex: 1 1 0;
+@media (min-width: 1100px) {
+  .sentence {
+    justify-content: space-between;
+  }
+  .target-group {
+    display: contents;
+  }
 }
 /* The second line: the standard, then the options. */
 .option-line .group {
@@ -1245,8 +1243,8 @@ footer strong {
     flex-wrap: nowrap;
     width: 100%;
   }
-  .sentence .segments label {
-    flex: 1 1 auto;
+  .segments label {
+    flex: auto;
     white-space: nowrap;
     justify-content: center;
     padding: 0 8px;
