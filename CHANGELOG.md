@@ -7,6 +7,28 @@ change.
 
 ## [Unreleased]
 
+### Fixed
+
+- Under `greek.finalSigma: "preserve"`, a lunate sigma written as a standard
+  sigma takes its shape from its place in the word, as a sigma read from Beta
+  Code or transliteration does. A lunate sigma notes no position, but it was
+  always written `σ`, even at the end of a word: with `sigma: "standard"`,
+  `ϲῶμαϲ` gave `σῶμασ` and now gives `σῶμας`; the Beta Code `lo/gos3` and
+  `logoc` under `bnf-core` gave `λόγοσ` and `λογοσ`. The default
+  `finalSigma: "contextual"` was not affected.
+- A sigma before an elision apostrophe stays medial in Greek output: the
+  apostrophe stands for the elided vowel. Every apostrophe ended the word, so
+  `ἔχουσ’ ἐγώ` gave `ἔχους’ ἐγώ`, the Modern Greek `σ’ αγαπώ` gave `ς’ αγαπώ`,
+  and the Beta Code `a)gge/llous'` gave `ἀγγέλλους’`. The sigma is final only
+  before an apostrophe that closes a quotation opened by `‘` on the same line,
+  and that no word beginning with a vowel follows on that line (‘λόγος’). A
+  sigma on its own (`σ’ το πω`) is always medial, and an apostrophe after
+  punctuation or a digit always closes the quotation (‘ναί.’). A straight
+  quotation mark opens nothing, since it cannot be told from an aphaeresis:
+  `'λόγος'` now gives `’λόγοσ’`. This applies wherever the position decides
+  the shape: under the default `finalSigma: "contextual"`, and under
+  `"preserve"` for a sigma whose shape the source does not note.
+
 ## [1.0.0-rc.8] - 2026-11-11
 
 Eighth release candidate for `1.0.0`. The API does not change. Following #47,

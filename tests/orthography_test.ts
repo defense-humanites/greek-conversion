@@ -749,6 +749,125 @@ test("keeps no sigma shape for a capital", () => {
   assertEquals(parse("Σ", "greek")[0], parse("*s", "beta-code")[0]);
 });
 
+test("places a lunate sigma written as a standard sigma by its position", () => {
+  // A lunate sigma notes no position: when it is written as a standard sigma,
+  // the end of the word decides between ς and σ, even where the source shapes
+  // are preserved.
+  const standard = {
+    greek: { sigma: "standard", finalSigma: "preserve" },
+  } as const;
+  assertNfcEquals(convert("ϲῶμαϲ", "greek", "greek", standard), "σῶμας");
+  assertNfcEquals(
+    convert("lo/gos3", "beta-code", "greek", standard),
+    "λόγος",
+  );
+  assertNfcEquals(
+    convert("logoc", "transliteration", "greek", {
+      preset: "bnf-core",
+      greek: { finalSigma: "preserve" },
+    }),
+    "λογος",
+  );
+  assertNfcEquals(
+    convert("ΛΟΓΟϹ", "greek", "greek", {
+      ...standard,
+      text: { letterCase: "lowercase" },
+    }),
+    "λογος",
+  );
+  // The same holds for the sigma a dental is assimilated into.
+  assertNfcEquals(
+    convert("ἐλπίδϲ", "greek", "greek", {
+      greek: { ...standard.greek, dentalSigma: "assimilate" },
+    }),
+    "ἐλπίς",
+  );
+  // Noted shapes are still kept as written.
+  assertNfcEquals(
+    convert("λόγοσ ςῶμα ϲῶμαϲ", "greek", "greek", {
+      greek: { sigma: "preserve", finalSigma: "preserve" },
+    }),
+    "λόγοσ ςῶμα ϲῶμαϲ",
+  );
+});
+
+test("keeps a sigma before an elision apostrophe medial", () => {
+  // The apostrophe stands for the elided vowel, so the word goes on.
+  for (
+    const [input, expected] of [
+      ["σ’ αγαπώ", "σ’ αγαπώ"],
+      ["σ' αγαπώ", "σ’ αγαπώ"],
+      ["ἔχουσ’ ἐγώ", "ἔχουσ’ ἐγώ"],
+      ["ἔχους’ ἐγώ", "ἔχουσ’ ἐγώ"],
+      ["ἀγγέλλουσ’", "ἀγγέλλουσ’"],
+      ["« ἔχουσ’ ἐγώ »", "« ἔχουσ’ ἐγώ »"],
+      // An elision before punctuation, after an aphaeresis on the same line.
+      ["εἰ ’κεῖνος ἐλθοῦσ’, ἤν", "εἰ ’κεῖνος ἐλθοῦσ’, ἤν"],
+      // Every elision mark is read as the apostrophe.
+      ["ἔχουσʼ ἐγώ", "ἔχουσ’ ἐγώ"],
+      ["ἔχουσ᾽ ἐγώ", "ἔχουσ’ ἐγώ"],
+      // A sigma on its own is σε or σου, which Modern Greek also elides
+      // before a consonant, or the letter quoted.
+      ["θα σ’ το πω.", "θα σ’ το πω."],
+      ["‘σ’", "‘σ’"],
+    ]
+  ) assertNfcEquals(convert(input, "greek", "greek"), expected);
+  assertNfcEquals(
+    convert("a)gge/llous'", "beta-code", "greek"),
+    "ἀγγέλλουσ’",
+  );
+  assertNfcEquals(
+    convert("angéllous’", "transliteration", "greek"),
+    "ἀγγέλλουσ’",
+  );
+  // A position decides the shape under `preserve` too, when none is noted.
+  assertNfcEquals(
+    convert("a)gge/llous'", "beta-code", "greek", {
+      greek: { finalSigma: "preserve" },
+    }),
+    "ἀγγέλλουσ’",
+  );
+  assertNfcEquals(
+    convert("ἐλπίδσ’ ἐγώ", "greek", "greek", {
+      greek: { dentalSigma: "assimilate" },
+    }),
+    "ἐλπίσ’ ἐγώ",
+  );
+});
+
+test("ends a word with ς before an apostrophe that closes a quotation", () => {
+  for (
+    const [input, expected] of [
+      ["‘λόγος’ est", "‘λόγος’ est"],
+      ["‘λόγοσ’.", "‘λόγος’."],
+      // An apostrophe before a vowel is an elision, even inside a quotation.
+      ["‘οὐκ ἔστ’ ἔτυμος λόγος οὗτος’", "‘οὐκ ἔστ’ ἔτυμος λόγος οὗτος’"],
+      ["‘ἔχουσ’ ἐγώ’", "‘ἔχουσ’ ἐγώ’"],
+      // A quotation closed earlier on the line, or on another line, is over.
+      ["‘a’ puis ἔχουσ’", "‘a’ puis ἔχουσ’"],
+      ["‘a\nἔχουσ’", "‘a\nἔχουσ’"],
+      ["‘a\r\nἔχουσ’", "‘a\r\nἔχουσ’"],
+      ["‘a\u0085ἔχουσ’", "‘a\u0085ἔχουσ’"],
+      ["‘a\u2028ἔχουσ’", "‘a\u2028ἔχουσ’"],
+      // After punctuation or a digit, an apostrophe closes the quotation.
+      ["‘ναί.’ ἐλθοῦσ’, ἤν", "‘ναί.’ ἐλθοῦσ’, ἤν"],
+      ["‘Ναι,’ είπε· θα σ’ το πω.", "‘Ναι,’ είπε· θα σ’ το πω."],
+      ["‘1821’ θα σ’ το πω.", "‘1821’ θα σ’ το πω."],
+      // A word on the next line does not follow the apostrophe.
+      ["‘λόγος’\nἐστί", "‘λόγος’\nἐστί"],
+    ]
+  ) assertNfcEquals(convert(input, "greek", "greek"), expected);
+  // Two documented limits. A straight quotation mark cannot be told from an
+  // aphaeresis and opens nothing. An apostrophe before a vowel is read as an
+  // elision, so the quotation stays open for the rest of the line.
+  assertNfcEquals(convert("'λόγος' est", "greek", "greek"), "’λόγοσ’ est");
+  assertNfcEquals(convert("‘λόγος’ ἐστί", "greek", "greek"), "‘λόγοσ’ ἐστί");
+  assertNfcEquals(
+    convert("‘Ναι’ είπε ἐλθοῦσ’.", "greek", "greek"),
+    "‘Ναι’ είπε ἐλθοῦς’.",
+  );
+});
+
 test("folds Greek variants while keeping letter case independent", () => {
   // The recipe for a comparison spelling: standard beta and sigma, medial
   // sigma everywhere.
