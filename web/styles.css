@@ -292,8 +292,9 @@ h1 span {
 .share-note:empty {
   display: none;
 }
+/* A third of the width, clear of the links and the Share button. */
 .intro {
-  max-width: 720px;
+  max-width: max(calc(100% / 3), 340px);
   margin: -12px 0 0;
   font-size: 18px;
   line-height: 27px;
@@ -417,12 +418,24 @@ h1 span {
   font-weight: 700;
   color: var(--ink);
 }
-.targets label:has(input:checked)::before {
-  content: "";
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  background: var(--to);
+/*
+ * Each target keeps the width of its bold, selected form, so that the group
+ * does not change width as the selection moves: the hidden bold copy of the
+ * label sets the width.
+ */
+.targets label span {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+.targets label span::after {
+  content: attr(data-label);
+  height: 0;
+  overflow: hidden;
+  font-weight: 700;
+  visibility: hidden;
+  user-select: none;
+  pointer-events: none;
 }
 .targets label:has(input:focus-visible) {
   outline: 2px solid var(--from);
@@ -969,10 +982,7 @@ footer strong {
     padding: 0 8px;
     font-size: 15px;
   }
-  /* The border marks the target; the square would not fit. */
-  .targets label:has(input:checked)::before {
-    display: none;
-  }
+
   .links {
     margin-left: 0;
     order: 3;
@@ -982,6 +992,7 @@ footer strong {
     margin-left: auto;
   }
   .intro {
+    max-width: none;
     margin-top: 0;
     font-size: 16px;
     line-height: 24px;

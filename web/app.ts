@@ -777,6 +777,18 @@ function restoreState(): void {
   else if (inventoryInput.value || strict.checked) selectTab("tab-characters");
 }
 
+/*
+ * The fields grow with their text: through CSS (`field-sizing: content`)
+ * where the browser supports it, otherwise by measuring the text.
+ */
+const SIZES_ITSELF = CSS.supports("field-sizing", "content");
+
+function fitHeight(field: HTMLTextAreaElement): void {
+  if (SIZES_ITSELF) return;
+  field.style.height = "auto";
+  field.style.height = `${field.scrollHeight}px`;
+}
+
 /* Conversion */
 
 function update(): void {
@@ -857,6 +869,8 @@ function update(): void {
     );
     showCode(from, to, preset, options, inventory, undefined);
   }
+  fitHeight(source);
+  fitHeight(output);
   markActiveExample();
   saveState();
 }
