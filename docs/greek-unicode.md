@@ -122,8 +122,9 @@ capital instead (`Ὠιδῇ`, `ΤΩΙ`), as Smyth describes (§ 5) and as Unico
 uppercase mapping does (`ᾳ` → `ΑΙ`). `"adscript"` writes it on the line after
 every vowel (`τῶι`). The iota is a capital among capitals and in text set in
 capitals, and small after a capital that begins a lowercase word or stands
-alone. Written on the line, it is a letter: it
-reads back as iota, and the conversion reports the loss of the subscript.
+alone. Written on the line, it is a letter: it reads back as iota, and the
+conversion reports the loss of the subscript. Monotonic output has no iota
+subscript to write.
 
 ## Letter forms
 

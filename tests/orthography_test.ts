@@ -1010,6 +1010,52 @@ test("reports the iota subscript written on the line as lost", () => {
   );
 });
 
+test("writes the iota on the line in Greek output only", () => {
+  const source = "τῷ ᾨδῇ ᾍδης";
+  for (const iotaSubscript of ["capital-adscript", "adscript"] as const) {
+    // Beta Code and transliteration ignore the option, under every preset.
+    for (
+      const preset of [undefined, "ala-lc-ancient", "sbl-academic"] as const
+    ) {
+      const base = preset === undefined ? {} : { preset };
+      for (const to of ["beta-code", "transliteration"] as const) {
+        assertEquals(
+          convert(source, "greek", to, { ...base, greek: { iotaSubscript } }),
+          convert(source, "greek", to, base),
+        );
+      }
+    }
+    // Other Greek output choices still apply.
+    const greek = (options: object) =>
+      convert(source, "greek", "greek", {
+        ...options,
+        greek: { ...(options as { greek?: object }).greek, iotaSubscript },
+      });
+    assertEquals(
+      greek({ greek: { composition: "decomposed" } }),
+      greek({}).normalize("NFD"),
+    );
+    // Monotonic Greek has no iota subscript to write.
+    assertNfcEquals(
+      greek({ greek: { accentuation: "monotonic" } }),
+      "τω Ωδή Άδης",
+    );
+    assertNfcEquals(
+      greek({ text: { letterCase: "lowercase" } }),
+      iotaSubscript === "adscript" ? "τῶι ὠιδῆι ἅιδης" : "τῷ ᾠδῇ ᾅδης",
+    );
+  }
+  // The added iota belongs to its vowel's output range.
+  const result = convertDetailed("τῷ ᾨ", "greek", "greek", {
+    greek: { iotaSubscript: "adscript" },
+  });
+  assertNfcEquals(result.output, "τῶι Ὠι");
+  assertEquals(
+    result.spans.map((span) => [span.outputStart, span.outputEnd]),
+    [[0, 1], [1, 3], [3, 4], [4, 6]],
+  );
+});
+
 test("writes Greek in the uncial style", () => {
   assertNfcEquals(
     convert("τῷ λόγῳ ἐστὶν ἀγαθός", "greek", "greek", {

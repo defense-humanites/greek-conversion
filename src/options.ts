@@ -10,7 +10,7 @@ export type MedialBetaOrthography = "standard" | "symbol";
  * `"subscript"` writes it below the line, and after a capital as the
  * prosgegrammeni (`ᾳ`, `ᾼ`). `"capital-adscript"` writes it on the line after
  * a capital, as Smyth (§ 5) describes and as Unicode's uppercase mapping does
- * (`ᾠδῇ` → `Ὠιδῇ`, `ΤΗΙ ΩΙΔΗΙ`), and below the line elsewhere; `"adscript"`
+ * (`ᾨδῇ` → `Ὠιδῇ`, `ΤΗΙ ΩΙΔΗΙ`), and below the line elsewhere; `"adscript"`
  * writes it on the line after every vowel (`τῶι`), as some editions and
  * papyrological transcriptions do. An iota written on the line reads back as
  * the letter iota, so a conversion that writes one reports the loss of the

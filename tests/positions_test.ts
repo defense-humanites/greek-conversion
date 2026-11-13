@@ -1032,9 +1032,9 @@ test("span invariants hold for bound converters", () => {
 
 test("span invariants hold for every value of every option", () => {
   const inputs = [
-    "Θουκυδίδης Ἀθηναῖος ξυνέγραψε τὸν πόλεμον, ιβʹ ἔτη· μπα ντο γκ;",
-    "*qoukudi/dhs *)aqhnai=os cune/graye to\\n po/lemon, ib# e)/th: mpa nto gk;",
-    "Thoukydídēs Athēnaĩos xynégrapse tòn pólemon, 12 étē; mpa nto gk?",
+    "Θουκυδίδης Ἀθηναῖος ξυνέγραψε τὸν πόλεμον, ιβʹ ἔτη· μπα ντο γκ; τῷ ᾨδῇ",
+    "*qoukudi/dhs *)aqhnai=os cune/graye to\\n po/lemon, ib# e)/th: mpa nto gk; tw=| *)w|dh=|",
+    "Thoukydídēs Athēnaĩos xynégrapse tòn pólemon, 12 étē; mpa nto gk? tō̧̃ Ō̧dȩ̄̃",
   ] as const;
 
   for (
