@@ -318,25 +318,22 @@ h1 span {
   align-items: center;
   gap: 12px;
 }
-/*
- * The standard takes the rest of the line, so that the sentence fills the
- * width; where less than about 240 px remain, it moves to a line of its own,
- * still full width.
- */
-.sentence .group {
-  display: flex;
-  flex: 1 1 240px;
+/* "to" stays with the targets when the line wraps. */
+.target-group {
+  display: inline-flex;
   align-items: center;
   gap: 12px;
-  min-width: 0;
   max-width: 100%;
 }
-.sentence .group .chip-select {
-  flex: 1;
-  min-width: 0;
+/* The second line: the standard, then the options. */
+.option-line .group {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
 }
-.sentence .group select {
-  width: 100%;
+.option-line .group .chip-select {
+  min-width: 0;
 }
 .word {
   font-size: 18px;
@@ -373,51 +370,6 @@ h1 span {
   text-overflow: ellipsis;
   appearance: none;
 }
-/*
- * The source menu: a native menu, transparent, over a drawn face that sets
- * the width and can mix styles ("Greek" bold, "detected" lighter), which an
- * option's text cannot. The menu keeps the clicks, the keyboard, the
- * system's list of options and what screen readers announce; the face is
- * hidden from them.
- */
-.chip-select.from {
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 0 38px 0 14px;
-  border: 2px solid var(--from);
-  border-radius: var(--radius);
-  background: var(--raised);
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
-}
-.chip-select.from .chip-note {
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--muted);
-}
-.chip-select.from select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  min-height: 0;
-  height: 100%;
-  padding: 0;
-  border: 0;
-  opacity: 0;
-  /* At least 16 px, or iOS zooms in on the menu. */
-  font-size: 16px;
-}
-.chip-select.from:has(select:focus-visible) {
-  outline: 2px solid var(--from);
-  outline-offset: 2px;
-}
-/* Detected rather than chosen: the border says it is a guess. */
-.chip-select.from.auto {
-  border-style: dashed;
-}
 .chip-select select:disabled {
   color: var(--muted);
   cursor: default;
@@ -429,7 +381,13 @@ h1 span {
   border-width: 1.5px;
   font-weight: 600;
 }
+.sources {
+  --accent: var(--from);
+}
 .targets {
+  --accent: var(--to);
+}
+.segments {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 2px;
@@ -438,7 +396,7 @@ h1 span {
   border-radius: 9px;
   background: var(--surface);
 }
-.targets label {
+.segments label {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -452,13 +410,14 @@ h1 span {
   color: var(--muted);
   cursor: pointer;
 }
-.targets input {
+.segments input {
   position: absolute;
   opacity: 0;
   pointer-events: none;
 }
-.targets label:has(input:checked) {
-  border-color: var(--to);
+.segments label:has(input:checked),
+.segments label.detected {
+  border-color: var(--accent);
   background: var(--raised);
   font-weight: 700;
   color: var(--ink);
@@ -470,15 +429,15 @@ h1 span {
  * the label is centred in that width; selected, it moves right of the
  * square.
  */
-.targets label {
+.segments label {
   position: relative;
   display: inline-grid;
 }
-.targets label > span {
+.segments label > span {
   grid-area: 1 / 1;
   justify-self: center;
 }
-.targets label::after {
+.segments label::after {
   content: attr(data-label);
   grid-area: 1 / 1;
   height: 0;
@@ -487,10 +446,12 @@ h1 span {
   font-weight: 700;
   visibility: hidden;
 }
-.targets label:has(input:checked) > span {
+.segments label:has(input:checked) > span,
+.segments label.detected > span {
   justify-self: end;
 }
-.targets label:has(input:checked)::before {
+.segments label:has(input:checked)::before,
+.segments label.detected::before {
   content: "";
   position: absolute;
   top: 50%;
@@ -499,9 +460,25 @@ h1 span {
   height: 10px;
   margin-top: -5px;
   border-radius: 3px;
-  background: var(--to);
+  background: var(--accent);
 }
-.targets label:has(input:focus-visible) {
+/* Detected rather than chosen: the border says it is a guess. */
+.segments label.detected {
+  border-style: dashed;
+}
+/* Auto, when on, names no format itself: the dashed frame shows the one. */
+.segments label.auto-choice:has(input:checked) {
+  border-color: transparent;
+  background: none;
+  color: var(--from);
+}
+.segments label.auto-choice:has(input:checked)::before {
+  display: none;
+}
+.segments label.auto-choice:has(input:checked) > span {
+  justify-self: center;
+}
+.segments label:has(input:focus-visible) {
   outline: 2px solid var(--from);
   outline-offset: 2px;
 }
@@ -1253,25 +1230,34 @@ footer strong {
     padding: 0;
     border: 0;
   }
-  .targets {
+  .target-group {
+    width: 100%;
+  }
+  .target-group .segments {
+    flex: 1;
+    min-width: 0;
+  }
+  .segments {
     display: flex;
     flex-wrap: nowrap;
     width: 100%;
   }
-  .targets label {
+  .segments label {
     flex: auto;
     justify-content: center;
     padding: 0 8px;
     font-size: 15px;
   }
-  /* No room for the square: the orange border marks the target. */
-  .targets label::after {
+  /* No room for the square: the border marks the format. */
+  .segments label::after {
     padding-left: 0;
   }
-  .targets label:has(input:checked)::before {
+  .segments label:has(input:checked)::before,
+  .segments label.detected::before {
     display: none;
   }
-  .targets label:has(input:checked) > span {
+  .segments label:has(input:checked) > span,
+  .segments label.detected > span {
     justify-self: center;
   }
 

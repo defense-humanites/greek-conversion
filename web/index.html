@@ -54,20 +54,25 @@
       <main>
         <section class="controls" aria-label="Conversion">
           <div class="sentence">
-            <label class="word" for="source-format" id="verb">Convert</label>
-            <span class="chip-select from" id="source-chip">
-              <span class="chip-face" aria-hidden="true"><span
-                  id="source-face-name">Greek</span>
-                <span id="source-face-note" class="chip-note">detected</span></span>
-              <select id="source-format">
-                <option value="auto">Detected</option>
-                <option value="greek">Greek</option>
-                <option value="beta-code">Beta Code</option>
-                <option value="transliteration">Transliteration</option>
-              </select>
-            </span>
+            <span class="word" id="verb">Convert</span>
+            <div class="segments sources" role="radiogroup"
+              aria-labelledby="verb">
+              <label data-label="Auto" class="auto-choice"
+                title="Detect the format from the text"><input type="radio"
+                  name="source" value="auto" checked>
+                <span>Auto</span><span id="detected-note"
+                  class="visually-hidden"></span></label>
+              <label data-label="Greek"><input type="radio" name="source"
+                  value="greek"> <span>Greek</span></label>
+              <label data-label="Beta Code"><input type="radio" name="source"
+                  value="beta-code"> <span>Beta Code</span></label>
+              <label data-label="Transliteration"><input type="radio"
+                  name="source" value="transliteration">
+                <span>Transliteration</span></label>
+            </div>
+            <span class="target-group">
             <span class="word" id="target-word">to</span>
-            <div class="targets" role="radiogroup"
+            <div class="segments targets" role="radiogroup"
               aria-labelledby="target-word">
               <label data-label="Transliteration"><input type="radio"
                   name="target" value="transliteration" checked>
@@ -77,6 +82,9 @@
               <label data-label="Greek"><input type="radio" name="target"
                   value="greek"> <span>Greek</span></label>
             </div>
+            </span>
+          </div>
+          <div class="option-line" id="option-line">
             <span class="group">
               <label class="word" for="preset">following</label>
               <span class="chip-select standard">
@@ -85,8 +93,6 @@
                 </select>
               </span>
             </span>
-          </div>
-          <div class="option-line" id="option-line">
             <span class="word" id="options-word">with</span>
             <ul id="option-pills" class="option-pills" role="list"
               aria-labelledby="options-word"></ul>

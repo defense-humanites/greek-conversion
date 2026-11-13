@@ -40,7 +40,9 @@ function element<T extends HTMLElement>(id: string): T {
   return found as T;
 }
 
-const sourceSelect = element<HTMLSelectElement>("source-format");
+const sourceInputs = [
+  ...document.querySelectorAll<HTMLInputElement>('input[name="source"]'),
+];
 const targetInputs = [
   ...document.querySelectorAll<HTMLInputElement>('input[name="target"]'),
 ];
@@ -286,9 +288,18 @@ function syncPresets(from: Format, to: Format): boolean {
 
 /* Source and target formats */
 
-const autoOption = sourceSelect.options[0];
 /** The last format read from the text, kept while the text gives no clue. */
 let detected: Format = "greek";
+
+/** The reader's choice of source format, or "auto" to detect it. */
+function sourceChoice(): Format | "auto" {
+  const checked = sourceInputs.find((input) => input.checked);
+  return (checked?.value ?? "auto") as Format | "auto";
+}
+
+function setSourceChoice(choice: Format | "auto"): void {
+  for (const input of sourceInputs) input.checked = input.value === choice;
+}
 
 /**
  * The source format: the reader's choice, or, by default, the one the text
@@ -296,28 +307,35 @@ let detected: Format = "greek";
  * detected format then stays, marked as assumed.
  */
 function sourceFormat(): Format {
-  if (sourceSelect.value !== "auto") return sourceSelect.value as Format;
+  const choice = sourceChoice();
+  if (choice !== "auto") return choice;
   return detectFormat(source.value) ?? detected;
 }
 
-const sourceChip = element<HTMLSpanElement>("source-chip");
-const sourceFaceName = element<HTMLSpanElement>("source-face-name");
-const sourceFaceNote = element<HTMLSpanElement>("source-face-note");
+const detectedNote = element<HTMLSpanElement>("detected-note");
 
 /**
- * Shows the source format on the menu's face, and in the text of its first
- * option, which is what screen readers announce: "Greek · detected".
+ * Under "Auto", frames the detected format with a dashed border, where a
+ * chosen one has a solid border, and names it in the Auto choice for screen
+ * readers: "Auto, Greek detected".
  */
 function showDetection(): void {
   const found = detectFormat(source.value);
   if (found !== undefined) detected = found;
-  const auto = sourceSelect.value === "auto";
+  const auto = sourceChoice() === "auto";
   const note = found === undefined ? "assumed" : "detected";
-  autoOption.textContent = `${FORMAT_NAMES[detected]} · ${note}`;
-  sourceFaceName.textContent = FORMAT_NAMES[sourceFormat()];
-  sourceFaceNote.textContent = auto ? note : "";
-  sourceFaceNote.hidden = !auto;
-  sourceChip.classList.toggle("auto", auto);
+  detectedNote.textContent = `, ${FORMAT_NAMES[detected]} ${note}`;
+  for (const input of sourceInputs) {
+    const label = input.parentElement as HTMLLabelElement;
+    const shown = auto && input.value === detected;
+    label.classList.toggle("detected", shown);
+    if (input.value === "auto") continue;
+    label.title = shown
+      ? found === undefined
+        ? "Assumed: the text has no letters yet"
+        : "Detected from the text"
+      : "";
+  }
 }
 
 function targetFormat(): Format {
@@ -466,9 +484,9 @@ function markActiveExample(): void {
 function loadExample(example: Example): void {
   source.value = example.text;
   // Detection stays on when it reads the example right.
-  sourceSelect.value = detectFormat(example.text) === example.from
-    ? "auto"
-    : example.from;
+  setSourceChoice(
+    detectFormat(example.text) === example.from ? "auto" : example.from,
+  );
   setTarget(example.to);
   conversionOptions = knownOptions(example.options ?? {});
   update();
@@ -892,7 +910,7 @@ function showCode(
 
 function saveState(): void {
   const state = new URLSearchParams({
-    from: sourceSelect.value,
+    from: sourceChoice(),
     to: targetFormat(),
     text: source.value,
   });
@@ -913,7 +931,7 @@ function restoreState(): void {
     value !== null && (FORMATS as readonly string[]).includes(value);
   const from = state.get("from");
   const to = state.get("to");
-  sourceSelect.value = known(from) ? from : "auto";
+  setSourceChoice(known(from) ? from : "auto");
   if (known(to)) setTarget(to);
   const preset = presets.find(({ id }) => id === state.get("preset"))?.id;
   choosePreset(preset ?? "");
@@ -1375,7 +1393,7 @@ async function share(): Promise<void> {
   shareTimer = setTimeout(() => (shareNote.textContent = ""), 6000);
 }
 
-sourceSelect.addEventListener("change", update);
+for (const input of sourceInputs) input.addEventListener("change", update);
 for (const input of targetInputs) input.addEventListener("change", update);
 presetSelect.addEventListener("change", () => {
   choosePreset(currentPreset());
@@ -1401,7 +1419,7 @@ swapButton.addEventListener("click", () => {
   const from = sourceFormat();
   const to = targetFormat();
   source.value = output.value;
-  sourceSelect.value = detectFormat(source.value) === to ? "auto" : to;
+  setSourceChoice(detectFormat(source.value) === to ? "auto" : to);
   setTarget(from);
   update();
 });
