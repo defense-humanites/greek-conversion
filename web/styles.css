@@ -319,22 +319,60 @@ h1 span {
   gap: 12px;
 }
 /*
- * "to" stays with the targets when the line wraps. Where the line has room,
- * the words and the two groups spread over its width, so that the space
- * goes between them and the groups keep their own width.
+ * "to" stays with the targets when the line wraps. Where the lines have
+ * room, they share four columns spread over the width: the words, the
+ * source and the standard, "to" and "with", the targets and the options.
+ * The space goes between the columns, and the groups keep their own width.
  */
+.settings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 .target-group {
   display: inline-flex;
   align-items: center;
   gap: 12px;
   max-width: 100%;
 }
+.option-cell {
+  display: contents;
+}
 @media (min-width: 1100px) {
-  .sentence {
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(4, auto);
     justify-content: space-between;
+    /* The words sit on the line of the text beside them, the first line
+       of options included. */
+    align-items: baseline;
+    gap: 16px 24px;
   }
-  .target-group {
+  /* The standard spans the column of the sources. */
+  .settings-grid .chip-select.standard select {
+    width: 100%;
+  }
+  .settings-grid .sentence,
+  .settings-grid .target-group,
+  .settings-grid .option-line,
+  .settings-grid .option-line .group {
     display: contents;
+  }
+  .settings-grid .segments {
+    flex-wrap: nowrap;
+  }
+  /* The options wrap within the column of the targets. */
+  .option-cell {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
+    width: 0;
+    min-width: 100%;
+  }
+  .same-format-hint {
+    grid-column: 1 / -1;
   }
 }
 /* The second line: the standard, then the options. */

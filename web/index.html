@@ -53,6 +53,7 @@
 
       <main>
         <section class="controls" aria-label="Conversion">
+          <div class="settings-grid">
           <div class="sentence">
             <span class="word" id="verb">Convert</span>
             <div class="segments sources" role="radiogroup"
@@ -94,6 +95,7 @@
               </span>
             </span>
             <span class="word" id="options-word">with</span>
+            <div class="option-cell">
             <ul id="option-pills" class="option-pills" role="list"
               aria-labelledby="options-word"></ul>
             <button id="add-option" class="add-option" type="button"
@@ -111,9 +113,11 @@
               <div id="option-list" class="option-list" role="listbox"
                 aria-label="Conversion options"></div>
             </div>
+            </div>
             <p id="same-format-hint" class="hint same-format-hint" hidden>Same
               format on both sides: only the standard and the options change
               the text.</p>
+          </div>
           </div>
           <div class="preset-line" id="preset-line" hidden>
             <p id="preset-summary"></p>

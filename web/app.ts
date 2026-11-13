@@ -206,10 +206,7 @@ function attachSuggestions(
   });
 }
 
-/**
- * Short names for the standard menu, so that the settings sentence fits on
- * one line; the full name opens the description under it.
- */
+/** Short names, for the head of the output field. */
 const SHORT_NAMES: Readonly<Record<Preset, string>> = {
   "ala-lc-ancient": "ALA-LC Ancient",
   "ala-lc-modern": "ALA-LC Modern",
@@ -268,7 +265,7 @@ function syncPresets(from: Format, to: Format): boolean {
     }
     for (const metadata of presets) {
       if (presetFormat(metadata.id) !== format) continue;
-      const option = new Option(SHORT_NAMES[metadata.id], metadata.id);
+      const option = new Option(metadata.name, metadata.id);
       option.title = metadata.name;
       parent.append(option);
     }
@@ -395,11 +392,9 @@ function showPreset(): void {
   presetLimits.hidden = true;
   if (metadata === undefined) return;
 
-  const name = document.createElement("strong");
-  name.textContent = `${metadata.name}.`;
+  // The menu shows the full name; the description follows it here.
   presetSummary.append(
-    name,
-    ` ${metadata.description} · ${
+    `${metadata.description} · ${
       metadata.coverage === "partial" ? "Partial" : "Full"
     } coverage`,
   );
@@ -1110,7 +1105,7 @@ function closePicker(focusButton: boolean): void {
 
 /** Under the button, kept inside the settings. */
 function placePicker(): void {
-  const line = optionPicker.parentElement as HTMLElement;
+  const line = optionPicker.offsetParent as HTMLElement;
   const room = line.clientWidth - optionPicker.offsetWidth;
   optionPicker.style.left = `${
     Math.max(0, Math.min(addOptionButton.offsetLeft, room))
