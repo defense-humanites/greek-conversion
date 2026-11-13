@@ -88,6 +88,20 @@ const CASES = [
     latin: "6 6 6 90 90 900 1000 1001 1002",
     lossy: true,
   },
+  {
+    preset: "ala-lc-modern",
+    rule: "numerals: στ as the units of a longer numeral",
+    greek: "ιστʹ ΙΣΤʹ ρκστʹ ͵αστʹ ιϛʹ",
+    latin: "16 16 126 1006 16",
+    lossy: true,
+  },
+  {
+    preset: "ala-lc-ancient",
+    rule: "numerals: στ as the units of a longer numeral",
+    greek: "ιστʹ ΚΣΤʹ",
+    latin: "16 26",
+    lossy: true,
+  },
 ] as const;
 
 for (const { preset, rule, greek, latin, lossy } of CASES) {

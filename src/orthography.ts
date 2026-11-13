@@ -333,18 +333,20 @@ function readNumeral(
     hasThousands = true;
   }
 
-  // Both ALA-LC Greek tables list στʹ as an alternate sign for six.
-  if (
-    !hasThousands && isLetter(document[index], "sigma") &&
-    isLetter(document[index + 1], "tau") &&
-    isLiteral(document[index + 2], DEXIA_KERAIA)
-  ) {
-    return { value: 6, end: index + 3 };
-  }
-
   let previous = 1000;
   let digits = 0;
   while (index < document.length) {
+    // Both ALA-LC Greek tables list στʹ as an alternate sign for six
+    // (ϝʹ, ϛʹ, στʹ 6), so it is also the units of a longer numeral: ιστʹ is
+    // 16, ͵αστʹ 1006. Read as 200 and 300, the pair would break the
+    // descending order, so before a keraia it reads only one way.
+    if (
+      previous >= 10 && isLetter(document[index], "sigma") &&
+      isLetter(document[index + 1], "tau") &&
+      isLiteral(document[index + 2], DEXIA_KERAIA)
+    ) {
+      return { value: value + 6, end: index + 3 };
+    }
     const current = numericValue(document[index]);
     if (current === undefined || current >= previous) break;
     value += current;

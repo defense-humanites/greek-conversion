@@ -18,13 +18,17 @@ The package is ESM-only.
 
 ## Updating from `1.0.0-rc.8`
 
-The API does not change. In Greek output, a sigma before an elision apostrophe
-is medial: `ἔχουσ’ ἐγώ` and `σ’ αγαπώ` keep their `σ`, and the Beta Code
-`a)gge/llous'` gives `ἀγγέλλουσ’` (rc.8: `ἔχους’`, `ς’ αγαπώ`,
-`ἀγγέλλους’`). Before an apostrophe that closes a quotation opened by `‘`, the
-sigma stays final (‘λόγος’). A Greek word in straight quotation marks,
-`'λόγος'`, now gives `’λόγοσ’`: use `‘` and `’` to quote, or keep the source
-shapes with `greek.finalSigma: "preserve"`.
+The API does not change. Two kinds of input convert differently:
+
+- In Greek output, a sigma before an elision apostrophe is medial:
+  `ἔχουσ’ ἐγώ` and `σ’ αγαπώ` keep their `σ`, and the Beta Code
+  `a)gge/llous'` gives `ἀγγέλλουσ’` (rc.8: `ἔχους’`, `ς’ αγαπώ`,
+  `ἀγγέλλους’`). Before an apostrophe that closes a quotation opened by `‘`,
+  the sigma stays final (‘λόγος’). A Greek word in straight quotation marks,
+  `'λόγος'`, now gives `’λόγοσ’`: use `‘` and `’` to quote, or keep the source
+  shapes with `greek.finalSigma: "preserve"`.
+- Under `text.numerals: "decimal"`, as in the ALA-LC presets, `στʹ` is the
+  units of a longer numeral too: `ΙΣΤʹ` gives `16` (rc.8: `ISTʹ`).
 
 ## Updating from `1.0.0-rc.7`
 

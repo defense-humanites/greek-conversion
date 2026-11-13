@@ -26,6 +26,12 @@ change.
   `'λόγος'` now gives `’λόγοσ’`. This applies wherever the position decides
   the shape: under the default `finalSigma: "contextual"`, and under
   `"preserve"` for a sigma whose shape the source does not note.
+- Under `text.numerals: "decimal"` (the ALA-LC presets), `στʹ` is also read as
+  the units of a longer numeral, as `ϛʹ` is: the ALA-LC tables give
+  `ϝʹ, ϛʹ, στʹ` for six, and Modern Greek writes 16 as `ΙΣΤʹ`. Only a lone
+  `στʹ` was read, so `ΙΣΤʹ` gave `ISTʹ`; it now gives `16`, and `͵αστʹ` gives
+  `1006`. Read as 200 and 300, the pair would break the descending order of
+  the digits, so it cannot mean anything else.
 
 ## [1.0.0-rc.8] - 2026-11-11
 
