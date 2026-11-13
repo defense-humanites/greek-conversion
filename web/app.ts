@@ -344,37 +344,33 @@ function renderExamples(): void {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "example";
-    if (example.label) {
-      const title = document.createElement("span");
-      title.className = "title";
-      title.textContent = example.label;
-      button.append(title);
-    } else {
-      const pair = document.createElement("span");
-      pair.className = "pair";
-      const from = document.createElement("span");
-      from.className = `face-${example.from}`;
-      from.textContent = example.text;
-      if (example.from === "greek") from.lang = "grc";
-      const arrow = document.createElement("span");
-      arrow.className = "arrow";
-      arrow.setAttribute("aria-label", "to");
-      arrow.textContent = "→";
-      const to = document.createElement("span");
-      to.className = `face-${example.to}`;
-      to.textContent = example.output;
-      if (example.to === "greek") to.lang = "grc";
-      pair.append(from, arrow, to);
-      button.append(pair);
-    }
+    const title = document.createElement("span");
+    title.className = "title";
+    title.textContent = example.title;
     const note = document.createElement("span");
     note.className = "note";
     note.textContent = example.note;
-    button.append(note);
+    button.append(title, note);
     button.addEventListener("click", () => loadExample(example));
     exampleList.append(button);
   }
+  exampleList.scrollLeft = 0;
+  showExampleFades();
   markActiveExample();
+}
+
+/**
+ * The examples scroll sideways on one line; a fade marks each side that
+ * hides more, and only that side: none on the left before scrolling, none
+ * on the right at the end.
+ */
+function showExampleFades(): void {
+  const { scrollLeft, scrollWidth, clientWidth } = exampleList;
+  exampleList.classList.toggle("fade-start", scrollLeft > 1);
+  exampleList.classList.toggle(
+    "fade-end",
+    scrollLeft + clientWidth < scrollWidth - 1,
+  );
 }
 
 function markActiveExample(): void {
@@ -927,6 +923,8 @@ presetSelect.addEventListener("change", () => {
   update();
 });
 source.addEventListener("input", update);
+exampleList.addEventListener("scroll", showExampleFades, { passive: true });
+new ResizeObserver(showExampleFades).observe(exampleList);
 source.addEventListener("scroll", () => {
   sourceMarks.scrollTop = source.scrollTop;
 });

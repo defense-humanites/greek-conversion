@@ -534,12 +534,36 @@ h1 span {
   padding-top: 16px;
   border-top: 1px solid var(--line);
 }
+/*
+ * The examples stay on one line and scroll sideways. A fade softens the
+ * edge that hides more examples, set by the script (`fade-start`,
+ * `fade-end`): none on the left until the list has scrolled.
+ */
 .example-list {
+  --fade-start: 0px;
+  --fade-end: 0px;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--fade-start),
+    #000 calc(100% - var(--fade-end)),
+    transparent
+  );
+}
+.example-list.fade-start {
+  --fade-start: 48px;
+}
+.example-list.fade-end {
+  --fade-end: 48px;
 }
 .example {
+  flex: none;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -557,19 +581,6 @@ h1 span {
 .example[aria-pressed="true"] {
   border: 2px solid var(--ink);
   background: var(--raised);
-}
-.example .pair {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px;
-  font-family: var(--face-text);
-  font-size: 20px;
-  line-height: 1.2;
-}
-.example .pair .arrow {
-  font-family: var(--face-ui);
-  color: var(--muted);
 }
 .example .title {
   font-size: 17px;
@@ -609,9 +620,14 @@ h1 span {
 .field.to {
   border-color: var(--to);
 }
+/*
+ * The buttons stay at the top right: where the label and its note do not
+ * fit beside them, the note is cut short. Only on a phone do the buttons
+ * move under the label.
+ */
 .field-head {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px 12px;
@@ -620,6 +636,11 @@ h1 span {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+}
+.field-label::before,
+.field-label .label {
+  flex: none;
 }
 .field-label::before {
   content: "";
@@ -635,10 +656,15 @@ h1 span {
   color: var(--ink);
 }
 .meta {
+  min-width: 0;
+  overflow: hidden;
   font-size: 13px;
   color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .field-actions {
+  flex: none;
   display: flex;
   gap: 8px;
 }
@@ -993,6 +1019,9 @@ footer strong {
 }
 
 @media (max-width: 640px) {
+  .field-head {
+    flex-wrap: wrap;
+  }
   .shell {
     gap: 20px;
     padding-top: 20px;
@@ -1061,14 +1090,6 @@ footer strong {
   .text {
     min-height: 140px;
     font-size: 24px;
-  }
-  .example-list {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 4px;
-  }
-  .example {
-    flex: none;
   }
   footer .package {
     text-align: left;
