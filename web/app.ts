@@ -14,11 +14,11 @@ import type {
   Format,
   Preset,
 } from "../src/mod.ts";
-import { parse, validateDocument } from "../src/document.ts";
+import { parse, parseDetailed, validateDocument } from "../src/document.ts";
 import { detectFormat } from "./detect_format.ts";
 import { changedSpans, firstChange, PROBE_GREEK } from "./option_probe.ts";
-import { EXAMPLES } from "./examples.ts";
-import type { Example } from "./examples.ts";
+import { EXAMPLES, INVALID_MARKS } from "./examples.ts";
+import type { Example, MarksExample } from "./examples.ts";
 import { suggestInventory } from "./inventory_suggestions.ts";
 import type { Suggestion } from "./inventory_suggestions.ts";
 import {
@@ -482,22 +482,62 @@ function activeExample(): Example | undefined {
 
 /**
  * Lists the examples of the standard in the menu of the source field: the
- * title, then the rule it shows.
+ * title, then the rule it shows. Under them, whatever the standard, one text
+ * per format with marks Greek does not allow, which are hard to type.
  */
 function renderExamples(): void {
   exampleMenu.replaceChildren(new Option("Choose an example", ""));
+  const standard = document.createElement("optgroup");
+  standard.label = currentPreset()
+    ? `${presets.find(({ id }) => id === currentPreset())?.name ?? ""}`
+    : "Library defaults";
   examples().forEach((example, index) => {
-    exampleMenu.append(
+    standard.append(
       new Option(`${example.title} — ${example.note}`, String(index)),
     );
   });
+  const marks = document.createElement("optgroup");
+  marks.label = "Marks Greek does not allow";
+  INVALID_MARKS.forEach((example, index) => {
+    marks.append(
+      new Option(`${example.title} — ${example.note}`, `marks-${index}`),
+    );
+  });
+  exampleMenu.append(standard, marks);
   markActiveExample();
+}
+
+/** The example of invalid marks on screen, if its text is still there. */
+function activeMarksExample(): number {
+  return INVALID_MARKS.findIndex((example) =>
+    example.text === source.value && example.from === sourceFormat()
+  );
 }
 
 /** Selects the example on screen in the menu, or none once it is edited. */
 function markActiveExample(): void {
   const active = activeExample();
-  exampleMenu.value = active ? String(examples().indexOf(active)) : "";
+  const marks = activeMarksExample();
+  exampleMenu.value = active
+    ? String(examples().indexOf(active))
+    : marks >= 0
+    ? `marks-${marks}`
+    : "";
+}
+
+/**
+ * Loads a text with invalid marks. The target stays, unless it is the
+ * source's own format: the marks show whatever the conversion.
+ */
+function loadMarksExample(example: MarksExample): void {
+  source.value = example.text;
+  setSourceChoice(
+    detectFormat(example.text) === example.from ? "auto" : example.from,
+  );
+  if (targetFormat() === example.from) {
+    setTarget(example.from === "greek" ? "transliteration" : "greek");
+  }
+  update();
 }
 
 function loadExample(example: Example): void {
@@ -574,21 +614,33 @@ function readAsGreek(issue: Issue): boolean {
  * distinctions the conversion loses, and dots those it copies but would read
  * back as Greek. Offsets count UTF-16 code units of the input as typed.
  */
-function showMarks(issues: readonly Issue[]): void {
+function showMarks(
+  issues: readonly Issue[],
+  invalid: readonly Issue[] = [],
+): void {
+  type Kind = "loss" | "literal" | "invalid";
   const text = source.value;
-  const ranges = issues
-    .map((issue) => ({
+  const tagged: { issue: Issue; kind: Kind }[] = [
+    // Marks Greek does not allow come first where they overlap a loss.
+    ...invalid.map((issue) => ({ issue, kind: "invalid" as Kind })),
+    ...issues.map((issue) => ({
+      issue,
+      kind: (readAsGreek(issue) ? "literal" : "loss") as Kind,
+    })),
+  ];
+  const ranges = tagged
+    .map(({ issue, kind }) => ({
       start: issue.offset,
       end: issue.offset + Math.max(issue.length, 1),
-      literal: readAsGreek(issue),
+      kind,
     }))
     .sort((a, b) => a.start - b.start)
     // Adjacent letters of one kind share a mark, so that its underline runs
     // on, dots included, rather than starting again at each letter.
-    .reduce<{ start: number; end: number; literal: boolean }[]>(
+    .reduce<{ start: number; end: number; kind: Kind }[]>(
       (runs, range) => {
         const last = runs.at(-1);
-        if (last && last.literal === range.literal && range.start <= last.end) {
+        if (last && last.kind === range.kind && range.start <= last.end) {
           last.end = Math.max(last.end, range.end);
         } else {
           runs.push({ ...range });
@@ -599,22 +651,22 @@ function showMarks(issues: readonly Issue[]): void {
     );
   sourceMarks.replaceChildren();
   let position = 0;
-  for (const { start, end, literal } of ranges) {
+  for (const { start, end, kind } of ranges) {
     if (end <= position) continue;
     const from = Math.max(start, position);
     sourceMarks.append(text.slice(position, from));
     const mark = document.createElement("mark");
     mark.textContent = text.slice(from, end);
-    if (literal) {
-      mark.className = "literal";
-      // A lone letter gets a single dot, centred under it.
-      if (isOneLetter(mark.textContent)) mark.classList.add("single");
+    if (kind !== "loss") mark.className = kind;
+    // A lone letter read back as Greek gets a single dot, centred under it.
+    if (kind === "literal" && isOneLetter(mark.textContent)) {
+      mark.classList.add("single");
     }
     sourceMarks.append(mark);
     position = end;
   }
   // A final newline needs a character after it to take up its line.
-  sourceMarks.append(text.slice(position) + "\u200b");
+  sourceMarks.append(text.slice(position) + "​");
   sourceMarks.scrollTop = source.scrollTop;
 }
 
@@ -668,9 +720,10 @@ function cardsByMessage(issues: readonly Issue[]): IssueCard[] {
 }
 
 /**
- * Lists diagnostics in three sections: the distinctions the target does not
+ * Lists diagnostics in four sections: the distinctions the target does not
  * keep; the letters of another script it copies but would read back as
- * Greek; and the characters outside the repertoire. Each letter is the text
+ * Greek; the characters outside the repertoire; and the marks the reader
+ * kept but Greek does not allow (`validateDocument`). Each letter is the text
  * of the input at the diagnostic's offset, as typed: indices count the
  * tokens of the document the conversion prepared, in which a character
  * outside the repertoire may be several literals, so they do not match a
@@ -680,9 +733,10 @@ function showIssues(
   losses: readonly ConversionLoss[],
   scope: readonly Issue[],
   format: Format,
+  invalid: readonly Issue[] = [],
 ): void {
   diagnostics.replaceChildren();
-  diagnostics.hidden = losses.length + scope.length === 0;
+  diagnostics.hidden = losses.length + scope.length + invalid.length === 0;
   if (diagnostics.hidden) return;
 
   const literals = losses.filter(readAsGreek);
@@ -705,6 +759,7 @@ function showIssues(
         : [],
     ],
     ["Characters outside the repertoire", cardsByMessage(scope)],
+    ["Marks Greek does not allow", cardsByMessage(invalid)],
   ];
 
   for (const [label, cards] of sections) {
@@ -1590,6 +1645,21 @@ function update(): void {
     });
     const result = converter.convertDetailed(source.value, from, to, options);
     conversion = { converter, from, to };
+    // The reader keeps every mark it reads; validation says which ones Greek
+    // does not allow, at the place of their token in the input.
+    const read = parseDetailed(source.value, from, withPreset);
+    const invalid: Issue[] = validateDocument(read.document).map((
+      { code, index, message },
+    ) => {
+      const span = read.spans[index] ?? { start: 0, end: 0 };
+      return {
+        code,
+        index,
+        message,
+        offset: span.start,
+        length: span.end - span.start,
+      };
+    });
 
     output.value = result.output;
     showOutputMarks(preview ? changedSpans(previewBase, result.output) : []);
@@ -1610,6 +1680,13 @@ function update(): void {
         outside === 1 ? "1 character is" : `${outside} characters are`
       } outside the repertoire and copied through.`
       : "";
+    const invalidText = invalid.length
+      ? ` ${
+        invalid.length === 1
+          ? "1 mark that Greek does not allow is kept"
+          : `${invalid.length} marks that Greek does not allow are kept`
+      } (dashed).`
+      : "";
     if (!source.value) {
       showVerdict("empty", "", "Type or paste text to convert it.");
     } else if (lost) {
@@ -1617,23 +1694,24 @@ function update(): void {
         "lossy",
         `${lost === 1 ? "1 distinction" : `${lost} distinctions`} lost.`,
         "Converting the result back will not give the same text. Underlined letters lose a distinction." +
-          literalText + outsideText,
+          literalText + outsideText + invalidText,
       );
     } else if (literals) {
       showVerdict(
         "ok",
         "No distinction lost.",
-        literalText.trimStart() + outsideText,
+        (literalText + outsideText + invalidText).trimStart(),
       );
     } else {
       showVerdict(
         "ok",
         "Lossless.",
-        "Converting the result back gives the same text." + outsideText,
+        "Converting the result back gives the same text." + outsideText +
+          invalidText,
       );
     }
-    showMarks(result.losses);
-    showIssues(result.losses, result.diagnostics, from);
+    showMarks(result.losses, invalid);
+    showIssues(result.losses, result.diagnostics, from, invalid);
     showCode(from, to, preset, options, inventory, result.output);
   } catch (error) {
     output.value = "";
@@ -1725,8 +1803,14 @@ presetSelect.addEventListener("change", () => {
 });
 source.addEventListener("input", update);
 exampleMenu.addEventListener("change", () => {
-  const example = examples()[Number(exampleMenu.value)];
-  if (exampleMenu.value !== "" && example) loadExample(example);
+  const value = exampleMenu.value;
+  if (value.startsWith("marks-")) {
+    const example = INVALID_MARKS[Number(value.slice("marks-".length))];
+    if (example) loadMarksExample(example);
+    return;
+  }
+  const example = examples()[Number(value)];
+  if (value !== "" && example) loadExample(example);
 });
 source.addEventListener("scroll", () => {
   sourceMarks.scrollTop = source.scrollTop;

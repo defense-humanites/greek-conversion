@@ -1044,6 +1044,15 @@ textarea.text::placeholder {
   /* Whole dots only: the spacing gives way at the end of a word. */
   background-repeat: space no-repeat;
 }
+/*
+ * A mark Greek does not allow: short dashes in the colour of the text,
+ * whole and evenly spaced, on the line of the others.
+ */
+.marks mark.invalid {
+  background: linear-gradient(90deg, var(--ink) 0 7px, transparent 7px)
+    50% calc(100% - 1.5px) / 11px 3px;
+  background-repeat: space no-repeat;
+}
 /* What the value under preview changes in the output */
 .marks mark.preview {
   padding-bottom: 0;

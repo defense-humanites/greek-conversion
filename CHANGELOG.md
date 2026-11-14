@@ -25,9 +25,11 @@ change.
   the library by `tests/playground_examples_test.ts`. Letters whose distinctions the
   target loses are underlined in the source; letters of another script,
   copied as is but read back as Greek (`unrepresented-literal`), are dotted,
-  listed under their own heading, and not counted as lost distinctions. The
-  character inventory and the output sit in tabs, and the generated code is
-  highlighted and shows the result. Texts in all three formats are set in
+  listed under their own heading, and not counted as lost distinctions.
+  Marks the reader keeps but Greek does not allow (`validateDocument()`) are
+  dashed and listed too, with an example per format in the menu. The
+  character inventory and the output sit in tabs, and the generated code and
+  the canonical document are highlighted. Texts in all three formats are set in
   Literata Light, served by the playground with the letters it lacked
   (`web/fonts/README.md`).
 

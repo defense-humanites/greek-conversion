@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import { assertEquals } from "./assertions.ts";
 import { convert, listPresetMetadata } from "../src/mod.ts";
-import { EXAMPLES } from "../web/examples.ts";
+import { parse, validateDocument } from "../src/document.ts";
+import { EXAMPLES, INVALID_MARKS } from "../web/examples.ts";
 
 test("every playground example gives the output its note describes", () => {
   for (const [preset, examples] of Object.entries(EXAMPLES)) {
@@ -22,5 +23,17 @@ test("every playground example gives the output its note describes", () => {
 test("every standard has examples", () => {
   for (const { id } of listPresetMetadata()) {
     assertEquals(EXAMPLES[id].length > 0, true, id);
+  }
+});
+
+test("every example of invalid marks gives the diagnostics it names", () => {
+  for (const example of INVALID_MARKS) {
+    assertEquals(
+      validateDocument(parse(example.text, example.from)).map(({ code }) =>
+        code
+      ),
+      [...example.codes],
+      example.title,
+    );
   }
 });

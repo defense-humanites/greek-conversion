@@ -1,4 +1,5 @@
 import type { ConversionOptions, Format, Preset } from "../src/mod.ts";
+import type { ValidationCode } from "../src/document.ts";
 
 /**
  * A complete scenario: loading one sets the text, formats, and settings.
@@ -265,3 +266,62 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
     ),
   ],
 };
+
+/**
+ * A text with marks the reader keeps but Greek does not allow, which
+ * `validateDocument()` reports: `codes` lists them in order, checked by
+ * `tests/playground_examples_test.ts`. Such marks are hard to type in Greek,
+ * where they take combining characters.
+ */
+export interface MarksExample {
+  title: string;
+  note: string;
+  text: string;
+  from: Format;
+  codes: readonly ValidationCode[];
+}
+
+const MARKS_NOTE =
+  "A circumflex on a short vowel, an accent on a consonant, two accents, a diaeresis with a breathing";
+
+/** One text per format with marks Greek does not allow. */
+export const INVALID_MARKS: readonly MarksExample[] = [
+  {
+    title: "Invalid marks in Greek",
+    note: `${MARKS_NOTE}, an iota subscript under epsilon`,
+    text: "λε\u0342γε β\u0301ίβλος ὰ\u0301μα ἐνε\u0345 ϊ\u0313ον",
+    from: "greek",
+    codes: [
+      "invalid-circumflex",
+      "invalid-accent",
+      "conflicting-accents",
+      "invalid-iota-subscript",
+      "incompatible-diaeresis-breathing",
+    ],
+  },
+  {
+    title: "Invalid marks in Beta Code",
+    note: `${MARKS_NOTE}, an iota subscript under epsilon`,
+    text: "le=ge b/ibloj a\\/ma e)ne| i+)on",
+    from: "beta-code",
+    codes: [
+      "invalid-circumflex",
+      "invalid-accent",
+      "conflicting-accents",
+      "invalid-iota-subscript",
+      "incompatible-diaeresis-breathing",
+    ],
+  },
+  {
+    title: "Invalid marks in transliteration",
+    note: MARKS_NOTE,
+    text: "le\u0303ge b\u0301íblos a\u0301\u0300ma i\u0308\u0313on",
+    from: "transliteration",
+    codes: [
+      "invalid-circumflex",
+      "invalid-accent",
+      "conflicting-accents",
+      "incompatible-diaeresis-breathing",
+    ],
+  },
+];
