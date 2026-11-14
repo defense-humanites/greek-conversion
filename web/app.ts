@@ -50,7 +50,7 @@ const presetSelect = element<HTMLSelectElement>("preset");
 const presetLine = element<HTMLDivElement>("preset-line");
 const presetSummary = element<HTMLParagraphElement>("preset-summary");
 const presetLimits = element<HTMLUListElement>("preset-limits");
-const exampleList = element<HTMLDivElement>("examples");
+const exampleMenu = element<HTMLSelectElement>("examples");
 const source = element<HTMLTextAreaElement>("source");
 const sourceMarks = element<HTMLDivElement>("source-marks");
 const output = element<HTMLTextAreaElement>("output");
@@ -442,49 +442,24 @@ function activeExample(): Example | undefined {
   );
 }
 
+/**
+ * Lists the examples of the standard in the menu of the source field: the
+ * title, then the rule it shows.
+ */
 function renderExamples(): void {
-  exampleList.replaceChildren();
-  for (const example of examples()) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "example";
-    const title = document.createElement("span");
-    title.className = "title";
-    title.textContent = example.title;
-    const note = document.createElement("span");
-    note.className = "note";
-    note.textContent = example.note;
-    button.append(title, note);
-    button.addEventListener("click", () => loadExample(example));
-    exampleList.append(button);
-  }
-  exampleList.scrollLeft = 0;
-  showExampleFades();
+  exampleMenu.replaceChildren(new Option("Choose an example", ""));
+  examples().forEach((example, index) => {
+    exampleMenu.append(
+      new Option(`${example.title} — ${example.note}`, String(index)),
+    );
+  });
   markActiveExample();
 }
 
-/**
- * The examples scroll sideways on one line; a fade marks each side that
- * hides more, and only that side: none on the left before scrolling, none
- * on the right at the end.
- */
-function showExampleFades(): void {
-  const { scrollLeft, scrollWidth, clientWidth } = exampleList;
-  exampleList.classList.toggle("fade-start", scrollLeft > 1);
-  exampleList.classList.toggle(
-    "fade-end",
-    scrollLeft + clientWidth < scrollWidth - 1,
-  );
-}
-
+/** Selects the example on screen in the menu, or none once it is edited. */
 function markActiveExample(): void {
   const active = activeExample();
-  examples().forEach((example, index) => {
-    exampleList.children[index]?.setAttribute(
-      "aria-pressed",
-      String(example === active),
-    );
-  });
+  exampleMenu.value = active ? String(examples().indexOf(active)) : "";
 }
 
 function loadExample(example: Example): void {
@@ -1431,8 +1406,10 @@ presetSelect.addEventListener("change", () => {
   update();
 });
 source.addEventListener("input", update);
-exampleList.addEventListener("scroll", showExampleFades, { passive: true });
-new ResizeObserver(showExampleFades).observe(exampleList);
+exampleMenu.addEventListener("change", () => {
+  const example = examples()[Number(exampleMenu.value)];
+  if (exampleMenu.value !== "" && example) loadExample(example);
+});
 source.addEventListener("scroll", () => {
   sourceMarks.scrollTop = source.scrollTop;
 });

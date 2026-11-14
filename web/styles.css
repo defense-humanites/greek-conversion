@@ -743,72 +743,6 @@ h1 span {
 .preset-limits li + li {
   margin-top: 4px;
 }
-.examples {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
-}
-/*
- * The examples stay on one line and scroll sideways. A fade softens the
- * edge that hides more examples, set by the script (`fade-start`,
- * `fade-end`): none on the left until the list has scrolled.
- */
-.example-list {
-  --fade-start: 0px;
-  --fade-end: 0px;
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  scrollbar-width: thin;
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 var(--fade-start),
-    #000 calc(100% - var(--fade-end)),
-    transparent
-  );
-}
-.example-list.fade-start {
-  --fade-start: 48px;
-}
-.example-list.fade-end {
-  --fade-end: 48px;
-}
-.example {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  min-height: 44px;
-  padding: 10px 14px;
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  text-align: left;
-}
-.example:hover {
-  border-color: var(--muted);
-}
-.example[aria-pressed="true"] {
-  border: 2px solid var(--ink);
-  background: var(--raised);
-}
-.example .title {
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-.example .note {
-  font-size: 13px;
-  line-height: 1.3;
-  color: var(--muted);
-}
-
 /* One typeface for the texts, whatever their format */
 .face-greek,
 .face-transliteration,
@@ -883,6 +817,41 @@ h1 span {
   flex: none;
   display: flex;
   gap: 8px;
+}
+/*
+ * A menu drawn as a button: the native menu, transparent, lies over it, so
+ * that it keeps the keyboard, the platform's list and what screen readers
+ * announce.
+ */
+.menu-button {
+  position: relative;
+}
+.menu-button::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin: -3px 2px 0 2px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+.menu-button select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  opacity: 0;
+  /* At least 16 px, or iOS zooms in on the menu. */
+  font-size: 16px;
+  cursor: pointer;
+}
+.menu-button:has(select:focus-visible) {
+  outline: 2px solid var(--from);
+  outline-offset: 2px;
+}
+.menu-button:hover {
+  border-color: var(--muted);
 }
 /*
  * The source sits over a copy of itself in which the letters that lose a

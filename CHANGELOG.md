@@ -17,9 +17,9 @@ change.
   the standard, added from a searchable list of the options that change the
   result of the conversion in use (measured by `npm run site:options`),
   instead of a JSON field; the sentence says "Restyle" when both sides share
-  a format. Examples now go with the selected standard,
-  each with a note on the rule it shows, and are checked against the library
-  by `tests/playground_examples_test.ts`. Letters whose distinctions the
+  a format. Examples, in a menu of the source field, now go with the selected
+  standard, each with a note on the rule it shows, and are checked against
+  the library by `tests/playground_examples_test.ts`. Letters whose distinctions the
   target loses are underlined in the source; letters of another script,
   copied as is but read back as Greek (`unrepresented-literal`), are dotted,
   listed under their own heading, and not counted as lost distinctions. The

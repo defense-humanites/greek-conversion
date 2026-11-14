@@ -123,11 +123,6 @@
             <p id="preset-summary"></p>
             <ul id="preset-limits" class="preset-limits" hidden></ul>
           </div>
-          <div class="examples">
-            <h2 id="examples-title" class="label">Examples</h2>
-            <div id="examples" class="example-list" role="group"
-              aria-labelledby="examples-title"></div>
-          </div>
         </section>
 
         <section class="fields" aria-label="Text">
@@ -136,11 +131,21 @@
               <label for="source" class="field-label"><span id="source-label"
                   class="label">Greek</span>
                 <span id="source-meta" class="meta"></span></label>
-              <button id="clear" class="button small" type="button">
-                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
-                    d="M6 6l12 12M18 6L6 18" /></svg>
-                Clear
-              </button>
+              <div class="field-actions">
+                <span class="button small menu-button">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
+                      d="M5 4h10a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4zM5 16a4 4 0 0 1 4-4h10" /></svg>
+                  <span aria-hidden="true">Examples</span>
+                  <select id="examples" aria-label="Examples">
+                    <option value="">Choose an example</option>
+                  </select>
+                </span>
+                <button id="clear" class="button small" type="button">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
+                      d="M6 6l12 12M18 6L6 18" /></svg>
+                  Clear
+                </button>
+              </div>
             </div>
             <div class="editor">
               <div id="source-marks" class="text marks" aria-hidden="true"></div>
