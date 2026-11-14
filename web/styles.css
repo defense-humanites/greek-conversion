@@ -638,9 +638,9 @@ h1 span {
   flex-basis: 100%;
 }
 /*
- * The picker opens in the flow, under the options, when it previews one or
- * two values, so that the output stays in view; otherwise it floats under
- * its button (`.floating`).
+ * The picker opens in the flow, under the options, when it previews more
+ * than two values, so that the output stays in view; otherwise it floats
+ * under its button (`.floating`).
  */
 .option-picker {
   display: flex;
