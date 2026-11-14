@@ -13,7 +13,7 @@ test("every playground example gives the output its note describes", () => {
       assertEquals(
         convert(example.text, example.from, example.to, options),
         example.output,
-        `${preset || "no standard"}: ${example.title}`,
+        `${preset || "library defaults"}: ${example.title}`,
       );
     }
   }

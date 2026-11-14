@@ -243,7 +243,7 @@ function syncPresets(from: Format, to: Format): boolean {
     format !== "greek"
   );
   const before = presetSelect.value;
-  const none = new Option("No standard", "");
+  const none = new Option("Library defaults", "");
   presetSelect.replaceChildren(none);
   for (const format of formats) {
     const parent = formats.length > 1
@@ -378,19 +378,43 @@ function choosePreset(preset: Preset | ""): void {
     lastPreset[presetFormat(preset)] = preset;
     return;
   }
-  // No standard: for every format in use, until the reader picks one.
+  // The defaults: for every format in use, until the reader picks a standard.
   for (const format of [sourceFormat(), targetFormat()]) {
     if (format !== "greek") lastPreset[format] = "";
   }
 }
 
+/**
+ * What the library's defaults write: the spelling of SBL Academic in
+ * transliteration and of Perseus in Beta Code, whose options they share,
+ * but for every character the library knows, where a standard keeps to its
+ * repertoire.
+ */
+function defaultsText(): string {
+  const formats = new Set([sourceFormat(), targetFormat()]);
+  const like = [
+    formats.has("transliteration") ? "SBL Academic" : "",
+    formats.has("beta-code") ? "Perseus" : "",
+  ].filter(Boolean);
+  if (!like.length) return "";
+  const spelling = like.length === 2
+    ? "SBL Academic in transliteration and Perseus in Beta Code"
+    : like[0];
+  return `Same spelling as ${spelling}, for every character the library knows.`;
+}
+
 function showPreset(): void {
   const metadata = presets.find(({ id }) => id === presetSelect.value);
-  presetLine.hidden = metadata === undefined;
   presetSummary.replaceChildren();
   presetLimits.replaceChildren();
   presetLimits.hidden = true;
-  if (metadata === undefined) return;
+  if (metadata === undefined) {
+    const text = defaultsText();
+    presetSummary.textContent = text;
+    presetLine.hidden = text === "";
+    return;
+  }
+  presetLine.hidden = false;
 
   // The menu shows the full name; the description follows it here.
   presetSummary.append(
@@ -1304,6 +1328,8 @@ function update(): void {
   applyFaces(from, to);
   sourceMeta.textContent = characterCount(source.value);
   const preset = currentPreset();
+  // The defaults' line names the formats in use.
+  if (!preset) showPreset();
   showOptions(from, to);
   let options: ConversionOptions = {};
   let inventory: ConverterConfiguration = {};
