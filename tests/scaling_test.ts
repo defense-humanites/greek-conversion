@@ -43,6 +43,15 @@ const ATTEMPTS = 3;
 const IOTA_PASSAGE =
   "φιλία καὶ πίστις τινὶ ἐν τοῖς ἄλλοις, ὅτι δίκαιον καὶ καλόν ἐστι πιστεύειν. ";
 
+/**
+ * A passage on one line with quotations and sigmas before an apostrophe,
+ * whose shape depends on the open quotations of the line (see
+ * `closingQuotes()` in `src/context.ts`). Searching back for them from each
+ * such sigma would be quadratic.
+ */
+const ELISION_PASSAGE =
+  "‘Ναι’ είπε ἀγγέλλουσ’ — θεοῖσ’; ‘λόγος’ est, ‘ναί.’ ἐλθοῦσ’, ἤν ";
+
 function fastest(run: () => unknown): number {
   run();
   let best = Infinity;
@@ -59,6 +68,7 @@ const CASES: readonly {
   target: Format;
   options: ConversionOptions;
   passage?: string;
+  name?: string;
 }[] = [
   { format: "greek", target: "transliteration", options: {} },
   { format: "beta-code", target: "greek", options: {} },
@@ -73,16 +83,24 @@ const CASES: readonly {
     target: "greek",
     options: { preset: "iso-843-type-1" },
     passage: IOTA_PASSAGE,
+    name: "iota passage",
   },
   {
     format: "greek",
     target: "greek",
     options: { greek: { accentuation: "monotonic" } },
   },
+  {
+    format: "greek",
+    target: "greek",
+    options: {},
+    passage: ELISION_PASSAGE,
+    name: "elision passage",
+  },
 ];
 
 test("conversion cost grows linearly with the input", () => {
-  for (const { format, target, options, passage = PASSAGE } of CASES) {
+  for (const { format, target, options, passage = PASSAGE, name } of CASES) {
     const small = convert(passage.repeat(SMALL), "greek", format, options);
     const large = convert(passage.repeat(LARGE), "greek", format, options);
     for (
@@ -109,7 +127,7 @@ test("conversion cost grows linearly with the input", () => {
         ratio < MAX_RATIO,
         true,
         `${label} ${format} → ${target} ${JSON.stringify(options)}${
-          passage === PASSAGE ? "" : " (iota passage)"
+          name === undefined ? "" : ` (${name})`
         }: an 8× longer input took ${ratio.toFixed(1)}× as long`,
       );
     }

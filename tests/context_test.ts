@@ -251,8 +251,6 @@ test("uses final sigma before Unicode separators and punctuation", () => {
     "‐",
     "–",
     "—",
-    "'",
-    "’",
     "·",
     "·",
     ";",
@@ -260,11 +258,12 @@ test("uses final sigma before Unicode separators and punctuation", () => {
     "\u200B",
   ];
 
+  // An apostrophe stands for an elided vowel and does not end the word: see
+  // "keeps a sigma before an elision apostrophe medial".
   for (const boundary of boundaries) {
-    const canonicalBoundary = boundary === "'" ? "’" : boundary;
     assertNfcEquals(
       convert(`ασ${boundary}α`, "greek", "greek"),
-      `ας${canonicalBoundary}α`,
+      `ας${boundary}α`,
     );
   }
 });
