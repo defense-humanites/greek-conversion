@@ -124,7 +124,8 @@ options `greek.sigma`, `greek.finalSigma`, `greek.medialBeta`, and
 the forms the source writes.
 
 A form is lost when Greek output, written under the options of the
-conversion, would write it from the source but not from the text read back.
+conversion, would write it from the source but not from the text read back,
+both taken in the case of the source.
 `convertDetailed()` then reports `removed-glyph-variant`, with the source form
 in `glyphVariant`. The rule follows from the guarantee: the text read back
 must give the same canonical text, that is, the source written under the same
@@ -143,8 +144,10 @@ options. Consequently:
   abbreviation (`λόγοσ` → `lógos`), and a symbol form in Beta Code;
 - a form that exists in one case only is lost when the case changes, unless
   the options write it again: `ϑ` in capitals is `Θ`, as `toUpperCase()`
-  writes it, and `ϴ` in lowercase is `θ`. Only the lunate sigma has both a
-  capital and a small form.
+  writes it, and `ϴ` in lowercase is `θ`. So is the shape a small sigma
+  notes against its place: `λόγοσ` in capitals is `ΛΌΓΟΣ`, which reads back
+  as `λόγος` in lowercase. Only the lunate sigma has both a capital and a
+  small form. `changed-case` reports the case itself.
 
 A conversion can also write a form the source did not have: under
 `greek.sigma: "lunate"`, a sigma read from `s` is written `ϲ`, which converts
