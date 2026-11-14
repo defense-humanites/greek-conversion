@@ -218,7 +218,8 @@ once === twice;
 
 The first conversion may canonicalize aliases, mark order, punctuation, case,
 spacing, or a deliberately lossy option. Reapplying the same options to that
-canonical target does not change it again. This fixed-point guarantee is not a
+canonical target does not change it again. Options that give a `source`
+describe another input: the output is converted again without it. This fixed-point guarantee is not a
 reverse-round-trip guarantee and does not imply that the original source can
 be reconstructed. The differential corpus and explicit loss cases live in
 `tests/fixtures.ts`; pairwise stability and isolated non-default option values

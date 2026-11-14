@@ -32,6 +32,7 @@ import {
   isCharacterInPresetScope,
   presetMappingIssue,
   resolveConversionOptions,
+  resolveConversionProfiles,
 } from "./presets.ts";
 import {
   type ReadPositions,
@@ -333,11 +334,12 @@ export class Converter {
     assertTextInput(input);
     assertFormat(from);
     assertFormat(to);
-    const resolved = this.#resolveOptions(options);
-    const sourceInput = this.#preprocess(input, from, resolved);
+    const { reading, writing: resolved } = this.#resolveProfiles(options);
+    const sourceInput = this.#preprocess(input, from, reading);
     const prepared = this.#prepareSource(
       sourceInput,
       from,
+      reading,
       resolved,
       to,
       "spans",
@@ -347,9 +349,14 @@ export class Converter {
     const { output, map } = this.#postprocess(encoded.output, to, true);
 
     const targetInput = this.#preprocess(output, to, resolved);
-    const target =
-      this.#prepareSource(targetInput, to, resolved, undefined, "none")
-        .document;
+    const target = this.#prepareSource(
+      targetInput,
+      to,
+      resolved,
+      resolved,
+      undefined,
+      "none",
+    ).document;
     const inputSpans = prepared.spans!;
     const outputSpans = map === undefined ? encoded.spans : spansIn(
       encoded.spans.starts,
@@ -364,8 +371,14 @@ export class Converter {
       // Reading the output again with positions, only if the losses need it.
       () => ({
         written: outputSpans,
-        read: this.#prepareSource(targetInput, to, resolved, undefined, "spans")
-          .spans!,
+        read: this.#prepareSource(
+          targetInput,
+          to,
+          resolved,
+          resolved,
+          undefined,
+          "spans",
+        ).spans!,
       }),
     );
     const spans: ConversionSpan[] = new Array(prepared.document.length);
@@ -396,12 +409,13 @@ export class Converter {
     assertTextInput(input);
     assertFormat(from);
     assertFormat(to);
-    const resolved = this.#resolveOptions(options);
-    const preprocessed = this.#preprocess(input, from, resolved);
+    const { reading, writing: resolved } = this.#resolveProfiles(options);
+    const preprocessed = this.#preprocess(input, from, reading);
     // Only a rejection shows the diagnostics, in the error it throws.
     const prepared = this.#prepareSource(
       preprocessed,
       from,
+      reading,
       resolved,
       to,
       this.#outOfScopeBehavior === "reject" ? "diagnostics" : "none",
@@ -492,16 +506,17 @@ export class Converter {
   }
 
   /**
-   * Parses the preprocessed input and preserves or rejects the characters
-   * outside the converter's scope. `positions` says which positions to
-   * report: those of the diagnostics only, computed when there are any by
-   * reading the text again with positions; those of every token of the
-   * document as well (`spans`); or none, for a target document that is only
-   * compared.
+   * Parses the preprocessed input with the `reading` options and preserves or
+   * rejects the characters outside the converter's scope, as the conversion
+   * writes them with `options`. `positions` says which positions to report:
+   * those of the diagnostics only, computed when there are any by reading the
+   * text again with positions; those of every token of the document as well
+   * (`spans`); or none, for a target document that is only compared.
    */
   #prepareSource(
     input: PreprocessedInput,
     format: Format,
+    reading: ResolvedConversionOptions,
     options: ResolvedConversionOptions,
     target?: Format,
     positions: "diagnostics" | "spans" | "none" = "diagnostics",
@@ -514,7 +529,7 @@ export class Converter {
         format === "transliteration" && this.#keepsLetters
       ? { text: "", starts: [] }
       : undefined;
-    const parsed = parseResolved(input.value, format, options, true, read);
+    const parsed = parseResolved(input.value, format, reading, true, read);
     const diagnostics: CharacterScopeDiagnostic[] = [];
     // The parsed token each diagnostic reports: its index in the prepared
     // document, where it may have become several literals, is the one the
@@ -527,6 +542,7 @@ export class Converter {
     const kept: KeptLetters = {
       parsed,
       format,
+      reading,
       options,
       value: input.value,
       read,
@@ -540,6 +556,7 @@ export class Converter {
         parsed,
         input,
         format,
+        reading,
         options,
         target,
         diagnostics,
@@ -564,7 +581,7 @@ export class Converter {
     // Where each parsed token was read, in the input as supplied.
     const parsedSpans = parsedInputSpans(
       input,
-      read ?? readAgain(input.value, format, options),
+      read ?? readAgain(input.value, format, reading),
     );
     for (const [k, diagnostic] of diagnostics.entries()) {
       diagnostic.offset = parsedSpans.starts[reported[k]];
@@ -588,6 +605,7 @@ export class Converter {
     parsed: Document,
     input: PreprocessedInput,
     format: Format,
+    reading: ResolvedConversionOptions,
     options: ResolvedConversionOptions,
     target: Format | undefined,
     diagnostics: CharacterScopeDiagnostic[],
@@ -645,7 +663,7 @@ export class Converter {
     const occurrence = occurrences.get(token.value) ?? 0;
     occurrences.set(token.value, occurrence + 1);
     const original = input.originals.get(token.value)?.[occurrence] ??
-      customForm(custom.character, format, custom.uppercase, options);
+      customForm(custom.character, format, custom.uppercase, reading);
     return literalTokens(original);
   }
 
@@ -706,7 +724,17 @@ export class Converter {
     return { output, map: { starts, ends } };
   }
 
-  #resolveOptions(options: ConversionOptions): ResolvedConversionOptions {
+  /**
+   * The profiles of one conversion. The bound preset applies to the options
+   * that write the output, and to the input unless `source` describes it:
+   * `source` is resolved on its own, and may name another preset.
+   */
+  #resolveProfiles(
+    options: ConversionOptions,
+  ): {
+    reading: ResolvedConversionOptions;
+    writing: ResolvedConversionOptions;
+  } {
     if (
       this.#preset !== undefined && options.preset !== undefined &&
       options.preset !== this.#preset
@@ -715,7 +743,7 @@ export class Converter {
         `Converter is bound to preset ${this.#preset}; received ${options.preset}.`,
       );
     }
-    return resolveConversionOptions(
+    return resolveConversionProfiles(
       this.#preset === undefined
         ? options
         : { ...options, preset: this.#preset },
@@ -1020,6 +1048,9 @@ function literalTokens(value: string): readonly Token[] {
 interface KeptLetters {
   readonly parsed: Document;
   readonly format: Format;
+  /** The options the source was read with. */
+  readonly reading: ResolvedConversionOptions;
+  /** The options that write the output. */
   readonly options: ResolvedConversionOptions;
   /** The preprocessed text the document was read from. */
   readonly value: string;
@@ -1204,7 +1235,7 @@ function copiedSpelling(
   const { text, starts } = kept.read ??= readAgain(
     kept.value,
     kept.format,
-    kept.options,
+    kept.reading,
   );
   const empty = (k: number) =>
     k >= 0 && k < kept.parsed.length && starts[k] === starts[k + 1];
@@ -1215,7 +1246,7 @@ function copiedSpelling(
       kept.format,
       {
         ...keptOptions("preserve"),
-        transliteration: kept.options.transliteration,
+        transliteration: kept.reading.transliteration,
       },
     );
   }

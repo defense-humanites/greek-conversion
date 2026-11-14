@@ -120,6 +120,69 @@ test("option errors are OptionErrors that locate the option", () => {
   assertEquals(Object.isFrozen(incompatible.accepted), true);
 });
 
+test("the options of source are checked, with paths that start with source.", () => {
+  const cases: Array<[unknown, string, unknown]> = [
+    [{ source: { source: {} } }, "source.source", undefined],
+    [{ source: { foo: 1 } }, "source.foo", undefined],
+    [
+      { source: { transliteration: { phi: "x" } } },
+      "source.transliteration.phi",
+      "x",
+    ],
+    [{ source: { preset: "nope" } }, "source.preset", "nope"],
+    [
+      {
+        source: {
+          transliteration: {
+            longVowels: "circumflex",
+            circumflexAccent: "circumflex",
+          },
+        },
+      },
+      "source.transliteration.longVowels",
+      "circumflex",
+    ],
+  ];
+  for (const [options, path, received] of cases) {
+    const error = assertThrows(
+      () => convert("α", "greek", "greek", options as never),
+      OptionError,
+    );
+    assertEquals(error.path, path);
+    assertEquals(error.received, received);
+  }
+  // A source has the keys of a conversion, without a source of its own.
+  assertEquals(
+    assertThrows(
+      () => resolveConversionOptions({ source: { foo: 1 } } as never),
+      OptionError,
+    ).accepted.includes("source"),
+    false,
+  );
+  const replaced = assertThrows(
+    () =>
+      resolveConversionOptions(
+        { source: { orthography: { betaCodeCase: "uppercase" } } } as never,
+      ),
+    OptionError,
+  );
+  assertEquals(replaced.path, "source.orthography.betaCodeCase");
+  assertEquals(replaced.replacement, "source.betaCode.case");
+  assertThrows(
+    () => resolveConversionOptions({ source: "sbl-academic" } as never),
+    TypeError,
+  );
+  assertThrows(
+    () => resolveConversionOptions({ source: { text: "lowercase" } } as never),
+    TypeError,
+  );
+  // The resolved options are those that write the output.
+  assertEquals(
+    resolveConversionOptions({ source: { preset: "ala-lc-modern" } }),
+    DEFAULT_CONVERSION_OPTIONS,
+  );
+});
+
 test("an OptionError has a replacement only when there is one", () => {
   // docs/stability.md: `replacement` is set only for keys and values that a
   // release candidate accepted, so `"replacement" in error` tells them apart.

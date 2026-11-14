@@ -350,6 +350,37 @@ written (`phē`), so that the output reads back as itself. The
 [stability policy](docs/stability.md#reading) states which spellings each
 reader accepts.
 
+### Restyle a transliteration
+
+In a conversion that keeps the format, the options describe the input as well
+as the output: `reencode()` normalizes a text in its own style. Reading
+transliteration depends on its options, so to change the style of a
+transliteration, say how it is written with `source`:
+
+```ts
+import { reencode } from "@humanities/greek-conversion";
+
+reencode("tōn barbarōn", "transliteration", {
+  preset: "ala-lc-modern",
+  source: { preset: "sbl-academic" },
+});
+// → tōn varvarōn
+
+reencode("phílos", "transliteration", {
+  transliteration: { phi: "f" },
+  source: {},
+});
+// → fílos
+```
+
+`source: {}` is the default style. Without `source`, the first call reads `b`
+as μπ, as ALA-LC Modern does, and gives `tōn barmparōn`, and the second reads
+`ph` as pi and a rough breathing, and changes nothing. `source` takes the
+options of a conversion and works with every function: `convertDetailed()`
+reports what the new style loses, and between two formats, `source` describes
+the input apart from the output. A restyle cannot restore what the source
+style does not note: the default style writes no coronis.
+
 ### Keep or fold letter variants
 
 Lunate sigma has two independent controls: `sigma` picks the Greek and Beta Code
@@ -702,7 +733,7 @@ What you can rely on:
 
 - Every format pair converts in both directions.
 - For fixed formats and options, output is canonical and idempotent: converting
-  it again changes nothing.
+  it again with the same options, without `source`, changes nothing.
 - A conversion that `convertDetailed()` reports as lossless converts back to the
   same canonical text.
 - Unknown characters are preserved, never dropped.

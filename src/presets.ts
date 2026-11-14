@@ -12,7 +12,7 @@ import { isGreekNumeralContext } from "./context.ts";
 import type { Document, Format, Letter } from "./model.ts";
 
 /** Partial option fields contributed by one registered preset. */
-export type PresetOptions = Omit<ConversionOptions, "preset">;
+export type PresetOptions = Omit<ConversionOptions, "preset" | "source">;
 
 /** Implementation status of a preset relative to its cited references. */
 export type PresetCoverage = "complete" | "partial" | "adapted" | "planned";
@@ -430,7 +430,9 @@ export function getPresetOptions(preset: Preset): PresetOptions {
  * "circumflex"` with `circumflexAccent: "circumflex"`, which would write the
  * length mark of eta and omega and the circumflex accent alike. A preset
  * value counts, so `{ preset: "bnf-core", transliteration: { longVowels:
- * "circumflex" } }` is rejected too.
+ * "circumflex" } }` is rejected too. The `source` profile is checked and
+ * resolved as well, on its own, and left out of the result, which holds the
+ * options that write the output.
  *
  * @throws {OptionError} If `options.preset` is not registered at runtime, if
  * an option key or value is unknown, or if two values are incompatible. An
@@ -440,11 +442,40 @@ export function getPresetOptions(preset: Preset): PresetOptions {
 export function resolveConversionOptions(
   options: ConversionOptions = {},
 ): ResolvedConversionOptions {
-  validateConversionOptions(options);
-  const { preset, ...custom } = options;
-  const base = preset === undefined ? {} : registeredPreset(preset);
+  return resolveConversionProfiles(options).writing;
+}
+
+/**
+ * The two profiles of a conversion: the options that write its output, and
+ * those that read its input. The input is read with `options.source`,
+ * resolved on its own, when it is given, and otherwise with the options that
+ * write the output, which are then the same object. Both are validated.
+ *
+ * @throws {OptionError} As {@link resolveConversionOptions}, with the path of
+ * an option of `source` starting with `source.`.
+ * @throws {TypeError} If `options`, `source`, or an option group has the
+ * wrong type.
+ */
+export function resolveConversionProfiles(
+  options: ConversionOptions = {},
+): { reading: ResolvedConversionOptions; writing: ResolvedConversionOptions } {
+  validateConversionOptions(options, "");
+  const writing = resolveProfile(options, "");
+  const reading = options.source === undefined
+    ? writing
+    : resolveProfile(options.source, "source.");
+  return { reading, writing };
+}
+
+/** Resolves validated options, whose errors name their paths after `prefix`. */
+function resolveProfile(
+  options: ConversionOptions,
+  prefix: string,
+): ResolvedConversionOptions {
+  const { preset, source: _source, ...custom } = options;
+  const base = preset === undefined ? {} : registeredPreset(preset, prefix);
   const merged = mergeConversionOptions(base, custom);
-  assertCompatibleOptions(merged, preset, custom);
+  assertCompatibleOptions(merged, preset, custom, prefix);
 
   return {
     transliteration: {
@@ -479,6 +510,7 @@ function assertCompatibleOptions(
   merged: ExpandedOptions,
   preset: Preset | undefined,
   custom: PresetOptions,
+  prefix: string,
 ): void {
   const transliteration = merged.transliteration;
   if (
@@ -489,12 +521,12 @@ function assertCompatibleOptions(
     (custom.transliteration?.longVowels !== "circumflex" ||
       custom.transliteration?.circumflexAccent !== "circumflex");
   throw new OptionError(
-    'transliteration.longVowels "circumflex" cannot be combined with ' +
-      'transliteration.circumflexAccent "circumflex"' +
+    `${prefix}transliteration.longVowels "circumflex" cannot be combined ` +
+      `with ${prefix}transliteration.circumflexAccent "circumflex"` +
       (fromPreset ? ` (set by preset "${preset}")` : "") +
       ": the length mark and the accent would be written alike.",
     {
-      path: "transliteration.longVowels",
+      path: `${prefix}transliteration.longVowels`,
       received: "circumflex",
       accepted: CONVERSION_OPTION_VALUES.transliteration.longVowels.filter((
         value,
@@ -557,12 +589,12 @@ const RENAMED_VALUES: Readonly<
   "transliteration.eta": { "e-macron": "e", "i-macron": "i" },
 };
 
-function registeredPreset(preset: Preset): ExpandedOptions {
+function registeredPreset(preset: Preset, prefix = ""): ExpandedOptions {
   const known = EXPANDED_PRESETS.get(preset);
   if (known !== undefined) return known;
   const expanded = mergeConversionOptions(
     {},
-    registeredDefinition(preset).options,
+    registeredDefinition(preset, prefix).options,
   );
   EXPANDED_PRESETS.set(preset, expanded);
   return expanded;
@@ -575,7 +607,9 @@ const OPTION_GROUPS = [
   "text",
   "diacritics",
 ] as const;
-const TOP_LEVEL_KEYS: readonly string[] = ["preset", ...OPTION_GROUPS];
+/** The keys of a profile, which `source` is. */
+const PROFILE_KEYS: readonly string[] = ["preset", ...OPTION_GROUPS];
+const TOP_LEVEL_KEYS: readonly string[] = [...PROFILE_KEYS, "source"];
 
 /** The groups of `1.0.0-rc.5`, whose keys the error for them names. */
 const REPLACED_GROUPS: ReadonlySet<string> = new Set([
@@ -583,23 +617,24 @@ const REPLACED_GROUPS: ReadonlySet<string> = new Set([
   "unicode",
 ]);
 
-function validateConversionOptions(options: unknown): void {
+/**
+ * Validates the options of a conversion (`prefix` empty), or its `source`
+ * profile (`prefix` `"source."`), which cannot have a `source` of its own.
+ */
+function validateConversionOptions(options: unknown, prefix: string): void {
   if (
     options === null || typeof options !== "object" || Array.isArray(options)
   ) {
     throw new TypeError(
-      `Expected conversion options to be an object, received ${
-        options === null
-          ? "null"
-          : Array.isArray(options)
-          ? "array"
-          : typeof options
-      }.`,
+      `Expected ${
+        prefix === "" ? "conversion" : prefix.slice(0, -1)
+      } options to be an object, received ${typeName(options)}.`,
     );
   }
+  const keys = prefix === "" ? TOP_LEVEL_KEYS : PROFILE_KEYS;
   for (const [key, value] of Object.entries(options)) {
     if (value === undefined) continue;
-    if (TOP_LEVEL_KEYS.includes(key)) continue;
+    if (keys.includes(key)) continue;
     if (
       REPLACED_GROUPS.has(key) && value !== null && typeof value === "object"
     ) {
@@ -609,21 +644,17 @@ function validateConversionOptions(options: unknown): void {
       const first =
         inner.find((name) => Object.hasOwn(REPLACED_KEYS, `${key}.${name}`)) ??
           inner[0];
-      throw unknownKey(first === undefined ? key : `${key}.${first}`);
+      throw unknownKey(first === undefined ? key : `${key}.${first}`, prefix);
     }
-    throw unknownKey(key);
+    throw unknownKey(key, prefix);
   }
   for (const group of OPTION_GROUPS) {
     const value = (options as Record<string, unknown>)[group];
     if (value === undefined) continue;
     if (value === null || typeof value !== "object" || Array.isArray(value)) {
       throw new TypeError(
-        `Expected ${group} options to be an object, received ${
-          value === null
-            ? "null"
-            : Array.isArray(value)
-            ? "array"
-            : typeof value
+        `Expected ${prefix}${group} options to be an object, received ${
+          typeName(value)
         }.`,
       );
     }
@@ -635,11 +666,14 @@ function validateConversionOptions(options: unknown): void {
       if (choice === undefined) continue;
       const accepted = Object.hasOwn(table, key) ? table[key] : undefined;
       if (accepted === undefined) {
-        throw new OptionError(`Unknown conversion option: ${group}.${key}`, {
-          path: `${group}.${key}`,
-          received: undefined,
-          accepted: Object.keys(table),
-        });
+        throw new OptionError(
+          `Unknown conversion option: ${prefix}${group}.${key}`,
+          {
+            path: `${prefix}${group}.${key}`,
+            received: undefined,
+            accepted: Object.keys(table),
+          },
+        );
       }
       if (!accepted.includes(choice as string)) {
         const renames = RENAMED_VALUES[`${group}.${key}`];
@@ -648,7 +682,7 @@ function validateConversionOptions(options: unknown): void {
           ? renames[choice]
           : undefined;
         throw new OptionError(
-          `Invalid value for ${group}.${key}: ${
+          `Invalid value for ${prefix}${group}.${key}: ${
             JSON.stringify(choice)
           }; expected one of ${
             accepted.map((v) => JSON.stringify(v)).join(", ")
@@ -658,7 +692,7 @@ function validateConversionOptions(options: unknown): void {
               : ` ${JSON.stringify(choice)} is now ${JSON.stringify(renamed)}.`
           }`,
           {
-            path: `${group}.${key}`,
+            path: `${prefix}${group}.${key}`,
             received: choice,
             accepted,
             ...(renamed === undefined ? {} : { replacement: renamed }),
@@ -667,6 +701,18 @@ function validateConversionOptions(options: unknown): void {
       }
     }
   }
+  const source = (options as ConversionOptions).source;
+  if (prefix === "" && source !== undefined) {
+    validateConversionOptions(source, "source.");
+  }
+}
+
+function typeName(value: unknown): string {
+  return value === null
+    ? "null"
+    : Array.isArray(value)
+    ? "array"
+    : typeof value;
 }
 
 /**
@@ -674,10 +720,16 @@ function validateConversionOptions(options: unknown): void {
  * of a group that `1.0.0-rc.5` had. A key the earlier release knew is named
  * with its current path.
  */
-function unknownKey(path: string): OptionError {
-  const replacement = Object.hasOwn(REPLACED_KEYS, path)
-    ? REPLACED_KEYS[path]
+function unknownKey(key: string, prefix: string): OptionError {
+  const replaced = Object.hasOwn(REPLACED_KEYS, key)
+    ? REPLACED_KEYS[key]
     : undefined;
+  const path = prefix + key;
+  // A replacement can name several paths, each of which takes the prefix.
+  const replacement = replaced?.replace(
+    /\b(?:transliteration|greek|betaCode|text|diacritics)\./g,
+    (group) => prefix + group,
+  );
   return new OptionError(
     `Unknown conversion option: ${path}${
       replacement === undefined ? "" : ` (${path} is now ${replacement})`
@@ -685,7 +737,7 @@ function unknownKey(path: string): OptionError {
     {
       path,
       received: undefined,
-      accepted: TOP_LEVEL_KEYS,
+      accepted: prefix === "" ? TOP_LEVEL_KEYS : PROFILE_KEYS,
       ...(replacement === undefined ? {} : { replacement }),
     },
   );
@@ -771,10 +823,13 @@ export function presetMappingIssue(
   return undefined;
 }
 
-function registeredDefinition(preset: Preset): PresetDefinition {
+function registeredDefinition(
+  preset: Preset,
+  prefix = "",
+): PresetDefinition {
   if (!Object.hasOwn(PRESET_DEFINITIONS, preset)) {
     throw new OptionError(`Unknown conversion preset: ${preset}`, {
-      path: "preset",
+      path: `${prefix}preset`,
       received: preset,
       accepted: Object.keys(PRESET_DEFINITIONS),
     });
