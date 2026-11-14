@@ -294,10 +294,12 @@ export function glyphForm(
  * The Beta Code of a sigma: `s3` for a lunate sigma, `s1` or `s2` for a
  * sigma whose noted shape (`σ` or `ς`) contradicts its place, kept under
  * `greek.finalSigma: "preserve"`, and `s` otherwise, whose shape the
- * position decides. A capital has no shape, and the TLG defines no `*s1` or
- * `*s2`.
+ * position decides. Before a digit from 1 to 3, which would make a code of
+ * `s`, a small sigma always takes its code, with the shape Greek output
+ * writes. A capital has no shape, and the TLG defines no `*s1` or `*s2`; so
+ * a capital sigma before `3` reads back as a lunate sigma.
  */
-function betaSigma(
+export function betaSigma(
   document: Document,
   index: number,
   token: Grapheme,
@@ -305,19 +307,22 @@ function betaSigma(
   quotations: QuotationContext,
 ): "s" | "s1" | "s2" | "s3" {
   if (writesLunateSigma(document, index, token, options)) return "s3";
-  if (isGreekNumeralContext(document, index)) return "s";
-  if (
-    token.uppercase ||
-    (options.greek?.finalSigma ?? "preserve") !== "preserve" ||
-    token.glyphVariant !== "medial-sigma" &&
-      token.glyphVariant !== "final-sigma"
-  ) return "s";
-  const final = sigmaEndsWord(document, index, quotations);
-  return token.glyphVariant === "medial-sigma"
-    ? final ? "s1" : "s"
-    : final
-    ? "s"
-    : "s2";
+  if (token.uppercase) return "s";
+  const next = document[index + 1];
+  const code = next?.kind === "literal" ? next.value.charCodeAt(0) : 0;
+  const beforeDigit = code >= 0x31 && code <= 0x33;
+  const numeral = isGreekNumeralContext(document, index);
+  const policy = options.greek?.finalSigma ?? "preserve";
+  const noted = !numeral && policy === "preserve" &&
+    (token.glyphVariant === "medial-sigma" ||
+      token.glyphVariant === "final-sigma");
+  if (!noted && !beforeDigit) return "s";
+  const ends = !numeral && sigmaEndsWord(document, index, quotations);
+  const final = noted
+    ? token.glyphVariant === "final-sigma"
+    : policy !== "medial" && ends;
+  if (beforeDigit) return final ? "s2" : "s1";
+  return final === ends ? "s" : final ? "s2" : "s1";
 }
 
 /**

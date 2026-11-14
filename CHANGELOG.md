@@ -55,10 +55,17 @@ change.
   `greek.finalSigma: "preserve"`: `λόγοσ` gives `lo/gos1` (was `lo/gos`, which
   reads back as `λόγος`), and `lo/gos1` gives `λόγοσ` (was `λόγος1`). A shape
   the place gives needs no code (`s1a` gives `sa`), and the TLG defines none
-  for a capital (`*s1` is still a capital sigma and a digit).
+  for a capital (`*s1` is still a capital sigma and a digit). Since `s1` and
+  `s2` now read as sigmas, a small sigma before a digit from 1 to 3 is
+  written with its code (`λόγος2` gives `lo/gos22`), so that the digit
+  survives; see *Changed* for how existing input reads.
 
 ### Changed
 
+- Beta Code `s1` and `s2` read as a sigma with a noted shape, and no longer
+  as a sigma followed by a digit: `lo/gos1` gives `λόγοσ` (rc.8: `λόγος1`).
+  Marks after a sigma code are read as marks of the sigma (`s2/a` gives
+  `ς́α`; rc.8: `ς/α`).
 - Greek output keeps the letter forms the source writes, by default. The
   defaults of `greek.sigma`, `greek.finalSigma`, and `greek.medialBeta` are
   now `"preserve"` (were `"standard"`, `"contextual"`, and `"standard"`), and
@@ -154,12 +161,15 @@ change.
   `αʹ` gives `aʹ` (was `á`, then `a`). A small stigma or sampi is written
   only where the numeral reads back: `ϡαʹ` in capitals gives `S̄Á` (was
   `s̄Á`, then `S̄Á`).
-
 - A lunate sigma that the options write where the source has a standard
   sigma is reported when it converts back otherwise. Under
   `transliteration.lunateSigma: "c"` and `greek.sigma: "lunate"`, `sōma`
   gives `ϲωμα`, which converts back to `cōma`; `convertDetailed()` reported
   no loss. The loss has no `glyphVariant`, since the source had none.
+- Beta Code no longer writes a small sigma before the digit 3 as `s3`, which
+  read back as a lunate sigma: `ς3` gives `s23` (rc.8: `s3`, read back as
+  `ϲ`). A capital sigma before `3` still gives `*s3`, since the TLG defines
+  no code for it; `convertDetailed()` reports the loss.
 
 ## [1.0.0-rc.8] - 2026-11-11
 

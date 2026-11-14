@@ -330,7 +330,7 @@ export interface TransliterationOptions {
 export interface GreekOptions {
   /** Sigma glyph policy. Defaults to `"preserve"`, which keeps a lunate sigma the source notes. */
   sigma?: SigmaOrthography;
-  /** Lowercase final sigma policy in Greek output. Defaults to `"preserve"`, which retains source Greek sigma shapes and places any other sigma by its position, such as a sigma read from Beta Code or a lunate sigma written as a standard sigma; `"contextual"` places every sigma by its position, correcting a shape the source notes. A sigma before an elision apostrophe is not at the end of its word. */
+  /** Lowercase final sigma policy in Greek output. Defaults to `"preserve"`, which retains the sigma shapes the source notes (Greek `σ` and `ς`, Beta Code `s1` and `s2`) and places any other sigma by its position, such as a sigma read from Beta Code `s` or a lunate sigma written as a standard sigma; `"contextual"` places every sigma by its position, correcting a shape the source notes. A sigma before an elision apostrophe is not at the end of its word. */
   finalSigma?: FinalSigmaOrthography;
   /** Beta glyph. Defaults to `"preserve"`, which keeps a `ϐ` the source notes. */
   medialBeta?: MedialBetaOrthography;

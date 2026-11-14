@@ -27,6 +27,7 @@ import {
   type Preset,
   type ResolvedConversionOptions,
 } from "./options.ts";
+import { betaSigma } from "./encode.ts";
 import { decimalNumeralTokens } from "./orthography.ts";
 import {
   isCharacterInPresetScope,
@@ -1153,18 +1154,39 @@ function writtenSpelling(kept: KeptLetters, index: number): string {
     word = kept.word = writtenWord(kept, index, options);
   }
   const position = index - word.start;
-  return word.output.slice(
+  const spelling = word.output.slice(
     word.spans.starts[position],
     word.spans.ends[position],
   );
+  // Whether a small sigma takes its Beta Code (`s1`, `s2`) depends on its
+  // place, which a quotation opened before its word or the word after an
+  // apostrophe decide: it is decided on the whole source.
+  const token = kept.parsed[index];
+  return kept.format === "beta-code" && token.kind === "grapheme" &&
+      token.letter === "sigma" && SMALL_SIGMA_CODE.test(spelling)
+    ? spelling.replace(
+      SMALL_SIGMA_CODE,
+      betaSigma(
+        kept.parsed,
+        index,
+        { ...token, uppercase: false },
+        options,
+        kept.quotations ??= {},
+      ),
+    )
+    : spelling;
 }
+
+/** A small sigma at the start of its Beta Code, with its code. */
+const SMALL_SIGMA_CODE = /^s[123]?/;
 
 /**
  * The word of the letter at `index`, with the token on either side of it (a
  * space, a keraia, an apostrophe), written in the source format. Only the
  * shape of a sigma depends on more than the word, and is decided on the whole
- * source first, so that a conversion writes no more of the source again than
- * the words of the letters it keeps.
+ * source (here for Greek, in `writtenSpelling()` for the Beta Code sigma
+ * codes), so that a conversion writes no more of the source again than the
+ * words of the letters it keeps.
  */
 function writtenWord(
   kept: KeptLetters,

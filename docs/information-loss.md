@@ -120,8 +120,11 @@ The Greek reader remembers the form of a letter as its `glyphVariant`: the
 lunate sigma `ϲ` (`Ϲ`), a final `ς` or medial `σ`, and the symbol forms `ϐ`,
 `ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, and `ϒ`. Beta Code notes the lunate sigma
 (`s3`), and the medial and final sigma (`s1`, `s2`), which it writes only
-where the shape contradicts the place, under `finalSigma: "preserve"`;
-transliteration notes the lunate sigma as `c` under `lunateSigma: "c"`. The
+where the shape contradicts the place, under `finalSigma: "preserve"`, or
+before a digit from 1 to 3; transliteration notes the lunate sigma as `c`
+under `lunateSigma: "c"`. The TLG defines no code for a capital sigma, so a
+capital sigma before `3` is written `*s3` and reads back as a lunate sigma
+(`Σ3` → `*s3` → `Ϲ`), a loss that `convertDetailed()` reports. The
 options `greek.sigma`, `greek.finalSigma`, `greek.medialBeta`, and
 `greek.symbolForms` decide how Greek output writes them; by default, it keeps
 the forms the source writes.

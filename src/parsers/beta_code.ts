@@ -135,6 +135,8 @@ export function parseBetaCode(
       ? digit
       : 0;
     if (code === 3 || code > 0 && !upper) {
+      // Marks follow the code, as they follow a letter.
+      [i, marks] = consumeMarks(text, i + 2, marks);
       out.push(
         share
           ? sharedGrapheme(SIGMA, (upper ? 1 : 0) | SIGMA_FLAGS[code], marks)
@@ -145,7 +147,6 @@ export function parseBetaCode(
             SIGMA_CODES[code],
           ),
       );
-      i += 2;
       continue;
     }
 
