@@ -716,8 +716,15 @@ h1 span {
   font-size: 15px;
   cursor: pointer;
 }
-.option-item[aria-selected="true"],
+.option-item + .option-item {
+  margin-top: 3px;
+}
+/* The pointer gets a softer tint than the active item, which the keyboard
+   and Enter act on. */
 .option-item:hover {
+  background: var(--code-bg);
+}
+.option-item[aria-selected="true"] {
   background: var(--surface);
 }
 .option-item > span:first-child {
