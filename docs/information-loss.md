@@ -126,13 +126,15 @@ options `greek.sigma`, `greek.finalSigma`, `greek.medialBeta`, and
 `greek.symbolForms` decide how Greek output writes them; by default, it keeps
 the forms the source writes.
 
-A form is lost when Greek output, written under the options of the
-conversion, would write it from the source but not from the text read back,
-both taken in the case of the source.
+A form is lost when the source format, under the options of the conversion
+(or of its `source` profile), writes the letter differently from the source
+and from the text read back, both taken in the case of the source. For a
+Greek source, that is how Greek output writes the letter; Beta Code notes
+only the sigma codes, and transliteration only the `c` of the lunate sigma.
 `convertDetailed()` then reports `removed-glyph-variant`, with the source form
 in `glyphVariant`. The rule follows from the guarantee: the text read back
 must give the same canonical text, that is, the source written under the same
-options. Consequently:
+options. Consequently, for a Greek source:
 
 - an option that folds a form is not a loss, since the canonical text has
   none: `sigma: "standard"` writes `ϲ` as `σ` from the source and from the
@@ -155,8 +157,9 @@ options. Consequently:
 
 A conversion can also write a form the source did not have: under
 `greek.sigma: "lunate"`, a sigma read from `s` is written `ϲ`, which converts
-back to `c` under `lunateSigma: "c"`. The loss is reported without
-`glyphVariant`.
+back to `c` under `lunateSigma: "c"`. Transliteration, the source format,
+writes `s` from the source and `c` from the text read back, so the loss is
+reported, without `glyphVariant`.
 
 ### Canonical Greek orthography
 
@@ -209,9 +212,9 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `finalSigma: "preserve"` (default) | Writes the sigma shape the source notes in lowercase Greek output, and places any other sigma by its position; Beta Code writes a shape that contradicts its place as `s1` or `s2` | Yes in Greek and Beta Code; a shape that contradicts its place is lost in transliteration |
 | `finalSigma: "contextual"` | Places every sigma by its position in lowercase Greek output | No, but the canonical text has no other shape, so the change is not reported |
 | `finalSigma: "medial"` | Uses `σ` instead of contextual `ς` in lowercase Greek output | Yes; both are the same canonical sigma letter |
-| `sigma: "preserve"` (default) | Uses lunate Greek or Beta Code glyphs only where the source notes a lunate sigma | Yes in Greek and Beta Code; in transliteration with `lunateSigma: "c"` |
+| `sigma: "preserve"` (default) | Uses lunate Greek or Beta Code glyphs only where the source notes a lunate sigma, numerals included | Yes in Greek and Beta Code; in transliteration with `lunateSigma: "c"` |
 | `sigma: "standard"` | Replaces a lunate sigma with the standard Greek or Beta Code glyph | No, but the canonical text has no lunate sigma, so the change is not reported |
-| `sigma: "lunate"` | Uses lunate glyphs for all non-numeral sigma in Greek or Beta Code output | Source letters remain recoverable; stylistically added lunate provenance is not a loss |
+| `sigma: "lunate"` | Uses lunate glyphs for all non-numeral sigma in Greek or Beta Code output | Source letters remain recoverable; the added lunate sigma is not a loss, unless it reads back as another spelling (`c` under `lunateSigma: "c"`) |
 | `medialBeta: "preserve"` (default) | Writes `ϐ` where the source notes it, and `β` elsewhere | Yes in Greek; no in Beta Code and transliteration, which report `removed-glyph-variant` |
 | `medialBeta: "standard"` | Writes `β` everywhere | No, but the canonical text has no `ϐ`, so the change is not reported |
 | `medialBeta: "symbol"` | Writes `ϐ` inside a word and `β` at its start, whatever the source has | Yes from every format, since the position decides the form |

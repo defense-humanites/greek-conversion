@@ -72,9 +72,9 @@ change.
   `{ greek: { sigma: "standard", finalSigma: "contextual", medialBeta: "standard", symbolForms: "standard" } }`
   give the output of rc.8, and the README gives a recipe to fold the forms
   for comparison (*Keep or fold letter variants*).
-- `convertDetailed()` reports a letter form when Greek output, under the
-  options of the conversion, would write it from the source but not from the
-  text read back, so that a conversion without loss still converts back to
+- `convertDetailed()` reports a letter form when the source format, under the
+  options of the conversion, writes it from the source but not from the text
+  read back, so that a conversion without loss still converts back to
   the same text (Information loss, *Letter forms*). A form the target cannot
   write is reported: `ϐίος` gives `bíos` in transliteration, which reads back
   as `βίος`, with a loss whose `glyphVariant` is `"beta-symbol"`; so do `ϑ`,
@@ -83,6 +83,9 @@ change.
   does, a text written that way gives no loss. A form that the options fold
   is no longer reported: `ϲῶμα` under `sigma: "standard"` gives `σῶμα`, which
   is how the same options write the source (rc.8: `removed-glyph-variant`).
+- Under the default `greek.sigma: "preserve"`, Greek and Beta Code output
+  keep a lunate sigma in a numeral (`ϲʹ`, Beta Code `s3#`); `"lunate"` still
+  writes a numeral with the standard sigma.
 
 ### Fixed
 
