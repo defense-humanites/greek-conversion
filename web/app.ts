@@ -66,6 +66,8 @@ const addOptionButton = element<HTMLButtonElement>("add-option");
 const optionPicker = element<HTMLDivElement>("option-picker");
 const optionSearch = element<HTMLInputElement>("option-search");
 const optionStep = element<HTMLParagraphElement>("option-step");
+const optionStepName = element<HTMLSpanElement>("option-step-name");
+const optionBack = element<HTMLButtonElement>("option-back");
 const optionList = element<HTMLDivElement>("option-list");
 const sameFormatHint = element<HTMLParagraphElement>("same-format-hint");
 const outputMarks = element<HTMLDivElement>("output-marks");
@@ -1349,7 +1351,7 @@ function showPickerItems(): void {
     const entry = pickerEntry;
     const standard = standardValue(preset, entry.group, entry.key);
     optionStep.hidden = false;
-    optionStep.textContent = optionName(entry);
+    optionStepName.textContent = optionName(entry);
     // A few values: the list takes the keyboard, without a search field.
     // It takes the focus before the field hides, so that the picker stays.
     optionList.tabIndex = 0;
@@ -1358,7 +1360,7 @@ function showPickerItems(): void {
     optionSearch.removeAttribute("aria-activedescendant");
     // The heading names the option.
     optionList.removeAttribute("aria-label");
-    optionList.setAttribute("aria-labelledby", "option-step");
+    optionList.setAttribute("aria-labelledby", "option-step-name");
     const values = entry.values
       .filter((value) => value !== standard)
       .map((value) => ({ value, example: valueExample(entry, value) }));
@@ -1491,6 +1493,12 @@ function pickerKeydown(event: KeyboardEvent): void {
     showPickerItems();
   }
 }
+// Back to the options, as Escape and Backspace do from the keyboard.
+optionBack.addEventListener("click", () => {
+  pickerEntry = undefined;
+  optionSearch.value = "";
+  showPickerItems();
+});
 optionSearch.addEventListener("keydown", pickerKeydown);
 optionList.addEventListener("keydown", pickerKeydown);
 optionPicker.addEventListener("focusout", (event) => {

@@ -109,7 +109,13 @@
                 aria-expanded="true" aria-controls="option-list"
                 aria-autocomplete="list" autocomplete="off" spellcheck="false"
                 aria-label="Find an option" placeholder="Find an option">
-              <p id="option-step" class="option-step" hidden></p>
+              <p id="option-step" class="option-step" hidden><button
+                  id="option-back" class="option-back" type="button"
+                  aria-label="Back to the options"
+                  title="Back to the options (Escape)"><svg class="icon"
+                    viewBox="0 0 24 24" aria-hidden="true"><path
+                      d="M15 18l-6-6 6-6" /></svg></button><span
+                  id="option-step-name"></span></p>
               <div id="option-list" class="option-list" role="listbox"
                 aria-label="Conversion options"></div>
             </div>

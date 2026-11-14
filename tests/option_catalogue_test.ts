@@ -110,6 +110,7 @@ test("finds options by name, key, or group", () => {
   const labels = (query: string) =>
     matchEntries(OPTION_ENTRIES, query).map(({ label }) => label);
   assertEquals(labels("ups"), ["Upsilon"]);
+  assertEquals(labels("eta").slice(0, 2), ["Eta", "Beta"]);
   assertEquals(labels("longV"), ["Long vowels"]);
   assertEquals(labels("beta code"), ["Beta Code case", "Yot"]);
 });

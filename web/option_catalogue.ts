@@ -163,16 +163,27 @@ export function standardValue(
   return typeof value === "string" ? value : undefined;
 }
 
-/** Entries whose label, key, or group contains `query`, ignoring case. */
+/**
+ * Entries whose label, key, or group contains `query`, ignoring case. Within
+ * a group, those whose name starts with it come first: "eta" puts Eta
+ * before Beta.
+ */
 export function matchEntries(
   entries: readonly OptionEntry[],
   query: string,
 ): OptionEntry[] {
   const needle = query.trim().toLowerCase();
   if (!needle) return [...entries];
-  return entries.filter(({ group, key, label }) =>
+  const found = entries.filter(({ group, key, label }) =>
     [label, key, GROUP_NAMES[group]].some((text) =>
       text.toLowerCase().includes(needle)
     )
+  );
+  const groups = [...new Set(found.map(({ group }) => group))];
+  const starts = (entry: OptionEntry) =>
+    entry.label.toLowerCase().startsWith(needle) ? 0 : 1;
+  return groups.flatMap((group) =>
+    found.filter((entry) => entry.group === group)
+      .sort((a, b) => starts(a) - starts(b))
   );
 }

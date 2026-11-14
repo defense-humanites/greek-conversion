@@ -686,9 +686,35 @@ h1 span {
   outline-offset: 0;
 }
 .option-step {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   margin: 2px 4px;
   font-size: 14px;
   font-weight: 600;
+}
+.option-step[hidden] {
+  display: none;
+}
+.option-back {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: -4px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+}
+.option-back:hover {
+  background: var(--code-bg);
+  color: var(--ink);
+}
+.option-back .icon {
+  width: 18px;
+  height: 18px;
 }
 .option-list {
   max-height: 300px;
@@ -741,6 +767,9 @@ h1 span {
   white-space: nowrap;
 }
 .option-example {
+  /* Room for the breathing and accent of a capital, which Literata draws
+     left of the letter, where the clip would cut them. */
+  padding-left: 0.4em;
   overflow: hidden;
   font-family: var(--face-text);
   font-size: 16px;
