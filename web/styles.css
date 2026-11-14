@@ -673,7 +673,7 @@ h1 span {
 .option-picker[hidden] {
   display: none;
 }
-.option-picker input {
+.option-picker input[type="text"] {
   min-height: 40px;
   padding: 0 12px;
   border: 1.5px solid var(--line);
@@ -681,7 +681,7 @@ h1 span {
   background: var(--surface);
   font-size: 16px;
 }
-.option-picker input:focus-visible {
+.option-picker input[type="text"]:focus-visible {
   outline: 2px solid var(--from);
   outline-offset: 0;
 }
@@ -1280,54 +1280,121 @@ pre.code code {
 .document-limit[hidden] {
   display: none;
 }
-.json-editor {
-  width: 100%;
-  min-height: 120px;
-  padding: 12px 14px;
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--code-bg);
-  font-family: var(--face-code);
-  font-size: 14px;
-  line-height: 1.5;
-  resize: vertical;
-}
 .check {
   display: flex;
   align-items: flex-start;
   gap: 10px;
   font-size: 15px;
 }
+/* Targets of at least 24 px (WCAG 2.2). */
 .check input {
-  width: 18px;
-  height: 18px;
-  margin: 3px 0 0;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 0;
   accent-color: var(--from);
 }
-.suggestions {
-  position: absolute;
-  z-index: 3;
-  min-width: 260px;
-  max-height: 260px;
-  margin-top: -10px;
-  overflow: auto;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--raised);
-  box-shadow: var(--shadow);
-  font-family: var(--face-code);
-  font-size: 14px;
+/* The character inventory: rows of pills, as for the options */
+.inventory {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
-.suggestions[hidden] {
+.inventory-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+/* The words share one width, so that the pills start on one line. */
+.inventory-row > .word {
+  min-width: 8.5em;
+}
+.inventory-row > .option-pills {
+  display: contents;
+}
+.inventory-empty {
+  color: var(--muted);
+  font-size: 15px;
+}
+.inventory-empty[hidden] {
   display: none;
 }
-.suggestions [role="option"] {
-  padding: 8px 12px;
-  cursor: pointer;
+.pill-text {
+  padding: 6px 0;
+  white-space: nowrap;
 }
-.suggestions [role="option"][aria-selected="true"],
-.suggestions [role="option"]:hover {
+.picker-search,
+.picker-field input {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
   background: var(--surface);
+  font-size: 16px;
+}
+.picker-search:focus-visible,
+.picker-field input:focus-visible {
+  outline: 2px solid var(--from);
+  outline-offset: 0;
+}
+.picker-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px;
+}
+.picker-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.picker-field input {
+  width: 100%;
+  min-width: 0;
+  color: var(--ink);
+  font-family: var(--face-text);
+  font-weight: 300;
+}
+.picker-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.picker-formats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 15px;
+}
+.picker-formats label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.picker-formats input {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: var(--from);
+}
+/* A new character's form needs the room of its two columns. */
+.option-picker.wide {
+  width: min(480px, 100%);
+}
+.picker-form .check {
+  align-items: center;
+}
+
+.picker-form .button {
+  align-self: flex-start;
 }
 
 /* Footer: the scope of the presets faces the package */

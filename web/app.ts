@@ -7,10 +7,12 @@ import {
   resolveConversionOptions,
 } from "../src/mod.ts";
 import type {
+  CharacterAliasDefinition,
   ConversionLoss,
   ConversionOptions,
   Converter,
   ConverterConfiguration,
+  CustomCharacterDefinition,
   Format,
   Preset,
 } from "../src/mod.ts";
@@ -19,8 +21,22 @@ import { detectFormat } from "./detect_format.ts";
 import { changedSpans, firstChange, PROBE_GREEK } from "./option_probe.ts";
 import { EXAMPLES, INVALID_MARKS } from "./examples.ts";
 import type { Example, MarksExample } from "./examples.ts";
-import { suggestInventory } from "./inventory_suggestions.ts";
-import type { Suggestion } from "./inventory_suggestions.ts";
+import {
+  aliasSummary,
+  characterChoices,
+  characterName,
+  customSummary,
+  FORMAT_LABELS,
+  knownInventory,
+  matchCharacters,
+  splitSpellings,
+  withAlias,
+  withCharacter,
+  withListItem,
+  withoutEntry,
+  withoutListItem,
+} from "./inventory.ts";
+import type { CharacterList, Inventory } from "./inventory.ts";
 import {
   actsOn,
   findEntry,
@@ -71,8 +87,8 @@ const optionBack = element<HTMLButtonElement>("option-back");
 const optionList = element<HTMLDivElement>("option-list");
 const sameFormatHint = element<HTMLParagraphElement>("same-format-hint");
 const outputMarks = element<HTMLDivElement>("output-marks");
-const inventoryInput = element<HTMLTextAreaElement>("inventory");
-const inventorySuggestions = element<HTMLDivElement>("inventory-suggestions");
+const inventoryBox = element<HTMLDivElement>("inventory");
+const inventoryPicker = element<HTMLDivElement>("inventory-picker");
 const strict = element<HTMLInputElement>("strict");
 const status = element<HTMLParagraphElement>("status");
 const verdict = status.parentElement as HTMLDivElement;
@@ -130,85 +146,6 @@ function markExternal(link: HTMLAnchorElement): void {
 
 for (const link of document.querySelectorAll<HTMLAnchorElement>("a[href]")) {
   markExternal(link);
-}
-
-function attachSuggestions(
-  input: HTMLTextAreaElement,
-  list: HTMLDivElement,
-  suggest: (value: string, caret: number) => Suggestion[],
-): void {
-  let visible: Suggestion[] = [];
-  let selected = 0;
-
-  function render(): void {
-    list.replaceChildren();
-    list.hidden = visible.length === 0;
-    input.setAttribute(
-      "aria-expanded",
-      String(!list.hidden),
-    );
-    for (const [index, suggestion] of visible.entries()) {
-      const option = document.createElement("div");
-      option.id = `${list.id}-${index}`;
-      option.setAttribute("role", "option");
-      option.setAttribute("aria-selected", String(index === selected));
-      option.textContent = suggestion.label;
-      option.addEventListener("pointerdown", (event) => event.preventDefault());
-      option.addEventListener("click", () => accept(index));
-      list.append(option);
-    }
-    if (list.hidden) {
-      input.removeAttribute("aria-activedescendant");
-    } else {
-      input.setAttribute("aria-activedescendant", `${list.id}-${selected}`);
-    }
-  }
-
-  function refresh(): void {
-    visible = suggest(input.value, input.selectionStart);
-    selected = 0;
-    render();
-  }
-
-  function accept(index: number): void {
-    const suggestion = visible[index];
-    if (!suggestion) return;
-    input.setRangeText(
-      suggestion.replacement,
-      suggestion.start,
-      suggestion.end,
-      "end",
-    );
-    input.setSelectionRange(suggestion.cursor, suggestion.cursor);
-    input.focus();
-    update();
-    refresh();
-  }
-
-  input.addEventListener("input", refresh);
-  input.addEventListener("click", refresh);
-  input.addEventListener("focus", refresh);
-  input.addEventListener("blur", () => {
-    visible = [];
-    render();
-  });
-  input.addEventListener("keydown", (event) => {
-    if (!visible.length) return;
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      selected = (selected +
-        (event.key === "ArrowDown" ? 1 : visible.length - 1)) %
-        visible.length;
-      render();
-    } else if (event.key === "Enter") {
-      event.preventDefault();
-      accept(selected);
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      visible = [];
-      render();
-    }
-  });
 }
 
 const presets = listPresetMetadata();
@@ -549,30 +486,6 @@ function loadExample(example: Example): void {
   setTarget(example.to);
   conversionOptions = knownOptions(example.options ?? {});
   update();
-}
-
-/** Reads one JSON settings field, its keys checked against `allowed`. */
-function parseSettings<T>(
-  input: HTMLTextAreaElement,
-  allowed: readonly string[],
-  label: string,
-): T {
-  let value: unknown;
-  try {
-    value = JSON.parse(input.value.trim() || "{}");
-  } catch {
-    throw new SyntaxError(`${label}: this is not valid JSON yet.`);
-  }
-  if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    throw new TypeError(`${label}: expected a JSON object.`);
-  }
-  const unknown = Object.keys(value).filter((key) => !allowed.includes(key));
-  if (unknown.length) {
-    throw new TypeError(
-      `${label}: unsupported field (${unknown.join(", ")}).`,
-    );
-  }
-  return value as T;
 }
 
 /* What a conversion loses */
@@ -1035,8 +948,8 @@ function saveState(): void {
   if (settingsOf(conversionOptions).length) {
     state.set("options", JSON.stringify(conversionOptions));
   }
-  if (inventoryInput.value.trim()) {
-    state.set("characters", inventoryInput.value);
+  if (Object.keys(inventory).length) {
+    state.set("characters", JSON.stringify(inventory));
   }
   if (strict.checked) state.set("strict", "1");
   history.replaceState(null, "", `#${state}`);
@@ -1059,10 +972,17 @@ function restoreState(): void {
   } catch {
     // A damaged link keeps the rest of its settings.
   }
-  inventoryInput.value = state.get("characters") ?? "";
+  inventory = {};
+  try {
+    inventory = knownInventory(JSON.parse(state.get("characters") ?? "{}"));
+  } catch {
+    // A damaged link keeps the rest of its settings.
+  }
   strict.checked = state.get("strict") === "1";
   // A link that carries settings opens on them.
-  if (inventoryInput.value || strict.checked) selectTab("tab-characters");
+  if (Object.keys(inventory).length || strict.checked) {
+    selectTab("tab-characters");
+  }
 }
 
 /*
@@ -1602,6 +1522,453 @@ optionPicker.addEventListener("focusout", (event) => {
   }
 });
 
+/*
+ * The character inventory, as rows of pills like the options: characters
+ * left out, kept alone, spellings added to letters, and new characters.
+ * One picker serves them: a searchable list of characters, then, for a
+ * spelling, a short form; for a new character, a form at once.
+ */
+
+let inventory: Inventory = {};
+
+type InventoryField = CharacterList | "aliases" | "characters";
+
+function setInventory(next: Inventory): void {
+  inventory = next;
+  update();
+}
+
+function inventoryRow(field: InventoryField): HTMLElement {
+  return inventoryBox.querySelector<HTMLElement>(
+    `.inventory-row[data-field="${field}"]`,
+  )!;
+}
+
+function pill(label: string, remove: () => void, removeLabel: string) {
+  const item = document.createElement("li");
+  item.className = "option-pill";
+  const name = document.createElement("span");
+  name.className = "pill-text";
+  name.textContent = label;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "pill-remove";
+  button.setAttribute("aria-label", removeLabel);
+  button.innerHTML =
+    '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>';
+  button.addEventListener("click", () => {
+    // The row first: the pill leaves the page with the change.
+    const row = inventoryRow(field(item));
+    remove();
+    row.querySelector<HTMLButtonElement>(".add-option")?.focus();
+  });
+  item.append(name, button);
+  return item;
+}
+
+function field(element: Element): InventoryField {
+  return (element.closest<HTMLElement>(".inventory-row")?.dataset.field ??
+    "exclude") as InventoryField;
+}
+
+/** Draws the pills of every row, rebuilt only when the inventory changes. */
+function showInventory(): void {
+  const signature = JSON.stringify(inventory);
+  if (inventoryBox.dataset.signature === signature) return;
+  inventoryBox.dataset.signature = signature;
+  for (const list of ["exclude", "repertoire"] as const) {
+    const row = inventoryRow(list);
+    const ids = inventory[list] ?? [];
+    row.querySelector("ul")!.replaceChildren(
+      ...ids.map((id) =>
+        pill(
+          characterName(id),
+          () => setInventory(withoutListItem(inventory, list, id)),
+          `Remove ${characterName(id)}`,
+        )
+      ),
+    );
+    const empty = row.querySelector<HTMLElement>(".inventory-empty");
+    if (empty) empty.hidden = ids.length > 0;
+  }
+  inventoryRow("aliases").querySelector("ul")!.replaceChildren(
+    ...(inventory.aliases ?? []).map((alias, index) =>
+      pill(
+        aliasSummary(alias),
+        () => setInventory(withoutEntry(inventory, "aliases", index)),
+        `Remove ${aliasSummary(alias)}`,
+      )
+    ),
+  );
+  inventoryRow("characters").querySelector("ul")!.replaceChildren(
+    ...(inventory.characters ?? []).map((character, index) =>
+      pill(
+        customSummary(character),
+        () => setInventory(withoutEntry(inventory, "characters", index)),
+        `Remove ${character.id}`,
+      )
+    ),
+  );
+}
+
+/* The inventory picker */
+
+let inventoryField: InventoryField = "exclude";
+let inventoryButton: HTMLButtonElement | undefined;
+let inventoryActive = 0;
+let inventoryItems: { id: string; pick: () => void }[] = [];
+
+function openInventoryPicker(
+  button: HTMLButtonElement,
+  target: InventoryField,
+): void {
+  inventoryField = target;
+  inventoryButton = button;
+  for (const other of inventoryBox.querySelectorAll(".add-option")) {
+    other.setAttribute("aria-expanded", String(other === button));
+  }
+  inventoryPicker.hidden = false;
+  inventoryPicker.classList.toggle("wide", target === "characters");
+  if (target === "characters") showCharacterForm();
+  else showCharacterList();
+}
+
+function closeInventoryPicker(focusButton: boolean): void {
+  if (inventoryPicker.hidden) return;
+  inventoryPicker.hidden = true;
+  inventoryPicker.replaceChildren();
+  for (const button of inventoryBox.querySelectorAll(".add-option")) {
+    button.setAttribute("aria-expanded", "false");
+  }
+  if (focusButton) inventoryButton?.focus();
+}
+
+/** Under the button that opened it, kept inside the panel. */
+function placeInventoryPicker(): void {
+  if (!inventoryButton) return;
+  const box = inventoryBox.getBoundingClientRect();
+  const button = inventoryButton.getBoundingClientRect();
+  const left = Math.max(
+    0,
+    Math.min(button.left - box.left, box.width - inventoryPicker.offsetWidth),
+  );
+  inventoryPicker.style.left = `${left}px`;
+  inventoryPicker.style.top = `${button.bottom - box.top + 6}px`;
+}
+
+function pickerHeading(text: string, back?: () => void): HTMLElement {
+  const heading = document.createElement("p");
+  heading.className = "option-step";
+  if (back) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "option-back";
+    button.setAttribute("aria-label", "Back to the characters");
+    button.title = "Back to the characters (Escape)";
+    button.innerHTML =
+      '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
+    button.addEventListener("click", back);
+    heading.append(button);
+  }
+  const name = document.createElement("span");
+  name.id = "inventory-step-name";
+  name.textContent = text;
+  heading.append(name);
+  return heading;
+}
+
+/** A searchable list of characters: what to leave out, keep, or respell. */
+function showCharacterList(query = ""): void {
+  const search = document.createElement("input");
+  search.type = "text";
+  search.className = "picker-search";
+  search.setAttribute("role", "combobox");
+  search.setAttribute("aria-expanded", "true");
+  search.setAttribute("aria-controls", "inventory-list");
+  search.setAttribute("aria-autocomplete", "list");
+  search.autocomplete = "off";
+  search.spellcheck = false;
+  search.placeholder = "Find a character";
+  search.setAttribute("aria-label", "Find a character");
+  search.value = query;
+  const list = document.createElement("div");
+  list.id = "inventory-list";
+  list.className = "option-list";
+  list.setAttribute("role", "listbox");
+  list.setAttribute("aria-label", "Characters");
+
+  const render = () => {
+    list.replaceChildren();
+    const taken = inventoryField === "aliases"
+      ? []
+      : inventory[inventoryField as CharacterList] ?? [];
+    // Spellings go to built-in letters only.
+    const choices = inventoryField === "aliases"
+      ? characterChoices({})
+      : characterChoices(inventory);
+    inventoryItems = matchCharacters(
+      choices.filter(({ id }) => !taken.includes(id)),
+      search.value,
+    ).map((choice, index) => {
+      const item = document.createElement("div");
+      item.id = `inventory-item-${index}`;
+      item.className = "option-item";
+      item.setAttribute("role", "option");
+      const name = document.createElement("span");
+      name.textContent = choice.label;
+      const forms = document.createElement("span");
+      forms.className = "option-example";
+      forms.textContent = choice.forms;
+      item.append(name, forms);
+      const pick = () => {
+        if (inventoryField === "aliases") {
+          showSpellingForm(choice.id, search.value);
+        } else {
+          const list = inventoryField as CharacterList;
+          closeInventoryPicker(true);
+          setInventory(withListItem(inventory, list, choice.id));
+        }
+      };
+      item.addEventListener("mousedown", (event) => event.preventDefault());
+      item.addEventListener("click", pick);
+      list.append(item);
+      return { id: item.id, pick };
+    });
+    if (!inventoryItems.length) {
+      const empty = document.createElement("div");
+      empty.className = "option-empty";
+      empty.textContent = "No character matches";
+      list.append(empty);
+    }
+    setInventoryActive(search, list, 0);
+  };
+  search.addEventListener("input", render);
+  search.addEventListener("keydown", (event) => {
+    const atEnd = search.selectionStart === search.value.length;
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      setInventoryActive(
+        search,
+        list,
+        inventoryActive + (event.key === "ArrowDown" ? 1 : -1),
+      );
+    } else if (
+      event.key === "Enter" ||
+      (event.key === "ArrowRight" && atEnd && inventoryField === "aliases")
+    ) {
+      event.preventDefault();
+      inventoryItems[inventoryActive]?.pick();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      closeInventoryPicker(true);
+    }
+  });
+  inventoryPicker.replaceChildren(search, list);
+  render();
+  placeInventoryPicker();
+  search.focus();
+}
+
+function setInventoryActive(
+  search: HTMLInputElement,
+  list: HTMLElement,
+  index: number,
+): void {
+  const count = inventoryItems.length;
+  inventoryActive = count ? (index + count) % count : 0;
+  for (const item of list.querySelectorAll('[role="option"]')) {
+    item.setAttribute(
+      "aria-selected",
+      String(item.id === `inventory-item-${inventoryActive}`),
+    );
+  }
+  const active = document.getElementById(`inventory-item-${inventoryActive}`);
+  if (active) {
+    search.setAttribute("aria-activedescendant", active.id);
+    active.scrollIntoView({ block: "nearest" });
+  } else {
+    search.removeAttribute("aria-activedescendant");
+  }
+}
+
+function formatChoice(name: string, legend: string): HTMLFieldSetElement {
+  const group = document.createElement("fieldset");
+  group.className = "picker-formats";
+  const caption = document.createElement("legend");
+  caption.className = "visually-hidden";
+  caption.textContent = legend;
+  group.append(caption);
+  FORMATS.forEach((format, index) => {
+    const label = document.createElement("label");
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = name;
+    input.value = format;
+    input.checked = index === 2;
+    label.append(input, ` ${FORMAT_LABELS[format]}`);
+    group.append(label);
+  });
+  return group;
+}
+
+function textField(label: string, placeholder = ""): HTMLLabelElement {
+  const wrapper = document.createElement("label");
+  wrapper.className = "picker-field";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.spellcheck = false;
+  input.autocomplete = "off";
+  input.placeholder = placeholder;
+  wrapper.append(label, input);
+  return wrapper;
+}
+
+function checkField(label: string): HTMLLabelElement {
+  const wrapper = document.createElement("label");
+  wrapper.className = "check";
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  wrapper.append(input, ` ${label}`);
+  return wrapper;
+}
+
+function submitButton(label: string): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "submit";
+  button.className = "button small primary";
+  button.textContent = label;
+  return button;
+}
+
+/** A form, with Escape to go back or close, and the focus on its first field. */
+function showForm(
+  form: HTMLFormElement,
+  onEscape: () => void,
+): void {
+  form.className = "picker-form";
+  form.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      onEscape();
+    }
+  });
+  inventoryPicker.replaceChildren(form);
+  placeInventoryPicker();
+  form.querySelector<HTMLInputElement>('input[type="text"]')?.focus();
+}
+
+/** The spellings of one letter: in which format, which, and how. */
+function showSpellingForm(letter: string, query: string): void {
+  const form = document.createElement("form");
+  const back = () => showCharacterList(query);
+  const formats = formatChoice("alias-format", "Format of the spellings");
+  const spellings = textField("Spellings, separated by commas", "c, k̄");
+  const uppercase = checkField("These spellings are capitals");
+  const override = checkField("They take precedence over existing readings");
+  form.append(
+    pickerHeading(characterName(letter), back),
+    formats,
+    spellings,
+    uppercase,
+    override,
+    submitButton("Add spellings"),
+  );
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const values = splitSpellings(spellings.querySelector("input")!.value);
+    if (!values.length) {
+      spellings.querySelector("input")!.focus();
+      return;
+    }
+    const format = formats.querySelector<HTMLInputElement>("input:checked")!
+      .value as Format;
+    closeInventoryPicker(true);
+    setInventory(withAlias(inventory, {
+      letter: letter as CharacterAliasDefinition["letter"],
+      format,
+      spellings: values,
+      ...(uppercase.querySelector("input")!.checked ? { uppercase: true } : {}),
+      ...(override.querySelector("input")!.checked ? { override: true } : {}),
+    }));
+  });
+  showForm(form, back);
+}
+
+/** A new character: its name, and its forms in every format. */
+function showCharacterForm(): void {
+  const form = document.createElement("form");
+  const id = textField("Name", "sho");
+  const forms = FORMATS.map((format) => ({
+    format,
+    lowercase: textField(`${FORMAT_LABELS[format]}, lowercase`),
+    uppercase: textField(`${FORMAT_LABELS[format]}, capital (optional)`),
+  }));
+  const override = checkField(
+    "Its forms take precedence over existing readings",
+  );
+  const grid = document.createElement("div");
+  grid.className = "picker-grid";
+  for (const { lowercase, uppercase } of forms) {
+    grid.append(lowercase, uppercase);
+  }
+  form.append(
+    pickerHeading("New character"),
+    id,
+    grid,
+    override,
+    submitButton("Add character"),
+  );
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const value = (field: HTMLLabelElement) =>
+      field.querySelector("input")!.value.trim();
+    const missing = [id, ...forms.map(({ lowercase }) => lowercase)]
+      .find((field) => !value(field));
+    if (missing) {
+      missing.querySelector("input")!.focus();
+      return;
+    }
+    closeInventoryPicker(true);
+    setInventory(withCharacter(inventory, {
+      id: value(id),
+      forms: Object.fromEntries(
+        forms.map(({ format, lowercase, uppercase }) => [format, {
+          lowercase: value(lowercase),
+          ...(value(uppercase) ? { uppercase: value(uppercase) } : {}),
+        }]),
+      ) as CustomCharacterDefinition["forms"],
+      ...(override.querySelector("input")!.checked ? { override: true } : {}),
+    }));
+  });
+  showForm(form, () => closeInventoryPicker(true));
+}
+
+for (
+  const button of inventoryBox.querySelectorAll<HTMLButtonElement>(
+    ".add-option",
+  )
+) {
+  button.addEventListener("click", () => {
+    const target = field(button);
+    if (!inventoryPicker.hidden && inventoryField === target) {
+      closeInventoryPicker(true);
+    } else {
+      openInventoryPicker(button, target);
+    }
+  });
+}
+inventoryPicker.addEventListener("focusout", (event) => {
+  const next = event.relatedTarget as Node | null;
+  if (next !== null && inventoryPicker.contains(next)) return;
+  if (next instanceof HTMLElement && next === inventoryButton) return;
+  // A click inside the picker on something that takes no focus keeps it.
+  requestAnimationFrame(() => {
+    if (!inventoryPicker.contains(document.activeElement)) {
+      closeInventoryPicker(false);
+    }
+  });
+});
+
 /* Conversion */
 
 /** "15 characters", counted as code points, as in a word processor. */
@@ -1627,17 +1994,12 @@ function update(): void {
   if (!preset) showPreset();
   showOptions(from, to);
   let options: ConversionOptions = {};
-  let inventory: ConverterConfiguration = {};
+  showInventory();
   try {
     options = effectiveOptions();
     const withPreset = { ...options, ...(preset ? { preset } : {}) };
     resolveConversionOptions(withPreset);
     inspectDocument(withPreset, from);
-    inventory = parseSettings<ConverterConfiguration>(
-      inventoryInput,
-      ["aliases", "characters", "repertoire", "exclude"],
-      "Character inventory",
-    );
     const converter = createConverter({
       ...inventory,
       ...(preset ? { preset } : {}),
@@ -1818,8 +2180,6 @@ source.addEventListener("scroll", () => {
 output.addEventListener("scroll", () => {
   outputMarks.scrollTop = output.scrollTop;
 });
-inventoryInput.addEventListener("input", update);
-attachSuggestions(inventoryInput, inventorySuggestions, suggestInventory);
 strict.addEventListener("change", update);
 documentShowAll.addEventListener("click", () => {
   showAllTokens = true;

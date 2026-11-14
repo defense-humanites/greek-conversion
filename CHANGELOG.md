@@ -28,8 +28,11 @@ change.
   listed under their own heading, and not counted as lost distinctions.
   Marks the reader keeps but Greek does not allow (`validateDocument()`) are
   dashed and listed too, with an example per format in the menu. The
-  character inventory and the output sit in tabs, and the generated code and
-  the canonical document are highlighted. Texts in all three formats are set in
+  character inventory is edited as pills too, in place of a JSON field:
+  characters left out or kept alone, spellings added to letters, and new
+  characters, each added from a searchable list or a short form. It sits in
+  a tab beside the generated code and the canonical document, both
+  highlighted. Texts in all three formats are set in
   Literata Light, served by the playground with the letters it lacked
   (`web/fonts/README.md`).
 

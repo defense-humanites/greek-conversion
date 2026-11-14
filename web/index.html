@@ -212,17 +212,53 @@
 
           <div id="panel-characters" class="panel" role="tabpanel"
             aria-labelledby="tab-characters" tabindex="0" hidden>
-            <label
-              for="inventory">JSON character inventory <span class="hint">Add spellings, define characters, or restrict the repertoire. Type <code>{</code> to browse <code>aliases</code>, <code>characters</code>, <code>repertoire</code>, and <code>exclude</code>.</span></label>
-            <textarea id="inventory" class="json-editor" spellcheck="false"
-              aria-autocomplete="list" aria-controls="inventory-suggestions"
-              placeholder='{"exclude":["stigma","koppa","sampi"]}'></textarea>
-            <div id="inventory-suggestions" class="suggestions" role="listbox"
-              aria-label="Available inventory fields and values" hidden></div>
+            <p class="hint inventory-intro">Change the characters the
+              conversion knows: leave some out, keep only some, add spellings
+              of a letter, or define new characters. <a
+                href="https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md">Character
+                extensions and repertoires</a></p>
+            <div class="inventory" id="inventory">
+              <div class="inventory-row" data-field="exclude">
+                <span class="word" id="exclude-word">Leave out</span>
+                <ul class="option-pills" role="list"
+                  aria-labelledby="exclude-word"></ul>
+                <button class="add-option" type="button"
+                  aria-expanded="false" aria-controls="inventory-picker"><svg
+                    class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
+                      d="M12 5v14M5 12h14" /></svg> character</button>
+              </div>
+              <div class="inventory-row" data-field="repertoire">
+                <span class="word" id="repertoire-word">Keep only</span>
+                <ul class="option-pills" role="list"
+                  aria-labelledby="repertoire-word"></ul>
+                <span class="inventory-empty">every character</span>
+                <button class="add-option" type="button"
+                  aria-expanded="false" aria-controls="inventory-picker"><svg
+                    class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
+                      d="M12 5v14M5 12h14" /></svg> character</button>
+              </div>
+              <div class="inventory-row" data-field="aliases">
+                <span class="word" id="aliases-word">Spellings</span>
+                <ul class="option-pills" role="list"
+                  aria-labelledby="aliases-word"></ul>
+                <button class="add-option" type="button"
+                  aria-expanded="false" aria-controls="inventory-picker"><svg
+                    class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
+                      d="M12 5v14M5 12h14" /></svg> spelling</button>
+              </div>
+              <div class="inventory-row" data-field="characters">
+                <span class="word" id="characters-word">New characters</span>
+                <ul class="option-pills" role="list"
+                  aria-labelledby="characters-word"></ul>
+                <button class="add-option" type="button"
+                  aria-expanded="false" aria-controls="inventory-picker"><svg
+                    class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
+                      d="M12 5v14M5 12h14" /></svg> character</button>
+              </div>
+              <div id="inventory-picker" class="option-picker" hidden></div>
+            </div>
             <label
               class="check"><input id="strict" type="checkbox"> Reject characters outside the standard's repertoire instead of copying them through</label>
-            <p
-              class="hint"><a href="https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md">Character extensions and repertoires</a></p>
           </div>
 
           <div id="panel-code" class="panel" role="tabpanel"
