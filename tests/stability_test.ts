@@ -56,6 +56,17 @@ const PROFILES = [
     options: { text: { letterCase: "lowercase" } },
   },
   {
+    name: "iota on the line",
+    options: { greek: { iotaSubscript: "adscript" } },
+  },
+  {
+    name: "iota on the line after capitals",
+    options: {
+      greek: { iotaSubscript: "capital-adscript" },
+      text: { letterCase: "title" },
+    },
+  },
+  {
     name: "uppercase output",
     options: { text: { letterCase: "uppercase" } },
   },

@@ -135,6 +135,7 @@ export function encodeGreek(
   const starts = written?.starts;
   const ends = written?.ends;
   const quotations: QuotationContext = {};
+  const uppercaseOutput = options.text?.letterCase === "uppercase";
 
   for (let i = 0; i < doc.length; i++) {
     const token = rendered[i];
@@ -204,7 +205,14 @@ export function encodeGreek(
     }
     if (token.uppercase) base = greekUpper(base);
 
-    out += base + greekMarks(token);
+    out += base +
+      (writesIotaAdscript(token, options)
+        ? greekMarks(token).replace("\u0345", "") +
+          (token.uppercase &&
+              (uppercaseOutput || isAmongCapitals(rendered, i))
+            ? "Ι"
+            : "ι")
+        : greekMarks(token));
     if (ends !== undefined) ends[i] = out.length;
   }
 
@@ -216,6 +224,23 @@ export function encodeGreek(
   written.text = out;
   written.normalized = normalized;
   return substituteGreekSigns(normalized, options);
+}
+
+/**
+ * Whether Greek output writes the iota subscript of `token` on the line, as a
+ * letter after its vowel (`greek.iotaSubscript`). The iota is a capital among
+ * capitals and in text set in capitals (`ΤΗΙ ΩΙΔΗΙ`), and small after a capital
+ * that begins a word in lowercase, or stands alone (`Ὠιδῇ`, `Ἧι`): read back,
+ * the two letters keep the case they were written with.
+ */
+function writesIotaAdscript(
+  token: Grapheme,
+  options: ConversionOptions,
+): boolean {
+  const policy = options.greek?.iotaSubscript;
+  return policy !== undefined && policy !== "subscript" &&
+    token.diacritics.has("iota-subscript") &&
+    (policy === "adscript" || token.uppercase);
 }
 
 /**

@@ -18,7 +18,10 @@ The package is ESM-only.
 
 ## Updating from `1.0.0-rc.8`
 
-The API does not change. Three kinds of input convert differently:
+The API gains one option, `greek.iotaSubscript`, which writes the iota
+subscript on the line on request and changes nothing by default (see the
+README, *Write the iota on the line*). Three kinds of input convert
+differently:
 
 - In Greek output, a sigma before an elision apostrophe is medial:
   `ἔχουσ’ ἐγώ` and `σ’ αγαπώ` keep their `σ`, and the Beta Code
