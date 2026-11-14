@@ -1175,7 +1175,11 @@ function showPickerItems(): void {
 
   if (pickerEntry === undefined) {
     optionStep.hidden = true;
-    optionSearch.placeholder = "Find an option";
+    // The field takes the focus back before the list stops taking it.
+    optionSearch.hidden = false;
+    if (optionPicker.contains(document.activeElement)) optionSearch.focus();
+    optionList.removeAttribute("tabindex");
+    optionList.removeAttribute("aria-activedescendant");
     const set = new Set(
       settingsOf(conversionOptions).map(({ group, key }) => `${group}.${key}`),
     );
@@ -1210,10 +1214,14 @@ function showPickerItems(): void {
     optionStep.textContent = `${optionName(entry)}${
       standard ? ` · standard: ${standard}` : ""
     }`;
-    optionSearch.placeholder = "Choose a value";
-    const needle = optionSearch.value.trim().toLowerCase();
+    // A few values: the list takes the keyboard, without a search field.
+    // It takes the focus before the field hides, so that the picker stays.
+    optionList.tabIndex = 0;
+    optionList.focus();
+    optionSearch.hidden = true;
+    optionSearch.removeAttribute("aria-activedescendant");
     for (const value of entry.values) {
-      if (value === standard || !value.toLowerCase().includes(needle)) {
+      if (value === standard) {
         continue;
       }
       pickerItems.push({
@@ -1269,12 +1277,14 @@ function setPickerActive(index: number): void {
       String(item.id === `option-item-${pickerActive}`),
     );
   }
+  // The search field leads the list of options, the list itself its values.
+  const owner = pickerEntry ? optionList : optionSearch;
   const active = document.getElementById(`option-item-${pickerActive}`);
   if (active) {
-    optionSearch.setAttribute("aria-activedescendant", active.id);
+    owner.setAttribute("aria-activedescendant", active.id);
     active.scrollIntoView({ block: "nearest" });
   } else {
-    optionSearch.removeAttribute("aria-activedescendant");
+    owner.removeAttribute("aria-activedescendant");
   }
 }
 
@@ -1283,7 +1293,7 @@ addOptionButton.addEventListener("click", () => {
   else closePicker(true);
 });
 optionSearch.addEventListener("input", showPickerItems);
-optionSearch.addEventListener("keydown", (event) => {
+function pickerKeydown(event: KeyboardEvent): void {
   if (event.key === "ArrowDown" || event.key === "ArrowUp") {
     event.preventDefault();
     setPickerActive(pickerActive + (event.key === "ArrowDown" ? 1 : -1));
@@ -1302,10 +1312,13 @@ optionSearch.addEventListener("keydown", (event) => {
   } else if (
     event.key === "Backspace" && pickerEntry && optionSearch.value === ""
   ) {
+    event.preventDefault();
     pickerEntry = undefined;
     showPickerItems();
   }
-});
+}
+optionSearch.addEventListener("keydown", pickerKeydown);
+optionList.addEventListener("keydown", pickerKeydown);
 optionPicker.addEventListener("focusout", (event) => {
   const next = event.relatedTarget as Node | null;
   if (next === null || !optionPicker.contains(next)) {

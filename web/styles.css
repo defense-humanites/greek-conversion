@@ -674,6 +674,10 @@ h1 span {
   max-height: 300px;
   overflow: auto;
 }
+/* The active value shows where the keyboard is. */
+.option-list:focus {
+  outline: none;
+}
 .option-group {
   padding: 8px 8px 4px;
   font-size: 12px;
