@@ -124,11 +124,13 @@ export function findConversionLosses(
   positions: () => OutputPositions,
 ): readonly ConversionLoss[] {
   const losses = new Losses(spans);
-  const counterparts = sameLetters(source, target)
+  const paired = sameLetters(source, target)
     ? undefined
     : pairByPosition(source, target, positions());
+  const counterparts = paired?.counterparts;
 
   for (let index = 0; index < source.length; index++) {
+    if (paired?.spelled[index] === 1) continue;
     const counterpart = counterparts === undefined
       ? index
       : counterparts[index] < 0
@@ -156,19 +158,27 @@ function sameLetters(source: Document, target: Document): boolean {
   return true;
 }
 
-/** The target token paired with each source token, or -1. */
+/**
+ * The target token paired with each source token, or -1, and the source
+ * literals that the literals read where they were written spell together
+ * (`spelled[i]` is 1): a reader may read a letter and its marks as several
+ * literals (`ῷ` in transliteration), and the text is retained.
+ */
 function pairByPosition(
   source: Document,
   target: Document,
   { written, read }: OutputPositions,
-): Int32Array {
+): { counterparts: Int32Array; spelled: Uint8Array } {
   const counterparts = new Int32Array(source.length).fill(-1);
+  const spelled = new Uint8Array(source.length);
   let first = 0;
   for (let index = 0; index < source.length; index++) {
     const start = written.starts[index];
     const end = written.ends[index];
     while (first < target.length && read.starts[first] < start) first++;
 
+    const token = source[index];
+    let text: string | undefined = token.kind === "literal" ? "" : undefined;
     let closeness = -1;
     for (
       let targetIndex = first;
@@ -176,6 +186,11 @@ function pairByPosition(
       targetIndex++
     ) {
       const candidate = target[targetIndex];
+      if (text !== undefined) {
+        text = candidate.kind === "literal"
+          ? text + candidate.value
+          : undefined;
+      }
       const score = preservesToken(source[index], candidate)
         ? 3
         : sameTokenIdentity(source[index], candidate)
@@ -188,8 +203,12 @@ function pairByPosition(
         closeness = score;
       }
     }
+    if (
+      text !== undefined && text !== "" && token.kind === "literal" &&
+      sameLiteral(token.value, text)
+    ) spelled[index] = 1;
   }
-  return counterparts;
+  return { counterparts, spelled };
 }
 
 /** The losses found so far, each located at its source token. */

@@ -18,6 +18,7 @@ import {
   isDiphthongAt,
   isElisionMark,
   isGreekNumeralContext,
+  isKeptLetter,
   isNasalGamma,
   isVowel,
   isVowelUpsilonAt,
@@ -143,7 +144,9 @@ export function encodeGreek(
     if (starts !== undefined) starts[i] = start;
 
     if (token.kind === "literal") {
-      out += encodePunctuation(token.value, "greek") ?? token.value;
+      out += isKeptLetter(token)
+        ? token.value
+        : encodePunctuation(token.value, "greek") ?? token.value;
       if (ends !== undefined) ends[i] = out.length;
       continue;
     }
@@ -257,6 +260,7 @@ export function encodeBetaCode(
 
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
+      if (isKeptLetter(token)) return token.value;
       if (token.value === DEXIA_KERAIA) return "#";
       if (token.value === ARISTERI_KERAIA) return "#22";
       return encodePunctuation(token.value, "beta-code") ?? token.value;
@@ -408,12 +412,18 @@ export function encodeTransliteration(
   // The tokens are written in order, so whether a letter starts a word is
   // known from the ones before (isWordInitial): `afterLetter` tells whether
   // the last token that is not transparent to word boundaries is a letter,
-  // and `wordStart` is the last letter that started a word.
+  // and `wordStart` is the last grapheme that started a word, or -1 when a
+  // letter kept as it was started it.
   let afterLetter = false;
   let wordStart = -1;
 
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
+      if (isKeptLetter(token)) {
+        if (!afterLetter) wordStart = -1;
+        afterLetter = true;
+        return token.value;
+      }
       if (!isBoundaryTransparent(token)) afterLetter = false;
       if (options.transliteration?.keraia === "bnf") {
         if (token.value === DEXIA_KERAIA) return "\u0301";

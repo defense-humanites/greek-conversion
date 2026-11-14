@@ -591,7 +591,19 @@ converter.convert("þeos", "transliteration", "greek"); // → θεος
 An alias inherits every rule of its built-in letter. A new character definition
 maps directly between formats and keeps its case, but does not join the
 contextual rules for diphthongs, breathings, or numerals. Excluded characters
-are copied through as text.
+are kept as the source writes them in their word. Of the options, only the
+transformations of the whole text (`text`) still apply to them:
+
+```ts
+import { createConverter } from "@humanities/greek-conversion";
+
+const noStigma = createConverter({ exclude: ["stigma"] });
+
+noStigma.convert("λόγος ϛ", "greek", "transliteration", {
+  text: { letterCase: "uppercase" },
+});
+// → LÓGOS Ϛ
+```
 
 A converter bound to a preset also enforces the preset's character scope.
 Characters outside it are preserved and reported; with

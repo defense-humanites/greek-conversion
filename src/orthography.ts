@@ -6,6 +6,7 @@ import {
   isGreekNumeralContext,
   isVowel,
   isWordInitial,
+  isWordLetter,
 } from "./context.ts";
 import {
   literal,
@@ -137,10 +138,14 @@ function unaccentMonosyllables(
     ) continue;
 
     const word: number[] = [];
+    // A letter a converter keeps as it was cannot be counted: its word keeps
+    // its accent.
+    let kept = false;
     let end = start;
     for (; end < monotonic.length; end++) {
       const token = monotonic[end];
       if (token.kind === "grapheme") word.push(end);
+      else if (isWordLetter(token)) kept = true;
       else if (!isBoundaryTransparent(token)) break;
     }
     start = end - 1;
@@ -149,7 +154,7 @@ function unaccentMonosyllables(
       (monotonic[index] as Grapheme).diacritics.has("acute")
     );
     if (
-      accented.length === 0 ||
+      kept || accented.length === 0 ||
       isGreekNumeralContext(monotonic, word[0]) ||
       syllableCount(monotonic, word) !== 1 ||
       keepsMonosyllableAccent(source, word)
@@ -248,6 +253,25 @@ export function applyNumeralOrthography(
   return output;
 }
 
+/**
+ * Marks the tokens that `numerals: "decimal"` writes as numbers: `marks[i]`
+ * is 1 when token `i` is a letter or keraia of a numeral, as
+ * `applyNumeralOrthography()` reads them.
+ */
+export function decimalNumeralTokens(document: Document): Uint8Array {
+  const marks = new Uint8Array(document.length);
+  for (let index = 0; index < document.length;) {
+    const numeral = readNumeral(document, index);
+    if (numeral === undefined) {
+      index++;
+      continue;
+    }
+    marks.fill(1, index, numeral.end);
+    index = numeral.end;
+  }
+  return marks;
+}
+
 function applyLetterCaseOrthography(
   document: Document,
   options: ConversionOptions,
@@ -315,7 +339,7 @@ function readNumeral(
 ): { value: number; end: number } | undefined {
   const previousToken = document[start - 1];
   if (
-    previousToken?.kind === "grapheme" ||
+    isWordLetter(previousToken) ||
     isLiteral(previousToken, ARISTERI_KERAIA)
   ) {
     return undefined;
@@ -361,7 +385,7 @@ function readNumeral(
   }
   // A leading thousands sign suffices in the ALA-LC tables. Do not convert
   // a prefix of a longer sequence that fails the numeral ordering rule.
-  if (hasThousands && document[index]?.kind !== "grapheme") {
+  if (hasThousands && !isWordLetter(document[index])) {
     return { value, end: index };
   }
   return undefined;

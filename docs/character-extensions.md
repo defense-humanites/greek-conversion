@@ -102,16 +102,60 @@ const converter = createConverter({
 ```
 
 The policy is semantic rather than graphical. Excluding `stigma` applies to
-its Greek, Beta Code, and transliterated spellings. An out-of-scope character
-is preserved as literal text using the source representation's canonical
-spelling; a matched custom form retains its registered spelling. The target
-may consequently contain a deliberate source-format fragment.
+its Greek, Beta Code, and transliterated spellings. An out-of-scope letter is
+kept as the source writes it in its word:
+
+- from Greek or Beta Code, in that format's canonical spelling, which notes
+  every mark and shape the source can note: a final sigma stays final, a
+  lunate sigma stays lunate, and Beta Code is written in lowercase, with `*`
+  for a capital and `j` for yot, whatever the conversion's `betaCode`
+  options, which only shape the converted text;
+- from transliteration, copied from the source, since a transliteration's
+  spelling depends on options that can leave marks out: the `n` of `ng` stays
+  `n`, and a macron or a coronis stays.
+
+The options that shape the converted text, `diacritics`, `greek`, `betaCode`,
+and `transliteration`, do not reach it, except the Unicode form of Greek
+output (`greek.composition` and `greek.acute`), which applies to the whole
+output. The transformations of the whole text (`text`) do: its case follows
+`text.letterCase`, and under `numerals: "decimal"` a numeral it belongs to is
+written as one number. A matched custom form retains its registered spelling.
+The target may consequently contain a deliberate source-format fragment:
+
+```ts
+const noSigma = createConverter({ exclude: ["sigma"] });
+
+noSigma.convert("λόγος σῶμα", "greek", "transliteration", {
+  text: { letterCase: "title" },
+}); // Lógoς Σō̃ma
+```
+
+A kept letter is a letter of its word, so the letters around it keep their
+place in it: `σο`, with omicron out of scope, keeps its medial sigma, title
+case capitalizes the first letter of the word only, and a capital next to a
+kept capital is among capitals (`ΘΕΟΣ`, with epsilon out of scope, gives
+`THΕOS`). No rule reads which letter it is, though:
+
+- A letter whose spelling depends on its neighbour is written as if the kept
+  letter were not a Greek letter. With alpha out of scope, the upsilon of
+  `αὐτόν` is transliterated `y` (`αytón`). With kappa out of scope, the gamma
+  of `ἀνάγκη` is `g` (`anágκē`).
+- Monotonic accentuation leaves the accent of a word that contains a kept
+  letter, whose syllables it cannot count.
+- A kept letter is not aspirated before a rough breathing: `ἀπ’ οὗ`, with pi
+  out of scope, keeps its `π`, which Greek output otherwise writes `φ`.
+- Transliteration writes the `h` of a diphthong with a rough breathing
+  before both vowels. The `h` goes with the vowel that has the breathing:
+  `hoi`, with iota out of scope, gives `οhi` in Greek.
+- A letter whose spelling the reader shares with a neighbour, as the two
+  letters of a modern digraph do (`b` for μπ), is written alone, as it was
+  read.
 
 `convertDetailed()` keeps scope diagnostics separate from conversion losses:
 
 ```ts
 const result = converter.convertDetailed(
-  "αϛβ",
+  "ἀϛβ",
   "greek",
   "transliteration",
 );
@@ -124,13 +168,13 @@ result.diagnostics[0].offset; // 1, in UTF-16 code units of the input
 
 Each diagnostic carries the `index` of its token in the source document as
 the conversion prepared it, the document that `losses` and `spans` index as
-well (a character preserved as several literals is reported at the first of
-them), and the `offset` and `length` of the character's spelling in the input
+well (a custom form preserved as several literals is reported at the first
+of them), and the `offset` and `length` of the character's spelling in the input
 as supplied, whether the spelling is built in, an alias, or a custom form.
 The result's `losses` and `spans` follow the
 [conversion-analysis contract](conversion-analysis.md#positions).
 
-Literal preservation is not information loss, so it does not set `lossy`.
+Keeping a letter is not information loss, so it does not set `lossy`.
 For strict processing, select rejection when creating the converter:
 
 ```ts
