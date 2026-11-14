@@ -8,6 +8,7 @@ import {
   diacriticBit,
   diacriticsFromMask,
   type Document,
+  type GlyphVariant,
   grapheme,
   literal,
   ownedGrapheme,
@@ -16,7 +17,12 @@ import {
 import { parsePunctuation } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
 import type { ReadPositions } from "./positions.ts";
-import { LETTERS, sharedGrapheme, sharedLiteral } from "./shared_tokens.ts";
+import {
+  LETTERS,
+  sharedGrapheme,
+  sharedLiteral,
+  VARIANTS,
+} from "./shared_tokens.ts";
 
 /**
  * Like the Greek reader, this one works on UTF-16 code units. Every symbol
@@ -27,8 +33,19 @@ import { LETTERS, sharedGrapheme, sharedLiteral } from "./shared_tokens.ts";
  */
 const LETTER_INDEX = new Map(LETTERS.map((letter, index) => [letter, index]));
 const SIGMA = LETTERS.indexOf("sigma");
-/** Variant flag of the lunate sigma (index 1 of VARIANTS, in bits 1–2). */
-const LUNATE = 1 << 1;
+/**
+ * Variant flags of the sigma codes `s1` (medial), `s2` (final), and `s3`
+ * (lunate): the index in VARIANTS, in bits 1–4.
+ */
+const SIGMA_CODES: readonly (GlyphVariant | undefined)[] = [
+  undefined,
+  "medial-sigma",
+  "final-sigma",
+  "lunate-sigma",
+];
+const SIGMA_FLAGS = SIGMA_CODES.map((variant) =>
+  variant === undefined ? 0 : VARIANTS.indexOf(variant) << 1
+);
 
 const NOT_A_LETTER = -1;
 
@@ -110,15 +127,22 @@ export function parseBetaCode(
     let marks = 0;
     if (upper) [i, marks] = consumeMarks(text, i);
 
-    if (text[i]?.toLowerCase() === "s" && text[i + 1] === "3") {
+    // `s3` is the lunate sigma, and `s1` and `s2` the medial and final
+    // sigma, which have no capital (`*s1` is a capital sigma and a digit).
+    const digit = text.charCodeAt(i + 1) - 0x30;
+    const code = (text.charCodeAt(i) | 0x20) === 0x73 && digit >= 1 &&
+        digit <= 3
+      ? digit
+      : 0;
+    if (code === 3 || code > 0 && !upper) {
       out.push(
         share
-          ? sharedGrapheme(SIGMA, (upper ? 1 : 0) | LUNATE, marks)
+          ? sharedGrapheme(SIGMA, (upper ? 1 : 0) | SIGMA_FLAGS[code], marks)
           : ownedGrapheme(
             "sigma",
             upper,
             diacriticsFromMask(marks),
-            "lunate-sigma",
+            SIGMA_CODES[code],
           ),
       );
       i += 2;

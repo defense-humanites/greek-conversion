@@ -15,6 +15,8 @@ import {
   parse,
   validateDocument,
 } from "../src/document.ts";
+import { parseResolved } from "../src/conversion.ts";
+import { resolveConversionOptions } from "../src/presets.ts";
 
 /** The losses of a conversion, as `code:glyphVariant@index`. */
 function glyphLosses(
@@ -229,6 +231,49 @@ test("Beta Code s3 and the BnF c give a lunate sigma", () => {
     "ϲωμα",
   );
   assertEquals(convert("s3w=ma", "beta-code", "beta-code"), "s3w=ma");
+});
+
+test("Beta Code reads s1 and s2, and writes them where the shape contradicts the place", () => {
+  assertNfcEquals(
+    convert("lo/gos1 s2o/s lo/gos s1a S1 *s1", "beta-code", "greek"),
+    "λόγοσ ςός λόγος σα σ Σ1",
+  );
+  assertEquals(
+    convert("λόγοσ ςόσ λόγος σα σʹ", "greek", "beta-code"),
+    "lo/gos1 s2o/s1 lo/gos sa s#",
+  );
+  assertEquals(glyphLosses("λόγοσ ςόσ", "greek", "beta-code"), []);
+  // Where the position gives the noted shape, the code is not needed.
+  assertEquals(convert("s1a lo/gos2", "beta-code", "beta-code"), "sa lo/gos");
+  assertEquals(
+    convert("λόγοσ", "greek", "beta-code", {
+      betaCode: { case: "uppercase" },
+    }),
+    "LO/GOS1",
+  );
+  // An elision apostrophe does not end the word.
+  assertEquals(
+    convert("ἔχουσ’ ἐγώ ἔχους’ ἐγώ", "greek", "beta-code"),
+    "e)/xous' e)gw/ e)/xous2' e)gw/",
+  );
+  // Under finalSigma: "contextual", the position decides every shape.
+  const contextual = { greek: { finalSigma: "contextual" } } as const;
+  assertEquals(
+    convert("λόγοσ ςόσ", "greek", "beta-code", contextual),
+    "lo/gos so/s",
+  );
+  assertEquals(glyphLosses("λόγοσ ςόσ", "greek", "beta-code", contextual), []);
+  // Transliteration cannot write the shapes.
+  assertEquals(glyphLosses("lo/gos1 s2o/s", "beta-code", "transliteration"), [
+    "removed-glyph-variant:medial-sigma@4",
+    "removed-glyph-variant:final-sigma@6",
+  ]);
+  // The shared tokens of the converting reader are the tokens parse() builds.
+  const text = "s1a s2a s3a *s3 S1";
+  assertEquals(
+    parseResolved(text, "beta-code", resolveConversionOptions({}), true),
+    parse(text, "beta-code"),
+  );
 });
 
 test("a lunate sigma the source does not have is reported when it reads back otherwise", () => {

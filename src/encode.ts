@@ -289,15 +289,44 @@ export function glyphForm(
     case "greek":
       return greekGlyph(document, index, token, options, quotations);
     case "beta-code":
-      return token.letter === "sigma" && rendersLunateSigma(token, options) &&
-          !isGreekNumeralContext(document, index)
-        ? "s3"
+      return token.letter === "sigma"
+        ? betaSigma(document, index, token, options, quotations)
         : "";
     default:
       return token.letter === "sigma" && rendersLunateC(token, options)
         ? "c"
         : "";
   }
+}
+
+/**
+ * The Beta Code of a sigma: `s3` for a lunate sigma, `s1` or `s2` for a
+ * sigma whose noted shape (`σ` or `ς`) contradicts its place, kept under
+ * `greek.finalSigma: "preserve"`, and `s` otherwise, whose shape the
+ * position decides. A capital has no shape, and the TLG defines no `*s1` or
+ * `*s2`.
+ */
+function betaSigma(
+  document: Document,
+  index: number,
+  token: Grapheme,
+  options: ConversionOptions,
+  quotations: QuotationContext,
+): "s" | "s1" | "s2" | "s3" {
+  if (isGreekNumeralContext(document, index)) return "s";
+  if (rendersLunateSigma(token, options)) return "s3";
+  if (
+    token.uppercase ||
+    (options.greek?.finalSigma ?? "preserve") !== "preserve" ||
+    token.glyphVariant !== "medial-sigma" &&
+      token.glyphVariant !== "final-sigma"
+  ) return "s";
+  const final = sigmaEndsWord(document, index, quotations);
+  return token.glyphVariant === "medial-sigma"
+    ? final ? "s1" : "s"
+    : final
+    ? "s"
+    : "s2";
 }
 
 /**
@@ -328,6 +357,7 @@ export function encodeBetaCode(
 ) {
   const rendered = prepareDiacriticsForRendering(doc, options, "beta-code");
   const betaMarks = byMarks((token) => marks(token, options, "beta-code"));
+  const quotations: QuotationContext = {};
 
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
@@ -336,19 +366,11 @@ export function encodeBetaCode(
       if (token.value === ARISTERI_KERAIA) return "#22";
       return encodePunctuation(token.value, "beta-code") ?? token.value;
     }
-    let base: string;
-    if (
-      token.letter === "sigma" &&
-      rendersLunateSigma(token, options) &&
-      !isGreekNumeralContext(doc, index)
-    ) {
-      base = "s3";
-    } else {
-      base = token.letter === "yot" &&
-          options.betaCode?.yot === "#401"
-        ? "#401"
-        : ALPHABET[token.letter].beta;
-    }
+    let base = token.letter === "sigma"
+      ? betaSigma(doc, index, token, options, quotations)
+      : token.letter === "yot" && options.betaCode?.yot === "#401"
+      ? "#401"
+      : ALPHABET[token.letter].beta;
 
     if (options.betaCode?.case === "uppercase") {
       base = base.toUpperCase();

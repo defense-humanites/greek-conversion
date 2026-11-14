@@ -50,6 +50,12 @@ change.
   notes it and `β` elsewhere.
 - A `removed-glyph-variant` loss names the source form in its new
   `glyphVariant` field.
+- Beta Code reads `s1` and `s2`, the medial and final sigma of the TLG, and
+  writes them where the shape contradicts the place, under the default
+  `greek.finalSigma: "preserve"`: `λόγοσ` gives `lo/gos1` (was `lo/gos`, which
+  reads back as `λόγος`), and `lo/gos1` gives `λόγοσ` (was `λόγος1`). A shape
+  the place gives needs no code (`s1a` gives `sa`), and the TLG defines none
+  for a capital (`*s1` is still a capital sigma and a digit).
 
 ### Changed
 

@@ -79,7 +79,9 @@ export type LunateSigmaTransliteration = "s" | "c";
  * `"preserve"` writes the shape the source notes, and places by its position
  * a sigma whose shape the source does not note; `"contextual"` places every
  * sigma by its position (`ς` at the end of a word, `σ` elsewhere);
- * `"medial"` writes `σ` everywhere.
+ * `"medial"` writes `σ` everywhere. Under `"preserve"`, Beta Code writes a
+ * noted shape that contradicts the place as `s1` (`σ`) or `s2` (`ς`), as the
+ * TLG defines them; otherwise it writes `s`, whose shape the place decides.
  */
 export type FinalSigmaOrthography = "preserve" | "contextual" | "medial";
 
@@ -320,9 +322,10 @@ export interface TransliterationOptions {
 
 /**
  * How Greek is written: letter shapes, accentuation, assimilation, and the
- * Unicode form of the output. `sigma` and `doubleRho` also shape Beta Code,
- * which writes Greek in ASCII; `accentuation` also decides whether reading
- * transliteration infers a smooth breathing, which monotonic Greek has not.
+ * Unicode form of the output. `sigma`, `finalSigma`, and `doubleRho` also
+ * shape Beta Code, which writes Greek in ASCII; `accentuation` also decides
+ * whether reading transliteration infers a smooth breathing, which monotonic
+ * Greek has not.
  */
 export interface GreekOptions {
   /** Sigma glyph policy. Defaults to `"preserve"`, which keeps a lunate sigma the source notes. */
