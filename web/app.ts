@@ -590,14 +590,23 @@ function showMarks(issues: readonly Issue[]): void {
     const from = Math.max(start, position);
     sourceMarks.append(text.slice(position, from));
     const mark = document.createElement("mark");
-    if (literal) mark.className = "literal";
     mark.textContent = text.slice(from, end);
+    if (literal) {
+      mark.className = "literal";
+      // A lone letter gets a single dot, centred under it.
+      if (isOneLetter(mark.textContent)) mark.classList.add("single");
+    }
     sourceMarks.append(mark);
     position = end;
   }
   // A final newline needs a character after it to take up its line.
   sourceMarks.append(text.slice(position) + "\u200b");
   sourceMarks.scrollTop = source.scrollTop;
+}
+
+/** Whether a text is one letter, with or without its combining marks. */
+function isOneLetter(text: string): boolean {
+  return text.normalize("NFD").replace(/\p{M}/gu, "").length === 1;
 }
 
 /**

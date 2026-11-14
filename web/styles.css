@@ -963,6 +963,10 @@ textarea.text::placeholder {
   background-size: 8px 6px;
   text-decoration: none;
 }
+.marks mark.literal.single {
+  background-position: 50% 100%;
+  background-repeat: no-repeat;
+}
 
 /* The verdict: the halves of the tessera meet when nothing is lost */
 .verdict {
