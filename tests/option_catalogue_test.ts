@@ -3,6 +3,7 @@ import { assertEquals } from "./assertions.ts";
 import { CONVERSION_OPTION_VALUES } from "../src/mod.ts";
 import type { Format } from "../src/mod.ts";
 import { OPTION_RELEVANCE } from "../web/option_relevance.ts";
+import { changedSpans, firstChange } from "../web/option_probe.ts";
 import {
   actsOn,
   findEntry,
@@ -111,4 +112,22 @@ test("finds options by name, key, or group", () => {
   assertEquals(labels("ups"), ["Upsilon"]);
   assertEquals(labels("longV"), ["Long vowels"]);
   assertEquals(labels("beta code"), ["Beta Code case", "Yot"]);
+});
+
+test("finds the first changed word, without its punctuation", () => {
+  assertEquals(
+    firstChange("ὑπὲρ φίλος.", "hypèr phílos.", "hypèr fílos."),
+    ["φίλος", "fílos"],
+  );
+  assertEquals(firstChange("τί;", "tí?", "tí;"), ["τί;", "tí;"]);
+  assertEquals(firstChange("α β", "a b", "a b"), undefined);
+  assertEquals(firstChange("α β", "a b", "a b c"), undefined);
+});
+
+test("finds the changed words of an output", () => {
+  assertEquals(changedSpans("hyper phílos", "huper phílos"), [
+    { start: 0, end: 5 },
+  ]);
+  assertEquals(changedSpans("a b", "a  b c"), [{ start: 2, end: 6 }]);
+  assertEquals(changedSpans("same", "same"), []);
 });

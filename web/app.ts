@@ -9,12 +9,14 @@ import {
 import type {
   ConversionLoss,
   ConversionOptions,
+  Converter,
   ConverterConfiguration,
   Format,
   Preset,
 } from "../src/mod.ts";
 import { parse, validateDocument } from "../src/document.ts";
 import { detectFormat } from "./detect_format.ts";
+import { changedSpans, firstChange, PROBE_GREEK } from "./option_probe.ts";
 import { EXAMPLES } from "./examples.ts";
 import type { Example } from "./examples.ts";
 import { suggestInventory } from "./inventory_suggestions.ts";
@@ -66,6 +68,7 @@ const optionSearch = element<HTMLInputElement>("option-search");
 const optionStep = element<HTMLParagraphElement>("option-step");
 const optionList = element<HTMLDivElement>("option-list");
 const sameFormatHint = element<HTMLParagraphElement>("same-format-hint");
+const outputMarks = element<HTMLDivElement>("output-marks");
 const inventoryInput = element<HTMLTextAreaElement>("inventory");
 const inventorySuggestions = element<HTMLDivElement>("inventory-suggestions");
 const strict = element<HTMLInputElement>("strict");
@@ -1131,10 +1134,106 @@ function showOptions(from: Format, to: Format): void {
   addOptionButton.classList.toggle("prompt", same && pills.length === 0);
 }
 
+/*
+ * Previewing a value: while the reader moves through the values of an
+ * option, the output shows the text written with the value under the
+ * active one, its changed words highlighted, without setting it. Enter sets
+ * it; leaving the values goes back to the settings as they were.
+ */
+let preview: { entry: OptionEntry; value: string } | undefined;
+/** The output before the preview, which the highlights compare with. */
+let previewBase = "";
+/** The conversion last run, which the examples of values reuse. */
+let conversion: { converter: Converter; from: Format; to: Format } | undefined;
+
+function setPreview(next: typeof preview): void {
+  if (preview === undefined && next !== undefined) previewBase = output.value;
+  const same = preview?.entry === next?.entry && preview?.value === next?.value;
+  preview = next;
+  if (!same) update();
+}
+
+/** The options in effect: the reader's, with the value under preview. */
+function effectiveOptions(): ConversionOptions {
+  return preview
+    ? withSetting(
+      conversionOptions,
+      preview.entry.group,
+      preview.entry.key,
+      preview.value,
+    )
+    : conversionOptions;
+}
+
+/** Highlights, in a copy of the output laid under it, the words that changed. */
+function showOutputMarks(
+  spans: readonly { start: number; end: number }[],
+): void {
+  const text = output.value;
+  outputMarks.replaceChildren();
+  let position = 0;
+  for (const { start, end } of spans) {
+    outputMarks.append(text.slice(position, start));
+    const mark = document.createElement("mark");
+    mark.className = "preview";
+    mark.textContent = text.slice(start, end);
+    outputMarks.append(mark);
+    position = end;
+  }
+  outputMarks.append(text.slice(position) + "\u200b");
+  outputMarks.scrollTop = output.scrollTop;
+}
+
+/**
+ * An example of what a value changes: a word of the reader's text, or of a
+ * text written for the purpose when the reader's has none, and what the
+ * value writes for it ("ὑπὲρ → hupèr").
+ */
+function valueExample(entry: OptionEntry, value: string): string {
+  if (conversion === undefined) return "";
+  const { converter, from, to } = conversion;
+  const alternative = withSetting(
+    conversionOptions,
+    entry.group,
+    entry.key,
+    value,
+  );
+  const write = (text: string, options: ConversionOptions, a = from) => {
+    try {
+      return converter.convert(text, a, to, options);
+    } catch {
+      return undefined;
+    }
+  };
+  let sample: string | undefined;
+  try {
+    sample = from === "greek"
+      ? PROBE_GREEK
+      : converter.convert(PROBE_GREEK, "greek", from);
+  } catch {
+    sample = undefined;
+  }
+  for (const text of [source.value.slice(0, 4000), sample]) {
+    if (!text) continue;
+    const before = write(text, conversionOptions);
+    const after = write(text, alternative);
+    if (before === undefined || after === undefined) continue;
+    const change = firstChange(text, before, after);
+    if (change) return `${change[0]} → ${change[1]}`;
+  }
+  return "";
+}
+
 /* The picker: find an option, then choose its value */
 
 let pickerEntry: OptionEntry | undefined;
-let pickerItems: { label: string; detail: string; pick: () => void }[] = [];
+let pickerItems: {
+  label: string;
+  detail: string;
+  pick: () => void;
+  /** For a value: what previewing it sets. */
+  value?: string;
+}[] = [];
 let pickerActive = 0;
 
 function openPicker(): void {
@@ -1150,17 +1249,30 @@ function openPicker(): void {
 function closePicker(focusButton: boolean): void {
   if (optionPicker.hidden) return;
   optionPicker.hidden = true;
+  setPreview(undefined);
   addOptionButton.setAttribute("aria-expanded", "false");
   if (focusButton) addOptionButton.focus();
 }
 
 /** Under the button, kept inside the settings. */
+/**
+ * Under the button, kept inside the settings. Where the fields stand side
+ * by side, the picker ends at the left of the output instead, over the
+ * source, so that the output stays in view for the preview of values.
+ */
 function placePicker(): void {
   const line = optionPicker.offsetParent as HTMLElement;
   const room = line.clientWidth - optionPicker.offsetWidth;
-  optionPicker.style.left = `${
-    Math.max(0, Math.min(addOptionButton.offsetLeft, room))
-  }px`;
+  let left = Math.max(0, Math.min(addOptionButton.offsetLeft, room));
+  const target = output.closest(".field")?.getBoundingClientRect();
+  const origin = line.getBoundingClientRect();
+  const settings = optionPicker.closest(".controls")?.getBoundingClientRect();
+  if (target && settings) {
+    const end = target.left - 16 - origin.left;
+    const start = end - optionPicker.offsetWidth;
+    if (start + origin.left >= settings.left && start < left) left = start;
+  }
+  optionPicker.style.left = `${left}px`;
   optionPicker.style.top = `${
     addOptionButton.offsetTop + addOptionButton.offsetHeight + 6
   }px`;
@@ -1180,6 +1292,9 @@ function showPickerItems(): void {
     if (optionPicker.contains(document.activeElement)) optionSearch.focus();
     optionList.removeAttribute("tabindex");
     optionList.removeAttribute("aria-activedescendant");
+    optionList.removeAttribute("aria-labelledby");
+    optionList.setAttribute("aria-label", "Conversion options");
+    setPreview(undefined);
     const set = new Set(
       settingsOf(conversionOptions).map(({ group, key }) => `${group}.${key}`),
     );
@@ -1220,14 +1335,19 @@ function showPickerItems(): void {
     optionList.focus();
     optionSearch.hidden = true;
     optionSearch.removeAttribute("aria-activedescendant");
+    // The heading names the option and its standard value.
+    optionList.removeAttribute("aria-label");
+    optionList.setAttribute("aria-labelledby", "option-step");
     for (const value of entry.values) {
       if (value === standard) {
         continue;
       }
       pickerItems.push({
         label: value,
-        detail: "",
+        detail: valueExample(entry, value),
+        value,
         pick: () => {
+          preview = undefined;
           closePicker(true);
           setOption(entry, value);
         },
@@ -1257,7 +1377,8 @@ function pickerItem(index: number): HTMLDivElement {
   item.append(name);
   if (detail) {
     const values = document.createElement("span");
-    values.className = "option-values";
+    // The values of an option in code; the example of a value in letters.
+    values.className = pickerEntry ? "option-example" : "option-values";
     values.textContent = detail;
     item.append(values);
   }
@@ -1279,6 +1400,10 @@ function setPickerActive(index: number): void {
   }
   // The search field leads the list of options, the list itself its values.
   const owner = pickerEntry ? optionList : optionSearch;
+  const value = pickerItems[pickerActive]?.value;
+  if (pickerEntry && value !== undefined) {
+    setPreview({ entry: pickerEntry, value });
+  }
   const active = document.getElementById(`option-item-${pickerActive}`);
   if (active) {
     owner.setAttribute("aria-activedescendant", active.id);
@@ -1356,7 +1481,7 @@ function update(): void {
   let options: ConversionOptions = {};
   let inventory: ConverterConfiguration = {};
   try {
-    options = conversionOptions;
+    options = effectiveOptions();
     const withPreset = { ...options, ...(preset ? { preset } : {}) };
     resolveConversionOptions(withPreset);
     inspectDocument(withPreset, from);
@@ -1371,8 +1496,10 @@ function update(): void {
       outOfScopeBehavior: strict.checked ? "reject" : "preserve",
     });
     const result = converter.convertDetailed(source.value, from, to, options);
+    conversion = { converter, from, to };
 
     output.value = result.output;
+    showOutputMarks(preview ? changedSpans(previewBase, result.output) : []);
     outputMeta.textContent = characterCount(result.output);
     copyButton.disabled = swapButton.disabled = false;
     const literals = result.losses.filter(readAsGreek).length;
@@ -1417,6 +1544,7 @@ function update(): void {
     showCode(from, to, preset, options, inventory, result.output);
   } catch (error) {
     output.value = "";
+    showOutputMarks([]);
     outputMeta.textContent = "";
     copyButton.disabled = swapButton.disabled = true;
     showVerdict(
@@ -1434,7 +1562,8 @@ function update(): void {
   }
   fitHeights();
   markActiveExample();
-  saveState();
+  // A value under preview is not set: the link keeps the settings.
+  if (!preview) saveState();
 }
 
 async function copy(text: string, button: HTMLButtonElement): Promise<void> {
@@ -1508,6 +1637,9 @@ exampleMenu.addEventListener("change", () => {
 });
 source.addEventListener("scroll", () => {
   sourceMarks.scrollTop = source.scrollTop;
+});
+output.addEventListener("scroll", () => {
+  outputMarks.scrollTop = output.scrollTop;
 });
 inventoryInput.addEventListener("input", update);
 attachSuggestions(inventoryInput, inventorySuggestions, suggestInventory);

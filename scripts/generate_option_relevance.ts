@@ -18,20 +18,11 @@ import {
   type Format,
   FORMATS,
 } from "../src/mod.ts";
+import { PROBE_GREEK } from "../web/option_probe.ts";
 
 const TABLE = new URL("../web/option_relevance.ts", import.meta.url);
 
-/** Greek that every option has something to act on. */
-const GREEK = [
-  "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων· τί λέγεις;",
-  "ὑπὲρ ἀνθρώπων εὐθύς αὐτοῦ ηὑρέθη ὑϊός Ἀίδης ἀΐδιος ῥήτωρ ἄρρητος Πύρρος",
-  "ἄγγελος ἀνάγκη σφίγξ ἔλεγχος ἐμπορία μπαμπάς ντομάτα ἀντί Μπαρ Ντίνος",
-  "κἀγώ τοὔνομα ταὐτό ᾠδῇ τῷ θεῷ ᾄδω ᾱ̓́ ῐ ῡ ᾰ",
-  "βίβλος ἐλπίσι ἐλπίδσι γέγραπται ψυχή ξένος φίλος χάρις",
-  "ϲοφία Ϲωκράτης ϛʹ ϟʹ ϡʹ ϙ Ϙ ϝ ϳ αʹ ιβʹ ͵α",
-  "ΛΟΓΟΣ λόγος Λόγος  δύο   διαστήματα πολυ-λογία πολυ‐λογία πολυ‿λογία",
-  "πού πώς ή άνθρωπος",
-].join("\n");
+const GREEK = PROBE_GREEK;
 
 const values = CONVERSION_OPTION_VALUES as unknown as Record<
   string,

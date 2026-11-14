@@ -713,6 +713,15 @@ h1 span {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.option-example {
+  overflow: hidden;
+  font-family: var(--face-text);
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .option-empty {
   padding: 8px;
   font-size: 14px;
@@ -948,7 +957,6 @@ textarea.text::placeholder {
   text-underline-offset: 0.25em;
   text-decoration-skip-ink: none;
 }
-/* Copied as is, but read back as Greek: nothing of the Greek is lost */
 /*
  * Copied as is, but read back as Greek: nothing of the Greek is lost. The
  * dots are drawn as a pattern, regular in every browser, on the line of the
@@ -965,6 +973,12 @@ textarea.text::placeholder {
   /* Whole dots only: the spacing gives way at the end of a word. */
   background-repeat: space no-repeat;
   background-size: 8px 6px;
+  text-decoration: none;
+}
+/* What the value under preview changes in the output */
+.marks mark.preview {
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--to) 20%, transparent);
   text-decoration: none;
 }
 .marks mark.literal.single {
