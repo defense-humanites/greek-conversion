@@ -749,6 +749,48 @@ test("keeps no sigma shape for a capital", () => {
   assertEquals(parse("Σ", "greek")[0], parse("*s", "beta-code")[0]);
 });
 
+test("places a lunate sigma written as a standard sigma by its position", () => {
+  // A lunate sigma notes no position: when it is written as a standard sigma,
+  // the end of the word decides between ς and σ, even where the source shapes
+  // are preserved.
+  const standard = {
+    greek: { sigma: "standard", finalSigma: "preserve" },
+  } as const;
+  assertNfcEquals(convert("ϲῶμαϲ", "greek", "greek", standard), "σῶμας");
+  assertNfcEquals(
+    convert("lo/gos3", "beta-code", "greek", standard),
+    "λόγος",
+  );
+  assertNfcEquals(
+    convert("logoc", "transliteration", "greek", {
+      preset: "bnf-core",
+      greek: { finalSigma: "preserve" },
+    }),
+    "λογος",
+  );
+  assertNfcEquals(
+    convert("ΛΟΓΟϹ", "greek", "greek", {
+      ...standard,
+      text: { letterCase: "lowercase" },
+    }),
+    "λογος",
+  );
+  // The same holds for the sigma a dental is assimilated into.
+  assertNfcEquals(
+    convert("ἐλπίδϲ", "greek", "greek", {
+      greek: { ...standard.greek, dentalSigma: "assimilate" },
+    }),
+    "ἐλπίς",
+  );
+  // Noted shapes are still kept as written.
+  assertNfcEquals(
+    convert("λόγοσ ςῶμα ϲῶμαϲ", "greek", "greek", {
+      greek: { sigma: "preserve", finalSigma: "preserve" },
+    }),
+    "λόγοσ ςῶμα ϲῶμαϲ",
+  );
+});
+
 test("folds Greek variants while keeping letter case independent", () => {
   // The recipe for a comparison spelling: standard beta and sigma, medial
   // sigma everywhere.

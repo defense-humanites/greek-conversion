@@ -276,7 +276,7 @@ export interface TransliterationOptions {
 export interface GreekOptions {
   /** Sigma glyph policy. Defaults to `"standard"`. */
   sigma?: SigmaOrthography;
-  /** Lowercase final sigma policy in Greek output. Defaults to `"contextual"`; `"preserve"` retains source Greek sigma shapes. */
+  /** Lowercase final sigma policy in Greek output. Defaults to `"contextual"`; `"preserve"` retains source Greek sigma shapes and places any other sigma by its position, such as a lunate sigma written as a standard sigma. */
   finalSigma?: FinalSigmaOrthography;
   /** Medial lowercase beta glyph. Defaults to `"standard"`. */
   medialBeta?: MedialBetaOrthography;

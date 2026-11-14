@@ -7,6 +7,16 @@ change.
 
 ## [Unreleased]
 
+### Fixed
+
+- Under `greek.finalSigma: "preserve"`, a lunate sigma written as a standard
+  sigma takes its shape from its place in the word, as a sigma read from Beta
+  Code or transliteration does. A lunate sigma notes no position, but it was
+  always written `σ`, even at the end of a word: with `sigma: "standard"`,
+  `ϲῶμαϲ` gave `σῶμασ` and now gives `σῶμας`; the Beta Code `lo/gos3` and
+  `logoc` under `bnf-core` gave `λόγοσ` and `λογοσ`. The default
+  `finalSigma: "contextual"` was not affected.
+
 ## [1.0.0-rc.8] - 2026-11-11
 
 Eighth release candidate for `1.0.0`. The API does not change. Following #47,

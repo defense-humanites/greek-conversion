@@ -154,7 +154,8 @@ export function encodeGreek(
       else if (
         options.greek?.finalSigma === "preserve"
           ? assimilated.glyphVariant === "final-sigma" ||
-            assimilated.glyphVariant === undefined && isWordFinal(doc, i + 1)
+            assimilated.glyphVariant !== "medial-sigma" &&
+              isWordFinal(doc, i + 1)
           : options.greek?.finalSigma !== "medial" &&
             isWordFinal(doc, i + 1)
       ) base = "ς";
@@ -181,7 +182,7 @@ export function encodeGreek(
       token.letter === "sigma" &&
       (options.greek?.finalSigma === "preserve"
         ? token.glyphVariant === "final-sigma" ||
-          token.glyphVariant === undefined && isWordFinal(doc, i)
+          token.glyphVariant !== "medial-sigma" && isWordFinal(doc, i)
         : options.greek?.finalSigma !== "medial" &&
           isWordFinal(doc, i)) &&
       !isGreekNumeralContext(doc, i)
