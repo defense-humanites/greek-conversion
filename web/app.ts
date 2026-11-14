@@ -1257,6 +1257,27 @@ function closePicker(focusButton: boolean): void {
 }
 
 /** Under the button, kept inside the settings. */
+/**
+ * Floating under the button while the list asks for an option, which
+ * changes nothing yet, or for one of more than two values; in the flow for
+ * one or two values, so that the output stays in view for their preview.
+ */
+function placePicker(floating: boolean): void {
+  optionPicker.classList.toggle("floating", floating);
+  if (!floating) {
+    optionPicker.style.left = optionPicker.style.top = "";
+    return;
+  }
+  const line = optionPicker.offsetParent as HTMLElement | null;
+  const room = (line?.clientWidth ?? 0) - optionPicker.offsetWidth;
+  optionPicker.style.left = `${
+    Math.max(0, Math.min(addOptionButton.offsetLeft, room))
+  }px`;
+  optionPicker.style.top = `${
+    addOptionButton.offsetTop + addOptionButton.offsetHeight + 6
+  }px`;
+}
+
 function showPickerItems(): void {
   const from = sourceFormat();
   const to = targetFormat();
@@ -1274,6 +1295,7 @@ function showPickerItems(): void {
     optionList.removeAttribute("aria-labelledby");
     optionList.setAttribute("aria-label", "Conversion options");
     setPreview(undefined);
+    placePicker(true);
     const set = new Set(
       settingsOf(conversionOptions).map(({ group, key }) => `${group}.${key}`),
     );
@@ -1318,6 +1340,7 @@ function showPickerItems(): void {
     const values = entry.values
       .filter((value) => value !== standard)
       .map((value) => ({ value, example: valueExample(entry, value) }));
+    placePicker(values.length > 2);
     // The standard's value heads the list, as the reference, not as a choice.
     if (standard !== undefined) {
       const first = values.find(({ example }) => example)?.example;
@@ -1411,6 +1434,11 @@ function setPickerActive(index: number): void {
   }
 }
 
+addEventListener("resize", () => {
+  if (optionPicker.classList.contains("floating") && !optionPicker.hidden) {
+    placePicker(true);
+  }
+});
 addOptionButton.addEventListener("click", () => {
   if (optionPicker.hidden) openPicker();
   else closePicker(true);

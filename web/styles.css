@@ -638,8 +638,9 @@ h1 span {
   flex-basis: 100%;
 }
 /*
- * The picker opens in the flow, under the options, rather than over the
- * page: the output stays in view below it for the preview of values.
+ * The picker opens in the flow, under the options, when it previews one or
+ * two values, so that the output stays in view; otherwise it floats under
+ * its button (`.floating`).
  */
 .option-picker {
   display: flex;
@@ -651,6 +652,12 @@ h1 span {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--raised);
+}
+.option-picker.floating {
+  position: absolute;
+  z-index: 3;
+  width: min(360px, 100%);
+  box-shadow: var(--shadow);
 }
 .option-picker[hidden] {
   display: none;
