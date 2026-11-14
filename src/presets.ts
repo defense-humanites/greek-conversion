@@ -193,7 +193,7 @@ const PRESET_DEFINITIONS = {
   "iso-843-type-1": {
     metadata: {
       id: "iso-843-type-1",
-      name: "ISO 843:1997 — Type 1",
+      name: "ISO 843:1997 — Type 1 (transliteration)",
       authority: "International Organization for Standardization",
       description:
         "Type 1 transliteration of Greek characters into Latin characters.",
@@ -230,7 +230,7 @@ const PRESET_DEFINITIONS = {
   "iso-843-type-2": {
     metadata: {
       id: "iso-843-type-2",
-      name: "ISO 843:1997 — Type 2",
+      name: "ISO 843:1997 — Type 2 (transcription)",
       authority: "International Organization for Standardization",
       description:
         "Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility (identity documents, road signs, maps).",

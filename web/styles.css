@@ -637,18 +637,20 @@ h1 span {
 .same-format-hint {
   flex-basis: 100%;
 }
+/*
+ * The picker opens in the flow, under the options, rather than over the
+ * page: the output stays in view below it for the preview of values.
+ */
 .option-picker {
-  position: absolute;
-  z-index: 3;
   display: flex;
+  flex: 1 1 100%;
   flex-direction: column;
   gap: 6px;
-  width: min(340px, 100%);
+  max-width: 520px;
   padding: 8px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--raised);
-  box-shadow: var(--shadow);
 }
 .option-picker[hidden] {
   display: none;
@@ -721,6 +723,20 @@ h1 span {
   color: var(--muted);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.option-standard {
+  color: var(--muted);
+  cursor: default;
+}
+.option-standard:hover {
+  background: none;
+}
+.option-tag {
+  margin-left: 8px;
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 12px;
 }
 .option-empty {
   padding: 8px;

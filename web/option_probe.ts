@@ -17,14 +17,15 @@ export const PROBE_GREEK = [
 
 /**
  * The first word that differs between two writings of one text, with the
- * word it writes in the source: `["ὑπὲρ", "hupèr"]`. Words are what
- * whitespace separates; texts whose words do not line up give none.
+ * word it writes in the source: `{ word: "ὑπὲρ", before: "hypèr", after:
+ * "hupèr" }`. Words are what whitespace separates; texts whose words do not
+ * line up give none.
  */
 export function firstChange(
   source: string,
   before: string,
   after: string,
-): [string, string] | undefined {
+): { word: string; before: string; after: string } | undefined {
   const words = (text: string) => text.split(/\s+/).filter(Boolean);
   const [from, a, b] = [words(source), words(before), words(after)];
   if (a.length !== b.length || from.length !== a.length) return undefined;
@@ -33,10 +34,10 @@ export function firstChange(
   // Without the punctuation around the words, unless it is the change.
   const bare = (word: string) =>
     word.replace(/^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu, "");
-  const [word, before_, after_] = [from[index], a[index], b[index]].map(bare);
-  return word && after_ && before_ !== after_
-    ? [word, after_]
-    : [from[index], b[index]];
+  const [word, was, is] = [from[index], a[index], b[index]].map(bare);
+  return word && is && was !== is
+    ? { word, before: was, after: is }
+    : { word: from[index], before: a[index], after: b[index] };
 }
 
 /**

@@ -1186,11 +1186,14 @@ function showOutputMarks(
 
 /**
  * An example of what a value changes: a word of the reader's text, or of a
- * text written for the purpose when the reader's has none, and what the
- * value writes for it ("ὑπὲρ → hupèr").
+ * text written for the purpose when the reader's has none, as the settings
+ * write it and as the value would.
  */
-function valueExample(entry: OptionEntry, value: string): string {
-  if (conversion === undefined) return "";
+function valueExample(
+  entry: OptionEntry,
+  value: string,
+): { word: string; before: string; after: string } | undefined {
+  if (conversion === undefined) return undefined;
   const { converter, from, to } = conversion;
   const alternative = withSetting(
     conversionOptions,
@@ -1198,9 +1201,9 @@ function valueExample(entry: OptionEntry, value: string): string {
     entry.key,
     value,
   );
-  const write = (text: string, options: ConversionOptions, a = from) => {
+  const write = (text: string, options: ConversionOptions) => {
     try {
-      return converter.convert(text, a, to, options);
+      return converter.convert(text, from, to, options);
     } catch {
       return undefined;
     }
@@ -1219,9 +1222,9 @@ function valueExample(entry: OptionEntry, value: string): string {
     const after = write(text, alternative);
     if (before === undefined || after === undefined) continue;
     const change = firstChange(text, before, after);
-    if (change) return `${change[0]} → ${change[1]}`;
+    if (change) return change;
   }
-  return "";
+  return undefined;
 }
 
 /* The picker: find an option, then choose its value */
@@ -1241,7 +1244,6 @@ function openPicker(): void {
   optionSearch.value = "";
   optionPicker.hidden = false;
   addOptionButton.setAttribute("aria-expanded", "true");
-  placePicker();
   showPickerItems();
   optionSearch.focus();
 }
@@ -1255,29 +1257,6 @@ function closePicker(focusButton: boolean): void {
 }
 
 /** Under the button, kept inside the settings. */
-/**
- * Under the button, kept inside the settings. Where the fields stand side
- * by side, the picker ends at the left of the output instead, over the
- * source, so that the output stays in view for the preview of values.
- */
-function placePicker(): void {
-  const line = optionPicker.offsetParent as HTMLElement;
-  const room = line.clientWidth - optionPicker.offsetWidth;
-  let left = Math.max(0, Math.min(addOptionButton.offsetLeft, room));
-  const target = output.closest(".field")?.getBoundingClientRect();
-  const origin = line.getBoundingClientRect();
-  const settings = optionPicker.closest(".controls")?.getBoundingClientRect();
-  if (target && settings) {
-    const end = target.left - 16 - origin.left;
-    const start = end - optionPicker.offsetWidth;
-    if (start + origin.left >= settings.left && start < left) left = start;
-  }
-  optionPicker.style.left = `${left}px`;
-  optionPicker.style.top = `${
-    addOptionButton.offsetTop + addOptionButton.offsetHeight + 6
-  }px`;
-}
-
 function showPickerItems(): void {
   const from = sourceFormat();
   const to = targetFormat();
@@ -1326,25 +1305,44 @@ function showPickerItems(): void {
     const entry = pickerEntry;
     const standard = standardValue(preset, entry.group, entry.key);
     optionStep.hidden = false;
-    optionStep.textContent = `${optionName(entry)}${
-      standard ? ` · standard: ${standard}` : ""
-    }`;
+    optionStep.textContent = optionName(entry);
     // A few values: the list takes the keyboard, without a search field.
     // It takes the focus before the field hides, so that the picker stays.
     optionList.tabIndex = 0;
     optionList.focus();
     optionSearch.hidden = true;
     optionSearch.removeAttribute("aria-activedescendant");
-    // The heading names the option and its standard value.
+    // The heading names the option.
     optionList.removeAttribute("aria-label");
     optionList.setAttribute("aria-labelledby", "option-step");
-    for (const value of entry.values) {
-      if (value === standard) {
-        continue;
+    const values = entry.values
+      .filter((value) => value !== standard)
+      .map((value) => ({ value, example: valueExample(entry, value) }));
+    // The standard's value heads the list, as the reference, not as a choice.
+    if (standard !== undefined) {
+      const first = values.find(({ example }) => example)?.example;
+      const row = document.createElement("div");
+      row.className = "option-item option-standard";
+      row.setAttribute("role", "option");
+      row.setAttribute("aria-disabled", "true");
+      const name = document.createElement("span");
+      const tag = document.createElement("span");
+      tag.className = "option-tag";
+      tag.textContent = "standard";
+      name.append(standard, tag);
+      row.append(name);
+      if (first) {
+        const example = document.createElement("span");
+        example.className = "option-example";
+        example.textContent = `${first.word} → ${first.before}`;
+        row.append(example);
       }
+      optionList.append(row);
+    }
+    for (const { value, example } of values) {
       pickerItems.push({
         label: value,
-        detail: valueExample(entry, value),
+        detail: example ? `${example.word} → ${example.after}` : "",
         value,
         pick: () => {
           preview = undefined;
@@ -1449,9 +1447,6 @@ optionPicker.addEventListener("focusout", (event) => {
   if (next === null || !optionPicker.contains(next)) {
     if (next !== addOptionButton) closePicker(false);
   }
-});
-addEventListener("resize", () => {
-  if (!optionPicker.hidden) placePicker();
 });
 
 /* Conversion */

@@ -117,9 +117,13 @@ test("finds options by name, key, or group", () => {
 test("finds the first changed word, without its punctuation", () => {
   assertEquals(
     firstChange("ὑπὲρ φίλος.", "hypèr phílos.", "hypèr fílos."),
-    ["φίλος", "fílos"],
+    { word: "φίλος", before: "phílos", after: "fílos" },
   );
-  assertEquals(firstChange("τί;", "tí?", "tí;"), ["τί;", "tí;"]);
+  assertEquals(firstChange("τί;", "tí?", "tí;"), {
+    word: "τί;",
+    before: "tí?",
+    after: "tí;",
+  });
   assertEquals(firstChange("α β", "a b", "a b"), undefined);
   assertEquals(firstChange("α β", "a b", "a b c"), undefined);
 });

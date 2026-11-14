@@ -9,6 +9,9 @@ change.
 
 ### Changed
 
+- The names of the ISO 843 presets say what each type does, as the standard
+  does: "ISO 843:1997 — Type 1 (transliteration)" and "ISO 843:1997 — Type 2
+  (transcription)". Their ids are unchanged.
 - The playground has a new design, in the project's identity (tessera
   symbol, Bricolage Grotesque, Papier and Nuit themes). Source and target are
   chosen from two segmented groups; the source is detected from the text by
