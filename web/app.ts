@@ -1515,6 +1515,22 @@ optionBack.addEventListener("click", () => {
 });
 optionSearch.addEventListener("keydown", pickerKeydown);
 optionList.addEventListener("keydown", pickerKeydown);
+/**
+ * A press on an empty part of a picker would move the focus out of it, to
+ * the page, and close it, losing what was typed: the focus stays where it
+ * is instead. Fields, buttons, and labels take the press as usual.
+ */
+function keepFocusInside(panel: HTMLElement): void {
+  panel.addEventListener("mousedown", (event) => {
+    // Within the picker only: the tab panel around it takes the focus too.
+    const hit = (event.target as Element).closest(
+      "input, textarea, select, button, label, a, [tabindex]",
+    );
+    if (hit === null || !panel.contains(hit)) event.preventDefault();
+  });
+}
+keepFocusInside(optionPicker);
+keepFocusInside(inventoryPicker);
 optionPicker.addEventListener("focusout", (event) => {
   const next = event.relatedTarget as Node | null;
   if (next === null || !optionPicker.contains(next)) {
