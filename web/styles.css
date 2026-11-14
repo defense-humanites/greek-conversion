@@ -895,7 +895,8 @@ h1 span {
   padding: 0 0 28px 16px;
   border: 0;
   background: transparent;
-  font-size: 28px;
+  --text-size: 28px;
+  font-size: var(--text-size);
   line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: break-word;
@@ -913,7 +914,18 @@ h1 span {
 .field.to:focus-within {
   outline-color: var(--to);
 }
-/* In the face and size of the text, so that it matches the caret. */
+/*
+ * While the field is empty, it takes the face and size of its placeholder,
+ * so that the caret matches it; the first letter typed brings the text's
+ * own face and size back.
+ */
+textarea.text:placeholder-shown {
+  font-family: var(--face-ui);
+  font-size: 18px;
+  font-weight: 400;
+  /* The line keeps the text's height, so that the first line stays put. */
+  line-height: calc(var(--text-size) * 1.6);
+}
 textarea.text::placeholder {
   color: var(--muted);
 }
@@ -1315,8 +1327,8 @@ footer strong {
     padding: 16px;
   }
   .text {
+    --text-size: 24px;
     min-height: 140px;
-    font-size: 24px;
   }
   footer .package {
     text-align: left;
