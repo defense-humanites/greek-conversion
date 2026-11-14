@@ -531,7 +531,21 @@ function showMarks(issues: readonly Issue[]): void {
       end: issue.offset + Math.max(issue.length, 1),
       literal: readAsGreek(issue),
     }))
-    .sort((a, b) => a.start - b.start);
+    .sort((a, b) => a.start - b.start)
+    // Adjacent letters of one kind share a mark, so that its underline runs
+    // on, dots included, rather than starting again at each letter.
+    .reduce<{ start: number; end: number; literal: boolean }[]>(
+      (runs, range) => {
+        const last = runs.at(-1);
+        if (last && last.literal === range.literal && range.start <= last.end) {
+          last.end = Math.max(last.end, range.end);
+        } else {
+          runs.push({ ...range });
+        }
+        return runs;
+      },
+      [],
+    );
   sourceMarks.replaceChildren();
   let position = 0;
   for (const { start, end, literal } of ranges) {

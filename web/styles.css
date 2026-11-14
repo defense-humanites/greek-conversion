@@ -913,10 +913,9 @@ h1 span {
 .field.to:focus-within {
   outline-color: var(--to);
 }
+/* In the face and size of the text, so that it matches the caret. */
 textarea.text::placeholder {
   color: var(--muted);
-  font-family: var(--face-ui);
-  font-size: 18px;
 }
 .marks {
   overflow: hidden;
@@ -934,9 +933,23 @@ textarea.text::placeholder {
   text-decoration-skip-ink: none;
 }
 /* Copied as is, but read back as Greek: nothing of the Greek is lost */
+/*
+ * Copied as is, but read back as Greek: nothing of the Greek is lost. The
+ * dots are drawn as a pattern, regular in every browser, on the line of the
+ * solid underline.
+ */
 .marks mark.literal {
-  text-decoration-style: dotted;
-  text-decoration-color: var(--from);
+  padding-bottom: calc(0.25em + 3px);
+  background-image: radial-gradient(
+    circle,
+    var(--from) 1.5px,
+    transparent 2px
+  );
+  background-position: 0 100%;
+  /* Whole dots only: the spacing gives way at the end of a word. */
+  background-repeat: space no-repeat;
+  background-size: 8px 6px;
+  text-decoration: none;
 }
 
 /* The verdict: the halves of the tessera meet when nothing is lost */
