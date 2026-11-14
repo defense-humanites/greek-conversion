@@ -23,9 +23,10 @@ The API gains two options, which change nothing by default:
 README, *Write the iota on the line*), and `source`, which describes how the
 input is written when it is not written as the output, to restyle a
 transliteration (*Restyle a transliteration*). A restyle that went through
-Greek in two calls can take one:
-`reencode(text, "transliteration", { ...target, source })`. Four kinds of
-input convert differently:
+Greek in two calls can take one,
+`reencode(text, "transliteration", { ...target, source })`, which also keeps
+what the Greek step dropped, such as a lunate sigma that the source writes
+`c`. Four kinds of input convert differently:
 
 - In Greek output, a sigma before an elision apostrophe is medial:
   `ἔχουσ’ ἐγώ` and `σ’ αγαπώ` keep their `σ`, and the Beta Code

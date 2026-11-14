@@ -363,8 +363,12 @@ export interface ConversionOptions {
   /**
    * How the input is written, when it is not written as the output: the
    * input is read with these options, resolved on their own, and the output
-   * written with the others. Without it, the options describe the input as
-   * well, which is how a text is normalized in its own style.
+   * written with the others. `source` replaces the options for reading and
+   * does not merge with them: `greek.accentuation` and `diacritics`, which
+   * also change how transliteration is read, then only write the output.
+   * Without it, the options describe the input as well, which is how a text
+   * is normalized in its own style. Functions that only write, `encode()`
+   * among them, check it and ignore it.
    *
    * Reading Greek and Beta Code depends on no option. Reading transliteration
    * depends on the `transliteration` group, `greek.accentuation`, and the

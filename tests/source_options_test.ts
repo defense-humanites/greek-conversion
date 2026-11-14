@@ -8,7 +8,12 @@ import {
   createConverter,
   reencode,
 } from "../src/mod.ts";
-import { parse } from "../src/document.ts";
+import {
+  applyGreekOrthography,
+  encode,
+  parse,
+  parseDetailed,
+} from "../src/document.ts";
 
 // A text whose default transliteration reads back as itself: no coronis and
 // no lunate sigma, which the default style does not note.
@@ -136,13 +141,61 @@ test("source reads the input of a conversion between formats", () => {
     }),
     "*aqhnai/os",
   );
-  // The document API reads with source too.
+  // The document API reads with source too, and writes without it.
+  const letters = (document: ReturnType<typeof parse>) =>
+    document.map((token) =>
+      token.kind === "grapheme" ? token.letter : token.value
+    );
+  const phi = { source: { transliteration: { phi: "f" } } } as const;
+  assertEquals(letters(parse("fílos", "transliteration", phi)), [
+    "phi",
+    "iota",
+    "lambda",
+    "omicron",
+    "sigma",
+  ]);
+  const detailed = parseDetailed("fílos", "transliteration", phi);
+  assertEquals(letters(detailed.document), [
+    "phi",
+    "iota",
+    "lambda",
+    "omicron",
+    "sigma",
+  ]);
+  assertEquals(detailed.spans[0], { start: 0, end: 1 });
+  const document = parse("ἄνθρωπος", "greek");
+  const modern = { source: { preset: "ala-lc-modern" } } as const;
   assertEquals(
-    parse("fílos", "transliteration", {
-      source: { transliteration: { phi: "f" } },
-    }).map((token) => token.kind === "grapheme" ? token.letter : token.value),
-    ["phi", "iota", "lambda", "omicron", "sigma"],
+    encode(document, "transliteration", modern),
+    encode(document, "transliteration"),
   );
+  assertEquals(
+    applyGreekOrthography(document, modern),
+    applyGreekOrthography(document),
+  );
+});
+
+test("a lossless restyle converts back with source and the other options swapped", () => {
+  const source = convert(GREEK, "greek", "transliteration");
+  const canonical = reencode(source, "transliteration");
+  let lossless = 0;
+  for (const [label, options] of profiles()) {
+    const restyle = convertDetailed(
+      source,
+      "transliteration",
+      "transliteration",
+      { ...options, source: {} },
+    );
+    if (restyle.lossy) continue;
+    lossless++;
+    assertNfcEquals(
+      reencode(restyle.output, "transliteration", { source: options }),
+      canonical,
+      label,
+    );
+  }
+  // Most profiles keep everything this text notes.
+  assertEquals(lossless > 40, true);
 });
 
 test("source changes nothing in reading Greek and Beta Code", () => {
@@ -198,6 +251,31 @@ test("a converter reads the input as source describes it", () => {
     modern.convert("tōn varvarōn", "transliteration", "transliteration"),
     "tōn varvarōn",
   );
+  // source is resolved on its own: {} is the default style, not the preset.
+  assertNfcEquals(
+    modern.convert("tōn barbarōn", "transliteration", "transliteration", {
+      source: {},
+    }),
+    "tōn varvarōn",
+  );
+  // An alias of the source format is read as source writes its letter.
+  const alias = createConverter({
+    aliases: [{ letter: "phi", format: "transliteration", spellings: ["ƒ"] }],
+  });
+  assertNfcEquals(
+    alias.convert("ƒílos", "transliteration", "greek", {
+      transliteration: { phi: "f" },
+      source: {},
+    }),
+    "φίλος",
+  );
+  assertNfcEquals(
+    alias.convertDetailed("ƒílos", "transliteration", "greek", {
+      transliteration: { phi: "f" },
+      source: {},
+    }).output,
+    "φίλος",
+  );
   // A letter kept out of scope is copied from the input as it was read.
   const noPhi = createConverter({ exclude: ["phi"] });
   const options = { transliteration: { phi: "f" }, source: {} } as const;
@@ -218,5 +296,12 @@ test("a converter reads the input as source describes it", () => {
       length,
     ]),
     [["phi", 0, 2]],
+  );
+  // The output's style reads the kept `ph` as pi and a rough breathing, which
+  // it puts on the iota: the output does not read back as its source.
+  assertEquals(detailed.lossy, true);
+  assertEquals(
+    detailed.losses.map(({ code, index }) => [code, index]),
+    [["unrepresented-literal", 0], ["unrepresented-grapheme", 1]],
   );
 });

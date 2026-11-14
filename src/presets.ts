@@ -725,11 +725,9 @@ function unknownKey(key: string, prefix: string): OptionError {
     ? REPLACED_KEYS[key]
     : undefined;
   const path = prefix + key;
-  // A replacement can name several paths, each of which takes the prefix.
-  const replacement = replaced?.replace(
-    /\b(?:transliteration|greek|betaCode|text|diacritics)\./g,
-    (group) => prefix + group,
-  );
+  // The keys of rc.5 were never accepted in `source`, which is newer: they
+  // have no replacement there (docs/stability.md).
+  const replacement = prefix === "" ? replaced : undefined;
   return new OptionError(
     `Unknown conversion option: ${path}${
       replacement === undefined ? "" : ` (${path} is now ${replacement})`
@@ -828,11 +826,16 @@ function registeredDefinition(
   prefix = "",
 ): PresetDefinition {
   if (!Object.hasOwn(PRESET_DEFINITIONS, preset)) {
-    throw new OptionError(`Unknown conversion preset: ${preset}`, {
-      path: `${prefix}preset`,
-      received: preset,
-      accepted: Object.keys(PRESET_DEFINITIONS),
-    });
+    throw new OptionError(
+      `Unknown conversion preset${
+        prefix === "" ? "" : ` for ${prefix}preset`
+      }: ${preset}`,
+      {
+        path: `${prefix}preset`,
+        received: preset,
+        accepted: Object.keys(PRESET_DEFINITIONS),
+      },
+    );
   }
   return PRESET_DEFINITIONS[preset];
 }

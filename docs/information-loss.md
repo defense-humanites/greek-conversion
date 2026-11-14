@@ -206,8 +206,8 @@ removable diacritics.
 
 ## Stability guarantee
 
-For canonical output and one fixed, resolved option set, every format is
-idempotent:
+For canonical output and one fixed, resolved option set without `source`,
+every format is idempotent:
 
 ```ts
 const once = convert(input, from, to, options);
@@ -219,9 +219,9 @@ once === twice;
 The first conversion may canonicalize aliases, mark order, punctuation, case,
 spacing, or a deliberately lossy option. Reapplying the same options to that
 canonical target does not change it again. Options that give a `source`
-describe another input: the output is converted again without it. This fixed-point guarantee is not a
-reverse-round-trip guarantee and does not imply that the original source can
-be reconstructed. The differential corpus and explicit loss cases live in
+describe another input: the output is converted again without it. This
+fixed-point guarantee is not a reverse-round-trip guarantee and does not imply
+that the original source can be reconstructed. The differential corpus and explicit loss cases live in
 `tests/fixtures.ts`; pairwise stability and isolated non-default option values
 are exercised by `tests/stability_test.ts`.
 
@@ -231,7 +231,8 @@ idempotence of canonical output; validity of the reparsed output, except at
 the documented boundaries listed in that file, which the producing conversion
 must report as lossy; and, when `convertDetailed()` reports no loss, exact
 reconstruction of the canonical source. A conversion reported as lossless is
-therefore reversible under the same options.
+therefore reversible under the same options, or, after a restyle that gives a
+`source`, with `source` and the other options swapped.
 
 For an actual input, `convertDetailed()` returns the output, a `lossy` status,
 and token-indexed diagnostics. Its comparison treats canonical Unicode and

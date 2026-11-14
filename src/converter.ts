@@ -94,7 +94,11 @@ export interface CharacterRepertoireDefinition {
 
 /** Immutable configuration used to create an isolated converter. */
 export interface ConverterConfiguration extends CharacterRepertoireDefinition {
-  /** Preset options and audited built-in scope bound to every conversion. */
+  /**
+   * Preset options and audited built-in scope bound to every conversion. The
+   * preset writes the output, and reads the input unless `source` describes
+   * it.
+   */
   preset?: Preset;
   /**
    * Preserves unsupported recognized input by default or rejects the

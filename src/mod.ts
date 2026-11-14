@@ -133,8 +133,9 @@ export type {
  * Converts text between Greek, Beta Code, and scientific transliteration.
  *
  * Unknown literals are preserved. The result is canonical and idempotent for
- * fixed formats and options, but a reverse conversion is not necessarily
- * lossless; use {@link convertDetailed} when that distinction matters.
+ * fixed formats and options, converted again without `source`, but a reverse
+ * conversion is not necessarily lossless; use {@link convertDetailed} when
+ * that distinction matters.
  *
  * Without a preset, transliteration follows the SBL academic style, which the
  * `sbl-academic` preset names.

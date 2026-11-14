@@ -110,9 +110,13 @@ kept as the source writes it in its word:
   lunate sigma stays lunate, and Beta Code is written in lowercase, with `*`
   for a capital and `j` for yot, whatever the conversion's `betaCode`
   options, which only shape the converted text;
-- from transliteration, copied from the source, since a transliteration's
-  spelling depends on options that can leave marks out: the `n` of `ng` stays
-  `n`, and a macron or a coronis stays.
+- from transliteration, copied from the source as it was read (with
+  `source`, when the options give one), since a transliteration's spelling
+  depends on options that can leave marks out: the `n` of `ng` stays `n`, and
+  a macron or a coronis stays. After a restyle, the output's style may read
+  that spelling otherwise, and `convertDetailed()` reports it: with phi out
+  of scope, `phílos` restyled under `phi: "f"` keeps `ph`, which that style
+  reads as pi and a rough breathing.
 
 The options that shape the converted text, `diacritics`, `greek`, `betaCode`,
 and `transliteration`, do not reach it, except the Unicode form of Greek
@@ -229,6 +233,9 @@ subset. `convertDetailed()` reports it as `out-of-scope-character`. Set
 `outOfScopeBehavior: "reject"` on the converter to reject it instead. Per-call
 options may refine the bound preset, but selecting another preset is rejected
 because its options would no longer agree with the converter's fixed scope.
+The input is the exception: `source` describes how it is written, may name
+another preset, and is resolved on its own, so that `source: {}` reads the
+default style, not the bound preset's.
 
 ALA-LC boundaries are context-sensitive. For example, a modern ALA-LC-bound
 converter preserves unmarked stigma but accepts `ϛʹ` as the alphabetic numeral

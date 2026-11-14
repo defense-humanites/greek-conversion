@@ -166,11 +166,35 @@ test("the options of source are checked, with paths that start with source.", ()
       ),
     OptionError,
   );
+  // The keys of rc.5 were never accepted in source: no replacement there.
   assertEquals(replaced.path, "source.orthography.betaCodeCase");
-  assertEquals(replaced.replacement, "source.betaCode.case");
-  assertThrows(
-    () => resolveConversionOptions({ source: "sbl-academic" } as never),
-    TypeError,
+  assertEquals("replacement" in replaced, false);
+  assertEquals(
+    "replacement" in assertThrows(
+      () =>
+        resolveConversionOptions(
+          { source: { orthography: { modernDigraphs: true } } } as never,
+        ),
+      OptionError,
+    ),
+    false,
+  );
+  assertEquals(
+    assertThrows(
+      () => resolveConversionOptions({ source: { preset: "nope" } } as never),
+      OptionError,
+    ).message,
+    "Unknown conversion preset for source.preset: nope",
+  );
+  for (const source of ["sbl-academic", null, []]) {
+    assertThrows(
+      () => resolveConversionOptions({ source } as never),
+      TypeError,
+    );
+  }
+  assertEquals(
+    resolveConversionOptions({ source: undefined }),
+    DEFAULT_CONVERSION_OPTIONS,
   );
   assertThrows(
     () => resolveConversionOptions({ source: { text: "lowercase" } } as never),

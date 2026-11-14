@@ -140,7 +140,7 @@ the coronis is kept, `transliteration.coronis` how it is written in Latin.
 
 | Group             | What it describes                                                                                                              | Examples                                                                         |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| `transliteration` | The Latin writing system: how each letter and mark is spelled, when transliteration is written and when it is read             | `beta: "v"`, `upsilon: "y"`, `longVowels: "circumflex"`, `coronis: "apostrophe"` |
+| `transliteration` | The Latin writing system: how each letter and mark is spelled, when transliteration is written and, without `source`, read     | `beta: "v"`, `upsilon: "y"`, `longVowels: "circumflex"`, `coronis: "apostrophe"` |
 | `greek`           | The Greek writing system: letter shapes, accentuation, assimilation, Unicode form. `sigma` and `doubleRho` reach Beta Code too | `finalSigma: "medial"`, `accentuation: "monotonic"`, `composition: "decomposed"` |
 | `betaCode`        | Beta Code conventions                                                                                                          | `case: "uppercase"`, `yot: "#401"`                                               |
 | `text`            | Transformations of the whole text, in every format                                                                             | `letterCase: "lowercase"`, `whitespace: "collapse"`, `numerals: "decimal"`       |
@@ -376,10 +376,12 @@ reencode("phílos", "transliteration", {
 `source: {}` is the default style. Without `source`, the first call reads `b`
 as μπ, as ALA-LC Modern does, and gives `tōn barmparōn`, and the second reads
 `ph` as pi and a rough breathing, and changes nothing. `source` takes the
-options of a conversion and works with every function: `convertDetailed()`
-reports what the new style loses, and between two formats, `source` describes
-the input apart from the output. A restyle cannot restore what the source
-style does not note: the default style writes no coronis.
+options of a conversion and replaces them all for reading: the other options,
+`greek.accentuation` and `diacritics` included, only write the output. It works
+with every function that reads text: `convertDetailed()` reports what the new
+style loses, and between two formats, `source` describes the input apart from
+the output. A restyle cannot restore what the source style does not note: the
+default style writes no coronis.
 
 ### Keep or fold letter variants
 
@@ -585,7 +587,8 @@ mixed.losses.filter((loss) => loss.code !== "unrepresented-literal").length; // 
 ```
 
 When `lossy` is `false`, converting the output back with the same options gives
-the same canonical text. The loss codes are:
+the same canonical text; after a restyle, swap `source` and the other options.
+The loss codes are:
 
 | Code                     | What the target cannot keep                                                                                    |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------- |

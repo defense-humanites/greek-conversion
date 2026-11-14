@@ -31,8 +31,9 @@ change.
   second gives `varvarōn` (README, *Restyle a transliteration*). Without
   `source`, nothing changes: the options describe the input as well, which
   normalizes a text in its own style and keeps output idempotent. `source`
-  works with every function, including a converter bound to another preset,
-  and its options are checked like the others, with paths that start with
+  replaces the options for reading, without merging with them, and works with
+  every function that reads text, including a converter bound to another
+  preset. Its options are checked like the others, with paths that start with
   `source.`.
 
 ### Fixed
