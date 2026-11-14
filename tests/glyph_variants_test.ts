@@ -346,7 +346,7 @@ test("a sigma before a digit from 1 to 3 keeps the digit in Beta Code", () => {
   // The TLG defines no code for a capital: before 3, `*s3` is a lunate sigma.
   assertEquals(convert("Σ1 Σ3", "greek", "beta-code"), "*s1 *s3");
   assertEquals(glyphLosses("Σ3", "greek", "beta-code"), [
-    "removed-glyph-variant@0",
+    "added-glyph-variant:lunate-sigma@0",
     "unrepresented-literal@1",
   ]);
 });
@@ -360,7 +360,7 @@ test("a lunate sigma the source does not have is reported when it reads back oth
   assertEquals(
     convertDetailed("sōma", "transliteration", "greek", options).losses
       .map(({ code, glyphVariant }) => [code, glyphVariant]),
-    [["removed-glyph-variant", undefined]],
+    [["added-glyph-variant", "lunate-sigma"]],
   );
   // Without lunateSigma: "c", the lunate sigma reads back as s.
   assertEquals(

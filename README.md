@@ -612,6 +612,7 @@ The loss codes are:
 | `inferred-breathing`     | The absence of a breathing on an initial vowel, which reads back as a smooth breathing                         |
 | `changed-case`           | The letter case                                                                                                |
 | `removed-glyph-variant`  | A letter form, such as `ϲ`, `ϐ`, or a `σ` at the end of a word; `glyphVariant` identifies it                     |
+| `added-glyph-variant`    | A letter form the target writes where the source has none, and that converts back as another spelling; `glyphVariant` identifies it |
 | `unrepresented-grapheme` | A letter, or its position                                                                                      |
 | `unrepresented-literal`  | A literal token                                                                                                |
 

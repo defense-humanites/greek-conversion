@@ -124,7 +124,8 @@ where the shape contradicts the place, under `finalSigma: "preserve"`, or
 before a digit from 1 to 3; transliteration notes the lunate sigma as `c`
 under `lunateSigma: "c"`. The TLG defines no code for a capital sigma, so a
 capital sigma before `3` is written `*s3` and reads back as a lunate sigma
-(`Σ3` → `*s3` → `Ϲ`), a loss that `convertDetailed()` reports. The
+(`Σ3` → `*s3` → `Ϲ`), which `convertDetailed()` reports as
+`added-glyph-variant`. The
 options `greek.sigma`, `greek.finalSigma`, `greek.medialBeta`, and
 `greek.symbolForms` decide how Greek output writes them; by default, it keeps
 the forms the source writes.
@@ -161,8 +162,9 @@ options. Consequently, for a Greek source:
 A conversion can also write a form the source did not have: under
 `greek.sigma: "lunate"`, a sigma read from `s` is written `ϲ`, which converts
 back to `c` under `lunateSigma: "c"`. Transliteration, the source format,
-writes `s` from the source and `c` from the text read back, so the loss is
-reported, without `glyphVariant`.
+writes `s` from the source and `c` from the text read back, so
+`convertDetailed()` reports `added-glyph-variant`, with the form written
+(`lunate-sigma`) in `glyphVariant`.
 
 ### Canonical Greek orthography
 

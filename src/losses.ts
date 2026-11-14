@@ -16,6 +16,7 @@ import type { SpanTable } from "./parsers/positions.ts";
 export type ConversionLossCode =
   | "changed-case"
   | "removed-glyph-variant"
+  | "added-glyph-variant"
   | "removed-diacritic"
   | "displaced-diacritic"
   | "inferred-breathing"
@@ -44,10 +45,10 @@ export interface ConversionLoss {
   diacritic?: Diacritic;
   /**
    * The source glyph variant when {@link code} is `"removed-glyph-variant"`,
-   * such as `"beta-symbol"` for `ϐ`. Absent when the source has the ordinary
-   * letter and the target a variant that converts back otherwise: a sigma
-   * read from `s` under `lunateSigma: "c"`, written `ϲ` under
-   * `greek.sigma: "lunate"`, converts back to `c`.
+   * such as `"beta-symbol"` for `ϐ`, and the variant the target writes when
+   * it is `"added-glyph-variant"`: a sigma read from `s` under
+   * `lunateSigma: "c"`, written `ϲ` under `greek.sigma: "lunate"`
+   * (`"lunate-sigma"`), converts back to `c`.
    */
   glyphVariant?: GlyphVariant;
 }
@@ -367,15 +368,23 @@ function addTokenLoss(
     }
     if (!sameGlyph(index, source, target)) {
       changed = true;
-      losses.add(
-        "removed-glyph-variant",
-        index,
-        source.glyphVariant === undefined
-          ? "The target representation writes a glyph variant that converts back otherwise."
-          : "The target representation does not retain the source glyph variant.",
-        undefined,
-        source.glyphVariant,
-      );
+      if (source.glyphVariant === undefined) {
+        losses.add(
+          "added-glyph-variant",
+          index,
+          "The target representation writes a glyph variant that converts back otherwise.",
+          undefined,
+          target.glyphVariant,
+        );
+      } else {
+        losses.add(
+          "removed-glyph-variant",
+          index,
+          "The target representation does not retain the source glyph variant.",
+          undefined,
+          source.glyphVariant,
+        );
+      }
     }
     if (changed) return;
   }

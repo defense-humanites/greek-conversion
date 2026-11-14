@@ -49,7 +49,9 @@ change.
 - `greek.medialBeta: "preserve"`, the new default, writes `ϐ` where the source
   notes it and `β` elsewhere.
 - A `removed-glyph-variant` loss names the source form in its new
-  `glyphVariant` field.
+  `glyphVariant` field. The new code `added-glyph-variant` reports a form the
+  target writes where the source has none, and that converts back as another
+  spelling; its `glyphVariant` is the form written.
 - Beta Code reads `s1` and `s2`, the medial and final sigma of the TLG, and
   writes them where the shape contradicts the place, under the default
   `greek.finalSigma: "preserve"`: `λόγοσ` gives `lo/gos1` (was `lo/gos`, which
@@ -165,11 +167,12 @@ change.
   sigma is reported when it converts back otherwise. Under
   `transliteration.lunateSigma: "c"` and `greek.sigma: "lunate"`, `sōma`
   gives `ϲωμα`, which converts back to `cōma`; `convertDetailed()` reported
-  no loss. The loss has no `glyphVariant`, since the source had none.
+  no loss, and now reports `added-glyph-variant`.
 - Beta Code no longer writes a small sigma before the digit 3 as `s3`, which
   read back as a lunate sigma: `ς3` gives `s23` (rc.8: `s3`, read back as
   `ϲ`). A capital sigma before `3` still gives `*s3`, since the TLG defines
-  no code for it; `convertDetailed()` reports the loss.
+  no code for it; `convertDetailed()` reports the loss
+  (`added-glyph-variant`).
 
 ## [1.0.0-rc.8] - 2026-11-11
 
