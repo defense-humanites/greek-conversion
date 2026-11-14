@@ -103,6 +103,7 @@ export type {
   SigmaOrthography,
   SmoothBreathingTransliteration,
   SourceOptions,
+  SymbolFormOrthography,
   TextOptions,
   TransliterationOptions,
   UnicodeComposition,
@@ -218,11 +219,17 @@ export function convertDetailed(
   const target = parseResolved(output, to, resolved, true);
   // Where the target tokens were read, only if the losses need it: reading
   // the output again with positions costs less than recording them each time.
-  const losses = findConversionLosses(source, target, inputSpans, () => {
-    const reread: ReadPositions = { text: "", starts: [] };
-    parseResolved(output, to, resolved, true, reread);
-    return { written: outputSpans, read: readSpans(output, reread) };
-  });
+  const losses = findConversionLosses(
+    source,
+    target,
+    inputSpans,
+    () => {
+      const reread: ReadPositions = { text: "", starts: [] };
+      parseResolved(output, to, resolved, true, reread);
+      return { written: outputSpans, read: readSpans(output, reread) };
+    },
+    { format: from, options: reading },
+  );
 
   const spans: ConversionSpan[] = new Array(source.length);
   for (let index = 0; index < source.length; index++) {

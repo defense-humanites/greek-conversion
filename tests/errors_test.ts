@@ -94,7 +94,7 @@ test("option errors are OptionErrors that locate the option", () => {
   );
   assertEquals(badValue.path, "greek.sigma");
   assertEquals(badValue.received, "nope");
-  assertEquals(badValue.accepted, ["standard", "lunate", "preserve"]);
+  assertEquals(badValue.accepted, ["preserve", "standard", "lunate"]);
 
   const badPreset = assertThrows(
     () => convert("α", "greek", "beta-code", { preset: "nope" } as never),

@@ -277,20 +277,20 @@ letters stay distinct (`η → ē`, `ω → ō`). The rough breathing goes with 
 class in every format: removed, it disappears from Greek and Beta Code and its
 `h` from transliteration; kept, it stays everywhere.
 
-In Greek, removing the marks still applies the sigma policies, so a source `σ`
-at the end of a word becomes `ς` and a lunate `ϲ` becomes `σ`. To change nothing
-but the marks, keep the source shapes:
+In Greek, removing the marks changes nothing else: by default, Greek output
+keeps the letter forms the source writes. To also place every sigma by its
+position and write the lunate sigma as a standard one:
 
 ```ts
 import { reencode } from "@humanities/greek-conversion";
 
 reencode("λόγος ϲῶμα ςόσ", "greek", { diacritics: { all: "remove" } });
-// → λογος σωμα σος
+// → λογος ϲωμα ςοσ
 reencode("λόγος ϲῶμα ςόσ", "greek", {
   diacritics: { all: "remove" },
-  greek: { sigma: "preserve", finalSigma: "preserve" },
+  greek: { sigma: "standard", finalSigma: "contextual" },
 });
-// → λογος ϲωμα ςοσ
+// → λογος σωμα σος
 ```
 
 ### Produce monotonic Greek
@@ -385,39 +385,52 @@ default style writes no coronis.
 
 ### Keep or fold letter variants
 
-Lunate sigma has two independent controls: `sigma` picks the Greek and Beta Code
-glyph (`"preserve"` remembers which source sigmas were lunate), and
-`lunateSigma` picks their transliteration:
+Some letters have more than one form: the lunate sigma `ϲ`, the final and
+medial sigma `ς` and `σ`, and the symbol forms `ϐ`, `ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`,
+`ϱ`, `ϵ`, and `ϒ`. Each is read as its letter, so `ϑεός` and `θεός` have the
+same letters. By default, Greek output keeps the forms the source writes, even
+a sigma whose shape contradicts its place, as in an abbreviation or a stem
+(`λόγοσ`). One option of `greek` decides each form:
+
+| Option        | Forms                     | Other values                                                                                |
+| ------------- | ------------------------- | ------------------------------------------------------------------------------------------- |
+| `sigma`       | `ϲ`                       | `"standard"` writes `σ` or `ς`; `"lunate"` writes `ϲ` for every sigma                       |
+| `finalSigma`  | `ς` and `σ`               | `"contextual"` writes `ς` at the end of a word and `σ` elsewhere; `"medial"` writes `σ`     |
+| `medialBeta`  | `ϐ`                       | `"standard"` writes `β`; `"symbol"` writes `ϐ` inside a word and `β` at its start, as French typography does |
+| `symbolForms` | `ϑ ϴ ϕ ϖ ϰ ϱ ϵ ϒ`         | `"standard"` writes the ordinary letters                                                    |
+
+Beta Code writes the lunate sigma `s3`, and transliteration writes it `c` under
+`lunateSigma: "c"`; `convertDetailed()` reports any other form the target
+cannot write (`removed-glyph-variant`):
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
 
-const options = {
-  transliteration: { lunateSigma: "c" },
-  greek: { sigma: "preserve" },
-} as const;
+const options = { transliteration: { lunateSigma: "c" } } as const;
 
 convert("σϲς", "greek", "transliteration", options); // → scs
 convert("scs", "transliteration", "greek", options); // → σϲς
+convert("σϲς", "greek", "beta-code"); // → ss3s
 ```
 
-To compare texts regardless of glyph variants, fold them to one spelling:
-standard beta and sigma, and a medial sigma everywhere:
+To write the ordinary letters, fold the variants. A comparison key also writes
+every sigma medial, and can drop the case and the marks:
 
 ```ts
 import { reencode } from "@humanities/greek-conversion";
 
 const fold = {
-  greek: { medialBeta: "standard", sigma: "standard", finalSigma: "medial" },
+  greek: { sigma: "standard", medialBeta: "standard", symbolForms: "standard" },
 } as const;
 
-reencode("ϐίος λόγος ϲῶμα", "greek", fold); // → βίοσ λόγοσ σῶμα
-reencode("ϐΊΟΣ", "greek", {
-  ...fold,
+reencode("ϐίος λόγοσ ϲῶμα ϑεός", "greek", fold);
+// → βίος λόγοσ σῶμα θεός
+reencode("ϐΊΟΣ λόγος ϑεός", "greek", {
+  greek: { ...fold.greek, finalSigma: "medial" },
   text: { letterCase: "lowercase" },
   diacritics: { all: "remove" },
 });
-// → βιοσ
+// → βιοσ λογοσ θεοσ
 ```
 
 ### Write the iota on the line
@@ -596,7 +609,7 @@ The loss codes are:
 | `displaced-diacritic`    | The position of a breathing: a hiatus marked only by a breathing (`Ἀίδης`) reads back as a diphthong (`Αἴδης`) |
 | `inferred-breathing`     | The absence of a breathing on an initial vowel, which reads back as a smooth breathing                         |
 | `changed-case`           | The letter case                                                                                                |
-| `removed-glyph-variant`  | A known lunate sigma                                                                                           |
+| `removed-glyph-variant`  | A letter form, such as `ϲ`, `ϐ`, or a `σ` at the end of a word; `glyphVariant` identifies it                     |
 | `unrepresented-grapheme` | A letter, or its position                                                                                      |
 | `unrepresented-literal`  | A literal token                                                                                                |
 

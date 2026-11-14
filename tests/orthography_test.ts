@@ -4,6 +4,9 @@ import { convert, convertDetailed } from "../src/mod.ts";
 import { parse } from "../src/document.ts";
 import { MEDIAL_BETA_SYMBOL, SMOOTH_ROUGH_DOUBLE_RHO } from "./fixtures.ts";
 
+/** The position decides the shape of every sigma. */
+const CONTEXTUAL = { greek: { finalSigma: "contextual" } } as const;
+
 test("collapses Unicode whitespace on demand", () => {
   const collapse = { text: { whitespace: "collapse" } } as const;
   const input = "\u2003\tἄνθρωπος\n\u00A0  λόγος\u2029";
@@ -635,6 +638,11 @@ test("applies lunate sigma orthography on demand", () => {
   const lunate = { greek: { sigma: "lunate" } } as const;
 
   assertNfcEquals(convert("σος ΣΟΣ", "greek", "greek"), "σος ΣΟΣ");
+  assertNfcEquals(convert("ϲοϲ ϹΟϹ", "greek", "greek"), "ϲοϲ ϹΟϹ");
+  assertNfcEquals(
+    convert("ϲοϲ ϹΟϹ", "greek", "greek", { greek: { sigma: "standard" } }),
+    "σος ΣΟΣ",
+  );
   assertNfcEquals(
     convert("σος ΣΟΣ", "greek", "greek", lunate),
     "ϲοϲ ϹΟϹ",
@@ -645,6 +653,12 @@ test("applies lunate sigma orthography on demand", () => {
   );
   assertNfcEquals(
     convert("s3os3 *s3*o*s3", "beta-code", "greek"),
+    "ϲοϲ ϹΟϹ",
+  );
+  assertNfcEquals(
+    convert("s3os3 *s3*o*s3", "beta-code", "greek", {
+      greek: { sigma: "standard" },
+    }),
     "σος ΣΟΣ",
   );
   assertNfcEquals(
@@ -764,7 +778,7 @@ test("places a lunate sigma written as a standard sigma by its position", () => 
   assertNfcEquals(
     convert("logoc", "transliteration", "greek", {
       preset: "bnf-core",
-      greek: { finalSigma: "preserve" },
+      greek: { sigma: "standard", finalSigma: "preserve" },
     }),
     "λογος",
   );
@@ -811,7 +825,7 @@ test("keeps a sigma before an elision apostrophe medial", () => {
       ["θα σ’ το πω.", "θα σ’ το πω."],
       ["‘σ’", "‘σ’"],
     ]
-  ) assertNfcEquals(convert(input, "greek", "greek"), expected);
+  ) assertNfcEquals(convert(input, "greek", "greek", CONTEXTUAL), expected);
   assertNfcEquals(
     convert("a)gge/llous'", "beta-code", "greek"),
     "ἀγγέλλουσ’",
@@ -856,16 +870,25 @@ test("ends a word with ς before an apostrophe that closes a quotation", () => {
       // A word on the next line does not follow the apostrophe.
       ["‘λόγος’\nἐστί", "‘λόγος’\nἐστί"],
     ]
-  ) assertNfcEquals(convert(input, "greek", "greek"), expected);
+  ) assertNfcEquals(convert(input, "greek", "greek", CONTEXTUAL), expected);
   // Two documented limits. A straight quotation mark cannot be told from an
   // aphaeresis and opens nothing. An apostrophe before a vowel is read as an
   // elision, so the quotation stays open for the rest of the line.
-  assertNfcEquals(convert("'λόγος' est", "greek", "greek"), "’λόγοσ’ est");
-  assertNfcEquals(convert("‘λόγος’ ἐστί", "greek", "greek"), "‘λόγοσ’ ἐστί");
   assertNfcEquals(
-    convert("‘Ναι’ είπε ἐλθοῦσ’.", "greek", "greek"),
+    convert("'λόγος' est", "greek", "greek", CONTEXTUAL),
+    "’λόγοσ’ est",
+  );
+  assertNfcEquals(
+    convert("‘λόγος’ ἐστί", "greek", "greek", CONTEXTUAL),
+    "‘λόγοσ’ ἐστί",
+  );
+  assertNfcEquals(
+    convert("‘Ναι’ είπε ἐλθοῦσ’.", "greek", "greek", CONTEXTUAL),
     "‘Ναι’ είπε ἐλθοῦς’.",
   );
+  // Under the default, the shapes the source notes are kept.
+  assertNfcEquals(convert("‘λόγοσ’.", "greek", "greek"), "‘λόγοσ’.");
+  assertNfcEquals(convert("‘lo/gos’.", "beta-code", "greek"), "‘λόγος’.");
 });
 
 test("folds Greek variants while keeping letter case independent", () => {

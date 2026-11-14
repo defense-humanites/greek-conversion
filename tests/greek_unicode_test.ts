@@ -97,7 +97,10 @@ test("monotonic monosyllables carry no accent except ή, πού, and πώς", ()
 
 test("monotonic rendering does not create blocked contractions", () => {
   assertEquals(
-    convert("βσ̓ κσ̓", "greek", "greek", MONOTONIC),
+    convert("βσ̓ κσ̓", "greek", "greek", {
+      ...MONOTONIC,
+      greek: { ...MONOTONIC.greek, finalSigma: "contextual" },
+    }),
     "βς κς",
   );
 });

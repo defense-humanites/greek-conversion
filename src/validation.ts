@@ -1,4 +1,10 @@
-import type { Diacritic, Document, Grapheme, Letter } from "./model.ts";
+import {
+  type Diacritic,
+  type Document,
+  GLYPH_VARIANTS,
+  type Grapheme,
+  type Letter,
+} from "./model.ts";
 import { initialBreathingStart } from "./context.ts";
 import { ALPHABET, ORDER } from "./alphabet.ts";
 
@@ -64,12 +70,6 @@ const ACCENTS = ["acute", "grave", "circumflex"] as const;
 const BREATHINGS = ["smooth", "rough"] as const;
 const QUANTITIES = ["macron", "breve"] as const;
 const DIACRITICS = new Set<Diacritic>(ORDER);
-const SIGMA_VARIANTS = new Set([
-  "lunate-sigma",
-  "final-sigma",
-  "medial-sigma",
-]);
-
 /**
  * Reports invalid document structure and Greek marks without mutation.
  *
@@ -122,9 +122,17 @@ export function validateDocument(
         add(diagnostics, "invalid-diacritic", index, "Unknown diacritic.");
       }
     }
+    const variant = token.glyphVariant === undefined
+      ? undefined
+      : Object.hasOwn(GLYPH_VARIANTS, token.glyphVariant)
+      ? GLYPH_VARIANTS[token.glyphVariant]
+      : null;
     if (
-      token.glyphVariant !== undefined &&
-      (token.letter !== "sigma" || !SIGMA_VARIANTS.has(token.glyphVariant))
+      variant === null ||
+      variant !== undefined &&
+        (variant.letter !== token.letter ||
+          variant.uppercase !== undefined &&
+            variant.uppercase !== token.uppercase)
     ) {
       add(
         diagnostics,
