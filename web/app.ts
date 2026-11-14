@@ -51,7 +51,7 @@ const targetInputs = [
 const presetSelect = element<HTMLSelectElement>("preset");
 const presetLine = element<HTMLDivElement>("preset-line");
 const presetSummary = element<HTMLParagraphElement>("preset-summary");
-const presetLimits = element<HTMLUListElement>("preset-limits");
+const presetLimits = element<HTMLOListElement>("preset-limits");
 const exampleMenu = element<HTMLSelectElement>("examples");
 const source = element<HTMLTextAreaElement>("source");
 const sourceMarks = element<HTMLDivElement>("source-marks");
@@ -419,20 +419,36 @@ function showPreset(): void {
   }
   presetLine.hidden = false;
 
-  // The menu shows the full name; the description follows it here.
+  // The menu shows the full name. Here: the description, the standard's
+  // own text, the coverage, then the limitations, last, since they unfold.
+  presetSummary.append(metadata.description);
+  for (const reference of metadata.references) {
+    const link = document.createElement("a");
+    link.href = reference.url;
+    link.textContent = reference.title;
+    markExternal(link);
+    presetSummary.append(" · ", link);
+  }
   presetSummary.append(
-    `${metadata.description} · ${
-      metadata.coverage === "partial" ? "Partial" : "Full"
-    } coverage`,
+    ` · ${metadata.coverage === "partial" ? "Partial" : "Full"} coverage`,
   );
   const limits = metadata.limitations.length;
   if (limits) {
     const toggle = document.createElement("button");
     toggle.type = "button";
     toggle.className = "link-button";
-    toggle.textContent = limits === 1
+    const label = limits === 1
       ? "1 known limitation"
       : `${limits} known limitations`;
+    // The last word and the chevron stay together, as for external links.
+    const space = label.lastIndexOf(" ");
+    const tail = document.createElement("span");
+    tail.className = "external-tail";
+    const chevron = document.createElement("span");
+    chevron.className = "disclosure-mark";
+    chevron.setAttribute("aria-hidden", "true");
+    tail.append(label.slice(space + 1), chevron);
+    toggle.append(label.slice(0, space + 1), tail);
     toggle.setAttribute("aria-expanded", "false");
     toggle.setAttribute("aria-controls", presetLimits.id);
     toggle.addEventListener("click", () => {
@@ -445,13 +461,6 @@ function showPreset(): void {
       item.textContent = limitation;
       presetLimits.append(item);
     }
-  }
-  for (const reference of metadata.references) {
-    const link = document.createElement("a");
-    link.href = reference.url;
-    link.textContent = reference.title;
-    markExternal(link);
-    presetSummary.append(" · ", link);
   }
 }
 

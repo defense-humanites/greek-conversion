@@ -55,6 +55,7 @@
     Menlo, Consolas, monospace;
 
   --radius: 6px;
+  --disclosure-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 6 8 10.5 12.5 6'/%3E%3C/svg%3E");
   --external-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 7.5 8.5M12 9.5v3a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3'/%3E%3C/svg%3E");
   font-family: var(--face-ui);
   color: var(--ink);
@@ -125,6 +126,20 @@ a:hover {
   vertical-align: -0.05em;
   background: currentColor;
   mask: var(--external-icon) center / contain no-repeat;
+}
+/* A button that unfolds a list: the chevron turns when it is open. */
+.disclosure-mark {
+  display: inline-block;
+  width: 0.75em;
+  height: 0.75em;
+  margin-left: 0.25em;
+  vertical-align: -0.05em;
+  background: currentColor;
+  mask: var(--disclosure-icon) center / contain no-repeat;
+  transition: transform 0.15s;
+}
+[aria-expanded="true"] .disclosure-mark {
+  transform: rotate(180deg);
 }
 .visually-hidden {
   position: absolute;
@@ -767,7 +782,7 @@ h1 span {
 }
 .preset-limits {
   margin: 10px 0 0;
-  padding-left: 20px;
+  padding-left: 24px;
   font-size: 14px;
   line-height: 20px;
   color: var(--muted);
@@ -1377,7 +1392,8 @@ footer strong {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tessera .half {
+  .tessera .half,
+  .disclosure-mark {
     transition: none;
   }
 }
