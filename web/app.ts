@@ -841,18 +841,22 @@ function inspectDocument(options: ConversionOptions, from: Format): void {
   if (selectedTab() !== "tab-document") return;
   const parsed = parse(source.value, from, options);
   const shown = showAllTokens ? parsed : parsed.slice(0, PREVIEW_TOKENS);
-  documentPreview.textContent = JSON.stringify(
-    {
-      tokens: shown.map((token) =>
-        token.kind === "grapheme"
-          ? { ...token, diacritics: [...token.diacritics] }
-          : token
-      ),
-      // Always the whole document, whatever the preview shows.
-      validation: validateDocument(parsed),
-    },
-    null,
-    2,
+  showHighlighted(
+    documentPreview,
+    JSON_TOKENS,
+    JSON.stringify(
+      {
+        tokens: shown.map((token) =>
+          token.kind === "grapheme"
+            ? { ...token, diacritics: [...token.diacritics] }
+            : token
+        ),
+        // Always the whole document, whatever the preview shows.
+        validation: validateDocument(parsed),
+      },
+      null,
+      2,
+    ),
   );
   const truncated = shown.length < parsed.length;
   documentLimit.hidden = !truncated;
@@ -883,22 +887,38 @@ const TOKENS = new RegExp(
   "g",
 );
 
-/** Shows the generated code, coloured by kind of token. */
-function showHighlighted(text: string): void {
-  code.replaceChildren();
+/** The canonical document, as JSON: a string before a colon is a key. */
+const JSON_TOKENS = new RegExp(
+  [
+    String.raw`(?<key>"(?:\\.|[^"\\])*"(?=\s*:))`,
+    String.raw`(?<string>"(?:\\.|[^"\\])*")`,
+    String.raw`(?<keyword>\b(?:true|false|null)\b)`,
+    String.raw`(?<number>-?\b\d+(?:\.\d+)?\b)`,
+    String.raw`(?<punctuation>[{}[\],:])`,
+  ].join("|"),
+  "g",
+);
+
+/** Shows code in an element, coloured by kind of token. */
+function showHighlighted(
+  target: HTMLElement,
+  tokens: RegExp,
+  text: string,
+): void {
+  target.replaceChildren();
   let position = 0;
-  for (const match of text.matchAll(TOKENS)) {
+  for (const match of text.matchAll(tokens)) {
     const [kind, value] = Object.entries(match.groups ?? {})
       .find(([, found]) => found !== undefined) ?? [];
     if (kind === undefined || value === undefined) continue;
-    code.append(text.slice(position, match.index));
+    target.append(text.slice(position, match.index));
     const span = document.createElement("span");
     span.className = `tok-${kind}`;
     span.textContent = value;
-    code.append(span);
+    target.append(span);
     position = match.index + value.length;
   }
-  code.append(text.slice(position));
+  target.append(text.slice(position));
 }
 
 /** Long results are cut in the comment; the code itself is complete. */
@@ -945,7 +965,7 @@ function showCode(
       `const converter = createConverter(${literalOf(configuration)});\n` +
       `converter.convert(text, ${formats}${argument});` + comment;
   }
-  showHighlighted(codeText);
+  showHighlighted(code, TOKENS, codeText);
 }
 
 /* State in the address, so that a link reproduces the conversion */
@@ -1470,6 +1490,25 @@ addOptionButton.addEventListener("click", () => {
 });
 optionSearch.addEventListener("input", showPickerItems);
 function pickerKeydown(event: KeyboardEvent): void {
+  // Right opens the values of the active option, once the caret has nothing
+  // more to its right in the search field; Left goes back to the options.
+  const atEnd = optionSearch.selectionStart === optionSearch.value.length &&
+    optionSearch.selectionEnd === optionSearch.value.length;
+  if (event.key === "ArrowRight" && !pickerEntry && atEnd) {
+    const item = pickerItems[pickerActive];
+    if (item) {
+      event.preventDefault();
+      item.pick();
+    }
+    return;
+  }
+  if (event.key === "ArrowLeft" && pickerEntry) {
+    event.preventDefault();
+    pickerEntry = undefined;
+    optionSearch.value = "";
+    showPickerItems();
+    return;
+  }
   if (event.key === "ArrowDown" || event.key === "ArrowUp") {
     event.preventDefault();
     setPickerActive(pickerActive + (event.key === "ArrowDown" ? 1 : -1));

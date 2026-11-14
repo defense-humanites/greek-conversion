@@ -1247,6 +1247,9 @@ pre.code code {
 .tok-string {
   color: var(--code-string);
 }
+.tok-number {
+  color: var(--code-keyword);
+}
 .tok-function {
   font-weight: 700;
   color: var(--code-function);
