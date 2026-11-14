@@ -1,6 +1,12 @@
 import { test } from "node:test";
-import { assertEquals } from "./assertions.ts";
-import { CharacterScopeError, convert, createConverter } from "../src/mod.ts";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
+import {
+  CharacterScopeError,
+  type ConversionOptions,
+  convert,
+  createConverter,
+  type Format,
+} from "../src/mod.ts";
 
 const SAN = {
   id: "san",
@@ -454,6 +460,272 @@ test("character exclusions preserve source-format spelling", () => {
     message:
       "Character stigma is outside this converter's repertoire and was preserved literally.",
   }]);
+});
+
+test("an excluded letter keeps its spelling in its word", () => {
+  const sigma = createConverter({ exclude: ["sigma"] });
+
+  // Written alone, the medial sigma of σῶμα became final (#68).
+  assertNfcEquals(sigma.convert("λόγος σῶμα", "greek", "greek"), "λόγος σῶμα");
+  assertNfcEquals(
+    sigma.convert("λόγος σῶμα", "greek", "transliteration"),
+    "lógoς σō̃ma",
+  );
+  assertNfcEquals(
+    sigma.convert("λόγος σῶμα", "greek", "beta-code"),
+    "lo/goς σw=ma",
+  );
+  assertNfcEquals(sigma.convert("λόγοϲ ϲῶμα", "greek", "greek"), "λόγοϲ ϲῶμα");
+  const spans = sigma.convertDetailed("λόγος σῶμα", "greek", "transliteration")
+    .spans.slice(4, 8).map(({ inputStart, outputStart, outputEnd }) => [
+      inputStart,
+      outputStart,
+      outputEnd,
+    ]);
+  assertEquals(spans, [[4, 4, 5], [5, 5, 6], [6, 6, 7], [7, 7, 9]]);
+
+  // A Beta Code mark is part of the letter, not a parenthesis to escape.
+  assertNfcEquals(
+    createConverter({ exclude: ["epsilon"] }).convert(
+      "w(s e)pole/mhsan",
+      "beta-code",
+      "beta-code",
+    ),
+    "w(s e)pole/mhsan",
+  );
+
+  // The reading conventions of the source write it back.
+  assertNfcEquals(
+    sigma.convert("LO/GOS SW=MA", "beta-code", "greek", {
+      betaCode: { case: "uppercase" },
+    }),
+    "λόγοS Sῶμα",
+  );
+  // A transliterated letter keeps the spelling its neighbours give it, and a
+  // vowel of a rough diphthong, whose h precedes both, keeps its breathing.
+  assertNfcEquals(
+    createConverter({ exclude: ["gamma"] }).convert(
+      "ángelos",
+      "transliteration",
+      "greek",
+    ),
+    "ἄngελος",
+  );
+  assertNfcEquals(
+    createConverter({ exclude: ["upsilon"] }).convert(
+      "autós",
+      "transliteration",
+      "greek",
+    ),
+    "αuτός",
+  );
+  assertNfcEquals(
+    createConverter({ exclude: ["iota"] }).convert(
+      "hoi",
+      "transliteration",
+      "greek",
+    ),
+    "οhi",
+  );
+  assertNfcEquals(
+    createConverter({ exclude: ["omicron"] }).convert(
+      "hoi",
+      "transliteration",
+      "greek",
+    ),
+    "oἱ",
+  );
+});
+
+test("the options of the converted text do not reach an excluded letter", () => {
+  const omega = createConverter({ exclude: ["omega"] });
+  const cases: Array<[ConversionOptions, Format, string]> = [
+    [{ diacritics: { all: "remove" } }, "transliteration", "tῷ"],
+    [{ diacritics: { iotaSubscript: "remove" } }, "beta-code", "tῷ"],
+    [{ greek: { accentuation: "monotonic" } }, "greek", "τῷ"],
+    [{ greek: { iotaSubscript: "adscript" } }, "beta-code", "tῷ"],
+    [{ greek: { iotaSubscript: "adscript" } }, "transliteration", "tῷ"],
+    [{ greek: { composition: "decomposed" } }, "transliteration", "tῷ"],
+    [{ preset: "sbl-general" }, "transliteration", "tῷ"],
+  ];
+  for (const [options, to, expected] of cases) {
+    assertNfcEquals(omega.convert("τῷ", "greek", to, options), expected);
+  }
+
+  const detailed = omega.convertDetailed("τῷ", "greek", "greek", {
+    diacritics: { all: "remove" },
+  });
+  assertNfcEquals(detailed.output, "τῷ");
+  assertEquals(detailed.lossy, false);
+  assertEquals(detailed.diagnostics.length, 1);
+});
+
+test("the transformations of the whole text reach an excluded letter", () => {
+  const sigma = createConverter({ exclude: ["sigma"] });
+  const title = { text: { letterCase: "title" } } as const;
+
+  assertNfcEquals(
+    sigma.convert("σῶμα λόγος", "greek", "greek", title),
+    "Σῶμα Λόγος",
+  );
+  assertNfcEquals(
+    sigma.convert("λόγος σῶμα", "greek", "transliteration", title),
+    "Lógoς Σō̃ma",
+  );
+  assertNfcEquals(
+    sigma.convert("lo/gos sw=ma", "beta-code", "greek", title),
+    "Λόγοs *sῶμα",
+  );
+  assertNfcEquals(
+    sigma.convert("λόγος σῶμα", "greek", "greek", {
+      text: { letterCase: "uppercase" },
+    }),
+    "ΛΌΓΟΣ ΣΩ͂ΜΑ",
+  );
+  const omega = createConverter({ exclude: ["omega"] });
+  assertNfcEquals(
+    omega.convert("τῷ λόγῳ", "greek", "transliteration", title),
+    "Tῷ Lógῳ",
+  );
+  assertNfcEquals(
+    omega.convert("Τῼ͂", "greek", "transliteration", {
+      text: { letterCase: "lowercase" },
+    }),
+    "tῷ",
+  );
+  assertNfcEquals(
+    createConverter({ preset: "perseus" }).convert("ϝάναξ", "greek", "greek", {
+      text: { letterCase: "title" },
+    }),
+    "Ϝάναξ",
+  );
+
+  // A numeral is written as one number, its excluded letters included.
+  const stigma = createConverter({ exclude: ["stigma"] });
+  const decimal = { text: { numerals: "decimal" } } as const;
+  assertNfcEquals(
+    stigma.convert("ϛʹ ιϛʹ ΙϚʹ αϛ", "greek", "transliteration", decimal),
+    "6 16 16 aϛ",
+  );
+  const detailed = stigma.convertDetailed(
+    "ιϛʹ",
+    "greek",
+    "transliteration",
+    decimal,
+  );
+  assertNfcEquals(detailed.output, "16");
+  assertEquals(
+    detailed.diagnostics.map(({ index, character }) => [index, character]),
+    [[1, "stigma"]],
+  );
+  let error: unknown;
+  try {
+    createConverter({ exclude: ["stigma"], outOfScopeBehavior: "reject" })
+      .convert("ϛʹ", "greek", "transliteration", decimal);
+  } catch (caught) {
+    error = caught;
+  }
+  assertEquals(error instanceof CharacterScopeError, true);
+});
+
+test("the letters around an excluded letter keep their place in its word", () => {
+  const omicron = createConverter({ exclude: ["omicron"] });
+
+  // A literal ended the word: σο gave ςο, and title case capitalized every
+  // letter after the omicron.
+  assertNfcEquals(
+    omicron.convert("σο λόγος οἱ", "greek", "greek"),
+    "σο λόγος οἱ",
+  );
+  assertNfcEquals(
+    omicron.convert("λόγος", "greek", "greek", {
+      text: { letterCase: "title" },
+    }),
+    "Λόγος",
+  );
+  assertNfcEquals(
+    omicron.convert("λόγος οἱ", "greek", "transliteration", {
+      text: { letterCase: "title" },
+    }),
+    "Lόgοs Οhi",
+  );
+
+  // A numeral cannot start inside a word.
+  const alpha = createConverter({ exclude: ["alpha"] });
+  assertNfcEquals(
+    alpha.convert("αιʹ ͵α", "greek", "transliteration", {
+      text: { numerals: "decimal" },
+    }),
+    "αiʹ 1000",
+  );
+  // The syllables of a word with an excluded letter cannot be counted: under
+  // monotonic accentuation, it keeps its accent.
+  assertNfcEquals(
+    alpha.convert("καὶ θεοῦ", "greek", "greek", {
+      greek: { accentuation: "monotonic" },
+    }),
+    "καί θεού",
+  );
+});
+
+test("excluding a letter leaves Greek and Beta Code written again unchanged", () => {
+  const text = "Θουκυδίδης Ἀθηναῖος ξυνέγραψε τὸν πόλεμον, ὡς ἐπολέμησαν " +
+    "ῥᾳδίως ἔχουσ’ ἐγώ ‘λόγος’ ϲῶμαϲ ιϛʹ ΙΣΤʹ ͵αστʹ";
+  const letters = [
+    "alpha",
+    "beta",
+    "gamma",
+    "delta",
+    "epsilon",
+    "zeta",
+    "eta",
+    "theta",
+    "iota",
+    "kappa",
+    "lambda",
+    "mu",
+    "nu",
+    "xi",
+    "omicron",
+    "pi",
+    "rho",
+    "sigma",
+    "tau",
+    "upsilon",
+    "phi",
+    "chi",
+    "psi",
+    "omega",
+    "stigma",
+  ];
+  for (const format of ["greek", "beta-code"] as const) {
+    const source = convert(text, "greek", format);
+    for (
+      const letterCase of [
+        "preserve",
+        "title",
+        "uppercase",
+        "lowercase",
+      ] as const
+    ) {
+      for (const numerals of ["alphabetic", "decimal"] as const) {
+        const options = { text: { letterCase, numerals } };
+        const expected = convert(source, format, format, options);
+        for (const letter of letters) {
+          assertEquals(
+            createConverter({ exclude: [letter] }).convert(
+              source,
+              format,
+              format,
+              options,
+            ),
+            expected,
+            `${format}, ${letterCase}, ${numerals}, without ${letter}`,
+          );
+        }
+      }
+    }
+  }
 });
 
 test("allow-lists apply to built-in and custom characters", () => {

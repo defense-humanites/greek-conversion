@@ -102,10 +102,37 @@ const converter = createConverter({
 ```
 
 The policy is semantic rather than graphical. Excluding `stigma` applies to
-its Greek, Beta Code, and transliterated spellings. An out-of-scope character
-is preserved as literal text using the source representation's canonical
-spelling; a matched custom form retains its registered spelling. The target
-may consequently contain a deliberate source-format fragment.
+its Greek, Beta Code, and transliterated spellings. An out-of-scope letter is
+kept as the source representation writes it in its word, in that
+representation's canonical spelling and with the conventions the source was
+read with (the `betaCode` or `transliteration` options of such a source): a
+final sigma stays final, a lunate sigma stays lunate, and the `n` of a
+transliterated `ng` stays `n`. The options that shape the converted text,
+`diacritics`, `greek`, and those of the target representation, do not reach
+it. The transformations of the whole text (`text`) do: its case follows
+`text.letterCase`, and under `numerals: "decimal"` a numeral it belongs to is
+written as one number. A matched custom form retains its registered spelling.
+The target may consequently contain a deliberate source-format fragment:
+
+```ts
+const noSigma = createConverter({ exclude: ["sigma"] });
+
+noSigma.convert("λόγος σῶμα", "greek", "transliteration", {
+  text: { letterCase: "title" },
+}); // Lógoς Σō̃ma
+```
+
+A kept letter is a letter of its word, so the letters around it keep their
+place in it: `σο`, with omicron out of scope, keeps its medial sigma, and
+title case capitalizes the first letter of the word only. No rule reads which
+letter it is, though. A letter whose spelling depends on its neighbour is
+written as if the kept letter were not a Greek letter: with alpha out of
+scope, the upsilon of `αὐτόν` is transliterated `y` (`αytón`), and with kappa
+out of scope, the gamma of `ἀνάγκη` is `g` (`anágκē`). Monotonic accentuation
+leaves the accent of a word that contains a kept letter, whose syllables it
+cannot count. In a transliterated source, a vowel of a diphthong with a rough
+breathing, whose `h` is written before both vowels, is kept with its own
+breathing: `hoi`, with iota out of scope, gives `οhi` in Greek.
 
 `convertDetailed()` keeps scope diagnostics separate from conversion losses:
 
@@ -130,7 +157,7 @@ as supplied, whether the spelling is built in, an alias, or a custom form.
 The result's `losses` and `spans` follow the
 [conversion-analysis contract](conversion-analysis.md#positions).
 
-Literal preservation is not information loss, so it does not set `lossy`.
+Keeping a letter is not information loss, so it does not set `lossy`.
 For strict processing, select rejection when creating the converter:
 
 ```ts

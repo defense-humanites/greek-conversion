@@ -20,7 +20,7 @@ The package is ESM-only.
 
 The API gains one option, `greek.iotaSubscript`, which writes the iota
 subscript on the line on request and changes nothing by default (see the
-README, *Write the iota on the line*). Three kinds of input convert
+README, *Write the iota on the line*). Four kinds of input convert
 differently:
 
 - In Greek output, a sigma before an elision apostrophe is medial:
@@ -36,6 +36,17 @@ differently:
   and the Beta Code `lo/gos3` gives `λόγος` (rc.8: `σῶμασ`, `λόγοσ`).
 - Under `text.numerals: "decimal"`, as in the ALA-LC presets, `στʹ` is the
   units of a longer numeral too: `ΙΣΤʹ` gives `16` (rc.8: `ISTʹ`).
+- A converter (`createConverter()`) writes a letter it keeps out of its scope
+  as the source writes it in its word, without the options of the converted
+  text: with sigma excluded, `λόγος σῶμα` gives `λόγος σῶμα` in Greek (rc.8:
+  `λόγος ςῶμα`), and with omega excluded, `τῷ` gives `tῷ` in transliteration
+  with `diacritics: { all: "remove" }` (rc.8: `tω`). The transformations of
+  the whole text (`text`) still apply, in context: under title case,
+  `σῶμα λόγος` gives `Σῶμα Λόγος` (rc.8: `ΣΩ͂μα ΛόγοΣ`), and under
+  `numerals: "decimal"`, `ιϛʹ` with stigma excluded gives `16` (rc.8: `iϛʹ`).
+  The letters around a kept letter stay in its word: `σο`, with omicron
+  excluded, keeps its `σ` (rc.8: `ςο`), and monotonic accentuation keeps the
+  accent of such a word, whose syllables it cannot count.
 
 ## Updating from `1.0.0-rc.7`
 

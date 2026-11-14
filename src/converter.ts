@@ -11,13 +11,21 @@ import {
   type ConversionSpan,
   findConversionLosses,
 } from "./losses.ts";
+import {
+  isBoundaryTransparent,
+  isDiphthongAt,
+  isWordInitial,
+  keptLetter,
+} from "./context.ts";
 import { assertFormat, assertTextInput, grapheme, literal } from "./model.ts";
-import type { Document, Format, Letter, Token } from "./model.ts";
-import type {
-  ConversionOptions,
-  Preset,
-  ResolvedConversionOptions,
+import type { Document, Format, Grapheme, Letter, Token } from "./model.ts";
+import {
+  type ConversionOptions,
+  DEFAULT_CONVERSION_OPTIONS,
+  type Preset,
+  type ResolvedConversionOptions,
 } from "./options.ts";
+import { decimalNumeralTokens } from "./orthography.ts";
 import {
   isCharacterInPresetScope,
   presetMappingIssue,
@@ -85,7 +93,12 @@ export interface CharacterRepertoireDefinition {
 export interface ConverterConfiguration extends CharacterRepertoireDefinition {
   /** Preset options and audited built-in scope bound to every conversion. */
   preset?: Preset;
-  /** Preserves unsupported recognized input by default or rejects the conversion. */
+  /**
+   * Preserves unsupported recognized input by default or rejects the
+   * conversion. A preserved letter is written as the source writes it in its
+   * word: of the conversion's options, only `text` reaches it, as it reaches
+   * the whole text.
+   */
   outOfScopeBehavior?: ConverterOutOfScopeBehavior;
   /** Additional spellings of built-in semantic letters. */
   aliases?: readonly CharacterAliasDefinition[];
@@ -500,6 +513,7 @@ export class Converter {
     // The parsed token each prepared token comes from.
     const origins: number[] | undefined = track ? [] : undefined;
     let prepared = 0;
+    const kept: KeptLetters = { parsed, format, options };
 
     const document = parsed.flatMap((token, index): readonly Token[] => {
       const before = diagnostics.length;
@@ -513,6 +527,7 @@ export class Converter {
         target,
         diagnostics,
         occurrences,
+        kept,
       );
       if (diagnostics.length > before) {
         diagnostics[before].index = prepared;
@@ -560,13 +575,14 @@ export class Converter {
     target: Format | undefined,
     diagnostics: CharacterScopeDiagnostic[],
     occurrences: Map<string, number>,
+    kept: KeptLetters,
   ): readonly Token[] {
     if (token.kind === "grapheme") {
       if (!this.#isAllowed(token.letter, parsed, index)) {
         diagnostics.push(
           scopeDiagnostic(index, token.letter, this.#outOfScopeBehavior),
         );
-        return literalTokens(encodeResolved([token], format, options));
+        return keptTokens(kept, index);
       }
       const issue = this.#preset !== undefined && target !== undefined
         ? presetMappingIssue(
@@ -587,7 +603,7 @@ export class Converter {
           this.#outOfScopeBehavior,
         ),
       );
-      return literalTokens(encodeResolved([token], format, options));
+      return keptTokens(kept, index);
     }
 
     const custom = this.#sentinels.get(token.value);
@@ -956,6 +972,153 @@ function mappingDiagnostic(
 
 function literalTokens(value: string): readonly Token[] {
   return Array.from(value).map(literal);
+}
+
+/**
+ * The letters of a source document that a converter keeps as they were, and
+ * how the source format writes them, found once for all of them.
+ */
+interface KeptLetters {
+  readonly parsed: Document;
+  readonly format: Format;
+  readonly options: ResolvedConversionOptions;
+  /** The options that write them (`keptOptions()`). */
+  writing?: ResolvedConversionOptions;
+  /** The last word written with them (`writtenWord()`). */
+  word?: WrittenWord;
+  /** The tokens of decimal numerals (`decimalNumeralTokens()`). */
+  numerals?: Uint8Array;
+}
+
+/**
+ * The tokens `start` to `end` of a document, written in its format, with the
+ * span of each in the output.
+ */
+interface WrittenWord {
+  readonly start: number;
+  readonly end: number;
+  readonly output: string;
+  readonly spans: SpanTable;
+}
+
+/**
+ * The tokens that keep the letter at `index` as it was, outside the
+ * converter's scope: its spelling in the source format, as its word is
+ * written in it (`keptSpelling()`), in literals that are letters of their
+ * word (`keptLetter()`). Under `numerals: "decimal"`, a letter of a numeral
+ * stays a letter, so that the numeral is written as one number, as the
+ * transformations of the whole text are.
+ */
+function keptTokens(kept: KeptLetters, index: number): readonly Token[] {
+  if (kept.options.text.numerals === "decimal") {
+    kept.numerals ??= decimalNumeralTokens(kept.parsed);
+    if (kept.numerals[index] === 1) return [kept.parsed[index]];
+  }
+  return Array.from(keptSpelling(kept, index), (char) => keptLetter(char));
+}
+
+/**
+ * How the source format writes the letter at `index` in its word, with the
+ * source's own conventions and none of the conversion's but those of the
+ * whole text (`keptOptions()`): a final sigma stays final, and `ng` keeps
+ * its `n` before `g`. Its span in its word written once is that spelling,
+ * unless it shares it with a neighbour, as the two letters of a modern
+ * digraph do (`b` for μπ), or a vowel of a diphthong with a rough breathing
+ * is transliterated, whose `h` is written before both (`hoi`): such a
+ * letter is written alone, with its own marks.
+ */
+function keptSpelling(kept: KeptLetters, index: number): string {
+  const options = kept.writing ??= keptOptions(kept.options, kept.format);
+  let word = kept.word;
+  if (word === undefined || index < word.start || index >= word.end) {
+    word = kept.word = writtenWord(kept.parsed, index, kept.format, options);
+  }
+  const { output, spans: { starts, ends } } = word;
+  const position = index - word.start;
+  const start = starts[position];
+  const end = ends[position];
+  const shared = (neighbour: number) =>
+    starts[neighbour] === start && ends[neighbour] === end;
+  if (
+    start < end && !shared(position - 1) && !shared(position + 1) &&
+    !(kept.format === "transliteration" &&
+      splitsRoughDiphthong(kept.parsed, index))
+  ) {
+    return output.slice(start, end);
+  }
+  // Alone, the letter would start a word: under title case, it takes the
+  // case of its place in the source.
+  const letterCase = options.text.letterCase !== "title"
+    ? options.text.letterCase
+    : isWordInitial(kept.parsed, index)
+    ? "uppercase"
+    : "lowercase";
+  return encodeResolved([kept.parsed[index]], kept.format, {
+    ...options,
+    text: { ...options.text, letterCase },
+  });
+}
+
+/**
+ * The word of the letter at `index`, with the token on either side of it (a
+ * space, a keraia, an apostrophe), written in the source format. The
+ * spelling of a letter depends on its word only, so that a conversion writes
+ * no more of the source again than the words of the letters it keeps.
+ */
+function writtenWord(
+  document: Document,
+  index: number,
+  format: Format,
+  options: ResolvedConversionOptions,
+): WrittenWord {
+  const inWord = (token: Token) =>
+    token.kind === "grapheme" || isBoundaryTransparent(token);
+  let start = index;
+  while (start > 0 && inWord(document[start - 1])) start--;
+  let end = index + 1;
+  while (end < document.length && inWord(document[end])) end++;
+  start = Math.max(0, start - 1);
+  end = Math.min(document.length, end + 1);
+  const { output, spans } = encodeTracked(
+    document.slice(start, end),
+    format,
+    options,
+  );
+  return { start, end, output, spans };
+}
+
+/** Whether the letter at `index` is a vowel of a diphthong whose second vowel has a rough breathing. */
+function splitsRoughDiphthong(document: Document, index: number): boolean {
+  const rough = (first: number) =>
+    isDiphthongAt(document, first) &&
+    (document[first + 1] as Grapheme).diacritics.has("rough");
+  return rough(index) || rough(index - 1);
+}
+
+/**
+ * The options that write a letter kept as it was: the conventions the source
+ * was read with (its format's own group), the sigma shapes of the source
+ * (`greek.sigma` and `greek.finalSigma` set to `"preserve"`), and, of the
+ * conversion's options, only the letter case, which `text` applies to the
+ * whole text. Its marks, its accentuation, and its iota subscript stay as
+ * they were.
+ */
+function keptOptions(
+  options: ResolvedConversionOptions,
+  format: Format,
+): ResolvedConversionOptions {
+  const defaults = DEFAULT_CONVERSION_OPTIONS;
+  return {
+    transliteration: format === "transliteration"
+      ? options.transliteration
+      : { ...defaults.transliteration },
+    greek: { ...defaults.greek, sigma: "preserve", finalSigma: "preserve" },
+    betaCode: format === "beta-code"
+      ? options.betaCode
+      : { ...defaults.betaCode },
+    text: { ...defaults.text, letterCase: options.text.letterCase },
+    diacritics: { ...defaults.diacritics },
+  };
 }
 
 /** Reads the preprocessed text again, for its positions only. */

@@ -46,6 +46,20 @@ change.
   `στʹ` was read, so `ΙΣΤʹ` gave `ISTʹ`; it now gives `16`, and `͵αστʹ` gives
   `1006`. Read as 200 and 300, the pair would break the descending order of
   the digits, so it cannot mean anything else.
+- A letter that a converter keeps out of its scope (`createConverter()` with
+  `exclude`, a `repertoire`, or a bound preset) is written as the source
+  writes it in its word, and the letters around it stay in that word (#68). It
+  was written alone, with the options of the converted text: with sigma
+  excluded, `λόγος σῶμα` gave `λόγος ςῶμα`, and with omega excluded, `τῷ` gave
+  `tω` in transliteration with `diacritics: { all: "remove" }`, which
+  `convertDetailed()` did not report. A kept letter also ended its word, so
+  that `σο`, with omicron excluded, gave `ςο`. Only the transformations of the
+  whole text (`text`) now reach a kept letter, in its context: title case
+  capitalizes it at the start of a word only (`σῶμα λόγος`, sigma excluded,
+  gave `ΣΩ͂μα ΛόγοΣ` and gives `Σῶμα Λόγος`), and under `numerals: "decimal"`
+  a numeral it belongs to is written as one number (`ιϛʹ`, stigma excluded,
+  gave `iϛʹ` and gives `16`). In Beta Code output, the marks of a kept Beta
+  Code letter are no longer escaped as punctuation (`e)` gave `e]1`).
 
 ## [1.0.0-rc.8] - 2026-11-11
 
