@@ -255,7 +255,7 @@ test("a lunate sigma the source does not have is reported when it reads back oth
   assertEquals(
     convertDetailed("sōma", "transliteration", "greek", options).losses
       .map(({ code, glyphVariant }) => [code, glyphVariant]),
-    [["removed-glyph-variant", undefined]],
+    [["added-glyph-variant", "lunate-sigma"]],
   );
   // Without lunateSigma: "c", the lunate sigma reads back as s.
   assertEquals(

@@ -154,8 +154,9 @@ options. Consequently, for a Greek source:
 A conversion can also write a form the source did not have: under
 `greek.sigma: "lunate"`, a sigma read from `s` is written `ϲ`, which converts
 back to `c` under `lunateSigma: "c"`. Transliteration, the source format,
-writes `s` from the source and `c` from the text read back, so the loss is
-reported, without `glyphVariant`.
+writes `s` from the source and `c` from the text read back, so
+`convertDetailed()` reports `added-glyph-variant`, with the form written
+(`lunate-sigma`) in `glyphVariant`.
 
 ### Canonical Greek orthography
 

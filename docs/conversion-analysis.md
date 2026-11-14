@@ -67,7 +67,8 @@ the text the loss is about.
 | Code | Meaning |
 | --- | --- |
 | `changed-case` | A source letter is retained but its uppercase/lowercase distinction is not |
-| `removed-glyph-variant` | A letter form of the source (the lunate, final, or medial sigma, or a symbol form such as `ϐ`) is absent from the reparsed target, and the options do not write it again; `glyphVariant` identifies it. Without `glyphVariant`, the target writes a form the source did not have and that reads back as another letter spelling |
+| `removed-glyph-variant` | A letter form of the source (the lunate, final, or medial sigma, or a symbol form such as `ϐ`) is absent from the reparsed target, and the options do not write it again; `glyphVariant` identifies it |
+| `added-glyph-variant` | The target writes a letter form the source did not have, which reads back as another spelling (a lunate sigma written `c` under `lunateSigma: "c"`); `glyphVariant` identifies the form written |
 | `removed-diacritic` | A source diacritic is absent from the reparsed target; `diacritic` identifies it |
 | `displaced-diacritic` | A source breathing is absent from its vowel but reappears on the following vowel of the reparsed target: a hiatus marked only by that breathing is read as a diphthong; `diacritic` identifies it |
 | `inferred-breathing` | The target does not distinguish an unmarked initial vowel from one with a smooth breathing, so the reparsed target carries a smooth breathing the source did not have; `index` is the vowel that acquires it (the second element of an initial diphthong), and `diacritic` is `"smooth"` |

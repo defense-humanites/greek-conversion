@@ -49,7 +49,9 @@ change.
 - `greek.medialBeta: "preserve"`, the new default, writes `ϐ` where the source
   notes it and `β` elsewhere.
 - A `removed-glyph-variant` loss names the source form in its new
-  `glyphVariant` field.
+  `glyphVariant` field. The new code `added-glyph-variant` reports a form the
+  target writes where the source has none, and that converts back as another
+  spelling; its `glyphVariant` is the form written.
 
 ### Changed
 
@@ -153,7 +155,7 @@ change.
   sigma is reported when it converts back otherwise. Under
   `transliteration.lunateSigma: "c"` and `greek.sigma: "lunate"`, `sōma`
   gives `ϲωμα`, which converts back to `cōma`; `convertDetailed()` reported
-  no loss. The loss has no `glyphVariant`, since the source had none.
+  no loss, and now reports `added-glyph-variant`.
 
 ## [1.0.0-rc.8] - 2026-11-11
 

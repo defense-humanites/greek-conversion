@@ -87,6 +87,12 @@ export type Diacritic =
  * one case: `ϴ` and `ϒ` are capitals, and the others small letters. The
  * sigma shapes fit both cases: the lunate sigma has a capital and a small
  * form, and a final or medial shape remains as provenance on a capital.
+ *
+ * A name is the Unicode name of the form without `GREEK`, and without
+ * `SYMBOL` where a qualifier already tells the form from the letter:
+ * `lunate-sigma` (GREEK LUNATE SIGMA SYMBOL), `lunate-epsilon`,
+ * `upsilon-hook` (GREEK UPSILON WITH HOOK SYMBOL). The others end in
+ * `-symbol`: `beta-symbol`, `capital-theta-symbol`.
  */
 export type GlyphVariant =
   | "lunate-sigma"

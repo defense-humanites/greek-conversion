@@ -30,9 +30,11 @@ The optional `glyphVariant` records the form of the letter in the source: a
 sigma shape (`lunate-sigma`, `final-sigma`, `medial-sigma`) or a symbol form
 (`beta-symbol` for `ϐ`, `theta-symbol`, `capital-theta-symbol`, `phi-symbol`,
 `pi-symbol`, `kappa-symbol`, `rho-symbol`, `lunate-epsilon`, `upsilon-hook`).
-A symbol form belongs to one case, and `validateDocument()` reports it on a
-grapheme of the other case or another letter; Greek orthography drops it when
-a case policy changes the case. The sigma shapes fit both cases.
+Each name is the Unicode name of the form without `GREEK`, and without
+`SYMBOL` where a qualifier already tells the form from the letter (lunate,
+hook). A symbol form belongs to one case, and `validateDocument()` reports it
+on a grapheme of the other case or another letter; Greek orthography drops it
+when a case policy changes the case. The sigma shapes fit both cases.
 
 `parse()` allocates new tokens on each call. `grapheme()` reads the supplied
 diacritics into the shared set for those marks, so a later change to the
