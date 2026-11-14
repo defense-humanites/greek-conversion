@@ -1251,24 +1251,15 @@ function openPicker(): void {
 function closePicker(focusButton: boolean): void {
   if (optionPicker.hidden) return;
   optionPicker.hidden = true;
+  controls?.style.setProperty("--picker-room", "0px");
   setPreview(undefined);
   addOptionButton.setAttribute("aria-expanded", "false");
   if (focusButton) addOptionButton.focus();
 }
 
 /** Under the button, kept inside the settings. */
-/**
- * Floating under the button while the list asks for an option, which
- * changes nothing yet, or offers two values at most, which hide no more
- * than the head of the output; in the flow for more, so that the output
- * stays in view for their preview.
- */
-function placePicker(floating: boolean): void {
-  optionPicker.classList.toggle("floating", floating);
-  if (!floating) {
-    optionPicker.style.left = optionPicker.style.top = "";
-    return;
-  }
+/** Under its button, floating over the page, kept inside the settings. */
+function placePicker(): void {
   const line = optionPicker.offsetParent as HTMLElement | null;
   const room = (line?.clientWidth ?? 0) - optionPicker.offsetWidth;
   optionPicker.style.left = `${
@@ -1277,6 +1268,27 @@ function placePicker(floating: boolean): void {
   optionPicker.style.top = `${
     addOptionButton.offsetTop + addOptionButton.offsetHeight + 6
   }px`;
+}
+
+const controls = optionPicker.closest<HTMLElement>(".controls");
+
+/**
+ * Two rows of values hide no more than the head of the output. Beyond them,
+ * the settings grow by the height of the rows that follow, so that the
+ * output moves down with the list and stays in view for the preview.
+ */
+function makeRoom(): void {
+  const rows = pickerEntry
+    ? [...optionList.querySelectorAll<HTMLElement>('[role="option"]')]
+    : [];
+  let room = 0;
+  if (rows.length > 2) {
+    const list = optionList.getBoundingClientRect();
+    const second = rows[1].getBoundingClientRect();
+    const last = rows[rows.length - 1].getBoundingClientRect();
+    room = Math.max(0, Math.min(last.bottom, list.bottom) - second.bottom);
+  }
+  controls?.style.setProperty("--picker-room", `${Math.ceil(room)}px`);
 }
 
 function showPickerItems(): void {
@@ -1296,7 +1308,7 @@ function showPickerItems(): void {
     optionList.removeAttribute("aria-labelledby");
     optionList.setAttribute("aria-label", "Conversion options");
     setPreview(undefined);
-    placePicker(true);
+    placePicker();
     const set = new Set(
       settingsOf(conversionOptions).map(({ group, key }) => `${group}.${key}`),
     );
@@ -1341,9 +1353,6 @@ function showPickerItems(): void {
     const values = entry.values
       .filter((value) => value !== standard)
       .map((value) => ({ value, example: valueExample(entry, value) }));
-    // Two rows at most hide no more than the head of the output; more go
-    // in the flow, so that the output stays in view for the preview.
-    placePicker(values.length + (standard === undefined ? 0 : 1) <= 2);
     // The standard's value heads the list, as the reference, not as a choice.
     if (standard !== undefined) {
       const first = values.find(({ example }) => example)?.example;
@@ -1387,6 +1396,7 @@ function showPickerItems(): void {
     empty.textContent = pickerEntry ? "No other value" : "No option matches";
     optionList.append(empty);
   }
+  makeRoom();
   setPickerActive(0);
 }
 
@@ -1438,8 +1448,9 @@ function setPickerActive(index: number): void {
 }
 
 addEventListener("resize", () => {
-  if (optionPicker.classList.contains("floating") && !optionPicker.hidden) {
-    placePicker(true);
+  if (!optionPicker.hidden) {
+    placePicker();
+    makeRoom();
   }
 });
 addOptionButton.addEventListener("click", () => {

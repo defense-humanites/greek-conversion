@@ -307,7 +307,8 @@ h1 span {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 20px 22px;
+  /* The option picker's room for its longer lists (`makeRoom()`). */
+  padding: 20px 22px calc(20px + var(--picker-room, 0px));
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--raised);
@@ -638,25 +639,20 @@ h1 span {
   flex-basis: 100%;
 }
 /*
- * The picker opens in the flow, under the options, when it previews more
- * than two values, so that the output stays in view; otherwise it floats
- * under its button (`.floating`).
+ * The picker floats under its button; for longer lists of values, the
+ * settings make room for it, so that the output stays in view.
  */
 .option-picker {
+  position: absolute;
+  z-index: 3;
   display: flex;
-  flex: 1 1 100%;
   flex-direction: column;
   gap: 6px;
-  max-width: 520px;
+  width: min(360px, 100%);
   padding: 8px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--raised);
-}
-.option-picker.floating {
-  position: absolute;
-  z-index: 3;
-  width: min(360px, 100%);
   box-shadow: var(--shadow);
 }
 .option-picker[hidden] {
