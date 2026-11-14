@@ -1,5 +1,13 @@
 import { ALPHABET } from "../src/alphabet.ts";
-import type { Suggestion } from "./options_suggestions.ts";
+
+/** A completion at the caret: the text it puts in, and where. */
+export interface Suggestion {
+  label: string;
+  replacement: string;
+  start: number;
+  end: number;
+  cursor: number;
+}
 
 type Frame = {
   kind: "object" | "array";

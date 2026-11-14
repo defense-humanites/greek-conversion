@@ -37,7 +37,7 @@
     "check:format": "dprint check",
     "check:lint": "oxlint --deny-warnings",
     "check:types": "tsc -p tsconfig.json && tsc -p tsconfig.build.json --noEmit && tsc -p web",
-    "check:docs": "node scripts/check_api_docs.ts && node scripts/check_readme.ts && node scripts/generate_preset_docs.ts --check && node scripts/check_metadata.ts",
+    "check:docs": "node scripts/check_api_docs.ts && node scripts/check_readme.ts && node scripts/generate_preset_docs.ts --check && node scripts/generate_option_relevance.ts --check && node scripts/check_metadata.ts",
     "format": "dprint fmt",
     "test": "node --test \"tests/**/*_test.ts\"",
     "bench": "node bench/main.ts",
@@ -45,6 +45,7 @@
     "npm:build": "node scripts/build_npm.ts",
     "npm:check": "npm run npm:build && node scripts/npm_smoke.mjs && node scripts/npm_types_smoke.mjs && npm pack ./npm --dry-run",
     "jsr:check": "jsr publish --dry-run",
+    "site:options": "node scripts/generate_option_relevance.ts",
     "site:build": "tsc -p web && node scripts/build_site.ts"
   },
   "devDependencies": {

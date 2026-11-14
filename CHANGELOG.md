@@ -7,6 +7,27 @@ change.
 
 ## [Unreleased]
 
+### Changed
+
+- The playground has a new design, in the project's identity (tessera
+  symbol, Bricolage Grotesque, Papier and Nuit themes). Source and target are
+  chosen from two segmented groups; the source is detected from the text by
+  default, plain Latin letters reading as transliteration. The standards
+  offered are those of the formats in use. Conversion options are pills after
+  the standard, added from a searchable list of the options that change the
+  result of the conversion in use (measured by `npm run site:options`),
+  instead of a JSON field; the sentence says "Restyle" when both sides share
+  a format. Examples, in a menu of the source field, now go with the selected
+  standard, each with a note on the rule it shows, and are checked against
+  the library by `tests/playground_examples_test.ts`. Letters whose distinctions the
+  target loses are underlined in the source; letters of another script,
+  copied as is but read back as Greek (`unrepresented-literal`), are dotted,
+  listed under their own heading, and not counted as lost distinctions. The
+  character inventory and the output sit in tabs, and the generated code is
+  highlighted and shows the result. Texts in all three formats are set in
+  Literata Light, served by the playground with the letters it lacked
+  (`web/fonts/README.md`).
+
 ## [1.0.0-rc.8] - 2026-11-11
 
 Eighth release candidate for `1.0.0`. The API does not change. Following #47,
