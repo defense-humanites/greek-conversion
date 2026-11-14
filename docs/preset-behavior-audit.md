@@ -28,8 +28,12 @@ BnF specifies the right keraia as an acute, the left keraia as a comma, a
 combining smooth breathing on the Latin letter, and a combining circumflex
 accent. The acute can coincide with a vowel's ordinary accent (`αʹ` and `ά`
 both render as `á` under `bnf-core`), so the inverse parser does not invent
-numeral provenance. `convertDetailed()` reports the loss. The BnF table also
-uses both koppa forms with Latin `q`, which likewise cannot be inverted
+numeral provenance there, and `convertDetailed()` reports the loss. A
+consonant bears no accent: its acute reads back as the keraia (`c̄́` → `ϛʹ`),
+as does a comma before `c̄` or `s̄`, the stigma and sampi of numerals
+(`,c̄` → `͵ϛ`). When the accents are removed, the right keraia is written `ʹ`,
+since an acute would read back as an accent and be removed. The BnF table
+also uses both koppa forms with Latin `q`, which likewise cannot be inverted
 without source provenance.
 Marked uppercase stigma and sampi numerals render with lowercase Latin `c̄`
 and `s̄` under BnF; `convertDetailed()` reports the changed case.

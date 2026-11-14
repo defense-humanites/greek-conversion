@@ -205,7 +205,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
 **Known limitations:**
 
 - Context-dependent access-point variants such as kappa → c and chi → kh are not selected automatically.
-- BnF keraiai are rendered as a comma and acute in transliteration, but reverse conversion cannot always distinguish the resulting accent from a letter accent.
+- BnF keraiai are rendered as a comma and acute in transliteration. The acute reads back as the keraia after a consonant, and the comma before c̄ or s̄, but after a vowel the acute reads back as an accent; with the accents removed, the right keraia is written ʹ.
 - Upper Cypriot syndyazomeno shares U+0306 with the ordinary breve and cannot be distinguished mechanically; lower syndyazomeno is not interpreted as a semantic mark.
 - The Iliad/Odyssey numeral exception is not selected without the relevant cataloguing context.
 - An iota adscript written after a marked capital (Ἅιδῃ) is kept as a letter rather than omitted as the table prescribes.
@@ -472,6 +472,9 @@ right numeral mark becomes an acute accent and the left numeral mark becomes
 a comma. This matches BnF spelling, but a vowel with an acute accent can be
 indistinguishable from a vowel followed by the right keraia. Forward
 conversion therefore reports information loss through `convertDetailed()`;
-the transliteration parser does not guess which character was intended.
+the transliteration parser does not guess which character was intended. A
+consonant bears no accent, so its acute reads back as the keraia, and a comma
+before `c̄` or `s̄`, the stigma and sampi of numerals, as the left keraia. With
+the accents removed, the right keraia is written `ʹ`.
 Canonical NFC output may compose the acute with a preceding Latin vowel.
 Set `transliteration.keraia: "greek"` to keep the original numeral marks.

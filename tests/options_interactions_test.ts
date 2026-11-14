@@ -523,3 +523,90 @@ test("vowel pairs stay idempotent next to breathings, diphthongs, and capitals",
   }
   assertEquals(failures, []);
 });
+
+test("under upsilon: y-with-ou-v-f alone, v and f read back as upsilon", () => {
+  // ISO 843 Type 2 writes the upsilon of αυ, ευ, ηυ as v or f, with its
+  // accent on the vowel. Without beta: "v" or phi: "f", nothing else claims
+  // the letter: it reads back, with its accent. It was read as text, which
+  // ended the word, so that title case wrote `Aftós` again as `AfTós`.
+  const options = {
+    transliteration: { upsilon: "y-with-ou-v-f" },
+  } as const;
+  for (
+    const [greek, latin] of [
+      ["αὐτός", "aftós"],
+      ["εὖ", "ẽf"],
+      ["Εὔβοια", "Évboia"],
+      ["αὑτοῦ", "haftoũ"],
+    ] as const
+  ) {
+    const result = convertDetailed(greek, "greek", "transliteration", options);
+    assertNfcEquals(result.output, latin);
+    assertEquals(result.lossy, false, greek);
+    assertNfcEquals(
+      convert(latin, "transliteration", "greek", options),
+      greek,
+    );
+  }
+  for (
+    const letterCase of ["preserve", "uppercase", "title", "lowercase"] as const
+  ) {
+    const caseOptions = { ...options, text: { letterCase } };
+    const once = convert("αὐτός εὖ", "greek", "transliteration", caseOptions);
+    assertNfcEquals(
+      convert(once, "transliteration", "transliteration", caseOptions),
+      once,
+      letterCase,
+    );
+  }
+  // Under ISO 843 Type 2, beta and phi are v and f: the pair reads back as
+  // they do, as documented.
+  assertNfcEquals(
+    convert("’aftós", "transliteration", "greek", {
+      preset: "iso-843-type-2",
+    }),
+    "’αφτός",
+  );
+});
+
+test("BnF numerals stay as written under every letter case and mark removal", () => {
+  // An acute on a consonant cannot be an accent: it reads back as the right
+  // keraia, and a comma before c̄ or s̄ as the left one. Removing the accents
+  // writes the right keraia ʹ, which an acute would not survive.
+  const bnf = { preset: "bnf-core" } as const;
+  assertNfcEquals(
+    convert("c̄́ s̄́ ,c̄", "transliteration", "greek", bnf),
+    "ϛʹ ϡʹ ͵ϛ",
+  );
+  assertEquals(
+    convertDetailed("ϛʹ ͵ϛ", "greek", "transliteration", bnf).lossy,
+    false,
+  );
+  // A comma before another letter is a comma.
+  assertNfcEquals(convert("a,b", "transliteration", "greek", bnf), "α,β");
+  assertNfcEquals(
+    convert("ϛʹ αʹ ͵ϛ", "greek", "transliteration", {
+      ...bnf,
+      diacritics: { all: "remove" },
+    }),
+    "c̄ʹ aʹ ,c̄",
+  );
+  const numerals = "ϛʹ Ϛʹ αʹ ιαʹ ϙʹ ϡʹ ͵ϛ ͵Ϡ βʹ ϡαʹ ϡβʹ";
+  for (
+    const letterCase of ["preserve", "uppercase", "title", "lowercase"] as const
+  ) {
+    for (const marks of [{}, { diacritics: { all: "remove" } }] as const) {
+      const options = {
+        transliteration: { keraia: "bnf" },
+        text: { letterCase },
+        ...marks,
+      } as const;
+      const once = convert(numerals, "greek", "transliteration", options);
+      assertNfcEquals(
+        convert(once, "transliteration", "transliteration", options),
+        once,
+        JSON.stringify(options),
+      );
+    }
+  }
+});

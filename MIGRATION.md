@@ -26,7 +26,7 @@ transliteration (*Restyle a transliteration*). A restyle that went through
 Greek in two calls can take one,
 `reencode(text, "transliteration", { ...target, source })`, which also keeps
 what the Greek step dropped, such as a lunate sigma that the source writes
-`c`. Four kinds of input convert differently:
+`c`. Five kinds of input convert differently:
 
 - In Greek output, a sigma before an elision apostrophe is medial:
   `ἔχουσ’ ἐγώ` and `σ’ αγαπώ` keep their `σ`, and the Beta Code
@@ -57,6 +57,13 @@ what the Greek step dropped, such as a lunate sigma that the source writes
   `convertDetailed()`, a kept letter is one literal, so the `spans` of a
   converter that keeps letters can be fewer (`a#2b`, stigma excluded, had 4
   and has 3).
+- Two transliteration options read back what they write. Under
+  `upsilon: "y-with-ou-v-f"` without `beta: "v"` or `phi: "f"`, `aftós` gives
+  `αὐτός` (rc.8: `ἀfτός`). Under `keraia: "bnf"`, as in `bnf-core`, an acute
+  after a consonant is the right keraia (`c̄́` gives `ϛʹ`; rc.8: `ϛ́`), and a
+  comma before `c̄` or `s̄` the left one (`,c̄` gives `͵ϛ`; rc.8: `,ϛ`); with
+  the accents removed, the right keraia is written `ʹ` (`αʹ` gives `aʹ`;
+  rc.8: `á`).
 
 ## Updating from `1.0.0-rc.7`
 
