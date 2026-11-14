@@ -221,8 +221,11 @@ function presetFormat(preset: Preset): Format {
 
 /** The reader's standard, kept when the formats hide it for a while. */
 let chosenPreset: Preset | "" = "";
-/** The last standard chosen for each format, offered again on return. */
-const lastPreset: Partial<Record<Format, Preset>> = {};
+/**
+ * The last choice for each format, offered again on return: a standard, or
+ * "" when the reader chose none.
+ */
+const lastPreset: Partial<Record<Format, Preset | "">> = {};
 
 const PRESET_GROUPS: Readonly<Partial<Record<Format, string>>> = {
   transliteration: "Transliteration",
@@ -260,7 +263,10 @@ function syncPresets(from: Format, to: Format): boolean {
   const applies = (preset: Preset | "" | undefined): preset is Preset =>
     preset !== undefined && preset !== "" &&
     formats.includes(presetFormat(preset));
-  const fallback = formats.map((format) => lastPreset[format]).find(applies);
+  // A standard of a format in use, or the reader's choice of none for it.
+  const fallback = formats.map((format) => lastPreset[format]).find((
+    preset,
+  ) => preset === "" || applies(preset));
   presetSelect.value = applies(chosenPreset) ? chosenPreset : fallback ?? "";
   // Greek to Greek: no standard applies.
   presetSelect.disabled = formats.length === 0;
@@ -368,7 +374,14 @@ function currentPreset(): Preset | "" {
 
 function choosePreset(preset: Preset | ""): void {
   chosenPreset = preset;
-  if (preset) lastPreset[presetFormat(preset)] = preset;
+  if (preset) {
+    lastPreset[presetFormat(preset)] = preset;
+    return;
+  }
+  // No standard: for every format in use, until the reader picks one.
+  for (const format of [sourceFormat(), targetFormat()]) {
+    if (format !== "greek") lastPreset[format] = "";
+  }
 }
 
 function showPreset(): void {
@@ -915,9 +928,9 @@ function restoreState(): void {
   const to = state.get("to");
   setSourceChoice(known(from) ? from : "auto");
   if (known(to)) setTarget(to);
+  if (state.has("text")) source.value = state.get("text") ?? "";
   const preset = presets.find(({ id }) => id === state.get("preset"))?.id;
   choosePreset(preset ?? "");
-  if (state.has("text")) source.value = state.get("text") ?? "";
   conversionOptions = {};
   try {
     conversionOptions = knownOptions(JSON.parse(state.get("options") ?? "{}"));
