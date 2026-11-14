@@ -222,6 +222,21 @@ test("a form that exists in one case is lost when the case changes", () => {
   );
 });
 
+test("a numeral keeps a lunate sigma the source notes", () => {
+  assertNfcEquals(convert("ϲʹ ͵ϲ σʹ", "greek", "greek"), "ϲʹ ͵ϲ σʹ");
+  assertEquals(convert("ϲʹ σʹ", "greek", "beta-code"), "s3# s#");
+  assertNfcEquals(convert("s3# s#", "beta-code", "greek"), "ϲʹ σʹ");
+  assertEquals(glyphLosses("ϲʹ", "greek", "beta-code"), []);
+  // The style of "lunate" leaves numerals standard, and "standard" folds.
+  for (const sigma of ["lunate", "standard"] as const) {
+    assertNfcEquals(
+      convert("ϲʹ σʹ", "greek", "greek", { greek: { sigma } }),
+      "σʹ σʹ",
+    );
+    assertEquals(glyphLosses("ϲʹ", "greek", "greek", { greek: { sigma } }), []);
+  }
+});
+
 test("Beta Code s3 and the BnF c give a lunate sigma", () => {
   assertNfcEquals(convert("s3w=ma", "beta-code", "greek"), "ϲῶμα");
   assertNfcEquals(

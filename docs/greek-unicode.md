@@ -157,10 +157,11 @@ A form belongs to one case, except the lunate sigma, which has a capital and a
 small form. Changing the case of `ϑ` or `ϐ` writes `Θ` or `Β`, as
 `toUpperCase()` does, and that of `ϴ` or `ϒ` writes `θ` or `υ`.
 
-A form that Greek output, under the options of the conversion, would write
-from the source but not from the text read back is lost, and
+A form that Greek output, under the options of the conversion, writes from a
+Greek source but not from the text read back is lost, and
 `convertDetailed()` reports it (`removed-glyph-variant`, with the source
-form in `glyphVariant`). Transliteration writes `ϐίος` as `bíos`, which
+form in `glyphVariant`; see [Letter forms](information-loss.md#letter-forms)
+for the other source formats). Transliteration writes `ϐίος` as `bíos`, which
 reads back as `βίος`: the conversion reports the loss under the default
 `medialBeta: "preserve"`, but not under `"symbol"`, which writes `βίος` from
 either text. Beta Code writes the lunate sigma `s3`, and transliteration
@@ -185,8 +186,9 @@ convert("e)/xous' e)gw/", "beta-code", "greek"); // ἔχουσ’ ἐγώ
 
 An apostrophe after punctuation or a digit cannot be an elision, and closes
 the quotation (‘ναί.’, ‘1821’). A straight quotation mark opens nothing, since
-it cannot be told from an aphaeresis (`’στιν`): under `"contextual"`,
-`'λόγος'` gives `’λόγοσ’`. A closing quotation mark followed by a word that
-begins with a vowel is read as an elision: `‘λόγος’ ἐστί` gives
-`‘λόγοσ’ ἐστί`, and the quotation stays open for the rest of the line, so that
-`‘Ναι’ είπε ἐλθοῦσ’.` gives `‘Ναι’ είπε ἐλθοῦς’.`
+it cannot be told from an aphaeresis (`’στιν`). A closing quotation mark
+followed by a word that begins with a vowel is read as an elision, and the
+quotation stays open for the rest of the line. So, under `"contextual"`,
+`'λόγος'` gives `’λόγοσ’`, `‘λόγος’ ἐστί` gives `‘λόγοσ’ ἐστί`, and
+`‘Ναι’ είπε ἐλθοῦσ’.` gives `‘Ναι’ είπε ἐλθοῦς’.`; the default `"preserve"`
+keeps these shapes as written.

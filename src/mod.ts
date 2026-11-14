@@ -189,9 +189,10 @@ export function reencode(
  * retain, and where each source token was read and written.
  *
  * Unicode composition and tonos/oxia are representational differences and are
- * not reported as loss. Known lunate-sigma provenance is reported when an
- * output policy removes it. The conversion itself is executed once; only the
- * rendered target is parsed again for comparison.
+ * not reported as loss. A letter form of the source (`glyphVariant`) is
+ * reported when the target cannot keep it and the options do not write it
+ * again; a form the options fold is not. The conversion itself is executed
+ * once; only the rendered target is parsed again for comparison.
  *
  * Positions ({@link ConversionResult.spans}, {@link ConversionLoss.offset})
  * are offsets in UTF-16 code units in the input as supplied and in the

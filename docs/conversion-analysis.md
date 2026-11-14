@@ -45,9 +45,9 @@ Consequently:
 
 - NFC/NFD and tonos/oxia changes are not losses;
 - selected Greek punctuation glyphs are not losses;
-- a letter form (`glyphVariant`) is lost when Greek output, under the options
-  of the conversion, would write it from the source but not from the reparsed
-  target: a form the options fold, or write again from its position, is not a
+- a letter form (`glyphVariant`) is lost when the source format, under the
+  options of the conversion, writes the letter differently from the source
+  and from the reparsed target: a form the options fold, or write again from its position, is not a
   loss (see [Letter forms](information-loss.md#letter-forms));
 - deterministic marks added by an output policy are not losses;
 - removed diacritics, monotonic simplification, numeral conversion, dental

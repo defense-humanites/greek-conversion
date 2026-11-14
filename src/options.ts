@@ -65,8 +65,8 @@ export type NasalGammaTransliteration =
 
 /**
  * Selects the sigma glyph of Greek and Beta Code output. `"preserve"` writes a
- * lunate sigma where the source notes one (`ϲ`, Beta Code `s3`) and a
- * standard sigma elsewhere; `"standard"` writes every sigma as `σ` or `ς`;
+ * lunate sigma where the source notes one (`ϲ`, Beta Code `s3`), numerals
+ * included, and a standard sigma elsewhere; `"standard"` writes every sigma as `σ` or `ς`;
  * `"lunate"` writes every sigma as `ϲ`, except in numerals.
  */
 export type SigmaOrthography = "preserve" | "standard" | "lunate";

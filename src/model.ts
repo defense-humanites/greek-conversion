@@ -83,9 +83,10 @@ export type Diacritic =
 /**
  * Source glyph distinctions retained independently from the Greek letter:
  * the shapes of sigma (`ϲ`, `ς`, `σ`), and the symbol forms of letters
- * (`ϐ`, `ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, `ϒ`). A variant belongs to one
- * case: only the lunate sigma has a capital and a small form, `ϴ` and `ϒ`
- * are capitals, and the others small letters.
+ * (`ϐ`, `ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, `ϒ`). A symbol form belongs to
+ * one case: `ϴ` and `ϒ` are capitals, and the others small letters. The
+ * sigma shapes fit both cases: the lunate sigma has a capital and a small
+ * form, and a final or medial shape remains as provenance on a capital.
  */
 export type GlyphVariant =
   | "lunate-sigma"
