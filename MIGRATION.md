@@ -55,8 +55,8 @@ Without them:
   `sigma: "standard"` gives `σῶμα`, as the same options write the source
   (rc.8: `removed-glyph-variant`).
 - `GlyphVariant` has nine more values, one per symbol form, and
-  `ConversionLossCode` one more, `added-glyph-variant`, which code that
-  switches over them must handle. A symbol form belongs to one case:
+  `ConversionLossCode` two more, `added-glyph-variant` and `added-diacritic`,
+  which code that switches over them must handle. A symbol form belongs to one case:
   `validateDocument()` reports it on a grapheme of the other case, and a case
   policy writes the ordinary letter (`ϑ` in capitals is `Θ`).
 

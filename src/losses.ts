@@ -18,6 +18,7 @@ export type ConversionLossCode =
   | "removed-glyph-variant"
   | "added-glyph-variant"
   | "removed-diacritic"
+  | "added-diacritic"
   | "displaced-diacritic"
   | "inferred-breathing"
   | "unrepresented-grapheme"
@@ -40,7 +41,7 @@ export interface ConversionLoss {
   message: string;
   /**
    * The affected semantic mark when {@link code} is `"removed-diacritic"`,
-   * `"displaced-diacritic"`, or `"inferred-breathing"`.
+   * `"added-diacritic"`, `"displaced-diacritic"`, or `"inferred-breathing"`.
    */
   diacritic?: Diacritic;
   /**
@@ -366,6 +367,15 @@ function addTokenLoss(
         );
       }
     }
+    if (addsDiaeresis(source, target)) {
+      changed = true;
+      losses.add(
+        "added-diacritic",
+        index,
+        "The target representation writes a diaeresis to keep a hiatus, and does not distinguish this vowel from one with a diaeresis; the diaeresis is read back.",
+        "diaeresis",
+      );
+    }
     if (!sameGlyph(index, source, target)) {
       changed = true;
       if (source.glyphVariant === undefined) {
@@ -429,7 +439,18 @@ function preservesToken(
   return source.letter === target.letter &&
     source.uppercase === target.uppercase &&
     sameGlyph(index, source, target) &&
-    includesMarks(target.diacritics, source.diacritics);
+    includesMarks(target.diacritics, source.diacritics) &&
+    !addsDiaeresis(source, target);
+}
+
+/**
+ * Whether the target reads back a diaeresis the source token does not have:
+ * the one transliteration writes on a contextual `y` to keep a hiatus that
+ * the reader would otherwise lose (`αἑυ` → `aheÿ`), which reads back as `ϋ`.
+ */
+function addsDiaeresis(source: Grapheme, target: Grapheme): boolean {
+  return source.diacritics !== target.diacritics &&
+    target.diacritics.has("diaeresis") && !source.diacritics.has("diaeresis");
 }
 
 /** Whether two literals are canonically equivalent; most are equal. */

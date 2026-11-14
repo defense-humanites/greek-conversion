@@ -52,6 +52,10 @@ change.
   `glyphVariant` field. The new code `added-glyph-variant` reports a form the
   target writes where the source has none, and that converts back as another
   spelling; its `glyphVariant` is the form written.
+- The loss code `added-diacritic` reports a diaeresis the target writes where
+  the source has none, and that reads back: under the contextual upsilon,
+  `ἀἑυ` gives `aheÿ`, which reads back as `ἀἑϋ`; `convertDetailed()`
+  reported no loss.
 - Beta Code reads `s1` and `s2`, the medial and final sigma of the TLG, and
   writes them where the shape contradicts the place, under the default
   `greek.finalSigma: "preserve"`: `λόγοσ` gives `lo/gos1` (was `lo/gos`, which
@@ -173,6 +177,13 @@ change.
   `ϲ`). A capital sigma before `3` still gives `*s3`, since the TLG defines
   no code for it; `convertDetailed()` reports the loss
   (`added-glyph-variant`).
+- A keraia followed by a digit is written as itself in Beta Code, `ʹ`, since
+  `#` and a digit are a TLG character code: `αʹ1` gave `a#1`, which reads
+  back as `αϟ`.
+- In a numeral, which takes no breathing, the contextual `y` keeps its
+  separation by a diaeresis, in both directions: `oyʹ` gives `οϋʹ` (was
+  `ουʹ`), and `ὀυʹ` gives `oÿʹ` (was `oyʹ`, which read back as `ουʹ` and
+  then gave `ouʹ`).
 
 ## [1.0.0-rc.8] - 2026-11-11
 

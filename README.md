@@ -609,6 +609,7 @@ The loss codes are:
 | ------------------------ | -------------------------------------------------------------------------------------------------------------- |
 | `removed-diacritic`      | A diacritic of the source                                                                                      |
 | `displaced-diacritic`    | The position of a breathing: a hiatus marked only by a breathing (`Ἀίδης`) reads back as a diphthong (`Αἴδης`) |
+| `added-diacritic`        | A diaeresis that transliteration writes on a contextual `y` to keep a hiatus, which reads back; `diacritic` identifies it |
 | `inferred-breathing`     | The absence of a breathing on an initial vowel, which reads back as a smooth breathing                         |
 | `changed-case`           | The letter case                                                                                                |
 | `removed-glyph-variant`  | A letter form, such as `ϲ`, `ϐ`, or a `σ` at the end of a word; `glyphVariant` identifies it                     |

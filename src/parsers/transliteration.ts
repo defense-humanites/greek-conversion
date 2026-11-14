@@ -645,7 +645,17 @@ function inferInitialBreathings(
     }
     wordStart = false;
 
-    if (!isVowel(token.letter) || isGreekNumeralContext(tokens, i)) continue;
+    if (!isVowel(token.letter)) continue;
+    if (isGreekNumeralContext(tokens, i)) {
+      // A numeral takes no breathing: a `y` that a smooth breathing was to
+      // separate from this vowel keeps its separation as a diaeresis.
+      const next = tokens[i + 1];
+      if (
+        separatedByBreathing.has(i + 1) && !token.diacritics.has("rough") &&
+        next?.kind === "grapheme"
+      ) next.diacritics = withDiacritic(next.diacritics, "diaeresis");
+      continue;
+    }
 
     const target = separatedByBreathing.has(i + 1)
       ? token
