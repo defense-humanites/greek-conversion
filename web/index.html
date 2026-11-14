@@ -129,8 +129,7 @@
           <div class="field from">
             <div class="field-head">
               <label for="source" class="field-label"><span id="source-label"
-                  class="label">Greek</span>
-                <span id="source-meta" class="meta"></span></label>
+                  class="label">Greek</span></label>
               <div class="field-actions">
                 <span class="button small menu-button">
                   <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
@@ -151,22 +150,21 @@
               <div id="source-marks" class="text marks" aria-hidden="true"></div>
               <textarea id="source" class="text" spellcheck="false"
                 autocomplete="off" autocapitalize="off"
-                aria-describedby="status"
+                aria-describedby="status source-meta"
                 placeholder="Type or paste text, or choose an example.">Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων, ὡς δὲ εἰπεῖν καὶ ἐπὶ πλεῖστον ἀνθρώπων.</textarea>
             </div>
+            <p id="source-meta" class="meta field-foot"></p>
           </div>
           <div class="field to">
             <div class="field-head">
               <label for="output" class="field-label"><span id="output-label"
-                  class="label">Transliteration</span>
-                <span id="output-meta" class="meta"></span></label>
+                  class="label">Transliteration</span></label>
               <div class="field-actions">
                 <button id="swap" class="button small" type="button"
-                  title="Convert the result back: it becomes the text to convert">
+                  title="Swap: the result becomes the text to convert, and the formats change sides">
                   <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
-                      d="M9 14L4 9l5-5" /><path
-                      d="M4 9h11a5 5 0 0 1 0 10h-3" /></svg>
-                  Convert back
+                      d="M4 8h15l-4-4" /><path d="M20 16H5l4 4" /></svg>
+                  Swap
                 </button>
                 <button id="copy" class="button small primary" type="button">
                   <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect
@@ -178,8 +176,9 @@
             </div>
             <div class="editor">
               <textarea id="output" class="text" readonly spellcheck="false"
-                aria-describedby="status"></textarea>
+                aria-describedby="status output-meta"></textarea>
             </div>
+            <p id="output-meta" class="meta field-foot"></p>
           </div>
         </section>
 

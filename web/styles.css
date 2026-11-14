@@ -771,9 +771,8 @@ h1 span {
   border-color: var(--to);
 }
 /*
- * The buttons stay at the top right: where the label and its note do not
- * fit beside them, the note is cut short. Only on a phone do the buttons
- * move under the label.
+ * The label and the buttons share the head of the field; only on a phone do
+ * the buttons move under the label. The character count sits at the foot.
  */
 .field-head {
   display: flex;
@@ -812,6 +811,13 @@ h1 span {
   color: var(--muted);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.field-foot {
+  margin: 0;
+  text-align: right;
+}
+.field-foot:empty {
+  display: none;
 }
 .field-actions {
   flex: none;

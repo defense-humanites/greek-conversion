@@ -206,19 +206,6 @@ function attachSuggestions(
   });
 }
 
-/** Short names, for the head of the output field. */
-const SHORT_NAMES: Readonly<Record<Preset, string>> = {
-  "ala-lc-ancient": "ALA-LC Ancient",
-  "ala-lc-modern": "ALA-LC Modern",
-  "bnf-core": "BnF",
-  "iso-843-type-1": "ISO 843 Type 1",
-  "iso-843-type-2": "ISO 843 Type 2",
-  perseus: "Perseus",
-  "sbl-academic": "SBL Academic",
-  "sbl-general": "SBL General",
-  "tlg-core": "TLG",
-};
-
 const presets = listPresetMetadata();
 
 /**
@@ -1242,6 +1229,13 @@ addEventListener("resize", () => {
 
 /* Conversion */
 
+/** "15 characters", counted as code points, as in a word processor. */
+function characterCount(text: string): string {
+  if (!text) return "";
+  const count = [...text].length;
+  return count === 1 ? "1 character" : `${count} characters`;
+}
+
 function update(): void {
   documentPreview.textContent = "";
   showDetection();
@@ -1252,11 +1246,8 @@ function update(): void {
     renderExamples();
   }
   applyFaces(from, to);
-  sourceMeta.textContent = source.value
-    ? `${[...source.value].length} characters`
-    : "";
+  sourceMeta.textContent = characterCount(source.value);
   const preset = currentPreset();
-  outputMeta.textContent = preset ? SHORT_NAMES[preset] : "";
   showOptions(from, to);
   let options: ConversionOptions = {};
   let inventory: ConverterConfiguration = {};
@@ -1278,6 +1269,7 @@ function update(): void {
     const result = converter.convertDetailed(source.value, from, to, options);
 
     output.value = result.output;
+    outputMeta.textContent = characterCount(result.output);
     copyButton.disabled = swapButton.disabled = false;
     const literals = result.losses.filter(readAsGreek).length;
     const lost = result.losses.length - literals;
@@ -1321,6 +1313,7 @@ function update(): void {
     showCode(from, to, preset, options, inventory, result.output);
   } catch (error) {
     output.value = "";
+    outputMeta.textContent = "";
     copyButton.disabled = swapButton.disabled = true;
     showVerdict(
       "error",
