@@ -494,46 +494,84 @@ test("an excluded letter keeps its spelling in its word", () => {
     "w(s e)pole/mhsan",
   );
 
-  // The reading conventions of the source write it back.
+  // A sigma whose shape the source does not note, lowercased, takes the
+  // shape of its place in the whole source, beyond its word.
+  for (const letterCase of ["lowercase", "title"] as const) {
+    for (
+      const text of ["‘Ο ΛΟΓΟΣ’ ΚΑΙ", "‘ΛΟΓΟΣ’ ΕΓΩ", "ΕΧΟΥΣ’ ΕΓΩ", "ΛΟΓΟΣ ΚΑΙ"]
+    ) {
+      const options = { text: { letterCase } };
+      assertNfcEquals(
+        sigma.convert(text, "greek", "greek", options),
+        convert(text, "greek", "greek", options),
+        `${letterCase}: ${text}`,
+      );
+    }
+  }
+
+  // Beta Code is written in its canonical spelling: the betaCode options only
+  // say how the converted text is written, and no reader needs them.
   assertNfcEquals(
-    sigma.convert("LO/GOS SW=MA", "beta-code", "greek", {
+    sigma.convert("lo/gos", "beta-code", "greek", {
       betaCode: { case: "uppercase" },
     }),
-    "λόγοS Sῶμα",
-  );
-  // A transliterated letter keeps the spelling its neighbours give it, and a
-  // vowel of a rough diphthong, whose h precedes both, keeps its breathing.
-  assertNfcEquals(
-    createConverter({ exclude: ["gamma"] }).convert(
-      "ángelos",
-      "transliteration",
-      "greek",
-    ),
-    "ἄngελος",
+    "λόγοs",
   );
   assertNfcEquals(
-    createConverter({ exclude: ["upsilon"] }).convert(
-      "autós",
-      "transliteration",
+    createConverter({ preset: "tlg-core", exclude: ["sigma"] }).convert(
+      "LO/GOS",
+      "beta-code",
       "greek",
     ),
-    "αuτός",
+    "λόγοs",
   );
   assertNfcEquals(
-    createConverter({ exclude: ["iota"] }).convert(
-      "hoi",
-      "transliteration",
-      "greek",
-    ),
-    "οhi",
+    createConverter({ exclude: ["yot"] }).convert("ja", "beta-code", "greek", {
+      betaCode: { yot: "#401" },
+    }),
+    "jα",
   );
-  assertNfcEquals(
-    createConverter({ exclude: ["omicron"] }).convert(
-      "hoi",
+});
+
+test("an excluded letter of a transliteration is copied from the source", () => {
+  const copy = (
+    letter: string,
+    input: string,
+    configuration: { preset?: "bnf-core" | "ala-lc-modern" } = {},
+  ) =>
+    createConverter({ ...configuration, exclude: [letter] }).convert(
+      input,
       "transliteration",
       "greek",
+    );
+
+  // Marks that the transliteration options leave out stay: bnf-core omits
+  // the quantity, and the defaults the coronis and the smooth breathing.
+  assertNfcEquals(copy("alpha", "pā́n", { preset: "bnf-core" }), "πā́ν");
+  assertNfcEquals(copy("alpha", "ka᾽gṓ"), "κa᾽γώ");
+  assertNfcEquals(copy("omicron", "o̓"), "o̓");
+  // The spelling its neighbours give it stays.
+  assertNfcEquals(copy("gamma", "ángelos"), "ἄngελος");
+  assertNfcEquals(copy("upsilon", "autós"), "αuτός");
+  // The h of a rough diphthong, written before both vowels, goes with the
+  // vowel that has the breathing, in its case.
+  assertNfcEquals(copy("iota", "hoi"), "οhi");
+  assertNfcEquals(copy("omicron", "hoi"), "oἱ");
+  assertNfcEquals(copy("omicron", "Hoi"), "Oἱ");
+  assertNfcEquals(copy("iota", "HOI"), "ΟHI");
+  assertNfcEquals(copy("upsilon", "heurískō"), "εhuρίσκω");
+  assertNfcEquals(copy("alpha", "ta̓hi"), "τa̓ἱ");
+  assertNfcEquals(copy("iota", "ta̓hi"), "τἀhi");
+  // A letter whose spelling it shares with a neighbour is written alone.
+  assertNfcEquals(copy("pi", "bála", { preset: "ala-lc-modern" }), "μpαλα");
+  assertNfcEquals(
+    createConverter({ preset: "ala-lc-modern", exclude: ["mu"] }).convert(
+      "bála",
+      "transliteration",
+      "greek",
+      { text: { letterCase: "title" } },
     ),
-    "oἱ",
+    "Mπαλα",
   );
 });
 
@@ -558,6 +596,40 @@ test("the options of the converted text do not reach an excluded letter", () => 
   assertNfcEquals(detailed.output, "τῷ");
   assertEquals(detailed.lossy, false);
   assertEquals(detailed.diagnostics.length, 1);
+  // Read back as a letter and its marks, the kept letter is retained.
+  for (const options of [{}, { diacritics: { all: "remove" } }] as const) {
+    const result = omega.convertDetailed(
+      "τῷ",
+      "greek",
+      "transliteration",
+      options,
+    );
+    assertNfcEquals(result.output, "tῷ");
+    assertEquals(result.lossy, false);
+  }
+  assertEquals(
+    omega.convertDetailed("τῷ", "greek", "transliteration", {
+      text: { letterCase: "uppercase" },
+    }).losses.map(({ code }) => code),
+    ["changed-case"],
+  );
+
+  // The Unicode form of Greek output applies to the whole output.
+  const alpha = createConverter({ exclude: ["alpha"] });
+  assertEquals(
+    alpha.convert("βά", "greek", "greek", { greek: { acute: "tonos" } }),
+    "β\u03AC",
+  );
+  assertEquals(
+    alpha.convert("βά", "greek", "greek", { greek: { acute: "oxia" } }),
+    "β\u1F71",
+  );
+  assertEquals(
+    alpha.convert("βά", "greek", "greek", {
+      greek: { composition: "decomposed" },
+    }),
+    "β\u03B1\u0301",
+  );
 });
 
 test("the transformations of the whole text reach an excluded letter", () => {
@@ -599,6 +671,45 @@ test("the transformations of the whole text reach an excluded letter", () => {
     }),
     "Ϝάναξ",
   );
+  assertNfcEquals(
+    createConverter({ preset: "iso-843-type-1" }).convert(
+      "ϛ λόγος",
+      "greek",
+      "transliteration",
+      { text: { letterCase: "uppercase" } },
+    ),
+    "Ϛ LÓGOS",
+  );
+  // A transliteration copied from the source takes the case of its letter.
+  assertNfcEquals(
+    sigma.convert("lógos sō̃ma", "transliteration", "greek", title),
+    "Λόγοs Sῶμα",
+  );
+  assertNfcEquals(
+    sigma.convert("lógos sō̃ma", "transliteration", "greek", {
+      text: { letterCase: "uppercase" },
+    }),
+    "ΛΌΓΟS SΩ͂ΜΑ",
+  );
+  const theta = createConverter({ exclude: ["theta"] });
+  assertNfcEquals(
+    theta.convert("Thoukydídēs", "transliteration", "greek", {
+      text: { letterCase: "lowercase" },
+    }),
+    "thουκυδίδης",
+  );
+  assertNfcEquals(
+    theta.convert("Thoukydídēs", "transliteration", "greek", {
+      text: { letterCase: "uppercase" },
+    }),
+    "THΟΥΚΥΔΊΔΗΣ",
+  );
+  assertNfcEquals(
+    sigma.convert(" λόγος \n\t σῶμα ", "greek", "greek", {
+      text: { whitespace: "collapse" },
+    }),
+    "λόγος σῶμα",
+  );
 
   // A numeral is written as one number, its excluded letters included.
   const stigma = createConverter({ exclude: ["stigma"] });
@@ -615,9 +726,32 @@ test("the transformations of the whole text reach an excluded letter", () => {
   );
   assertNfcEquals(detailed.output, "16");
   assertEquals(
-    detailed.diagnostics.map(({ index, character }) => [index, character]),
-    [[1, "stigma"]],
+    detailed.diagnostics.map(({ index, character, message }) => [
+      index,
+      character,
+      message,
+    ]),
+    [[
+      1,
+      "stigma",
+      "Character stigma is outside this converter's repertoire and was written in a decimal numeral.",
+    ]],
   );
+  // Its spans and losses are those of the same conversion without exclusion.
+  const plain = createConverter().convertDetailed(
+    "ιϛʹ α",
+    "greek",
+    "transliteration",
+    decimal,
+  );
+  const excluded = stigma.convertDetailed(
+    "ιϛʹ α",
+    "greek",
+    "transliteration",
+    decimal,
+  );
+  assertEquals(excluded.spans, plain.spans);
+  assertEquals(excluded.losses, plain.losses);
   let error: unknown;
   try {
     createConverter({ exclude: ["stigma"], outOfScopeBehavior: "reject" })
@@ -648,6 +782,22 @@ test("the letters around an excluded letter keep their place in its word", () =>
       text: { letterCase: "title" },
     }),
     "Lόgοs Οhi",
+  );
+
+  // A capital next to a kept capital is among capitals.
+  assertNfcEquals(
+    createConverter({ exclude: ["epsilon"] }).convert(
+      "ΘΕΟΣ",
+      "greek",
+      "transliteration",
+    ),
+    "THΕOS",
+  );
+  assertNfcEquals(
+    createConverter({ exclude: ["tau"] }).convert("Τῌ", "greek", "greek", {
+      greek: { iotaSubscript: "capital-adscript" },
+    }),
+    "ΤΗΙ",
   );
 
   // A numeral cannot start inside a word.

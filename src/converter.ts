@@ -13,9 +13,11 @@ import {
 } from "./losses.ts";
 import {
   isBoundaryTransparent,
-  isDiphthongAt,
+  isVowel,
   isWordInitial,
   keptLetter,
+  type QuotationContext,
+  sigmaEndsWord,
 } from "./context.ts";
 import { assertFormat, assertTextInput, grapheme, literal } from "./model.ts";
 import type { Document, Format, Grapheme, Letter, Token } from "./model.ts";
@@ -96,7 +98,7 @@ export interface ConverterConfiguration extends CharacterRepertoireDefinition {
   /**
    * Preserves unsupported recognized input by default or rejects the
    * conversion. A preserved letter is written as the source writes it in its
-   * word: of the conversion's options, only `text` reaches it, as it reaches
+   * word: of the conversion's options, only `text` changes it, as it changes
    * the whole text.
    */
   outOfScopeBehavior?: ConverterOutOfScopeBehavior;
@@ -118,7 +120,7 @@ export interface CharacterScopeDiagnostic {
   code: CharacterScopeDiagnosticCode;
   /**
    * Zero-based token index in the source document as the conversion prepared
-   * it, the document that `losses` and `spans` index as well: a character
+   * it, the document that `losses` and `spans` index as well: a custom form
    * preserved as several literals is reported at the first of them, and
    * `spans[index]` is where the character was read.
    */
@@ -167,7 +169,8 @@ export interface ConverterConversionResult extends ConversionResult {
   losses: readonly ConversionLoss[];
   /**
    * One span per token of the prepared source document (the parsed input,
-   * with out-of-scope characters preserved as literals), as in
+   * with out-of-scope characters preserved as literals, except the letters
+   * of a decimal numeral), as in
    * `convertDetailed()`: positions are in the input as supplied, before the
    * converter's own spellings are substituted, and in the output as
    * returned, after the custom forms are written.
@@ -256,6 +259,8 @@ export class Converter {
   readonly #excluded: ReadonlySet<string>;
   readonly #preset?: Preset;
   readonly #outOfScopeBehavior: ConverterOutOfScopeBehavior;
+  /** Whether a recognized letter can fall outside this converter's scope. */
+  readonly #keepsLetters: boolean;
 
   /** Creates an isolated converter from copied and validated definitions. */
   constructor(configuration: ConverterConfiguration = {}) {
@@ -302,6 +307,8 @@ export class Converter {
     this.#excluded = new Set(
       validateCharacterIds(configuration.exclude ?? [], known),
     );
+    this.#keepsLetters = this.#excluded.size > 0 ||
+      this.#repertoire !== undefined || this.#preset !== undefined;
 
     Object.freeze(this);
   }
@@ -500,7 +507,11 @@ export class Converter {
     positions: "diagnostics" | "spans" | "none" = "diagnostics",
   ): PreparedSource {
     const track = positions === "spans";
-    const read: ReadPositions | undefined = track
+    // A transliterated letter kept out of scope is copied from where it was
+    // read: a converter that can keep letters records it while reading, which
+    // costs less than reading the text again.
+    const read: ReadPositions | undefined = track ||
+        format === "transliteration" && this.#keepsLetters
       ? { text: "", starts: [] }
       : undefined;
     const parsed = parseResolved(input.value, format, options, true, read);
@@ -513,7 +524,13 @@ export class Converter {
     // The parsed token each prepared token comes from.
     const origins: number[] | undefined = track ? [] : undefined;
     let prepared = 0;
-    const kept: KeptLetters = { parsed, format, options };
+    const kept: KeptLetters = {
+      parsed,
+      format,
+      options,
+      value: input.value,
+      read,
+    };
 
     const document = parsed.flatMap((token, index): readonly Token[] => {
       const before = diagnostics.length;
@@ -579,10 +596,16 @@ export class Converter {
   ): readonly Token[] {
     if (token.kind === "grapheme") {
       if (!this.#isAllowed(token.letter, parsed, index)) {
+        const numeral = inDecimalNumeral(kept, index);
         diagnostics.push(
-          scopeDiagnostic(index, token.letter, this.#outOfScopeBehavior),
+          scopeDiagnostic(
+            index,
+            token.letter,
+            this.#outOfScopeBehavior,
+            numeral,
+          ),
         );
-        return keptTokens(kept, index);
+        return numeral ? [token] : keptTokens(kept, index);
       }
       const issue = this.#preset !== undefined && target !== undefined
         ? presetMappingIssue(
@@ -595,15 +618,17 @@ export class Converter {
         )
         : undefined;
       if (issue === undefined) return [token];
+      const numeral = inDecimalNumeral(kept, index);
       diagnostics.push(
         mappingDiagnostic(
           index,
           token.letter,
           issue,
           this.#outOfScopeBehavior,
+          numeral,
         ),
       );
-      return keptTokens(kept, index);
+      return numeral ? [token] : keptTokens(kept, index);
     }
 
     const custom = this.#sentinels.get(token.value);
@@ -935,6 +960,7 @@ function scopeDiagnostic(
   index: number,
   character: string,
   behavior: ConverterOutOfScopeBehavior,
+  numeral = false,
 ): CharacterScopeDiagnostic {
   return {
     code: "out-of-scope-character",
@@ -944,9 +970,21 @@ function scopeDiagnostic(
     character,
     message:
       `Character ${character} is outside this converter's repertoire and was ${
-        behavior === "reject" ? "rejected" : "preserved literally"
+        outcome(behavior, numeral)
       }.`,
   };
+}
+
+/**
+ * What became of an out-of-scope character: under `numerals: "decimal"`, a
+ * letter of a numeral is written in the number.
+ */
+function outcome(
+  behavior: ConverterOutOfScopeBehavior,
+  numeral: boolean,
+): string {
+  if (behavior === "reject") return "rejected";
+  return numeral ? "written in a decimal numeral" : "preserved literally";
 }
 
 function mappingDiagnostic(
@@ -954,6 +992,7 @@ function mappingDiagnostic(
   character: string,
   code: "undefined-preset-mapping" | "unresolved-preset-mapping",
   behavior: ConverterOutOfScopeBehavior,
+  numeral = false,
 ): CharacterScopeDiagnostic {
   const reason = code === "undefined-preset-mapping"
     ? "has no ISO 843 conversion"
@@ -965,7 +1004,7 @@ function mappingDiagnostic(
     length: 0,
     character,
     message: `Character ${character} ${reason} and was ${
-      behavior === "reject" ? "rejected" : "preserved literally"
+      outcome(behavior, numeral)
     }.`,
   };
 }
@@ -976,18 +1015,24 @@ function literalTokens(value: string): readonly Token[] {
 
 /**
  * The letters of a source document that a converter keeps as they were, and
- * how the source format writes them, found once for all of them.
+ * what writes them, found once for all of them.
  */
 interface KeptLetters {
   readonly parsed: Document;
   readonly format: Format;
   readonly options: ResolvedConversionOptions;
-  /** The options that write them (`keptOptions()`). */
+  /** The preprocessed text the document was read from. */
+  readonly value: string;
+  /** Where each token was read in it, when the reading recorded it. */
+  read?: ReadPositions;
+  /** The options that write them in Greek or Beta Code (`keptOptions()`). */
   writing?: ResolvedConversionOptions;
   /** The last word written with them (`writtenWord()`). */
   word?: WrittenWord;
   /** The tokens of decimal numerals (`decimalNumeralTokens()`). */
   numerals?: Uint8Array;
+  /** The quotations the sigmas of the source close (`sigmaEndsWord()`). */
+  quotations?: QuotationContext;
 }
 
 /**
@@ -1002,75 +1047,95 @@ interface WrittenWord {
 }
 
 /**
- * The tokens that keep the letter at `index` as it was, outside the
- * converter's scope: its spelling in the source format, as its word is
- * written in it (`keptSpelling()`), in literals that are letters of their
- * word (`keptLetter()`). Under `numerals: "decimal"`, a letter of a numeral
- * stays a letter, so that the numeral is written as one number, as the
- * transformations of the whole text are.
+ * Whether the letter at `index` belongs to a numeral that `numerals:
+ * "decimal"` writes as a number. Such a letter stays a letter, outside the
+ * converter's scope or not, so that the numeral is written as one number, as
+ * the transformations of the whole text are.
  */
-function keptTokens(kept: KeptLetters, index: number): readonly Token[] {
-  if (kept.options.text.numerals === "decimal") {
-    kept.numerals ??= decimalNumeralTokens(kept.parsed);
-    if (kept.numerals[index] === 1) return [kept.parsed[index]];
-  }
-  return Array.from(keptSpelling(kept, index), (char) => keptLetter(char));
+function inDecimalNumeral(kept: KeptLetters, index: number): boolean {
+  if (kept.options.text.numerals !== "decimal") return false;
+  kept.numerals ??= decimalNumeralTokens(kept.parsed);
+  return kept.numerals[index] === 1;
 }
 
 /**
- * How the source format writes the letter at `index` in its word, with the
- * source's own conventions and none of the conversion's but those of the
- * whole text (`keptOptions()`): a final sigma stays final, and `ng` keeps
- * its `n` before `g`. Its span in its word written once is that spelling,
- * unless it shares it with a neighbour, as the two letters of a modern
- * digraph do (`b` for μπ), or a vowel of a diphthong with a rough breathing
- * is transliterated, whose `h` is written before both (`hoi`): such a
- * letter is written alone, with its own marks.
+ * The literal that keeps the letter at `index` as it was, outside the
+ * converter's scope: its spelling in the source format (`keptSpelling()`),
+ * in one literal that is a letter of its word, with the case it takes in the
+ * output (`keptLetter()`). One literal, so that a reader that reorders its
+ * marks reads it back whole.
  */
-function keptSpelling(kept: KeptLetters, index: number): string {
-  const options = kept.writing ??= keptOptions(kept.options, kept.format);
+function keptTokens(kept: KeptLetters, index: number): readonly Token[] {
+  const uppercase = keptCase(kept, index);
+  const spelling = keptSpelling(kept, index, uppercase);
+  return spelling === "" ? [] : [keptLetter(spelling, uppercase)];
+}
+
+/** Whether the letter at `index` is a capital in the output: `text.letterCase` applies to it. */
+function keptCase(kept: KeptLetters, index: number): boolean {
+  switch (kept.options.text.letterCase) {
+    case "uppercase":
+      return true;
+    case "lowercase":
+      return false;
+    case "title":
+      return isWordInitial(kept.parsed, index);
+    default:
+      return (kept.parsed[index] as Grapheme).uppercase;
+  }
+}
+
+/**
+ * How the source writes the letter at `index`, in its word, with only the
+ * transformations of the whole text (`text`) applied. Greek and Beta Code
+ * are written in their canonical spelling, which notes every mark and shape
+ * they can note (`writtenSpelling()`). A transliteration is copied from the
+ * source (`copiedSpelling()`): its spelling depends on options, some of which
+ * leave marks out, and no options would write every source again.
+ */
+function keptSpelling(
+  kept: KeptLetters,
+  index: number,
+  uppercase: boolean,
+): string {
+  return kept.format === "transliteration"
+    ? copiedSpelling(kept, index, uppercase)
+    : writtenSpelling(kept, index);
+}
+
+/**
+ * The span of the letter at `index` in its word, written in Greek or Beta
+ * Code with the source's own marks and shapes and the conversion's letter
+ * case (`keptOptions()`). A sigma whose shape the source does not note, a
+ * capital that the letter case lowercases, takes the shape of its place in
+ * the whole source, which may depend on a quotation opened before its word.
+ */
+function writtenSpelling(kept: KeptLetters, index: number): string {
+  const options = kept.writing ??= keptOptions(kept.options.text.letterCase);
   let word = kept.word;
   if (word === undefined || index < word.start || index >= word.end) {
-    word = kept.word = writtenWord(kept.parsed, index, kept.format, options);
+    word = kept.word = writtenWord(kept, index, options);
   }
-  const { output, spans: { starts, ends } } = word;
   const position = index - word.start;
-  const start = starts[position];
-  const end = ends[position];
-  const shared = (neighbour: number) =>
-    starts[neighbour] === start && ends[neighbour] === end;
-  if (
-    start < end && !shared(position - 1) && !shared(position + 1) &&
-    !(kept.format === "transliteration" &&
-      splitsRoughDiphthong(kept.parsed, index))
-  ) {
-    return output.slice(start, end);
-  }
-  // Alone, the letter would start a word: under title case, it takes the
-  // case of its place in the source.
-  const letterCase = options.text.letterCase !== "title"
-    ? options.text.letterCase
-    : isWordInitial(kept.parsed, index)
-    ? "uppercase"
-    : "lowercase";
-  return encodeResolved([kept.parsed[index]], kept.format, {
-    ...options,
-    text: { ...options.text, letterCase },
-  });
+  return word.output.slice(
+    word.spans.starts[position],
+    word.spans.ends[position],
+  );
 }
 
 /**
  * The word of the letter at `index`, with the token on either side of it (a
- * space, a keraia, an apostrophe), written in the source format. The
- * spelling of a letter depends on its word only, so that a conversion writes
- * no more of the source again than the words of the letters it keeps.
+ * space, a keraia, an apostrophe), written in the source format. Only the
+ * shape of a sigma depends on more than the word, and is decided on the whole
+ * source first, so that a conversion writes no more of the source again than
+ * the words of the letters it keeps.
  */
 function writtenWord(
-  document: Document,
+  kept: KeptLetters,
   index: number,
-  format: Format,
   options: ResolvedConversionOptions,
 ): WrittenWord {
+  const document = kept.parsed;
   const inWord = (token: Token) =>
     token.kind === "grapheme" || isBoundaryTransparent(token);
   let start = index;
@@ -1079,46 +1144,114 @@ function writtenWord(
   while (end < document.length && inWord(document[end])) end++;
   start = Math.max(0, start - 1);
   end = Math.min(document.length, end + 1);
-  const { output, spans } = encodeTracked(
-    document.slice(start, end),
-    format,
-    options,
-  );
+
+  const tokens = document.slice(start, end);
+  if (kept.format === "greek") {
+    for (let k = 0; k < tokens.length; k++) {
+      const token = tokens[k];
+      if (
+        token.kind !== "grapheme" || token.letter !== "sigma" ||
+        token.glyphVariant !== undefined
+      ) continue;
+      const quotations = kept.quotations ??= {};
+      tokens[k] = {
+        ...token,
+        glyphVariant: sigmaEndsWord(document, start + k, quotations)
+          ? "final-sigma"
+          : "medial-sigma",
+      };
+    }
+  }
+  const { output, spans } = encodeTracked(tokens, kept.format, options);
   return { start, end, output, spans };
 }
 
-/** Whether the letter at `index` is a vowel of a diphthong whose second vowel has a rough breathing. */
-function splitsRoughDiphthong(document: Document, index: number): boolean {
-  const rough = (first: number) =>
-    isDiphthongAt(document, first) &&
-    (document[first + 1] as Grapheme).diacritics.has("rough");
-  return rough(index) || rough(index - 1);
-}
-
 /**
- * The options that write a letter kept as it was: the conventions the source
- * was read with (its format's own group), the sigma shapes of the source
- * (`greek.sigma` and `greek.finalSigma` set to `"preserve"`), and, of the
- * conversion's options, only the letter case, which `text` applies to the
- * whole text. Its marks, its accentuation, and its iota subscript stay as
- * they were.
+ * The options that write a letter kept as it was in Greek or Beta Code: the
+ * canonical spelling of its format (the defaults, whatever `betaCode`
+ * options the conversion has, since no reader needs them), the sigma shapes
+ * of the source (`greek.sigma` and `greek.finalSigma` set to `"preserve"`),
+ * and, of the conversion's options, only the letter case, which `text`
+ * applies to the whole text.
  */
 function keptOptions(
-  options: ResolvedConversionOptions,
-  format: Format,
+  letterCase: ResolvedConversionOptions["text"]["letterCase"],
 ): ResolvedConversionOptions {
   const defaults = DEFAULT_CONVERSION_OPTIONS;
   return {
-    transliteration: format === "transliteration"
-      ? options.transliteration
-      : { ...defaults.transliteration },
+    transliteration: { ...defaults.transliteration },
     greek: { ...defaults.greek, sigma: "preserve", finalSigma: "preserve" },
-    betaCode: format === "beta-code"
-      ? options.betaCode
-      : { ...defaults.betaCode },
-    text: { ...defaults.text, letterCase: options.text.letterCase },
+    betaCode: { ...defaults.betaCode },
+    text: { ...defaults.text, letterCase },
     diacritics: { ...defaults.diacritics },
   };
+}
+
+/**
+ * The spelling of the transliterated letter at `index` as the source wrote
+ * it (`ng` keeps its `n`, a macron or a coronis stays), in the case the
+ * letter takes. The `h` of a rough breathing on a diphthong, written before
+ * both vowels, goes with the vowel that has the breathing (`hoi`: `o`, and
+ * `hi`). A letter whose spelling the reader shares with a neighbour, as the
+ * two letters of a modern digraph do (`b` for μπ), is written alone, as the
+ * source was read.
+ */
+function copiedSpelling(
+  kept: KeptLetters,
+  index: number,
+  uppercase: boolean,
+): string {
+  const { text, starts } = kept.read ??= readAgain(
+    kept.value,
+    kept.format,
+    kept.options,
+  );
+  const empty = (k: number) =>
+    k >= 0 && k < kept.parsed.length && starts[k] === starts[k + 1];
+  const token = kept.parsed[index] as Grapheme;
+  if (empty(index) || empty(index - 1) || empty(index + 1)) {
+    return encodeResolved(
+      [{ ...token, uppercase }],
+      kept.format,
+      {
+        ...keptOptions("preserve"),
+        transliteration: kept.options.transliteration,
+      },
+    );
+  }
+
+  let spelling = text.slice(starts[index], starts[index + 1]).normalize("NFC");
+  if (isVowel(token.letter)) {
+    const rough = token.diacritics.has("rough");
+    if (!rough && /^[hH]/.test(spelling)) spelling = spelling.slice(1);
+    else if (rough && !/[hH]|\u0314/.test(spelling)) {
+      spelling = (uppercase && !/\p{Ll}/u.test(spelling) ? "H" : "h") +
+        spelling;
+    }
+  }
+  switch (kept.options.text.letterCase) {
+    case "uppercase":
+      return spelling.toUpperCase();
+    case "lowercase":
+      return spelling.toLowerCase();
+    case "title":
+      return uppercase
+        ? capitalized(spelling.toLowerCase())
+        : spelling.toLowerCase();
+    default:
+      // The letter keeps the case it was read with, which the h of another
+      // vowel may have carried (`Hoi`), or which its own h takes (`HOI`).
+      return uppercase === /\p{Lu}/u.test(spelling)
+        ? spelling
+        : uppercase
+        ? capitalized(spelling)
+        : spelling.toLowerCase();
+  }
+}
+
+/** The spelling with its first letter in capitals (`th` → `Th`). */
+function capitalized(spelling: string): string {
+  return spelling.replace(/\p{L}/u, (letter) => letter.toUpperCase());
 }
 
 /** Reads the preprocessed text again, for its positions only. */

@@ -40,13 +40,18 @@ differently:
   as the source writes it in its word, without the options of the converted
   text: with sigma excluded, `λόγος σῶμα` gives `λόγος σῶμα` in Greek (rc.8:
   `λόγος ςῶμα`), and with omega excluded, `τῷ` gives `tῷ` in transliteration
-  with `diacritics: { all: "remove" }` (rc.8: `tω`). The transformations of
+  with `diacritics: { all: "remove" }` (rc.8: `tω`). A Beta Code letter is
+  written in canonical Beta Code, whatever the `betaCode` options, and a
+  transliterated letter is copied from the source. The transformations of
   the whole text (`text`) still apply, in context: under title case,
   `σῶμα λόγος` gives `Σῶμα Λόγος` (rc.8: `ΣΩ͂μα ΛόγοΣ`), and under
   `numerals: "decimal"`, `ιϛʹ` with stigma excluded gives `16` (rc.8: `iϛʹ`).
   The letters around a kept letter stay in its word: `σο`, with omicron
   excluded, keeps its `σ` (rc.8: `ςο`), and monotonic accentuation keeps the
-  accent of such a word, whose syllables it cannot count.
+  accent of such a word, whose syllables it cannot count. In
+  `convertDetailed()`, a kept letter is one literal, so the `spans` of a
+  converter that keeps letters can be fewer (`a#2b`, stigma excluded, had 4
+  and has 3).
 
 ## Updating from `1.0.0-rc.7`
 

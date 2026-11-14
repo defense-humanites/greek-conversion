@@ -74,16 +74,18 @@ const DENTALS = new Set<Letter>(["tau", "delta", "theta"]);
 
 /**
  * The literals that write a letter a converter keeps as it was, outside its
- * scope (see `createConverter()`). They are letters of their word, so that
- * the letters around them keep their place in it: `σο`, with omicron kept,
- * keeps its medial sigma. No rule reads which letter they write.
+ * scope (see `createConverter()`), and whether that letter is a capital in
+ * the output. They are letters of their word, so that the letters around
+ * them keep their place in it: `σο`, with omicron kept, keeps its medial
+ * sigma, and a capital among them is among capitals. No rule reads which
+ * letter they write.
  */
-const KEPT_LETTERS = new WeakSet<Token>();
+const KEPT_LETTERS = new WeakMap<Token, boolean>();
 
 /** A literal that writes (part of) a letter kept as it was. */
-export function keptLetter(value: string): Literal {
+export function keptLetter(value: string, uppercase: boolean): Literal {
   const token = literal(value);
-  KEPT_LETTERS.add(token);
+  KEPT_LETTERS.set(token, uppercase);
   return token;
 }
 
@@ -99,6 +101,12 @@ export function isKeptLetter(token: Token): boolean {
 export function isWordLetter(token: Token | undefined): boolean {
   return token !== undefined &&
     (token.kind === "grapheme" || KEPT_LETTERS.has(token));
+}
+
+/** Whether a letter of a word is a capital, or undefined for another token. */
+function capitalLetter(token: Token | undefined): boolean | undefined {
+  if (token === undefined) return undefined;
+  return token.kind === "grapheme" ? token.uppercase : KEPT_LETTERS.get(token);
 }
 
 export function isWordInitial(document: Document, index: number): boolean {
@@ -217,9 +225,8 @@ function isLineBreak(token: Token | undefined): boolean {
  * only its first letter is, which ISO 843 allows (note 11).
  */
 export function isAmongCapitals(document: Document, index: number): boolean {
-  const neighbour = adjacentGrapheme(document, index, 1) ??
-    adjacentGrapheme(document, index, -1);
-  return neighbour?.uppercase === true;
+  return (capitalLetter(adjacentToken(document, index, 1)) ??
+    capitalLetter(adjacentToken(document, index, -1))) === true;
 }
 
 /**
@@ -266,15 +273,6 @@ function spellsLetter(token: Token | undefined): boolean {
   return token?.kind === "grapheme" ||
     token?.kind === "literal" &&
       /[\p{Lu}\p{Ll}\p{Lt}\p{Lo}\p{Co}]/u.test(token.value);
-}
-
-function adjacentGrapheme(
-  document: Document,
-  index: number,
-  step: 1 | -1,
-): Grapheme | undefined {
-  const token = adjacentToken(document, index, step);
-  return token?.kind === "grapheme" ? token : undefined;
 }
 
 export function isVowel(letter: Letter): boolean {
