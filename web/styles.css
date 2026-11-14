@@ -772,7 +772,7 @@ h1 span {
 }
 /*
  * The label and the buttons share the head of the field; only on a phone do
- * the buttons move under the label. The character count sits at the foot.
+ * the buttons move under the label.
  */
 .field-head {
   display: flex;
@@ -812,9 +812,18 @@ h1 span {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/*
+ * The character count sits on the line of the resize handle, at the left
+ * edge of the text; the text keeps that line free (padding-bottom of
+ * `.text`).
+ */
 .field-foot {
+  position: absolute;
+  bottom: 0;
+  left: 16px;
   margin: 0;
-  text-align: right;
+  line-height: 14px;
+  pointer-events: none;
 }
 .field-foot:empty {
   display: none;
@@ -880,7 +889,7 @@ h1 span {
   width: 100%;
   min-height: 220px;
   margin: 0;
-  padding: 0 0 0 16px;
+  padding: 0 0 28px 16px;
   border: 0;
   background: transparent;
   font-size: 28px;
