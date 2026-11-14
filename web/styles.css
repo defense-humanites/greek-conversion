@@ -982,38 +982,37 @@ textarea.text::placeholder {
   pointer-events: none;
   resize: none;
 }
+/*
+ * Both marks are drawn as backgrounds in the padding under the text, so that
+ * the solid line and the dots share one line in every browser: a text
+ * decoration sits on the baseline, a background on the descent, and the two
+ * drift apart from one browser or font to another. Each is centred 3 px
+ * above the bottom of the padding.
+ */
 .marks mark {
-  background: none;
+  padding-bottom: 6px;
+  background: linear-gradient(var(--to), var(--to)) 0 calc(100% - 1.5px) /
+    100% 3px no-repeat;
   color: transparent;
-  text-decoration: underline;
-  text-decoration-color: var(--to);
-  text-decoration-thickness: 3px;
-  text-underline-offset: 0.25em;
-  text-decoration-skip-ink: none;
 }
 /*
  * Copied as is, but read back as Greek: nothing of the Greek is lost. The
- * dots are drawn as a pattern, regular in every browser, on the line of the
- * solid underline.
+ * dots are a pattern, regular in every browser.
  */
 .marks mark.literal {
-  padding-bottom: calc(0.25em + 3px);
-  background-image: radial-gradient(
+  background: radial-gradient(
     circle,
     var(--from) 1.5px,
     transparent 2px
-  );
-  background-position: 0 100%;
+  ) 0 100% / 8px 6px;
   /* Whole dots only: the spacing gives way at the end of a word. */
   background-repeat: space no-repeat;
-  background-size: 8px 6px;
-  text-decoration: none;
 }
 /* What the value under preview changes in the output */
 .marks mark.preview {
+  padding-bottom: 0;
   border-radius: 4px;
   background: color-mix(in srgb, var(--to) 20%, transparent);
-  text-decoration: none;
 }
 .marks mark.literal.single {
   background-position: 50% 100%;
