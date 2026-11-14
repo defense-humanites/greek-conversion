@@ -917,16 +917,45 @@ function restoreState(): void {
 }
 
 /*
- * The fields grow with their text: through CSS (`field-sizing: content`)
- * where the browser supports it, otherwise by measuring the text.
+ * The two fields keep one height, so that their character counts stay on
+ * one line. They grow with the longer text: the grid stretches both fields,
+ * and the texts fill them, sized by CSS (`field-sizing: content`) where the
+ * browser supports it, otherwise by measuring them. Resizing one field by
+ * its handle resizes the other with it; from then on, both keep the height
+ * chosen.
  */
 const SIZES_ITSELF = CSS.supports("field-sizing", "content");
+let resizing: HTMLTextAreaElement | undefined;
+let resized = false;
 
-function fitHeight(field: HTMLTextAreaElement): void {
-  if (SIZES_ITSELF) return;
-  field.style.height = "auto";
-  field.style.height = `${field.scrollHeight}px`;
+function fitHeights(): void {
+  if (SIZES_ITSELF || resized) return;
+  for (const field of [source, output]) field.style.height = "auto";
+  const height = Math.max(source.scrollHeight, output.scrollHeight);
+  for (const field of [source, output]) field.style.height = `${height}px`;
 }
+
+const followResize = new ResizeObserver(() => {
+  if (resizing === undefined || !resizing.style.height) return;
+  const other = resizing === source ? output : source;
+  resized = true;
+  if (other.style.height !== resizing.style.height) {
+    other.style.height = resizing.style.height;
+  }
+});
+for (const field of [source, output]) {
+  // The handle belongs to the field: a press on it starts on the field.
+  field.addEventListener("pointerdown", () => {
+    resizing = field;
+  });
+  followResize.observe(field);
+}
+addEventListener("pointerup", () => {
+  resizing = undefined;
+});
+addEventListener("pointercancel", () => {
+  resizing = undefined;
+});
 
 /*
  * Conversion options, as pills after the sentence: one per option that
@@ -1328,8 +1357,7 @@ function update(): void {
     );
     showCode(from, to, preset, options, inventory, undefined);
   }
-  fitHeight(source);
-  fitHeight(output);
+  fitHeights();
   markActiveExample();
   saveState();
 }

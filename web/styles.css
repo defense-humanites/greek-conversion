@@ -875,6 +875,8 @@ h1 span {
 .editor {
   position: relative;
   display: grid;
+  /* The field fills the height the grid gives it: that of the longer text. */
+  flex: 1;
 }
 /*
  * Literata draws the breathings and accents of a capital to the left of the
@@ -886,6 +888,7 @@ h1 span {
 }
 .text {
   grid-area: 1 / 1;
+  align-self: stretch;
   width: 100%;
   min-height: 220px;
   margin: 0;
