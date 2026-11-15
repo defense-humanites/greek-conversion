@@ -5,13 +5,13 @@ the `0.14.x` API.
 
 ## Installation
 
-The release candidate `1.0.0-rc.8` is published on JSR, and on npm under the
+The release candidate `1.0.0-rc.9` is published on JSR, and on npm under the
 `next` distribution tag; the stable `1.0.0` will follow with the same content
 unless a problem is found:
 
 ```sh
 npm install @humanities/greek-conversion@next
-npx jsr add @humanities/greek-conversion@1.0.0-rc.8
+npx jsr add @humanities/greek-conversion@1.0.0-rc.9
 ```
 
 The package is ESM-only.
@@ -56,9 +56,9 @@ Without them:
   (rc.8: `removed-glyph-variant`).
 - `GlyphVariant` has nine more values, one per symbol form, and
   `ConversionLossCode` two more, `added-glyph-variant` and `added-diacritic`,
-  which code that switches over them must handle. A symbol form belongs to one case:
-  `validateDocument()` reports it on a grapheme of the other case, and a case
-  policy writes the ordinary letter (`ϑ` in capitals is `Θ`).
+  which code that switches over them must handle. A symbol form belongs to
+  one case: `validateDocument()` reports it on a grapheme of the other case,
+  and a case policy writes the ordinary letter (`ϑ` in capitals is `Θ`).
 
 The API also gains two options, which change nothing by default:
 `greek.iotaSubscript`, which writes the iota subscript on the line (see the
@@ -68,16 +68,16 @@ transliteration (*Restyle a transliteration*). A restyle that went through
 Greek in two calls can take one,
 `reencode(text, "transliteration", { ...target, source })`, which also keeps
 what the Greek step dropped, such as a lunate sigma that the source writes
-`c`. Six kinds of input convert differently:
+`c`. Seven kinds of input convert differently:
 
 - Where the position decides the shape of a sigma in Greek output, a sigma
   before an elision apostrophe is medial: the Beta Code `a)gge/llous'` gives
   `ἀγγέλλουσ’`, and under `finalSigma: "contextual"`, `ἔχουσ’ ἐγώ` and
-  `σ’ αγαπώ` keep their `σ` (rc.8: `ἀγγέλλους’`, `ἔχους’`, `ς’ αγαπώ`). Before an apostrophe that closes a quotation opened by
-  `‘`, the sigma stays final (‘λόγος’). Under `"contextual"`, a Greek word in
-  straight quotation marks, `'λόγος'`, now gives `’λόγοσ’`: use `‘` and `’`
-  to quote, or keep the source shapes with the default
-  `finalSigma: "preserve"`.
+  `σ’ αγαπώ` keep their `σ` (rc.8: `ἀγγέλλους’`, `ἔχους’`, `ς’ αγαπώ`).
+  Before an apostrophe that closes a quotation opened by `‘`, the sigma stays
+  final (‘λόγος’). Under `"contextual"`, a Greek word in straight quotation
+  marks, `'λόγος'`, now gives `’λόγοσ’`: use `‘` and `’` to quote, or keep
+  the source shapes with the default `finalSigma: "preserve"`.
 - Under `greek.finalSigma: "preserve"`, a lunate sigma written as a standard
   sigma takes `ς` at the end of a word, as any sigma whose shape the source
   does not note already did: with `sigma: "standard"`, `ϲῶμαϲ` gives `σῶμας`
@@ -111,6 +111,15 @@ what the Greek step dropped, such as a lunate sigma that the source writes
   no space, does not start a word: `δ’ἐγώ` gives `Δ’ἐγώ` (rc.8: `Δ’Ἐγώ`), as a
   coronis written as an apostrophe does (`Ka’gṓ`). With a space, `δ’ ἐγώ`
   still gives `Δ’ Ἐγώ`.
+- A few rare spellings are written so that they read back as written. In
+  Beta Code, a keraia before a digit is written `ʹ`, since `#` and a digit
+  are a TLG character code: `αʹ1` gives `aʹ1` (rc.8: `a#1`, read back as
+  `αϟ`), and a small sigma before a digit from 1 to 3 takes its code
+  (`λόγος2` gives `lo/gos22`). In transliteration, the contextual `y` of a
+  numeral takes a diaeresis (`ὀυʹ` gives `oÿʹ`; rc.8: `oyʹ`), and under
+  `upsilon: "y-with-ou-v-f"`, a circumflex moved to an epsilon is written as
+  a tilde where `ê` is eta (`εὖ` gives `’ẽf` under ISO 843 Type 1; rc.8:
+  `’êf`).
 
 ## Updating from `1.0.0-rc.7`
 

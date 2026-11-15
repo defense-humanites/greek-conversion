@@ -7,6 +7,20 @@ change.
 
 ## [Unreleased]
 
+## [1.0.0-rc.9] - 2026-11-15
+
+Ninth release candidate for `1.0.0`. Greek output now keeps the letter forms
+the source writes, by default: the lunate sigma, a sigma whose shape
+contradicts its place, `ϐ`, and the symbol forms such as `ϑ`; MIGRATION gives
+the options that reproduce rc.8. `convertDetailed()` reports a form only where
+converting back cannot restore it, and names it. The API gains the `source`
+option, which restyles a transliteration (#70), `greek.iotaSubscript`,
+`greek.symbolForms`, the loss codes `added-glyph-variant` and
+`added-diacritic`, and the `glyphVariant` field of a loss. Beta Code reads and
+writes the TLG sigma codes `s1` and `s2`. Checking the Bailly corpus and
+fuzzing the options fixed a series of conversions that did not read back as
+written, or that were not idempotent.
+
 ### Added
 
 - `greek.iotaSubscript` decides where Greek output writes a kept iota
@@ -68,10 +82,6 @@ change.
 
 ### Changed
 
-- Beta Code `s1` and `s2` read as a sigma with a noted shape, and no longer
-  as a sigma followed by a digit: `lo/gos1` gives `λόγοσ` (rc.8: `λόγος1`).
-  Marks after a sigma code are read as marks of the sigma (`s2/a` gives
-  `ς́α`; rc.8: `ς/α`).
 - Greek output keeps the letter forms the source writes, by default. The
   defaults of `greek.sigma`, `greek.finalSigma`, and `greek.medialBeta` are
   now `"preserve"` (were `"standard"`, `"contextual"`, and `"standard"`), and
@@ -99,6 +109,10 @@ change.
 - Under the default `greek.sigma: "preserve"`, Greek and Beta Code output
   keep a lunate sigma in a numeral (`ϲʹ`, Beta Code `s3#`); `"lunate"` still
   writes a numeral with the standard sigma.
+- Beta Code `s1` and `s2` read as a sigma with a noted shape, and no longer
+  as a sigma followed by a digit: `lo/gos1` gives `λόγοσ` (rc.8: `λόγος1`).
+  Marks after a sigma code are read as marks of the sigma (`s2/a` gives
+  `ς́α`; rc.8: `ς/α`).
 
 ### Fixed
 
@@ -111,9 +125,9 @@ change.
   sigma on its own (`σ’ το πω`) is always medial, and an apostrophe after
   punctuation or a digit always closes the quotation (‘ναί.’). A straight
   quotation mark opens nothing, since it cannot be told from an aphaeresis:
-  `'λόγος'` now gives `’λόγοσ’`. This applies wherever the position decides
-  the shape: under `finalSigma: "contextual"`, and under `"preserve"` for a
-  sigma whose shape the source does not note.
+  under `finalSigma: "contextual"`, `'λόγος'` now gives `’λόγοσ’`. This
+  applies wherever the position decides the shape: under `"contextual"`, and
+  under `"preserve"` for a sigma whose shape the source does not note.
 - Under `greek.finalSigma: "preserve"`, a lunate sigma written as a standard
   sigma takes its shape from its place in the word, as a sigma read from Beta
   Code or transliteration does. A lunate sigma notes no position, but it was
@@ -1086,7 +1100,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.8...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.9...HEAD
+[1.0.0-rc.9]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.8...v1.0.0-rc.9
 [1.0.0-rc.8]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.7...v1.0.0-rc.8
 [1.0.0-rc.7]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.6...v1.0.0-rc.7
 [1.0.0-rc.6]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.5...v1.0.0-rc.6
