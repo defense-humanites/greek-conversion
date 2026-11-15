@@ -1,5 +1,5 @@
 import { test } from "node:test";
-import { assertEquals } from "./assertions.ts";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import { convert, convertDetailed, type Preset } from "../src/mod.ts";
 import {
   EQUIVALENCES,
@@ -181,25 +181,25 @@ test("canonical Unicode variants are not information loss", () => {
   assertEquals(decomposed.lossy, false);
 });
 
-test("removed lunate provenance is independent from lossy case folding", () => {
-  const variants = convertDetailed("ϐίος ϲῶμα", "greek", "greek", {
-    greek: { finalSigma: "medial", medialBeta: "standard", sigma: "standard" },
+test("folding glyph variants on request is independent from case folding", () => {
+  // Greek output that folds the variants on request writes the source as the
+  // options ask: nothing written under the same options is lost.
+  const variants = convertDetailed("ϐίος ϲῶμα ϑεός", "greek", "greek", {
+    greek: {
+      finalSigma: "medial",
+      medialBeta: "standard",
+      sigma: "standard",
+      symbolForms: "standard",
+    },
   });
   const lowercase = convertDetailed("ΒΊΟΣ", "greek", "greek", {
     greek: { finalSigma: "medial" },
     text: { letterCase: "lowercase" },
   });
 
-  assertEquals(variants.output, "βίοσ σῶμα");
-  assertEquals(variants.lossy, true);
-  assertEquals(variants.losses, [{
-    code: "removed-glyph-variant",
-    index: 5,
-    offset: 5,
-    length: 1,
-    message:
-      "The target representation does not retain the source glyph variant.",
-  }]);
+  assertNfcEquals(variants.output, "βίοσ σῶμα θεόσ");
+  assertEquals(variants.lossy, false);
+  assertEquals(variants.losses, []);
   assertEquals(lowercase.output, "βίοσ");
   assertEquals(lowercase.lossy, true);
   assertEquals(lowercase.losses.map(({ code }) => code), [
@@ -240,10 +240,12 @@ test("tracks lunate provenance through all three formats", () => {
 
   const span = { inputStart: 0, inputEnd: 1, outputStart: 0, outputEnd: 1 };
   assertEquals(greek, { output: "ϲ", lossy: false, losses: [], spans: [span] });
-  assertEquals(beta.output, "s");
-  assertEquals(beta.losses.map(({ code }) => code), [
-    "removed-glyph-variant",
-  ]);
+  assertEquals(beta, {
+    output: "s3",
+    lossy: false,
+    losses: [],
+    spans: [{ inputStart: 0, inputEnd: 2, outputStart: 0, outputEnd: 2 }],
+  });
   assertEquals(transliteration, {
     output: "c",
     lossy: false,

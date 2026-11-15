@@ -52,11 +52,20 @@ test("keeps unrecognized combining marks literal", () => {
 test("handles transparent controls at final-sigma boundaries", () => {
   const transparent = ["\u0323", "\u200C", "\u200D", "\u2060", "\uFEFF"];
 
+  const contextual = { greek: { finalSigma: "contextual" } } as const;
+
   for (const suffix of transparent) {
-    assertNfcEquals(convert(`ασ${suffix}`, "greek", "greek"), `ας${suffix}`);
     assertNfcEquals(
-      convert(`ασ${suffix}α`, "greek", "greek"),
+      convert(`ασ${suffix}`, "greek", "greek", contextual),
+      `ας${suffix}`,
+    );
+    assertNfcEquals(
+      convert(`ας${suffix}α`, "greek", "greek", contextual),
       `ασ${suffix}α`,
+    );
+    assertNfcEquals(
+      convert(`as${suffix}`, "beta-code", "greek"),
+      `ας${suffix}`,
     );
   }
 });

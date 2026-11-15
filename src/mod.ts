@@ -103,6 +103,7 @@ export type {
   SigmaOrthography,
   SmoothBreathingTransliteration,
   SourceOptions,
+  SymbolFormOrthography,
   TextOptions,
   TransliterationOptions,
   UnicodeComposition,
@@ -188,9 +189,10 @@ export function reencode(
  * retain, and where each source token was read and written.
  *
  * Unicode composition and tonos/oxia are representational differences and are
- * not reported as loss. Known lunate-sigma provenance is reported when an
- * output policy removes it. The conversion itself is executed once; only the
- * rendered target is parsed again for comparison.
+ * not reported as loss. A letter form of the source (`glyphVariant`) is
+ * reported when the target cannot keep it and the options do not write it
+ * again; a form the options fold is not. The conversion itself is executed
+ * once; only the rendered target is parsed again for comparison.
  *
  * Positions ({@link ConversionResult.spans}, {@link ConversionLoss.offset})
  * are offsets in UTF-16 code units in the input as supplied and in the
@@ -218,11 +220,17 @@ export function convertDetailed(
   const target = parseResolved(output, to, resolved, true);
   // Where the target tokens were read, only if the losses need it: reading
   // the output again with positions costs less than recording them each time.
-  const losses = findConversionLosses(source, target, inputSpans, () => {
-    const reread: ReadPositions = { text: "", starts: [] };
-    parseResolved(output, to, resolved, true, reread);
-    return { written: outputSpans, read: readSpans(output, reread) };
-  });
+  const losses = findConversionLosses(
+    source,
+    target,
+    inputSpans,
+    () => {
+      const reread: ReadPositions = { text: "", starts: [] };
+      parseResolved(output, to, resolved, true, reread);
+      return { written: outputSpans, read: readSpans(output, reread) };
+    },
+    { format: from, options: reading },
+  );
 
   const spans: ConversionSpan[] = new Array(source.length);
   for (let index = 0; index < source.length; index++) {

@@ -41,12 +41,21 @@ import {
 /** Letter indices, in the order the readers use. */
 export const LETTERS = Object.keys(ALPHABET) as Letter[];
 
-/** Glyph variants by index; a reader's flags hold the index in bits 1–2. */
+/** Glyph variants by index; a reader's flags hold the index in bits 1–4. */
 export const VARIANTS: readonly (GlyphVariant | undefined)[] = [
   undefined,
   "lunate-sigma",
   "final-sigma",
   "medial-sigma",
+  "beta-symbol",
+  "theta-symbol",
+  "capital-theta-symbol",
+  "phi-symbol",
+  "pi-symbol",
+  "kappa-symbol",
+  "rho-symbol",
+  "lunate-epsilon",
+  "upsilon-hook",
 ];
 
 /** Upper bound of the shared graphemes. */
@@ -58,10 +67,10 @@ export const LITERAL_UNITS = 0x2070;
 /** Upper bound of the other shared literals. */
 export const SHARED_LITERAL_LIMIT = 1024;
 
-// A grapheme key packs the letter, the flags (bit 0: uppercase; bits 1–2:
+// A grapheme key packs the letter, the flags (bit 0: uppercase; bits 1–4:
 // variant) and the mark mask, one bit per entry of ORDER.
 const MASKS = 1 << ORDER.length;
-const FLAGS = 8;
+const FLAGS = 32;
 
 const graphemes = new Map<number, Grapheme>();
 const unitLiterals = new Map<number, Literal>();

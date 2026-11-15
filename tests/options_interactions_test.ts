@@ -57,7 +57,7 @@ test("classifies context before selective diacritic removal", () => {
 test("does not create contractions by removing blocking marks", () => {
   const options = {
     diacritics: { all: "remove" },
-    greek: { dentalSigma: "assimilate" },
+    greek: { dentalSigma: "assimilate", finalSigma: "contextual" },
   } as const;
 
   assertNfcEquals(
@@ -69,7 +69,7 @@ test("does not create contractions by removing blocking marks", () => {
 test("selective removal does not create blocked contractions", () => {
   const options = {
     diacritics: { accents: "remove" },
-    greek: { dentalSigma: "assimilate" },
+    greek: { dentalSigma: "assimilate", finalSigma: "contextual" },
   } as const;
 
   assertNfcEquals(

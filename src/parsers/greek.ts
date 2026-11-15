@@ -5,6 +5,7 @@ import {
   diacriticBit,
   diacriticsFromMask,
   type Document,
+  type GlyphVariant,
   literal,
   ownedGrapheme,
   type Token,
@@ -40,8 +41,25 @@ const LETTERS_START = 0x0370;
 const LETTERS_SIZE = 0x90;
 /** Letter index of each unit of the range, or NOT_A_LETTER. */
 const LETTER_OF = new Int8Array(LETTERS_SIZE).fill(NOT_A_LETTER);
-/** Bit 0: uppercase; bits 1–2: index in VARIANTS. */
+/** Bit 0: uppercase; bits 1–4: index in VARIANTS. */
 const FLAGS_OF = new Uint8Array(LETTERS_SIZE);
+
+/**
+ * The glyph variant each symbol form notes. `greekLower` reads them as their
+ * letters (`docs/greek-unicode.md`, *Letter forms*); NFD has already split
+ * `ϓ` and `ϔ` into `ϒ` and a mark.
+ */
+const SYMBOL_VARIANTS = new Map<string, GlyphVariant>([
+  ["ϐ", "beta-symbol"],
+  ["ϑ", "theta-symbol"],
+  ["ϴ", "capital-theta-symbol"],
+  ["ϕ", "phi-symbol"],
+  ["ϖ", "pi-symbol"],
+  ["ϰ", "kappa-symbol"],
+  ["ϱ", "rho-symbol"],
+  ["ϵ", "lunate-epsilon"],
+  ["ϒ", "upsilon-hook"],
+]);
 
 for (let index = 0; index < LETTERS_SIZE; index++) {
   const source = String.fromCharCode(LETTERS_START + index);
@@ -49,19 +67,24 @@ for (let index = 0; index < LETTERS_SIZE; index++) {
   const letter = BY_GREEK.get(lower === "ς" ? "σ" : lower);
   if (letter === undefined) continue;
   LETTER_OF[index] = LETTER_INDEX.get(letter)!;
-  const uppercase = source !== lower;
+  const symbol = SYMBOL_VARIANTS.get(source);
+  const uppercase = symbol === undefined
+    ? source !== lower
+    : symbol === "capital-theta-symbol" || symbol === "upsilon-hook";
   // A capital sigma has no final or medial shape to keep; the capital lunate
   // sigma Ϲ is still lunate.
-  FLAGS_OF[index] = (uppercase ? 1 : 0) |
+  const variant: GlyphVariant | undefined = symbol ??
     (lower === "ϲ"
-      ? 1
+      ? "lunate-sigma"
       : uppercase
-      ? 0
+      ? undefined
       : lower === "ς"
-      ? 2
+      ? "final-sigma"
       : lower === "σ"
-      ? 3
-      : 0) << 1;
+      ? "medial-sigma"
+      : undefined);
+  FLAGS_OF[index] = (uppercase ? 1 : 0) |
+    (variant === undefined ? 0 : VARIANTS.indexOf(variant)) << 1;
 }
 
 const letterOf = (unit: number): number =>

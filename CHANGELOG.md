@@ -35,6 +35,53 @@ change.
   every function that reads text, including a converter bound to another
   preset. Its options are checked like the others, with paths that start with
   `source.`.
+- `greek.symbolForms` decides how Greek output writes the symbol forms of
+  letters: `ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, and `ϒ`, with its accented forms
+  `ϓ` and `ϔ`. `"preserve"`, the default, keeps those the source writes, and
+  `"standard"` writes the ordinary letters. No value writes a symbol form
+  where the source has the ordinary letter: Unicode reserves them for
+  mathematics. The Greek reader records each symbol form as the grapheme's
+  `glyphVariant` (`"beta-symbol"` for `ϐ`, `"theta-symbol"`,
+  `"capital-theta-symbol"`, `"phi-symbol"`, `"pi-symbol"`, `"kappa-symbol"`,
+  `"rho-symbol"`, `"lunate-epsilon"`, `"upsilon-hook"`). A symbol form belongs
+  to one case: in capitals, `ϑ` is `Θ`, as `toUpperCase()` writes it, and
+  `validateDocument()` reports a symbol form on a grapheme of the other case.
+- `greek.medialBeta: "preserve"`, the new default, writes `ϐ` where the source
+  notes it and `β` elsewhere.
+- A `removed-glyph-variant` loss names the source form in its new
+  `glyphVariant` field. The new code `added-glyph-variant` reports a form the
+  target writes where the source has none, and that converts back as another
+  spelling; its `glyphVariant` is the form written.
+
+### Changed
+
+- Greek output keeps the letter forms the source writes, by default. The
+  defaults of `greek.sigma`, `greek.finalSigma`, and `greek.medialBeta` are
+  now `"preserve"` (were `"standard"`, `"contextual"`, and `"standard"`), and
+  so is that of the new `greek.symbolForms`. `ϲῶμα`, `λόγοσ`, `ϐίος`, and
+  `ϑεός` stay as written (rc.8: `σῶμα`, `λόγος`, `βίος`, `θεός`); so do a
+  sigma noted final inside a word and the shapes of a word whose marks are
+  removed. The lunate sigma that Beta Code writes `s3`, and `bnf-core` `c`,
+  gives `ϲ` in Greek, and Beta Code output writes it `s3` (rc.8: `s`). A sigma
+  whose shape the source does not note, as in Beta Code or transliteration,
+  is still placed by its position. The options
+  `{ greek: { sigma: "standard", finalSigma: "contextual", medialBeta: "standard", symbolForms: "standard" } }`
+  give the output of rc.8, and the README gives a recipe to fold the forms
+  for comparison (*Keep or fold letter variants*).
+- `convertDetailed()` reports a letter form when the source format, under the
+  options of the conversion, writes it from the source but not from the text
+  read back, so that a conversion without loss still converts back to
+  the same text (Information loss, *Letter forms*). A form the target cannot
+  write is reported: `ϐίος` gives `bíos` in transliteration, which reads back
+  as `βίος`, with a loss whose `glyphVariant` is `"beta-symbol"`; so do `ϑ`,
+  and a sigma whose shape contradicts its place (`λόγοσ` → `lógos`). Under
+  `medialBeta: "symbol"`, which writes `ϐ` inside a word as French typography
+  does, a text written that way gives no loss. A form that the options fold
+  is no longer reported: `ϲῶμα` under `sigma: "standard"` gives `σῶμα`, which
+  is how the same options write the source (rc.8: `removed-glyph-variant`).
+- Under the default `greek.sigma: "preserve"`, Greek and Beta Code output
+  keep a lunate sigma in a numeral (`ϲʹ`, Beta Code `s3#`); `"lunate"` still
+  writes a numeral with the standard sigma.
 
 ### Fixed
 
@@ -48,15 +95,15 @@ change.
   punctuation or a digit always closes the quotation (‘ναί.’). A straight
   quotation mark opens nothing, since it cannot be told from an aphaeresis:
   `'λόγος'` now gives `’λόγοσ’`. This applies wherever the position decides
-  the shape: under the default `finalSigma: "contextual"`, and under
-  `"preserve"` for a sigma whose shape the source does not note.
+  the shape: under `finalSigma: "contextual"`, and under `"preserve"` for a
+  sigma whose shape the source does not note.
 - Under `greek.finalSigma: "preserve"`, a lunate sigma written as a standard
   sigma takes its shape from its place in the word, as a sigma read from Beta
   Code or transliteration does. A lunate sigma notes no position, but it was
   always written `σ`, even at the end of a word: with `sigma: "standard"`,
   `ϲῶμαϲ` gave `σῶμασ` and now gives `σῶμας`; the Beta Code `lo/gos3` and
-  `logoc` under `bnf-core` gave `λόγοσ` and `λογοσ`. The default
-  `finalSigma: "contextual"` was not affected.
+  `logoc` under `bnf-core` gave `λόγοσ` and `λογοσ`. `finalSigma:
+  "contextual"` was not affected.
 - Under `text.numerals: "decimal"` (the ALA-LC presets), `στʹ` is also read as
   the units of a longer numeral, as `ϛʹ` is: the ALA-LC tables give
   `ϝʹ, ϛʹ, στʹ` for six, and Modern Greek writes 16 as `ΙΣΤʹ`. Only a lone
@@ -103,6 +150,12 @@ change.
   `αʹ` gives `aʹ` (was `á`, then `a`). A small stigma or sampi is written
   only where the numeral reads back: `ϡαʹ` in capitals gives `S̄Á` (was
   `s̄Á`, then `S̄Á`).
+
+- A lunate sigma that the options write where the source has a standard
+  sigma is reported when it converts back otherwise. Under
+  `transliteration.lunateSigma: "c"` and `greek.sigma: "lunate"`, `sōma`
+  gives `ϲωμα`, which converts back to `cōma`; `convertDetailed()` reported
+  no loss, and now reports `added-glyph-variant`.
 
 ## [1.0.0-rc.8] - 2026-11-11
 

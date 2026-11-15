@@ -37,6 +37,7 @@ import {
   preservesDiacritic,
 } from "./diacritics.ts";
 import {
+  GLYPH_VARIANTS,
   NO_DIACRITICS,
   sharedMask,
   withDiacritic,
@@ -157,9 +158,9 @@ export function encodeGreek(
 
     if (assimilated !== undefined) {
       let base = ALPHABET.sigma.greek;
-      if (rendersLunateSigma(assimilated, options)) base = "ϲ";
+      if (writesLunateSigma(doc, i + 1, assimilated, options)) base = "ϲ";
       else if (
-        options.greek?.finalSigma === "preserve"
+        (options.greek?.finalSigma ?? "preserve") === "preserve"
           ? assimilated.glyphVariant === "final-sigma" ||
             assimilated.glyphVariant !== "medial-sigma" &&
               sigmaEndsWord(doc, i + 1, quotations)
@@ -177,35 +178,11 @@ export function encodeGreek(
     }
 
     const outputLetter = elidedAspirate(doc, i) ?? token.letter;
-    let base = ALPHABET[outputLetter].greek;
-
-    if (
-      token.letter === "sigma" &&
-      rendersLunateSigma(token, options) &&
-      !isGreekNumeralContext(doc, i)
-    ) {
-      base = "ϲ";
-    } else if (
-      token.letter === "sigma" &&
-      (options.greek?.finalSigma === "preserve"
-        ? token.glyphVariant === "final-sigma" ||
-          token.glyphVariant !== "medial-sigma" &&
-            sigmaEndsWord(doc, i, quotations)
-        : options.greek?.finalSigma !== "medial" &&
-          sigmaEndsWord(doc, i, quotations)) &&
-      !isGreekNumeralContext(doc, i)
-    ) {
-      base = "ς";
-    }
-    if (
-      token.letter === "beta" &&
-      !token.uppercase &&
-      options.greek?.medialBeta === "symbol" &&
-      !isGreekNumeralContext(doc, i) &&
-      !isWordInitial(doc, i)
-    ) {
-      base = "ϐ";
-    }
+    let base = outputLetter === token.letter
+      ? greekGlyph(doc, i, token, options, quotations)
+      : ALPHABET[outputLetter].greek;
+    // greekGlyph() writes a symbol form only in its own case, which
+    // greekUpper() leaves as it is (ϴ, ϒ).
     if (token.uppercase) base = greekUpper(base);
 
     out += base +
@@ -227,6 +204,91 @@ export function encodeGreek(
   written.text = out;
   written.normalized = normalized;
   return substituteGreekSigns(normalized, options);
+}
+
+/**
+ * The glyph Greek output writes for the letter of `token` at `index`, before
+ * its case and marks: the shape of a sigma (`ϲ`, `ς`, `σ`), the beta (`ϐ`,
+ * `β`), a symbol form the source notes (`ϑ`, `ϴ`…), or the ordinary letter.
+ * A symbol form is returned in its own case. The loss detector compares
+ * these glyphs (`glyphForm()`).
+ */
+export function greekGlyph(
+  document: Document,
+  index: number,
+  token: Grapheme,
+  options: ConversionOptions,
+  quotations: QuotationContext,
+): string {
+  const ordinary = ALPHABET[token.letter].greek;
+  if (token.letter === "sigma") {
+    if (writesLunateSigma(document, index, token, options)) return "ϲ";
+    if (isGreekNumeralContext(document, index)) return ordinary;
+    return ((options.greek?.finalSigma ?? "preserve") === "preserve"
+        ? token.glyphVariant === "final-sigma" ||
+          token.glyphVariant !== "medial-sigma" &&
+            sigmaEndsWord(document, index, quotations)
+        : options.greek?.finalSigma !== "medial" &&
+          sigmaEndsWord(document, index, quotations))
+      ? "ς"
+      : ordinary;
+  }
+  // A variant of another letter, which only a document built by hand can
+  // have (`validateDocument()` reports it), is not written.
+  const variant = token.glyphVariant !== undefined &&
+      Object.hasOwn(GLYPH_VARIANTS, token.glyphVariant) &&
+      GLYPH_VARIANTS[token.glyphVariant].letter === token.letter
+    ? GLYPH_VARIANTS[token.glyphVariant]
+    : undefined;
+  if (token.letter === "beta") {
+    if (token.uppercase) return ordinary;
+    switch (options.greek?.medialBeta) {
+      case "symbol":
+        return isGreekNumeralContext(document, index) ||
+            isWordInitial(document, index)
+          ? ordinary
+          : "ϐ";
+      case "standard":
+        return ordinary;
+      default:
+        return variant?.symbol ?? ordinary;
+    }
+  }
+  return variant?.symbol !== undefined &&
+      variant.uppercase === token.uppercase &&
+      options.greek?.symbolForms !== "standard"
+    ? variant.symbol
+    : ordinary;
+}
+
+/**
+ * The glyph that `format` writes for the letter of `token` at `index` under
+ * these options, as far as it depends on the token's glyph variant: what the
+ * loss detector compares, so that a variant is lost only when the options do
+ * not write it again from the text read back (`docs/information-loss.md`).
+ * Case is left out, which `changed-case` reports.
+ */
+export function glyphForm(
+  document: Document,
+  index: number,
+  token: Grapheme,
+  format: Format,
+  options: ConversionOptions,
+  quotations: QuotationContext,
+): string {
+  switch (format) {
+    case "greek":
+      return greekGlyph(document, index, token, options, quotations);
+    case "beta-code":
+      return token.letter === "sigma" &&
+          writesLunateSigma(document, index, token, options)
+        ? "s3"
+        : "";
+    default:
+      return token.letter === "sigma" && rendersLunateC(token, options)
+        ? "c"
+        : "";
+  }
 }
 
 /**
@@ -268,8 +330,7 @@ export function encodeBetaCode(
     let base: string;
     if (
       token.letter === "sigma" &&
-      rendersLunateSigma(token, options) &&
-      !isGreekNumeralContext(doc, index)
+      writesLunateSigma(doc, index, token, options)
     ) {
       base = "s3";
     } else {
@@ -658,13 +719,21 @@ function rendersLunateC(token: Grapheme, options: ConversionOptions): boolean {
     options.transliteration?.lunateSigma === "c";
 }
 
-function rendersLunateSigma(
+/**
+ * Whether Greek and Beta Code output write `token`, a sigma, as a lunate
+ * sigma: where the source notes one under `"preserve"`, numerals included,
+ * and everywhere but in numerals under `"lunate"`.
+ */
+function writesLunateSigma(
+  document: Document,
+  index: number,
   token: Pick<Grapheme, "glyphVariant">,
   options: ConversionOptions,
 ): boolean {
-  return options.greek?.sigma === "lunate" ||
-    options.greek?.sigma === "preserve" &&
-      token.glyphVariant === "lunate-sigma";
+  const policy = options.greek?.sigma ?? "preserve";
+  return policy === "preserve"
+    ? token.glyphVariant === "lunate-sigma"
+    : policy === "lunate" && !isGreekNumeralContext(document, index);
 }
 
 /**

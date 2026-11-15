@@ -26,8 +26,15 @@ The guard stops ordinary calls, not a deliberate bypass: calling
 modifies it for every grapheme that shares it, including those of later
 parses in the same process. Do not mutate a set you did not create.
 
-The optional `glyphVariant` records a sigma shape from the source. It remains
-valid provenance if an orthographic policy changes the grapheme's current case.
+The optional `glyphVariant` records the form of the letter in the source: a
+sigma shape (`lunate-sigma`, `final-sigma`, `medial-sigma`) or a symbol form
+(`beta-symbol` for `ϐ`, `theta-symbol`, `capital-theta-symbol`, `phi-symbol`,
+`pi-symbol`, `kappa-symbol`, `rho-symbol`, `lunate-epsilon`, `upsilon-hook`).
+Each name is the Unicode name of the form without `GREEK`, and without
+`SYMBOL` where a qualifier already tells the form from the letter (lunate,
+hook). A symbol form belongs to one case, and `validateDocument()` reports it
+on a grapheme of the other case or another letter; Greek orthography drops it
+when a case policy changes the case. The sigma shapes fit both cases.
 
 `parse()` allocates new tokens on each call. `grapheme()` reads the supplied
 diacritics into the shared set for those marks, so a later change to the

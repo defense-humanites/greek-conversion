@@ -1,8 +1,23 @@
 /** Controls marks added to a pair of consecutive rho in Greek output. */
 export type DoubleRhoOrthography = "unmarked" | "smooth-rough";
 
-/** Selects standard beta or the medial lowercase symbol `ϐ` in Greek output. */
-export type MedialBetaOrthography = "standard" | "symbol";
+/**
+ * Selects the beta of Greek output. `"preserve"` writes `ϐ` where the source
+ * notes it and `β` elsewhere; `"symbol"` writes `ϐ` inside a word and `β` at
+ * its start, as French typography does, whatever the source; `"standard"`
+ * writes `β` everywhere.
+ */
+export type MedialBetaOrthography = "preserve" | "standard" | "symbol";
+
+/**
+ * Selects the symbol forms of letters in Greek output: `ϑ`, `ϴ`, `ϕ`, `ϖ`,
+ * `ϰ`, `ϱ`, `ϵ`, and `ϒ` with its accented forms `ϓ` and `ϔ`. `"preserve"`
+ * writes those the source notes, and `"standard"` the ordinary letters. No
+ * value writes a symbol form where the source has an ordinary letter, which
+ * Unicode reserves them for mathematics. The beta symbol `ϐ` follows
+ * `medialBeta`, and the lunate sigma `ϲ` follows `sigma`.
+ */
+export type SymbolFormOrthography = "preserve" | "standard";
 
 /**
  * Selects where Greek output writes a kept iota subscript.
@@ -48,14 +63,25 @@ export type NasalGammaTransliteration =
   | "nasal-medial-kappa"
   | "literal";
 
-/** Selects standard, lunate, or source-preserving sigma glyphs. */
-export type SigmaOrthography = "standard" | "lunate" | "preserve";
+/**
+ * Selects the sigma glyph of Greek and Beta Code output. `"preserve"` writes a
+ * lunate sigma where the source notes one (`ϲ`, Beta Code `s3`), numerals
+ * included, and a standard sigma elsewhere; `"standard"` writes every sigma as `σ` or `ς`;
+ * `"lunate"` writes every sigma as `ϲ`, except in numerals.
+ */
+export type SigmaOrthography = "preserve" | "standard" | "lunate";
 
 /** Selects `s` or `c` for a provenanced lunate sigma in transliteration. */
 export type LunateSigmaTransliteration = "s" | "c";
 
-/** Selects contextual final sigma or a uniform medial sigma in Greek output. */
-export type FinalSigmaOrthography = "contextual" | "medial" | "preserve";
+/**
+ * Selects the shape of a standard sigma in lowercase Greek output.
+ * `"preserve"` writes the shape the source notes, and places by its position
+ * a sigma whose shape the source does not note; `"contextual"` places every
+ * sigma by its position (`ς` at the end of a word, `σ` elsewhere);
+ * `"medial"` writes `σ` everywhere.
+ */
+export type FinalSigmaOrthography = "preserve" | "contextual" | "medial";
 
 /** Preserves marked alphabetic numerals or renders valid groups as decimals. */
 export type NumeralOrthography = "alphabetic" | "decimal";
@@ -299,12 +325,14 @@ export interface TransliterationOptions {
  * transliteration infers a smooth breathing, which monotonic Greek has not.
  */
 export interface GreekOptions {
-  /** Sigma glyph policy. Defaults to `"standard"`. */
+  /** Sigma glyph policy. Defaults to `"preserve"`, which keeps a lunate sigma the source notes. */
   sigma?: SigmaOrthography;
-  /** Lowercase final sigma policy in Greek output. Defaults to `"contextual"`; `"preserve"` retains source Greek sigma shapes and places any other sigma by its position, such as a lunate sigma written as a standard sigma. A sigma before an elision apostrophe is not at the end of its word. */
+  /** Lowercase final sigma policy in Greek output. Defaults to `"preserve"`, which retains source Greek sigma shapes and places any other sigma by its position, such as a sigma read from Beta Code or a lunate sigma written as a standard sigma; `"contextual"` places every sigma by its position, correcting a shape the source notes. A sigma before an elision apostrophe is not at the end of its word. */
   finalSigma?: FinalSigmaOrthography;
-  /** Medial lowercase beta glyph. Defaults to `"standard"`. */
+  /** Beta glyph. Defaults to `"preserve"`, which keeps a `ϐ` the source notes. */
   medialBeta?: MedialBetaOrthography;
+  /** Symbol forms of letters, such as `ϑ`. Defaults to `"preserve"`. */
+  symbolForms?: SymbolFormOrthography;
   /** Where a kept iota subscript is written. Defaults to `"subscript"`; whether it is kept is `diacritics.iotaSubscript`. */
   iotaSubscript?: IotaSubscriptOrthography;
   /** Double-rho marks in Greek output. Defaults to `"unmarked"`. */
@@ -448,9 +476,10 @@ export interface DefaultConversionOptions {
   };
   /** Literal default Greek orthography and Unicode form. */
   readonly greek: {
-    readonly sigma: "standard";
-    readonly finalSigma: "contextual";
-    readonly medialBeta: "standard";
+    readonly sigma: "preserve";
+    readonly finalSigma: "preserve";
+    readonly medialBeta: "preserve";
+    readonly symbolForms: "preserve";
     readonly iotaSubscript: "subscript";
     readonly doubleRho: "unmarked";
     readonly dentalSigma: "preserve";
@@ -601,9 +630,10 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
     archaicKoppa: ["k-dot-below", "q"],
   }),
   greek: freezeTable<GreekOptions>({
-    sigma: ["standard", "lunate", "preserve"],
-    finalSigma: ["contextual", "medial", "preserve"],
-    medialBeta: ["standard", "symbol"],
+    sigma: ["preserve", "standard", "lunate"],
+    finalSigma: ["preserve", "contextual", "medial"],
+    medialBeta: ["preserve", "standard", "symbol"],
+    symbolForms: ["preserve", "standard"],
     iotaSubscript: ["subscript", "capital-adscript", "adscript"],
     doubleRho: ["unmarked", "smooth-rough"],
     dentalSigma: ["preserve", "assimilate"],
@@ -666,9 +696,10 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         archaicKoppa: "k-dot-below",
       }),
       greek: Object.freeze({
-        sigma: "standard",
-        finalSigma: "contextual",
-        medialBeta: "standard",
+        sigma: "preserve",
+        finalSigma: "preserve",
+        medialBeta: "preserve",
+        symbolForms: "preserve",
         iotaSubscript: "subscript",
         doubleRho: "unmarked",
         dentalSigma: "preserve",

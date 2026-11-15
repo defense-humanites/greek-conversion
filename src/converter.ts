@@ -384,6 +384,7 @@ export class Converter {
           "spans",
         ).spans!,
       }),
+      { format: from, options: reading },
     );
     const spans: ConversionSpan[] = new Array(prepared.document.length);
     for (let index = 0; index < spans.length; index++) {

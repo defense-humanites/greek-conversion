@@ -9,6 +9,7 @@ import {
   isWordLetter,
 } from "./context.ts";
 import {
+  GLYPH_VARIANTS,
   literal,
   sharedDiacritics,
   withDiacritic as addDiacritic,
@@ -288,6 +289,16 @@ function applyLetterCaseOrthography(
     if (token.uppercase === uppercase) return token;
 
     changed = true;
+    // A symbol form exists in one case only: in the other, the letter is the
+    // ordinary one (`ϑ` → `Θ`, `ϴ` → `θ`). The lunate sigma has both.
+    const variant = token.glyphVariant !== undefined &&
+        Object.hasOwn(GLYPH_VARIANTS, token.glyphVariant)
+      ? GLYPH_VARIANTS[token.glyphVariant].uppercase
+      : undefined;
+    if (variant !== undefined && variant !== uppercase) {
+      const { glyphVariant: _variant, ...ordinary } = token;
+      return { ...ordinary, uppercase };
+    }
     return { ...token, uppercase };
   });
 

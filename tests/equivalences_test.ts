@@ -59,19 +59,39 @@ test("reencode is the same-format conversion facade", () => {
       greek: { finalSigma: "medial" },
       text: { letterCase: "lowercase" },
     }),
+    "ϐίοσ",
+  );
+  assertNfcEquals(
+    reencode("ϐΊΟΣ", "greek", {
+      greek: { finalSigma: "medial", medialBeta: "standard" },
+      text: { letterCase: "lowercase" },
+    }),
     "βίοσ",
   );
 });
 
 test("reads the symbol forms of letters as those letters", () => {
   // ϑ ϕ ϖ ϰ ϱ ϵ, and the capitals ϒ (with its accented forms ϓ ϔ) and ϴ,
-  // as ϐ is read as beta (#47). Greek output writes the letters themselves.
+  // as ϐ is read as beta (#47). Greek output keeps them, or writes the
+  // letters themselves under symbolForms: "standard".
   const symbols = "ϑεός ϕῶς ϖ ϰ ϱ ϵ ϒ ϓ ϔ ϴ";
+  const standard = { greek: { symbolForms: "standard" } } as const;
+  assertNfcEquals(convert(symbols, "greek", "greek"), symbols);
   assertNfcEquals(
-    convert(symbols, "greek", "greek"),
+    convert(symbols, "greek", "greek", standard),
     "θεός φῶς π κ ρ ε Υ Ύ Ϋ Θ",
   );
   assertEquals(convertDetailed(symbols, "greek", "greek").lossy, false);
+  assertEquals(
+    convertDetailed(symbols, "greek", "greek", standard).lossy,
+    false,
+  );
+  // Read as letters, the symbols name the same letters.
+  const letters = (text: string) =>
+    parse(text, "greek").map((token) =>
+      token.kind === "grapheme" ? token.letter : token.value
+    );
+  assertEquals(letters(symbols), letters("θεός φῶς π κ ρ ε Υ Ύ Ϋ Θ"));
   assertNfcEquals(convert("ϑεός", "greek", "transliteration"), "theós");
   assertEquals(convert("ϑεός", "greek", "beta-code"), "qeo/s");
 });

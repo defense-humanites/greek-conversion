@@ -2,8 +2,10 @@
 
 Conversion is defined as parsing a source string into the canonical `Document`
 model, applying target orthography, and encoding one canonical spelling. The
-engine preserves unknown characters and the known lunate-sigma glyph variant,
-but it does not otherwise preserve spelling or Unicode provenance.
+engine preserves unknown characters and the letter forms it knows (the lunate,
+final, and medial sigma, and the symbol forms such as `ϐ`; see
+[Letter forms](#letter-forms)), but it does not otherwise preserve spelling or
+Unicode provenance.
 
 This document distinguishes three effects:
 
@@ -22,8 +24,8 @@ the row format to the column format and parsing the result again.
 
 | From \ To | Greek | Beta Code | Transliteration |
 | --- | --- | --- | --- |
-| **Greek** | Selected glyph, accent, punctuation, and composition policies; lunate provenance unless preserved | Canonical spelling and mark order; lunate provenance unless preserved | Lunate provenance by default; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; the absence of a breathing on an initial vowel (monotonic or uncial text), which reads back as a smooth breathing; `ν` before a velar under nasal-gamma inference; `τ`, `π`, or `ρ` before a rough breathing inside a word, which merges with its `h` |
-| **Beta Code** | Canonical Greek glyphs; lunate provenance unless preserved | Canonical ASCII case, asterisk placement, mark order, aliases, and punctuation; lunate provenance unless preserved | Same transliteration losses as Greek, including lunate provenance, coronis, and marked double rho |
+| **Greek** | Selected glyph, accent, punctuation, and composition policies | Canonical spelling and mark order; symbol forms other than the lunate sigma; a sigma whose shape contradicts its place | Symbol forms; the lunate sigma unless `lunateSigma: "c"`; a sigma whose shape contradicts its place; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; the absence of a breathing on an initial vowel (monotonic or uncial text), which reads back as a smooth breathing; `ν` before a velar under nasal-gamma inference; `τ`, `π`, or `ρ` before a rough breathing inside a word, which merges with its `h` |
+| **Beta Code** | Canonical Greek glyphs | Canonical ASCII case, asterisk placement, mark order, aliases, and punctuation | Same transliteration losses as Greek, including the lunate sigma unless `lunateSigma: "c"`, coronis, and marked double rho |
 | **Transliteration** | Initial smooth breathing is inferred where quantity is not explicit; an elided mute may be aspirated before rough breathing | Initial smooth breathing is inferred where quantity is not explicit; accepted aliases converge to canonical Beta Code | Accepted aliases, punctuation, combining-mark order, NFC, and orthographic spelling converge |
 
 “Canonical documents” excludes invalid or ambiguous combinations. Use
@@ -37,9 +39,9 @@ All recognized output has a selected spelling. Transliteration is NFC. Greek is
 composed by default, but the system polytonic acute prefers oxia and is therefore
 not necessarily NFC. Accepted aliases do not round-trip byte for byte:
 
-- Greek medial beta aliases become the selected output glyph;
-- lunate sigma provenance becomes the selected output glyph unless
-  `sigma: "preserve"` or `lunateSigma: "c"` retains it in the target format;
+- letter forms follow the Greek options, which keep those of the source by
+  default, and are lost where the target cannot write them (see
+  [Letter forms](#letter-forms));
 - Unicode punctuation aliases become the canonical punctuation for the target;
 - equivalent combining-mark order and duplicate recognized marks converge;
   Greek and transliteration write the marks of one vowel in the order
@@ -111,6 +113,51 @@ the transliteration parser recognizes that scalar as a coronis in precisely
 that position. This provides a lossless interchange spelling for implemented
 coronis contexts without guessing from ordinary apostrophes.
 
+### Letter forms
+
+The Greek reader remembers the form of a letter as its `glyphVariant`: the
+lunate sigma `ϲ` (`Ϲ`), a final `ς` or medial `σ`, and the symbol forms `ϐ`,
+`ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, and `ϒ`. Beta Code notes the lunate sigma
+(`s3`), and transliteration notes it as `c` under `lunateSigma: "c"`. The
+options `greek.sigma`, `greek.finalSigma`, `greek.medialBeta`, and
+`greek.symbolForms` decide how Greek output writes them; by default, it keeps
+the forms the source writes.
+
+A form is lost when the source format, under the options of the conversion
+(or of its `source` profile), writes the letter differently from the source
+and from the text read back, both taken in the case of the source. For a
+Greek source, that is how Greek output writes the letter; Beta Code notes
+only the sigma codes, and transliteration only the `c` of the lunate sigma.
+`convertDetailed()` then reports `removed-glyph-variant`, with the source form
+in `glyphVariant`. The rule follows from the guarantee: the text read back
+must give the same canonical text, that is, the source written under the same
+options. Consequently, for a Greek source:
+
+- an option that folds a form is not a loss, since the canonical text has
+  none: `sigma: "standard"` writes `ϲ` as `σ` from the source and from the
+  text read back alike;
+- a form that an option writes again from its position is kept: under
+  `medialBeta: "symbol"`, transliteration writes `ἅϐα` as `hába`, which reads
+  back as `ἅϐα`. French typography writes `ϐ` this way, and under this option
+  a text that does gives no loss when it is transliterated;
+- a form the target cannot write is lost: under the default
+  `medialBeta: "preserve"`, `ϐίος` is written `bíos`, which reads back as
+  `βίος`. So is a sigma whose shape contradicts its place, as in an
+  abbreviation (`λόγοσ` → `lógos`), and a symbol form in Beta Code;
+- a form that exists in one case only is lost when the case changes, unless
+  the options write it again: `ϑ` in capitals is `Θ`, as `toUpperCase()`
+  writes it, and `ϴ` in lowercase is `θ`. So is the shape a small sigma
+  notes against its place: `λόγοσ` in capitals is `ΛΌΓΟΣ`, which reads back
+  as `λόγος` in lowercase. Only the lunate sigma has both a capital and a
+  small form. `changed-case` reports the case itself.
+
+A conversion can also write a form the source did not have: under
+`greek.sigma: "lunate"`, a sigma read from `s` is written `ϲ`, which converts
+back to `c` under `lunateSigma: "c"`. Transliteration, the source format,
+writes `s` from the source and `c` from the text read back, so
+`convertDetailed()` reports `added-glyph-variant`, with the form written
+(`lunate-sigma`) in `glyphVariant`.
+
 ### Canonical Greek orthography
 
 Greek output keeps a labial or a velar before sigma as written: Greek has
@@ -159,10 +206,17 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `betaCode.case: "lowercase"` or `"uppercase"` | Selects the insignificant ASCII case of Beta Code letters without changing `*` markers | Yes; the canonical graphemes are unchanged |
 | `betaCode.yot: "#401"` | Uses the TLG character code instead of `j` for yot | Yes; both spellings parse as yot |
 | `archaicKoppa: "q"` | Uses the same transliteration for both koppa forms | No; `q` parses as modern koppa |
+| `finalSigma: "preserve"` (default) | Writes the sigma shape the source notes in lowercase Greek output, and places any other sigma by its position | Yes in Greek; a shape that contradicts its place is lost in Beta Code and transliteration |
+| `finalSigma: "contextual"` | Places every sigma by its position in lowercase Greek output | No, but the canonical text has no other shape, so the change is not reported |
 | `finalSigma: "medial"` | Uses `σ` instead of contextual `ς` in lowercase Greek output | Yes; both are the same canonical sigma letter |
-| `sigma: "standard"` (default) | Replaces a provenanced lunate sigma with the standard Greek or Beta Code glyph | No; `convertDetailed()` reports `removed-glyph-variant` |
-| `sigma: "lunate"` | Uses lunate glyphs for all non-numeral sigma in Greek or Beta Code output | Source letters remain recoverable; stylistically added lunate provenance is not a loss |
-| `sigma: "preserve"` | Uses lunate Greek or Beta Code glyphs only where lunate provenance is known | Yes |
+| `sigma: "preserve"` (default) | Uses lunate Greek or Beta Code glyphs only where the source notes a lunate sigma, numerals included | Yes in Greek and Beta Code; in transliteration with `lunateSigma: "c"` |
+| `sigma: "standard"` | Replaces a lunate sigma with the standard Greek or Beta Code glyph | No, but the canonical text has no lunate sigma, so the change is not reported |
+| `sigma: "lunate"` | Uses lunate glyphs for all non-numeral sigma in Greek or Beta Code output | Source letters remain recoverable; the added lunate sigma is not a loss, unless it reads back as another spelling (`c` under `lunateSigma: "c"`) |
+| `medialBeta: "preserve"` (default) | Writes `ϐ` where the source notes it, and `β` elsewhere | Yes in Greek; no in Beta Code and transliteration, which report `removed-glyph-variant` |
+| `medialBeta: "standard"` | Writes `β` everywhere | No, but the canonical text has no `ϐ`, so the change is not reported |
+| `medialBeta: "symbol"` | Writes `ϐ` inside a word and `β` at its start, whatever the source has | Yes from every format, since the position decides the form |
+| `symbolForms: "preserve"` (default) | Writes the symbol forms `ϑ ϴ ϕ ϖ ϰ ϱ ϵ ϒ` the source notes | Yes in Greek; no in Beta Code and transliteration, which report `removed-glyph-variant` |
+| `symbolForms: "standard"` | Writes the ordinary letters | No, but the canonical text has no symbol form, so the change is not reported |
 | `lunateSigma: "s"` (default) | Transliterates every sigma as `s` | No when the source sigma was known to be lunate |
 | `lunateSigma: "c"` | Transliterates only a provenanced lunate sigma as `c` and recognizes `c/C` on input | Yes; marked `c̄/ĉ` remains stigma |
 | `numerals: "decimal"` | Replaces a valid marked alphabetic numeral group with decimal digits | No |
@@ -184,7 +238,7 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | The accent is recoverable; its scalar preference is not |
 | Greek question-mark or ano-teleia scalar | Selects a canonically unstable punctuation scalar | The punctuation meaning is recoverable; its scalar preference is not |
 | `iotaSubscript: "capital-adscript"` or `"adscript"` | Writes a kept iota subscript on the line, after a capital or after every vowel | No: the iota reads back as a letter, and the subscript is reported as removed (`removed-diacritic`) |
-| `doubleRho`, `medialBeta`, `finalSigma`, letter variants, `upsilon`, `longVowels` | Selects a canonical output spelling | The canonical letters normally remain recoverable, but `eta: "i"` with `longVowels: "macron"` writes eta like iota with a macron |
+| `doubleRho`, letter variants, `upsilon`, `longVowels` | Selects a canonical output spelling | The canonical letters normally remain recoverable, but `eta: "i"` with `longVowels: "macron"` writes eta like iota with a macron |
 
 `longVowels` chooses either a macron or a circumflex for structural eta and
 omega length, on the letter that `eta` selects (`ē`/`ê` or `ī`/`î`). A

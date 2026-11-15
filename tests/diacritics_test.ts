@@ -177,9 +177,17 @@ test("removing Greek diacritics changes sigma shapes unless asked not to", () =>
     ),
     "λογος λογοσ οϲοϲ ςοσ",
   );
-  // Without the recipe the default sigma policies apply as in any conversion.
+  // The default sigma policies keep the noted shapes too; the contextual
+  // rule decides them by position.
   assertNfcEquals(
     convert(input, "greek", "greek", WITHOUT_DIACRITICS),
+    "λογος λογοσ οϲοϲ ςοσ",
+  );
+  assertNfcEquals(
+    convert(input, "greek", "greek", {
+      ...WITHOUT_DIACRITICS,
+      greek: { sigma: "standard", finalSigma: "contextual" },
+    }),
     "λογος λογος οσος σος",
   );
   assertNfcEquals(

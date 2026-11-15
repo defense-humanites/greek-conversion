@@ -18,7 +18,46 @@ The package is ESM-only.
 
 ## Updating from `1.0.0-rc.8`
 
-The API gains two options, which change nothing by default:
+Greek output keeps the letter forms the source writes, by default: the lunate
+sigma `ϲ`, a sigma whose shape contradicts its place (`λόγοσ`), `ϐ`, and the
+symbol forms such as `ϑ`. The defaults of `greek.sigma`, `greek.finalSigma`,
+and `greek.medialBeta` become `"preserve"`, and the new `greek.symbolForms`
+decides the symbol forms. These options give the output of rc.8:
+
+```ts
+const rc8 = {
+  greek: {
+    sigma: "standard",
+    finalSigma: "contextual",
+    medialBeta: "standard",
+    symbolForms: "standard",
+  },
+} as const;
+```
+
+Without them:
+
+- `ϲῶμα`, `λόγοσ`, `ϐίος`, and `ϑεός` stay as written in Greek output (rc.8:
+  `σῶμα`, `λόγος`, `βίος`, `θεός`). The Beta Code `s3` and the `c` of
+  `bnf-core` give `ϲ`, and Beta Code output writes `ϲ` as `s3` (rc.8: `σ` or
+  `ς`, and `s`). To compare texts regardless of these forms, fold them (see
+  the README, *Keep or fold letter variants*).
+- `convertDetailed()` reports a form the target cannot write, so that a
+  conversion without loss still converts back to the same text: `ϐίος` gives
+  `bíos` in transliteration, which reads back as `βίος`, with a
+  `removed-glyph-variant` loss whose new `glyphVariant` field is
+  `"beta-symbol"` (rc.8: no loss). Under `medialBeta: "symbol"`, which writes
+  `ϐ` inside a word as French typography does, a text written that way gives
+  no loss. A form the options fold is no longer reported: `ϲῶμα` under
+  `sigma: "standard"` gives `σῶμα`, as the same options write the source
+  (rc.8: `removed-glyph-variant`).
+- `GlyphVariant` has nine more values, one per symbol form, and
+  `ConversionLossCode` one more, `added-glyph-variant`, which code that
+  switches over them must handle. A symbol form belongs to one case:
+  `validateDocument()` reports it on a grapheme of the other case, and a case
+  policy writes the ordinary letter (`ϑ` in capitals is `Θ`).
+
+The API also gains two options, which change nothing by default:
 `greek.iotaSubscript`, which writes the iota subscript on the line (see the
 README, *Write the iota on the line*), and `source`, which describes how the
 input is written when it is not written as the output, to restyle a
@@ -28,13 +67,14 @@ Greek in two calls can take one,
 what the Greek step dropped, such as a lunate sigma that the source writes
 `c`. Five kinds of input convert differently:
 
-- In Greek output, a sigma before an elision apostrophe is medial:
-  `ἔχουσ’ ἐγώ` and `σ’ αγαπώ` keep their `σ`, and the Beta Code
-  `a)gge/llous'` gives `ἀγγέλλουσ’` (rc.8: `ἔχους’`, `ς’ αγαπώ`,
-  `ἀγγέλλους’`). Before an apostrophe that closes a quotation opened by `‘`,
-  the sigma stays final (‘λόγος’). A Greek word in straight quotation marks,
-  `'λόγος'`, now gives `’λόγοσ’`: use `‘` and `’` to quote, or keep the source
-  shapes with `greek.finalSigma: "preserve"`.
+- Where the position decides the shape of a sigma in Greek output, a sigma
+  before an elision apostrophe is medial: the Beta Code `a)gge/llous'` gives
+  `ἀγγέλλουσ’`, and under `finalSigma: "contextual"`, `ἔχουσ’ ἐγώ` and
+  `σ’ αγαπώ` keep their `σ` (rc.8: `ἀγγέλλους’`, `ἔχους’`, `ς’ αγαπώ`). Before an apostrophe that closes a quotation opened by
+  `‘`, the sigma stays final (‘λόγος’). Under `"contextual"`, a Greek word in
+  straight quotation marks, `'λόγος'`, now gives `’λόγοσ’`: use `‘` and `’`
+  to quote, or keep the source shapes with the default
+  `finalSigma: "preserve"`.
 - Under `greek.finalSigma: "preserve"`, a lunate sigma written as a standard
   sigma takes `ς` at the end of a word, as any sigma whose shape the source
   does not note already did: with `sigma: "standard"`, `ϲῶμαϲ` gives `σῶμας`
