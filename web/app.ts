@@ -1643,6 +1643,13 @@ function openInventoryPicker(
   for (const other of inventoryBox.querySelectorAll(".add-option")) {
     other.setAttribute("aria-expanded", String(other === button));
   }
+  // Under its row, whatever its kind, where a form shows in the flow. It
+  // moves while empty: moving it with the focus inside would blur it.
+  const row = button.closest(".inventory-row");
+  if (row && row.nextElementSibling !== inventoryPicker) {
+    inventoryPicker.replaceChildren();
+    row.after(inventoryPicker);
+  }
   inventoryPicker.hidden = false;
   inventoryPicker.classList.toggle("wide", target === "characters");
   if (target === "characters") showCharacterForm();
@@ -1653,23 +1660,66 @@ function closeInventoryPicker(focusButton: boolean): void {
   if (inventoryPicker.hidden) return;
   inventoryPicker.hidden = true;
   inventoryPicker.replaceChildren();
+  makeInventoryRoom();
   for (const button of inventoryBox.querySelectorAll(".add-option")) {
     button.setAttribute("aria-expanded", "false");
   }
   if (focusButton) inventoryButton?.focus();
 }
 
-/** Under the button that opened it, kept inside the panel. */
-function placeInventoryPicker(): void {
+/**
+ * A list floats under the button that opened it, kept inside the panel,
+ * which grows where the list would run past it, as at the foot of the page.
+ * A form, where one types and stays, opens in the page under its row, and
+ * pushes what follows down rather than covering it. Either way the page
+ * scrolls, if it must, to show it whole.
+ */
+function placeInventoryPicker(inline: boolean): void {
   if (!inventoryButton) return;
+  inventoryPicker.classList.toggle("inline", inline);
   const box = inventoryBox.getBoundingClientRect();
   const button = inventoryButton.getBoundingClientRect();
   const left = Math.max(
     0,
     Math.min(button.left - box.left, box.width - inventoryPicker.offsetWidth),
   );
-  inventoryPicker.style.left = `${left}px`;
-  inventoryPicker.style.top = `${button.bottom - box.top + 6}px`;
+  if (inline) {
+    inventoryPicker.style.left = inventoryPicker.style.top = "";
+    inventoryPicker.style.marginLeft = `${left}px`;
+  } else {
+    inventoryPicker.style.marginLeft = "";
+    inventoryPicker.style.left = `${left}px`;
+    inventoryPicker.style.top = `${button.bottom - box.top + 6}px`;
+  }
+  makeInventoryRoom();
+  revealInventoryPicker();
+}
+
+const inventoryPanel = inventoryBox.closest<HTMLElement>(".panel");
+
+/** Grows the panel by what a floating list runs past its foot. */
+function makeInventoryRoom(): void {
+  if (!inventoryPanel) return;
+  inventoryPanel.style.paddingBottom = "";
+  if (inventoryPicker.hidden || inventoryPicker.classList.contains("inline")) {
+    return;
+  }
+  const panel = inventoryPanel.getBoundingClientRect();
+  const picker = inventoryPicker.getBoundingClientRect();
+  const past = picker.bottom + 16 - panel.bottom;
+  if (past > 0) {
+    const base = parseFloat(getComputedStyle(inventoryPanel).paddingBottom);
+    inventoryPanel.style.paddingBottom = `${base + past}px`;
+  }
+}
+
+/** Scrolls the page, gently unless motion is reduced, to show the picker. */
+function revealInventoryPicker(): void {
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  inventoryPicker.scrollIntoView({
+    block: "nearest",
+    behavior: still ? "auto" : "smooth",
+  });
 }
 
 function pickerHeading(text: string, back?: () => void): HTMLElement {
@@ -1781,8 +1831,9 @@ function showCharacterList(query = ""): void {
   });
   inventoryPicker.replaceChildren(search, list);
   render();
-  placeInventoryPicker();
-  search.focus();
+  // The focus first, without its own jump: the scroll is the picker's.
+  search.focus({ preventScroll: true });
+  placeInventoryPicker(false);
 }
 
 function setInventoryActive(
@@ -1869,8 +1920,10 @@ function showForm(
     }
   });
   inventoryPicker.replaceChildren(form);
-  placeInventoryPicker();
-  form.querySelector<HTMLInputElement>('input[type="text"]')?.focus();
+  form.querySelector<HTMLInputElement>('input[type="text"]')?.focus({
+    preventScroll: true,
+  });
+  placeInventoryPicker(true);
 }
 
 /** The spellings of one letter: in which format, which, and how. */

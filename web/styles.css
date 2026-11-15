@@ -1385,6 +1385,15 @@ pre.code code {
   margin: 0;
   accent-color: var(--from);
 }
+/* Scrolled into view with a margin, not against the edge of the window. */
+.option-picker {
+  scroll-margin: 24px;
+}
+/* A form opens in the page, under its row, rather than over it. */
+.option-picker.inline {
+  position: static;
+  box-shadow: none;
+}
 /* A new character's form needs the room of its two columns. */
 .option-picker.wide {
   width: min(480px, 100%);
