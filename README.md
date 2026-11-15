@@ -812,6 +812,19 @@ npm run check        # formatting, lint, types, API docs, README examples
 npm test             # unit, conformance, and property tests
 npm run bench        # throughput baseline
 npm run site:build   # builds the playground into _site/
+npm run site:options # updates which options the playground offers per conversion
+```
+
+`npm run check` fails when a change to the options leaves
+`web/option_relevance.ts` out of date.
+
+The playground's fonts are subsets of Bricolage Grotesque, Literata and Noto
+Serif, built with Python and [fontTools](https://github.com/fonttools/fonttools)
+(`web/fonts/README.md`):
+
+```sh
+pip install "fonttools[woff]==4.67.0"
+python3 scripts/build_playground_fonts.py # downloads the sources, writes web/fonts/
 ```
 
 Every TypeScript example in this README is type-checked and executed by

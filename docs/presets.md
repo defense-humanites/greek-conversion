@@ -212,7 +212,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
 - The BnF circumflex and smooth breathing marks and omission of explicit quantity marks apply only to transliteration; missing breathings are never inferred from Greek source text.
 - Both documented koppa forms collapse to q in BnF transliteration and therefore cannot be distinguished on reverse conversion.
 
-### `iso-843-type-1` — ISO 843:1997 — Type 1
+### `iso-843-type-1` — ISO 843:1997 — Type 1 (transliteration)
 
 - **Authority:** International Organization for Standardization
 - **Scope:** Ancient Greek; Modern Greek
@@ -251,7 +251,7 @@ Type 1 transliteration of Greek characters into Latin characters.
 - ISO 843 names stigma, koppa, and sampi in its Greek repertoire but does not assign them Type 1 conversions; bound converters preserve or reject them for transliteration, while ordinary preset use retains engine defaults.
 - The standard's single named koppa cannot be identified unambiguously with the engine's separate archaic-koppa entry; bound transliteration reports this unresolved mapping.
 
-### `iso-843-type-2` — ISO 843:1997 — Type 2
+### `iso-843-type-2` — ISO 843:1997 — Type 2 (transcription)
 
 - **Authority:** International Organization for Standardization
 - **Scope:** Modern Greek; Ancient Greek
