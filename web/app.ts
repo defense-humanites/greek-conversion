@@ -1551,7 +1551,22 @@ type InventoryField = CharacterList | "aliases" | "characters";
 
 function setInventory(next: Inventory): void {
   inventory = next;
+  updateInPlace();
+}
+
+/**
+ * Updates while keeping the settings tabs where they are on the screen. A
+ * change there can add or remove diagnostics above them (a repertoire of
+ * one letter puts most of the text outside it), which would otherwise push
+ * the tabs, and the reader's place in them, out of view.
+ */
+function updateInPlace(): void {
+  const anchor = inventoryBox.closest<HTMLElement>(".settings") ??
+    inventoryBox;
+  const before = anchor.getBoundingClientRect().top;
   update();
+  const shift = anchor.getBoundingClientRect().top - before;
+  if (shift) scrollBy({ top: shift, behavior: "instant" });
 }
 
 function inventoryRow(field: InventoryField): HTMLElement {
@@ -2249,7 +2264,7 @@ source.addEventListener("scroll", () => {
 output.addEventListener("scroll", () => {
   outputMarks.scrollTop = output.scrollTop;
 });
-strict.addEventListener("change", update);
+strict.addEventListener("change", updateInPlace);
 documentShowAll.addEventListener("click", () => {
   showAllTokens = true;
   update();
