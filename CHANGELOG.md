@@ -40,7 +40,8 @@ change.
   a tab beside the generated code and the canonical document, both
   highlighted. Texts in all three formats are set in
   Literata Light, served by the playground with the letters it lacked
-  (`web/fonts/README.md`).
+  (`web/fonts/README.md`). Reset, beside Share, brings the page back to its
+  opening state, and offers to undo it for a few seconds.
 
 ## [1.0.0-rc.9] - 2026-11-15
 

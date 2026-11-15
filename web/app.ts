@@ -103,6 +103,8 @@ const code = element<HTMLElement>("code");
 const copyButton = element<HTMLButtonElement>("copy");
 const copyCodeButton = element<HTMLButtonElement>("copy-code");
 const clearButton = element<HTMLButtonElement>("clear");
+const resetButton = element<HTMLButtonElement>("reset");
+const resetNote = element<HTMLParagraphElement>("reset-note");
 const shareButton = element<HTMLButtonElement>("share");
 const shareNote = element<HTMLParagraphElement>("share-help");
 const swapButton = element<HTMLButtonElement>("swap");
@@ -1151,6 +1153,8 @@ function saveState(): void {
   }
   if (strict.checked) state.set("strict", "1");
   history.replaceState(null, "", `#${state}`);
+  // Nothing to reset on the page as it opens.
+  resetButton.disabled = `#${state}` === START;
 }
 
 function restoreState(): void {
@@ -2438,16 +2442,21 @@ function resetShare(): void {
  * leave the page and let it scroll sideways.
  */
 function placeShareNote(): void {
-  shareNote.style.setProperty("--nudge", "0px");
+  placeNote(shareNote);
+}
+
+/** Moves a note under a button left or right, so that it stays in the page. */
+function placeNote(note: HTMLElement): void {
+  note.style.setProperty("--nudge", "0px");
   const margin = 12;
-  const { left, right } = shareNote.getBoundingClientRect();
+  const { left, right } = note.getBoundingClientRect();
   const page = document.documentElement.clientWidth;
   const nudge = right > page - margin
     ? right - (page - margin)
     : left < margin
     ? left - margin
     : 0;
-  shareNote.style.setProperty("--nudge", `${Math.round(nudge)}px`);
+  note.style.setProperty("--nudge", `${Math.round(nudge)}px`);
 }
 
 async function share(): Promise<void> {
@@ -2539,6 +2548,56 @@ swapButton.addEventListener("click", () => {
   setTarget(from);
   update();
 });
+/*
+ * Reset: back to the page as it opens, with its text and without a setting,
+ * the standards remembered per format forgotten. Undo, offered for a while,
+ * brings the conversion back from the address it had.
+ */
+const START = `#${new URLSearchParams({
+  from: "auto",
+  to: "transliteration",
+  text: source.defaultValue,
+})}`;
+let undoTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Applies the state of an address, as following a link does. */
+function applyState(hash: string): void {
+  history.replaceState(null, "", hash || location.pathname);
+  restoreState();
+  showPreset();
+  renderExamples();
+  update();
+}
+
+function hideUndo(): void {
+  clearTimeout(undoTimer);
+  resetNote.replaceChildren();
+}
+
+function resetAll(): void {
+  const before = location.hash;
+  for (const format of FORMATS) delete lastPreset[format];
+  setTarget("transliteration");
+  applyState(START);
+  const undo = document.createElement("button");
+  undo.type = "button";
+  undo.textContent = "Undo";
+  undo.addEventListener("click", () => {
+    hideUndo();
+    applyState(before);
+    resetButton.focus();
+  });
+  resetNote.replaceChildren("Back to the start.", undo);
+  placeNote(resetNote);
+  // Reset is disabled now: the focus goes to Undo rather than the page.
+  undo.focus();
+  clearTimeout(undoTimer);
+  undoTimer = setTimeout(hideUndo, 8000);
+}
+
+resetButton.addEventListener("click", resetAll);
+// Undo is offered for the conversion reset, not for what follows it.
+source.addEventListener("input", hideUndo);
 clearButton.addEventListener("click", () => {
   source.value = "";
   update();
@@ -2549,19 +2608,20 @@ copyCodeButton.addEventListener("click", () => copy(codeText, copyCodeButton));
 shareButton.addEventListener("click", share);
 
 /**
- * Lays the masthead out on one line when the name, the links and Share fit
- * on it; otherwise the links go under the name, with Share beside it, rather
- * than Share alone under the name.
+ * Lays the masthead out on one line when the name, the links, Reset and
+ * Share fit on it; otherwise the links go under the name, with the buttons
+ * beside it, as icons if need be, rather than alone under the name.
  */
 const masthead = shareButton.closest<HTMLElement>(".masthead")!;
 function fitMasthead(): void {
-  masthead.classList.remove("stacked");
-  const name = masthead.querySelector(".identity")!.getBoundingClientRect();
-  const wrapped = [".links", ".share"].some((selector) =>
+  masthead.classList.remove("stacked", "compact");
+  const below = (selector: string): boolean =>
     masthead.querySelector(selector)!.getBoundingClientRect().top >=
-    name.bottom
-  );
-  masthead.classList.toggle("stacked", wrapped);
+    masthead.querySelector(".identity")!.getBoundingClientRect().bottom;
+  if (!below(".links") && !below(".page-actions")) return;
+  masthead.classList.add("stacked");
+  // Beside the name, the buttons keep only their icons if they must.
+  if (below(".page-actions")) masthead.classList.add("compact");
 }
 
 function placeHeader(): void {

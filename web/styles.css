@@ -297,14 +297,22 @@ h1 span {
 .links a:hover {
   text-decoration: underline;
 }
-.share {
+/* Reset and Share act on the whole page: they sit together, top right. */
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.share,
+.reset {
   position: relative;
 }
 /*
  * The note of the Share button: centred under it, with a pointer, in a tint
  * darker than the page, so as not to read as one of the raised pickers.
  */
-.share-note {
+.share-note,
+.reset-note {
   position: absolute;
   top: calc(100% + 12px);
   left: 50%;
@@ -322,7 +330,8 @@ h1 span {
   /* Moved left by --nudge when it would leave the page (placeShareNote). */
   transform: translateX(calc(-50% - var(--nudge, 0px)));
 }
-.share-note::before {
+.share-note::before,
+.reset-note::before {
   content: "";
   position: absolute;
   top: -6px;
@@ -361,6 +370,21 @@ h1 span {
 }
 .share svg[hidden] {
   display: none;
+}
+/* The note of Reset shows while its Undo is offered. */
+.reset-note:empty {
+  display: none;
+}
+.reset-note button {
+  margin-left: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--link, var(--from));
+  text-decoration: underline;
+  cursor: pointer;
 }
 .share-done {
   color: var(--from);
@@ -1578,8 +1602,26 @@ footer strong {
   order: 3;
   width: 100%;
 }
-.masthead.stacked .share {
+.masthead.stacked .page-actions {
   margin-left: auto;
+}
+/* Still no room beside the name: Reset and Share keep their icons, and their
+   names for screen readers. */
+.masthead.compact {
+  column-gap: 12px;
+}
+.masthead.compact .page-actions .button {
+  width: 44px;
+  padding: 0;
+  justify-content: center;
+}
+.masthead.compact .page-actions .button-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 /* With the settings in one column, the introduction takes the width. */
 @media (max-width: 1099px) {
@@ -1606,21 +1648,14 @@ footer strong {
     color: var(--muted);
   }
 }
-/* A narrow phone: Share keeps its icon, beside the name, and its name for
-   screen readers. */
+/* A narrow phone: a smaller name, so that the buttons fit beside it, and
+   closer links, on one line. */
 @media (max-width: 380px) {
-  #share {
-    width: 44px;
-    padding: 0;
-    justify-content: center;
+  .identity h1 {
+    font-size: 20px;
   }
-  #share .button-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+  .masthead .links {
+    column-gap: 16px;
   }
 }
 /* A narrow tablist: the canonical document is called the document. */
