@@ -86,6 +86,23 @@ change.
   a letter and its marks (`τῷ` in transliteration). In Beta Code output, the
   marks of a kept Beta Code letter are no longer escaped as punctuation (`e)`
   gave `e]1`).
+- Under `transliteration.upsilon: "y-with-ou-v-f"` alone, the `v` and `f`
+  written for the upsilon of `αυ`, `ευ`, `ηυ` read back as that upsilon, with
+  the accent the encoder moves onto the vowel: `aftós` gives `αὐτός`. They
+  were read as text, which ended the word, so that title case wrote `Aftós`
+  again as `AfTós`. Under `beta: "v"` and `phi: "f"`, as in
+  `iso-843-type-2`, they still read back as beta and phi.
+- BnF numerals (`transliteration.keraia: "bnf"`, as in `bnf-core`) stay as
+  written when the output is converted again. An acute after a consonant,
+  which bears no accent, reads back as the right keraia (`c̄́` gives `ϛʹ`),
+  and a comma before `c̄` or `s̄`, the stigma and sampi of numerals, as the
+  left keraia (`,c̄` gives `͵ϛ`). Both read as an accent and a comma, so that
+  in capitals `c̄́` became `C̄́` the second time, and with the accents removed,
+  the keraia went. With the acute accents removed, the right keraia is now
+  written `ʹ`, since an acute after a vowel still reads back as an accent:
+  `αʹ` gives `aʹ` (was `á`, then `a`). A small stigma or sampi is written
+  only where the numeral reads back: `ϡαʹ` in capitals gives `S̄Á` (was
+  `s̄Á`, then `S̄Á`).
 
 ## [1.0.0-rc.8] - 2026-11-11
 

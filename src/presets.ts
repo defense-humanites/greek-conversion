@@ -165,7 +165,7 @@ const PRESET_DEFINITIONS = {
       }],
       limitations: [
         "Context-dependent access-point variants such as kappa → c and chi → kh are not selected automatically.",
-        "BnF keraiai are rendered as a comma and acute in transliteration, but reverse conversion cannot always distinguish the resulting accent from a letter accent.",
+        "BnF keraiai are rendered as a comma and acute in transliteration. The acute reads back as the keraia after a consonant, and the comma before c̄ or s̄, but after a vowel the acute reads back as an accent; with the accents removed, the right keraia is written ʹ.",
         "Upper Cypriot syndyazomeno shares U+0306 with the ordinary breve and cannot be distinguished mechanically; lower syndyazomeno is not interpreted as a semantic mark.",
         "The Iliad/Odyssey numeral exception is not selected without the relevant cataloguing context.",
         "An iota adscript written after a marked capital (Ἅιδῃ) is kept as a letter rather than omitted as the table prescribes.",

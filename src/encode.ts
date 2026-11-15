@@ -426,7 +426,7 @@ export function encodeTransliteration(
       }
       if (!isBoundaryTransparent(token)) afterLetter = false;
       if (options.transliteration?.keraia === "bnf") {
-        if (token.value === DEXIA_KERAIA) return "\u0301";
+        if (token.value === DEXIA_KERAIA) return bnfRightKeraia(options);
         if (token.value === ARISTERI_KERAIA) return ",";
       }
       return encodePunctuation(token.value, "transliteration", options) ??
@@ -538,7 +538,7 @@ export function encodeTransliteration(
     const bnfLowercaseNumeral = options.transliteration?.keraia === "bnf" &&
       token.uppercase &&
       (token.letter === "stigma" || token.letter === "sampi") &&
-      isGreekNumeralContext(doc, index);
+      bnfNumeralReadsBack(doc, index, options);
     if (
       token.uppercase && !bnfLowercaseNumeral &&
       (!groupUppercase || capitals)
@@ -842,6 +842,46 @@ function transliterationBase(
 }
 
 const ACCENTS: readonly Diacritic[] = ["acute", "grave", "circumflex"];
+
+/**
+ * The BnF right keraia: an acute, or the Greek keraia when the acute accents
+ * are removed, since the acute would then read back as an accent and go.
+ */
+function bnfRightKeraia(options: ConversionOptions): string {
+  return preservesDiacritic("acute", options, "transliteration")
+    ? "\u0301"
+    : DEXIA_KERAIA;
+}
+
+/**
+ * Whether the BnF numeral of the stigma or sampi at `index` reads back as a
+ * numeral, so that the letter can be written small, as BnF prescribes, and
+ * stay so when the output is converted again. The comma of the left keraia
+ * reads back as one before `c̄` and `s̄`. The right keraia must read back as
+ * one: an acute does on a consonant, but reads back as an accent on a vowel.
+ */
+function bnfNumeralReadsBack(
+  document: Document,
+  index: number,
+  options: ConversionOptions,
+): boolean {
+  const previous = document[index - 1];
+  if (previous?.kind === "literal" && previous.value === ARISTERI_KERAIA) {
+    return true;
+  }
+  let last: Token | undefined;
+  for (let i = index; i < document.length; i++) {
+    const token = document[i];
+    if (token.kind === "grapheme") {
+      last = token;
+      continue;
+    }
+    if (isBoundaryTransparent(token)) continue;
+    return token.value === DEXIA_KERAIA && last?.kind === "grapheme" &&
+      (!isVowel(last.letter) || bnfRightKeraia(options) === DEXIA_KERAIA);
+  }
+  return false;
+}
 
 /**
  * Under `upsilon: "y-with-ou-v-f"`, the accent of the upsilon of `αυ`, `ευ`,
