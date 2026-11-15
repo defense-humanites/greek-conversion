@@ -19,7 +19,7 @@ import type {
 import { parse, parseDetailed, validateDocument } from "../src/document.ts";
 import { detectFormat } from "./detect_format.ts";
 import { changedSpans, firstChange, PROBE_GREEK } from "./option_probe.ts";
-import { EXAMPLES, INVALID_MARKS } from "./examples.ts";
+import { exampleFrom, EXAMPLES, INVALID_MARKS } from "./examples.ts";
 import type { Example, MarksExample } from "./examples.ts";
 import {
   aliasSummary,
@@ -403,9 +403,36 @@ function showPreset(): void {
   }
 }
 
+/**
+ * The examples of the standard. Once the reader chooses the source format,
+ * each is written in that format, and those that cannot be are left out.
+ */
 function examples(): readonly Example[] {
-  return EXAMPLES[currentPreset()];
+  const preset = currentPreset();
+  const choice = sourceChoice();
+  if (choice === "auto") return EXAMPLES[preset];
+  return EXAMPLES[preset].flatMap((example) =>
+    exampleFrom(example, choice, preset) ?? []
+  );
 }
+
+/** The examples of invalid marks: one per format, or the chosen one's. */
+function marksExamples(): number[] {
+  const choice = sourceChoice();
+  return INVALID_MARKS.flatMap((example, index) =>
+    choice === "auto" || example.from === choice ? [index] : []
+  );
+}
+
+/** A format's name within a sentence. */
+function formatInProse(format: Format): string {
+  return format === "transliteration"
+    ? "transliteration"
+    : FORMAT_NAMES[format];
+}
+
+/** The source choice the examples were last listed for. */
+let examplesFor: Format | "auto" | undefined;
 
 /** The example on screen, if the text and settings are still its own. */
 function activeExample(): Example | undefined {
@@ -419,27 +446,48 @@ function activeExample(): Example | undefined {
 
 /**
  * Lists the examples of the standard in the menu of the source field: the
- * title, then the rule it shows. Under them, whatever the standard, one text
- * per format with marks Greek does not allow, which are hard to type.
+ * title, then the rule it shows. Under them, whatever the standard, a text
+ * with marks Greek does not allow, which are hard to type: one per format,
+ * or one in the chosen source format.
  */
 function renderExamples(): void {
+  examplesFor = sourceChoice();
   exampleMenu.replaceChildren(new Option("Choose an example", ""));
   const standard = document.createElement("optgroup");
-  standard.label = currentPreset()
+  const name = currentPreset()
     ? `${presets.find(({ id }) => id === currentPreset())?.name ?? ""}`
     : "Library defaults";
+  standard.label = examplesFor === "auto"
+    ? name
+    : `${name}, from ${formatInProse(examplesFor)}`;
   examples().forEach((example, index) => {
     standard.append(
       new Option(`${example.title} — ${example.note}`, String(index)),
     );
   });
+  if (!standard.children.length) {
+    const others = FORMATS.filter((format) =>
+      format !== examplesFor &&
+      EXAMPLES[currentPreset()].some((example) =>
+        exampleFrom(example, format, currentPreset())
+      )
+    ).map(formatInProse);
+    const none = new Option(
+      `None from ${formatInProse(examplesFor as Format)}` +
+        (others.length ? `: choose ${others.join(" or ")} as the source` : ""),
+      "none",
+    );
+    none.disabled = true;
+    standard.append(none);
+  }
   const marks = document.createElement("optgroup");
   marks.label = "Marks Greek does not allow";
-  INVALID_MARKS.forEach((example, index) => {
+  for (const index of marksExamples()) {
+    const example = INVALID_MARKS[index]!;
     marks.append(
       new Option(`${example.title} — ${example.note}`, `marks-${index}`),
     );
-  });
+  }
   exampleMenu.append(standard, marks);
   markActiveExample();
 }
@@ -456,7 +504,7 @@ function markActiveExample(): void {
   const active = activeExample();
   const marks = activeMarksExample();
   exampleMenu.value = active
-    ? String(examples().indexOf(active))
+    ? String(examples().findIndex(({ title }) => title === active.title))
     : marks >= 0
     ? `marks-${marks}`
     : "";
@@ -468,21 +516,26 @@ function markActiveExample(): void {
  */
 function loadMarksExample(example: MarksExample): void {
   source.value = example.text;
-  setSourceChoice(
-    detectFormat(example.text) === example.from ? "auto" : example.from,
-  );
+  keepSourceChoice(example.from);
   if (targetFormat() === example.from) {
     setTarget(example.from === "greek" ? "transliteration" : "greek");
   }
   update();
 }
 
+/**
+ * Sets the source format of an example. A chosen format stays chosen: the
+ * menu lists the examples in it. Otherwise, detection stays on when it reads
+ * the example right.
+ */
+function keepSourceChoice(from: Format): void {
+  if (sourceChoice() !== "auto") return;
+  setSourceChoice(detectFormat(source.value) === from ? "auto" : from);
+}
+
 function loadExample(example: Example): void {
   source.value = example.text;
-  // Detection stays on when it reads the example right.
-  setSourceChoice(
-    detectFormat(example.text) === example.from ? "auto" : example.from,
-  );
+  keepSourceChoice(example.from);
   setTarget(example.to);
   conversionOptions = knownOptions(example.options ?? {});
   update();
@@ -2069,6 +2122,8 @@ function update(): void {
   const to = targetFormat();
   if (syncPresets(from, to)) {
     showPreset();
+    renderExamples();
+  } else if (sourceChoice() !== examplesFor) {
     renderExamples();
   }
   applyFaces(from, to);

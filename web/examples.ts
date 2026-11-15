@@ -1,4 +1,9 @@
-import type { ConversionOptions, Format, Preset } from "../src/mod.ts";
+import {
+  type ConversionOptions,
+  convert,
+  type Format,
+  type Preset,
+} from "../src/mod.ts";
 import type { ValidationCode } from "../src/document.ts";
 
 /**
@@ -16,6 +21,8 @@ export interface Example {
   to: Format;
   options?: ConversionOptions;
   output: string;
+  /** The note names the source format: the example is offered in it only. */
+  sourceBound?: boolean;
 }
 
 const THUCYDIDES =
@@ -50,6 +57,7 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       from: "beta-code",
       to: "greek",
       output: "Μῆνιν ἄειδε θεὰ Πηληϊάδεω Ἀχιλῆος",
+      sourceBound: true,
     },
     {
       title: "Plato, Apology 17a",
@@ -58,6 +66,7 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       from: "transliteration",
       to: "greek",
       output: "Ὅτι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι",
+      sourceBound: true,
     },
     {
       title: "Modern Greek phrase",
@@ -75,6 +84,7 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       from: "beta-code",
       to: "greek",
       output: "λόγος",
+      sourceBound: true,
     },
     greek("Archaic letter", "Digamma, written w", "ϝάναξ", "wánax"),
   ],
@@ -266,6 +276,37 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
     ),
   ],
 };
+
+/**
+ * The example written in another source format, or `undefined` when it
+ * cannot be: when that format is the example's target, when its note names
+ * its own source format, or when the text,
+ * written in that format, no longer gives under the standard the output the
+ * note describes.
+ */
+export function exampleFrom(
+  example: Example,
+  from: Format,
+  preset: Preset | "",
+): Example | undefined {
+  if (from === example.from) return example;
+  if (from === example.to || example.sourceBound) return undefined;
+  const options = {
+    ...example.options,
+    ...(preset ? { preset } : {}),
+  } as Parameters<typeof convert>[3];
+  try {
+    // Written with the library defaults, the text keeps every mark that the
+    // standard may drop: the conversion shows it doing so.
+    const text = convert(example.text, example.from, from);
+    if (convert(text, from, example.to, options) !== example.output) {
+      return undefined;
+    }
+    return { ...example, text, from };
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * A text with marks the reader keeps but Greek does not allow, which
