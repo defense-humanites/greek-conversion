@@ -2204,14 +2204,11 @@ async function share(): Promise<void> {
     await navigator.clipboard.writeText(location.href);
     shareNote.replaceChildren();
     const strong = document.createElement("strong");
-    strong.textContent = "Link copied.";
-    shareNote.append(
-      strong,
-      " It opens this text with the same source, target, standard and settings.",
-    );
+    strong.textContent = "Link copied:";
+    shareNote.append(strong, " it opens this text with the same settings.");
   } catch {
     shareNote.textContent =
-      "The link could not be copied: copy the address from the address bar. It holds the text, formats, standard and settings.";
+      "The link could not be copied: copy the address from the address bar.";
   }
   shareTimer = setTimeout(() => (shareNote.textContent = ""), 6000);
 }

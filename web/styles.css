@@ -48,6 +48,9 @@
   --code-function: #1f2a44;
   --code-muted: #5e5a63;
   --shadow: 0 6px 20px rgb(31 42 68 / 0.12);
+  /* Notes take a tint darker than the page, unlike the raised pickers. */
+  --tip: #e9e1d1;
+  --check-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 12.5l4.5 4.5 8.5-9.5'/%3E%3C/svg%3E");
 
   --face-ui: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
   --face-text: "Literata GC", "Gentium Plus", "Noto Serif", serif;
@@ -81,6 +84,8 @@
     --code-function: #f4ecdd;
     --code-muted: #9aa3bf;
     --shadow: 0 6px 20px rgb(0 0 0 / 0.4);
+    --tip: #0e1220;
+    --check-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23161b2b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 12.5l4.5 4.5 8.5-9.5'/%3E%3C/svg%3E");
   }
 }
 
@@ -289,20 +294,38 @@ h1 span {
 .share {
   position: relative;
 }
+/*
+ * The note of the Share button: centred under it, with a pointer, in a tint
+ * darker than the page, so as not to read as one of the raised pickers.
+ */
 .share-note {
   position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
+  top: calc(100% + 12px);
+  left: 50%;
   z-index: 2;
-  width: 300px;
+  width: max-content;
+  max-width: 280px;
   margin: 0;
-  padding: 14px 16px;
+  padding: 10px 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--raised);
-  box-shadow: var(--shadow);
-  font-size: 14px;
-  line-height: 20px;
+  background: var(--tip);
+  font-size: 15px;
+  line-height: 21px;
+  text-align: center;
+  transform: translateX(-50%);
+}
+.share-note::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  background: var(--tip);
+  transform: translateX(-50%) rotate(45deg);
 }
 .share-note:empty {
   display: none;
@@ -1286,13 +1309,42 @@ pre.code code {
   gap: 10px;
   font-size: 15px;
 }
-/* Targets of at least 24 px (WCAG 2.2). */
-.check input {
+/*
+ * Check boxes and radio buttons in the colours of the page, not the
+ * system's: 24 px targets (WCAG 2.2), the source colour once checked.
+ */
+.check input,
+.picker-formats input {
   flex: none;
   width: 24px;
   height: 24px;
   margin: 0;
-  accent-color: var(--from);
+  border: 1.5px solid var(--muted);
+  border-radius: 5px;
+  background: var(--raised) center / 20px no-repeat;
+  appearance: none;
+  cursor: pointer;
+}
+.check input:checked {
+  border-color: var(--from);
+  background-color: var(--from);
+  background-image: var(--check-icon);
+}
+.picker-formats input {
+  border-radius: 50%;
+}
+.picker-formats input:checked {
+  border-color: var(--from);
+  background-image: radial-gradient(
+    circle,
+    var(--from) 0 6px,
+    transparent 6.5px
+  );
+}
+.check input:focus-visible,
+.picker-formats input:focus-visible {
+  outline: 2px solid var(--from);
+  outline-offset: 2px;
 }
 /* The character inventory: rows of pills, as for the options */
 .inventory {
@@ -1377,13 +1429,6 @@ pre.code code {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-}
-.picker-formats input {
-  flex: none;
-  width: 24px;
-  height: 24px;
-  margin: 0;
-  accent-color: var(--from);
 }
 /* Scrolled into view with a margin, not against the edge of the window. */
 .option-picker {
