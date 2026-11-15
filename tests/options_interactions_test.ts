@@ -610,3 +610,59 @@ test("BnF numerals stay as written under every letter case and mark removal", ()
     }
   }
 });
+
+test("a Beta Code keraia before a digit is written as itself", () => {
+  // `#` and a digit are a TLG character code: `a#1` is αϟ.
+  assertEquals(convert("αʹ1 βʹ22 αʹ 1", "greek", "beta-code"), "aʹ1 bʹ22 a# 1");
+  for (const input of ["αʹ1", "βʹ22", "αʹ5"]) {
+    const result = convertDetailed(input, "greek", "beta-code");
+    assertEquals(result.lossy, false, input);
+    assertNfcEquals(convert(result.output, "beta-code", "greek"), input);
+    assertEquals(
+      convert(result.output, "beta-code", "beta-code"),
+      result.output,
+    );
+  }
+  assertNfcEquals(convert("a#1", "beta-code", "greek"), "αϟ");
+});
+
+test("a separation diaeresis the source does not have is reported", () => {
+  // Under the contextual upsilon, transliteration keeps a hiatus that only a
+  // breathing on a vowel inside the word marks by a diaeresis, which reads
+  // back: ἑυ and ἑϋ are both written `heÿ`.
+  for (
+    const [input, from] of [["a)e(u", "beta-code"], ["ἀἑυ", "greek"]] as const
+  ) {
+    const result = convertDetailed(input, from, "transliteration");
+    assertNfcEquals(result.output, "aheÿ");
+    assertEquals(
+      result.losses.map(({ code, diacritic, index }) => [
+        code,
+        diacritic,
+        index,
+      ]),
+      [["added-diacritic", "diaeresis", 2]],
+    );
+  }
+  assertEquals(convertDetailed("ἀἑϋ", "greek", "transliteration").lossy, false);
+});
+
+test("a numeral keeps the separation of a contextual y", () => {
+  // A numeral takes no breathing, so the reader infers none there: the `y`
+  // keeps its separation by a diaeresis, as inside a word.
+  assertNfcEquals(convert("oyʹ ayʹ", "transliteration", "greek"), "οϋʹ αϋʹ");
+  assertNfcEquals(convert("ὀυʹ", "greek", "transliteration"), "oÿʹ");
+  assertNfcEquals(convert("oÿʹ", "transliteration", "transliteration"), "oÿʹ");
+  assertEquals(
+    convertDetailed("ὀυʹ", "greek", "transliteration").losses.map((loss) =>
+      `${loss.code}:${loss.diacritic}`
+    ),
+    ["removed-diacritic:smooth", "added-diacritic:diaeresis"],
+  );
+  // An `h` keeps its rough breathing in place, which separates the pair.
+  assertNfcEquals(convert("hayʹ", "transliteration", "greek"), "ἁυʹ");
+  assertNfcEquals(convert("ἁυʹ", "greek", "transliteration"), "hayʹ");
+  // Outside a numeral, the smooth breathing is inferred at the start of the
+  // word.
+  assertNfcEquals(convert("oy", "transliteration", "greek"), "ὀυ");
+});

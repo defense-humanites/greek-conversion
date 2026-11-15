@@ -358,7 +358,13 @@ export function encodeBetaCode(
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
       if (isKeptLetter(token)) return token.value;
-      if (token.value === DEXIA_KERAIA) return "#";
+      if (token.value === DEXIA_KERAIA) {
+        // `#` and a digit are a TLG character code (`#1` is koppa): before a
+        // digit, the keraia is written as itself, which reads back as one.
+        const next = rendered[index + 1];
+        const unit = next?.kind === "literal" ? next.value.charCodeAt(0) : 0;
+        return unit >= 0x30 && unit <= 0x39 ? DEXIA_KERAIA : "#";
+      }
       if (token.value === ARISTERI_KERAIA) return "#22";
       return encodePunctuation(token.value, "beta-code") ?? token.value;
     }
@@ -1382,9 +1388,12 @@ function writesSeparationDiaeresis(
     return false;
   }
   if (written("rough") && isWordInitial(document, index - 1)) return false;
+  // The reader infers a smooth breathing at the start of a word, but not in
+  // a numeral, which takes none.
   if (
     first.diacritics.has("smooth") &&
-    (infersSmoothBreathing(options) ||
+    (infersSmoothBreathing(options) &&
+        !isGreekNumeralContext(document, index - 1) ||
       (options.transliteration?.smoothBreathing === "greek" &&
         written("smooth")))
   ) return false;

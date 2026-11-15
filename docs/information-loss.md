@@ -60,7 +60,9 @@ Beta Code writes parentheses as the TLG bracket codes `[1` and `]1`, since `(`
 and `)` are breathings, and reads the number after a bracket whole: `[10` is
 another bracket code. A parenthesis or square bracket followed by a digit
 therefore does not read back: `(1)` is written `[11]1`, which reads as `[11)`,
-and `[1]` reads as `(]`. `convertDetailed()` reports the loss.
+and `[1]` reads as `(]`. `convertDetailed()` reports the loss. A keraia
+followed by a digit is written as itself, `ʹ`, since `#` and a digit are a
+TLG character code (`#1` is koppa): `αʹ1` gives `aʹ1`.
 
 Unrecognized characters, including unrecognized combining marks, remain
 literals and are preserved.
@@ -76,14 +78,21 @@ Default transliteration has these intrinsic ambiguities:
 - an initial vowel with explicit quantity has no inferred smooth breathing, so
   an explicitly smooth quantity-marked source converges to the unmarked form;
 - a smooth breathing written on the first vowel of a pair that could form a
-  diphthong marks a hiatus or an iota adscript (`Ἀίδης`, `ἀυτμή`), but the
-  omitted breathing leaves `Aídēs`, `autmḗ`, which parse back as diphthongs;
+  diphthong marks a hiatus or an iota adscript (`Ἀίδης`), but the omitted
+  breathing leaves `Aídēs`, which parses back as a diphthong;
   `convertDetailed()` reports `displaced-diacritic`. The engine does not add
   a diaeresis to compensate, because the same spelling also marks an iota
   adscript (`Ἅιδης`, `τῆι` in editions that write the adscript), which is not
   a hiatus. `smoothBreathing: "greek"` or `"apostrophe"` writes the breathing
   in place and keeps the distinction; an accent on the first vowel
   (`Ἅιδῃ → Háidȩ̄`) keeps it as well;
+- under the contextual upsilon rules (the default `"y-with-diphthong-u"`,
+  ISO 843, BnF), the `y` of a pair with upsilon says it is not a diphthong:
+  `ἀυτμή` → `aytmḗ`, which reads back with its breathing at the start of a
+  word. Where the breathing would not read back on the first vowel (inside a
+  word, or in a numeral, which takes no breathing), the `y` carries a
+  diaeresis, which reads back too: `ἀἑυ` → `aheÿ` → `ἀἑϋ`, and
+  `convertDetailed()` reports `added-diacritic`;
 - with the default `nasalGamma: "nasal"`, Greek gamma and nu before a velar can
   both be read as nasal gamma after transliteration;
 - the `h` of a rough breathing precedes its vowel or diphthong inside a word as
