@@ -40,8 +40,11 @@ Without them:
 - `ϲῶμα`, `λόγοσ`, `ϐίος`, and `ϑεός` stay as written in Greek output (rc.8:
   `σῶμα`, `λόγος`, `βίος`, `θεός`). The Beta Code `s3` and the `c` of
   `bnf-core` give `ϲ`, and Beta Code output writes `ϲ` as `s3` (rc.8: `σ` or
-  `ς`, and `s`). To compare texts regardless of these forms, fold them (see
-  the README, *Keep or fold letter variants*).
+  `ς`, and `s`). Beta Code reads and writes the TLG's `s1` and `s2` for a
+  sigma whose shape contradicts its place: `λόγοσ` gives `lo/gos1`, and
+  `lo/gos1` gives `λόγοσ` (rc.8: `lo/gos`, and `λόγος1`). To compare texts
+  regardless of these forms, fold them (see the README, *Keep or fold letter
+  variants*).
 - `convertDetailed()` reports a form the target cannot write, so that a
   conversion without loss still converts back to the same text: `ϐίος` gives
   `bíos` in transliteration, which reads back as `βίος`, with a

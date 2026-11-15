@@ -141,7 +141,7 @@ the coronis is kept, `transliteration.coronis` how it is written in Latin.
 | Group             | What it describes                                                                                                              | Examples                                                                         |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
 | `transliteration` | The Latin writing system: how each letter and mark is spelled, when transliteration is written and, without `source`, read     | `beta: "v"`, `upsilon: "y"`, `longVowels: "circumflex"`, `coronis: "apostrophe"` |
-| `greek`           | The Greek writing system: letter shapes, accentuation, assimilation, Unicode form. `sigma` and `doubleRho` reach Beta Code too | `finalSigma: "medial"`, `accentuation: "monotonic"`, `composition: "decomposed"` |
+| `greek`           | The Greek writing system: letter shapes, accentuation, assimilation, Unicode form. `sigma`, `finalSigma`, and `doubleRho` reach Beta Code too | `finalSigma: "medial"`, `accentuation: "monotonic"`, `composition: "decomposed"` |
 | `betaCode`        | Beta Code conventions                                                                                                          | `case: "uppercase"`, `yot: "#401"`                                               |
 | `text`            | Transformations of the whole text, in every format                                                                             | `letterCase: "lowercase"`, `whitespace: "collapse"`, `numerals: "decimal"`       |
 | `diacritics`      | Which classes of marks are kept at all; `all` sets every class, a class named with it is the exception                         | `accents: "remove"`, `all: "remove"`                                             |
@@ -399,9 +399,10 @@ a sigma whose shape contradicts its place, as in an abbreviation or a stem
 | `medialBeta`  | `ϐ`                       | `"standard"` writes `β`; `"symbol"` writes `ϐ` inside a word and `β` at its start, as French typography does |
 | `symbolForms` | `ϑ ϴ ϕ ϖ ϰ ϱ ϵ ϒ`         | `"standard"` writes the ordinary letters                                                    |
 
-Beta Code writes the lunate sigma `s3`, and transliteration writes it `c` under
-`lunateSigma: "c"`; `convertDetailed()` reports any other form the target
-cannot write (`removed-glyph-variant`):
+Beta Code writes the lunate sigma `s3`, and a sigma whose shape contradicts its
+place `s1` (`σ`) or `s2` (`ς`). Transliteration writes the lunate sigma `c`
+under `lunateSigma: "c"`. `convertDetailed()` reports any other form the
+target cannot write (`removed-glyph-variant`):
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
@@ -411,6 +412,7 @@ const options = { transliteration: { lunateSigma: "c" } } as const;
 convert("σϲς", "greek", "transliteration", options); // → scs
 convert("scs", "transliteration", "greek", options); // → σϲς
 convert("σϲς", "greek", "beta-code"); // → ss3s
+convert("λόγοσ", "greek", "beta-code"); // → lo/gos1
 ```
 
 To write the ordinary letters, fold the variants. A comparison key also writes

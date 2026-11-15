@@ -461,7 +461,8 @@ test("assimilates dentals before sigma only on demand", () => {
     convert("atsa adsa athsa", "transliteration", "greek", assimilate),
     "ἀσα ἀσα ἀσα",
   );
-  assertNfcEquals(convert("τσ δσ θσ", "greek", "beta-code"), "ts ds qs");
+  // Beta Code keeps the medial sigma the source notes at the end of a word.
+  assertNfcEquals(convert("τσ δσ θσ", "greek", "beta-code"), "ts1 ds1 qs1");
   assertNfcEquals(
     convert("τσ δσ θσ", "greek", "transliteration"),
     "ts ds ths",

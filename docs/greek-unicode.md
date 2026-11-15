@@ -165,7 +165,10 @@ for the other source formats). Transliteration writes `ϐίος` as `bíos`, whi
 reads back as `βίος`: the conversion reports the loss under the default
 `medialBeta: "preserve"`, but not under `"symbol"`, which writes `βίος` from
 either text. Beta Code writes the lunate sigma `s3`, and transliteration
-writes it `c` under `transliteration.lunateSigma: "c"`.
+writes it `c` under `transliteration.lunateSigma: "c"`. Under the default
+`greek.finalSigma: "preserve"`, Beta Code also writes a sigma whose shape
+contradicts its place as `s1` (`σ`) or `s2` (`ς`), the codes of the TLG:
+`λόγοσ` gives `lo/gos1`.
 
 Where its position decides the shape of a sigma (`greek.finalSigma:
 "contextual"`, or `"preserve"` for a sigma whose shape the source does not

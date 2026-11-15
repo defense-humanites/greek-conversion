@@ -24,8 +24,8 @@ the row format to the column format and parsing the result again.
 
 | From \ To | Greek | Beta Code | Transliteration |
 | --- | --- | --- | --- |
-| **Greek** | Selected glyph, accent, punctuation, and composition policies | Canonical spelling and mark order; symbol forms other than the lunate sigma; a sigma whose shape contradicts its place | Symbol forms; the lunate sigma unless `lunateSigma: "c"`; a sigma whose shape contradicts its place; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; the absence of a breathing on an initial vowel (monotonic or uncial text), which reads back as a smooth breathing; `ν` before a velar under nasal-gamma inference; `τ`, `π`, or `ρ` before a rough breathing inside a word, which merges with its `h` |
-| **Beta Code** | Canonical Greek glyphs | Canonical ASCII case, asterisk placement, mark order, aliases, and punctuation | Same transliteration losses as Greek, including the lunate sigma unless `lunateSigma: "c"`, coronis, and marked double rho |
+| **Greek** | Selected glyph, accent, punctuation, and composition policies | Canonical spelling and mark order; symbol forms other than the lunate sigma | Symbol forms; the lunate sigma unless `lunateSigma: "c"`; a sigma whose shape contradicts its place; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; the absence of a breathing on an initial vowel (monotonic or uncial text), which reads back as a smooth breathing; `ν` before a velar under nasal-gamma inference; `τ`, `π`, or `ρ` before a rough breathing inside a word, which merges with its `h` |
+| **Beta Code** | Canonical Greek glyphs | Canonical ASCII case, asterisk placement, mark order, aliases, and punctuation | Same transliteration losses as Greek, including the lunate sigma unless `lunateSigma: "c"`, a sigma whose shape contradicts its place (`s1`, `s2`), coronis, and marked double rho |
 | **Transliteration** | Initial smooth breathing is inferred where quantity is not explicit; an elided mute may be aspirated before rough breathing | Initial smooth breathing is inferred where quantity is not explicit; accepted aliases converge to canonical Beta Code | Accepted aliases, punctuation, combining-mark order, NFC, and orthographic spelling converge |
 
 “Canonical documents” excludes invalid or ambiguous combinations. Use
@@ -48,7 +48,8 @@ not necessarily NFC. Accepted aliases do not round-trip byte for byte:
   quantity, breathing, diaeresis, accent, so that the macron sits on the
   vowel (`ᾱ́`), and in transliteration an explicit macron is spelled like the
   structural macron of eta and omega (`ā́` like `ḗ`);
-- Beta Code aliases, case placement, and mark order converge.
+- Beta Code aliases, case placement, and mark order converge, and a sigma
+  code that the place makes redundant is dropped (`s1a` → `sa`).
 
 ASCII letter case in Beta Code is presentation only and does not enter the
 canonical document. An asterisk is the sole uppercase marker. Consequently,
@@ -118,7 +119,13 @@ coronis contexts without guessing from ordinary apostrophes.
 The Greek reader remembers the form of a letter as its `glyphVariant`: the
 lunate sigma `ϲ` (`Ϲ`), a final `ς` or medial `σ`, and the symbol forms `ϐ`,
 `ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, and `ϒ`. Beta Code notes the lunate sigma
-(`s3`), and transliteration notes it as `c` under `lunateSigma: "c"`. The
+(`s3`), and the medial and final sigma (`s1`, `s2`), which it writes only
+where the shape contradicts the place, under `finalSigma: "preserve"`, or
+before a digit from 1 to 3; transliteration notes the lunate sigma as `c`
+under `lunateSigma: "c"`. The TLG defines no code for a capital sigma, so a
+capital sigma before `3` is written `*s3` and reads back as a lunate sigma
+(`Σ3` → `*s3` → `Ϲ`), which `convertDetailed()` reports as
+`added-glyph-variant`. The
 options `greek.sigma`, `greek.finalSigma`, `greek.medialBeta`, and
 `greek.symbolForms` decide how Greek output writes them; by default, it keeps
 the forms the source writes.
@@ -143,7 +150,8 @@ options. Consequently, for a Greek source:
 - a form the target cannot write is lost: under the default
   `medialBeta: "preserve"`, `ϐίος` is written `bíos`, which reads back as
   `βίος`. So is a sigma whose shape contradicts its place, as in an
-  abbreviation (`λόγοσ` → `lógos`), and a symbol form in Beta Code;
+  abbreviation, in transliteration (`λόγοσ` → `lógos`), and a symbol form in
+  Beta Code;
 - a form that exists in one case only is lost when the case changes, unless
   the options write it again: `ϑ` in capitals is `Θ`, as `toUpperCase()`
   writes it, and `ϴ` in lowercase is `θ`. So is the shape a small sigma
@@ -206,7 +214,7 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `betaCode.case: "lowercase"` or `"uppercase"` | Selects the insignificant ASCII case of Beta Code letters without changing `*` markers | Yes; the canonical graphemes are unchanged |
 | `betaCode.yot: "#401"` | Uses the TLG character code instead of `j` for yot | Yes; both spellings parse as yot |
 | `archaicKoppa: "q"` | Uses the same transliteration for both koppa forms | No; `q` parses as modern koppa |
-| `finalSigma: "preserve"` (default) | Writes the sigma shape the source notes in lowercase Greek output, and places any other sigma by its position | Yes in Greek; a shape that contradicts its place is lost in Beta Code and transliteration |
+| `finalSigma: "preserve"` (default) | Writes the sigma shape the source notes in lowercase Greek output, and places any other sigma by its position; Beta Code writes a shape that contradicts its place as `s1` or `s2` | Yes in Greek and Beta Code; a shape that contradicts its place is lost in transliteration |
 | `finalSigma: "contextual"` | Places every sigma by its position in lowercase Greek output | No, but the canonical text has no other shape, so the change is not reported |
 | `finalSigma: "medial"` | Uses `σ` instead of contextual `ς` in lowercase Greek output | Yes; both are the same canonical sigma letter |
 | `sigma: "preserve"` (default) | Uses lunate Greek or Beta Code glyphs only where the source notes a lunate sigma, numerals included | Yes in Greek and Beta Code; in transliteration with `lunateSigma: "c"` |

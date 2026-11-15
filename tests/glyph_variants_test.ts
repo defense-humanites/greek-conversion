@@ -4,6 +4,7 @@ import {
   type ConversionOptions,
   convert,
   convertDetailed,
+  createConverter,
   type Format,
   type GlyphVariant,
   reencode,
@@ -15,6 +16,8 @@ import {
   parse,
   validateDocument,
 } from "../src/document.ts";
+import { parseResolved } from "../src/conversion.ts";
+import { resolveConversionOptions } from "../src/presets.ts";
 
 /** The losses of a conversion, as `code:glyphVariant@index`. */
 function glyphLosses(
@@ -244,6 +247,108 @@ test("Beta Code s3 and the BnF c give a lunate sigma", () => {
     "ϲωμα",
   );
   assertEquals(convert("s3w=ma", "beta-code", "beta-code"), "s3w=ma");
+});
+
+test("Beta Code reads s1 and s2, and writes them where the shape contradicts the place", () => {
+  assertNfcEquals(
+    convert("lo/gos1 s2o/s lo/gos s1a S1 *s1", "beta-code", "greek"),
+    "λόγοσ ςός λόγος σα σ Σ1",
+  );
+  assertEquals(
+    convert("λόγοσ ςόσ λόγος σα σʹ", "greek", "beta-code"),
+    "lo/gos1 s2o/s1 lo/gos sa s#",
+  );
+  assertEquals(glyphLosses("λόγοσ ςόσ", "greek", "beta-code"), []);
+  // Where the position gives the noted shape, the code is not needed.
+  assertEquals(convert("s1a lo/gos2", "beta-code", "beta-code"), "sa lo/gos");
+  assertEquals(
+    convert("λόγοσ", "greek", "beta-code", {
+      betaCode: { case: "uppercase" },
+    }),
+    "LO/GOS1",
+  );
+  // An elision apostrophe does not end the word.
+  assertEquals(
+    convert("ἔχουσ’ ἐγώ ἔχους’ ἐγώ", "greek", "beta-code"),
+    "e)/xous' e)gw/ e)/xous2' e)gw/",
+  );
+  // Under finalSigma: "contextual", the position decides every shape.
+  const contextual = { greek: { finalSigma: "contextual" } } as const;
+  assertEquals(
+    convert("λόγοσ ςόσ", "greek", "beta-code", contextual),
+    "lo/gos so/s",
+  );
+  assertEquals(glyphLosses("λόγοσ ςόσ", "greek", "beta-code", contextual), []);
+  // Transliteration cannot write the shapes.
+  assertEquals(glyphLosses("lo/gos1 s2o/s", "beta-code", "transliteration"), [
+    "removed-glyph-variant:medial-sigma@4",
+    "removed-glyph-variant:final-sigma@6",
+  ]);
+  // A capital has no shape, even when a case policy keeps the provenance.
+  assertEquals(
+    convert("λόγοσ", "greek", "beta-code", {
+      text: { letterCase: "uppercase" },
+    }),
+    "*l*/o*g*o*s",
+  );
+  // Marks follow a sigma code as they follow a letter.
+  assertNfcEquals(convert("s2/a s3+", "beta-code", "greek"), "ς́α ϲ̈");
+  assertEquals(convert("s2/a", "beta-code", "beta-code"), "s2/a");
+  // A kept sigma takes its code from its place in the whole source: here, a
+  // quotation opened two words before.
+  const keepSigma = createConverter({ exclude: ["sigma"] });
+  for (
+    const [text, expected] of [
+      ["‘a)ei\\ lo/gos1' ", "‘aeì lógos1’ "],
+      ["‘lo/gos1' ", "‘lógos1’ "],
+    ]
+  ) {
+    assertNfcEquals(
+      keepSigma.convert(text, "beta-code", "transliteration"),
+      expected,
+    );
+  }
+  // The shared tokens of the converting reader are the tokens parse() builds.
+  const text = "s1a s2a s3a *s3 S1";
+  assertEquals(
+    parseResolved(text, "beta-code", resolveConversionOptions({}), true),
+    parse(text, "beta-code"),
+  );
+});
+
+test("a sigma before a digit from 1 to 3 keeps the digit in Beta Code", () => {
+  for (
+    const [finalSigma, beta] of [
+      ["preserve", "lo/gos22 lo/gos11 s23 s11a"],
+      ["contextual", "lo/gos22 lo/gos21 s23 s21a"],
+      ["medial", "lo/gos12 lo/gos11 s13 s11a"],
+    ] as const
+  ) {
+    const options = { greek: { finalSigma } };
+    const output = convert(
+      "λόγος2 λόγοσ1 ς3 σ1α",
+      "greek",
+      "beta-code",
+      options,
+    );
+    assertEquals(output, beta, finalSigma);
+    assertEquals(convert(output, "beta-code", "beta-code", options), beta);
+    assertNfcEquals(
+      convert(output, "beta-code", "greek", options),
+      convert("λόγος2 λόγοσ1 ς3 σ1α", "greek", "greek", options),
+    );
+    assertEquals(
+      convertDetailed("λόγος2 λόγοσ1 ς3", "greek", "beta-code", options).lossy,
+      false,
+    );
+  }
+  assertEquals(convert("logos1", "transliteration", "beta-code"), "logos21");
+  // The TLG defines no code for a capital: before 3, `*s3` is a lunate sigma.
+  assertEquals(convert("Σ1 Σ3", "greek", "beta-code"), "*s1 *s3");
+  assertEquals(glyphLosses("Σ3", "greek", "beta-code"), [
+    "added-glyph-variant:lunate-sigma@0",
+    "unrepresented-literal@1",
+  ]);
 });
 
 test("a lunate sigma the source does not have is reported when it reads back otherwise", () => {
