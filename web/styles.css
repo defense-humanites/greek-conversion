@@ -1565,15 +1565,20 @@ footer strong {
   color: var(--ink);
 }
 
-/* A tablet in portrait: the links go under the name, Share stays beside it. */
-@media (max-width: 900px) {
-  .links {
-    margin-left: 0;
-    order: 3;
-    width: 100%;
-  }
-  .share {
-    margin-left: auto;
+/* When the masthead has no room for one line (fitMasthead), the links go
+   under the name, and Share stays beside it. */
+.masthead.stacked .links {
+  margin-left: 0;
+  order: 3;
+  width: 100%;
+}
+.masthead.stacked .share {
+  margin-left: auto;
+}
+/* With the settings in one column, the introduction takes the width. */
+@media (max-width: 1099px) {
+  .intro {
+    max-width: none;
   }
 }
 /*

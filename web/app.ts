@@ -2547,8 +2547,31 @@ clearButton.addEventListener("click", () => {
 copyButton.addEventListener("click", () => copy(output.value, copyButton));
 copyCodeButton.addEventListener("click", () => copy(codeText, copyCodeButton));
 shareButton.addEventListener("click", share);
-placeShareNote();
-addEventListener("resize", placeShareNote);
+
+/**
+ * Lays the masthead out on one line when the name, the links and Share fit
+ * on it; otherwise the links go under the name, with Share beside it, rather
+ * than Share alone under the name.
+ */
+const masthead = shareButton.closest<HTMLElement>(".masthead")!;
+function fitMasthead(): void {
+  masthead.classList.remove("stacked");
+  const name = masthead.querySelector(".identity")!.getBoundingClientRect();
+  const wrapped = [".links", ".share"].some((selector) =>
+    masthead.querySelector(selector)!.getBoundingClientRect().top >=
+    name.bottom
+  );
+  masthead.classList.toggle("stacked", wrapped);
+}
+
+function placeHeader(): void {
+  fitMasthead();
+  placeShareNote();
+}
+placeHeader();
+addEventListener("resize", placeHeader);
+// The widths change once the fonts have loaded.
+document.fonts.ready.then(placeHeader);
 // Escape hides the note until the pointer or the focus leaves the button
 // (WCAG 1.4.13); a click elsewhere hides a note that a click had shown.
 const shareHolder = shareButton.parentElement!;
