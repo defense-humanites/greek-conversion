@@ -1152,9 +1152,15 @@ function saveState(): void {
     state.set("characters", JSON.stringify(inventory));
   }
   if (strict.checked) state.set("strict", "1");
-  history.replaceState(null, "", `#${state}`);
-  // Nothing to reset on the page as it opens.
-  resetButton.disabled = `#${state}` === START;
+  // The page as it opens needs no parameters in its address, and has nothing
+  // to reset.
+  const atStart = `#${state}` === START;
+  history.replaceState(
+    null,
+    "",
+    atStart ? location.pathname + location.search : `#${state}`,
+  );
+  resetButton.disabled = atStart;
 }
 
 function restoreState(): void {
