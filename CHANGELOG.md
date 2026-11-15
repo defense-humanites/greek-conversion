@@ -201,7 +201,7 @@ change.
     gives `kef’géneian` when read back.
 - Under `eta: "i"`, an iota with a macron is written like eta (`ī`), and an
   upsilon after it takes the separation diaeresis it would take after eta:
-  `ῑῠ` gives `īÿ̆` (rc.8: `īy̆`, which read back as `ηῠ̈`).
+  `ῑῠ` gives `īy̆̈` (rc.8: `īy̆`, which read back as `ηῠ̈`).
 
 ## [1.0.0-rc.8] - 2026-11-11
 
