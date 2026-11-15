@@ -132,6 +132,13 @@ Hence, under `phi: "f"`, `ph` is pi followed by a rough breathing, which is how
 that mixes conventions is not guessed: it is read by the convention of the
 options.
 
+A conversion reads its input with the options of `source` when they are given,
+and writes its output with the others: a transliteration is restyled by naming
+the convention it is written in. Without `source`, one set of options reads and
+writes, so that output converted again with the same options reads back as
+itself. The convention `source` names is read as the options would read it,
+and follows the same rules.
+
 ## Diagnostics and errors
 
 Diagnostic `code` values, their `index` semantics, and the fields that accompany

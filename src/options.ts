@@ -360,7 +360,38 @@ export interface ConversionOptions {
   text?: TextOptions;
   /** Which semantic diacritics are kept. */
   diacritics?: DiacriticOptions;
+  /**
+   * How the input is written, when it is not written as the output: the
+   * input is read with these options, resolved on their own, and the output
+   * written with the others. `source` replaces the options for reading and
+   * does not merge with them: `greek.accentuation` and `diacritics`, which
+   * also change how transliteration is read, then only write the output.
+   * Without it, the options describe the input as well, which is how a text
+   * is normalized in its own style. Functions that only write, `encode()`
+   * among them, check it and ignore it.
+   *
+   * Reading Greek and Beta Code depends on no option. Reading transliteration
+   * depends on the `transliteration` group, `greek.accentuation`, and the
+   * smooth breathing class of `diacritics`, so that restyling a
+   * transliteration needs the style it is written in:
+   *
+   * @example
+   * ```ts
+   * reencode("tōn barbarōn", "transliteration", {
+   *   preset: "ala-lc-modern",
+   *   source: { preset: "sbl-academic" },
+   * }); // "tōn varvarōn"
+   * ```
+   */
+  source?: SourceOptions;
 }
+
+/**
+ * The options that describe how the input of a conversion is written (see
+ * {@link ConversionOptions.source}): the options of a conversion, without a
+ * `source` of their own.
+ */
+export type SourceOptions = Omit<ConversionOptions, "source">;
 
 /**
  * Every effective option after defaults, a preset, and custom overrides.

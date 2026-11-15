@@ -80,9 +80,11 @@ tokens; some transliteration spellings depend on the selected options. The
 options are validated for every format, but only the `transliteration` group,
 `greek.accentuation`, and the disposition of the smooth breathing
 (`diacritics.smoothBreathing`, or `diacritics.all`) change how text is read:
-reading Greek or Beta Code depends on no option. It does not perform the target's orthographic
-transformations. Use the same preset and parsing options when encoding the
-result, unless a deliberate change of policy is intended:
+reading Greek or Beta Code depends on no option. When the options give a
+`source`, `parse()` reads with it, as a conversion does. It does not perform
+the target's orthographic transformations. Use the same preset and parsing
+options when encoding the result, unless a deliberate change of policy is
+intended:
 
 ```ts
 const options = { preset: "bnf-core" } as const;

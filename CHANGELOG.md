@@ -18,6 +18,23 @@ change.
   iota on the line reads back as a letter, and `convertDetailed()` reports the
   loss of the subscript. The README gives a recipe for Greek in the uncial
   style, with this option.
+- `source` describes how the input of a conversion is written, when it is not
+  written as the output (#70). The input is read with these options, resolved
+  on their own, and the output written with the others. Reading
+  transliteration depends on its options, which also described the input in
+  a conversion that keeps the format, so `reencode()` could not restyle a
+  transliteration into a style that reads it otherwise:
+  `reencode("phílos", "transliteration", { transliteration: { phi: "f" } })`
+  read `ph` as pi and a rough breathing and gave `phílos`, and ALA-LC Modern
+  read the `b` of `barbarōn` as μπ. With `source: {}`, the default style, the
+  first gives `fílos`, and with `source: { preset: "sbl-academic" }`, the
+  second gives `varvarōn` (README, *Restyle a transliteration*). Without
+  `source`, nothing changes: the options describe the input as well, which
+  normalizes a text in its own style and keeps output idempotent. `source`
+  replaces the options for reading, without merging with them, and works with
+  every function that reads text, including a converter bound to another
+  preset. Its options are checked like the others, with paths that start with
+  `source.`.
 
 ### Fixed
 
