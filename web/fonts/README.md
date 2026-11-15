@@ -11,18 +11,33 @@ Reserved Font Name.
 | `literata-gc-light.woff2` | [Literata](https://github.com/googlefonts/literata), static Light (`wght` 300) at `opsz` 24, renamed Literata GC | The texts in all three formats: the fields, examples, and loss reports |
 | `noto-serif-greek-symbols.woff2` | [Noto Serif](https://github.com/notofonts/latin-greek-cyrillic), static Light, sixteen letters | The Greek letters Literata lacks, in the same family (`unicode-range`) |
 
-Both are subsets of the files in
+All three are subsets of the variable fonts of
 [google/fonts](https://github.com/google/fonts) (`ofl/bricolagegrotesque`,
-`ofl/literata`), made with [fontTools](https://github.com/fonttools/fonttools):
+`ofl/literata`, `ofl/notoserif`), made with
+[fontTools](https://github.com/fonttools/fonttools) 4.67.0 by
+[`scripts/build_playground_fonts.py`](../../scripts/build_playground_fonts.py):
+
+```sh
+pip install "fonttools[woff]==4.67.0"
+python3 scripts/build_playground_fonts.py
+```
+
+The script downloads the sources and checks them against the SHA-256 of the
+versions the fonts were built from (`--sources` reads them from a folder
+instead, `--any-version` accepts another release). Each font keeps the date of
+its source, so the build gives the same bytes every time. The subsets keep
+every name, the licence's included, and the layout features the texts need
+(`ccmp`, `locl`, `mark`, `mkmk`, `kern`, `liga`).
 
 - **Bricolage Grotesque**: the `wdth` axis fixed at 100 and `wght` limited to
-  400–800, then subset to Basic Latin, Latin-1, Latin Extended-A and general
-  punctuation.
+  400–800, then subset to Basic Latin, Latin-1, Latin Extended-A, the
+  combining acute and macron, and general punctuation.
 - **Literata GC**: instantiated at `opsz` 24 and `wght` 300, one step
   lighter than Regular, then subset to
   Latin (with Latin Extended-B and Extended Additional), spacing modifiers,
   combining diacritics, Greek and Coptic, Greek Extended, and general
-  punctuation. Literata lacks four letters that the presets produce or
+  punctuation. Both subsets also keep the euro, the trade mark, the arrows ←
+  and →, and the minus. Literata lacks four letters that the presets produce or
   accept; they are added as composites of its own glyphs:
   - `ϲ` (U+03F2) and `Ϲ` (U+03F9), lunate sigma: the Latin `c` and `C`.
   - `ḳ` (U+1E33) and `Ḳ` (U+1E32), ALA-LC archaic koppa: `k` and `K` with
