@@ -313,13 +313,14 @@ h1 span {
   font-size: 15px;
   line-height: 21px;
   text-align: center;
-  transform: translateX(-50%);
+  /* Moved left by --nudge when it would leave the page (placeShareNote). */
+  transform: translateX(calc(-50% - var(--nudge, 0px)));
 }
 .share-note::before {
   content: "";
   position: absolute;
   top: -6px;
-  left: 50%;
+  left: calc(50% + var(--nudge, 0px));
   width: 10px;
   height: 10px;
   border-top: 1px solid var(--line);
@@ -405,11 +406,14 @@ h1 span {
 .option-cell {
   display: contents;
 }
-@media (min-width: 1100px) {
+/*
+ * From a tablet on, the words and the settings share a grid: two columns,
+ * each word beside its setting, then, where the lines have room, four.
+ */
+@media (min-width: 641px) {
   .settings-grid {
     display: grid;
-    grid-template-columns: repeat(4, auto);
-    justify-content: space-between;
+    grid-template-columns: auto minmax(0, 1fr);
     /* The words sit on the line of the text beside them, the first line
        of options included. */
     align-items: baseline;
@@ -454,6 +458,22 @@ h1 span {
   }
   .settings-grid .option-line .group > .word {
     grid-column: 1;
+  }
+}
+/* Two columns: the formats span theirs, as the menus do. */
+@media (min-width: 641px) and (max-width: 1099px) {
+  .settings-grid .segments {
+    display: flex;
+  }
+  .settings-grid .segments label {
+    flex: 1;
+    justify-content: center;
+  }
+}
+@media (min-width: 1100px) {
+  .settings-grid {
+    grid-template-columns: repeat(4, auto);
+    justify-content: space-between;
   }
 }
 /* How a transliteration in the source is written, when that matters. */
@@ -915,7 +935,7 @@ h1 span {
 /* The two fields: the source in cobalt, the target in orange */
 .fields {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
   gap: 20px;
 }
 .field {
@@ -935,9 +955,10 @@ h1 span {
  * The label and the buttons share the head of the field; only on a phone do
  * the buttons move under the label.
  */
+/* The buttons go under the label when the field is too narrow for both. */
 .field-head {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px 12px;
@@ -1143,15 +1164,17 @@ textarea.text::placeholder {
 }
 
 /* The verdict: the halves of the tessera meet when nothing is lost */
+/* The tessera stands on the first line of the verdict, however many wrap. */
 .verdict {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
 }
 .tessera {
   width: 32px;
   height: 32px;
   flex: none;
+  margin-top: -4px;
 }
 .tessera .grec {
   fill: var(--from);
@@ -1542,9 +1565,124 @@ footer strong {
   color: var(--ink);
 }
 
+/* A tablet in portrait: the links go under the name, Share stays beside it. */
+@media (max-width: 900px) {
+  .links {
+    margin-left: 0;
+    order: 3;
+    width: 100%;
+  }
+  .share {
+    margin-left: auto;
+  }
+}
+/*
+ * Without a pointer to hover with, the hint of the source formats shows,
+ * since nothing else says that choosing a format again detects it.
+ */
+@media (hover: none) and (max-width: 1099px) {
+  #source-hint {
+    position: static;
+    grid-column: -2;
+    width: auto;
+    height: auto;
+    margin: -8px 0 0;
+    overflow: visible;
+    clip-path: none;
+    font-size: 13px;
+    line-height: 18px;
+    white-space: normal;
+    color: var(--muted);
+  }
+}
+/* A narrow phone: Share keeps its icon, beside the name, and its name for
+   screen readers. */
+@media (max-width: 380px) {
+  #share {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+  #share .button-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+/* A narrow tablist: the canonical document is called the document. */
+@media (max-width: 440px) {
+  .tabs {
+    gap: 4px 18px;
+    padding: 0 16px;
+  }
+  .tabs [role="tab"] .tab-full {
+    display: none;
+  }
+  .tabs [role="tab"][data-short]::after {
+    content: attr(data-short);
+  }
+}
+@media (min-width: 441px) {
+  .tabs [role="tab"] .tab-short {
+    display: none;
+  }
+}
 @media (max-width: 640px) {
-  .field-head {
+  /* The settings in one column: each word over its setting. */
+  .settings-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .settings-grid .sentence,
+  .settings-grid .target-group,
+  .settings-grid .source-line,
+  .settings-grid .option-line,
+  .settings-grid .option-line .group {
+    display: contents;
+  }
+  .settings-grid .word {
+    margin-top: 10px;
+    font-size: 16px;
+  }
+  .settings-grid #verb {
+    margin-top: 0;
+  }
+  .settings-grid .chip-select select {
+    width: 100%;
+  }
+  .option-cell {
+    position: relative;
+    display: flex;
     flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
+  }
+  .same-format-hint {
+    margin-top: 6px;
+  }
+  /* The characters: each word over its pills. */
+  .inventory-row > .word {
+    width: 100%;
+    font-size: 16px;
+  }
+  .diagnostics h2 {
+    font-size: 20px;
+  }
+  .diagnostics ul {
+    gap: 12px;
+  }
+  .diagnostics li {
+    gap: 10px;
+    padding: 14px;
+  }
+  /* The code wraps rather than scroll sideways. */
+  pre.code {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
   .shell {
     gap: 20px;
@@ -1600,14 +1738,6 @@ footer strong {
     display: none;
   }
 
-  .links {
-    margin-left: 0;
-    order: 3;
-    width: 100%;
-  }
-  .share {
-    margin-left: auto;
-  }
   .intro {
     max-width: none;
     margin-top: 0;
@@ -1619,7 +1749,7 @@ footer strong {
   }
   .text {
     --text-size: 24px;
-    min-height: 140px;
+    min-height: 96px;
   }
   footer .package {
     text-align: left;

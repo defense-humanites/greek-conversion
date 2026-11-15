@@ -2423,6 +2423,7 @@ function resetShare(): void {
   shareLinkIcon.removeAttribute("hidden");
   shareDoneIcon.setAttribute("hidden", "");
   shareNote.textContent = SHARE_HELP;
+  placeShareNote();
   shareNote.parentElement?.classList.remove("shown");
 }
 
@@ -2431,6 +2432,24 @@ function resetShare(): void {
  * hover and focus, says what the button does; after a click, the icon turns
  * into a check for a moment and the note says that the link was copied.
  */
+/**
+ * Keeps the note of Share within the page: centred under the button where
+ * it has room, moved left, its pointer still on the button, where it would
+ * leave the page and let it scroll sideways.
+ */
+function placeShareNote(): void {
+  shareNote.style.setProperty("--nudge", "0px");
+  const margin = 12;
+  const { left, right } = shareNote.getBoundingClientRect();
+  const page = document.documentElement.clientWidth;
+  const nudge = right > page - margin
+    ? right - (page - margin)
+    : left < margin
+    ? left - margin
+    : 0;
+  shareNote.style.setProperty("--nudge", `${Math.round(nudge)}px`);
+}
+
 async function share(): Promise<void> {
   clearTimeout(shareTimer);
   const holder = shareNote.parentElement;
@@ -2440,11 +2459,13 @@ async function share(): Promise<void> {
     shareLinkIcon.setAttribute("hidden", "");
     shareDoneIcon.removeAttribute("hidden");
     shareNote.textContent = "Link copied to the clipboard.";
+    placeShareNote();
     holder?.classList.add("shown");
     shareTimer = setTimeout(resetShare, 2000);
   } catch {
     shareNote.textContent =
       "The link could not be copied: copy the address from the address bar.";
+    placeShareNote();
     holder?.classList.add("shown");
     shareTimer = setTimeout(resetShare, 6000);
   }
@@ -2526,6 +2547,8 @@ clearButton.addEventListener("click", () => {
 copyButton.addEventListener("click", () => copy(output.value, copyButton));
 copyCodeButton.addEventListener("click", () => copy(codeText, copyCodeButton));
 shareButton.addEventListener("click", share);
+placeShareNote();
+addEventListener("resize", placeShareNote);
 // Escape hides the note until the pointer or the focus leaves the button
 // (WCAG 1.4.13); a click elsewhere hides a note that a click had shown.
 const shareHolder = shareButton.parentElement!;
