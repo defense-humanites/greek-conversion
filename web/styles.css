@@ -327,8 +327,36 @@ h1 span {
   background: var(--tip);
   transform: translateX(-50%) rotate(45deg);
 }
-.share-note:empty {
+/* Shown on hover and keyboard focus, or after a click, unless dismissed. */
+.share-note {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.share:hover .share-note,
+.share:has(#share:focus-visible) .share-note,
+.share.shown .share-note {
+  visibility: visible;
+  opacity: 1;
+}
+.share.dismissed .share-note {
+  visibility: hidden;
+  opacity: 0;
+}
+/* A bridge over the gap, so that the pointer can reach the note. */
+.share-note::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  height: 14px;
+}
+.share svg[hidden] {
   display: none;
+}
+.share-done {
+  color: var(--from);
 }
 /* Half the width, clear of the links and the Share button. */
 .intro {
@@ -1561,7 +1589,8 @@ footer strong {
 
 @media (prefers-reduced-motion: reduce) {
   .tessera .half,
-  .disclosure-mark {
+  .disclosure-mark,
+  .share-note {
     transition: none;
   }
 }

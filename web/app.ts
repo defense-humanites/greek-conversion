@@ -2196,21 +2196,40 @@ async function copy(text: string, button: HTMLButtonElement): Promise<void> {
 }
 
 let shareTimer: ReturnType<typeof setTimeout> | undefined;
+const SHARE_HELP = "Copy a link that opens this text with the same settings.";
+const shareLinkIcon = shareButton.querySelector<SVGElement>(".share-link")!;
+const shareDoneIcon = shareButton.querySelector<SVGElement>(".share-done")!;
 
-/** Copies the address, which holds the whole conversion, and says so. */
+/** Back to the button's resting state: its icon, and the note on hover. */
+function resetShare(): void {
+  shareLinkIcon.removeAttribute("hidden");
+  shareDoneIcon.setAttribute("hidden", "");
+  shareNote.textContent = SHARE_HELP;
+  shareNote.parentElement?.classList.remove("shown");
+}
+
+/**
+ * Copies the address, which holds the whole conversion. The note, shown on
+ * hover and focus, says what the button does; after a click, the icon turns
+ * into a check for a moment and the note says that the link was copied.
+ */
 async function share(): Promise<void> {
   clearTimeout(shareTimer);
+  const holder = shareNote.parentElement;
+  holder?.classList.remove("dismissed");
   try {
     await navigator.clipboard.writeText(location.href);
-    shareNote.replaceChildren();
-    const strong = document.createElement("strong");
-    strong.textContent = "Link copied:";
-    shareNote.append(strong, " it opens this text with the same settings.");
+    shareLinkIcon.setAttribute("hidden", "");
+    shareDoneIcon.removeAttribute("hidden");
+    shareNote.textContent = "Link copied to the clipboard.";
+    holder?.classList.add("shown");
+    shareTimer = setTimeout(resetShare, 2000);
   } catch {
     shareNote.textContent =
       "The link could not be copied: copy the address from the address bar.";
+    holder?.classList.add("shown");
+    shareTimer = setTimeout(resetShare, 6000);
   }
-  shareTimer = setTimeout(() => (shareNote.textContent = ""), 6000);
 }
 
 for (const input of sourceInputs) {
@@ -2283,12 +2302,28 @@ clearButton.addEventListener("click", () => {
 copyButton.addEventListener("click", () => copy(output.value, copyButton));
 copyCodeButton.addEventListener("click", () => copy(codeText, copyCodeButton));
 shareButton.addEventListener("click", share);
+// Escape hides the note until the pointer or the focus leaves the button
+// (WCAG 1.4.13); a click elsewhere hides a note that a click had shown.
+const shareHolder = shareButton.parentElement!;
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") shareNote.textContent = "";
+  if (event.key === "Escape") {
+    shareHolder.classList.add("dismissed");
+    shareHolder.classList.remove("shown");
+  }
 });
+for (const type of ["mouseleave", "focusout"] as const) {
+  shareHolder.addEventListener(type, () => {
+    if (
+      !shareHolder.matches(":hover") &&
+      !shareHolder.contains(document.activeElement)
+    ) {
+      shareHolder.classList.remove("dismissed");
+    }
+  });
+}
 document.addEventListener("click", (event) => {
-  if (!shareButton.parentElement?.contains(event.target as Node)) {
-    shareNote.textContent = "";
+  if (!shareHolder.contains(event.target as Node)) {
+    shareHolder.classList.remove("shown");
   }
 });
 addEventListener("hashchange", () => {
