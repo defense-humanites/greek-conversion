@@ -219,7 +219,7 @@ nu; this changes the accepted spelling contract for transliteration input.
 | --- | --- | --- |
 | `diacritics.all: "remove"` | Removes every semantic class, breathings included; a class named alongside is the exception, so `{ all: "remove", roughBreathing: "preserve" }` keeps the rough breathing and its `h` in transliteration | No |
 | `diacritics.<class>: "remove"` | Removes only the selected semantic class during rendering | No when that class occurs; unselected classes remain recoverable |
-| `letterCase: "lowercase"`, `"uppercase"`, or `"title"` | Applies deterministic case to recognized Greek graphemes | No when source case changes; unknown literals are untouched |
+| `letterCase: "lowercase"`, `"uppercase"`, or `"title"` | Applies deterministic case to recognized Greek graphemes; under `"title"`, an apostrophe between two letters does not start a word | No when source case changes; unknown literals are untouched |
 | `betaCode.case: "lowercase"` or `"uppercase"` | Selects the insignificant ASCII case of Beta Code letters without changing `*` markers | Yes; the canonical graphemes are unchanged |
 | `betaCode.yot: "#401"` | Uses the TLG character code instead of `j` for yot | Yes; both spellings parse as yot |
 | `archaicKoppa: "q"` | Uses the same transliteration for both koppa forms | No; `q` parses as modern koppa |
@@ -248,7 +248,7 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `nuTau: "d-initial"` | Writes word-initial `ντ` as `d` | No; `d` is also delta |
 | `nuTau: "d-underline-initial"` | Writes word-initial `ντ` as `d̲` (ALA-LC) | Yes; `d̲` remains distinct from delta |
 | `nasalGamma: "nasal-medial-kappa"` | Writes `γκ` as `nk` inside a word and `gk` at its edges (ALA-LC) | Yes |
-| `upsilon: "y-with-ou-v-f"` | Writes the upsilon of `αυ/ευ/ηυ` as `v` or `f` and moves its accent to the vowel (ISO 843 Type 2) | Yes alone; no with `beta: "v"` or `phi: "f"`, as in ISO 843 Type 2, under which `v` and `f` read back as beta and phi, and the accent stays on the vowel |
+| `upsilon: "y-with-ou-v-f"` | Writes the upsilon of `αυ/ευ/ηυ` as `v` or `f` and moves its accent to the vowel (ISO 843 Type 2) | Yes alone; no with `beta: "v"` or `phi: "f"`, as in ISO 843 Type 2, under which `v` and `f` read back as beta and phi, and the accent stays on the vowel. A circumflex moved to epsilon is written as a tilde where `ê` is eta (`εὖ` → `ẽf` under ISO 843 Type 1), and a `v` or `f` after an eta written `i` without a length mark reads back as the upsilon of `ηυ` |
 | `longVowels: "omit"` | Writes eta and omega without a length mark (ISO 843 Type 2); a vowel pair is written as it reads back, so `ωυ` is written like `ου`, and `ηἱ` like `εἱ` (or like `ιἱ` under `eta: "i"`) | No: they read back as epsilon (or iota) and omicron, except where a circumflex or an iota subscript only fits the long vowel |
 | `rho: "systematic"` | Adds one final `h` to every contiguous rho group | The rho letters are recoverable; an explicit rough breathing is not |
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |

@@ -394,13 +394,18 @@ const VOICELESS = new Set<Letter>([
   "sampi",
 ]);
 
-/** Whether the upsilon at `index` is followed by a voiced sound in its word. */
+/**
+ * Whether the upsilon at `index` is followed by a voiced sound in its word. A
+ * coronis on it, written as an apostrophe and read back (`Kev’géneian`),
+ * leaves the letter after it in the word, as the coronis did.
+ */
 export function precedesVoicedSound(
   document: Document,
   index: number,
 ): boolean {
-  if (isWordFinal(document, index)) return false;
   let next = index + 1;
+  if (followsCoronisApostrophe(document, index + 2)) next++;
+  else if (isWordFinal(document, index)) return false;
   while (isBoundaryTransparent(document[next])) next++;
   const token = document[next];
   return token?.kind === "grapheme" && !VOICELESS.has(token.letter);
@@ -551,6 +556,37 @@ export function elidedAspirate(
   return target?.kind === "grapheme" && target.diacritics.has("rough")
     ? aspirate
     : undefined;
+}
+
+/**
+ * Whether the letter at `index` follows a vowel and an apostrophe with no
+ * space between them: a coronis written as an apostrophe
+ * (`coronis: "apostrophe"`), read back as punctuation. An elision apostrophe
+ * follows a consonant, and a space follows it. The letter stays inside the
+ * word for the rules that tell the start of a word from its middle, as it was
+ * when the coronis was a mark: `toú’mpalin` (`τοὔμπαλιν`) is read back as
+ * `τού’μπαλιν`, which must not be written `toú’balin`.
+ */
+export function followsCoronisApostrophe(
+  document: Document,
+  index: number,
+): boolean {
+  const mark = document[index - 1];
+  const vowel = document[index - 2];
+  return isElisionMark(mark) && vowel?.kind === "grapheme" &&
+    isVowel(vowel.letter);
+}
+
+/**
+ * Whether the letter at `index` follows a letter and an apostrophe with no
+ * space between them, for title case (see followsCoronisApostrophe()).
+ */
+export function followsApostropheInWord(
+  document: Document,
+  index: number,
+): boolean {
+  return isElisionMark(document[index - 1]) &&
+    document[index - 2]?.kind === "grapheme";
 }
 
 /** Whether a literal is an apostrophe: elision, or a coronis written so. */

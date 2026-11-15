@@ -1,6 +1,7 @@
 import {
   ARISTERI_KERAIA,
   DEXIA_KERAIA,
+  followsApostropheInWord,
   isBoundaryTransparent,
   isDiphthongAt,
   isGreekNumeralContext,
@@ -284,8 +285,13 @@ function applyLetterCaseOrthography(
   const cased = document.map((token, index) => {
     if (token.kind === "literal") return token;
 
+    // An apostrophe between two letters, with no space, does not start a
+    // word: it is a coronis written so and read back (`Ka’gṓ`, `Taf’tón`,
+    // where the upsilon of `ταὐτόν` is written `f`), which was a mark of the
+    // word, or an elision written without a space.
     const uppercase = policy === "uppercase" ||
-      policy === "title" && isWordInitial(document, index);
+      policy === "title" && isWordInitial(document, index) &&
+        !followsApostropheInWord(document, index);
     if (token.uppercase === uppercase) return token;
 
     changed = true;

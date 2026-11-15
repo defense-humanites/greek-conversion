@@ -184,6 +184,24 @@ change.
   separation by a diaeresis, in both directions: `oyʹ` gives `οϋʹ` (was
   `ουʹ`), and `ὀυʹ` gives `oÿʹ` (was `oyʹ`, which read back as `ουʹ` and
   then gave `ouʹ`).
+- Under `letterCase: "title"`, a coronis written as an apostrophe and read
+  back started a word: `κἀγώ` gave `Ka’gṓ`, which then gave `Ka’Gṓ`. An
+  apostrophe between two letters, with no space, no longer starts a word,
+  which also changes an elision written without a space (`δ’ἐγώ` gives
+  `Δ’ἐγώ`; rc.8: `Δ’Ἐγώ`).
+- Under `upsilon: "y-with-ou-v-f"`, three spellings did not read back as
+  written:
+  - a `v` or `f` after an eta written `i` without a length mark (ISO 843
+    Type 2 with `beta: "b"`): `ηὗρον` gives `hîvron`, which now reads back as
+    `ηὗρον` (rc.8: `ἷvρον`);
+  - a circumflex moved to epsilon, where `ê` is eta (ISO 843 Type 1, BnF):
+    `εὖ` gives `’ẽf` (rc.8: `’êf`, which read back as eta);
+  - a `v` or `f` before a coronis written as an apostrophe, which counted as
+    the end of the word: `κεὐγένειαν` gives `kev’géneian`, which no longer
+    gives `kef’géneian` when read back.
+- Under `eta: "i"`, an iota with a macron is written like eta (`ī`), and an
+  upsilon after it takes the separation diaeresis it would take after eta:
+  `ῑῠ` gives `īÿ̆` (rc.8: `īy̆`, which read back as `ηῠ̈`).
 
 ## [1.0.0-rc.8] - 2026-11-11
 

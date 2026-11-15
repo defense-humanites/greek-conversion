@@ -68,7 +68,7 @@ transliteration (*Restyle a transliteration*). A restyle that went through
 Greek in two calls can take one,
 `reencode(text, "transliteration", { ...target, source })`, which also keeps
 what the Greek step dropped, such as a lunate sigma that the source writes
-`c`. Five kinds of input convert differently:
+`c`. Six kinds of input convert differently:
 
 - Where the position decides the shape of a sigma in Greek output, a sigma
   before an elision apostrophe is medial: the Beta Code `a)gge/llous'` gives
@@ -107,6 +107,10 @@ what the Greek step dropped, such as a lunate sigma that the source writes
   comma before `c̄` or `s̄` the left one (`,c̄` gives `͵ϛ`; rc.8: `,ϛ`); with
   the accents removed, the right keraia is written `ʹ` (`αʹ` gives `aʹ`;
   rc.8: `á`).
+- Under `text.letterCase: "title"`, an apostrophe between two letters, with
+  no space, does not start a word: `δ’ἐγώ` gives `Δ’ἐγώ` (rc.8: `Δ’Ἐγώ`), as a
+  coronis written as an apostrophe does (`Ka’gṓ`). With a space, `δ’ ἐγώ`
+  still gives `Δ’ Ἐγώ`.
 
 ## Updating from `1.0.0-rc.7`
 
