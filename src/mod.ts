@@ -39,7 +39,7 @@ import type {
   ResolvedConversionOptions,
 } from "./options.ts";
 import { type ReadPositions, readSpans } from "./parsers/positions.ts";
-import { resolveConversionOptions } from "./presets.ts";
+import { resolveConversionProfiles } from "./presets.ts";
 
 export { FORMATS } from "./model.ts";
 export type {
@@ -84,6 +84,7 @@ export type {
   GreekOptions,
   GreekQuestionMarkForm,
   HyphenTransliteration,
+  IotaSubscriptOrthography,
   KeraiaTransliteration,
   LetterCaseOrthography,
   LongVowelTransliteration,
@@ -101,6 +102,8 @@ export type {
   RhoTransliteration,
   SigmaOrthography,
   SmoothBreathingTransliteration,
+  SourceOptions,
+  SymbolFormOrthography,
   TextOptions,
   TransliterationOptions,
   UnicodeComposition,
@@ -131,8 +134,9 @@ export type {
  * Converts text between Greek, Beta Code, and scientific transliteration.
  *
  * Unknown literals are preserved. The result is canonical and idempotent for
- * fixed formats and options, but a reverse conversion is not necessarily
- * lossless; use {@link convertDetailed} when that distinction matters.
+ * fixed formats and options, converted again without `source`, but a reverse
+ * conversion is not necessarily lossless; use {@link convertDetailed} when
+ * that distinction matters.
  *
  * Without a preset, transliteration follows the SBL academic style, which the
  * `sbl-academic` preset names.
@@ -155,13 +159,21 @@ export function convert(
  *
  * This is the expressive shorthand for `convert(input, format, format,
  * options)`. It canonicalizes accepted aliases and applies the selected
- * orthographic policies.
+ * orthographic policies. The options describe the input as well, which
+ * normalizes a text in its own style. Reading transliteration depends on its
+ * options: to restyle a transliteration, give the style it is written in as
+ * `options.source` ({@link ConversionOptions.source}).
  *
  * @example
  * ```ts
  * reencode("λόγος", "greek", {
  *   greek: { finalSigma: "medial" },
  * }); // "λόγοσ"
+ *
+ * reencode("phílos", "transliteration", {
+ *   transliteration: { phi: "f" },
+ *   source: {},
+ * }); // "fílos"
  * ```
  */
 export function reencode(
@@ -177,9 +189,10 @@ export function reencode(
  * retain, and where each source token was read and written.
  *
  * Unicode composition and tonos/oxia are representational differences and are
- * not reported as loss. Known lunate-sigma provenance is reported when an
- * output policy removes it. The conversion itself is executed once; only the
- * rendered target is parsed again for comparison.
+ * not reported as loss. A letter form of the source (`glyphVariant`) is
+ * reported when the target cannot keep it and the options do not write it
+ * again; a form the options fold is not. The conversion itself is executed
+ * once; only the rendered target is parsed again for comparison.
  *
  * Positions ({@link ConversionResult.spans}, {@link ConversionLoss.offset})
  * are offsets in UTF-16 code units in the input as supplied and in the
@@ -199,19 +212,25 @@ export function convertDetailed(
   assertTextInput(input);
   assertFormat(from);
   assertFormat(to);
-  const resolved = resolveConversionOptions(options);
+  const { reading, writing: resolved } = resolveConversionProfiles(options);
   const read: ReadPositions = { text: "", starts: [] };
-  const source = parseResolved(input, from, resolved, true, read);
+  const source = parseResolved(input, from, reading, true, read);
   const inputSpans = readSpans(input, read);
   const { output, spans: outputSpans } = encodeTracked(source, to, resolved);
   const target = parseResolved(output, to, resolved, true);
   // Where the target tokens were read, only if the losses need it: reading
   // the output again with positions costs less than recording them each time.
-  const losses = findConversionLosses(source, target, inputSpans, () => {
-    const reread: ReadPositions = { text: "", starts: [] };
-    parseResolved(output, to, resolved, true, reread);
-    return { written: outputSpans, read: readSpans(output, reread) };
-  });
+  const losses = findConversionLosses(
+    source,
+    target,
+    inputSpans,
+    () => {
+      const reread: ReadPositions = { text: "", starts: [] };
+      parseResolved(output, to, resolved, true, reread);
+      return { written: outputSpans, read: readSpans(output, reread) };
+    },
+    { format: from, options: reading },
+  );
 
   const spans: ConversionSpan[] = new Array(source.length);
   for (let index = 0; index < source.length; index++) {
@@ -235,7 +254,7 @@ function runConversion(
   assertTextInput(input);
   assertFormat(from);
   assertFormat(to);
-  const resolved = resolveConversionOptions(options);
-  const source = parseResolved(input, from, resolved, true);
+  const { reading, writing: resolved } = resolveConversionProfiles(options);
+  const source = parseResolved(input, from, reading, true);
   return { source, output: encodeResolved(source, to, resolved), resolved };
 }

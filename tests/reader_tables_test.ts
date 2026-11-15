@@ -12,6 +12,19 @@ import { parse } from "../src/document.ts";
  * rather than being read as a literal.
  */
 
+/** The symbol forms of letters, read as the letter with a glyph variant. */
+const SYMBOL_FORMS: Readonly<Record<string, string>> = {
+  "\u03D0": "beta-symbol",
+  "\u03D1": "theta-symbol",
+  "\u03D2": "upsilon-hook",
+  "\u03D5": "phi-symbol",
+  "\u03D6": "pi-symbol",
+  "\u03F0": "kappa-symbol",
+  "\u03F1": "rho-symbol",
+  "\u03F4": "capital-theta-symbol",
+  "\u03F5": "lunate-epsilon",
+};
+
 const hex = (unit: number) =>
   "U+" + unit.toString(16).toUpperCase().padStart(4, "0");
 
@@ -31,15 +44,16 @@ test("the Greek reader classifies every BMP code unit as greekLower does", () =>
       mismatches.push(`${hex(unit)}: ${actual} instead of ${expected}`);
     } else if (token.kind === "grapheme") {
       // A capital Σ has no final or medial shape; Ϲ is a lunate capital.
-      const variant = lower === "ϲ"
-        ? "lunate-sigma"
-        : char !== lower
-        ? undefined
-        : lower === "ς"
-        ? "final-sigma"
-        : lower === "σ"
-        ? "medial-sigma"
-        : undefined;
+      const variant = SYMBOL_FORMS[char] ??
+        (lower === "ϲ"
+          ? "lunate-sigma"
+          : char !== lower
+          ? undefined
+          : lower === "ς"
+          ? "final-sigma"
+          : lower === "σ"
+          ? "medial-sigma"
+          : undefined);
       if (token.uppercase !== (char !== lower)) {
         mismatches.push(`${hex(unit)}: wrong case`);
       }

@@ -80,8 +80,61 @@ export type Diacritic =
   | "macron"
   | "breve";
 
-/** Source glyph distinctions retained independently from the Greek letter. */
-export type GlyphVariant = "lunate-sigma" | "final-sigma" | "medial-sigma";
+/**
+ * Source glyph distinctions retained independently from the Greek letter:
+ * the shapes of sigma (`ϲ`, `ς`, `σ`), and the symbol forms of letters
+ * (`ϐ`, `ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, `ϒ`). A symbol form belongs to
+ * one case: `ϴ` and `ϒ` are capitals, and the others small letters. The
+ * sigma shapes fit both cases: the lunate sigma has a capital and a small
+ * form, and a final or medial shape remains as provenance on a capital.
+ *
+ * A name is the Unicode name of the form without `GREEK`, and without
+ * `SYMBOL` where a qualifier already tells the form from the letter:
+ * `lunate-sigma` (GREEK LUNATE SIGMA SYMBOL), `lunate-epsilon`,
+ * `upsilon-hook` (GREEK UPSILON WITH HOOK SYMBOL). The others end in
+ * `-symbol`: `beta-symbol`, `capital-theta-symbol`.
+ */
+export type GlyphVariant =
+  | "lunate-sigma"
+  | "final-sigma"
+  | "medial-sigma"
+  | "beta-symbol"
+  | "theta-symbol"
+  | "capital-theta-symbol"
+  | "phi-symbol"
+  | "pi-symbol"
+  | "kappa-symbol"
+  | "rho-symbol"
+  | "lunate-epsilon"
+  | "upsilon-hook";
+
+/**
+ * The letter each glyph variant belongs to, its case when it has only one,
+ * and the character that writes it, for the symbol forms.
+ */
+export const GLYPH_VARIANTS: Readonly<
+  Record<
+    GlyphVariant,
+    {
+      readonly letter: Letter;
+      readonly uppercase?: boolean;
+      readonly symbol?: string;
+    }
+  >
+> = Object.freeze({
+  "lunate-sigma": { letter: "sigma" },
+  "final-sigma": { letter: "sigma" },
+  "medial-sigma": { letter: "sigma" },
+  "beta-symbol": { letter: "beta", uppercase: false, symbol: "ϐ" },
+  "theta-symbol": { letter: "theta", uppercase: false, symbol: "ϑ" },
+  "capital-theta-symbol": { letter: "theta", uppercase: true, symbol: "ϴ" },
+  "phi-symbol": { letter: "phi", uppercase: false, symbol: "ϕ" },
+  "pi-symbol": { letter: "pi", uppercase: false, symbol: "ϖ" },
+  "kappa-symbol": { letter: "kappa", uppercase: false, symbol: "ϰ" },
+  "rho-symbol": { letter: "rho", uppercase: false, symbol: "ϱ" },
+  "lunate-epsilon": { letter: "epsilon", uppercase: false, symbol: "ϵ" },
+  "upsilon-hook": { letter: "upsilon", uppercase: true, symbol: "ϒ" },
+});
 
 /** One canonical Greek letter with mutable case and semantic diacritics. */
 export interface Grapheme {

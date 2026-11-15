@@ -6,7 +6,7 @@ import type { ConversionOptions, Format, Preset } from "../src/mod.ts";
 import { OPTION_RELEVANCE } from "./option_relevance.ts";
 
 /** A field of `ConversionOptions` that holds options. */
-export type OptionGroup = Exclude<keyof ConversionOptions, "preset">;
+export type OptionGroup = Exclude<keyof ConversionOptions, "preset" | "source">;
 
 /** One conversion option, as the playground offers it. */
 export interface OptionEntry {

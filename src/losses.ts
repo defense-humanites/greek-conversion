@@ -1,13 +1,24 @@
-import { isVowel } from "./context.ts";
+import { isVowel, type QuotationContext } from "./context.ts";
+import { glyphForm } from "./encode.ts";
 import { sharedMask } from "./model.ts";
-import type { Diacritic, Document, Token } from "./model.ts";
+import type {
+  Diacritic,
+  Document,
+  Format,
+  GlyphVariant,
+  Grapheme,
+  Token,
+} from "./model.ts";
+import type { ConversionOptions } from "./options.ts";
 import type { SpanTable } from "./parsers/positions.ts";
 
 /** Machine-readable categories of information loss. */
 export type ConversionLossCode =
   | "changed-case"
   | "removed-glyph-variant"
+  | "added-glyph-variant"
   | "removed-diacritic"
+  | "added-diacritic"
   | "displaced-diacritic"
   | "inferred-breathing"
   | "unrepresented-grapheme"
@@ -30,9 +41,17 @@ export interface ConversionLoss {
   message: string;
   /**
    * The affected semantic mark when {@link code} is `"removed-diacritic"`,
-   * `"displaced-diacritic"`, or `"inferred-breathing"`.
+   * `"added-diacritic"`, `"displaced-diacritic"`, or `"inferred-breathing"`.
    */
   diacritic?: Diacritic;
+  /**
+   * The source glyph variant when {@link code} is `"removed-glyph-variant"`,
+   * such as `"beta-symbol"` for `ϐ`, and the variant the target writes when
+   * it is `"added-glyph-variant"`: a sigma read from `s` under
+   * `lunateSigma: "c"`, written `ϲ` under `greek.sigma: "lunate"`
+   * (`"lunate-sigma"`), converts back to `c`.
+   */
+  glyphVariant?: GlyphVariant;
 }
 
 /**
@@ -122,13 +141,17 @@ export function findConversionLosses(
   target: Document,
   spans: SpanTable,
   positions: () => OutputPositions,
+  glyphs: SourceGlyphs,
 ): readonly ConversionLoss[] {
   const losses = new Losses(spans);
-  const counterparts = sameLetters(source, target)
+  const sameGlyph = glyphComparison(source, glyphs);
+  const paired = sameLetters(source, target)
     ? undefined
-    : pairByPosition(source, target, positions());
+    : pairByPosition(source, target, positions(), sameGlyph);
+  const counterparts = paired?.counterparts;
 
   for (let index = 0; index < source.length; index++) {
+    if (paired?.spelled[index] === 1) continue;
     const counterpart = counterparts === undefined
       ? index
       : counterparts[index] < 0
@@ -136,15 +159,61 @@ export function findConversionLosses(
       : counterparts[index];
     if (
       counterpart !== undefined &&
-      preservesToken(source[index], target[counterpart])
+      preservesToken(source[index], target[counterpart], index, sameGlyph)
     ) {
       addInferredBreathing(losses, source, target, index, counterpart);
     } else {
-      addTokenLoss(losses, source, target, index, counterpart);
+      addTokenLoss(losses, source, target, index, counterpart, sameGlyph);
     }
   }
 
   return losses.all;
+}
+
+/**
+ * The format the source was read from and the options that write it: those
+ * of the conversion, or its `source` profile.
+ */
+export interface SourceGlyphs {
+  readonly format: Format;
+  readonly options: ConversionOptions;
+}
+
+/**
+ * Whether the target token at a source index keeps the glyph of the source
+ * token there: whether the source format, under the options, writes them
+ * alike (`glyphForm()`). A variant that the options write again from the text
+ * read back is kept (`ϐ` inside a word under `medialBeta: "symbol"`); one
+ * they fold is not reported (`ϲ` under `sigma: "standard"`), since the
+ * canonical source has none.
+ */
+type GlyphComparison = (
+  index: number,
+  source: Grapheme,
+  target: Grapheme,
+) => boolean;
+
+function glyphComparison(
+  document: Document,
+  { format, options }: SourceGlyphs,
+): GlyphComparison {
+  const quotations: QuotationContext = {};
+  // The target is compared in the source's case: `changed-case` reports the
+  // case, and a variant is lost only if the other case has no such form
+  // (`ϑ` → `Θ`) and the options do not write it again.
+  return (index, source, target) =>
+    source.glyphVariant === target.glyphVariant ||
+    glyphForm(document, index, source, format, options, quotations) ===
+      glyphForm(
+        document,
+        index,
+        target.uppercase === source.uppercase
+          ? target
+          : { ...target, uppercase: source.uppercase },
+        format,
+        options,
+        quotations,
+      );
 }
 
 /** Whether both documents have the same tokens, letter for letter. */
@@ -156,19 +225,28 @@ function sameLetters(source: Document, target: Document): boolean {
   return true;
 }
 
-/** The target token paired with each source token, or -1. */
+/**
+ * The target token paired with each source token, or -1, and the source
+ * literals that the literals read where they were written spell together
+ * (`spelled[i]` is 1): a reader may read a letter and its marks as several
+ * literals (`ῷ` in transliteration), and the text is retained.
+ */
 function pairByPosition(
   source: Document,
   target: Document,
   { written, read }: OutputPositions,
-): Int32Array {
+  sameGlyph: GlyphComparison,
+): { counterparts: Int32Array; spelled: Uint8Array } {
   const counterparts = new Int32Array(source.length).fill(-1);
+  const spelled = new Uint8Array(source.length);
   let first = 0;
   for (let index = 0; index < source.length; index++) {
     const start = written.starts[index];
     const end = written.ends[index];
     while (first < target.length && read.starts[first] < start) first++;
 
+    const token = source[index];
+    let text: string | undefined = token.kind === "literal" ? "" : undefined;
     let closeness = -1;
     for (
       let targetIndex = first;
@@ -176,7 +254,12 @@ function pairByPosition(
       targetIndex++
     ) {
       const candidate = target[targetIndex];
-      const score = preservesToken(source[index], candidate)
+      if (text !== undefined) {
+        text = candidate.kind === "literal"
+          ? text + candidate.value
+          : undefined;
+      }
+      const score = preservesToken(source[index], candidate, index, sameGlyph)
         ? 3
         : sameTokenIdentity(source[index], candidate)
         ? 2
@@ -188,8 +271,12 @@ function pairByPosition(
         closeness = score;
       }
     }
+    if (
+      text !== undefined && text !== "" && token.kind === "literal" &&
+      sameLiteral(token.value, text)
+    ) spelled[index] = 1;
   }
-  return counterparts;
+  return { counterparts, spelled };
 }
 
 /** The losses found so far, each located at its source token. */
@@ -206,14 +293,14 @@ class Losses {
     index: number,
     message: string,
     diacritic?: Diacritic,
+    glyphVariant?: GlyphVariant,
   ): void {
     const offset = this.#spans.starts[index];
     const length = this.#spans.ends[index] - offset;
-    this.all.push(
-      diacritic === undefined
-        ? { code, index, offset, length, message }
-        : { code, index, offset, length, diacritic, message },
-    );
+    const loss: ConversionLoss = { code, index, offset, length, message };
+    if (diacritic !== undefined) loss.diacritic = diacritic;
+    if (glyphVariant !== undefined) loss.glyphVariant = glyphVariant;
+    this.all.push(loss);
   }
 }
 
@@ -223,6 +310,7 @@ function addTokenLoss(
   targetDocument: Document,
   index: number,
   targetIndex: number | undefined,
+  sameGlyph: GlyphComparison,
 ): void {
   const source = sourceDocument[index];
   const target = targetIndex === undefined
@@ -279,16 +367,34 @@ function addTokenLoss(
         );
       }
     }
-    if (
-      source.glyphVariant === "lunate-sigma" &&
-      source.glyphVariant !== target.glyphVariant
-    ) {
+    if (addsDiaeresis(source, target)) {
       changed = true;
       losses.add(
-        "removed-glyph-variant",
+        "added-diacritic",
         index,
-        "The target representation does not retain the source glyph variant.",
+        "The target representation writes a diaeresis to keep a hiatus, and does not distinguish this vowel from one with a diaeresis; the diaeresis is read back.",
+        "diaeresis",
       );
+    }
+    if (!sameGlyph(index, source, target)) {
+      changed = true;
+      if (source.glyphVariant === undefined) {
+        losses.add(
+          "added-glyph-variant",
+          index,
+          "The target representation writes a glyph variant that converts back otherwise.",
+          undefined,
+          target.glyphVariant,
+        );
+      } else {
+        losses.add(
+          "removed-glyph-variant",
+          index,
+          "The target representation does not retain the source glyph variant.",
+          undefined,
+          source.glyphVariant,
+        );
+      }
     }
     if (changed) return;
   }
@@ -319,7 +425,12 @@ function sameTokenIdentity(source: Token, target: Token): boolean {
     source.letter === target.letter;
 }
 
-function preservesToken(source: Token, target: Token): boolean {
+function preservesToken(
+  source: Token,
+  target: Token,
+  index: number,
+  sameGlyph: GlyphComparison,
+): boolean {
   if (source.kind !== target.kind) return false;
   if (source.kind === "literal" && target.kind === "literal") {
     return sameLiteral(source.value, target.value);
@@ -327,9 +438,19 @@ function preservesToken(source: Token, target: Token): boolean {
   if (source.kind !== "grapheme" || target.kind !== "grapheme") return false;
   return source.letter === target.letter &&
     source.uppercase === target.uppercase &&
-    (source.glyphVariant !== "lunate-sigma" ||
-      source.glyphVariant === target.glyphVariant) &&
-    includesMarks(target.diacritics, source.diacritics);
+    sameGlyph(index, source, target) &&
+    includesMarks(target.diacritics, source.diacritics) &&
+    !addsDiaeresis(source, target);
+}
+
+/**
+ * Whether the target reads back a diaeresis the source token does not have:
+ * the one transliteration writes on a contextual `y` to keep a hiatus that
+ * the reader would otherwise lose (`αἑυ` → `aheÿ`), which reads back as `ϋ`.
+ */
+function addsDiaeresis(source: Grapheme, target: Grapheme): boolean {
+  return source.diacritics !== target.diacritics &&
+    target.diacritics.has("diaeresis") && !source.diacritics.has("diaeresis");
 }
 
 /** Whether two literals are canonically equivalent; most are equal. */

@@ -140,8 +140,8 @@ the coronis is kept, `transliteration.coronis` how it is written in Latin.
 
 | Group             | What it describes                                                                                                              | Examples                                                                         |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| `transliteration` | The Latin writing system: how each letter and mark is spelled, when transliteration is written and when it is read             | `beta: "v"`, `upsilon: "y"`, `longVowels: "circumflex"`, `coronis: "apostrophe"` |
-| `greek`           | The Greek writing system: letter shapes, accentuation, assimilation, Unicode form. `sigma` and `doubleRho` reach Beta Code too | `finalSigma: "medial"`, `accentuation: "monotonic"`, `composition: "decomposed"` |
+| `transliteration` | The Latin writing system: how each letter and mark is spelled, when transliteration is written and, without `source`, read     | `beta: "v"`, `upsilon: "y"`, `longVowels: "circumflex"`, `coronis: "apostrophe"` |
+| `greek`           | The Greek writing system: letter shapes, accentuation, assimilation, Unicode form. `sigma`, `finalSigma`, and `doubleRho` reach Beta Code too | `finalSigma: "medial"`, `accentuation: "monotonic"`, `composition: "decomposed"` |
 | `betaCode`        | Beta Code conventions                                                                                                          | `case: "uppercase"`, `yot: "#401"`                                               |
 | `text`            | Transformations of the whole text, in every format                                                                             | `letterCase: "lowercase"`, `whitespace: "collapse"`, `numerals: "decimal"`       |
 | `diacritics`      | Which classes of marks are kept at all; `all` sets every class, a class named with it is the exception                         | `accents: "remove"`, `all: "remove"`                                             |
@@ -277,20 +277,20 @@ letters stay distinct (`η → ē`, `ω → ō`). The rough breathing goes with 
 class in every format: removed, it disappears from Greek and Beta Code and its
 `h` from transliteration; kept, it stays everywhere.
 
-In Greek, removing the marks still applies the sigma policies, so a source `σ`
-at the end of a word becomes `ς` and a lunate `ϲ` becomes `σ`. To change nothing
-but the marks, keep the source shapes:
+In Greek, removing the marks changes nothing else: by default, Greek output
+keeps the letter forms the source writes. To also place every sigma by its
+position and write the lunate sigma as a standard one:
 
 ```ts
 import { reencode } from "@humanities/greek-conversion";
 
 reencode("λόγος ϲῶμα ςόσ", "greek", { diacritics: { all: "remove" } });
-// → λογος σωμα σος
+// → λογος ϲωμα ςοσ
 reencode("λόγος ϲῶμα ςόσ", "greek", {
   diacritics: { all: "remove" },
-  greek: { sigma: "preserve", finalSigma: "preserve" },
+  greek: { sigma: "standard", finalSigma: "contextual" },
 });
-// → λογος ϲωμα ςοσ
+// → λογος σωμα σος
 ```
 
 ### Produce monotonic Greek
@@ -350,41 +350,124 @@ written (`phē`), so that the output reads back as itself. The
 [stability policy](docs/stability.md#reading) states which spellings each
 reader accepts.
 
+### Restyle a transliteration
+
+In a conversion that keeps the format, the options describe the input as well
+as the output: `reencode()` normalizes a text in its own style. Reading
+transliteration depends on its options, so to change the style of a
+transliteration, say how it is written with `source`:
+
+```ts
+import { reencode } from "@humanities/greek-conversion";
+
+reencode("tōn barbarōn", "transliteration", {
+  preset: "ala-lc-modern",
+  source: { preset: "sbl-academic" },
+});
+// → tōn varvarōn
+
+reencode("phílos", "transliteration", {
+  transliteration: { phi: "f" },
+  source: {},
+});
+// → fílos
+```
+
+`source: {}` is the default style. Without `source`, the first call reads `b`
+as μπ, as ALA-LC Modern does, and gives `tōn barmparōn`, and the second reads
+`ph` as pi and a rough breathing, and changes nothing. `source` takes the
+options of a conversion and replaces them all for reading: the other options,
+`greek.accentuation` and `diacritics` included, only write the output. It works
+with every function that reads text: `convertDetailed()` reports what the new
+style loses, and between two formats, `source` describes the input apart from
+the output. A restyle cannot restore what the source style does not note: the
+default style writes no coronis.
+
 ### Keep or fold letter variants
 
-Lunate sigma has two independent controls: `sigma` picks the Greek and Beta Code
-glyph (`"preserve"` remembers which source sigmas were lunate), and
-`lunateSigma` picks their transliteration:
+Some letters have more than one form: the lunate sigma `ϲ`, the final and
+medial sigma `ς` and `σ`, and the symbol forms `ϐ`, `ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`,
+`ϱ`, `ϵ`, and `ϒ`. Each is read as its letter, so `ϑεός` and `θεός` have the
+same letters. By default, Greek output keeps the forms the source writes, even
+a sigma whose shape contradicts its place, as in an abbreviation or a stem
+(`λόγοσ`). One option of `greek` decides each form:
+
+| Option        | Forms                     | Other values                                                                                |
+| ------------- | ------------------------- | ------------------------------------------------------------------------------------------- |
+| `sigma`       | `ϲ`                       | `"standard"` writes `σ` or `ς`; `"lunate"` writes `ϲ` for every sigma                       |
+| `finalSigma`  | `ς` and `σ`               | `"contextual"` writes `ς` at the end of a word and `σ` elsewhere; `"medial"` writes `σ`     |
+| `medialBeta`  | `ϐ`                       | `"standard"` writes `β`; `"symbol"` writes `ϐ` inside a word and `β` at its start, as French typography does |
+| `symbolForms` | `ϑ ϴ ϕ ϖ ϰ ϱ ϵ ϒ`         | `"standard"` writes the ordinary letters                                                    |
+
+Beta Code writes the lunate sigma `s3`, and a sigma whose shape contradicts its
+place `s1` (`σ`) or `s2` (`ς`). Transliteration writes the lunate sigma `c`
+under `lunateSigma: "c"`. `convertDetailed()` reports any other form the
+target cannot write (`removed-glyph-variant`):
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
 
-const options = {
-  transliteration: { lunateSigma: "c" },
-  greek: { sigma: "preserve" },
-} as const;
+const options = { transliteration: { lunateSigma: "c" } } as const;
 
 convert("σϲς", "greek", "transliteration", options); // → scs
 convert("scs", "transliteration", "greek", options); // → σϲς
+convert("σϲς", "greek", "beta-code"); // → ss3s
+convert("λόγοσ", "greek", "beta-code"); // → lo/gos1
 ```
 
-To compare texts regardless of glyph variants, fold them to one spelling:
-standard beta and sigma, and a medial sigma everywhere:
+To write the ordinary letters, fold the variants. A comparison key also writes
+every sigma medial, and can drop the case and the marks:
 
 ```ts
 import { reencode } from "@humanities/greek-conversion";
 
 const fold = {
-  greek: { medialBeta: "standard", sigma: "standard", finalSigma: "medial" },
+  greek: { sigma: "standard", medialBeta: "standard", symbolForms: "standard" },
 } as const;
 
-reencode("ϐίος λόγος ϲῶμα", "greek", fold); // → βίοσ λόγοσ σῶμα
-reencode("ϐΊΟΣ", "greek", {
-  ...fold,
+reencode("ϐίος λόγοσ ϲῶμα ϑεός", "greek", fold);
+// → βίος λόγοσ σῶμα θεός
+reencode("ϐΊΟΣ λόγος ϑεός", "greek", {
+  greek: { ...fold.greek, finalSigma: "medial" },
   text: { letterCase: "lowercase" },
   diacritics: { all: "remove" },
 });
-// → βιοσ
+// → βιοσ λογοσ θεοσ
+```
+
+### Write the iota on the line
+
+`greek.iotaSubscript` decides where Greek output writes an iota subscript.
+`"subscript"`, the default, writes it below the line, and as the prosgegrammeni
+after a capital (`ᾼ`). `"capital-adscript"` writes it on the line after a
+capital, as Smyth describes (§ 5), and `"adscript"` after every vowel, as some
+editions and papyrological transcriptions do:
+
+```ts
+import { reencode } from "@humanities/greek-conversion";
+
+reencode("τῷ ᾠδῷ, ᾨδῇ", "greek", { greek: { iotaSubscript: "capital-adscript" } });
+// → τῷ ᾠδῷ, Ὠιδῇ
+reencode("τῷ ᾠδῷ, ᾨδῇ", "greek", { greek: { iotaSubscript: "adscript" } });
+// → τῶι ὠιδῶι, Ὠιδῆι
+```
+
+An iota written on the line reads back as the letter iota, so
+`convertDetailed()` reports the loss of the subscript (`removed-diacritic`).
+
+Greek in the style of the uncial manuscripts combines it with capitals, the
+lunate sigma, and no other mark. The shapes of the uncial letters are a matter
+of font, and removing the spaces between words is left to the caller:
+
+```ts
+import { reencode } from "@humanities/greek-conversion";
+
+reencode("τῷ λόγῳ ἐστὶν ἀγαθός", "greek", {
+  text: { letterCase: "uppercase" },
+  diacritics: { all: "remove", iotaSubscript: "preserve" },
+  greek: { sigma: "lunate", iotaSubscript: "adscript" },
+});
+// → ΤΩΙ ΛΟΓΩΙ ΕϹΤΙΝ ΑΓΑΘΟϹ
 ```
 
 ### Normalize case and whitespace
@@ -398,9 +481,10 @@ convert("  ΦΙΛΗΒΟΣ\nΗΔΟΝΗ  ", "greek", "transliteration", {
 // → philēbos ēdonē
 ```
 
-`letterCase` accepts `"preserve"`, `"lowercase"`, `"uppercase"`, and `"title"`;
-`whitespace: "collapse"` trims the text and reduces every run of whitespace to
-one space.
+`letterCase` accepts `"preserve"`, `"lowercase"`, `"uppercase"`, and `"title"`,
+under which an apostrophe between two letters, as a coronis written so
+(`Ka’gṓ`), does not start a word; `whitespace: "collapse"` trims the text and
+reduces every run of whitespace to one space.
 
 Under `"preserve"`, a capital spelled with several Latin letters is written in
 full capitals among capitals, and with its first letter only before lowercase
@@ -519,15 +603,18 @@ mixed.losses.filter((loss) => loss.code !== "unrepresented-literal").length; // 
 ```
 
 When `lossy` is `false`, converting the output back with the same options gives
-the same canonical text. The loss codes are:
+the same canonical text; after a restyle, swap `source` and the other options.
+The loss codes are:
 
 | Code                     | What the target cannot keep                                                                                    |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------- |
 | `removed-diacritic`      | A diacritic of the source                                                                                      |
 | `displaced-diacritic`    | The position of a breathing: a hiatus marked only by a breathing (`Ἀίδης`) reads back as a diphthong (`Αἴδης`) |
+| `added-diacritic`        | A diaeresis that transliteration writes on a contextual `y` to keep a hiatus, which reads back; `diacritic` identifies it |
 | `inferred-breathing`     | The absence of a breathing on an initial vowel, which reads back as a smooth breathing                         |
 | `changed-case`           | The letter case                                                                                                |
-| `removed-glyph-variant`  | A known lunate sigma                                                                                           |
+| `removed-glyph-variant`  | A letter form, such as `ϲ`, `ϐ`, or a `σ` at the end of a word; `glyphVariant` identifies it                     |
+| `added-glyph-variant`    | A letter form the target writes where the source has none, and that converts back as another spelling; `glyphVariant` identifies it |
 | `unrepresented-grapheme` | A letter, or its position                                                                                      |
 | `unrepresented-literal`  | A literal token                                                                                                |
 
@@ -556,7 +643,19 @@ converter.convert("þeos", "transliteration", "greek"); // → θεος
 An alias inherits every rule of its built-in letter. A new character definition
 maps directly between formats and keeps its case, but does not join the
 contextual rules for diphthongs, breathings, or numerals. Excluded characters
-are copied through as text.
+are kept as the source writes them in their word. Of the options, only the
+transformations of the whole text (`text`) still apply to them:
+
+```ts
+import { createConverter } from "@humanities/greek-conversion";
+
+const noStigma = createConverter({ exclude: ["stigma"] });
+
+noStigma.convert("λόγος ϛ", "greek", "transliteration", {
+  text: { letterCase: "uppercase" },
+});
+// → LÓGOS Ϛ
+```
 
 A converter bound to a preset also enforces the preset's character scope.
 Characters outside it are preserved and reported; with
@@ -655,7 +754,7 @@ What you can rely on:
 
 - Every format pair converts in both directions.
 - For fixed formats and options, output is canonical and idempotent: converting
-  it again changes nothing.
+  it again with the same options, without `source`, changes nothing.
 - A conversion that `convertDetailed()` reports as lossless converts back to the
   same canonical text.
 - Unknown characters are preserved, never dropped.

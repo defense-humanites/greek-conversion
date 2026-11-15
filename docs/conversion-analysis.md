@@ -44,9 +44,11 @@ literal tokens—not byte or code-point identity.
 Consequently:
 
 - NFC/NFD and tonos/oxia changes are not losses;
-- selected beta and Greek punctuation glyphs are not losses;
-- removing known lunate-sigma provenance is a loss, while adding a
-  deterministic lunate style is not;
+- selected Greek punctuation glyphs are not losses;
+- a letter form (`glyphVariant`) is lost when the source format, under the
+  options of the conversion, writes the letter differently from the source
+  and from the reparsed target: a form the options fold, or write again from its position, is not a
+  loss (see [Letter forms](information-loss.md#letter-forms));
 - deterministic marks added by an output policy are not losses;
 - removed diacritics, monotonic simplification, numeral conversion, dental
   assimilation, consonant changes, and unrepresented source tokens are losses
@@ -65,9 +67,11 @@ the text the loss is about.
 | Code | Meaning |
 | --- | --- |
 | `changed-case` | A source letter is retained but its uppercase/lowercase distinction is not |
-| `removed-glyph-variant` | A known source glyph variant, currently lunate sigma, is absent from the reparsed target |
+| `removed-glyph-variant` | A letter form of the source (the lunate, final, or medial sigma, or a symbol form such as `ϐ`) is absent from the reparsed target, and the options do not write it again; `glyphVariant` identifies it |
+| `added-glyph-variant` | The target writes a letter form the source did not have, which reads back as another spelling (a lunate sigma written `c` under `lunateSigma: "c"`); `glyphVariant` identifies the form written |
 | `removed-diacritic` | A source diacritic is absent from the reparsed target; `diacritic` identifies it |
 | `displaced-diacritic` | A source breathing is absent from its vowel but reappears on the following vowel of the reparsed target: a hiatus marked only by that breathing is read as a diphthong; `diacritic` identifies it |
+| `added-diacritic` | The target writes a diacritic the source token did not have, which reads back: the diaeresis on a contextual `y` that keeps a hiatus the reader would otherwise lose (`ἀἑυ` → `aheÿ` → `ἀἑϋ`); `diacritic` is `"diaeresis"` |
 | `inferred-breathing` | The target does not distinguish an unmarked initial vowel from one with a smooth breathing, so the reparsed target carries a smooth breathing the source did not have; `index` is the vowel that acquires it (the second element of an initial diphthong), and `diacritic` is `"smooth"` |
 | `unrepresented-grapheme` | A source letter or its position cannot be recovered from the target document |
 | `unrepresented-literal` | A source literal token cannot be recovered from the target document |

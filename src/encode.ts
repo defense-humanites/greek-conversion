@@ -11,21 +11,24 @@ import {
   breathingTarget,
   DEXIA_KERAIA,
   elidedAspirate,
+  followsCoronisApostrophe,
   hasHiatusMark,
   isAmongCapitals,
   isAuEuOuAt,
   isBoundaryTransparent,
   isDiphthongAt,
-  isElisionMark,
   isGreekNumeralContext,
+  isKeptLetter,
   isNasalGamma,
   isVowel,
   isVowelUpsilonAt,
   isWordFinal,
   isWordInitial,
   precedesVoicedSound,
+  type QuotationContext,
   roughDiphthongStart,
   roughDiphthongStarts,
+  sigmaEndsWord,
   standsAlone,
 } from "./context.ts";
 import {
@@ -34,6 +37,7 @@ import {
   preservesDiacritic,
 } from "./diacritics.ts";
 import {
+  GLYPH_VARIANTS,
   NO_DIACRITICS,
   sharedMask,
   withDiacritic,
@@ -132,6 +136,8 @@ export function encodeGreek(
   );
   const starts = written?.starts;
   const ends = written?.ends;
+  const quotations: QuotationContext = {};
+  const uppercaseOutput = options.text?.letterCase === "uppercase";
 
   for (let i = 0; i < doc.length; i++) {
     const token = rendered[i];
@@ -139,7 +145,9 @@ export function encodeGreek(
     if (starts !== undefined) starts[i] = start;
 
     if (token.kind === "literal") {
-      out += encodePunctuation(token.value, "greek") ?? token.value;
+      out += isKeptLetter(token)
+        ? token.value
+        : encodePunctuation(token.value, "greek") ?? token.value;
       if (ends !== undefined) ends[i] = out.length;
       continue;
     }
@@ -150,13 +158,14 @@ export function encodeGreek(
 
     if (assimilated !== undefined) {
       let base = ALPHABET.sigma.greek;
-      if (rendersLunateSigma(assimilated, options)) base = "ϲ";
+      if (writesLunateSigma(doc, i + 1, assimilated, options)) base = "ϲ";
       else if (
-        options.greek?.finalSigma === "preserve"
+        (options.greek?.finalSigma ?? "preserve") === "preserve"
           ? assimilated.glyphVariant === "final-sigma" ||
-            assimilated.glyphVariant === undefined && isWordFinal(doc, i + 1)
+            assimilated.glyphVariant !== "medial-sigma" &&
+              sigmaEndsWord(doc, i + 1, quotations)
           : options.greek?.finalSigma !== "medial" &&
-            isWordFinal(doc, i + 1)
+            sigmaEndsWord(doc, i + 1, quotations)
       ) base = "ς";
       out += assimilated.uppercase ? greekUpper(base) : base;
       // The dental and the sigma it became are written as one letter.
@@ -169,37 +178,21 @@ export function encodeGreek(
     }
 
     const outputLetter = elidedAspirate(doc, i) ?? token.letter;
-    let base = ALPHABET[outputLetter].greek;
-
-    if (
-      token.letter === "sigma" &&
-      rendersLunateSigma(token, options) &&
-      !isGreekNumeralContext(doc, i)
-    ) {
-      base = "ϲ";
-    } else if (
-      token.letter === "sigma" &&
-      (options.greek?.finalSigma === "preserve"
-        ? token.glyphVariant === "final-sigma" ||
-          token.glyphVariant === undefined && isWordFinal(doc, i)
-        : options.greek?.finalSigma !== "medial" &&
-          isWordFinal(doc, i)) &&
-      !isGreekNumeralContext(doc, i)
-    ) {
-      base = "ς";
-    }
-    if (
-      token.letter === "beta" &&
-      !token.uppercase &&
-      options.greek?.medialBeta === "symbol" &&
-      !isGreekNumeralContext(doc, i) &&
-      !isWordInitial(doc, i)
-    ) {
-      base = "ϐ";
-    }
+    let base = outputLetter === token.letter
+      ? greekGlyph(doc, i, token, options, quotations)
+      : ALPHABET[outputLetter].greek;
+    // greekGlyph() writes a symbol form only in its own case, which
+    // greekUpper() leaves as it is (ϴ, ϒ).
     if (token.uppercase) base = greekUpper(base);
 
-    out += base + greekMarks(token);
+    out += base +
+      (writesIotaAdscript(token, options)
+        ? greekMarks(token).replace("\u0345", "") +
+          (token.uppercase &&
+              (uppercaseOutput || isAmongCapitals(rendered, i))
+            ? "Ι"
+            : "ι")
+        : greekMarks(token));
     if (ends !== undefined) ends[i] = out.length;
   }
 
@@ -214,6 +207,142 @@ export function encodeGreek(
 }
 
 /**
+ * The glyph Greek output writes for the letter of `token` at `index`, before
+ * its case and marks: the shape of a sigma (`ϲ`, `ς`, `σ`), the beta (`ϐ`,
+ * `β`), a symbol form the source notes (`ϑ`, `ϴ`…), or the ordinary letter.
+ * A symbol form is returned in its own case. The loss detector compares
+ * these glyphs (`glyphForm()`).
+ */
+export function greekGlyph(
+  document: Document,
+  index: number,
+  token: Grapheme,
+  options: ConversionOptions,
+  quotations: QuotationContext,
+): string {
+  const ordinary = ALPHABET[token.letter].greek;
+  if (token.letter === "sigma") {
+    if (writesLunateSigma(document, index, token, options)) return "ϲ";
+    if (isGreekNumeralContext(document, index)) return ordinary;
+    return ((options.greek?.finalSigma ?? "preserve") === "preserve"
+        ? token.glyphVariant === "final-sigma" ||
+          token.glyphVariant !== "medial-sigma" &&
+            sigmaEndsWord(document, index, quotations)
+        : options.greek?.finalSigma !== "medial" &&
+          sigmaEndsWord(document, index, quotations))
+      ? "ς"
+      : ordinary;
+  }
+  // A variant of another letter, which only a document built by hand can
+  // have (`validateDocument()` reports it), is not written.
+  const variant = token.glyphVariant !== undefined &&
+      Object.hasOwn(GLYPH_VARIANTS, token.glyphVariant) &&
+      GLYPH_VARIANTS[token.glyphVariant].letter === token.letter
+    ? GLYPH_VARIANTS[token.glyphVariant]
+    : undefined;
+  if (token.letter === "beta") {
+    if (token.uppercase) return ordinary;
+    switch (options.greek?.medialBeta) {
+      case "symbol":
+        return isGreekNumeralContext(document, index) ||
+            isWordInitial(document, index)
+          ? ordinary
+          : "ϐ";
+      case "standard":
+        return ordinary;
+      default:
+        return variant?.symbol ?? ordinary;
+    }
+  }
+  return variant?.symbol !== undefined &&
+      variant.uppercase === token.uppercase &&
+      options.greek?.symbolForms !== "standard"
+    ? variant.symbol
+    : ordinary;
+}
+
+/**
+ * The glyph that `format` writes for the letter of `token` at `index` under
+ * these options, as far as it depends on the token's glyph variant: what the
+ * loss detector compares, so that a variant is lost only when the options do
+ * not write it again from the text read back (`docs/information-loss.md`).
+ * Case is left out, which `changed-case` reports.
+ */
+export function glyphForm(
+  document: Document,
+  index: number,
+  token: Grapheme,
+  format: Format,
+  options: ConversionOptions,
+  quotations: QuotationContext,
+): string {
+  switch (format) {
+    case "greek":
+      return greekGlyph(document, index, token, options, quotations);
+    case "beta-code":
+      return token.letter === "sigma"
+        ? betaSigma(document, index, token, options, quotations)
+        : "";
+    default:
+      return token.letter === "sigma" && rendersLunateC(token, options)
+        ? "c"
+        : "";
+  }
+}
+
+/**
+ * The Beta Code of a sigma: `s3` for a lunate sigma, `s1` or `s2` for a
+ * sigma whose noted shape (`σ` or `ς`) contradicts its place, kept under
+ * `greek.finalSigma: "preserve"`, and `s` otherwise, whose shape the
+ * position decides. Before a digit from 1 to 3, which would make a code of
+ * `s`, a small sigma always takes its code, with the shape Greek output
+ * writes. A capital has no shape, and the TLG defines no `*s1` or `*s2`; so
+ * a capital sigma before `3` reads back as a lunate sigma.
+ */
+export function betaSigma(
+  document: Document,
+  index: number,
+  token: Grapheme,
+  options: ConversionOptions,
+  quotations: QuotationContext,
+): "s" | "s1" | "s2" | "s3" {
+  if (writesLunateSigma(document, index, token, options)) return "s3";
+  if (token.uppercase) return "s";
+  const next = document[index + 1];
+  const code = next?.kind === "literal" ? next.value.charCodeAt(0) : 0;
+  const beforeDigit = code >= 0x31 && code <= 0x33;
+  const numeral = isGreekNumeralContext(document, index);
+  const policy = options.greek?.finalSigma ?? "preserve";
+  const noted = !numeral && policy === "preserve" &&
+    (token.glyphVariant === "medial-sigma" ||
+      token.glyphVariant === "final-sigma");
+  if (!noted && !beforeDigit) return "s";
+  const ends = !numeral && sigmaEndsWord(document, index, quotations);
+  const final = noted
+    ? token.glyphVariant === "final-sigma"
+    : policy !== "medial" && ends;
+  if (beforeDigit) return final ? "s2" : "s1";
+  return final === ends ? "s" : final ? "s2" : "s1";
+}
+
+/**
+ * Whether Greek output writes the iota subscript of `token` on the line, as a
+ * letter after its vowel (`greek.iotaSubscript`). The iota is a capital among
+ * capitals and in text set in capitals (`ΤΗΙ ΩΙΔΗΙ`), and small after a capital
+ * that begins a word in lowercase, or stands alone (`Ὠιδῇ`, `Ἧι`): read back,
+ * the two letters keep the case they were written with.
+ */
+function writesIotaAdscript(
+  token: Grapheme,
+  options: ConversionOptions,
+): boolean {
+  const policy = options.greek?.iotaSubscript;
+  return policy !== undefined && policy !== "subscript" &&
+    token.diacritics.has("iota-subscript") &&
+    (policy === "adscript" || token.uppercase);
+}
+
+/**
  * Writes Beta Code. With `written`, records the range of each token's output
  * (see `parsers/positions.ts`).
  */
@@ -224,26 +353,26 @@ export function encodeBetaCode(
 ) {
   const rendered = prepareDiacriticsForRendering(doc, options, "beta-code");
   const betaMarks = byMarks((token) => marks(token, options, "beta-code"));
+  const quotations: QuotationContext = {};
 
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
-      if (token.value === DEXIA_KERAIA) return "#";
+      if (isKeptLetter(token)) return token.value;
+      if (token.value === DEXIA_KERAIA) {
+        // `#` and a digit are a TLG character code (`#1` is koppa): before a
+        // digit, the keraia is written as itself, which reads back as one.
+        const next = rendered[index + 1];
+        const unit = next?.kind === "literal" ? next.value.charCodeAt(0) : 0;
+        return unit >= 0x30 && unit <= 0x39 ? DEXIA_KERAIA : "#";
+      }
       if (token.value === ARISTERI_KERAIA) return "#22";
       return encodePunctuation(token.value, "beta-code") ?? token.value;
     }
-    let base: string;
-    if (
-      token.letter === "sigma" &&
-      rendersLunateSigma(token, options) &&
-      !isGreekNumeralContext(doc, index)
-    ) {
-      base = "s3";
-    } else {
-      base = token.letter === "yot" &&
-          options.betaCode?.yot === "#401"
-        ? "#401"
-        : ALPHABET[token.letter].beta;
-    }
+    let base = token.letter === "sigma"
+      ? betaSigma(doc, index, token, options, quotations)
+      : token.letter === "yot" && options.betaCode?.yot === "#401"
+      ? "#401"
+      : ALPHABET[token.letter].beta;
 
     if (options.betaCode?.case === "uppercase") {
       base = base.toUpperCase();
@@ -313,6 +442,9 @@ export function encodeTransliteration(
   // an upsilon written v or f: memoized on those four for shared sets, as
   // byMarks() does, across calls with the same options (latinMarkStrings).
   const markStrings = latinMarkStrings(options);
+  const circumflexReadsAsLength =
+    options.transliteration?.circumflexAccent === "circumflex" &&
+    options.transliteration?.longVowels !== "omit";
   const markString = (
     token: Grapheme,
     separation: boolean,
@@ -351,7 +483,15 @@ export function encodeTransliteration(
     );
     const transliteratedMarks = tokenMarks
       .filter((mark) => mark !== "coronis")
-      .map((mark) => trMark(mark, options))
+      .map((mark) =>
+        // Epsilon and omicron bear a circumflex only where the accent of the
+        // upsilon of `ευ` moves to them (`y-with-ou-v-f`). Unless length marks
+        // are omitted, `ê` and `ô` read back as eta and omega: the accent is
+        // written as a tilde, which reads back as one.
+        mark === "circumflex" && shortVowel && circumflexReadsAsLength
+          ? "\u0303"
+          : trMark(mark, options)
+      )
       .join("");
     // The Greek coronis U+1FBD reads back as one only right after a vowel;
     // after an upsilon written v or f, it is the apostrophe it reads as.
@@ -378,15 +518,21 @@ export function encodeTransliteration(
   // The tokens are written in order, so whether a letter starts a word is
   // known from the ones before (isWordInitial): `afterLetter` tells whether
   // the last token that is not transparent to word boundaries is a letter,
-  // and `wordStart` is the last letter that started a word.
+  // and `wordStart` is the last grapheme that started a word, or -1 when a
+  // letter kept as it was started it.
   let afterLetter = false;
   let wordStart = -1;
 
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
+      if (isKeptLetter(token)) {
+        if (!afterLetter) wordStart = -1;
+        afterLetter = true;
+        return token.value;
+      }
       if (!isBoundaryTransparent(token)) afterLetter = false;
       if (options.transliteration?.keraia === "bnf") {
-        if (token.value === DEXIA_KERAIA) return "\u0301";
+        if (token.value === DEXIA_KERAIA) return bnfRightKeraia(options);
         if (token.value === ARISTERI_KERAIA) return ",";
       }
       return encodePunctuation(token.value, "transliteration", options) ??
@@ -498,7 +644,7 @@ export function encodeTransliteration(
     const bnfLowercaseNumeral = options.transliteration?.keraia === "bnf" &&
       token.uppercase &&
       (token.letter === "stigma" || token.letter === "sampi") &&
-      isGreekNumeralContext(doc, index);
+      bnfNumeralReadsBack(doc, index, options);
     if (
       token.uppercase && !bnfLowercaseNumeral &&
       (!groupUppercase || capitals)
@@ -591,19 +737,22 @@ function findRoughDiphthongs(
 /**
  * The Latin mark strings already written for shared diacritic sets, by the
  * options they depend on: how transliteration writes the circumflex, the
- * smooth breathing, and the coronis (trMark). Which marks it keeps does not
+ * smooth breathing, and the coronis (trMark), and whether it omits length
+ * marks, under which a circumflex on epsilon or omicron is an accent and not
+ * eta or omega (writeLatinMarks). Which marks it keeps does not
  * enter the key: prepareDiacriticsForRendering() has removed the others from
  * the tokens, whose sets are the rest of the key, and a separation diaeresis
  * is added only where diaereses are kept. Kept across calls, since a short
  * text has few tokens to share one call's strings; the options are resolved,
- * so there are at most 18 keys.
+ * so there are at most 36 keys.
  */
 const LATIN_MARK_STRINGS = new Map<string, (string | undefined)[]>();
 
 function latinMarkStrings(options: ConversionOptions): (string | undefined)[] {
   const transliteration = options.transliteration;
   const key = transliteration?.circumflexAccent + " " +
-    transliteration?.smoothBreathing + " " + transliteration?.coronis;
+    transliteration?.smoothBreathing + " " + transliteration?.coronis +
+    (transliteration?.longVowels === "omit" ? " omit" : "");
   let strings = LATIN_MARK_STRINGS.get(key);
   if (strings === undefined) {
     strings = [];
@@ -618,13 +767,21 @@ function rendersLunateC(token: Grapheme, options: ConversionOptions): boolean {
     options.transliteration?.lunateSigma === "c";
 }
 
-function rendersLunateSigma(
+/**
+ * Whether Greek and Beta Code output write `token`, a sigma, as a lunate
+ * sigma: where the source notes one under `"preserve"`, numerals included,
+ * and everywhere but in numerals under `"lunate"`.
+ */
+function writesLunateSigma(
+  document: Document,
+  index: number,
   token: Pick<Grapheme, "glyphVariant">,
   options: ConversionOptions,
 ): boolean {
-  return options.greek?.sigma === "lunate" ||
-    options.greek?.sigma === "preserve" &&
-      token.glyphVariant === "lunate-sigma";
+  const policy = options.greek?.sigma ?? "preserve";
+  return policy === "preserve"
+    ? token.glyphVariant === "lunate-sigma"
+    : policy === "lunate" && !isGreekNumeralContext(document, index);
 }
 
 /**
@@ -688,22 +845,6 @@ function isEdgeGammaKappa(document: Document, index: number): boolean {
     (isWordInitial(document, index) &&
         !followsCoronisApostrophe(document, index) ||
       isWordFinal(document, index + 1));
-}
-
-/**
- * Whether the letter at `index` follows a vowel and an apostrophe with no
- * space between them: a coronis written as an apostrophe
- * (`coronis: "apostrophe"`), read back as punctuation. An elision apostrophe
- * follows a consonant, and a space follows it. The letter stays inside the
- * word for the rules that tell the start of a word from its middle, as it was
- * when the coronis was a mark: `toú’mpalin` (`τοὔμπαλιν`) is read back as
- * `τού’μπαλιν`, which must not be written `toú’balin`.
- */
-function followsCoronisApostrophe(document: Document, index: number): boolean {
-  const mark = document[index - 1];
-  const vowel = document[index - 2];
-  return isElisionMark(mark) && vowel?.kind === "grapheme" &&
-    isVowel(vowel.letter);
 }
 
 function caseDigraph(
@@ -804,6 +945,46 @@ function transliterationBase(
 const ACCENTS: readonly Diacritic[] = ["acute", "grave", "circumflex"];
 
 /**
+ * The BnF right keraia: an acute, or the Greek keraia when the acute accents
+ * are removed, since the acute would then read back as an accent and go.
+ */
+function bnfRightKeraia(options: ConversionOptions): string {
+  return preservesDiacritic("acute", options, "transliteration")
+    ? "\u0301"
+    : DEXIA_KERAIA;
+}
+
+/**
+ * Whether the BnF numeral of the stigma or sampi at `index` reads back as a
+ * numeral, so that the letter can be written small, as BnF prescribes, and
+ * stay so when the output is converted again. The comma of the left keraia
+ * reads back as one before `c̄` and `s̄`. The right keraia must read back as
+ * one: an acute does on a consonant, but reads back as an accent on a vowel.
+ */
+function bnfNumeralReadsBack(
+  document: Document,
+  index: number,
+  options: ConversionOptions,
+): boolean {
+  const previous = document[index - 1];
+  if (previous?.kind === "literal" && previous.value === ARISTERI_KERAIA) {
+    return true;
+  }
+  let last: Token | undefined;
+  for (let i = index; i < document.length; i++) {
+    const token = document[i];
+    if (token.kind === "grapheme") {
+      last = token;
+      continue;
+    }
+    if (isBoundaryTransparent(token)) continue;
+    return token.value === DEXIA_KERAIA && last?.kind === "grapheme" &&
+      (!isVowel(last.letter) || bnfRightKeraia(options) === DEXIA_KERAIA);
+  }
+  return false;
+}
+
+/**
  * Under `upsilon: "y-with-ou-v-f"`, the accent of the upsilon of `αυ`, `ευ`,
  * `ηυ`, written `v` or `f`, moves to the preceding vowel (ISO 843, note 10:
  * `Εύβοια` → `Évvoia`). Returns the token whose marks are written at `index`
@@ -878,6 +1059,19 @@ function trMark(mark: Diacritic, options: ConversionOptions) {
     default:
       return "";
   }
+}
+
+/**
+ * Whether a vowel is an iota written like eta: under `eta: "i"` with the
+ * default `longVowels: "macron"`, eta is `ī`, and so is an iota whose macron
+ * is kept (`ῑ`), which reads back as eta.
+ */
+function writtenAsEta(token: Grapheme, options: ConversionOptions): boolean {
+  const longVowels = options.transliteration?.longVowels;
+  return token.letter === "iota" && token.diacritics.has("macron") &&
+    options.transliteration?.eta === "i" && longVowels !== "omit" &&
+    longVowels !== "circumflex" &&
+    preservesDiacritic("macron", options, "transliteration");
 }
 
 /**
@@ -1173,8 +1367,12 @@ function writesSeparationDiaeresis(
   if (
     token?.kind !== "grapheme" ||
     token.letter !== "iota" && token.letter !== "upsilon" ||
-    first?.kind !== "grapheme" || !hasHiatusMark(first)
+    first?.kind !== "grapheme"
   ) return false;
+  // An iota written like eta reads back as one, and the pair with it.
+  const etaLike = !hasHiatusMark(first) &&
+    token.letter === "upsilon" && writtenAsEta(first, options);
+  if (!etaLike && !hasHiatusMark(first)) return false;
   if (token.letter === "iota") {
     return upsilon === "y-with-diphthong-u" &&
       separatesIotaAfterY(document, index, options);
@@ -1186,7 +1384,7 @@ function writesSeparationDiaeresis(
   const unmarked: Document = [
     {
       ...first,
-      letter: readBackLetter(first, options),
+      letter: etaLike ? "eta" : readBackLetter(first, options),
       diacritics: NO_DIACRITICS,
     },
     token,
@@ -1205,9 +1403,12 @@ function writesSeparationDiaeresis(
     return false;
   }
   if (written("rough") && isWordInitial(document, index - 1)) return false;
+  // The reader infers a smooth breathing at the start of a word, but not in
+  // a numeral, which takes none.
   if (
     first.diacritics.has("smooth") &&
-    (infersSmoothBreathing(options) ||
+    (infersSmoothBreathing(options) &&
+        !isGreekNumeralContext(document, index - 1) ||
       (options.transliteration?.smoothBreathing === "greek" &&
         written("smooth")))
   ) return false;

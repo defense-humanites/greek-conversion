@@ -94,7 +94,7 @@ test("option errors are OptionErrors that locate the option", () => {
   );
   assertEquals(badValue.path, "greek.sigma");
   assertEquals(badValue.received, "nope");
-  assertEquals(badValue.accepted, ["standard", "lunate", "preserve"]);
+  assertEquals(badValue.accepted, ["preserve", "standard", "lunate"]);
 
   const badPreset = assertThrows(
     () => convert("α", "greek", "beta-code", { preset: "nope" } as never),
@@ -118,6 +118,93 @@ test("option errors are OptionErrors that locate the option", () => {
   assertEquals(incompatible.received, "circumflex");
   assertEquals(incompatible.accepted, ["macron", "omit"]);
   assertEquals(Object.isFrozen(incompatible.accepted), true);
+});
+
+test("the options of source are checked, with paths that start with source.", () => {
+  const cases: Array<[unknown, string, unknown]> = [
+    [{ source: { source: {} } }, "source.source", undefined],
+    [{ source: { foo: 1 } }, "source.foo", undefined],
+    [
+      { source: { transliteration: { phi: "x" } } },
+      "source.transliteration.phi",
+      "x",
+    ],
+    [{ source: { preset: "nope" } }, "source.preset", "nope"],
+    [
+      {
+        source: {
+          transliteration: {
+            longVowels: "circumflex",
+            circumflexAccent: "circumflex",
+          },
+        },
+      },
+      "source.transliteration.longVowels",
+      "circumflex",
+    ],
+  ];
+  for (const [options, path, received] of cases) {
+    const error = assertThrows(
+      () => convert("α", "greek", "greek", options as never),
+      OptionError,
+    );
+    assertEquals(error.path, path);
+    assertEquals(error.received, received);
+  }
+  // A source has the keys of a conversion, without a source of its own.
+  assertEquals(
+    assertThrows(
+      () => resolveConversionOptions({ source: { foo: 1 } } as never),
+      OptionError,
+    ).accepted.includes("source"),
+    false,
+  );
+  const replaced = assertThrows(
+    () =>
+      resolveConversionOptions(
+        { source: { orthography: { betaCodeCase: "uppercase" } } } as never,
+      ),
+    OptionError,
+  );
+  // The keys of rc.5 were never accepted in source: no replacement there.
+  assertEquals(replaced.path, "source.orthography.betaCodeCase");
+  assertEquals("replacement" in replaced, false);
+  assertEquals(
+    "replacement" in assertThrows(
+      () =>
+        resolveConversionOptions(
+          { source: { orthography: { modernDigraphs: true } } } as never,
+        ),
+      OptionError,
+    ),
+    false,
+  );
+  assertEquals(
+    assertThrows(
+      () => resolveConversionOptions({ source: { preset: "nope" } } as never),
+      OptionError,
+    ).message,
+    "Unknown conversion preset for source.preset: nope",
+  );
+  for (const source of ["sbl-academic", null, []]) {
+    assertThrows(
+      () => resolveConversionOptions({ source } as never),
+      TypeError,
+    );
+  }
+  assertEquals(
+    resolveConversionOptions({ source: undefined }),
+    DEFAULT_CONVERSION_OPTIONS,
+  );
+  assertThrows(
+    () => resolveConversionOptions({ source: { text: "lowercase" } } as never),
+    TypeError,
+  );
+  // The resolved options are those that write the output.
+  assertEquals(
+    resolveConversionOptions({ source: { preset: "ala-lc-modern" } }),
+    DEFAULT_CONVERSION_OPTIONS,
+  );
 });
 
 test("an OptionError has a replacement only when there is one", () => {

@@ -368,7 +368,7 @@ test("distinguishes academic and general SBL diacritics", () => {
 test("core presets remain conservative and mixable", () => {
   assertNfcEquals(
     convert("ϲοϲ", "greek", "beta-code", { preset: "tlg-core" }),
-    "SOS",
+    "S3OS3",
   );
   assertNfcEquals(
     convert("κἀγώ", "greek", "transliteration", {

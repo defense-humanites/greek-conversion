@@ -113,23 +113,85 @@ Greek encoder itself, after the semantic punctuation rules, not by blind
 character replacement: `reencode(input, "greek", options)` is how a Greek
 string is restyled.
 
+## Iota subscript
+
+Greek output writes a kept iota subscript below the line, and after a capital
+as the prosgegrammeni (`ᾼ`, U+1FBC), which is what Unicode's titlecase mapping
+gives. `greek.iotaSubscript: "capital-adscript"` writes it on the line after a
+capital instead (`Ὠιδῇ`, `ΤΩΙ`), as Smyth describes (§ 5) and as Unicode's
+uppercase mapping does (`ᾳ` → `ΑΙ`). `"adscript"` writes it on the line after
+every vowel (`τῶι`). The iota is a capital among capitals and in text set in
+capitals, and small after a capital that begins a lowercase word or stands
+alone. Written on the line, it is a letter: it reads back as iota, and the
+conversion reports the loss of the subscript. Monotonic output has no iota
+subscript to write.
+
 ## Letter forms
 
 The Greek reader reads the symbol forms of letters as those letters, which is
 how Unicode folds them under compatibility normalization (NFKC): `ϐ` as beta,
 `ϑ` as theta, `ϕ` as phi, `ϖ` as pi, `ϰ` as kappa, `ϱ` as rho, `ϵ` as
 epsilon, and the capitals `ϴ` as theta and `ϒ` as upsilon, with its accented
-forms `ϓ` and `ϔ`. Greek output writes the ordinary letters, except that
-`greek.medialBeta: "symbol"` writes `ϐ` inside a word; the change of form is
-not a loss:
+forms `ϓ` and `ϔ`. It also remembers the form as the grapheme's
+`glyphVariant`, as it does for the lunate sigma `ϲ` (`Ϲ`) and for the final and
+medial sigma.
+
+By default, Greek output keeps the forms the source writes. Each has its
+option, whose `"standard"` value writes the ordinary letter: `greek.sigma` for
+the lunate sigma, `greek.medialBeta` for `ϐ`, and `greek.symbolForms` for the
+other symbol forms. `greek.medialBeta: "symbol"` writes `ϐ` inside a word and
+`β` at its start, as French typography does, whatever the source has. No
+option writes another symbol form where the source has the ordinary letter:
+Unicode reserves them for mathematics (§ 7.2), and leaves the shape of a
+letter to the font.
 
 ```ts
-reencode("ϐίος ϑεός", "greek"); // βίος θεός
-reencode("ἅϐα", "greek", { greek: { medialBeta: "symbol" } }); // ἅϐα
+reencode("ϐίος ϑεός", "greek"); // ϐίος ϑεός
+reencode("ϐίος ϑεός", "greek", {
+  greek: { medialBeta: "standard", symbolForms: "standard" },
+}); // βίος θεός
+reencode("βίος ἅβα", "greek", { greek: { medialBeta: "symbol" } }); // βίος ἅϐα
 ```
 
-The lunate sigma `ϲ` (`Ϲ`) is different: it is read as sigma and remembered,
-so that Greek output can keep it (`greek.sigma: "preserve"`) and
-transliteration can write it `c` (`transliteration.lunateSigma: "c"`). By
-default Greek output writes `σ` or `ς`, and `convertDetailed()` reports the
-change (`removed-glyph-variant`).
+A form belongs to one case, except the lunate sigma, which has a capital and a
+small form. Changing the case of `ϑ` or `ϐ` writes `Θ` or `Β`, as
+`toUpperCase()` does, and that of `ϴ` or `ϒ` writes `θ` or `υ`.
+
+A form that Greek output, under the options of the conversion, writes from a
+Greek source but not from the text read back is lost, and
+`convertDetailed()` reports it (`removed-glyph-variant`, with the source
+form in `glyphVariant`; see [Letter forms](information-loss.md#letter-forms)
+for the other source formats). Transliteration writes `ϐίος` as `bíos`, which
+reads back as `βίος`: the conversion reports the loss under the default
+`medialBeta: "preserve"`, but not under `"symbol"`, which writes `βίος` from
+either text. Beta Code writes the lunate sigma `s3`, and transliteration
+writes it `c` under `transliteration.lunateSigma: "c"`. Under the default
+`greek.finalSigma: "preserve"`, Beta Code also writes a sigma whose shape
+contradicts its place as `s1` (`σ`) or `s2` (`ς`), the codes of the TLG:
+`λόγοσ` gives `lo/gos1`.
+
+Where its position decides the shape of a sigma (`greek.finalSigma:
+"contextual"`, or `"preserve"` for a sigma whose shape the source does not
+note), a sigma before an apostrophe stays medial: the apostrophe stands for an
+elided vowel, and the word goes on (`ἔχουσ’ ἐγώ`, `σ’ αγαπώ`). The sigma is
+final only when the apostrophe closes a quotation that `‘` opened on the same
+line, and no word that begins with a vowel follows it on that line, since
+Greek elides only before a vowel. A sigma on its own is always medial: it is
+the elided σε or σου, which Modern Greek also elides before a consonant
+(`σ’ το πω`), or the letter quoted (‘σ’).
+
+```ts
+const contextual = { greek: { finalSigma: "contextual" } } as const;
+reencode("ἔχους’ ἐγώ", "greek", contextual); // ἔχουσ’ ἐγώ
+reencode("‘λόγοσ’ est", "greek", contextual); // ‘λόγος’ est
+convert("e)/xous' e)gw/", "beta-code", "greek"); // ἔχουσ’ ἐγώ
+```
+
+An apostrophe after punctuation or a digit cannot be an elision, and closes
+the quotation (‘ναί.’, ‘1821’). A straight quotation mark opens nothing, since
+it cannot be told from an aphaeresis (`’στιν`). A closing quotation mark
+followed by a word that begins with a vowel is read as an elision, and the
+quotation stays open for the rest of the line. So, under `"contextual"`,
+`'λόγος'` gives `’λόγοσ’`, `‘λόγος’ ἐστί` gives `‘λόγοσ’ ἐστί`, and
+`‘Ναι’ είπε ἐλθοῦσ’.` gives `‘Ναι’ είπε ἐλθοῦς’.`; the default `"preserve"`
+keeps these shapes as written.

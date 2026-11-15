@@ -111,6 +111,8 @@ export const OPTION_RELEVANCE: Readonly<Record<string, readonly string[]>> = {
   "transliteration.keraia": [
     "greek>transliteration",
     "beta-code>transliteration",
+    "transliteration>greek",
+    "transliteration>beta-code",
     "transliteration>transliteration",
   ],
   "transliteration.enotikon": [
@@ -143,6 +145,14 @@ export const OPTION_RELEVANCE: Readonly<Record<string, readonly string[]>> = {
     "transliteration>greek",
   ],
   "greek.medialBeta": [
+    "greek>greek",
+    "beta-code>greek",
+    "transliteration>greek",
+  ],
+  "greek.symbolForms": [
+    "greek>greek",
+  ],
+  "greek.iotaSubscript": [
     "greek>greek",
     "beta-code>greek",
     "transliteration>greek",

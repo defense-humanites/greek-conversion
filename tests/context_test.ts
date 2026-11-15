@@ -4,6 +4,9 @@ import { convert, convertDetailed } from "../src/mod.ts";
 import { encode, parse, validateDocument } from "../src/document.ts";
 import { grapheme } from "../src/model.ts";
 
+/** The position decides the shape of every sigma. */
+const CONTEXTUAL = { greek: { finalSigma: "contextual" } } as const;
+
 test("preserves case when transliterating nasal gamma", () => {
   assertNfcEquals(
     convert("ΓΓ ΓΚ ΓΞ ΓΧ", "greek", "transliteration"),
@@ -251,8 +254,6 @@ test("uses final sigma before Unicode separators and punctuation", () => {
     "‐",
     "–",
     "—",
-    "'",
-    "’",
     "·",
     "·",
     ";",
@@ -260,11 +261,18 @@ test("uses final sigma before Unicode separators and punctuation", () => {
     "\u200B",
   ];
 
+  // An apostrophe stands for an elided vowel and does not end the word: see
+  // "keeps a sigma before an elision apostrophe medial". The position decides
+  // the shape under finalSigma: "contextual", and for a sigma whose shape
+  // the source does not note.
   for (const boundary of boundaries) {
-    const canonicalBoundary = boundary === "'" ? "’" : boundary;
     assertNfcEquals(
-      convert(`ασ${boundary}α`, "greek", "greek"),
-      `ας${canonicalBoundary}α`,
+      convert(`ασ${boundary}α`, "greek", "greek", CONTEXTUAL),
+      `ας${boundary}α`,
+    );
+    assertNfcEquals(
+      convert(`as${boundary}a`, "beta-code", "greek"),
+      `ας${boundary}α`,
     );
   }
 });
@@ -272,11 +280,11 @@ test("uses final sigma before Unicode separators and punctuation", () => {
 test("ignores combining marks and join controls at word boundaries", () => {
   for (const transparent of ["\u0323", "\u200C", "\u200D", "\u2060"]) {
     assertNfcEquals(
-      convert(`ασ${transparent}α`, "greek", "greek"),
+      convert(`ας${transparent}α`, "greek", "greek", CONTEXTUAL),
       `ασ${transparent}α`,
     );
     assertNfcEquals(
-      convert(`ασ${transparent}`, "greek", "greek"),
+      convert(`ασ${transparent}`, "greek", "greek", CONTEXTUAL),
       `ας${transparent}`,
     );
   }
@@ -383,7 +391,7 @@ test("keeps a labial or velar before sigma as written", () => {
   // Greek writes these pairs where a prefix meets a stem (ἔκστασις, ἐκσῴζω);
   // ψ and ξ are read from their own spellings, never contracted.
   assertNfcEquals(
-    convert("πσ βσ φσ κσ γσ χσ", "greek", "greek"),
+    convert("πσ βσ φσ κσ γσ χσ", "greek", "greek", CONTEXTUAL),
     "πς βς φς κς γς χς",
   );
   assertNfcEquals(convert("ἔκστασις", "greek", "greek"), "ἔκστασις");
@@ -417,13 +425,22 @@ test("assimilates dentals before sigma only on demand", () => {
     greek: { dentalSigma: "assimilate" },
   } as const;
 
-  assertNfcEquals(convert("τσ δσ θσ", "greek", "greek"), "τς δς θς");
+  assertNfcEquals(
+    convert("τσ δσ θσ", "greek", "greek", CONTEXTUAL),
+    "τς δς θς",
+  );
   assertNfcEquals(
     convert("ατσα αδσα αθσα", "greek", "greek", assimilate),
     "ασα ασα ασα",
   );
   assertNfcEquals(
     convert("τσ δσ θσ", "greek", "greek", assimilate),
+    "σ σ σ",
+  );
+  assertNfcEquals(
+    convert("τσ δσ θσ", "greek", "greek", {
+      greek: { dentalSigma: "assimilate", finalSigma: "contextual" },
+    }),
     "ς ς ς",
   );
   assertNfcEquals(
@@ -444,7 +461,8 @@ test("assimilates dentals before sigma only on demand", () => {
     convert("atsa adsa athsa", "transliteration", "greek", assimilate),
     "ἀσα ἀσα ἀσα",
   );
-  assertNfcEquals(convert("τσ δσ θσ", "greek", "beta-code"), "ts ds qs");
+  // Beta Code keeps the medial sigma the source notes at the end of a word.
+  assertNfcEquals(convert("τσ δσ θσ", "greek", "beta-code"), "ts1 ds1 qs1");
   assertNfcEquals(
     convert("τσ δσ θσ", "greek", "transliteration"),
     "ts ds ths",
@@ -455,7 +473,10 @@ test("does not contract separated, marked, or numeric pairs", () => {
   const assimilate = {
     greek: { dentalSigma: "assimilate" },
   } as const;
-  assertNfcEquals(convert("π σ κ σ", "greek", "greek"), "π ς κ ς");
+  assertNfcEquals(
+    convert("π σ κ σ", "greek", "greek", CONTEXTUAL),
+    "π ς κ ς",
+  );
   assertNfcEquals(convert("τσʹ", "greek", "greek", assimilate), "τσʹ");
   assertNfcEquals(
     convert("τσʹ", "greek", "greek", {

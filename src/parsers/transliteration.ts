@@ -1,7 +1,9 @@
 import { ALPHABET, GREEK_MARKS } from "../alphabet.ts";
 import { infersSmoothBreathing } from "../diacritics.ts";
 import {
+  ARISTERI_KERAIA,
   breathingTarget,
+  DEXIA_KERAIA,
   followsNasalGamma,
   hasQuantity,
   isAuEuOuAt,
@@ -93,6 +95,7 @@ function markBit(char: string): number {
 const ROUGH = diacriticBit("rough");
 const BREATHINGS = ROUGH | diacriticBit("smooth");
 const CIRCUMFLEX = diacriticBit("circumflex");
+const ACUTE = diacriticBit("acute");
 const IOTA_SUBSCRIPT = diacriticBit("iota-subscript");
 const MACRON = diacriticBit("macron");
 const DIAERESIS = diacriticBit("diaeresis");
@@ -137,10 +140,15 @@ export function parseTransliteration(
   // Without a length mark, e and o are epsilon and omicron, and a circumflex
   // on them is an accent: one that only the long vowel can bear.
   const omitLength = transliteration?.longVowels === "omit";
+  // An eta written like an iota, with no length mark (ISO 843 Type 2).
+  const etaAsIota = omitLength && transliteration?.eta === "i";
   const upsilon = transliteration?.upsilon;
   const nasalGamma = transliteration?.nasalGamma;
   // Where gamma stays `g` before kappa but is `n` before chi, `kh` after `g`
   // is kappa followed by a rough breathing (`γκἡ` → `gkhē`), not chi.
+  // BnF writes the right keraia as an acute, which a consonant cannot bear as
+  // an accent: there, it is the keraia. The left keraia: see below.
+  const bnfKeraia = transliteration?.keraia === "bnf";
   const kappaAfterG = transliteration?.chi === "kh" &&
     (nasalGamma === "nasal-except-kappa" ||
       nasalGamma === "nasal-medial-kappa");
@@ -193,6 +201,32 @@ export function parseTransliteration(
       (lunateSigma ? { value: "sigma" as const, length: 1 } : undefined);
 
     if (!match) {
+      if (
+        upsilon === "y-with-ou-v-f" &&
+        (lowered[i] === "v" || lowered[i] === "f") &&
+        followsUpsilonVowel(out, etaAsIota)
+      ) {
+        // ISO 843 Type 2 writes the upsilon of `αυ`, `ευ`, `ηυ` as `v` or
+        // `f`, and its accent on the vowel before it (`aftós`, `Évvoia`):
+        // where beta and phi do not claim the letter, it is that upsilon,
+        // and the accent goes back to it, which makes the pair a diphthong.
+        const previous = out[out.length - 1] as Grapheme;
+        // Without a length mark, eta is written `i` under `eta: "i"`; `ιυ` is
+        // never written with `v` or `f`, so the `i` was that eta.
+        if (previous.letter === "iota") previous.letter = "eta";
+        let diacritics = diacriticsFromMask(0);
+        for (const accent of ["acute", "grave", "circumflex"] as const) {
+          if (!previous.diacritics.has(accent)) continue;
+          previous.diacritics = withoutDiacritic(previous.diacritics, accent);
+          diacritics = withDiacritic(diacritics, accent);
+        }
+        out.push(
+          ownedGrapheme("upsilon", chars[i] !== lowered[i], diacritics),
+        );
+        i++;
+        continue;
+      }
+
       if (chars[i] === "\u1FBD") {
         const previous = out.at(-1);
         if (
@@ -210,8 +244,17 @@ export function parseTransliteration(
         out.push(literal(roughUppercase ? "H" : "h"));
         if (starts !== undefined) starts.push(i);
       }
+      // BnF writes the left keraia as a comma, which reads back as one
+      // before `c̄` and `s̄`, the stigma and sampi that only numerals use.
+      const leftKeraia = bnfKeraia && chars[i] === "," &&
+        markedArchaicLetter(chars, lowered, i + 1) !== undefined &&
+        lowered[i + 1] !== "k";
       out.push(
-        literal(parsePunctuation(chars[i], "transliteration") ?? chars[i]),
+        literal(
+          leftKeraia
+            ? ARISTERI_KERAIA
+            : parsePunctuation(chars[i], "transliteration") ?? chars[i],
+        ),
       );
       i++;
       continue;
@@ -237,6 +280,8 @@ export function parseTransliteration(
 
     let marks = rough ? ROUGH : 0;
     let structuralCircumflex = false;
+    // Where an acute was read, for a BnF keraia.
+    let acuteAt = -1;
 
     while (i < chars.length) {
       if (
@@ -251,6 +296,7 @@ export function parseTransliteration(
       }
       const bit = markBit(chars[i]);
       if (bit === 0) break;
+      if (bit === ACUTE) acuteAt = i;
       marks |= bit;
       i++;
     }
@@ -351,12 +397,18 @@ export function parseTransliteration(
       contextualY.add(out.length);
     }
 
+    const keraia = bnfKeraia && (marks & ACUTE) !== 0 && !isVowel(letter);
+    if (keraia) marks &= ~ACUTE;
     out.push(ownedGrapheme(
       letter,
       roughUppercase || source !== sourceLower,
       diacriticsFromMask(marks),
       lunateSigma ? "lunate-sigma" : undefined,
     ));
+    if (keraia) {
+      out.push(literal(DEXIA_KERAIA));
+      if (starts !== undefined) starts.push(acuteAt);
+    }
   }
 
   if (positions !== undefined && starts !== undefined) {
@@ -513,6 +565,22 @@ function inferNasalGammas(tokens: Token[], exceptKappa: boolean) {
 
 const KAPPA = { value: "kappa", length: 1 } as const;
 
+/**
+ * Whether the last token read is the vowel of `αυ`, `ευ`, or `ηυ` whose
+ * upsilon ISO 843 Type 2 writes `v` or `f`: alpha, epsilon, or eta, with no
+ * diaeresis; or an iota where eta is written like one (`etaAsIota`).
+ */
+function followsUpsilonVowel(
+  tokens: readonly Token[],
+  etaAsIota: boolean,
+): boolean {
+  const previous = tokens.at(-1);
+  return previous?.kind === "grapheme" &&
+    (previous.letter === "alpha" || previous.letter === "epsilon" ||
+      previous.letter === "eta" || etaAsIota && previous.letter === "iota") &&
+    !previous.diacritics.has("diaeresis");
+}
+
 /** Whether the last token read is a gamma. */
 function followsGamma(tokens: readonly Token[]): boolean {
   const previous = tokens.at(-1);
@@ -585,7 +653,17 @@ function inferInitialBreathings(
     }
     wordStart = false;
 
-    if (!isVowel(token.letter) || isGreekNumeralContext(tokens, i)) continue;
+    if (!isVowel(token.letter)) continue;
+    if (isGreekNumeralContext(tokens, i)) {
+      // A numeral takes no breathing: a `y` that a smooth breathing was to
+      // separate from this vowel keeps its separation as a diaeresis.
+      const next = tokens[i + 1];
+      if (
+        separatedByBreathing.has(i + 1) && !token.diacritics.has("rough") &&
+        next?.kind === "grapheme"
+      ) next.diacritics = withDiacritic(next.diacritics, "diaeresis");
+      continue;
+    }
 
     const target = separatedByBreathing.has(i + 1)
       ? token

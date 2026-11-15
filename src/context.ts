@@ -1,10 +1,18 @@
 import {
   diacriticBit,
+  literal,
   sharedMask,
   withDiacritic,
   withoutDiacritic,
 } from "./model.ts";
-import type { Diacritic, Document, Grapheme, Letter, Token } from "./model.ts";
+import type {
+  Diacritic,
+  Document,
+  Grapheme,
+  Letter,
+  Literal,
+  Token,
+} from "./model.ts";
 import { APOSTROPHE } from "./punctuation.ts";
 
 const NASAL_GAMMA_FOLLOWERS = new Set<Letter>([
@@ -64,10 +72,47 @@ const ELIDED_ASPIRATES = new Map<Letter, Letter>([
 
 const DENTALS = new Set<Letter>(["tau", "delta", "theta"]);
 
+/**
+ * The literals that write a letter a converter keeps as it was, outside its
+ * scope (see `createConverter()`), and whether that letter is a capital in
+ * the output. They are letters of their word, so that the letters around
+ * them keep their place in it: `σο`, with omicron kept, keeps its medial
+ * sigma, and a capital among them is among capitals. No rule reads which
+ * letter they write.
+ */
+const KEPT_LETTERS = new WeakMap<Token, boolean>();
+
+/** A literal that writes (part of) a letter kept as it was. */
+export function keptLetter(value: string, uppercase: boolean): Literal {
+  const token = literal(value);
+  KEPT_LETTERS.set(token, uppercase);
+  return token;
+}
+
+/**
+ * Whether a token writes (part of) a letter kept as it was: its text is a
+ * spelling in the source format, which no punctuation rule rewrites.
+ */
+export function isKeptLetter(token: Token): boolean {
+  return KEPT_LETTERS.has(token);
+}
+
+/** Whether a token is a letter of a word: a grapheme, or a kept letter. */
+export function isWordLetter(token: Token | undefined): boolean {
+  return token !== undefined &&
+    (token.kind === "grapheme" || KEPT_LETTERS.has(token));
+}
+
+/** Whether a letter of a word is a capital, or undefined for another token. */
+function capitalLetter(token: Token | undefined): boolean | undefined {
+  if (token === undefined) return undefined;
+  return token.kind === "grapheme" ? token.uppercase : KEPT_LETTERS.get(token);
+}
+
 export function isWordInitial(document: Document, index: number): boolean {
   let previous = index - 1;
   while (previous >= 0 && isBoundaryTransparent(document[previous])) previous--;
-  return previous < 0 || document[previous].kind === "literal";
+  return previous < 0 || !isWordLetter(document[previous]);
 }
 
 export function isWordFinal(document: Document, index: number): boolean {
@@ -75,7 +120,101 @@ export function isWordFinal(document: Document, index: number): boolean {
   while (next < document.length && isBoundaryTransparent(document[next])) {
     next++;
   }
-  return next === document.length || document[next].kind === "literal";
+  return next === document.length || !isWordLetter(document[next]);
+}
+
+/**
+ * The apostrophes of a document that close a quotation, found once for all
+ * the sigmas of a conversion that need them (see `sigmaEndsWord()`).
+ */
+export interface QuotationContext {
+  closingQuotes?: Uint8Array;
+}
+
+/**
+ * Whether the sigma at `index` ends its word, for the choice between `σ` and
+ * `ς`. An apostrophe after the sigma stands for an elided vowel, so the sigma
+ * stays medial (`ἔχουσ’ ἐγώ`, `σ’ αγαπώ`), unless the apostrophe closes a
+ * quotation (‘λόγος’).
+ */
+export function sigmaEndsWord(
+  document: Document,
+  index: number,
+  quotations: QuotationContext,
+): boolean {
+  if (!isWordFinal(document, index)) return false;
+  const next = adjacentIndex(document, index, 1);
+  if (!isElisionMark(document[next])) return true;
+  // A sigma on its own is the elided σε or σου (`σ’ αγαπώ`, and `σ’ το πω`,
+  // which Modern Greek elides before a consonant), or the letter quoted (‘σ’),
+  // which is written medial.
+  if (isWordInitial(document, index)) return false;
+  if (precedesVowelWord(document, next)) return false;
+  quotations.closingQuotes ??= closingQuotes(document);
+  return quotations.closingQuotes[next] === 1;
+}
+
+const LEFT_QUOTATION_MARK = "‘";
+const LINE_BREAKS = new Set([
+  "\n",
+  "\r",
+  "\u000B",
+  "\u000C",
+  "\u0085",
+  "\u2028",
+  "\u2029",
+]);
+
+/**
+ * Marks the apostrophes that close a quotation, which ‘ opened on the same
+ * line. An apostrophe after a letter closes it unless a word that begins with
+ * a vowel follows: Greek elides only before a vowel, so an apostrophe there is
+ * an elision, even inside a quotation (‘οὐκ ἔστ’ ἔτυμος λόγος οὗτος’). An
+ * apostrophe after punctuation or a digit cannot be an elision, and closes it
+ * too (‘ναί.’, ‘1821’). Only ‘ opens a quotation: an apostrophe before a word
+ * may be an aphaeresis (`’στιν`), and a straight quotation mark cannot be told
+ * from one. This is one pass, made only when a sigma before an apostrophe
+ * needs it; searching back from each such sigma would make a conversion
+ * quadratic.
+ */
+function closingQuotes(document: Document): Uint8Array {
+  const closing = new Uint8Array(document.length);
+  let open = 0;
+  for (let i = 0; i < document.length; i++) {
+    const token = document[i];
+    if (token.kind !== "literal") continue;
+    if (isLineBreak(token)) open = 0;
+    else if (token.value === LEFT_QUOTATION_MARK) open++;
+    else if (open > 0 && isElisionMark(token)) {
+      const previous = adjacentToken(document, i, -1);
+      if (!spellsLetter(previous)) {
+        if (previous !== undefined && !isWhitespace(previous)) open--;
+      } else if (!precedesVowelWord(document, i)) {
+        closing[i] = 1;
+        open--;
+      }
+    }
+  }
+  return closing;
+}
+
+/**
+ * Whether a word that begins with a vowel follows `index` on the same line,
+ * past spaces.
+ */
+function precedesVowelWord(document: Document, index: number): boolean {
+  let next = index + 1;
+  while (
+    next < document.length &&
+    (isWhitespace(document[next]) && !isLineBreak(document[next]) ||
+      isBoundaryTransparent(document[next]))
+  ) next++;
+  const token = document[next];
+  return token?.kind === "grapheme" && isVowel(token.letter);
+}
+
+function isLineBreak(token: Token | undefined): boolean {
+  return token?.kind === "literal" && LINE_BREAKS.has(token.value);
 }
 
 /**
@@ -86,9 +225,8 @@ export function isWordFinal(document: Document, index: number): boolean {
  * only its first letter is, which ISO 843 allows (note 11).
  */
 export function isAmongCapitals(document: Document, index: number): boolean {
-  const neighbour = adjacentGrapheme(document, index, 1) ??
-    adjacentGrapheme(document, index, -1);
-  return neighbour?.uppercase === true;
+  return (capitalLetter(adjacentToken(document, index, 1)) ??
+    capitalLetter(adjacentToken(document, index, -1))) === true;
 }
 
 /**
@@ -110,12 +248,20 @@ function adjacentToken(
   index: number,
   step: 1 | -1,
 ): Token | undefined {
+  return document[adjacentIndex(document, index, step)];
+}
+
+function adjacentIndex(
+  document: Document,
+  index: number,
+  step: 1 | -1,
+): number {
   let position = index + step;
   while (
     position >= 0 && position < document.length &&
     isBoundaryTransparent(document[position])
   ) position += step;
-  return document[position];
+  return position;
 }
 
 /**
@@ -127,15 +273,6 @@ function spellsLetter(token: Token | undefined): boolean {
   return token?.kind === "grapheme" ||
     token?.kind === "literal" &&
       /[\p{Lu}\p{Ll}\p{Lt}\p{Lo}\p{Co}]/u.test(token.value);
-}
-
-function adjacentGrapheme(
-  document: Document,
-  index: number,
-  step: 1 | -1,
-): Grapheme | undefined {
-  const token = adjacentToken(document, index, step);
-  return token?.kind === "grapheme" ? token : undefined;
 }
 
 export function isVowel(letter: Letter): boolean {
@@ -165,8 +302,8 @@ export function isGreekNumeralContext(
 
   for (let i = start; i < document.length; i++) {
     const token = document[i];
-    if (token.kind === "grapheme" || isBoundaryTransparent(token)) continue;
-    return token.value === DEXIA_KERAIA;
+    if (isWordLetter(token) || isBoundaryTransparent(token)) continue;
+    return (token as Literal).value === DEXIA_KERAIA;
   }
 
   return false;
@@ -257,13 +394,18 @@ const VOICELESS = new Set<Letter>([
   "sampi",
 ]);
 
-/** Whether the upsilon at `index` is followed by a voiced sound in its word. */
+/**
+ * Whether the upsilon at `index` is followed by a voiced sound in its word. A
+ * coronis on it, written as an apostrophe and read back (`Kev’géneian`),
+ * leaves the letter after it in the word, as the coronis did.
+ */
 export function precedesVoicedSound(
   document: Document,
   index: number,
 ): boolean {
-  if (isWordFinal(document, index)) return false;
   let next = index + 1;
+  if (followsCoronisApostrophe(document, index + 2)) next++;
+  else if (isWordFinal(document, index)) return false;
   while (isBoundaryTransparent(document[next])) next++;
   const token = document[next];
   return token?.kind === "grapheme" && !VOICELESS.has(token.letter);
@@ -414,6 +556,37 @@ export function elidedAspirate(
   return target?.kind === "grapheme" && target.diacritics.has("rough")
     ? aspirate
     : undefined;
+}
+
+/**
+ * Whether the letter at `index` follows a vowel and an apostrophe with no
+ * space between them: a coronis written as an apostrophe
+ * (`coronis: "apostrophe"`), read back as punctuation. An elision apostrophe
+ * follows a consonant, and a space follows it. The letter stays inside the
+ * word for the rules that tell the start of a word from its middle, as it was
+ * when the coronis was a mark: `toú’mpalin` (`τοὔμπαλιν`) is read back as
+ * `τού’μπαλιν`, which must not be written `toú’balin`.
+ */
+export function followsCoronisApostrophe(
+  document: Document,
+  index: number,
+): boolean {
+  const mark = document[index - 1];
+  const vowel = document[index - 2];
+  return isElisionMark(mark) && vowel?.kind === "grapheme" &&
+    isVowel(vowel.letter);
+}
+
+/**
+ * Whether the letter at `index` follows a letter and an apostrophe with no
+ * space between them, for title case (see followsCoronisApostrophe()).
+ */
+export function followsApostropheInWord(
+  document: Document,
+  index: number,
+): boolean {
+  return isElisionMark(document[index - 1]) &&
+    document[index - 2]?.kind === "grapheme";
 }
 
 /** Whether a literal is an apostrophe: elision, or a coronis written so. */

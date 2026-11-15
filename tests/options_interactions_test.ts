@@ -57,7 +57,7 @@ test("classifies context before selective diacritic removal", () => {
 test("does not create contractions by removing blocking marks", () => {
   const options = {
     diacritics: { all: "remove" },
-    greek: { dentalSigma: "assimilate" },
+    greek: { dentalSigma: "assimilate", finalSigma: "contextual" },
   } as const;
 
   assertNfcEquals(
@@ -69,7 +69,7 @@ test("does not create contractions by removing blocking marks", () => {
 test("selective removal does not create blocked contractions", () => {
   const options = {
     diacritics: { accents: "remove" },
-    greek: { dentalSigma: "assimilate" },
+    greek: { dentalSigma: "assimilate", finalSigma: "contextual" },
   } as const;
 
   assertNfcEquals(
@@ -522,4 +522,249 @@ test("vowel pairs stay idempotent next to breathings, diphthongs, and capitals",
     }
   }
   assertEquals(failures, []);
+});
+
+test("under upsilon: y-with-ou-v-f alone, v and f read back as upsilon", () => {
+  // ISO 843 Type 2 writes the upsilon of αυ, ευ, ηυ as v or f, with its
+  // accent on the vowel. Without beta: "v" or phi: "f", nothing else claims
+  // the letter: it reads back, with its accent. It was read as text, which
+  // ended the word, so that title case wrote `Aftós` again as `AfTós`.
+  const options = {
+    transliteration: { upsilon: "y-with-ou-v-f" },
+  } as const;
+  for (
+    const [greek, latin] of [
+      ["αὐτός", "aftós"],
+      ["εὖ", "ẽf"],
+      ["Εὔβοια", "Évboia"],
+      ["αὑτοῦ", "haftoũ"],
+    ] as const
+  ) {
+    const result = convertDetailed(greek, "greek", "transliteration", options);
+    assertNfcEquals(result.output, latin);
+    assertEquals(result.lossy, false, greek);
+    assertNfcEquals(
+      convert(latin, "transliteration", "greek", options),
+      greek,
+    );
+  }
+  for (
+    const letterCase of ["preserve", "uppercase", "title", "lowercase"] as const
+  ) {
+    const caseOptions = { ...options, text: { letterCase } };
+    const once = convert("αὐτός εὖ", "greek", "transliteration", caseOptions);
+    assertNfcEquals(
+      convert(once, "transliteration", "transliteration", caseOptions),
+      once,
+      letterCase,
+    );
+  }
+  // Under ISO 843 Type 2, beta and phi are v and f: the pair reads back as
+  // they do, as documented.
+  assertNfcEquals(
+    convert("’aftós", "transliteration", "greek", {
+      preset: "iso-843-type-2",
+    }),
+    "’αφτός",
+  );
+});
+
+test("BnF numerals stay as written under every letter case and mark removal", () => {
+  // An acute on a consonant cannot be an accent: it reads back as the right
+  // keraia, and a comma before c̄ or s̄ as the left one. Removing the accents
+  // writes the right keraia ʹ, which an acute would not survive.
+  const bnf = { preset: "bnf-core" } as const;
+  assertNfcEquals(
+    convert("c̄́ s̄́ ,c̄", "transliteration", "greek", bnf),
+    "ϛʹ ϡʹ ͵ϛ",
+  );
+  assertEquals(
+    convertDetailed("ϛʹ ͵ϛ", "greek", "transliteration", bnf).lossy,
+    false,
+  );
+  // A comma before another letter is a comma.
+  assertNfcEquals(convert("a,b", "transliteration", "greek", bnf), "α,β");
+  assertNfcEquals(
+    convert("ϛʹ αʹ ͵ϛ", "greek", "transliteration", {
+      ...bnf,
+      diacritics: { all: "remove" },
+    }),
+    "c̄ʹ aʹ ,c̄",
+  );
+  const numerals = "ϛʹ Ϛʹ αʹ ιαʹ ϙʹ ϡʹ ͵ϛ ͵Ϡ βʹ ϡαʹ ϡβʹ";
+  for (
+    const letterCase of ["preserve", "uppercase", "title", "lowercase"] as const
+  ) {
+    for (const marks of [{}, { diacritics: { all: "remove" } }] as const) {
+      const options = {
+        transliteration: { keraia: "bnf" },
+        text: { letterCase },
+        ...marks,
+      } as const;
+      const once = convert(numerals, "greek", "transliteration", options);
+      assertNfcEquals(
+        convert(once, "transliteration", "transliteration", options),
+        once,
+        JSON.stringify(options),
+      );
+    }
+  }
+});
+
+test("a Beta Code keraia before a digit is written as itself", () => {
+  // `#` and a digit are a TLG character code: `a#1` is αϟ.
+  assertEquals(convert("αʹ1 βʹ22 αʹ 1", "greek", "beta-code"), "aʹ1 bʹ22 a# 1");
+  for (const input of ["αʹ1", "βʹ22", "αʹ5"]) {
+    const result = convertDetailed(input, "greek", "beta-code");
+    assertEquals(result.lossy, false, input);
+    assertNfcEquals(convert(result.output, "beta-code", "greek"), input);
+    assertEquals(
+      convert(result.output, "beta-code", "beta-code"),
+      result.output,
+    );
+  }
+  assertNfcEquals(convert("a#1", "beta-code", "greek"), "αϟ");
+});
+
+test("a separation diaeresis the source does not have is reported", () => {
+  // Under the contextual upsilon, transliteration keeps a hiatus that only a
+  // breathing on a vowel inside the word marks by a diaeresis, which reads
+  // back: ἑυ and ἑϋ are both written `heÿ`.
+  for (
+    const [input, from] of [["a)e(u", "beta-code"], ["ἀἑυ", "greek"]] as const
+  ) {
+    const result = convertDetailed(input, from, "transliteration");
+    assertNfcEquals(result.output, "aheÿ");
+    assertEquals(
+      result.losses.map(({ code, diacritic, index }) => [
+        code,
+        diacritic,
+        index,
+      ]),
+      [["added-diacritic", "diaeresis", 2]],
+    );
+  }
+  assertEquals(convertDetailed("ἀἑϋ", "greek", "transliteration").lossy, false);
+});
+
+test("a numeral keeps the separation of a contextual y", () => {
+  // A numeral takes no breathing, so the reader infers none there: the `y`
+  // keeps its separation by a diaeresis, as inside a word.
+  assertNfcEquals(convert("oyʹ ayʹ", "transliteration", "greek"), "οϋʹ αϋʹ");
+  assertNfcEquals(convert("ὀυʹ", "greek", "transliteration"), "oÿʹ");
+  assertNfcEquals(convert("oÿʹ", "transliteration", "transliteration"), "oÿʹ");
+  assertEquals(
+    convertDetailed("ὀυʹ", "greek", "transliteration").losses.map((loss) =>
+      `${loss.code}:${loss.diacritic}`
+    ),
+    ["removed-diacritic:smooth", "added-diacritic:diaeresis"],
+  );
+  // An `h` keeps its rough breathing in place, which separates the pair.
+  assertNfcEquals(convert("hayʹ", "transliteration", "greek"), "ἁυʹ");
+  assertNfcEquals(convert("ἁυʹ", "greek", "transliteration"), "hayʹ");
+  // Outside a numeral, the smooth breathing is inferred at the start of the
+  // word.
+  assertNfcEquals(convert("oy", "transliteration", "greek"), "ὀυ");
+});
+
+test("title case leaves the letter after an apostrophe inside its word", () => {
+  // A coronis written as an apostrophe reads back as one: the letter after it
+  // stays inside the word, as it was when the coronis was a mark.
+  for (
+    const [input, options, expected] of [
+      [
+        "κἀγώ τοὔνομα",
+        { transliteration: { coronis: "apostrophe" } },
+        "Ka’gṓ Toú’noma",
+      ],
+      // The upsilon of `ταὐτόν` is written `f`, which reads back as phi.
+      [
+        "ταὐτόν",
+        { preset: "iso-843-type-2", transliteration: { beta: "b" } },
+        "Taf’tón",
+      ],
+    ] as const
+  ) {
+    const title = { ...options, text: { letterCase: "title" } } as const;
+    const output = convert(input, "greek", "transliteration", title);
+    assertNfcEquals(output, expected);
+    assertNfcEquals(
+      convert(output, "transliteration", "transliteration", title),
+      output,
+    );
+  }
+  // So does an elision written without a space; a space starts a word.
+  assertNfcEquals(
+    convert("δ’ἐγώ δ’ ἐγώ", "greek", "greek", {
+      text: { letterCase: "title" },
+    }),
+    "Δ’ἐγώ Δ’ Ἐγώ",
+  );
+});
+
+test("upsilon written v or f reads back after an eta written i", () => {
+  // Under ISO 843 Type 2, eta is `i` with no length mark; with `beta: "b"`,
+  // `v` is the upsilon of `ηυ`, and `ιυ` is never written so.
+  const options = {
+    preset: "iso-843-type-2",
+    transliteration: { beta: "b" },
+  } as const;
+  const result = convertDetailed("ηὗρον", "greek", "transliteration", options);
+  assertNfcEquals(result.output, "hîvron");
+  assertEquals(result.lossy, false);
+  assertNfcEquals(
+    convert(result.output, "transliteration", "greek", options),
+    "ηὗρον",
+  );
+  // Before a voiced sound, a coronis written as an apostrophe keeps the `v`.
+  const title = { ...options, text: { letterCase: "title" } } as const;
+  for (const input of ["κεὐγένειαν", "ταὔλιον"]) {
+    const output = convert(input, "greek", "transliteration", title);
+    assertNfcEquals(
+      convert(output, "transliteration", "transliteration", title),
+      output,
+    );
+  }
+});
+
+test("a circumflex moved to epsilon does not read back as eta", () => {
+  // Under `y-with-ou-v-f`, the accent of the upsilon of `ευ` moves to the
+  // epsilon. Where `ê` is eta, it is written as a tilde.
+  for (
+    const [preset, expected] of [
+      ["iso-843-type-1", "’ẽf"],
+      ["bnf-core", "ẽf̓"],
+      ["iso-843-type-2", "’êf"],
+    ] as const
+  ) {
+    const options = {
+      preset,
+      transliteration: { upsilon: "y-with-ou-v-f" },
+    } as const;
+    const output = convert("εὖ", "greek", "transliteration", options);
+    assertNfcEquals(output, expected, preset);
+    assertNfcEquals(
+      convert(output, "transliteration", "transliteration", options),
+      output,
+    );
+  }
+});
+
+test("an iota written like eta keeps the separation of the next y", () => {
+  // Under `eta: "i"`, `ī` is eta, and so reads an iota with a macron: before
+  // an upsilon, the `y` takes the diaeresis it would take after an eta.
+  const options = {
+    preset: "iso-843-type-1",
+    transliteration: { upsilon: "y-with-ou-v-f" },
+  } as const;
+  const result = convertDetailed("ῑῠ", "greek", "transliteration", options);
+  assertNfcEquals(result.output, "īy\u0306\u0308");
+  assertEquals(
+    convert(result.output, "transliteration", "transliteration", options),
+    result.output,
+  );
+  assertEquals(
+    result.losses.map(({ code }) => code),
+    ["unrepresented-grapheme", "added-diacritic"],
+  );
 });

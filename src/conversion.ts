@@ -26,7 +26,10 @@ import {
   writtenSpans,
 } from "./parsers/positions.ts";
 import { parseTransliteration } from "./parsers/transliteration.ts";
-import { resolveConversionOptions } from "./presets.ts";
+import {
+  resolveConversionOptions,
+  resolveConversionProfiles,
+} from "./presets.ts";
 
 /** Where a token was read: a range of UTF-16 code units in the input. */
 export interface TokenSpan {
@@ -60,8 +63,9 @@ export interface ParseResult {
  * option-dependent: the `transliteration` group, `greek.accentuation`, and
  * the disposition of the smooth breathing (`diacritics.smoothBreathing`, or
  * `diacritics.all`) decide how transliteration is read, while reading Greek
- * or Beta Code depends on no option. Every option is validated whatever the
- * format.
+ * or Beta Code depends on no option. As in a conversion, the input is read
+ * with `options.source` when it is given. Every option is validated whatever
+ * the format.
  *
  * @throws {TypeError} If `input` is not a string.
  * @throws {RangeError} If `format` is not supported or an option is invalid.
@@ -73,7 +77,11 @@ export function parse(
 ): Document {
   assertTextInput(input);
   assertFormat(format);
-  return parseResolved(input, format, resolveConversionOptions(options));
+  return parseResolved(
+    input,
+    format,
+    resolveConversionProfiles(options).reading,
+  );
 }
 
 /**
@@ -98,7 +106,7 @@ export function parseDetailed(
   const document = parseResolved(
     input,
     format,
-    resolveConversionOptions(options),
+    resolveConversionProfiles(options).reading,
     false,
     read,
   );

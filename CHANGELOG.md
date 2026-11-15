@@ -36,6 +36,216 @@ change.
   Literata Light, served by the playground with the letters it lacked
   (`web/fonts/README.md`).
 
+## [1.0.0-rc.9] - 2026-11-15
+
+Ninth release candidate for `1.0.0`. Greek output now keeps the letter forms
+the source writes, by default: the lunate sigma, a sigma whose shape
+contradicts its place, `ϐ`, and the symbol forms such as `ϑ`; MIGRATION gives
+the options that reproduce rc.8. `convertDetailed()` reports a form only where
+converting back cannot restore it, and names it. The API gains the `source`
+option, which restyles a transliteration (#70), `greek.iotaSubscript`,
+`greek.symbolForms`, the loss codes `added-glyph-variant` and
+`added-diacritic`, and the `glyphVariant` field of a loss. Beta Code reads and
+writes the TLG sigma codes `s1` and `s2`. Checking the Bailly corpus and
+fuzzing the options fixed a series of conversions that did not read back as
+written, or that were not idempotent.
+
+### Added
+
+- `greek.iotaSubscript` decides where Greek output writes a kept iota
+  subscript. `"subscript"`, the default, writes it below the line as before.
+  `"capital-adscript"` writes it on the line after a capital, as Smyth
+  describes (§ 5) and as Unicode's uppercase mapping does: `ᾨδῇ` gives `Ὠιδῇ`,
+  and `τῇ ᾠδῇ` in capitals gives `ΤΗΙ ΩΙΔΗΙ` once the other marks are
+  removed. `"adscript"` writes it on the line after every vowel (`τῶι`). An
+  iota on the line reads back as a letter, and `convertDetailed()` reports the
+  loss of the subscript. The README gives a recipe for Greek in the uncial
+  style, with this option.
+- `source` describes how the input of a conversion is written, when it is not
+  written as the output (#70). The input is read with these options, resolved
+  on their own, and the output written with the others. Reading
+  transliteration depends on its options, which also described the input in
+  a conversion that keeps the format, so `reencode()` could not restyle a
+  transliteration into a style that reads it otherwise:
+  `reencode("phílos", "transliteration", { transliteration: { phi: "f" } })`
+  read `ph` as pi and a rough breathing and gave `phílos`, and ALA-LC Modern
+  read the `b` of `barbarōn` as μπ. With `source: {}`, the default style, the
+  first gives `fílos`, and with `source: { preset: "sbl-academic" }`, the
+  second gives `varvarōn` (README, *Restyle a transliteration*). Without
+  `source`, nothing changes: the options describe the input as well, which
+  normalizes a text in its own style and keeps output idempotent. `source`
+  replaces the options for reading, without merging with them, and works with
+  every function that reads text, including a converter bound to another
+  preset. Its options are checked like the others, with paths that start with
+  `source.`.
+- `greek.symbolForms` decides how Greek output writes the symbol forms of
+  letters: `ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, and `ϒ`, with its accented forms
+  `ϓ` and `ϔ`. `"preserve"`, the default, keeps those the source writes, and
+  `"standard"` writes the ordinary letters. No value writes a symbol form
+  where the source has the ordinary letter: Unicode reserves them for
+  mathematics. The Greek reader records each symbol form as the grapheme's
+  `glyphVariant` (`"beta-symbol"` for `ϐ`, `"theta-symbol"`,
+  `"capital-theta-symbol"`, `"phi-symbol"`, `"pi-symbol"`, `"kappa-symbol"`,
+  `"rho-symbol"`, `"lunate-epsilon"`, `"upsilon-hook"`). A symbol form belongs
+  to one case: in capitals, `ϑ` is `Θ`, as `toUpperCase()` writes it, and
+  `validateDocument()` reports a symbol form on a grapheme of the other case.
+- `greek.medialBeta: "preserve"`, the new default, writes `ϐ` where the source
+  notes it and `β` elsewhere.
+- A `removed-glyph-variant` loss names the source form in its new
+  `glyphVariant` field. The new code `added-glyph-variant` reports a form the
+  target writes where the source has none, and that converts back as another
+  spelling; its `glyphVariant` is the form written.
+- The loss code `added-diacritic` reports a diaeresis the target writes where
+  the source has none, and that reads back: under the contextual upsilon,
+  `ἀἑυ` gives `aheÿ`, which reads back as `ἀἑϋ`; `convertDetailed()`
+  reported no loss.
+- Beta Code reads `s1` and `s2`, the medial and final sigma of the TLG, and
+  writes them where the shape contradicts the place, under the default
+  `greek.finalSigma: "preserve"`: `λόγοσ` gives `lo/gos1` (was `lo/gos`, which
+  reads back as `λόγος`), and `lo/gos1` gives `λόγοσ` (was `λόγος1`). A shape
+  the place gives needs no code (`s1a` gives `sa`), and the TLG defines none
+  for a capital (`*s1` is still a capital sigma and a digit). Since `s1` and
+  `s2` now read as sigmas, a small sigma before a digit from 1 to 3 is
+  written with its code (`λόγος2` gives `lo/gos22`), so that the digit
+  survives; see *Changed* for how existing input reads.
+
+### Changed
+
+- Greek output keeps the letter forms the source writes, by default. The
+  defaults of `greek.sigma`, `greek.finalSigma`, and `greek.medialBeta` are
+  now `"preserve"` (were `"standard"`, `"contextual"`, and `"standard"`), and
+  so is that of the new `greek.symbolForms`. `ϲῶμα`, `λόγοσ`, `ϐίος`, and
+  `ϑεός` stay as written (rc.8: `σῶμα`, `λόγος`, `βίος`, `θεός`); so do a
+  sigma noted final inside a word and the shapes of a word whose marks are
+  removed. The lunate sigma that Beta Code writes `s3`, and `bnf-core` `c`,
+  gives `ϲ` in Greek, and Beta Code output writes it `s3` (rc.8: `s`). A sigma
+  whose shape the source does not note, as in Beta Code or transliteration,
+  is still placed by its position. The options
+  `{ greek: { sigma: "standard", finalSigma: "contextual", medialBeta: "standard", symbolForms: "standard" } }`
+  give the output of rc.8, and the README gives a recipe to fold the forms
+  for comparison (*Keep or fold letter variants*).
+- `convertDetailed()` reports a letter form when the source format, under the
+  options of the conversion, writes it from the source but not from the text
+  read back, so that a conversion without loss still converts back to
+  the same text (Information loss, *Letter forms*). A form the target cannot
+  write is reported: `ϐίος` gives `bíos` in transliteration, which reads back
+  as `βίος`, with a loss whose `glyphVariant` is `"beta-symbol"`; so do `ϑ`,
+  and a sigma whose shape contradicts its place (`λόγοσ` → `lógos`). Under
+  `medialBeta: "symbol"`, which writes `ϐ` inside a word as French typography
+  does, a text written that way gives no loss. A form that the options fold
+  is no longer reported: `ϲῶμα` under `sigma: "standard"` gives `σῶμα`, which
+  is how the same options write the source (rc.8: `removed-glyph-variant`).
+- Under the default `greek.sigma: "preserve"`, Greek and Beta Code output
+  keep a lunate sigma in a numeral (`ϲʹ`, Beta Code `s3#`); `"lunate"` still
+  writes a numeral with the standard sigma.
+- Beta Code `s1` and `s2` read as a sigma with a noted shape, and no longer
+  as a sigma followed by a digit: `lo/gos1` gives `λόγοσ` (rc.8: `λόγος1`).
+  Marks after a sigma code are read as marks of the sigma (`s2/a` gives
+  `ς́α`; rc.8: `ς/α`).
+
+### Fixed
+
+- A sigma before an elision apostrophe stays medial in Greek output: the
+  apostrophe stands for the elided vowel. Every apostrophe ended the word, so
+  `ἔχουσ’ ἐγώ` gave `ἔχους’ ἐγώ`, the Modern Greek `σ’ αγαπώ` gave `ς’ αγαπώ`,
+  and the Beta Code `a)gge/llous'` gave `ἀγγέλλους’`. The sigma is final only
+  before an apostrophe that closes a quotation opened by `‘` on the same line,
+  and that no word beginning with a vowel follows on that line (‘λόγος’). A
+  sigma on its own (`σ’ το πω`) is always medial, and an apostrophe after
+  punctuation or a digit always closes the quotation (‘ναί.’). A straight
+  quotation mark opens nothing, since it cannot be told from an aphaeresis:
+  under `finalSigma: "contextual"`, `'λόγος'` now gives `’λόγοσ’`. This
+  applies wherever the position decides the shape: under `"contextual"`, and
+  under `"preserve"` for a sigma whose shape the source does not note.
+- Under `greek.finalSigma: "preserve"`, a lunate sigma written as a standard
+  sigma takes its shape from its place in the word, as a sigma read from Beta
+  Code or transliteration does. A lunate sigma notes no position, but it was
+  always written `σ`, even at the end of a word: with `sigma: "standard"`,
+  `ϲῶμαϲ` gave `σῶμασ` and now gives `σῶμας`; the Beta Code `lo/gos3` and
+  `logoc` under `bnf-core` gave `λόγοσ` and `λογοσ`. `finalSigma:
+  "contextual"` was not affected.
+- Under `text.numerals: "decimal"` (the ALA-LC presets), `στʹ` is also read as
+  the units of a longer numeral, as `ϛʹ` is: the ALA-LC tables give
+  `ϝʹ, ϛʹ, στʹ` for six, and Modern Greek writes 16 as `ΙΣΤʹ`. Only a lone
+  `στʹ` was read, so `ΙΣΤʹ` gave `ISTʹ`; it now gives `16`, and `͵αστʹ` gives
+  `1006`. Read as 200 and 300, the pair would break the descending order of
+  the digits, so it cannot mean anything else.
+- A letter that a converter keeps out of its scope (`createConverter()` with
+  `exclude`, a `repertoire`, or a bound preset) is written as the source
+  writes it in its word, and the letters around it stay in that word (#68).
+  It was written alone, with the options of the converted text: with sigma
+  excluded, `λόγος σῶμα` gave `λόγος ςῶμα`, and with omega excluded, `τῷ` gave
+  `tω` in transliteration with `diacritics: { all: "remove" }`, which
+  `convertDetailed()` did not report. A Greek or Beta Code letter is now
+  written in its format's canonical spelling, whatever the `betaCode` options
+  (`lo/gos` with `betaCode.case: "uppercase"` gave `λόγοS` and gives `λόγοs`).
+  A transliterated letter is copied from the source, with the marks that the
+  options would leave out (`pā́n` under `bnf-core`, alpha excluded, gave `πáν`
+  and gives `πā́ν`). Only the transformations of the whole text (`text`)
+  reach a kept letter, in its context: title case capitalizes it at the start
+  of a word only (`σῶμα λόγος`, sigma excluded, gave `ΣΩ͂μα ΛόγοΣ` and gives
+  `Σῶμα Λόγος`), and under `numerals: "decimal"` a numeral it belongs to is
+  written as one number (`ιϛʹ`, stigma excluded, gave `iϛʹ` and gives `16`).
+  A kept letter also ended its word: `σο`, with omicron excluded, gave `ςο`,
+  and a capital next to it was not among capitals (`ΘΕΟΣ`, epsilon excluded,
+  gave `ThΕOS` and gives `THΕOS`). A kept letter is one literal, which
+  `convertDetailed()` no longer reports as lost when a reader splits it into
+  a letter and its marks (`τῷ` in transliteration). In Beta Code output, the
+  marks of a kept Beta Code letter are no longer escaped as punctuation (`e)`
+  gave `e]1`).
+- Under `transliteration.upsilon: "y-with-ou-v-f"` alone, the `v` and `f`
+  written for the upsilon of `αυ`, `ευ`, `ηυ` read back as that upsilon, with
+  the accent the encoder moves onto the vowel: `aftós` gives `αὐτός`. They
+  were read as text, which ended the word, so that title case wrote `Aftós`
+  again as `AfTós`. Under `beta: "v"` and `phi: "f"`, as in
+  `iso-843-type-2`, they still read back as beta and phi.
+- BnF numerals (`transliteration.keraia: "bnf"`, as in `bnf-core`) stay as
+  written when the output is converted again. An acute after a consonant,
+  which bears no accent, reads back as the right keraia (`c̄́` gives `ϛʹ`),
+  and a comma before `c̄` or `s̄`, the stigma and sampi of numerals, as the
+  left keraia (`,c̄` gives `͵ϛ`). Both read as an accent and a comma, so that
+  in capitals `c̄́` became `C̄́` the second time, and with the accents removed,
+  the keraia went. With the acute accents removed, the right keraia is now
+  written `ʹ`, since an acute after a vowel still reads back as an accent:
+  `αʹ` gives `aʹ` (was `á`, then `a`). A small stigma or sampi is written
+  only where the numeral reads back: `ϡαʹ` in capitals gives `S̄Á` (was
+  `s̄Á`, then `S̄Á`).
+- A lunate sigma that the options write where the source has a standard
+  sigma is reported when it converts back otherwise. Under
+  `transliteration.lunateSigma: "c"` and `greek.sigma: "lunate"`, `sōma`
+  gives `ϲωμα`, which converts back to `cōma`; `convertDetailed()` reported
+  no loss, and now reports `added-glyph-variant`.
+- Beta Code no longer writes a small sigma before the digit 3 as `s3`, which
+  read back as a lunate sigma: `ς3` gives `s23` (rc.8: `s3`, read back as
+  `ϲ`). A capital sigma before `3` still gives `*s3`, since the TLG defines
+  no code for it; `convertDetailed()` reports the loss
+  (`added-glyph-variant`).
+- A keraia followed by a digit is written as itself in Beta Code, `ʹ`, since
+  `#` and a digit are a TLG character code: `αʹ1` gave `a#1`, which reads
+  back as `αϟ`.
+- In a numeral, which takes no breathing, the contextual `y` keeps its
+  separation by a diaeresis, in both directions: `oyʹ` gives `οϋʹ` (was
+  `ουʹ`), and `ὀυʹ` gives `oÿʹ` (was `oyʹ`, which read back as `ουʹ` and
+  then gave `ouʹ`).
+- Under `letterCase: "title"`, a coronis written as an apostrophe and read
+  back started a word: `κἀγώ` gave `Ka’gṓ`, which then gave `Ka’Gṓ`. An
+  apostrophe between two letters, with no space, no longer starts a word,
+  which also changes an elision written without a space (`δ’ἐγώ` gives
+  `Δ’ἐγώ`; rc.8: `Δ’Ἐγώ`).
+- Under `upsilon: "y-with-ou-v-f"`, three spellings did not read back as
+  written:
+  - a `v` or `f` after an eta written `i` without a length mark (ISO 843
+    Type 2 with `beta: "b"`): `ηὗρον` gives `hîvron`, which now reads back as
+    `ηὗρον` (rc.8: `ἷvρον`);
+  - a circumflex moved to epsilon, where `ê` is eta (ISO 843 Type 1, BnF):
+    `εὖ` gives `’ẽf` (rc.8: `’êf`, which read back as eta);
+  - a `v` or `f` before a coronis written as an apostrophe, which counted as
+    the end of the word: `κεὐγένειαν` gives `kev’géneian`, which no longer
+    gives `kef’géneian` when read back.
+- Under `eta: "i"`, an iota with a macron is written like eta (`ī`), and an
+  upsilon after it takes the separation diaeresis it would take after eta:
+  `ῑῠ` gives `īy̆̈` (rc.8: `īy̆`, which read back as `ηῠ̈`).
+
 ## [1.0.0-rc.8] - 2026-11-11
 
 Eighth release candidate for `1.0.0`. The API does not change. Following #47,
@@ -919,7 +1129,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.8...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.9...HEAD
+[1.0.0-rc.9]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.8...v1.0.0-rc.9
 [1.0.0-rc.8]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.7...v1.0.0-rc.8
 [1.0.0-rc.7]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.6...v1.0.0-rc.7
 [1.0.0-rc.6]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.5...v1.0.0-rc.6

@@ -1,13 +1,16 @@
 import {
   ARISTERI_KERAIA,
   DEXIA_KERAIA,
+  followsApostropheInWord,
   isBoundaryTransparent,
   isDiphthongAt,
   isGreekNumeralContext,
   isVowel,
   isWordInitial,
+  isWordLetter,
 } from "./context.ts";
 import {
+  GLYPH_VARIANTS,
   literal,
   sharedDiacritics,
   withDiacritic as addDiacritic,
@@ -137,10 +140,14 @@ function unaccentMonosyllables(
     ) continue;
 
     const word: number[] = [];
+    // A letter a converter keeps as it was cannot be counted: its word keeps
+    // its accent.
+    let kept = false;
     let end = start;
     for (; end < monotonic.length; end++) {
       const token = monotonic[end];
       if (token.kind === "grapheme") word.push(end);
+      else if (isWordLetter(token)) kept = true;
       else if (!isBoundaryTransparent(token)) break;
     }
     start = end - 1;
@@ -149,7 +156,7 @@ function unaccentMonosyllables(
       (monotonic[index] as Grapheme).diacritics.has("acute")
     );
     if (
-      accented.length === 0 ||
+      kept || accented.length === 0 ||
       isGreekNumeralContext(monotonic, word[0]) ||
       syllableCount(monotonic, word) !== 1 ||
       keepsMonosyllableAccent(source, word)
@@ -248,6 +255,25 @@ export function applyNumeralOrthography(
   return output;
 }
 
+/**
+ * Marks the tokens that `numerals: "decimal"` writes as numbers: `marks[i]`
+ * is 1 when token `i` is a letter or keraia of a numeral, as
+ * `applyNumeralOrthography()` reads them.
+ */
+export function decimalNumeralTokens(document: Document): Uint8Array {
+  const marks = new Uint8Array(document.length);
+  for (let index = 0; index < document.length;) {
+    const numeral = readNumeral(document, index);
+    if (numeral === undefined) {
+      index++;
+      continue;
+    }
+    marks.fill(1, index, numeral.end);
+    index = numeral.end;
+  }
+  return marks;
+}
+
 function applyLetterCaseOrthography(
   document: Document,
   options: ConversionOptions,
@@ -259,11 +285,26 @@ function applyLetterCaseOrthography(
   const cased = document.map((token, index) => {
     if (token.kind === "literal") return token;
 
+    // An apostrophe between two letters, with no space, does not start a
+    // word: it is a coronis written so and read back (`Ka’gṓ`, `Taf’tón`,
+    // where the upsilon of `ταὐτόν` is written `f`), which was a mark of the
+    // word, or an elision written without a space.
     const uppercase = policy === "uppercase" ||
-      policy === "title" && isWordInitial(document, index);
+      policy === "title" && isWordInitial(document, index) &&
+        !followsApostropheInWord(document, index);
     if (token.uppercase === uppercase) return token;
 
     changed = true;
+    // A symbol form exists in one case only: in the other, the letter is the
+    // ordinary one (`ϑ` → `Θ`, `ϴ` → `θ`). The lunate sigma has both.
+    const variant = token.glyphVariant !== undefined &&
+        Object.hasOwn(GLYPH_VARIANTS, token.glyphVariant)
+      ? GLYPH_VARIANTS[token.glyphVariant].uppercase
+      : undefined;
+    if (variant !== undefined && variant !== uppercase) {
+      const { glyphVariant: _variant, ...ordinary } = token;
+      return { ...ordinary, uppercase };
+    }
     return { ...token, uppercase };
   });
 
@@ -315,7 +356,7 @@ function readNumeral(
 ): { value: number; end: number } | undefined {
   const previousToken = document[start - 1];
   if (
-    previousToken?.kind === "grapheme" ||
+    isWordLetter(previousToken) ||
     isLiteral(previousToken, ARISTERI_KERAIA)
   ) {
     return undefined;
@@ -333,18 +374,20 @@ function readNumeral(
     hasThousands = true;
   }
 
-  // Both ALA-LC Greek tables list στʹ as an alternate sign for six.
-  if (
-    !hasThousands && isLetter(document[index], "sigma") &&
-    isLetter(document[index + 1], "tau") &&
-    isLiteral(document[index + 2], DEXIA_KERAIA)
-  ) {
-    return { value: 6, end: index + 3 };
-  }
-
   let previous = 1000;
   let digits = 0;
   while (index < document.length) {
+    // Both ALA-LC Greek tables list στʹ as an alternate sign for six
+    // (ϝʹ, ϛʹ, στʹ 6), so it is also the units of a longer numeral: ιστʹ is
+    // 16, ͵αστʹ 1006. Read as 200 and 300, the pair would break the
+    // descending order, so before a keraia it reads only one way.
+    if (
+      previous >= 10 && isLetter(document[index], "sigma") &&
+      isLetter(document[index + 1], "tau") &&
+      isLiteral(document[index + 2], DEXIA_KERAIA)
+    ) {
+      return { value: value + 6, end: index + 3 };
+    }
     const current = numericValue(document[index]);
     if (current === undefined || current >= previous) break;
     value += current;
@@ -359,7 +402,7 @@ function readNumeral(
   }
   // A leading thousands sign suffices in the ALA-LC tables. Do not convert
   // a prefix of a longer sequence that fails the numeral ordering rule.
-  if (hasThousands && document[index]?.kind !== "grapheme") {
+  if (hasThousands && !isWordLetter(document[index])) {
     return { value, end: index };
   }
   return undefined;
