@@ -306,6 +306,22 @@ function setTarget(format: Format): void {
 /** The reader's choice; `""` reads the input as the output is written. */
 let sourceStyle: SourceStyle = "";
 
+/** Whether "written in" was shown at the last update. */
+let styleShown = false;
+
+/**
+ * Towards Greek, the standard describes the source: a style the reader gave
+ * it becomes the standard, so that the text is still read as written.
+ */
+function keepStyle(from: Format, to: Format): void {
+  const shown = readsStyle(from, to);
+  if (styleShown && !shown && from === "transliteration" && sourceStyle) {
+    choosePreset(sourceStyle === "defaults" ? "" : sourceStyle);
+    sourceStyle = "";
+  }
+  styleShown = shown;
+}
+
 /** Whether the reader says how the source is written. */
 function readsStyle(from: Format, to: Format): boolean {
   return from === "transliteration" && to !== "greek";
@@ -624,6 +640,29 @@ interface Issue {
   offset: number;
   length: number;
   message: string;
+  /** The letter form a loss is about (`removed-glyph-variant`, `added-…`). */
+  glyphVariant?: string;
+}
+
+/** The letter forms a loss may name, as a sentence names them. */
+const GLYPH_NAMES: Readonly<Record<string, string>> = {
+  "lunate-sigma": "lunate sigma ϲ",
+  "final-sigma": "final sigma ς inside a word",
+  "medial-sigma": "medial sigma σ at the end of a word",
+  "beta-symbol": "beta symbol ϐ",
+  "theta-symbol": "theta symbol ϑ",
+  "capital-theta-symbol": "capital theta symbol ϴ",
+  "phi-symbol": "phi symbol ϕ",
+  "pi-symbol": "pi symbol ϖ",
+  "kappa-symbol": "kappa symbol ϰ",
+  "rho-symbol": "rho symbol ϱ",
+  "lunate-epsilon": "lunate epsilon ϵ",
+  "upsilon-hook": "upsilon with hook ϒ",
+};
+
+/** The losses where the target writes what the source does not have. */
+function isAddition(issue: Issue): boolean {
+  return issue.code.startsWith("added-");
 }
 
 /**
@@ -631,10 +670,27 @@ interface Issue {
  * representation does not retain the acute accent." gives "Acute accent"),
  * or its code when the message has no such form.
  */
-function issueTitle(message: string, code: string): string {
-  const named = /does not retain (?:the |an? )?(.+?)\.?$/.exec(message);
-  const title = named?.[1] ?? code.replaceAll("-", " ");
+function issueTitle(
+  message: string,
+  code: string,
+  glyphVariant?: string,
+): string {
+  const form = glyphVariant && GLYPH_NAMES[glyphVariant];
+  const named = form ||
+    /writes an? ([a-z ]+?) (?:to|where|that)\b/.exec(message)?.[1] ||
+    /does not retain (?:the |an? )?(.+?)\.?$/.exec(message)?.[1];
+  const title = named ?? code.replaceAll("-", " ");
   return title.charAt(0).toUpperCase() + title.slice(1);
+}
+
+/** The message of a loss, naming the letter form it is about. */
+function issueText(message: string, glyphVariant?: string): string {
+  const form = glyphVariant && GLYPH_NAMES[glyphVariant];
+  if (!form) return message;
+  return message.replace(
+    /the source glyph variant|a glyph variant/,
+    `the ${form}`,
+  );
 }
 
 /**
@@ -740,25 +796,36 @@ interface IssueCard {
 
 /** Groups issues by message: one card per kind, with every letter it affects. */
 function cardsByMessage(issues: readonly Issue[]): IssueCard[] {
-  const groups = new Map<string, { code: string; issues: Issue[] }>();
+  const groups = new Map<
+    string,
+    { message: string; code: string; glyphVariant?: string; issues: Issue[] }
+  >();
   for (const issue of issues) {
-    const group = groups.get(issue.message) ??
-      { code: issue.code, issues: [] };
+    // A letter form per card: the message alone does not name it.
+    const key = `${issue.message}\u0000${issue.glyphVariant ?? ""}`;
+    const group = groups.get(key) ?? {
+      message: issue.message,
+      code: issue.code,
+      glyphVariant: issue.glyphVariant,
+      issues: [],
+    };
     group.issues.push(issue);
-    groups.set(issue.message, group);
+    groups.set(key, group);
   }
-  return [...groups].map(([message, { code, issues: affected }]) => ({
-    title: issueTitle(message, code),
+  return [...groups.values()].map((
+    { message, code, glyphVariant, issues: affected },
+  ) => ({
+    title: issueTitle(message, code, glyphVariant),
     count: affected.length,
-    text: message,
+    text: issueText(message, glyphVariant),
     code,
     affected,
   }));
 }
 
 /**
- * Lists diagnostics in four sections: the distinctions the target does not
- * keep; the letters of another script it copies but would read back as
+ * Lists diagnostics in five sections: the distinctions the target does not
+ * keep; the forms and marks it adds, which read back as others; the letters of another script it copies but would read back as
  * Greek; the characters outside the repertoire; and the marks the reader
  * kept but Greek does not allow (`validateDocument`). Each letter is the text
  * of the input at the diagnostic's offset, as typed: indices count the
@@ -780,7 +847,13 @@ function showIssues(
   const sections: [string, IssueCard[]][] = [
     [
       "What the target does not keep",
-      cardsByMessage(losses.filter((loss) => !readAsGreek(loss))),
+      cardsByMessage(
+        losses.filter((loss) => !readAsGreek(loss) && !isAddition(loss)),
+      ),
+    ],
+    [
+      "What the target adds, and reads back",
+      cardsByMessage(losses.filter(isAddition)),
     ],
     [
       "Copied as is, read back as Greek",
@@ -2206,6 +2279,7 @@ function update(): void {
   showDetection();
   const from = sourceFormat();
   const to = targetFormat();
+  keepStyle(from, to);
   if (syncPresets(from, to)) {
     showPreset();
     renderExamples();

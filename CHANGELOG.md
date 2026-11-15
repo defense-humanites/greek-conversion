@@ -23,7 +23,10 @@ change.
   a format. A transliteration converted to transliteration or Beta Code says
   what it is written in ("written in", the `source` option): read as the
   output writes it, the default, it is normalized ("Normalize"); written in
-  another style, it is restyled. Examples, in a menu of the source field, now go with the selected
+  another style, it is restyled; towards Greek, the style becomes the
+  standard. Losses name the letter form they are about (`glyphVariant`), one
+  card per form, and the forms and marks the target adds are listed apart.
+  Examples, in a menu of the source field, now go with the selected
   standard, each with a note on the rule it shows, and are checked against
   the library by `tests/playground_examples_test.ts`. Letters whose distinctions the
   target loses are underlined in the source; letters of another script,
