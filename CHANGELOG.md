@@ -20,7 +20,10 @@ change.
   the standard, added from a searchable list of the options that change the
   result of the conversion in use (measured by `npm run site:options`),
   instead of a JSON field; the sentence says "Restyle" when both sides share
-  a format. Examples, in a menu of the source field, now go with the selected
+  a format. A transliteration converted to transliteration or Beta Code says
+  what it is written in ("written in", the `source` option): read as the
+  output writes it, the default, it is normalized ("Normalize"); written in
+  another style, it is restyled. Examples, in a menu of the source field, now go with the selected
   standard, each with a note on the rule it shows, and are checked against
   the library by `tests/playground_examples_test.ts`. Letters whose distinctions the
   target loses are underlined in the source; letters of another script,

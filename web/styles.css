@@ -441,6 +441,33 @@ h1 span {
   .same-format-hint {
     grid-column: 1 / -1;
   }
+  /* How the source is written sits under the sources, on a line of its
+     own: the standard starts the next one. */
+  .settings-grid .source-line {
+    display: contents;
+  }
+  .settings-grid .source-line .chip-select {
+    grid-column: 2;
+  }
+  .settings-grid .source-line .chip-select select {
+    width: 100%;
+  }
+  .settings-grid .option-line .group > .word {
+    grid-column: 1;
+  }
+}
+/* How a transliteration in the source is written, when that matters. */
+.source-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+}
+.settings-grid .source-line[hidden] {
+  display: none;
+}
+.source-line .chip-select {
+  min-width: 0;
 }
 /* The second line: the standard, then the options. */
 .option-line .group {

@@ -19,8 +19,8 @@ import type {
 import { parse, parseDetailed, validateDocument } from "../src/document.ts";
 import { detectFormat } from "./detect_format.ts";
 import { changedSpans, firstChange, PROBE_GREEK } from "./option_probe.ts";
-import { exampleFrom, EXAMPLES, INVALID_MARKS } from "./examples.ts";
-import type { Example, MarksExample } from "./examples.ts";
+import { exampleFrom, EXAMPLES, INVALID_MARKS, sourceOf } from "./examples.ts";
+import type { Example, MarksExample, SourceStyle } from "./examples.ts";
 import {
   aliasSummary,
   characterChoices,
@@ -86,6 +86,8 @@ const optionStepName = element<HTMLSpanElement>("option-step-name");
 const optionBack = element<HTMLButtonElement>("option-back");
 const optionList = element<HTMLDivElement>("option-list");
 const sameFormatHint = element<HTMLParagraphElement>("same-format-hint");
+const sourceLine = element<HTMLDivElement>("source-line");
+const sourceStyleSelect = element<HTMLSelectElement>("source-style");
 const outputMarks = element<HTMLDivElement>("output-marks");
 const inventoryBox = element<HTMLDivElement>("inventory");
 const inventoryPicker = element<HTMLDivElement>("inventory-picker");
@@ -181,9 +183,11 @@ const PRESET_GROUPS: Readonly<Partial<Record<Format, string>>> = {
  * Returns whether the standard in use changed.
  */
 function syncPresets(from: Format, to: Format): boolean {
-  const formats: Format[] = [...new Set([from, to])].filter((format) =>
-    format !== "greek"
-  );
+  // When "written in" says how the transliteration is written, the standard
+  // is the output's.
+  const formats: Format[] = [
+    ...new Set(readsStyle(from, to) ? [to] : [from, to]),
+  ].filter((format) => format !== "greek");
   const before = presetSelect.value;
   const none = new Option("Library defaults", "");
   presetSelect.replaceChildren(none);
@@ -288,6 +292,71 @@ function targetFormat(): Format {
 
 function setTarget(format: Format): void {
   for (const input of targetInputs) input.checked = input.value === format;
+}
+
+/*
+ * How the source is written. Reading transliteration depends on its style,
+ * which the standard and the options otherwise describe: they write the
+ * output and read the input alike, which normalizes a text in its own
+ * style. When the source is transliteration and the output is not Greek
+ * (whose standard is the source's), "written in" says how the input is
+ * written, as the library's `source` option does.
+ */
+
+/** The reader's choice; `""` reads the input as the output is written. */
+let sourceStyle: SourceStyle = "";
+
+/** Whether the reader says how the source is written. */
+function readsStyle(from: Format, to: Format): boolean {
+  return from === "transliteration" && to !== "greek";
+}
+
+/**
+ * Lists the styles the source may be written in. Between two
+ * transliterations, the default reads it as the output writes it; towards
+ * Beta Code, whose standards say nothing of transliteration, the default is
+ * the library's style, refined by the options.
+ */
+function syncSourceStyle(from: Format, to: Format): void {
+  const shown = readsStyle(from, to);
+  sourceLine.hidden = !shown;
+  if (!shown) return;
+  const restyle = to === "transliteration";
+  if (!restyle && sourceStyle === "defaults") sourceStyle = "";
+  if (sourceStyleSelect.dataset.for !== to) {
+    sourceStyleSelect.dataset.for = to;
+    sourceStyleSelect.replaceChildren(
+      ...(restyle
+        ? [
+          new Option("Same as the output", ""),
+          new Option("Library defaults", "defaults"),
+        ]
+        : [new Option("Library defaults", "")]),
+      ...presets.filter(({ id }) => presetFormat(id) === "transliteration")
+        .map(({ id, name }) => new Option(name, id)),
+    );
+  }
+  sourceStyleSelect.value = sourceStyle;
+}
+
+/**
+ * The `source` option of the conversion in use. Towards Beta Code, the
+ * transliteration options refine the style the source is written in.
+ */
+function sourceOption(
+  from: Format,
+  to: Format,
+  options: ConversionOptions,
+): ConversionOptions["source"] {
+  if (!readsStyle(from, to)) return undefined;
+  const style = sourceOf(sourceStyle);
+  if (style === undefined || to === "transliteration") return style;
+  return {
+    ...style,
+    ...(options.transliteration
+      ? { transliteration: options.transliteration }
+      : {}),
+  };
 }
 
 /** Shows each text in the typeface of its format. */
@@ -440,6 +509,7 @@ function activeExample(): Example | undefined {
     example.text === source.value &&
     example.to === targetFormat() &&
     example.from === sourceFormat() &&
+    (example.sourceStyle ?? "") === sourceStyle &&
     sameOptions(example.options ?? {}, conversionOptions)
   );
 }
@@ -537,6 +607,7 @@ function loadExample(example: Example): void {
   source.value = example.text;
   keepSourceChoice(example.from);
   setTarget(example.to);
+  sourceStyle = example.sourceStyle ?? "";
   conversionOptions = knownOptions(example.options ?? {});
   update();
 }
@@ -998,6 +1069,7 @@ function saveState(): void {
     text: source.value,
   });
   if (presetSelect.value) state.set("preset", presetSelect.value);
+  if (sourceStyle) state.set("written", sourceStyle);
   if (settingsOf(conversionOptions).length) {
     state.set("options", JSON.stringify(conversionOptions));
   }
@@ -1019,6 +1091,13 @@ function restoreState(): void {
   if (state.has("text")) source.value = state.get("text") ?? "";
   const preset = presets.find(({ id }) => id === state.get("preset"))?.id;
   choosePreset(preset ?? "");
+  const written = state.get("written");
+  sourceStyle = written === "defaults"
+    ? written
+    : presets.find(({ id }) =>
+      id === written && presetFormat(id) ===
+        "transliteration"
+    )?.id ?? "";
   conversionOptions = {};
   try {
     conversionOptions = knownOptions(JSON.parse(state.get("options") ?? "{}"));
@@ -1188,8 +1267,15 @@ function showOptions(from: Format, to: Format): void {
   optionPills.hidden = pills.length === 0;
 
   const same = from === to;
-  verb.textContent = same ? "Restyle" : "Convert";
+  // A transliteration read as the output writes it is normalized.
+  const normalized = same && from === "transliteration" && !sourceStyle;
+  verb.textContent = normalized ? "Normalize" : same ? "Restyle" : "Convert";
   sameFormatHint.hidden = !same;
+  sameFormatHint.textContent = from !== "transliteration"
+    ? "Same format on both sides: only the standard and the options change the text."
+    : normalized
+    ? "Read as the output writes it, the text is normalized in that style: say what it is written in to restyle it."
+    : "Read as written in one style, the text is written in another.";
   addOptionButton.classList.toggle("prompt", same && pills.length === 0);
 }
 
@@ -2126,6 +2212,7 @@ function update(): void {
   } else if (sourceChoice() !== examplesFor) {
     renderExamples();
   }
+  syncSourceStyle(from, to);
   applyFaces(from, to);
   sourceMeta.textContent = characterCount(source.value);
   const preset = currentPreset();
@@ -2136,6 +2223,8 @@ function update(): void {
   showInventory();
   try {
     options = effectiveOptions();
+    const written = sourceOption(from, to, options);
+    if (written) options = { ...options, source: written };
     const withPreset = { ...options, ...(preset ? { preset } : {}) };
     resolveConversionOptions(withPreset);
     inspectDocument(withPreset, from);
@@ -2319,6 +2408,10 @@ presetSelect.addEventListener("change", () => {
   update();
 });
 source.addEventListener("input", update);
+sourceStyleSelect.addEventListener("change", () => {
+  sourceStyle = sourceStyleSelect.value as SourceStyle;
+  update();
+});
 exampleMenu.addEventListener("change", () => {
   const value = exampleMenu.value;
   if (value.startsWith("marks-")) {
@@ -2346,6 +2439,8 @@ swapButton.addEventListener("click", () => {
   const to = targetFormat();
   source.value = output.value;
   setSourceChoice(detectFormat(source.value) === to ? "auto" : to);
+  // The result is written as the output was.
+  sourceStyle = "";
   setTarget(from);
   update();
 });

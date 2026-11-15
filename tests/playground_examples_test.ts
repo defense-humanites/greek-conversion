@@ -2,15 +2,17 @@ import { test } from "node:test";
 import { assertEquals } from "./assertions.ts";
 import { convert, FORMATS, listPresetMetadata } from "../src/mod.ts";
 import { parse, validateDocument } from "../src/document.ts";
-import { exampleFrom, EXAMPLES, INVALID_MARKS } from "../web/examples.ts";
+import {
+  exampleFrom,
+  exampleOptions,
+  EXAMPLES,
+  INVALID_MARKS,
+} from "../web/examples.ts";
 
 test("every playground example gives the output its note describes", () => {
   for (const [preset, examples] of Object.entries(EXAMPLES)) {
     for (const example of examples) {
-      const options = {
-        ...example.options,
-        ...(preset ? { preset } : {}),
-      } as Parameters<typeof convert>[3];
+      const options = exampleOptions(example, preset as "");
       assertEquals(
         convert(example.text, example.from, example.to, options),
         example.output,
@@ -44,10 +46,7 @@ test("an example written in the chosen source format gives the same output", () 
       for (const from of FORMATS) {
         const written = exampleFrom(example, from, preset as "");
         if (!written) continue;
-        const options = {
-          ...example.options,
-          ...(preset ? { preset } : {}),
-        } as Parameters<typeof convert>[3];
+        const options = exampleOptions(example, preset as "");
         assertEquals(
           convert(written.text, from, example.to, options),
           example.output,
@@ -96,6 +95,20 @@ test("an example whose note names its source is offered from it only", () => {
         exampleFrom(example, from, "") !== undefined,
         from === example.from,
         `${example.title} from ${from}`,
+      );
+    }
+  }
+});
+
+test("a restyle example needs its source style", () => {
+  for (const [preset, examples] of Object.entries(EXAMPLES)) {
+    for (const example of examples.filter(({ sourceStyle }) => sourceStyle)) {
+      const { source: _, ...options } = exampleOptions(example, preset as "")!;
+      assertEquals(
+        convert(example.text, example.from, example.to, options) !==
+          example.output,
+        true,
+        `${preset || "library defaults"}: ${example.title}`,
       );
     }
   }

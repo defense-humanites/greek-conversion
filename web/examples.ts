@@ -3,6 +3,7 @@ import {
   convert,
   type Format,
   type Preset,
+  type SourceOptions,
 } from "../src/mod.ts";
 import type { ValidationCode } from "../src/document.ts";
 
@@ -23,6 +24,37 @@ export interface Example {
   output: string;
   /** The note names the source format: the example is offered in it only. */
   sourceBound?: boolean;
+  /**
+   * How the transliteration in the source is written, when not as the
+   * output writes it: the library's defaults, or a standard.
+   */
+  sourceStyle?: SourceStyle;
+}
+
+/**
+ * How a transliteration in the source is written: `""` as the output writes
+ * it (no `source` option), `"defaults"` in the library's default style
+ * (`source: {}`), or following a standard.
+ */
+export type SourceStyle = "" | "defaults" | Preset;
+
+/** The `source` option for a style, or `undefined` to read as the output. */
+export function sourceOf(style: SourceStyle): SourceOptions | undefined {
+  if (style === "") return undefined;
+  return style === "defaults" ? {} : { preset: style };
+}
+
+/** The options of an example's conversion under a standard. */
+export function exampleOptions(
+  example: Example,
+  preset: Preset | "",
+): Parameters<typeof convert>[3] {
+  const source = sourceOf(example.sourceStyle ?? "");
+  return {
+    ...example.options,
+    ...(preset ? { preset } : {}),
+    ...(source ? { source } : {}),
+  } as Parameters<typeof convert>[3];
 }
 
 const THUCYDIDES =
@@ -87,6 +119,16 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       sourceBound: true,
     },
     greek("Archaic letter", "Digamma, written w", "ϝάναξ", "wánax"),
+    {
+      title: "Restyle a word",
+      note: "Read in the default style, ph is written f",
+      text: "phílos",
+      from: "transliteration",
+      to: "transliteration",
+      options: { transliteration: { phi: "f" } },
+      sourceStyle: "defaults",
+      output: "fílos",
+    },
   ],
   "ala-lc-ancient": [
     greek(
@@ -135,6 +177,15 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       "Ῥόδος",
       "Rhodos",
     ),
+    {
+      title: "Restyle from SBL Academic",
+      note: "Read as SBL Academic writes it, b becomes v",
+      text: "tōn barbarōn",
+      from: "transliteration",
+      to: "transliteration",
+      sourceStyle: "sbl-academic",
+      output: "tōn varvarōn",
+    },
   ],
   "bnf-core": [
     greek(
@@ -290,11 +341,10 @@ export function exampleFrom(
   preset: Preset | "",
 ): Example | undefined {
   if (from === example.from) return example;
-  if (from === example.to || example.sourceBound) return undefined;
-  const options = {
-    ...example.options,
-    ...(preset ? { preset } : {}),
-  } as Parameters<typeof convert>[3];
+  if (from === example.to || example.sourceBound || example.sourceStyle) {
+    return undefined;
+  }
+  const options = exampleOptions(example, preset);
   try {
     // Written with the library defaults, the text keeps every mark that the
     // standard may drop: the conversion shows it doing so.
