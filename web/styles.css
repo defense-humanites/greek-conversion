@@ -1268,7 +1268,12 @@ textarea.text::placeholder {
   padding: 0 24px;
   border-bottom: 1px solid var(--line);
 }
+/* Each tab is as wide as its bold label, so that choosing one moves none. */
 .tabs [role="tab"] {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-height: 48px;
   margin-bottom: -1px;
   padding: 0 4px;
@@ -1278,6 +1283,13 @@ textarea.text::placeholder {
   font-size: 15px;
   font-weight: 500;
   color: var(--muted);
+}
+.tabs [role="tab"]::after {
+  content: attr(data-label);
+  height: 0;
+  overflow: hidden;
+  font-weight: 700;
+  visibility: hidden;
 }
 .tabs [role="tab"][aria-selected="true"] {
   border-bottom-color: var(--from);

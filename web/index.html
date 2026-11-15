@@ -216,12 +216,42 @@
 
         <section class="settings" aria-label="Settings and output">
           <div class="tabs" role="tablist" aria-label="Settings and output">
-            <button id="tab-characters" role="tab" type="button"
-              aria-controls="panel-characters">Characters</button>
             <button id="tab-code" role="tab" type="button"
+              data-label="Code"
               aria-controls="panel-code">Code</button>
             <button id="tab-document" role="tab" type="button"
+              data-label="Canonical document"
               aria-controls="panel-document">Canonical document</button>
+            <button id="tab-characters" role="tab" type="button"
+              data-label="Characters"
+              aria-controls="panel-characters">Characters</button>
+          </div>
+
+          <div id="panel-code" class="panel" role="tabpanel"
+            aria-labelledby="tab-code" tabindex="0" hidden>
+            <div class="panel-head">
+              <p
+                class="hint">The same call with the library, input text included. The comment shows what it returns.</p>
+              <button id="copy-code" class="button" type="button">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect
+                    x="8" y="8" width="12" height="12" rx="2" /><path
+                    d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></svg>
+                <span class="button-label">Copy code</span>
+              </button>
+            </div>
+            <pre class="code"><code id="code"></code></pre>
+          </div>
+
+          <div id="panel-document" class="panel" role="tabpanel"
+            aria-labelledby="tab-document" tabindex="0" hidden>
+            <p
+              class="hint">How the library reads the input with its built-in alphabet: letters, case, and diacritics, independent of spelling. Diagnostic token numbers refer to this list.</p>
+            <pre id="document-preview" class="code"></pre>
+            <div id="document-limit" class="document-limit" hidden>
+              <p id="document-limit-text" class="hint"></p>
+              <button id="document-show-all" class="button" type="button">Show
+                all</button>
+            </div>
           </div>
 
           <div id="panel-characters" class="panel" role="tabpanel"
@@ -273,33 +303,6 @@
             </div>
             <label
               class="check"><input id="strict" type="checkbox"> Reject characters outside the standard's repertoire instead of copying them through</label>
-          </div>
-
-          <div id="panel-code" class="panel" role="tabpanel"
-            aria-labelledby="tab-code" tabindex="0" hidden>
-            <div class="panel-head">
-              <p
-                class="hint">The same call with the library, input text included. The comment shows what it returns.</p>
-              <button id="copy-code" class="button" type="button">
-                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect
-                    x="8" y="8" width="12" height="12" rx="2" /><path
-                    d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></svg>
-                <span class="button-label">Copy code</span>
-              </button>
-            </div>
-            <pre class="code"><code id="code"></code></pre>
-          </div>
-
-          <div id="panel-document" class="panel" role="tabpanel"
-            aria-labelledby="tab-document" tabindex="0" hidden>
-            <p
-              class="hint">How the library reads the input with its built-in alphabet: letters, case, and diacritics, independent of spelling. Diagnostic token numbers refer to this list.</p>
-            <pre id="document-preview" class="code"></pre>
-            <div id="document-limit" class="document-limit" hidden>
-              <p id="document-limit-text" class="hint"></p>
-              <button id="document-show-all" class="button" type="button">Show
-                all</button>
-            </div>
           </div>
         </section>
       </main>
