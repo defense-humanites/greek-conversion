@@ -2418,7 +2418,18 @@ async function copy(text: string, button: HTMLButtonElement): Promise<void> {
 }
 
 let shareTimer: ReturnType<typeof setTimeout> | undefined;
-const SHARE_HELP = "Copy a link that opens this text with the same settings.";
+/**
+ * Without a pointer to hover with, no note says what Share does: there, the
+ * system's share sheet, which shows the page and the link, says it itself.
+ * Where the sheet is missing or closed, and with a pointer, the link is
+ * copied.
+ */
+const SHARES_NATIVELY = matchMedia("(hover: none)").matches &&
+  typeof navigator.share === "function";
+const SHARE_HELP = SHARES_NATIVELY
+  ? "Share a link that opens this text with the same settings."
+  : "Copy a link that opens this text with the same settings.";
+shareNote.textContent = SHARE_HELP;
 const shareLinkIcon = shareButton.querySelector<SVGElement>(".share-link")!;
 const shareDoneIcon = shareButton.querySelector<SVGElement>(".share-done")!;
 
@@ -2459,18 +2470,32 @@ function placeNote(note: HTMLElement): void {
   note.style.setProperty("--nudge", `${Math.round(nudge)}px`);
 }
 
+/** Shows that the link went out: a check on the button, and a note. */
+function confirmShare(message: string): void {
+  shareLinkIcon.setAttribute("hidden", "");
+  shareDoneIcon.removeAttribute("hidden");
+  shareNote.textContent = message;
+  placeShareNote();
+  shareNote.parentElement?.classList.add("shown");
+  shareTimer = setTimeout(resetShare, 2000);
+}
+
 async function share(): Promise<void> {
   clearTimeout(shareTimer);
   const holder = shareNote.parentElement;
   holder?.classList.remove("dismissed");
+  if (SHARES_NATIVELY) {
+    try {
+      await navigator.share({ title: document.title, url: location.href });
+      confirmShare("Link shared.");
+      return;
+    } catch {
+      // Closed, or refused: the link is copied instead.
+    }
+  }
   try {
     await navigator.clipboard.writeText(location.href);
-    shareLinkIcon.setAttribute("hidden", "");
-    shareDoneIcon.removeAttribute("hidden");
-    shareNote.textContent = "Link copied to the clipboard.";
-    placeShareNote();
-    holder?.classList.add("shown");
-    shareTimer = setTimeout(resetShare, 2000);
+    confirmShare("Link copied to the clipboard.");
   } catch {
     shareNote.textContent =
       "The link could not be copied: copy the address from the address bar.";

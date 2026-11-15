@@ -41,7 +41,8 @@ change.
   highlighted. Texts in all three formats are set in
   Literata Light, served by the playground with the letters it lacked
   (`web/fonts/README.md`). Reset, beside Share, brings the page back to its
-  opening state, and offers to undo it for a few seconds.
+  opening state, and offers to undo it for a few seconds. On a touch screen,
+  Share opens the system's share sheet; elsewhere, it copies the link.
 
 ## [1.0.0-rc.9] - 2026-11-15
 
