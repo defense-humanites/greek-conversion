@@ -481,9 +481,10 @@ convert("  ΦΙΛΗΒΟΣ\nΗΔΟΝΗ  ", "greek", "transliteration", {
 // → philēbos ēdonē
 ```
 
-`letterCase` accepts `"preserve"`, `"lowercase"`, `"uppercase"`, and `"title"`;
-`whitespace: "collapse"` trims the text and reduces every run of whitespace to
-one space.
+`letterCase` accepts `"preserve"`, `"lowercase"`, `"uppercase"`, and `"title"`,
+under which an apostrophe between two letters, as a coronis written so
+(`Ka’gṓ`), does not start a word; `whitespace: "collapse"` trims the text and
+reduces every run of whitespace to one space.
 
 Under `"preserve"`, a capital spelled with several Latin letters is written in
 full capitals among capitals, and with its first letter only before lowercase

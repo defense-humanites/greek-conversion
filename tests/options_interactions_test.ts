@@ -666,3 +666,105 @@ test("a numeral keeps the separation of a contextual y", () => {
   // word.
   assertNfcEquals(convert("oy", "transliteration", "greek"), "ὀυ");
 });
+
+test("title case leaves the letter after an apostrophe inside its word", () => {
+  // A coronis written as an apostrophe reads back as one: the letter after it
+  // stays inside the word, as it was when the coronis was a mark.
+  for (
+    const [input, options, expected] of [
+      [
+        "κἀγώ τοὔνομα",
+        { transliteration: { coronis: "apostrophe" } },
+        "Ka’gṓ Toú’noma",
+      ],
+      // The upsilon of `ταὐτόν` is written `f`, which reads back as phi.
+      [
+        "ταὐτόν",
+        { preset: "iso-843-type-2", transliteration: { beta: "b" } },
+        "Taf’tón",
+      ],
+    ] as const
+  ) {
+    const title = { ...options, text: { letterCase: "title" } } as const;
+    const output = convert(input, "greek", "transliteration", title);
+    assertNfcEquals(output, expected);
+    assertNfcEquals(
+      convert(output, "transliteration", "transliteration", title),
+      output,
+    );
+  }
+  // So does an elision written without a space; a space starts a word.
+  assertNfcEquals(
+    convert("δ’ἐγώ δ’ ἐγώ", "greek", "greek", {
+      text: { letterCase: "title" },
+    }),
+    "Δ’ἐγώ Δ’ Ἐγώ",
+  );
+});
+
+test("upsilon written v or f reads back after an eta written i", () => {
+  // Under ISO 843 Type 2, eta is `i` with no length mark; with `beta: "b"`,
+  // `v` is the upsilon of `ηυ`, and `ιυ` is never written so.
+  const options = {
+    preset: "iso-843-type-2",
+    transliteration: { beta: "b" },
+  } as const;
+  const result = convertDetailed("ηὗρον", "greek", "transliteration", options);
+  assertNfcEquals(result.output, "hîvron");
+  assertEquals(result.lossy, false);
+  assertNfcEquals(
+    convert(result.output, "transliteration", "greek", options),
+    "ηὗρον",
+  );
+  // Before a voiced sound, a coronis written as an apostrophe keeps the `v`.
+  const title = { ...options, text: { letterCase: "title" } } as const;
+  for (const input of ["κεὐγένειαν", "ταὔλιον"]) {
+    const output = convert(input, "greek", "transliteration", title);
+    assertNfcEquals(
+      convert(output, "transliteration", "transliteration", title),
+      output,
+    );
+  }
+});
+
+test("a circumflex moved to epsilon does not read back as eta", () => {
+  // Under `y-with-ou-v-f`, the accent of the upsilon of `ευ` moves to the
+  // epsilon. Where `ê` is eta, it is written as a tilde.
+  for (
+    const [preset, expected] of [
+      ["iso-843-type-1", "’ẽf"],
+      ["bnf-core", "ẽf̓"],
+      ["iso-843-type-2", "’êf"],
+    ] as const
+  ) {
+    const options = {
+      preset,
+      transliteration: { upsilon: "y-with-ou-v-f" },
+    } as const;
+    const output = convert("εὖ", "greek", "transliteration", options);
+    assertNfcEquals(output, expected, preset);
+    assertNfcEquals(
+      convert(output, "transliteration", "transliteration", options),
+      output,
+    );
+  }
+});
+
+test("an iota written like eta keeps the separation of the next y", () => {
+  // Under `eta: "i"`, `ī` is eta, and so reads an iota with a macron: before
+  // an upsilon, the `y` takes the diaeresis it would take after an eta.
+  const options = {
+    preset: "iso-843-type-1",
+    transliteration: { upsilon: "y-with-ou-v-f" },
+  } as const;
+  const result = convertDetailed("ῑῠ", "greek", "transliteration", options);
+  assertNfcEquals(result.output, "īy\u0306\u0308");
+  assertEquals(
+    convert(result.output, "transliteration", "transliteration", options),
+    result.output,
+  );
+  assertEquals(
+    result.losses.map(({ code }) => code),
+    ["unrepresented-grapheme", "added-diacritic"],
+  );
+});

@@ -140,6 +140,8 @@ export function parseTransliteration(
   // Without a length mark, e and o are epsilon and omicron, and a circumflex
   // on them is an accent: one that only the long vowel can bear.
   const omitLength = transliteration?.longVowels === "omit";
+  // An eta written like an iota, with no length mark (ISO 843 Type 2).
+  const etaAsIota = omitLength && transliteration?.eta === "i";
   const upsilon = transliteration?.upsilon;
   const nasalGamma = transliteration?.nasalGamma;
   // Where gamma stays `g` before kappa but is `n` before chi, `kh` after `g`
@@ -202,13 +204,16 @@ export function parseTransliteration(
       if (
         upsilon === "y-with-ou-v-f" &&
         (lowered[i] === "v" || lowered[i] === "f") &&
-        followsUpsilonVowel(out)
+        followsUpsilonVowel(out, etaAsIota)
       ) {
         // ISO 843 Type 2 writes the upsilon of `αυ`, `ευ`, `ηυ` as `v` or
         // `f`, and its accent on the vowel before it (`aftós`, `Évvoia`):
         // where beta and phi do not claim the letter, it is that upsilon,
         // and the accent goes back to it, which makes the pair a diphthong.
         const previous = out[out.length - 1] as Grapheme;
+        // Without a length mark, eta is written `i` under `eta: "i"`; `ιυ` is
+        // never written with `v` or `f`, so the `i` was that eta.
+        if (previous.letter === "iota") previous.letter = "eta";
         let diacritics = diacriticsFromMask(0);
         for (const accent of ["acute", "grave", "circumflex"] as const) {
           if (!previous.diacritics.has(accent)) continue;
@@ -563,13 +568,16 @@ const KAPPA = { value: "kappa", length: 1 } as const;
 /**
  * Whether the last token read is the vowel of `αυ`, `ευ`, or `ηυ` whose
  * upsilon ISO 843 Type 2 writes `v` or `f`: alpha, epsilon, or eta, with no
- * diaeresis.
+ * diaeresis; or an iota where eta is written like one (`etaAsIota`).
  */
-function followsUpsilonVowel(tokens: readonly Token[]): boolean {
+function followsUpsilonVowel(
+  tokens: readonly Token[],
+  etaAsIota: boolean,
+): boolean {
   const previous = tokens.at(-1);
   return previous?.kind === "grapheme" &&
     (previous.letter === "alpha" || previous.letter === "epsilon" ||
-      previous.letter === "eta") &&
+      previous.letter === "eta" || etaAsIota && previous.letter === "iota") &&
     !previous.diacritics.has("diaeresis");
 }
 

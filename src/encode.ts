@@ -11,12 +11,12 @@ import {
   breathingTarget,
   DEXIA_KERAIA,
   elidedAspirate,
+  followsCoronisApostrophe,
   hasHiatusMark,
   isAmongCapitals,
   isAuEuOuAt,
   isBoundaryTransparent,
   isDiphthongAt,
-  isElisionMark,
   isGreekNumeralContext,
   isKeptLetter,
   isNasalGamma,
@@ -442,6 +442,9 @@ export function encodeTransliteration(
   // an upsilon written v or f: memoized on those four for shared sets, as
   // byMarks() does, across calls with the same options (latinMarkStrings).
   const markStrings = latinMarkStrings(options);
+  const circumflexReadsAsLength =
+    options.transliteration?.circumflexAccent === "circumflex" &&
+    options.transliteration?.longVowels !== "omit";
   const markString = (
     token: Grapheme,
     separation: boolean,
@@ -480,7 +483,15 @@ export function encodeTransliteration(
     );
     const transliteratedMarks = tokenMarks
       .filter((mark) => mark !== "coronis")
-      .map((mark) => trMark(mark, options))
+      .map((mark) =>
+        // Epsilon and omicron bear a circumflex only where the accent of the
+        // upsilon of `ευ` moves to them (`y-with-ou-v-f`). Unless length marks
+        // are omitted, `ê` and `ô` read back as eta and omega: the accent is
+        // written as a tilde, which reads back as one.
+        mark === "circumflex" && shortVowel && circumflexReadsAsLength
+          ? "\u0303"
+          : trMark(mark, options)
+      )
       .join("");
     // The Greek coronis U+1FBD reads back as one only right after a vowel;
     // after an upsilon written v or f, it is the apostrophe it reads as.
@@ -726,19 +737,22 @@ function findRoughDiphthongs(
 /**
  * The Latin mark strings already written for shared diacritic sets, by the
  * options they depend on: how transliteration writes the circumflex, the
- * smooth breathing, and the coronis (trMark). Which marks it keeps does not
+ * smooth breathing, and the coronis (trMark), and whether it omits length
+ * marks, under which a circumflex on epsilon or omicron is an accent and not
+ * eta or omega (writeLatinMarks). Which marks it keeps does not
  * enter the key: prepareDiacriticsForRendering() has removed the others from
  * the tokens, whose sets are the rest of the key, and a separation diaeresis
  * is added only where diaereses are kept. Kept across calls, since a short
  * text has few tokens to share one call's strings; the options are resolved,
- * so there are at most 18 keys.
+ * so there are at most 36 keys.
  */
 const LATIN_MARK_STRINGS = new Map<string, (string | undefined)[]>();
 
 function latinMarkStrings(options: ConversionOptions): (string | undefined)[] {
   const transliteration = options.transliteration;
   const key = transliteration?.circumflexAccent + " " +
-    transliteration?.smoothBreathing + " " + transliteration?.coronis;
+    transliteration?.smoothBreathing + " " + transliteration?.coronis +
+    (transliteration?.longVowels === "omit" ? " omit" : "");
   let strings = LATIN_MARK_STRINGS.get(key);
   if (strings === undefined) {
     strings = [];
@@ -831,22 +845,6 @@ function isEdgeGammaKappa(document: Document, index: number): boolean {
     (isWordInitial(document, index) &&
         !followsCoronisApostrophe(document, index) ||
       isWordFinal(document, index + 1));
-}
-
-/**
- * Whether the letter at `index` follows a vowel and an apostrophe with no
- * space between them: a coronis written as an apostrophe
- * (`coronis: "apostrophe"`), read back as punctuation. An elision apostrophe
- * follows a consonant, and a space follows it. The letter stays inside the
- * word for the rules that tell the start of a word from its middle, as it was
- * when the coronis was a mark: `toú’mpalin` (`τοὔμπαλιν`) is read back as
- * `τού’μπαλιν`, which must not be written `toú’balin`.
- */
-function followsCoronisApostrophe(document: Document, index: number): boolean {
-  const mark = document[index - 1];
-  const vowel = document[index - 2];
-  return isElisionMark(mark) && vowel?.kind === "grapheme" &&
-    isVowel(vowel.letter);
 }
 
 function caseDigraph(
@@ -1061,6 +1059,19 @@ function trMark(mark: Diacritic, options: ConversionOptions) {
     default:
       return "";
   }
+}
+
+/**
+ * Whether a vowel is an iota written like eta: under `eta: "i"` with the
+ * default `longVowels: "macron"`, eta is `ī`, and so is an iota whose macron
+ * is kept (`ῑ`), which reads back as eta.
+ */
+function writtenAsEta(token: Grapheme, options: ConversionOptions): boolean {
+  const longVowels = options.transliteration?.longVowels;
+  return token.letter === "iota" && token.diacritics.has("macron") &&
+    options.transliteration?.eta === "i" && longVowels !== "omit" &&
+    longVowels !== "circumflex" &&
+    preservesDiacritic("macron", options, "transliteration");
 }
 
 /**
@@ -1356,8 +1367,12 @@ function writesSeparationDiaeresis(
   if (
     token?.kind !== "grapheme" ||
     token.letter !== "iota" && token.letter !== "upsilon" ||
-    first?.kind !== "grapheme" || !hasHiatusMark(first)
+    first?.kind !== "grapheme"
   ) return false;
+  // An iota written like eta reads back as one, and the pair with it.
+  const etaLike = !hasHiatusMark(first) &&
+    token.letter === "upsilon" && writtenAsEta(first, options);
+  if (!etaLike && !hasHiatusMark(first)) return false;
   if (token.letter === "iota") {
     return upsilon === "y-with-diphthong-u" &&
       separatesIotaAfterY(document, index, options);
@@ -1369,7 +1384,7 @@ function writesSeparationDiaeresis(
   const unmarked: Document = [
     {
       ...first,
-      letter: readBackLetter(first, options),
+      letter: etaLike ? "eta" : readBackLetter(first, options),
       diacritics: NO_DIACRITICS,
     },
     token,
