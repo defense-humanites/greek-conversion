@@ -154,7 +154,10 @@ export type GreekQuestionMarkForm = "canonical" | "semicolon" | "greek";
 /** Selects the Unicode scalar used for Greek ano teleia. */
 export type GreekAnoTeleiaForm = "canonical" | "middle-dot" | "greek";
 
-/** Preserves whitespace or collapses each Unicode whitespace run. */
+/**
+ * Preserves whitespace, or collapses it: `"collapse"` trims the text and
+ * reduces each run of Unicode whitespace to one space.
+ */
 export type WhitespaceOrthography = "preserve" | "collapse";
 
 /** Selects ASCII or typographic hyphen in transliteration output. */
@@ -200,7 +203,23 @@ export type NuTauTransliteration = "nt" | "d-initial" | "d-underline-initial";
 /** Selects contextual rho spelling or one final `h` per contiguous rho group. */
 export type RhoTransliteration = "contextual" | "systematic";
 
-/** Selects the mechanical case transformation applied during rendering. */
+/**
+ * Selects the mechanical case transformation applied during rendering.
+ *
+ * `"preserve"` keeps the case of the source. In transliteration, a capital
+ * spelled with several Latin letters (`TH`, `CH`, `PS`, and the `H` of a rough
+ * breathing or of rho) is written in full capitals among capitals, and with
+ * its first letter only before lowercase text, which ISO 843 allows (note 11):
+ * `ΘΑΛΑΣΣΑ` → `THALASSA`, `Θάλασσα` → `Thálassa`. A capital consonant on its
+ * own, such as a letter name, a numeral, or a siglum, is written in full
+ * capitals (`Θ` → `TH`), except before a period, where it is an abbreviated
+ * initial (`Θ.` → `Th.`). A vowel with a rough breathing on its own, such as
+ * the article at the head of a sentence, keeps its first letter only
+ * (`Ὁ` → `Ho`).
+ *
+ * `"title"` capitalizes the first letter of each word; an apostrophe between
+ * two letters, as a coronis written so (`Ka’gṓ`), does not start a word.
+ */
 export type LetterCaseOrthography =
   | "preserve"
   | "lowercase"
@@ -265,7 +284,10 @@ export interface DiacriticClassOptions {
  *
  * Removing a class removes its marks from the output in every format. In
  * transliteration the rough breathing is a letter, `h`: it goes with its
- * class, so `{ all: "remove", roughBreathing: "preserve" }` keeps it.
+ * class, so `{ all: "remove", roughBreathing: "preserve" }` keeps it. The
+ * letters stay as they are spelled: in transliteration, eta and omega keep
+ * the length mark that `longVowels` selects (`η` → `ē`, `ω` → `ō` by
+ * default), which spells the letter and is not a diacritic.
  */
 export interface DiacriticOptions extends DiacriticClassOptions {
   /** Disposition of every class not named alongside. */
@@ -407,7 +429,9 @@ export interface ConversionOptions {
    * also change how transliteration is read, then only write the output.
    * Without it, the options describe the input as well, which is how a text
    * is normalized in its own style. Functions that only write, `encode()`
-   * among them, check it and ignore it.
+   * among them, check it and ignore it. A restyle cannot restore what the
+   * source style does not note: the default style writes no coronis, so a
+   * text in that style has none to give.
    *
    * Reading Greek and Beta Code depends on no option. Reading transliteration
    * depends on the `transliteration` group, `greek.accentuation`, and the

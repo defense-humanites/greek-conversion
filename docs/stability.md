@@ -19,8 +19,13 @@ The public API is everything exported from the two entry points:
 
 This includes runtime values, classes and their public members, types, option
 keys and values, preset identifiers, diagnostic codes, the error classes thrown
-for documented conditions, and the behaviors documented in the `README` and in
-`docs/`.
+for documented conditions, and the behaviors documented in `docs/` and in the
+API documentation (the TSDoc comments of the exported declarations).
+[Guarantees and limits](guarantees.md) gathers the properties every
+conversion keeps. The `README`, its examples, and any guide or translation of
+this documentation illustrate these behaviors without extending them; where
+they differ, the English text of `docs/` and of the API documentation
+prevails.
 
 Not covered, and free to change in any release:
 
@@ -74,7 +79,7 @@ contradicted the documented contract. This covers:
 
 - output that `validateDocument()` rejects, or that is not idempotent, or whose
   `convertDetailed()` report is wrong, contrary to the
-  [guarantees](../README.md#guarantees-and-scope);
+  [guarantees](guarantees.md);
 - output of a preset that disagrees with the preset's cited reference for a rule
   the preset documents as implemented;
 - a parser reading a documented spelling as the wrong canonical document.

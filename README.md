@@ -782,14 +782,18 @@ archaic letters, Greek punctuation, and marked alphabetic numerals.
 
 From version 1.0.0, the version number protects the documented behavior.
 Corrections that bring output closer to the documentation or to a preset's
-reference are released as patches; see the
-[stability policy](https://github.com/defense-humanites/greek-conversion/blob/main/docs/stability.md).
+reference are released as patches. The
+[guarantees and limits](https://github.com/defense-humanites/greek-conversion/blob/main/docs/guarantees.md)
+state these properties in full, and the
+[stability policy](https://github.com/defense-humanites/greek-conversion/blob/main/docs/stability.md)
+what the version number protects.
 
 ## Documentation
 
 | Topic                               | Document                                                                                                                                                                                                                         |
 | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Presets and their exact options     | [Presets](https://github.com/defense-humanites/greek-conversion/blob/main/docs/presets.md)                                                                                                                                       |
+| What every conversion guarantees    | [Guarantees and limits](https://github.com/defense-humanites/greek-conversion/blob/main/docs/guarantees.md)                                                                                                                      |
 | What the version number promises    | [Stability policy](https://github.com/defense-humanites/greek-conversion/blob/main/docs/stability.md)                                                                                                                            |
 | Loss by format pair and option      | [Information loss](https://github.com/defense-humanites/greek-conversion/blob/main/docs/information-loss.md)                                                                                                                     |
 | Detailed conversion results         | [Conversion analysis](https://github.com/defense-humanites/greek-conversion/blob/main/docs/conversion-analysis.md)                                                                                                               |

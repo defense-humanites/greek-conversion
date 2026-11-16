@@ -64,6 +64,10 @@ and `[1]` reads as `(]`. `convertDetailed()` reports the loss. A keraia
 followed by a digit is written as itself, `ʹ`, since `#` and a digit are a
 TLG character code (`#1` is koppa): `αʹ1` gives `aʹ1`.
 
+As in the TLG, `'` is the apostrophe (U+2019): `ἀλλ’` gives `a)ll'`. The font
+shifts `&` (Latin) and `$` (Greek) are not interpreted: they are kept as text,
+and the letters after them are still read as Beta Code, so `&x` gives `&χ`.
+
 Unrecognized characters, including unrecognized combining marks, remain
 literals and are preserved.
 

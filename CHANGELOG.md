@@ -47,6 +47,17 @@ change.
   search field, whose keyboard would hide them. The result reads on the
   ground of the code blocks, says where it will appear while empty, and,
   typed in, where to write instead.
+- The contract is stated in `docs/` and the API documentation alone: the
+  stability policy no longer counts the `README`, which will become a short
+  entry point to a documentation site, among the documents that define
+  behavior. What only the `README` stated has moved: the guarantees and limits
+  to the new `docs/guarantees.md` (the stability policy linked to a heading
+  that no longer existed); to the API documentation of their options, the
+  capitals of `letterCase: "preserve"` and `"title"`, the trimming of
+  `whitespace: "collapse"`, the spelling of eta and omega when diacritics are
+  removed, and what a restyle with `source` cannot restore; and the Beta Code
+  apostrophe and font shifts to `docs/information-loss.md`. The English text
+  prevails over the `README`, guides, and translations. No behavior changes.
 
 ### Fixed
 
