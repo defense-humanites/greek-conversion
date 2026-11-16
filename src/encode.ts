@@ -720,6 +720,22 @@ function findRoughDiphthongs(
   const starts = roughDiphthongStarts(
     marksAsReadBack(readBack, doc, options, preservesSmooth, digraphs),
   );
+  // Under ISO 843 Type 2, `ωυ` is written letter by letter (`oy`) and read
+  // back so: it is no diphthong whose `h` goes before it.
+  if (
+    options.transliteration?.upsilon === "y-with-ou-v-f" &&
+    options.transliteration?.longVowels === "omit"
+  ) {
+    for (let index = 0; index < starts.length; index++) {
+      const token = doc[index];
+      const next = doc[index + 1];
+      if (
+        starts[index] === 1 && token.kind === "grapheme" &&
+        token.letter === "omega" && next?.kind === "grapheme" &&
+        next.letter === "upsilon"
+      ) starts[index] = 0;
+    }
+  }
   // A coronis written as an apostrophe after the first vowel splits the pair
   // (splitByCoronis): the second vowel keeps its own `h`.
   if (options.transliteration?.coronis === "apostrophe") {
@@ -888,9 +904,14 @@ function transliterationBase(
         if (isVowelUpsilonAt(document, index - 1)) {
           return precedesVoicedSound(document, index) ? "v" : "f";
         }
+        // Table 2 lists `ου` but not `ωυ`, which note 8 converts letter by
+        // letter: `oy`, read back as omega and upsilon. A numeral is written
+        // as it reads back (`ωυʹ` like `ουʹ`), since its letters are digits.
         const previous = document[index - 1];
         return previous?.kind === "grapheme" &&
-            readBackLetter(previous, options) === "omicron" &&
+            (previous.letter === "omicron" ||
+              readBackLetter(previous, options) === "omicron" &&
+                isGreekNumeralContext(document, index - 1)) &&
             !splitByCoronis(previous, options) &&
             isDiphthongAt(document, index - 1)
           ? "u"
@@ -1106,6 +1127,14 @@ function initialBreathingTarget(
   if (options.transliteration?.longVowels !== "omit") {
     return breathingTarget(rendered, start);
   }
+  // Under ISO 843 Type 2, `ωυ` is written letter by letter (`oy`) and read
+  // back so: it is no diphthong that carries the breathing.
+  const head = rendered[start];
+  const next = rendered[start + 1];
+  if (
+    vowelUpsilonVF && head?.kind === "grapheme" && head.letter === "omega" &&
+    next?.kind === "grapheme" && next.letter === "upsilon"
+  ) return start;
   const first = readBackInitial(rendered, doc, start, options, vowelUpsilonVF);
   const second = readBackInitial(
     rendered,

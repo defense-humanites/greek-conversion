@@ -16,6 +16,12 @@ npx jsr add @humanities/greek-conversion@1.0.0-rc.9
 
 The package is ESM-only.
 
+## Updating from `1.0.0-rc.9`
+
+One kind of input converts differently: under ISO 843 Type 2, `ωυ` is written
+letter by letter, as the standard requires: `ἑωυτοῦ` gives `heoytoû` (rc.9:
+`heoutoû`), and `oy` without marks reads back as `ωυ`.
+
 ## Updating from `1.0.0-rc.8`
 
 Greek output keeps the letter forms the source writes, by default: the lunate

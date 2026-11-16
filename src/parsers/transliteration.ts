@@ -129,6 +129,8 @@ export function parseTransliteration(
   // Upsilons read from a contextual `y` whose separation from the preceding
   // vowel is carried by a breathing on that vowel rather than by a diaeresis.
   const separatedByBreathing = new Set<number>();
+  // The omegas read from an `o` before `y` (ISO 843 Type 2): see below.
+  const omegaBeforeY: number[] = [];
   const transliteration = options.transliteration;
   // `b` is μπ only where it cannot be beta; `d̲` is never delta.
   const digraphB = transliteration?.muPi !== undefined &&
@@ -143,6 +145,9 @@ export function parseTransliteration(
   // An eta written like an iota, with no length mark (ISO 843 Type 2).
   const etaAsIota = omitLength && transliteration?.eta === "i";
   const upsilon = transliteration?.upsilon;
+  // An omega written like an omicron, before the upsilon ISO 843 Type 2
+  // writes `y` after it.
+  const omegaAsO = omitLength && upsilon === "y-with-ou-v-f";
   const nasalGamma = transliteration?.nasalGamma;
   // Where gamma stays `g` before kappa but is `n` before chi, `kh` after `g`
   // is kappa followed by a rough breathing (`γκἡ` → `gkhē`), not chi.
@@ -343,6 +348,26 @@ export function parseTransliteration(
       }
     }
 
+    // Under ISO 843 Type 2, omega is written `o`, and `ωυ`, which Table 2
+    // does not list, letter by letter (note 8): `oy`. `ου` is written `ou`,
+    // or `oy` with an accent on the `o` or a diaeresis on the `y` (note 9),
+    // so an `o` without marks, or with a coronis only (crasis, `τὠυ`), before
+    // a `y` without diaeresis is that omega.
+    if (
+      letter === "upsilon" && omegaAsO && sourceLower === "y" &&
+      (marks & DIAERESIS) === 0
+    ) {
+      const previous = out.at(-1);
+      if (
+        previous?.kind === "grapheme" && previous.letter === "omicron" &&
+        (previous.diacritics.size === 0 ||
+          previous.diacritics.size === 1 && previous.diacritics.has("coronis"))
+      ) {
+        previous.letter = "omega";
+        omegaBeforeY.push(out.length - 1);
+      }
+    }
+
     if (
       letter === "upsilon" &&
       (upsilon === "y-with-diphthong-u" || upsilon === "y-with-au-eu-ou" ||
@@ -427,6 +452,19 @@ export function parseTransliteration(
 
   if (nasalGamma !== "literal") {
     inferNasalGammas(out, nasalGamma === "nasal-except-kappa");
+  }
+  // A numeral, whose letters Type 2 writes as it reads them back (`ωυʹ` is
+  // `ouʹ`), keeps the `o` and the separation the `y` gives, by a diaeresis.
+  for (const index of omegaBeforeY) {
+    const omega = out[index];
+    const next = out[index + 1];
+    if (
+      omega.kind === "grapheme" && next?.kind === "grapheme" &&
+      isGreekNumeralContext(out, index)
+    ) {
+      omega.letter = "omicron";
+      next.diacritics = withDiacritic(next.diacritics, "diaeresis");
+    }
   }
   inferInitialBreathings(out, options, separatedByBreathing);
 
