@@ -226,10 +226,28 @@ code {
 }
 
 /* Layout */
+/*
+ * Three spaces: tight between what belongs together (the name and the
+ * introduction, the fields and their verdict, the verdict and its details),
+ * the usual one between the parts of the converter, and a wider one before
+ * the tabs and the footer, which are parts of their own.
+ */
+:root {
+  --space-tight: 16px;
+  --space: 28px;
+  --space-section: 56px;
+}
+@media (max-width: 640px) {
+  :root {
+    --space-tight: 12px;
+    --space: 20px;
+    --space-section: 40px;
+  }
+}
 .shell {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: var(--space);
   max-width: 1200px;
   margin: 0 auto;
   padding: 32px clamp(16px, 4vw, 48px) 48px;
@@ -243,7 +261,15 @@ code {
 main {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: var(--space);
+}
+.verdict,
+.diagnostics {
+  margin-top: calc(var(--space-tight) - var(--space));
+}
+main > .settings,
+footer {
+  margin-top: calc(var(--space-section) - var(--space));
 }
 
 /* Masthead */
@@ -399,7 +425,7 @@ h1 span {
 .intro {
   max-width: max(55%, 340px);
   text-wrap: pretty;
-  margin: -12px 0 0;
+  margin: calc(var(--space-tight) - var(--space)) 0 0;
   font-size: 18px;
   line-height: 27px;
   color: var(--muted);
@@ -1262,8 +1288,13 @@ textarea.text::placeholder {
   flex-direction: column;
   gap: 16px;
 }
+/* Hidden, the diagnostics take no space, not even the gap before them. */
+.diagnostics[hidden] {
+  display: none;
+}
+/* A heading closer to its cards than to the group above. */
 .diagnostics h2 {
-  margin: 8px 0 0;
+  margin: 16px 0 -4px;
   font-size: 24px;
   line-height: 1.15;
   letter-spacing: -0.01em;
@@ -1752,7 +1783,6 @@ footer strong {
     overflow-wrap: anywhere;
   }
   .shell {
-    gap: 20px;
     padding-top: 20px;
   }
   h1 {
@@ -1807,7 +1837,6 @@ footer strong {
 
   .intro {
     max-width: none;
-    margin-top: 0;
     font-size: 16px;
     line-height: 24px;
   }
