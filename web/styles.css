@@ -250,7 +250,8 @@ code {
   gap: var(--space);
   max-width: 1200px;
   margin: 0 auto;
-  padding: 32px clamp(16px, 4vw, 48px) 48px;
+  /* As much room under the footer as over the masthead. */
+  padding: 32px clamp(16px, 4vw, 48px);
 }
 /* The masthead and the introduction, spaced as the rest of the page. */
 .page-head {
@@ -1804,7 +1805,7 @@ footer strong {
     overflow-wrap: anywhere;
   }
   .shell {
-    padding-top: 20px;
+    padding-block: 20px;
   }
   h1 {
     font-size: 22px;
