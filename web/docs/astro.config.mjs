@@ -31,6 +31,39 @@ function prefixBase() {
 }
 
 /**
+ * Sets texts in the playground's typeface for texts. Inline code that is a
+ * Greek or transliterated form (letters, marks, spaces, and the punctuation
+ * of a text, with at least one letter beyond ASCII), such as `ἄνθρωπος` or
+ * `ánthrōpos`, is a text rather than code: it takes the class `text`, and
+ * Greek the language `grc`, as in the playground's fields. Code, Beta Code
+ * included, stays in the monospace face.
+ */
+function markTexts() {
+  const TEXT = /^[\p{L}\p{M}\s’ʼ'ʹ͵·;.,:?!-]+$/u;
+  const BEYOND_ASCII = /[^\x00-\x7f]/;
+  const GREEK = /[\u0370-\u03ff\u1f00-\u1fff]/;
+  /** @param {any} node @param {any} parent */
+  const visit = (node, parent) => {
+    if (
+      node.type === "element" && node.tagName === "code" &&
+      parent?.tagName !== "pre"
+    ) {
+      const text = (node.children ?? []).map((/** @type {any} */ child) =>
+        child.type === "text" ? child.value : "\u0000"
+      ).join("");
+      if (TEXT.test(text) && BEYOND_ASCII.test(text)) {
+        const classes = node.properties.className ?? [];
+        node.properties.className = [...classes, "text"];
+        if (GREEK.test(text)) node.properties.lang = "grc";
+      }
+      return;
+    }
+    for (const child of node.children ?? []) visit(child, node);
+  };
+  return () => (/** @type {any} */ tree) => visit(tree, undefined);
+}
+
+/**
  * The playground used to be served at the site's root, and its shared links
  * carry their state in the fragment (`#from=greek&to=…`), which never reaches
  * the server. Such a link now opens the home page: send it on to the
@@ -45,7 +78,9 @@ export default defineConfig({
   site: SITE,
   base: BASE,
   trailingSlash: "always",
-  markdown: { processor: unified({ rehypePlugins: [prefixBase()] }) },
+  markdown: {
+    processor: unified({ rehypePlugins: [prefixBase(), markTexts()] }),
+  },
   vite: { server: { fs: { allow: ["../.."] } } },
   integrations: [
     starlight({

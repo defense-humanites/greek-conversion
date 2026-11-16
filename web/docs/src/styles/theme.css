@@ -10,7 +10,10 @@
 ::backdrop,
 :root[data-theme="light"],
 [data-theme="light"] ::backdrop {
-  --sl-font: var(--face-ui);
+  /* Greek in running text, which Bricolage lacks, falls back to Literata,
+     as in the playground. */
+  --sl-font: "Bricolage Grotesque", "Literata GC", ui-sans-serif, system-ui,
+    sans-serif;
   --sl-font-mono: var(--face-code);
 
   --sl-color-white: var(--ink);
@@ -98,6 +101,20 @@ kbd {
 .sl-markdown-content th code {
   letter-spacing: normal;
   text-transform: none;
+}
+/*
+ * A text in any of the formats, Greek or transliterated, is set as the
+ * playground sets its texts: Literata GC Light, a step larger than code.
+ * Literata draws the breathing and accent of a capital left of the letter,
+ * hence the room on that side.
+ */
+.sl-markdown-content :not(pre) > code.text {
+  padding: 0 0.3em 0 0.4em;
+  font-family: var(--face-text);
+  font-size: 1.05em;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: normal;
 }
 /* An identifier heading a row stays on one line. */
 .sl-markdown-content td:first-child > code {
