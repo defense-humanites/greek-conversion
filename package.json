@@ -36,7 +36,7 @@
     "check": "npm run check:format && npm run check:lint && npm run check:types && npm run check:docs",
     "check:format": "dprint check",
     "check:lint": "oxlint --deny-warnings",
-    "check:types": "tsc -p tsconfig.json && tsc -p tsconfig.build.json --noEmit && tsc -p web",
+    "check:types": "tsc -p tsconfig.json && tsc -p tsconfig.build.json --noEmit && tsc -p web/playground",
     "check:docs": "node scripts/check_api_docs.ts && node scripts/check_readme.ts && node scripts/generate_preset_docs.ts --check && node scripts/generate_option_relevance.ts --check && node scripts/check_metadata.ts",
     "format": "dprint fmt",
     "test": "node --test \"tests/**/*_test.ts\"",
@@ -46,7 +46,7 @@
     "npm:check": "npm run npm:build && node scripts/npm_smoke.mjs && node scripts/npm_types_smoke.mjs && npm pack ./npm --dry-run",
     "jsr:check": "jsr publish --dry-run",
     "site:options": "node scripts/generate_option_relevance.ts",
-    "site:build": "tsc -p web && node scripts/build_site.ts"
+    "site:build": "tsc -p web/playground && node scripts/build_site.ts"
   },
   "devDependencies": {
     "@dprint/json": "0.26.0",

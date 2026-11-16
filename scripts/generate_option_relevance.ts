@@ -2,7 +2,7 @@
  * Finds, for each conversion option and each pair of formats, whether some
  * value of the option changes the result, and writes the table the
  * playground uses to offer only the options that act on a conversion
- * (`web/option_relevance.ts`). `--check` fails when the table is out of
+ * (`web/playground/option_relevance.ts`). `--check` fails when the table is out of
  * date.
  *
  * The probe texts gather, for each format, what the options act on: every
@@ -18,9 +18,9 @@ import {
   type Format,
   FORMATS,
 } from "../src/mod.ts";
-import { PROBE_GREEK } from "../web/option_probe.ts";
+import { PROBE_GREEK } from "../web/playground/option_probe.ts";
 
-const TABLE = new URL("../web/option_relevance.ts", import.meta.url);
+const TABLE = new URL("../web/playground/option_relevance.ts", import.meta.url);
 
 const GREEK = PROBE_GREEK;
 
@@ -121,7 +121,7 @@ ${lines.join("\n")}
     const current = await readFile(TABLE, "utf8").catch(() => "");
     if (current !== expected) {
       console.error(
-        "web/option_relevance.ts is out of date; run `npm run site:options`.",
+        "web/playground/option_relevance.ts is out of date; run `npm run site:options`.",
       );
       process.exit(1);
     }

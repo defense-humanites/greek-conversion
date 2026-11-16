@@ -5,7 +5,7 @@ import {
   getPresetOptions,
   listPresetMetadata,
   resolveConversionOptions,
-} from "../src/mod.ts";
+} from "../../src/mod.ts";
 import type {
   CharacterAliasDefinition,
   ConversionLoss,
@@ -15,8 +15,8 @@ import type {
   CustomCharacterDefinition,
   Format,
   Preset,
-} from "../src/mod.ts";
-import { parse, parseDetailed, validateDocument } from "../src/document.ts";
+} from "../../src/mod.ts";
+import { parse, parseDetailed, validateDocument } from "../../src/document.ts";
 import { detectFormat } from "./detect_format.ts";
 import { changedSpans, firstChange, PROBE_GREEK } from "./option_probe.ts";
 import { exampleFrom, EXAMPLES, INVALID_MARKS, sourceOf } from "./examples.ts";
