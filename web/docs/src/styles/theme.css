@@ -152,10 +152,7 @@ kbd {
   border-color: var(--muted);
 }
 
-/* Header: the page's paper, the search field as a bordered button. */
-.header {
-  border-bottom-color: transparent;
-}
+/* Header: the search field as a bordered button. */
 site-search button[data-open-modal] {
   min-height: 2.75rem;
   border: 1.5px solid var(--line);
