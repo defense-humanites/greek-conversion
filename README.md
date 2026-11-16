@@ -820,15 +820,15 @@ npm run site:options # updates which options the playground offers per conversio
 ```
 
 `npm run check` fails when a change to the options leaves
-`web/option_relevance.ts` out of date.
+`web/playground/option_relevance.ts` out of date.
 
-The playground's fonts are subsets of Bricolage Grotesque, Literata and Noto
+The fonts of the playground and the documentation site are subsets of Bricolage Grotesque, Literata and Noto
 Serif, built with Python and [fontTools](https://github.com/fonttools/fonttools)
-(`web/fonts/README.md`):
+(`web/shared/fonts/README.md`):
 
 ```sh
 pip install "fonttools[woff]==4.67.0"
-python3 scripts/build_playground_fonts.py # downloads the sources, writes web/fonts/
+python3 scripts/build_fonts.py # downloads the sources, writes web/shared/fonts/
 ```
 
 Every TypeScript example in this README is type-checked and executed by

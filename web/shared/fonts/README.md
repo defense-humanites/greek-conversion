@@ -1,8 +1,9 @@
-# Playground fonts
+# Fonts of the playground and the documentation site
 
-The playground serves its typefaces itself, so that it loads nothing from
-another site. Both are under the
-[SIL Open Font License 1.1](../../LICENSES/OFL-1.1.txt); neither declares a
+The playground and the documentation site serve their typefaces themselves,
+so that they load nothing from another site. `web/shared/tokens.css` declares
+them. Both are under the
+[SIL Open Font License 1.1](../../../LICENSES/OFL-1.1.txt); neither declares a
 Reserved Font Name.
 
 | File | Source | Used for |
@@ -15,11 +16,11 @@ All three are subsets of the variable fonts of
 [google/fonts](https://github.com/google/fonts) (`ofl/bricolagegrotesque`,
 `ofl/literata`, `ofl/notoserif`), made with
 [fontTools](https://github.com/fonttools/fonttools) 4.67.0 by
-[`scripts/build_playground_fonts.py`](../../scripts/build_playground_fonts.py):
+[`scripts/build_fonts.py`](../../../scripts/build_fonts.py):
 
 ```sh
 pip install "fonttools[woff]==4.67.0"
-python3 scripts/build_playground_fonts.py
+python3 scripts/build_fonts.py
 ```
 
 The script downloads the sources and checks them against the SHA-256 of the

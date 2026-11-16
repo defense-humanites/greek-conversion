@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""Builds the playground's fonts (web/fonts) from the files of google/fonts.
+"""Builds the fonts of the playground and the documentation site (web/shared/fonts)
+from the files of google/fonts.
 
     pip install "fonttools[woff]==4.67.0"
-    python3 scripts/build_playground_fonts.py [--sources DIR] [--output DIR]
+    python3 scripts/build_fonts.py [--sources DIR] [--output DIR]
 
 Without --sources, the three variable fonts are downloaded from google/fonts.
 With it, DIR holds them under the names google/fonts gives them. Either way,
 each file is checked against the SHA-256 the fonts were built from, so that a
 newer release is a deliberate change: pass --any-version to accept one.
 
-The output (web/fonts by default) is reproducible: each font keeps the
+The output (web/shared/fonts by default) is reproducible: each font keeps the
 modification date of its source, so the same sources and the same fontTools
-give the same bytes. web/fonts/README.md says what each step does and why.
+give the same bytes. web/shared/fonts/README.md says what each step does and why.
 """
 
 from __future__ import annotations
@@ -305,7 +306,7 @@ def noto(path: Path, output: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Builds the playground's fonts from google/fonts.",
+        description="Builds the shared fonts from google/fonts.",
     )
     parser.add_argument(
         "--sources",
@@ -315,8 +316,8 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path(__file__).resolve().parent.parent / "web" / "fonts",
-        help="folder to write the fonts to (default: web/fonts)",
+        default=Path(__file__).resolve().parent.parent / "web" / "shared" / "fonts",
+        help="folder to write the fonts to (default: web/shared/fonts)",
     )
     parser.add_argument(
         "--any-version",

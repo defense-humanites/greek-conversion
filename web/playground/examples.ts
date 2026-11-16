@@ -4,8 +4,8 @@ import {
   type Format,
   type Preset,
   type SourceOptions,
-} from "../src/mod.ts";
-import type { ValidationCode } from "../src/document.ts";
+} from "../../src/mod.ts";
+import type { ValidationCode } from "../../src/document.ts";
 
 /**
  * A complete scenario: loading one sets the text, formats, and settings.

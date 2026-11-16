@@ -7,7 +7,7 @@ import {
   exampleOptions,
   EXAMPLES,
   INVALID_MARKS,
-} from "../web/examples.ts";
+} from "../web/playground/examples.ts";
 
 test("every playground example gives the output its note describes", () => {
   for (const [preset, examples] of Object.entries(EXAMPLES)) {

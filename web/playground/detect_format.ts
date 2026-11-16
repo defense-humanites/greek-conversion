@@ -1,4 +1,4 @@
-import type { Format } from "../src/mod.ts";
+import type { Format } from "../../src/mod.ts";
 
 const GREEK = /[Ͱ-Ͽἀ-῿]/u;
 // A Beta Code mark written against a letter: an accent, a breathing, a

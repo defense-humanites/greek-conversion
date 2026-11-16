@@ -2,8 +2,8 @@ import { test } from "node:test";
 import { assertEquals } from "./assertions.ts";
 import { CONVERSION_OPTION_VALUES } from "../src/mod.ts";
 import type { Format } from "../src/mod.ts";
-import { OPTION_RELEVANCE } from "../web/option_relevance.ts";
-import { changedSpans, firstChange } from "../web/option_probe.ts";
+import { OPTION_RELEVANCE } from "../web/playground/option_relevance.ts";
+import { changedSpans, firstChange } from "../web/playground/option_probe.ts";
 import {
   actsOn,
   findEntry,
@@ -15,7 +15,7 @@ import {
   settingsOf,
   standardValue,
   withSetting,
-} from "../web/option_catalogue.ts";
+} from "../web/playground/option_catalogue.ts";
 
 test("offers every option of the library, with a name for people", () => {
   const count = Object.values(CONVERSION_OPTION_VALUES)

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import { assertEquals } from "./assertions.ts";
-import { detectFormat } from "../web/detect_format.ts";
+import { detectFormat } from "../web/playground/detect_format.ts";
 
 test("detects Greek, Beta Code, and transliteration from their characters", () => {
   assertEquals(detectFormat("Μῆνιν ἄειδε θεὰ"), "greek");

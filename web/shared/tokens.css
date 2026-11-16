@@ -1,0 +1,84 @@
+/*
+ * The greek-conversion design system: Papier (light) and Nuit (dark), the
+ * cobalt of the Greek half of the tessera for the source, the orange of its
+ * Latin half for the target. Bricolage Grotesque for the interface;
+ * Literata, one step lighter than Regular, for the texts in all three
+ * formats, Beta Code included; a monospace face for code.
+ *
+ * Shared by the playground and the documentation site. The font URLs are
+ * relative to this file: a build serves the fonts in a `fonts/` folder next
+ * to the stylesheet that includes it.
+ */
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("./fonts/bricolage-grotesque.woff2") format("woff2");
+  font-weight: 400 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Literata GC";
+  src: url("./fonts/literata-gc-light.woff2") format("woff2");
+  font-weight: 300;
+  font-display: swap;
+}
+/*
+ * Literata has no symbol forms of Greek letters (ϐ ϑ ϕ ϖ ϰ ϱ ϵ ϒ) nor the
+ * reversed lunate sigmas: Noto Serif supplies them, scaled to Literata's
+ * x-height.
+ */
+@font-face {
+  font-family: "Literata GC";
+  src: url("./fonts/noto-serif-greek-symbols.woff2") format("woff2");
+  font-weight: 300;
+  font-display: swap;
+  size-adjust: 95%;
+  unicode-range: U+037B-037D, U+03D0-03D6, U+03F0-03F1, U+03F5, U+03FD-03FF;
+}
+
+:root {
+  color-scheme: light;
+  --surface: #f6f0e4;
+  --raised: #ffffff;
+  --line: #e2d9c8;
+  --ink: #1f2a44;
+  --muted: #5e5a63;
+  --from: #2f4fa8;
+  --to: #c85a26;
+  --to-fill: #dd6a33;
+  --link: #2f4fa8;
+  --code-bg: #fbf8f2;
+  --code-keyword: #2f4fa8;
+  --code-string: #a9461c;
+  --code-function: #1f2a44;
+  --code-muted: #5e5a63;
+  --shadow: 0 6px 20px rgb(31 42 68 / 0.12);
+  /* Notes take a tint darker than the page, unlike the raised pickers. */
+  --tip: #e9e1d1;
+  --face-ui: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --face-text: "Literata GC", "Gentium Plus", "Noto Serif", serif;
+  --face-code: ui-monospace, "SF Mono", "Cascadia Mono", "DejaVu Sans Mono",
+    Menlo, Consolas, monospace;
+  --radius: 6px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --surface: #161b2b;
+    --raised: #1f2538;
+    --line: #323a5c;
+    --ink: #d9ddeb;
+    --muted: #9aa3bf;
+    --from: #c9d3ec;
+    --to: #e08a5e;
+    --to-fill: #e08a5e;
+    --link: #c9d3ec;
+    --code-bg: #191f31;
+    --code-keyword: #c9d3ec;
+    --code-string: #e08a5e;
+    --code-function: #f4ecdd;
+    --code-muted: #9aa3bf;
+    --shadow: 0 6px 20px rgb(0 0 0 / 0.4);
+    --tip: #0e1220;
+  }
+}

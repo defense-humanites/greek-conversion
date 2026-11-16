@@ -1,8 +1,8 @@
 import {
   CONVERSION_OPTION_VALUES,
   resolveConversionOptions,
-} from "../src/mod.ts";
-import type { ConversionOptions, Format, Preset } from "../src/mod.ts";
+} from "../../src/mod.ts";
+import type { ConversionOptions, Format, Preset } from "../../src/mod.ts";
 import { OPTION_RELEVANCE } from "./option_relevance.ts";
 
 /** A field of `ConversionOptions` that holds options. */

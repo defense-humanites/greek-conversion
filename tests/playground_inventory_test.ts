@@ -14,7 +14,7 @@ import {
   withListItem,
   withoutEntry,
   withoutListItem,
-} from "../web/inventory.ts";
+} from "../web/playground/inventory.ts";
 
 const SHO = {
   id: "sho",

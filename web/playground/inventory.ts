@@ -1,11 +1,11 @@
-import { ALPHABET } from "../src/alphabet.ts";
-import { FORMATS } from "../src/mod.ts";
+import { ALPHABET } from "../../src/alphabet.ts";
+import { FORMATS } from "../../src/mod.ts";
 import type {
   CharacterAliasDefinition,
   ConverterConfiguration,
   CustomCharacterDefinition,
   Format,
-} from "../src/mod.ts";
+} from "../../src/mod.ts";
 
 /** The character inventory the playground edits: a converter's own fields. */
 export type Inventory = Pick<

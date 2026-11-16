@@ -1,35 +1,7 @@
 /*
- * The greek-conversion design system: Papier (light) and Nuit (dark), the
- * cobalt of the Greek half of the tessera for the source, the orange of its
- * Latin half for the target. Bricolage Grotesque for the interface;
- * Literata, one step lighter than Regular, for the texts in all three
- * formats, Beta Code included; a monospace face for code.
+ * The playground. Its design tokens and fonts are in
+ * `web/shared/tokens.css`, which the build puts before this file.
  */
-@font-face {
-  font-family: "Bricolage Grotesque";
-  src: url("./fonts/bricolage-grotesque.woff2") format("woff2");
-  font-weight: 400 800;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Literata GC";
-  src: url("./fonts/literata-gc-light.woff2") format("woff2");
-  font-weight: 300;
-  font-display: swap;
-}
-/*
- * Literata has no symbol forms of Greek letters (ϐ ϑ ϕ ϖ ϰ ϱ ϵ ϒ) nor the
- * reversed lunate sigmas: Noto Serif supplies them, scaled to Literata's
- * x-height.
- */
-@font-face {
-  font-family: "Literata GC";
-  src: url("./fonts/noto-serif-greek-symbols.woff2") format("woff2");
-  font-weight: 300;
-  font-display: swap;
-  size-adjust: 95%;
-  unicode-range: U+037B-037D, U+03D0-03D6, U+03F0-03F1, U+03F5, U+03FD-03FF;
-}
 
 /* Safari on iPhone enlarges some text in landscape: the sizes stay those
    the page sets. */
@@ -38,32 +10,7 @@ html {
   text-size-adjust: 100%;
 }
 :root {
-  color-scheme: light;
-  --surface: #f6f0e4;
-  --raised: #ffffff;
-  --line: #e2d9c8;
-  --ink: #1f2a44;
-  --muted: #5e5a63;
-  --from: #2f4fa8;
-  --to: #c85a26;
-  --to-fill: #dd6a33;
-  --link: #2f4fa8;
-  --code-bg: #fbf8f2;
-  --code-keyword: #2f4fa8;
-  --code-string: #a9461c;
-  --code-function: #1f2a44;
-  --code-muted: #5e5a63;
-  --shadow: 0 6px 20px rgb(31 42 68 / 0.12);
-  /* Notes take a tint darker than the page, unlike the raised pickers. */
-  --tip: #e9e1d1;
   --check-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 12.5l4.5 4.5 8.5-9.5'/%3E%3C/svg%3E");
-
-  --face-ui: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
-  --face-text: "Literata GC", "Gentium Plus", "Noto Serif", serif;
-  --face-code: ui-monospace, "SF Mono", "Cascadia Mono", "DejaVu Sans Mono",
-    Menlo, Consolas, monospace;
-
-  --radius: 6px;
   --disclosure-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 6 8 10.5 12.5 6'/%3E%3C/svg%3E");
   --external-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 7.5 8.5M12 9.5v3a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3'/%3E%3C/svg%3E");
   font-family: var(--face-ui);
@@ -74,23 +21,6 @@ html {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    color-scheme: dark;
-    --surface: #161b2b;
-    --raised: #1f2538;
-    --line: #323a5c;
-    --ink: #d9ddeb;
-    --muted: #9aa3bf;
-    --from: #c9d3ec;
-    --to: #e08a5e;
-    --to-fill: #e08a5e;
-    --link: #c9d3ec;
-    --code-bg: #191f31;
-    --code-keyword: #c9d3ec;
-    --code-string: #e08a5e;
-    --code-function: #f4ecdd;
-    --code-muted: #9aa3bf;
-    --shadow: 0 6px 20px rgb(0 0 0 / 0.4);
-    --tip: #0e1220;
     --check-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23161b2b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 12.5l4.5 4.5 8.5-9.5'/%3E%3C/svg%3E");
   }
 }
