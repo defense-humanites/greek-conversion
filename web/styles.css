@@ -975,6 +975,12 @@ h1 span {
   font-size: inherit;
   text-decoration: underline;
   text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+/* As a link does. */
+.preset-line .link-button:hover {
+  color: var(--ink);
+  text-decoration-thickness: 2px;
 }
 .preset-limits {
   margin: 10px 0 0;
@@ -1680,23 +1686,33 @@ footer strong {
   }
 }
 /*
- * Without a pointer to hover with, the hint of the source formats shows,
- * since nothing else says that choosing a format again detects it.
+ * Without a pointer to hover with, the state of the source format shows
+ * under the verb, or beside it on a phone (showDetection): it says what the
+ * titles say on hover, that choosing a format again detects it.
  */
-@media (hover: none) and (max-width: 1099px) {
-  #source-hint {
-    position: static;
-    grid-column: -2;
-    width: auto;
-    height: auto;
-    margin: -8px 0 0;
-    overflow: visible;
-    clip-path: none;
-    font-size: 13px;
-    line-height: 18px;
-    white-space: normal;
-    color: var(--muted);
-  }
+.verb-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.source-state {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 16px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+/* As wide as its longest text in every state, so that nothing moves. */
+.source-state::after {
+  content: "tap again to detect";
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+.source-state:empty {
+  display: none;
 }
 /* A narrow phone: a smaller name, so that the buttons fit beside it, and
    closer links, on one line. */
@@ -1743,6 +1759,11 @@ footer strong {
   .settings-grid .word {
     margin-top: 10px;
     font-size: 16px;
+  }
+  .verb-cell {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 10px;
   }
   .settings-grid #verb {
     margin-top: 0;

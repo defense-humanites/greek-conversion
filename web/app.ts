@@ -86,6 +86,7 @@ const optionStepName = element<HTMLSpanElement>("option-step-name");
 const optionBack = element<HTMLButtonElement>("option-back");
 const optionList = element<HTMLDivElement>("option-list");
 const sameFormatHint = element<HTMLParagraphElement>("same-format-hint");
+const sourceState = element<HTMLSpanElement>("source-state");
 const sourceLine = element<HTMLDivElement>("source-line");
 const sourceStyleSelect = element<HTMLSelectElement>("source-style");
 const outputMarks = element<HTMLDivElement>("output-marks");
@@ -284,6 +285,12 @@ function showDetection(): void {
         : "Detected from the text. Choose it to keep it."
       : "Chosen. Choose it again to detect the format from the text.";
   }
+  // By touch, without titles, the state shows beside the verb.
+  sourceState.textContent = !touchOnly()
+    ? ""
+    : sourceAuto
+    ? note
+    : "tap again to detect";
   shownSource = format;
 }
 
