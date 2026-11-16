@@ -1,3 +1,5 @@
+<br>
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/defense-humanites/greek-conversion/main/docs/assets/greek-conversion-logo-sombre.svg">
@@ -18,6 +20,11 @@
   <a href="https://github.com/defense-humanites/greek-conversion/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
 </p>
 
+<p align="center">
+  <a href="https://defense-humanites.github.io/greek-conversion/"><b>Documentation</b></a> ·
+  <a href="https://defense-humanites.github.io/greek-conversion/playground/"><b>Playground</b></a>
+</p>
+
 <br>
 
 `greek-conversion` is a TypeScript library for classicists, librarians, and
@@ -25,13 +32,6 @@ digital-humanities developers. It handles polytonic and monotonic Greek,
 implements published conventions (ALA-LC, BnF, ISO 843, SBL, TLG, Perseus) as
 ready-made presets, and tells you when a conversion loses information instead of
 quietly guessing. It has no dependencies and uses no runtime-specific API.
-
-<p align="center">
-  <a href="https://defense-humanites.github.io/greek-conversion/"><b>Documentation</b></a> ·
-  <a href="https://defense-humanites.github.io/greek-conversion/playground/"><b>Playground</b></a> ·
-  <a href="https://www.npmjs.com/package/@humanities/greek-conversion">npm</a> ·
-  <a href="https://jsr.io/@humanities/greek-conversion">JSR</a>
-</p>
 
 ## Installation
 
@@ -78,10 +78,10 @@ to contribute, see
 ## Citing and license
 
 If you use `greek-conversion` in research or in a published resource, please
-cite it; GitHub's "Cite this repository" button uses the metadata in
+cite it; GitHub's “Cite this repository” button uses the metadata in
 [`CITATION.cff`](https://github.com/defense-humanites/greek-conversion/blob/main/CITATION.cff).
 
-Copyright © 2021–2026 Antoine Boquet. Released under the
+Copyright (C) 2021–2026 Antoine Boquet. Released under the
 [MIT License](https://github.com/defense-humanites/greek-conversion/blob/main/LICENSE)
 since `1.0.0-beta.7`; earlier versions remain under AGPL-3.0-or-later. The
 benchmark input,
