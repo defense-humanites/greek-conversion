@@ -49,8 +49,8 @@ Without them:
   `ς`, and `s`). Beta Code reads and writes the TLG's `s1` and `s2` for a
   sigma whose shape contradicts its place: `λόγοσ` gives `lo/gos1`, and
   `lo/gos1` gives `λόγοσ` (rc.8: `lo/gos`, and `λόγος1`). To compare texts
-  regardless of these forms, fold them (see the README, *Keep or fold letter
-  variants*).
+  regardless of these forms, fold them (see
+  [Keep or fold letter variants](https://defense-humanites.github.io/greek-conversion/guide/recipes/letter-variants/)).
 - `convertDetailed()` reports a form the target cannot write, so that a
   conversion without loss still converts back to the same text: `ϐίος` gives
   `bíos` in transliteration, which reads back as `βίος`, with a
@@ -67,10 +67,11 @@ Without them:
   and a case policy writes the ordinary letter (`ϑ` in capitals is `Θ`).
 
 The API also gains two options, which change nothing by default:
-`greek.iotaSubscript`, which writes the iota subscript on the line (see the
-README, *Write the iota on the line*), and `source`, which describes how the
-input is written when it is not written as the output, to restyle a
-transliteration (*Restyle a transliteration*). A restyle that went through
+`greek.iotaSubscript`, which writes the iota subscript on the line (see
+[Write the iota on the line](https://defense-humanites.github.io/greek-conversion/guide/recipes/iota-on-the-line/)), and
+`source`, which describes how the input is written when it is not written as
+the output, to restyle a transliteration
+([Restyle a transliteration](https://defense-humanites.github.io/greek-conversion/guide/recipes/restyle/)). A restyle that went through
 Greek in two calls can take one,
 `reencode(text, "transliteration", { ...target, source })`, which also keeps
 what the Greek step dropped, such as a lunate sigma that the source writes

@@ -59,6 +59,24 @@ change.
   apostrophe and font shifts to `docs/information-loss.md`. The English text
   prevails over the `README`, guides, and translations. No behavior changes.
 
+### Added
+
+- A documentation site, at https://defense-humanites.github.io/greek-conversion/,
+  built with Starlight (`web/docs/`): a guide and nine recipes taken from the
+  README, the reference generated from `docs/` at each build, and the API
+  reference generated from the TSDoc of both entry points, with search. It
+  uses the playground's design (`web/shared/`) and follows the system's light
+  or dark appearance. The playground moves to `/playground/`; a link shared
+  before, to the site's root with its state in the fragment, opens the
+  playground. The site is laid out for translations, English being the
+  source; none is published yet.
+- The README is now a short entry point: installation, one example, the main
+  functions, and links to the site. Its development notes move to
+  `CONTRIBUTING.md`. `npm run check` (`scripts/check_examples.ts`, formerly
+  `check_readme.ts`) type-checks and runs the examples of the guide pages as
+  well as the README's, and checks the links between pages. The package's
+  `homepage` is the site.
+
 ### Fixed
 
 - ISO 843 Type 2 (`iso-843-type-2`) writes `ωυ` letter by letter, as note 8

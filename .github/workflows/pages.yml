@@ -1,12 +1,24 @@
-name: Playground
+name: Site
 
+# The documentation site (web/docs) at the root of GitHub Pages, and the
+# playground (web/playground) under /playground/. A pull request builds the
+# site to check it; a push to main also deploys it.
 on:
   push:
     branches: [main]
     paths:
       - .github/workflows/pages.yml
+      - docs/**
       - package.json
       - package-lock.json
+      - scripts/build_site.ts
+      - src/**
+      - tsconfig*.json
+      - web/**
+  pull_request:
+    paths:
+      - .github/workflows/pages.yml
+      - docs/**
       - scripts/build_site.ts
       - src/**
       - web/**
@@ -16,7 +28,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: github-pages
+  group: site-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -28,14 +40,25 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/docs/package-lock.json
       - run: npm ci --ignore-scripts
+      - run: npm ci --prefix web/docs
+      - run: npm run build --prefix web/docs
+        env:
+          ASTRO_TELEMETRY_DISABLED: 1
       - run: npm run site:build
+      - run: cp -R web/docs/dist/. _site/
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+        if: github.event_name != 'pull_request'
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        if: github.event_name != 'pull_request'
         with:
           path: _site
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -45,6 +68,9 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
     steps:
       - uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
         id: deployment

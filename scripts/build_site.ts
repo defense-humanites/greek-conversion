@@ -1,6 +1,6 @@
 /**
- * Builds the static playground into `_site/` from this checkout's public
- * library entry points. `web/playground/tsconfig.json` type-checks it
+ * Builds the static playground into `_site/playground/` from this checkout's
+ * public library entry points. `web/playground/tsconfig.json` type-checks it
  * beforehand, in `npm run site:build` and in `npm run check`.
  *
  * The design tokens and fonts shared with the documentation site are in
@@ -16,7 +16,9 @@ import { build } from "esbuild";
 const ROOT = new URL("../", import.meta.url);
 const PLAYGROUND = new URL("web/playground/", ROOT);
 const SHARED = new URL("web/shared/", ROOT);
-const SITE = new URL("_site/", ROOT);
+// The documentation site (`web/docs/`) is built into `_site/` itself, with
+// the playground under it, as GitHub Pages serves them.
+const SITE = new URL("_site/playground/", ROOT);
 
 await mkdir(new URL("fonts/", SITE), { recursive: true });
 await mkdir(new URL("assets/", SITE), { recursive: true });

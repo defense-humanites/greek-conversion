@@ -31,7 +31,8 @@ Not covered, and free to change in any release:
 
 - direct imports of `src/*.ts` modules, which are implementation details even
   though JSR serves them;
-- the playground website, the build scripts, the test suite and its fixtures;
+- the documentation site and the playground, the build scripts, the test
+  suite and its fixtures;
 - the English text of diagnostic and error messages (see below);
 - the exact `limitations`, `description`, and `coverage` texts of preset
   metadata, which are descriptive;

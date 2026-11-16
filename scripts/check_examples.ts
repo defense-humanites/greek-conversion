@@ -1,7 +1,10 @@
 /**
- * Checks the TypeScript examples of README.md, so that the README cannot
- * drift from the code: each ```ts block is type-checked as a module of its
- * own, then executed, and its results are compared with the documented ones.
+ * Checks the TypeScript examples of README.md and of the guide pages of the
+ * documentation site (`web/docs/src/content/docs/`, except the generated
+ * reference and API pages), so that they cannot drift from the code: each
+ * ```ts block is type-checked as a module of its own, then executed, and its
+ * results are compared with the documented ones. A translated page keeps its
+ * examples, so they are checked in every language.
  *
  * Inside a ```ts block, an expected result is written as a comment that
  * starts with an arrow, either after a one-line statement or on the line
@@ -19,17 +22,24 @@
  * Comments without an arrow are illustrative and are not checked.
  *
  * Links to files of this repository, and to headings in them or in the
- * README, must exist in the working tree.
+ * README, must exist in the working tree. A guide page links to other pages
+ * by their path from the site's root (`/reference/presets/#coverage`); the
+ * page and the heading must exist, in `docs/` for the reference, generated
+ * from it.
  *
- * Run with `node scripts/check_readme.ts`.
+ * Run with `node scripts/check_examples.ts`.
  */
 import { execFileSync } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const README = new URL("../README.md", import.meta.url);
+const ROOT = new URL("../", import.meta.url);
+const README = new URL("README.md", ROOT);
+const PAGES = new URL("web/docs/src/content/docs/", ROOT);
+/** Folders of the site that are generated, from `docs/` and from the API. */
+const GENERATED = new Set(["reference", "api"]);
 const MAIN = new URL("../src/mod.ts", import.meta.url);
 const DOCUMENT = new URL("../src/document.ts", import.meta.url);
 const TSC = fileURLToPath(
@@ -85,9 +95,34 @@ interface Expectation {
   line: number;
 }
 
-const source = await readFile(README, "utf8");
-const lines = source.split("\n");
-const blocks = [...codeBlocks(lines)];
+/** A checked document: the README or a guide page of the site. */
+interface Source {
+  /** Its path from the repository's root, for messages. */
+  name: string;
+  lines: string[];
+  /** Its path on the site, such as `/guide/losses/`, for a guide page. */
+  page?: string;
+}
+
+const sources: Source[] = [
+  { name: "README.md", lines: (await readFile(README, "utf8")).split("\n") },
+];
+for (const file of await guidePages(PAGES)) {
+  const url = new URL(file, PAGES);
+  sources.push({
+    name: relative(fileURLToPath(ROOT), fileURLToPath(url)).replaceAll(
+      "\\",
+      "/",
+    ),
+    lines: (await readFile(url, "utf8")).split("\n"),
+    page: `/${
+      file.replace(/(^|\/)index\.mdx?$/, "$1").replace(/\.mdx?$/, "/")
+    }`,
+  });
+}
+const blocks = sources.flatMap((source) =>
+  [...codeBlocks(source.lines)].map((block) => ({ ...block, source }))
+);
 const failures: string[] = [];
 let checked = 0;
 
@@ -108,7 +143,7 @@ try {
       await import(pathToFileURL(file).href);
     } catch (error) {
       failures.push(
-        `README.md:${block.start}: the example failed to run: ${error}`,
+        `${block.source.name}:${block.start}: the example failed to run: ${error}`,
       );
       continue;
     }
@@ -116,7 +151,7 @@ try {
       checked++;
       if (!result.ok) {
         failures.push(
-          `README.md:${expectations[index].line}: ${result.detail}`,
+          `${block.source.name}:${expectations[index].line}: ${result.detail}`,
         );
       }
     });
@@ -127,46 +162,127 @@ try {
 
 // Links to this repository point at main, because the README is also shown on
 // JSR and npm; check that each linked file and heading exists in this tree.
+// Guide pages link to the site's pages by their path from its root.
 const REPOSITORY =
   "https://github.com/defense-humanites/greek-conversion/blob/main/";
 const slug = (heading: string) =>
   heading.trim().toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, "")
     .replace(/\s/g, "-");
-for (const [index, line] of lines.entries()) {
-  for (const match of line.matchAll(/\]\(([^)\s]+)\)/g)) {
+for (const source of sources) {
+  const text = source.lines.join("\n");
+  for (const match of text.matchAll(/\]\(([^)\s]+)\)/g)) {
+    const line = text.slice(0, match.index).split("\n").length;
+    const where = `${source.name}:${line}`;
     const target = match[1];
     let file: string | undefined;
     let anchor: string | undefined;
     if (target.startsWith(REPOSITORY)) {
       [file, anchor] = target.slice(REPOSITORY.length).split("#");
     } else if (target.startsWith("#")) {
-      file = "README.md";
+      file = source.name;
       anchor = target.slice(1);
+    } else if (source.page !== undefined && target.startsWith("/")) {
+      const [path, fragment] = target.split("#");
+      anchor = fragment;
+      file = await pageFile(path);
+      if (file === undefined) {
+        failures.push(`${where}: no such page: ${path}`);
+        continue;
+      }
+      if (file === "") {
+        checked++;
+        continue;
+      }
     } else continue;
 
-    let text: string;
+    let content: string;
     try {
-      text = await readFile(new URL(`../${file}`, import.meta.url), "utf8");
+      content = await readFile(new URL(file, ROOT), "utf8");
     } catch {
-      failures.push(`README.md:${index + 1}: no such file: ${file}`);
+      failures.push(`${where}: no such file: ${file}`);
       continue;
     }
     checked++;
-    if (anchor === undefined) continue;
-    const headings = text.split("\n").filter((row) => /^#{1,6} /.test(row))
+    if (anchor === undefined || anchor === "") continue;
+    const headings = content.split("\n").filter((row) => /^#{1,6} /.test(row))
       .map((row) => slug(row.replace(/^#+ /, "")));
     if (!headings.includes(anchor)) {
-      failures.push(`README.md:${index + 1}: no heading #${anchor} in ${file}`);
+      failures.push(`${where}: no heading #${anchor} in ${file}`);
     }
   }
 }
 
 if (failures.length > 0) {
   console.error(failures.join("\n"));
-  console.error(`\n${failures.length} README problem(s) found.`);
+  console.error(
+    `\n${failures.length} problem(s) found in the examples and links.`,
+  );
   process.exit(1);
 }
-console.log(`${checked} README results and links check out.`);
+console.log(
+  `${checked} results and links check out in the README and ${
+    sources.length - 1
+  } guide pages.`,
+);
+
+/** The guide pages under `folder`, as paths relative to it. */
+async function guidePages(folder: URL): Promise<string[]> {
+  let entries;
+  try {
+    entries = await readdir(folder, { recursive: true, withFileTypes: true });
+  } catch {
+    return [];
+  }
+  return entries.filter((entry) => entry.isFile() && /\.mdx?$/.test(entry.name))
+    .map((entry) =>
+      relative(fileURLToPath(folder), join(entry.parentPath, entry.name))
+        .replaceAll("\\", "/")
+    )
+    .filter((file) => !GENERATED.has(file.split("/")[0]))
+    .sort();
+}
+
+/**
+ * The file, from the repository's root, of the site's page at `path`:
+ * `docs/<name>.md` for a reference page, the page's source for a guide page,
+ * an empty string for a page this check does not read (the API reference,
+ * generated from the code, and the playground), and undefined for no page.
+ */
+async function pageFile(path: string): Promise<string | undefined> {
+  const reference = path.match(/^\/reference\/([\w-]+)\/$/);
+  if (reference) {
+    const file = `docs/${reference[1]}.md`;
+    try {
+      await readFile(new URL(file, ROOT));
+      return file;
+    } catch {
+      return undefined;
+    }
+  }
+  if (path.startsWith("/api/") || path === "/playground/") return "";
+  if (!path.endsWith("/")) return undefined;
+  const base = path === "/" ? "index" : path.slice(1, -1);
+  for (
+    const candidate of [
+      `${base}.md`,
+      `${base}.mdx`,
+      `${base}/index.md`,
+      `${base}/index.mdx`,
+    ]
+  ) {
+    try {
+      await readFile(new URL(candidate, PAGES));
+      return relative(
+        fileURLToPath(ROOT),
+        fileURLToPath(new URL(candidate, PAGES)),
+      )
+        .replaceAll("\\", "/");
+    } catch {
+      // Try the next layout.
+    }
+  }
+  return undefined;
+}
 
 function* codeBlocks(
   all: readonly string[],
@@ -276,10 +392,10 @@ function toPath(url: URL): string {
 
 /**
  * Type-checks each block as a module of its own, as written, and returns the
- * errors with their README line numbers.
+ * errors with their file names and line numbers.
  */
 async function typeCheck(
-  all: readonly { start: number; lines: string[] }[],
+  all: readonly { start: number; lines: string[]; source: Source }[],
   directory: string,
 ): Promise<string[]> {
   const files: string[] = [];
@@ -326,7 +442,7 @@ async function typeCheck(
         line.replace(
           /^(?:.*[\\/])?check-(\d+)\.mts\((\d+),(\d+)\)/,
           (_, number: string, row: string, column: string) =>
-            `README.md:${
+            `${all[Number(number)].source.name}:${
               all[Number(number)].start + Number(row) - 1
             }:${column}`,
         ),

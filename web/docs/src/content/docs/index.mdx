@@ -1,0 +1,47 @@
+---
+title: greek conversion
+description: Bidirectional conversion between Greek, Beta Code, and transliteration, with standards-based presets and information-loss diagnostics.
+template: splash
+hero:
+  tagline: Convert between Greek, Beta Code, and transliteration, in every direction. Follow a published standard, and know exactly what a conversion keeps.
+  actions:
+    - text: Get started
+      link: /greek-conversion/guide/getting-started/
+      icon: right-arrow
+    - text: Try the playground
+      link: /greek-conversion/playground/
+      variant: minimal
+---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("Ἕλλησιν ἐγένετο", "greek", "transliteration"); // → Héllēsin egéneto
+convert("*(/ellhsin e)ge/neto", "beta-code", "greek"); // → Ἕλλησιν ἐγένετο
+convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliteration", {
+  preset: "iso-843-type-2",
+});
+// → I Athína eínai i protévousa
+```
+
+<CardGrid>
+  <Card title="Every direction" icon="random">
+    Unicode Greek, polytonic or monotonic, the Beta Code of the TLG, and
+    scientific transliteration all convert into one another, through one
+    canonical document.
+  </Card>
+  <Card title="Published standards" icon="open-book">
+    Presets implement ALA-LC, the BnF, ISO 843 (ELOT 743), SBL, the TLG, and
+    Perseus, each with its references, coverage, and limits.
+  </Card>
+  <Card title="Losses, reported" icon="magnifier">
+    `convertDetailed()` tells you, token by token, what the target cannot
+    keep, and where each token went.
+  </Card>
+  <Card title="Checked options" icon="approve-check">
+    A misspelled option never falls back silently: every error names the
+    option, what it received, and what it accepts.
+  </Card>
+</CardGrid>
