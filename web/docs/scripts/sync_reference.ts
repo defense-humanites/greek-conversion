@@ -8,8 +8,8 @@
  * to other files of the repository point at them on GitHub. The output is
  * generated and not committed.
  *
- * The project's marks (`docs/assets/`) are copied too: the symbol for the
- * header, and the favicon.
+ * The project's marks (`docs/assets/`) are copied too, into `public/`: the
+ * symbol of the header, light and dark, and the favicon.
  *
  * Run with `npm run sync`, which `npm run dev` and `npm run build` do first.
  */
@@ -17,7 +17,6 @@ import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 
 const DOCS = new URL("../../../docs/", import.meta.url);
 const OUTPUT = new URL("../src/content/docs/reference/", import.meta.url);
-const MARKS = new URL("../src/assets/marks/", import.meta.url);
 const PUBLIC = new URL("../public/", import.meta.url);
 const REPOSITORY =
   "https://github.com/defense-humanites/greek-conversion/blob/main/";
@@ -51,16 +50,19 @@ for (const name of names) {
   await writeFile(new URL(name, OUTPUT), page);
 }
 
-await mkdir(MARKS, { recursive: true });
-for (const name of ["symbol-clair", "symbol-sombre"]) {
-  const file = `greek-conversion-${name}.svg`;
-  await cp(new URL(`assets/${file}`, DOCS), new URL(file, MARKS));
-}
 await mkdir(PUBLIC, { recursive: true });
-await cp(
-  new URL("assets/greek-conversion-favicon.svg", DOCS),
-  new URL("favicon.svg", PUBLIC),
-);
+for (
+  const [name, copy] of [
+    ["symbol-clair", "symbol-light"],
+    ["symbol-sombre", "symbol-dark"],
+    ["favicon", "favicon"],
+  ]
+) {
+  await cp(
+    new URL(`assets/greek-conversion-${name}.svg`, DOCS),
+    new URL(`${copy}.svg`, PUBLIC),
+  );
+}
 
 console.log(`${names.length} reference documents synced from docs/.`);
 

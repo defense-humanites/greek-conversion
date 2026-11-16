@@ -1,9 +1,10 @@
 /*
- * Starlight in the greek-conversion design: the tokens of
- * `web/shared/tokens.css` (Papier and Nuit, cobalt and orange, Bricolage
- * Grotesque and Literata), which follow the system's appearance. The site
- * has no theme switch, so Starlight's `data-theme` follows the same
- * appearance, and one mapping serves both.
+ * Starlight in the playground's design (`web/shared/tokens.css`): Papier and
+ * Nuit, cobalt for what is read and orange for what is written, Bricolage
+ * Grotesque, and the same shapes: raised panels with a thin line and a 6px
+ * radius on the page's paper, bordered buttons, pills. The site has no theme
+ * switch, so Starlight's `data-theme` follows the system's appearance, as the
+ * tokens do, and one mapping serves both.
  */
 :root,
 ::backdrop,
@@ -22,36 +23,222 @@
   --sl-color-gray-7: var(--code-bg);
   --sl-color-black: var(--surface);
 
-  --sl-color-accent-low: color-mix(in oklab, var(--from) 16%, var(--surface));
+  --sl-color-accent-low: color-mix(in oklab, var(--from) 14%, var(--raised));
   --sl-color-accent: var(--from);
   --sl-color-accent-high: color-mix(in oklab, var(--from) 75%, var(--ink));
   --sl-color-text-accent: var(--link);
 
   --sl-color-bg-nav: var(--surface);
   --sl-color-bg-sidebar: var(--surface);
+  --sl-color-bg-inline-code: var(--raised);
   --sl-color-hairline-light: var(--line);
   --sl-color-hairline: var(--line);
   --sl-color-hairline-shade: var(--line);
+
+  --sl-nav-height: 4.5rem;
+  --sl-line-height: 1.65;
+  --sl-text-h1: 2.5rem;
+  --sl-text-h2: 1.75rem;
+  --sl-text-h3: 1.375rem;
+  --sl-text-h4: 1.125rem;
 }
 
-/* The orange of the tessera's Latin half marks the current page, as it
-   marks the target in the playground. */
+/* Text: headings in Bricolage at display size, as the playground's name. */
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6),
+h1#_top {
+  font-weight: 700;
+  font-variation-settings: "opsz" 72;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.sl-markdown-content :is(h3, h4, h5, h6) {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.content-panel + .content-panel {
+  border-top-color: transparent;
+}
+
+/* Inline code and keyboard keys: small raised chips. */
+.sl-markdown-content :not(pre) > code,
+kbd {
+  padding: 0.1em 0.35em;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--raised);
+  font-size: 0.875em;
+}
+
+/* Tables: a raised panel with rounded corners, headed by small capitals. */
+.sl-markdown-content table {
+  display: block;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: var(--radius);
+  background: var(--raised);
+}
+.sl-markdown-content :is(th, td) {
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+}
+.sl-markdown-content tr:last-child td {
+  border-bottom: none;
+}
+.sl-markdown-content th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--raised);
+}
+/* Capitals would change Greek in a heading's code. */
+.sl-markdown-content th code {
+  letter-spacing: normal;
+  text-transform: none;
+}
+/* An identifier heading a row stays on one line. */
+.sl-markdown-content td:first-child > code {
+  white-space: nowrap;
+}
+/* A chip that wraps keeps its border on each line. */
+.sl-markdown-content :not(pre) > code {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* Asides, cards, and the previous and next links: raised panels. */
+.starlight-aside {
+  border: 1px solid var(--line);
+  border-inline-start-width: 4px;
+  border-radius: var(--radius);
+  background: var(--raised);
+}
+.card {
+  --sl-card-border: var(--from);
+  --sl-card-bg: color-mix(in oklab, var(--from) 12%, var(--raised));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+}
+.card:nth-child(even) {
+  --sl-card-border: var(--to);
+  --sl-card-bg: color-mix(in oklab, var(--to) 12%, var(--raised));
+}
+.card .icon {
+  border-radius: var(--radius);
+}
+.pagination-links a {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+  box-shadow: none;
+}
+.pagination-links a:hover {
+  border-color: var(--muted);
+}
+
+/* Header: the page's paper, the search field as a bordered button. */
+.header {
+  border-bottom-color: transparent;
+}
+site-search button[data-open-modal] {
+  min-height: 2.75rem;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+}
+site-search button[data-open-modal]:hover {
+  border-color: var(--muted);
+}
+site-search kbd {
+  border-radius: 4px;
+}
+site-search dialog {
+  border-radius: var(--radius);
+}
+
+/*
+ * Sidebar: rounded entries; the current page is marked as the playground
+ * marks its target, raised, with a border in the orange of the tessera's
+ * Latin half.
+ */
+.sidebar-content a {
+  border: 1.5px solid transparent;
+  border-radius: var(--radius);
+}
+.sidebar-content a:hover {
+  background: color-mix(in oklab, var(--raised) 60%, transparent);
+}
 .sidebar-content a[aria-current="page"],
 .sidebar-content a[aria-current="page"]:hover,
 .sidebar-content a[aria-current="page"]:focus {
-  background-color: color-mix(in oklab, var(--to) 14%, var(--surface));
-  box-shadow: inset 3px 0 0 var(--to);
+  border-color: var(--to);
+  background: var(--raised);
   color: var(--ink);
   font-weight: 600;
 }
-
-/* Greek, Beta Code, and transliteration in the hero read as in the
-   playground. */
-.hero .tagline {
-  font-family: var(--face-text);
+.sidebar-content summary .group-label .large {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sidebar-content ul ul {
+  border-inline-start-color: transparent;
 }
 
-.site-title {
-  font-weight: 700;
-  letter-spacing: -0.01em;
+/* Table of contents and its mobile toggle. */
+mobile-starlight-toc nav summary,
+mobile-starlight-toc .toggle {
+  border-radius: var(--radius);
+}
+
+/* The home page: the intro set like the playground's, buttons like its own. */
+.hero {
+  padding-block: 3rem 2rem;
+}
+.hero h1 {
+  font-variation-settings: "opsz" 96;
+  letter-spacing: -0.03em;
+  color: var(--from);
+}
+.hero h1 span {
+  color: var(--to);
+}
+.hero .tagline {
+  max-width: 34rem;
+  font-family: var(--face-text);
+  font-size: 1.25rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.hero .sl-link-button,
+.sl-link-button {
+  min-height: 2.75rem;
+  padding-inline: 1rem;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
+}
+.sl-link-button.primary {
+  border-color: var(--from);
+  background: var(--from);
+  color: var(--surface);
+}
+.sl-link-button.primary:hover {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--surface);
+}
+.sl-link-button.minimal {
+  background: transparent;
+  color: var(--ink);
+}
+.sl-link-button.minimal:hover {
+  border-color: var(--muted);
 }

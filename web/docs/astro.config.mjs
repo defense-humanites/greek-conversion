@@ -52,10 +52,6 @@ export default defineConfig({
       title: "greek conversion",
       description:
         "Bidirectional conversion between Greek, Beta Code, and transliteration, with standards-based presets and information-loss diagnostics.",
-      logo: {
-        light: "./src/assets/marks/greek-conversion-symbol-clair.svg",
-        dark: "./src/assets/marks/greek-conversion-symbol-sombre.svg",
-      },
       favicon: "/favicon.svg",
       // English is the root locale, at the site's root. A translation is a
       // folder of the same pages (`fr/`) and one more entry here.
@@ -63,7 +59,10 @@ export default defineConfig({
       social: [{ icon: "github", label: "GitHub", href: REPOSITORY }],
       editLink: { baseUrl: `${REPOSITORY}/edit/main/web/docs/` },
       customCss: ["../shared/tokens.css", "./src/styles/theme.css"],
-      components: { ThemeSelect: "./src/components/ThemeSelect.astro" },
+      components: {
+        SiteTitle: "./src/components/SiteTitle.astro",
+        ThemeSelect: "./src/components/ThemeSelect.astro",
+      },
       head: [{ tag: "script", content: PLAYGROUND_REDIRECT }],
       plugins: [
         starlightTypeDoc({
