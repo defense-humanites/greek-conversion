@@ -1859,8 +1859,6 @@ function showInventory(): void {
         )
       ),
     );
-    const empty = row.querySelector<HTMLElement>(".inventory-empty");
-    if (empty) empty.hidden = ids.length > 0;
   }
   inventoryRow("aliases").querySelector("ul")!.replaceChildren(
     ...(inventory.aliases ?? []).map((alias, index) =>

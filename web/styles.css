@@ -1502,13 +1502,6 @@ pre.code code {
 .inventory-row > .option-pills {
   display: contents;
 }
-.inventory-empty {
-  color: var(--muted);
-  font-size: 15px;
-}
-.inventory-empty[hidden] {
-  display: none;
-}
 .pill-text {
   padding: 6px 0;
   white-space: nowrap;
