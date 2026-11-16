@@ -2,46 +2,51 @@
 title: greek conversion
 description: Bidirectional conversion between Greek, Beta Code, and transliteration, with standards-based presets and information-loss diagnostics.
 template: splash
+# The opening is drawn by HomeHero, below; this only leaves out the title.
 hero:
-  title: greek <span>conversion</span>
-  tagline: Convert between Greek, Beta Code, and transliteration, in every direction. Follow a published standard, and know exactly what a conversion keeps.
-  actions:
-    - text: Get started
-      link: /greek-conversion/guide/getting-started/
-      icon: right-arrow
-    - text: Try the playground
-      link: /greek-conversion/playground/
-      variant: minimal
+  title: greek conversion
 ---
 
 import { Card, CardGrid } from "@astrojs/starlight/components";
+import HomeHero from "../../components/HomeHero.astro";
+
+<HomeHero>
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
 
-convert("Ἕλλησιν ἐγένετο", "greek", "transliteration"); // → Héllēsin egéneto
-convert("*(/ellhsin e)ge/neto", "beta-code", "greek"); // → Ἕλλησιν ἐγένετο
+// Ancient Greek, in the SBL academic style
+convert("Ἕλλησιν ἐγένετο", "greek", "transliteration");
+// → Héllēsin egéneto
+
+// Beta Code, as the TLG writes it
+convert("*(/ellhsin e)ge/neto", "beta-code", "greek");
+// → Ἕλλησιν ἐγένετο
+
+// Modern Greek, as passports and maps write it
 convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliteration", {
   preset: "iso-843-type-2",
 });
 // → I Athína eínai i protévousa
 ```
 
+</HomeHero>
+
 <CardGrid>
-  <Card title="Every direction" icon="random">
+  <Card title="Every direction">
     Unicode Greek, polytonic or monotonic, the Beta Code of the TLG, and
     scientific transliteration all convert into one another, through one
     canonical document.
   </Card>
-  <Card title="Published standards" icon="open-book">
+  <Card title="Published standards">
     Presets implement ALA-LC, the BnF, ISO 843 (ELOT 743), SBL, the TLG, and
     Perseus, each with its references, coverage, and limits.
   </Card>
-  <Card title="Losses, reported" icon="magnifier">
+  <Card title="Losses, reported">
     `convertDetailed()` tells you, token by token, what the target cannot
     keep, and where each token went.
   </Card>
-  <Card title="Checked options" icon="approve-check">
+  <Card title="Checked options">
     A misspelled option never falls back silently: every error names the
     option, what it received, and what it accepts.
   </Card>

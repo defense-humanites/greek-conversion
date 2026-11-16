@@ -1,0 +1,95 @@
+---
+/*
+ * The opening of the home page: the vertical logo, which is the page's
+ * heading, the project's description, and the two ways in; the example given
+ * in the page's body sits beside them on a wide screen, under them otherwise.
+ * The logo follows the system's appearance, as the whole site does.
+ */
+import { LinkButton } from "@astrojs/starlight/components";
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+---
+
+<section class="home-hero not-content">
+  <div class="intro">
+    <h1 id="_top">
+      <picture>
+        <source
+          media="(prefers-color-scheme: dark)"
+          srcset={`${base}logo-dark.svg`}
+        />
+        <img
+          src={`${base}logo-light.svg`}
+          alt="greek conversion"
+          width="308"
+          height="168"
+        />
+      </picture>
+    </h1>
+    <p class="description">
+      Bidirectional conversion between Greek, Beta Code, and transliteration,
+      with standards‑based presets and information‑loss&nbsp;diagnostics.
+    </p>
+    <div class="actions">
+      <LinkButton href={`${base}guide/getting-started/`} icon="right-arrow">
+        Get started
+      </LinkButton>
+      <LinkButton href={`${base}playground/`} variant="minimal">
+        Try the playground
+      </LinkButton>
+    </div>
+  </div>
+  <div class="example"><slot /></div>
+</section>
+
+<style>
+  .home-hero {
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+    padding-block: 2.5rem 1rem;
+  }
+  /* The vertical logo is centred on itself: so is what follows it. */
+  .intro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    text-align: center;
+  }
+  h1 {
+    margin: 0;
+    line-height: 0;
+  }
+  img {
+    width: min(19rem, 70vw);
+    height: auto;
+  }
+  .description {
+    max-width: 30rem;
+    margin: 0;
+    font-size: 1.25rem;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+  .actions :global(.sl-link-button) {
+    margin: 0;
+  }
+  .example {
+    min-width: 0;
+  }
+  @media (min-width: 72rem) {
+    .home-hero {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: 3.5rem;
+      padding-block: 4rem 2rem;
+    }
+  }
+</style>

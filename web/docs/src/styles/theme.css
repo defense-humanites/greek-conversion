@@ -117,18 +117,13 @@ kbd {
   background: var(--raised);
 }
 .card {
-  --sl-card-border: var(--from);
-  --sl-card-bg: color-mix(in oklab, var(--from) 12%, var(--raised));
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--raised);
 }
-.card:nth-child(even) {
-  --sl-card-border: var(--to);
-  --sl-card-bg: color-mix(in oklab, var(--to) 12%, var(--raised));
-}
-.card .icon {
-  border-radius: var(--radius);
+.card .title {
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 .pagination-links a {
   border: 1px solid var(--line);
@@ -197,26 +192,7 @@ mobile-starlight-toc .toggle {
   border-radius: var(--radius);
 }
 
-/* The home page: the intro set like the playground's, buttons like its own. */
-.hero {
-  padding-block: 3rem 2rem;
-}
-.hero h1 {
-  font-variation-settings: "opsz" 96;
-  letter-spacing: -0.03em;
-  color: var(--from);
-}
-.hero h1 span {
-  color: var(--to);
-}
-.hero .tagline {
-  max-width: 34rem;
-  font-family: var(--face-text);
-  font-size: 1.25rem;
-  line-height: 1.55;
-  color: var(--muted);
-}
-.hero .sl-link-button,
+/* Buttons, as the playground's: bordered, with the same radius. */
 .sl-link-button {
   min-height: 2.75rem;
   padding-inline: 1rem;

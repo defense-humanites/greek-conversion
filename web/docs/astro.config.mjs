@@ -60,6 +60,7 @@ export default defineConfig({
       editLink: { baseUrl: `${REPOSITORY}/edit/main/web/docs/` },
       customCss: ["../shared/tokens.css", "./src/styles/theme.css"],
       components: {
+        Hero: "./src/components/Hero.astro",
         SiteTitle: "./src/components/SiteTitle.astro",
         ThemeSelect: "./src/components/ThemeSelect.astro",
       },

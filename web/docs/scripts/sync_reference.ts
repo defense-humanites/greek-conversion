@@ -9,7 +9,8 @@
  * generated and not committed.
  *
  * The project's marks (`docs/assets/`) are copied too, into `public/`: the
- * symbol of the header, light and dark, and the favicon.
+ * symbol of the header and the vertical logo of the home page, light and
+ * dark, and the favicon.
  *
  * Run with `npm run sync`, which `npm run dev` and `npm run build` do first.
  */
@@ -55,6 +56,8 @@ for (
   const [name, copy] of [
     ["symbol-clair", "symbol-light"],
     ["symbol-sombre", "symbol-dark"],
+    ["logo-clair", "logo-light"],
+    ["logo-sombre", "logo-dark"],
     ["favicon", "favicon"],
   ]
 ) {
