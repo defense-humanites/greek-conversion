@@ -31,6 +31,12 @@
   unicode-range: U+037B-037D, U+03D0-03D6, U+03F0-03F1, U+03F5, U+03FD-03FF;
 }
 
+/* Safari on iPhone enlarges some text in landscape: the sizes stay those
+   the page sets. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 :root {
   color-scheme: light;
   --surface: #f6f0e4;
@@ -1489,17 +1495,21 @@ pre.code code {
   flex-direction: column;
   gap: 14px;
 }
+/* The words share a column, so that the pills start on one line and wrap
+   under one another, never under the word. */
 .inventory-row {
+  display: grid;
+  grid-template-columns: 8.5em minmax(0, 1fr);
+  align-items: baseline;
+  gap: 10px 12px;
+}
+.inventory-pills {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px 12px;
 }
-/* The words share one width, so that the pills start on one line. */
-.inventory-row > .word {
-  min-width: 8.5em;
-}
-.inventory-row > .option-pills {
+.inventory-pills > .option-pills {
   display: contents;
 }
 .pill-text {
@@ -1720,8 +1730,10 @@ footer strong {
     margin-top: 6px;
   }
   /* The characters: each word over its pills. */
+  .inventory-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .inventory-row > .word {
-    width: 100%;
     font-size: 16px;
   }
   .diagnostics h2 {
