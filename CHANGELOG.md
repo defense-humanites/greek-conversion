@@ -44,7 +44,9 @@ change.
   opening state, and offers to undo it for a few seconds. On a touch screen,
   Share opens the system's share sheet; elsewhere, it copies the link. By
   touch, the pickers of options and characters show their lists without a
-  search field, whose keyboard would hide them.
+  search field, whose keyboard would hide them. The result reads on the
+  ground of the code blocks, says where it will appear while empty, and,
+  typed in, where to write instead.
 
 ## [1.0.0-rc.9] - 2026-11-15
 

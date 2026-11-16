@@ -978,8 +978,11 @@ h1 span {
   border-radius: var(--radius);
   background: var(--raised);
 }
+/* The result reads on the ground of the code: written by the conversion,
+   selectable, not typed in. */
 .field.to {
   border-color: var(--to);
+  background: var(--code-bg);
 }
 /*
  * The label and the buttons share the head of the field; only on a phone do
@@ -1039,6 +1042,19 @@ h1 span {
 }
 .field-foot:empty {
   display: none;
+}
+/* Typing in the result says where to write, in place of its count. */
+.field-tip {
+  bottom: -5px;
+  padding: 3px 8px;
+  border-radius: var(--radius);
+  background: var(--tip);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 18px;
+}
+.editor:has(.field-tip:not(:empty)) #output-meta {
+  visibility: hidden;
 }
 .field-actions {
   flex: none;

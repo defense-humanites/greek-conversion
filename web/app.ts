@@ -2652,6 +2652,36 @@ function resetAll(): void {
 }
 
 resetButton.addEventListener("click", resetAll);
+
+/*
+ * The result is read-only: typing in it, or pasting, says where to write
+ * instead, until the next click or for a few seconds.
+ */
+const outputTip = element<HTMLParagraphElement>("output-tip");
+let outputTipTimer: ReturnType<typeof setTimeout> | undefined;
+
+function hideOutputTip(): void {
+  clearTimeout(outputTipTimer);
+  outputTip.textContent = "";
+}
+
+function showOutputTip(): void {
+  outputTip.textContent =
+    "The result follows the source: edit the source, or Swap.";
+  clearTimeout(outputTipTimer);
+  outputTipTimer = setTimeout(hideOutputTip, 5000);
+}
+
+output.addEventListener("keydown", (event) => {
+  const typing = event.key.length === 1 ||
+    ["Backspace", "Delete", "Enter"].includes(event.key);
+  if (typing && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    showOutputTip();
+  }
+});
+output.addEventListener("paste", showOutputTip);
+output.addEventListener("pointerdown", hideOutputTip);
+output.addEventListener("blur", hideOutputTip);
 // Undo is offered for the conversion reset, not for what follows it.
 source.addEventListener("input", hideUndo);
 clearButton.addEventListener("click", () => {
