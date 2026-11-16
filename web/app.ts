@@ -1467,13 +1467,22 @@ let pickerItems: {
 }[] = [];
 let pickerActive = 0;
 
+/**
+ * Whether the page is used without a mouse, by touch. There, the pickers
+ * show their lists without a search field: the virtual keyboard it raises
+ * would hide most of a list that a finger scrolls faster than it types.
+ */
+function touchOnly(): boolean {
+  return matchMedia("(hover: none) and (pointer: coarse)").matches;
+}
+
 function openPicker(): void {
   pickerEntry = undefined;
   optionSearch.value = "";
   optionPicker.hidden = false;
   addOptionButton.setAttribute("aria-expanded", "true");
   showPickerItems();
-  optionSearch.focus();
+  (optionSearch.hidden ? optionList : optionSearch).focus();
 }
 
 function closePicker(focusButton: boolean): void {
@@ -1528,11 +1537,19 @@ function showPickerItems(): void {
 
   if (pickerEntry === undefined) {
     optionStep.hidden = true;
-    // The field takes the focus back before the list stops taking it.
-    optionSearch.hidden = false;
-    if (optionPicker.contains(document.activeElement)) optionSearch.focus();
-    optionList.removeAttribute("tabindex");
-    optionList.removeAttribute("aria-activedescendant");
+    if (touchOnly()) {
+      // By touch, the list alone, as for the values.
+      optionList.tabIndex = 0;
+      if (optionPicker.contains(document.activeElement)) optionList.focus();
+      optionSearch.hidden = true;
+      optionSearch.removeAttribute("aria-activedescendant");
+    } else {
+      // The field takes the focus back before the list stops taking it.
+      optionSearch.hidden = false;
+      if (optionPicker.contains(document.activeElement)) optionSearch.focus();
+      optionList.removeAttribute("tabindex");
+      optionList.removeAttribute("aria-activedescendant");
+    }
     optionList.removeAttribute("aria-labelledby");
     optionList.setAttribute("aria-label", "Conversion options");
     setPreview(undefined);
@@ -1660,8 +1677,9 @@ function setPickerActive(index: number): void {
       String(item.id === `option-item-${pickerActive}`),
     );
   }
-  // The search field leads the list of options, the list itself its values.
-  const owner = pickerEntry ? optionList : optionSearch;
+  // The search field leads the list of options, the list itself its values,
+  // and its options by touch.
+  const owner = optionSearch.hidden ? optionList : optionSearch;
   const value = pickerItems[pickerActive]?.value;
   if (pickerEntry && value !== undefined) {
     setPreview({ entry: pickerEntry, value });
@@ -1999,6 +2017,10 @@ function showCharacterList(query = ""): void {
   list.className = "option-list";
   list.setAttribute("role", "listbox");
   list.setAttribute("aria-label", "Characters");
+  // By touch, the list alone takes the focus and the keys (touchOnly).
+  const byTouch = touchOnly();
+  const owner = byTouch ? list : search;
+  if (byTouch) list.tabIndex = 0;
 
   const render = () => {
     list.replaceChildren();
@@ -2043,15 +2065,15 @@ function showCharacterList(query = ""): void {
       empty.textContent = "No character matches";
       list.append(empty);
     }
-    setInventoryActive(search, list, 0);
+    setInventoryActive(owner, list, 0);
   };
   search.addEventListener("input", render);
-  search.addEventListener("keydown", (event) => {
+  owner.addEventListener("keydown", (event) => {
     const atEnd = search.selectionStart === search.value.length;
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
       setInventoryActive(
-        search,
+        owner,
         list,
         inventoryActive + (event.key === "ArrowDown" ? 1 : -1),
       );
@@ -2066,15 +2088,15 @@ function showCharacterList(query = ""): void {
       closeInventoryPicker(true);
     }
   });
-  inventoryPicker.replaceChildren(search, list);
+  inventoryPicker.replaceChildren(...(byTouch ? [list] : [search, list]));
   render();
   // The focus first, without its own jump: the scroll is the picker's.
-  search.focus({ preventScroll: true });
+  owner.focus({ preventScroll: true });
   placeInventoryPicker(false);
 }
 
 function setInventoryActive(
-  search: HTMLInputElement,
+  owner: HTMLElement,
   list: HTMLElement,
   index: number,
 ): void {
@@ -2088,10 +2110,10 @@ function setInventoryActive(
   }
   const active = document.getElementById(`inventory-item-${inventoryActive}`);
   if (active) {
-    search.setAttribute("aria-activedescendant", active.id);
+    owner.setAttribute("aria-activedescendant", active.id);
     active.scrollIntoView({ block: "nearest" });
   } else {
-    search.removeAttribute("aria-activedescendant");
+    owner.removeAttribute("aria-activedescendant");
   }
 }
 
@@ -2430,8 +2452,7 @@ let shareTimer: ReturnType<typeof setTimeout> | undefined;
  * Where the sheet is missing or closed, and with a pointer, the link is
  * copied.
  */
-const SHARES_NATIVELY = matchMedia("(hover: none)").matches &&
-  typeof navigator.share === "function";
+const SHARES_NATIVELY = touchOnly() && typeof navigator.share === "function";
 const SHARE_HELP = SHARES_NATIVELY
   ? "Share a link that opens this text with the same settings."
   : "Copy a link that opens this text with the same settings.";
