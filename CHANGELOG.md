@@ -48,6 +48,18 @@ change.
   ground of the code blocks, says where it will appear while empty, and,
   typed in, where to write instead.
 
+### Fixed
+
+- ISO 843 Type 2 (`iso-843-type-2`) writes `ωυ` letter by letter, as note 8
+  requires of a combination that Table 2 does not list: `ἑωυτοῦ` gives
+  `heoytoû` (rc.9: `heoutoû`). Omega was written as it reads back, omicron,
+  and `ωυ` like `ου`. Since `ου` is written `ou`, or `oy` only with an accent
+  on the `o` or a diaeresis on the `y` (note 9), an `o` without marks before
+  a `y` without diaeresis now reads back as omega, so that `ωυ` converts back
+  without loss. A rough breathing on its upsilon stays there (`κωὑ` gives
+  `kohy`). A numeral, whose letters are digits, is still written as it reads
+  back (`ωυʹ` gives `ouʹ`, with a reported loss).
+
 ## [1.0.0-rc.9] - 2026-11-15
 
 Ninth release candidate for `1.0.0`. Greek output now keeps the letter forms

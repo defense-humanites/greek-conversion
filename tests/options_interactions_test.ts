@@ -302,12 +302,25 @@ test("letter spelling options keep consonants before a rough breathing idempoten
 
 test("writes vowel pairs as they read back, under the ISO and SBL presets", () => {
   const iso = { preset: "iso-843-type-2" } as const;
-  // Omega is written o: Ionic ωυ is written like ου, not oy, which reads
-  // back as the hiatus οϋ.
-  assertNfcEquals(
-    convert("ἑωυτοῦ", "greek", "transliteration", iso),
-    "heoutoû",
-  );
+  // Table 2 lists ου but not ωυ, which note 8 converts letter by letter:
+  // oy, which reads back as omega and upsilon, since ου is written ou, or oy
+  // only with an accent on the o or a diaeresis on the y (note 9).
+  for (const [input, output] of [["ἑωυτοῦ", "heoytoû"], ["Ωυ ωύ", "Oy oý"]]) {
+    const result = convertDetailed(input, "greek", "transliteration", iso);
+    assertNfcEquals(result.output, output);
+    assertEquals(result.lossy, false);
+    assertNfcEquals(convert(output, "transliteration", "greek", iso), input);
+  }
+  // With an accent on the o, the pair is ου in hiatus, and omega is lost.
+  assertNfcEquals(convert("όυ ώυ", "greek", "transliteration", iso), "óy óy");
+  assertNfcEquals(convert("óy", "transliteration", "greek", iso), "όυ");
+  // A rough breathing on the upsilon of ωυ stays on it.
+  assertNfcEquals(convert("κωὑ", "greek", "transliteration", iso), "kohy");
+  assertNfcEquals(convert("kohy", "transliteration", "greek", iso), "κωὑ");
+  // A numeral is written as it reads back, and a bare oy in it keeps its
+  // omicron: ωυʹ (1200) like ουʹ (470).
+  assertNfcEquals(convert("ωυʹ", "greek", "transliteration", iso), "ouʹ");
+  assertNfcEquals(convert("oyʹ", "transliteration", "greek", iso), "οϋʹ");
   // The apostrophe of a coronis reads back as punctuation; the μπ after it
   // stays inside the word, where it is mp.
   assertNfcEquals(
