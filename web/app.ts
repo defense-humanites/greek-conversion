@@ -2449,8 +2449,8 @@ let shareTimer: ReturnType<typeof setTimeout> | undefined;
 /**
  * Without a pointer to hover with, no note says what Share does: there, the
  * system's share sheet, which shows the page and the link, says it itself.
- * Where the sheet is missing or closed, and with a pointer, the link is
- * copied.
+ * Where the sheet is missing or fails, and with a pointer, the link is
+ * copied; closed, the sheet copies nothing.
  */
 const SHARES_NATIVELY = touchOnly() && typeof navigator.share === "function";
 const SHARE_HELP = SHARES_NATIVELY
@@ -2516,8 +2516,12 @@ async function share(): Promise<void> {
       await navigator.share({ title: document.title, url: location.href });
       confirmShare("Link shared.");
       return;
-    } catch {
-      // Closed, or refused: the link is copied instead.
+    } catch (error) {
+      // Closed: the reader chose not to share, nor to copy, which the sheet
+      // offers. Refused or failed: the link is copied instead.
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
     }
   }
   try {
