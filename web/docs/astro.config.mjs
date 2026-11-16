@@ -40,7 +40,7 @@ function prefixBase() {
  */
 function markTexts() {
   const TEXT = /^[\p{L}\p{M}\s’ʼ'ʹ͵·;.,:?!-]+$/u;
-  const BEYOND_ASCII = /[^\x00-\x7f]/;
+  const BEYOND_ASCII = /\P{ASCII}/u;
   const GREEK = /[\u0370-\u03ff\u1f00-\u1fff]/;
   /** @param {any} node @param {any} parent */
   const visit = (node, parent) => {
