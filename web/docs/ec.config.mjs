@@ -3,10 +3,51 @@
  * Code blocks in the colors of the playground's code (`web/shared/tokens.css`):
  * keywords in cobalt, strings in the orange of the target, functions in ink,
  * comments muted, on the code background, with the same rounded frame.
- * Expressive Code needs literal colors: these are the tokens' values, for
- * Papier (light) and Nuit (dark).
+ * Expressive Code needs literal colors: they are read from the tokens
+ * themselves, for Papier (light, `:root`) and Nuit (dark, the
+ * `prefers-color-scheme: dark` block), so that a change there reaches the
+ * site as it reaches the playground.
  */
+import { readFileSync } from "node:fs";
 import { defineEcConfig, ExpressiveCodeTheme } from "@astrojs/starlight/expressive-code";
+
+const TOKENS = readFileSync(
+  new URL("../shared/tokens.css", import.meta.url),
+  "utf8",
+);
+
+/**
+ * The value of each custom property of the first `:root` block after
+ * `start` in tokens.css.
+ * @param {number} start
+ * @returns {Record<string, string>}
+ */
+function tokens(start) {
+  const open = TOKENS.indexOf(":root {", start);
+  const block = TOKENS.slice(open, TOKENS.indexOf("}", open));
+  return Object.fromEntries(
+    [...block.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map(([, name, value]) => [
+      name,
+      value.trim(),
+    ]),
+  );
+}
+
+/**
+ * The colors of the code in one appearance.
+ * @param {Record<string, string>} t
+ */
+function colors(t) {
+  return {
+    background: t["--code-bg"],
+    ink: t["--ink"],
+    muted: t["--code-muted"],
+    keyword: t["--code-keyword"],
+    string: t["--code-string"],
+    function: t["--code-function"],
+    selection: t["--line"],
+  };
+}
 
 /**
  * @param {"light" | "dark"} type
@@ -68,25 +109,11 @@ function theme(type, c) {
   });
 }
 
-const light = theme("light", {
-  background: "#fbf8f2",
-  ink: "#1f2a44",
-  muted: "#5e5a63",
-  keyword: "#2f4fa8",
-  string: "#a9461c",
-  function: "#1f2a44",
-  selection: "#e2d9c8",
-});
-
-const dark = theme("dark", {
-  background: "#191f31",
-  ink: "#d9ddeb",
-  muted: "#9aa3bf",
-  keyword: "#c9d3ec",
-  string: "#e08a5e",
-  function: "#f4ecdd",
-  selection: "#323a5c",
-});
+const light = theme("light", colors(tokens(0)));
+const dark = theme(
+  "dark",
+  colors(tokens(TOKENS.indexOf("@media (prefers-color-scheme: dark)"))),
+);
 
 export default defineEcConfig({
   themes: [dark, light],

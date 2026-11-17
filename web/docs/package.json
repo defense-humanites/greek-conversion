@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "sync": "node scripts/sync_reference.ts",
-    "dev": "npm run sync && astro dev",
-    "build": "npm run sync && astro build",
+    "dev": "npm run sync && astro dev --force",
+    "build": "npm run sync && astro build --force",
     "preview": "astro preview"
   },
   "dependencies": {
