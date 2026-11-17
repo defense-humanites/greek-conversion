@@ -115,6 +115,17 @@ const dark = theme(
   colors(tokens(TOKENS.indexOf("@media (prefers-color-scheme: dark)"))),
 );
 
+/**
+ * The playground's copy icon (`web/playground/index.html`): a 24px grid,
+ * 2px rounded stroke, as every icon of the design system. Expressive Code
+ * draws it as a mask, in the button's foreground colour.
+ */
+const COPY_ICON = `url("data:image/svg+xml,${
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>',
+  )
+}")`;
+
 export default defineEcConfig({
   themes: [dark, light],
   // The tokens' colors as they are: they already contrast enough.
@@ -140,8 +151,18 @@ export default defineEcConfig({
       terminalTitlebarBorderBottomColor: "var(--line)",
       terminalTitlebarDotsForeground: "var(--line)",
       terminalBackground: "var(--code-bg)",
+      // The copy button as the playground's secondary buttons: no fill, a
+      // line border (darker on hover, in theme.css), the icon in ink.
+      copyIcon: COPY_ICON,
+      inlineButtonForeground: "var(--ink)",
+      inlineButtonBackground: "var(--raised)",
+      inlineButtonBackgroundIdleOpacity: "0",
+      inlineButtonBackgroundHoverOrFocusOpacity: "0",
+      inlineButtonBackgroundActiveOpacity: "0",
       inlineButtonBorder: "var(--line)",
+      inlineButtonBorderOpacity: "1",
       tooltipSuccessBackground: "var(--from)",
+      tooltipSuccessForeground: "var(--surface)",
     },
   },
 });

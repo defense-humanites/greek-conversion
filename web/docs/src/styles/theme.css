@@ -483,3 +483,36 @@ mobile-starlight-toc .toggle {
     opacity: 0;
   }
 }
+
+/* The copy button of code blocks, as the playground's secondary buttons: a
+   6px radius, a 1.5px line that darkens on hover, the 18px icon. */
+.expressive-code .copy button {
+  border-radius: var(--radius);
+}
+
+/* Where there is a pointer, Expressive Code shows the button when the block
+   is hovered, dimmed: shown, it is shown whole. */
+@media (hover: hover) {
+  .expressive-code .frame:hover .copy button:not(:hover),
+  .expressive-code .frame:focus-within :focus-visible ~ .copy button:not(:hover),
+  .expressive-code .frame .copy .feedback.show ~ button:not(:hover) {
+    opacity: 1;
+  }
+}
+
+.expressive-code .copy button::before {
+  border-width: 1.5px;
+}
+
+.expressive-code .copy button:hover::before {
+  border-color: var(--muted);
+}
+
+.expressive-code .copy button::after {
+  margin: calc(50% - 9px);
+}
+
+.expressive-code .copy .feedback {
+  border-radius: var(--radius);
+  font-weight: 600;
+}
