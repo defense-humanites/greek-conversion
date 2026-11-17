@@ -340,6 +340,11 @@ site-search dialog {
   border: 1.5px solid transparent;
   border-radius: var(--radius);
 }
+/* Items keep a 3px gap, as the playground's option list does, so that a
+   hovered item's background never touches its neighbour's. */
+.sidebar-content li:has(> a) + li:has(> a) {
+  margin-top: 3px;
+}
 .sidebar-content a:hover {
   background: color-mix(in oklab, var(--raised) 60%, transparent);
 }
@@ -397,10 +402,15 @@ mobile-starlight-toc .dropdown {
   box-shadow: var(--shadow);
 }
 
+mobile-starlight-toc .isMobile li + li,
+mobile-starlight-toc .isMobile li > ul {
+  margin-top: 3px;
+}
+
 mobile-starlight-toc .isMobile a {
   padding-block: 0.5rem;
   border: 1.5px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--radius);
   color: var(--ink);
   font-size: 0.9375rem;
 }
