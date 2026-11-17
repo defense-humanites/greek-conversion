@@ -172,6 +172,11 @@ h1#_top {
   white-space: nowrap;
 }
 /* A chip that wraps keeps its border on each line. */
+/* Inline code in the ink, the running text's accented version (the text
+   itself is at 86%); in a link, the link's colour. */
+.sl-markdown-content :not(pre, a) > code {
+  color: var(--ink);
+}
 .sl-markdown-content :not(pre) > code {
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
