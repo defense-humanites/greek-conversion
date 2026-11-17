@@ -362,10 +362,64 @@ site-search dialog {
   border-inline-start-color: transparent;
 }
 
-/* Table of contents and its mobile toggle. */
-mobile-starlight-toc nav summary,
+/* "On this page", below the header where the table of contents has no
+   column. The toggle is a secondary button, as in the playground; the list
+   opens in a raised panel, with the playground's shadow, and the current
+   section is marked as the sidebar marks the current page. */
 mobile-starlight-toc .toggle {
+  padding-block: 0.5rem;
+  border: 1.5px solid var(--line);
   border-radius: var(--radius);
+  background: var(--raised);
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+mobile-starlight-toc details[open] .toggle,
+mobile-starlight-toc details .toggle:hover {
+  border-color: var(--muted);
+  color: var(--ink);
+}
+
+mobile-starlight-toc .display-current {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+mobile-starlight-toc .dropdown {
+  max-width: 24rem;
+  margin: 0.5rem 1rem 0;
+  padding: 0.375rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+  box-shadow: var(--shadow);
+}
+
+mobile-starlight-toc .isMobile a {
+  padding-block: 0.5rem;
+  border: 1.5px solid transparent;
+  border-radius: 4px;
+  color: var(--ink);
+  font-size: 0.9375rem;
+}
+
+mobile-starlight-toc .isMobile a:hover {
+  background: var(--code-bg);
+}
+
+mobile-starlight-toc .isMobile a[aria-current="true"],
+mobile-starlight-toc .isMobile a[aria-current="true"]:hover,
+mobile-starlight-toc .isMobile a[aria-current="true"]:focus {
+  border-color: var(--to);
+  background: var(--raised);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+mobile-starlight-toc .isMobile a[aria-current="true"]::after {
+  display: none;
 }
 
 /* Buttons, as the playground's: bordered, with the same radius. */
