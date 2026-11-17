@@ -152,7 +152,12 @@ kbd {
   border-color: var(--muted);
 }
 
-/* Header: the search field as a bordered button. */
+/* Header: no divider after the project's links, which end the line. */
+.header .social-icons::after {
+  content: none;
+}
+
+/* The search field as a bordered button. */
 site-search button[data-open-modal] {
   min-height: 2.75rem;
   border: 1.5px solid var(--line);

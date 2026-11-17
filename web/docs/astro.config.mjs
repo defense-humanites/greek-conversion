@@ -91,12 +91,12 @@ export default defineConfig({
       // English is the root locale, at the site's root. A translation is a
       // folder of the same pages (`fr/`) and one more entry here.
       locales: { root: { label: "English", lang: "en" } },
-      social: [{ icon: "github", label: "GitHub", href: REPOSITORY }],
       editLink: { baseUrl: `${REPOSITORY}/edit/main/web/docs/` },
       customCss: ["../shared/tokens.css", "./src/styles/theme.css"],
       components: {
         Hero: "./src/components/Hero.astro",
         SiteTitle: "./src/components/SiteTitle.astro",
+        SocialIcons: "./src/components/SocialIcons.astro",
         ThemeSelect: "./src/components/ThemeSelect.astro",
       },
       head: [{ tag: "script", content: PLAYGROUND_REDIRECT }],
@@ -121,7 +121,6 @@ export default defineConfig({
             "guide/getting-started",
             "guide/how-it-works",
             "guide/presets",
-            { label: "Playground", link: "/playground/" },
           ],
         },
         {
@@ -169,8 +168,6 @@ export default defineConfig({
             { label: "Changelog", link: `${REPOSITORY}/blob/main/CHANGELOG.md` },
             { label: "Migration guide", link: `${REPOSITORY}/blob/main/MIGRATION.md` },
             { label: "Contributing", link: `${REPOSITORY}/blob/main/CONTRIBUTING.md` },
-            { label: "npm", link: "https://www.npmjs.com/package/@humanities/greek-conversion" },
-            { label: "JSR", link: "https://jsr.io/@humanities/greek-conversion" },
           ],
         },
       ],
