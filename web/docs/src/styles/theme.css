@@ -60,6 +60,22 @@
   outline-offset: 2px;
 }
 
+/* Links in the text keep their blue, hovered or not. The 2px underline is
+   faint at rest and takes the link's own colour on hover. */
+.sl-markdown-content a:not(:where(.not-content *, .sl-anchor-link)) {
+  color: var(--link);
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+  transition: text-decoration-color 0.15s ease;
+}
+
+.sl-markdown-content a:hover:not(:where(.not-content *, .sl-anchor-link)) {
+  color: var(--link);
+  text-decoration-color: currentColor;
+}
+
 /* Links that open in a new tab, as in the playground: a mark kept on the
    line of the last word. */
 .external-tail {
