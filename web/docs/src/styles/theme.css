@@ -395,3 +395,70 @@ mobile-starlight-toc .toggle {
     --__toc-width: initial;
   }
 }
+
+/* Moving between pages. The browser itself cross-fades the content while the
+   header and the sidebar stay put (cross-document view transitions: Chrome,
+   Edge, Safari; other browsers load the page as before). Nothing moves for
+   those who ask for less motion. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+
+/* Starlight's frame header; code frames and the header's own content also use
+   the class, and a name must be unique. */
+.page > .header {
+  view-transition-name: site-header;
+}
+
+@media (min-width: 50rem) {
+  .sidebar-pane {
+    view-transition-name: site-sidebar;
+  }
+}
+
+::view-transition-group(site-header),
+::view-transition-group(site-sidebar),
+::view-transition-old(site-header),
+::view-transition-old(site-sidebar),
+::view-transition-new(site-header),
+::view-transition-new(site-sidebar) {
+  animation: none;
+}
+
+::view-transition-old(site-header),
+::view-transition-old(site-sidebar) {
+  display: none;
+}
+
+/* The sidebar appears or leaves with the home page: let it fade. */
+::view-transition-old(site-sidebar):only-child,
+::view-transition-new(site-sidebar):only-child {
+  display: block;
+  animation: 180ms ease both page-fade-in;
+}
+
+::view-transition-old(site-sidebar):only-child {
+  animation-name: page-fade-out;
+}
+
+::view-transition-old(root) {
+  animation: 90ms ease-in both page-fade-out;
+}
+
+::view-transition-new(root) {
+  animation: 180ms ease-out 60ms both page-fade-in;
+}
+
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+}

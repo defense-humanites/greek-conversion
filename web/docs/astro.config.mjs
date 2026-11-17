@@ -148,6 +148,10 @@ export default defineConfig({
   site: SITE,
   base: BASE,
   trailingSlash: "always",
+  // Fetch a page as soon as its link is hovered or touched: with the view
+  // transition declared in theme.css, moving between pages then feels like an
+  // application's.
+  prefetch: { prefetchAll: true, defaultStrategy: "hover" },
   markdown: {
     processor: unified({ rehypePlugins: [prefixBase(), markExternal(), markGreek()] }),
   },
