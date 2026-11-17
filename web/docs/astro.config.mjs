@@ -100,6 +100,7 @@ export default defineConfig({
         ThemeSelect: "./src/components/ThemeSelect.astro",
       },
       head: [{ tag: "script", content: PLAYGROUND_REDIRECT }],
+      routeMiddleware: "./src/routeData.ts",
       plugins: [
         starlightTypeDoc({
           entryPoints: ["../../src/mod.ts", "../../src/document.ts"],

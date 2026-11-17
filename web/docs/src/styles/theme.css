@@ -355,3 +355,17 @@ mobile-starlight-toc .toggle {
 .sl-link-button.minimal:hover {
   border-color: var(--muted);
 }
+
+/*
+ * The home page keeps the sidebar for the phone's menu (`routeData.ts`); on a
+ * wider screen it is a splash page, without the sidebar, at full width.
+ */
+@media (min-width: 50rem) {
+  :root[data-has-sidebar]:has(.home-hero) {
+    --sl-content-inline-start: 0rem;
+    --sl-content-width: 67.5rem;
+  }
+  :root:has(.home-hero) .sidebar-pane {
+    display: none;
+  }
+}
