@@ -7,3 +7,4 @@ npm/
 coverage/
 _site/
 .node-test-runner.mjs
+__pycache__/
