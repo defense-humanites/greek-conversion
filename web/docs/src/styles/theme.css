@@ -54,9 +54,10 @@
   --sl-text-h4: 1.125rem;
 }
 
-/* Keyboard focus, as in the playground: a cobalt ring, set off the shape. */
+/* Keyboard focus, as in the playground: a ring in the link colour (cobalt,
+   cobalt-clair in the dark theme), set off the shape. */
 :focus-visible {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 2px;
 }
 
@@ -338,7 +339,7 @@ site-search dialog {
   outline: none;
 }
 #starlight__search .pagefind-ui__search-clear:focus-visible {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: -4px;
 }
 #starlight__search .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)):hover,
@@ -349,7 +350,7 @@ site-search dialog {
 #starlight__search .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)):focus-within,
 #starlight__search .pagefind-ui__result-nested:focus-within {
   /* Inside the result, where its neighbours cannot hide it. */
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: -2px;
   background-color: var(--sl-color-black);
 }

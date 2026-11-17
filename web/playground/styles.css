@@ -61,7 +61,7 @@ a:hover,
   text-decoration-color: currentColor;
 }
 :focus-visible {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 2px;
 }
 /* Links to other sites open in a new tab; the mark says so. */
@@ -629,7 +629,7 @@ h1 span {
   color: var(--from);
 }
 .segments label:has(input:focus-visible) {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 2px;
 }
 /* Options: one pill per departure from the standard, then a picker */
@@ -700,7 +700,7 @@ h1 span {
 }
 .pill-value:has(select:focus-visible) {
   border-radius: 6px;
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 1px;
 }
 .pill-remove {
@@ -782,7 +782,7 @@ h1 span {
   font-size: 16px;
 }
 .option-picker input[type="text"]:focus-visible {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 0;
 }
 .option-step {
@@ -1060,7 +1060,7 @@ h1 span {
   cursor: pointer;
 }
 .menu-button:has(select:focus-visible) {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 2px;
 }
 .menu-button:hover {
@@ -1106,7 +1106,7 @@ h1 span {
   outline: none;
 }
 .field:focus-within {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 3px;
 }
 .field.to:focus-within {
@@ -1454,7 +1454,7 @@ pre.code code {
 }
 .check input:focus-visible,
 .picker-formats input:focus-visible {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 2px;
 }
 /* The character inventory: rows of pills, as for the options */
@@ -1496,7 +1496,7 @@ pre.code code {
 }
 .picker-search:focus-visible,
 .picker-field input:focus-visible {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 0;
 }
 .picker-form {

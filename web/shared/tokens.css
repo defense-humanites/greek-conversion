@@ -65,7 +65,8 @@
   /* --from: the cobalt of identity and meaning (the name's "greek", the
      symbol's half, the source side of the playground's source and target).
      --link: links and active elements (primary buttons, checked controls,
-     selected tabs, hover colours), as the design system's link token. In
+     selected tabs, hover colours, the focus ring), as the design system's
+     link and focus-ring tokens. In
      the light theme the two are the same cobalt; in the dark theme --from
      is bleu-clair and --link cobalt-clair. */
   --from: #2f4fa8;
