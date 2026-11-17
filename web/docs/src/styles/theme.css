@@ -239,14 +239,34 @@ site-search button[data-open-modal]:hover {
     display: block;
   }
 }
-/* The menu button of a phone: its icon alone, centred, without a frame. On
-   a wider screen, Starlight hides it. */
+/* On a phone, where everything stacks, the header and the "On this page"
+   bar sit 4px closer to the edges than the text (12px rather than 16px):
+   the break in alignment sets them off, and the floating panel stands out
+   from the text below it. */
 @media (max-width: 49.99rem) {
+  :root {
+    --sl-nav-pad-x: 0.75rem;
+  }
+}
+
+/* The menu button of a phone: its icon alone, without a frame, its right
+   edge on the header's margin, as the symbol's left edge. The button itself
+   reaches the screen's edge, a target at least 44px wide, which shows
+   nothing since it has no background. The header keeps the usual gap
+   between the search field and the icon. On a wider screen, Starlight hides
+   the button. */
+@media (max-width: 49.99rem) {
+  [data-has-sidebar] .page > .header {
+    padding-inline-end: calc(var(--sl-nav-gap) + var(--sl-nav-pad-x) + 1.5rem);
+  }
   button.sl-menu-button,
   button.sl-menu-button:has(~ :popover-open) {
+    inset-inline-end: 0;
+    width: calc(1.5rem + var(--sl-nav-pad-x) + 0.75rem);
+    padding-inline-end: var(--sl-nav-pad-x);
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     border: 0;
     background: transparent;
     color: var(--ink);
@@ -375,6 +395,10 @@ mobile-starlight-toc nav {
   --toggle-height: 2.125rem;
 }
 
+mobile-starlight-toc summary {
+  padding-inline: var(--sl-nav-pad-x);
+}
+
 mobile-starlight-toc .toggle {
   box-sizing: border-box;
   height: var(--toggle-height);
@@ -413,8 +437,8 @@ mobile-starlight-toc .display-current {
 mobile-starlight-toc .dropdown {
   position: absolute;
   top: calc((var(--sl-mobile-toc-height) - 1px + var(--toggle-height)) / 2 + 6px);
-  inset-inline-start: 1rem;
-  width: min(24rem, 100% - 2rem);
+  inset-inline-start: var(--sl-nav-pad-x);
+  width: min(24rem, 100% - 2 * var(--sl-nav-pad-x));
   margin: 0;
   padding: 0.375rem;
   border: 1px solid var(--line);
