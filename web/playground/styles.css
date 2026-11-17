@@ -43,13 +43,22 @@ button,
 select {
   cursor: pointer;
 }
-a {
+/* Links keep their blue, hovered or not, as in the documentation. The 2px
+   underline is faint at rest and takes the link's own colour on hover. */
+a,
+.link-button,
+.reset-note button {
   color: var(--link);
-  text-underline-offset: 0.15em;
-}
-a:hover {
-  color: var(--ink);
+  text-decoration-line: underline;
   text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+  transition: text-decoration-color 0.15s ease;
+}
+a:hover,
+.link-button:hover,
+.reset-note button:hover {
+  text-decoration-color: currentColor;
 }
 :focus-visible {
   outline: 2px solid var(--from);
@@ -258,7 +267,9 @@ h1 span {
   text-decoration: none;
 }
 .links a:hover {
+  color: var(--ink);
   text-decoration: underline;
+  text-decoration-thickness: 2px;
 }
 /* Reset and Share act on the whole page: they sit together, top right. */
 .page-actions {
@@ -345,8 +356,6 @@ h1 span {
   background: none;
   font: inherit;
   font-weight: 600;
-  color: var(--link, var(--from));
-  text-decoration: underline;
   cursor: pointer;
 }
 .share-done {
@@ -902,16 +911,8 @@ h1 span {
   padding: 0;
   border: none;
   background: none;
-  color: var(--link);
   font-size: inherit;
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
   cursor: pointer;
-}
-/* As a link does. */
-.preset-line .link-button:hover {
-  color: var(--ink);
-  text-decoration-thickness: 2px;
 }
 .preset-limits {
   margin: 10px 0 0;
