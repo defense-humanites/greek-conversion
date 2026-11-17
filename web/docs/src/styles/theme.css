@@ -192,14 +192,33 @@ h1#_top {
   font-weight: 700;
   letter-spacing: -0.01em;
 }
+/* Previous and next: no panels, under a single rule. The arrow sits on
+   the first line, "Previous" or "Next" (an icon box one line high); on
+   hover, the title takes the links' blue. */
+.pagination-links {
+  /* Side by side down to two columns of 14rem (Starlight: 18rem), since
+     the links are no longer panels that need the room. */
+  grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
 .pagination-links a {
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--raised);
+  align-items: flex-start;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
   box-shadow: none;
 }
-.pagination-links a:hover {
-  border-color: var(--muted);
+.pagination-links a svg {
+  /* Starlight sizes icons through font-size: back to the label's, so that
+     1lh is the label's line. */
+  font-size: inherit;
+  width: 1.25rem;
+  height: 1lh;
+}
+.pagination-links a:hover .link-title {
+  color: var(--link);
 }
 
 /* Header: no divider after the project's links, which end the line. */
