@@ -38,6 +38,9 @@
   --sl-color-hairline: var(--line);
   --sl-color-hairline-shade: var(--line);
 
+  /* Wide enough for the full name and its label to sit above the sidebar,
+     so that the search field lines up with the text, on Starlight's grid. */
+  --sl-sidebar-width: 21.25rem;
   --sl-nav-height: 4.5rem;
   --sl-line-height: 1.65;
   --sl-text-h1: 2.5rem;
