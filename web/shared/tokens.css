@@ -92,7 +92,12 @@
     --from: #c9d3ec;
     --to: #e08a5e;
     --to-fill: #e08a5e;
-    --link: #c9d3ec;
+    /* cobalt-clair: the cobalt's hue (oklch 0.76 0.12 265.8), lightened as
+       orange-clair lightens the orange, and as saturated as the screen
+       allows; 7.9:1 on nuit, 7:1 on surface-raised. bleu-clair, nearly
+       grey, stays the symbol's and the name's: as a link colour it read
+       as text a shade lighter rather than as blue. */
+    --link: #8daffe;
     --code-bg: #191f31;
     --code-keyword: #c9d3ec;
     --code-string: #e08a5e;
