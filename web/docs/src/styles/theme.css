@@ -368,4 +368,12 @@ mobile-starlight-toc .toggle {
   :root:has(.home-hero) .sidebar-pane {
     display: none;
   }
+  /* The header still lays out as on a page of the guide, with its sidebar,
+     its column of text, and its table of contents, so that the search field
+     keeps its place from page to page. */
+  :root:has(.home-hero) .header {
+    --sl-content-inline-start: var(--sl-sidebar-width);
+    --sl-content-width: 45rem;
+    --__toc-width: initial;
+  }
 }
