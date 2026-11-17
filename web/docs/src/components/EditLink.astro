@@ -1,0 +1,37 @@
+---
+/*
+ * Starlight's edit link, which leads to GitHub: like every link that leaves
+ * the documentation, it opens in a new tab and says so.
+ */
+import { Icon } from "@astrojs/starlight/components";
+
+const { editUrl } = Astro.locals.starlightRoute;
+const label = Astro.locals.t("page.editLink");
+---
+
+{
+  editUrl && (
+    <a href={editUrl} class="sl-flex print:hidden" target="_blank" rel="noopener">
+      <Icon name="pencil" size="1.2em" />
+      <span>
+        <span class="external-tail">
+          {label}
+          <span class="external-mark" aria-hidden="true" />
+        </span>
+        <span class="sr-only"> (opens in a new tab)</span>
+      </span>
+    </a>
+  )
+}
+
+<style>
+  a {
+    gap: 0.5rem;
+    align-items: center;
+    text-decoration: none;
+    color: var(--sl-color-gray-3);
+  }
+  a:hover {
+    color: var(--sl-color-white);
+  }
+</style>

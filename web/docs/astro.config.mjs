@@ -58,6 +58,65 @@ function markGreek() {
 }
 
 /**
+ * Links that leave the documentation open in a new tab and say so, as the
+ * header's do: links to other sites, and to the playground, a tool of its
+ * own. The last word and the mark stay on one line (`.external-tail`), and
+ * screen readers hear "opens in a new tab". Runs after `prefixBase`.
+ */
+function markExternal() {
+  /** @param {string} href */
+  const leaves = (href) =>
+    /^https?:\/\//.test(href) || href.startsWith(`${BASE}/playground/`);
+  /** @param {string} tagName @param {string[]} className @param {any[]} children */
+  const span = (tagName, className, children) => ({
+    type: "element",
+    tagName,
+    properties: { className },
+    children,
+  });
+  /** @param {any} node */
+  const visit = (node) => {
+    if (node.type === "element" && node.tagName === "a") {
+      const href = node.properties?.href;
+      if (typeof href === "string" && leaves(href)) {
+        node.properties.target = "_blank";
+        node.properties.rel = ["noopener"];
+        const children = node.children ?? [];
+        const mark = span("span", ["external-mark"], []);
+        mark.properties.ariaHidden = "true";
+        const last = children.at(-1);
+        let tail;
+        if (last?.type === "text") {
+          const start = last.value.search(/\S+\s*$/);
+          const word = start >= 0 ? last.value.slice(start).trimEnd() : "";
+          last.value = start >= 0 ? last.value.slice(0, start) : last.value;
+          tail = span("span", ["external-tail"], [
+            { type: "text", value: word },
+            mark,
+          ]);
+          if (last.value === "") children.pop();
+        } else {
+          tail = span("span", ["external-tail"], [
+            ...(last ? [children.pop()] : []),
+            mark,
+          ]);
+        }
+        node.children = [
+          ...children,
+          tail,
+          span("span", ["sr-only"], [
+            { type: "text", value: " (opens in a new tab)" },
+          ]),
+        ];
+      }
+      return;
+    }
+    for (const child of node.children ?? []) visit(child);
+  };
+  return () => visit;
+}
+
+/**
  * The playground used to be served at the site's root, and its shared links
  * carry their state in the fragment (`#from=greek&to=…`), which never reaches
  * the server. Such a link now opens the home page: send it on to the
@@ -68,12 +127,29 @@ if (location.pathname === "${BASE}/" && location.hash.includes("=")) {
   location.replace("${BASE}/playground/" + location.hash);
 }`;
 
+/**
+ * A sidebar link that leaves the documentation: it opens in a new tab, and
+ * says so to screen readers; theme.css draws the mark.
+ * @param {string} label @param {string} link
+ */
+function external(label, link) {
+  return {
+    label,
+    link,
+    attrs: {
+      target: "_blank",
+      rel: "noopener",
+      "aria-label": `${label} (opens in a new tab)`,
+    },
+  };
+}
+
 export default defineConfig({
   site: SITE,
   base: BASE,
   trailingSlash: "always",
   markdown: {
-    processor: unified({ rehypePlugins: [prefixBase(), markGreek()] }),
+    processor: unified({ rehypePlugins: [prefixBase(), markExternal(), markGreek()] }),
   },
   vite: { server: { fs: { allow: ["../.."] } } },
   integrations: [
@@ -88,6 +164,7 @@ export default defineConfig({
       editLink: { baseUrl: `${REPOSITORY}/edit/main/web/docs/` },
       customCss: ["../shared/tokens.css", "./src/styles/theme.css"],
       components: {
+        EditLink: "./src/components/EditLink.astro",
         Footer: "./src/components/Footer.astro",
         Hero: "./src/components/Hero.astro",
         SiteTitle: "./src/components/SiteTitle.astro",
@@ -161,9 +238,9 @@ export default defineConfig({
           label: "Project",
           collapsed: true,
           items: [
-            { label: "Changelog", link: `${REPOSITORY}/blob/main/CHANGELOG.md` },
-            { label: "Migration guide", link: `${REPOSITORY}/blob/main/MIGRATION.md` },
-            { label: "Contributing", link: `${REPOSITORY}/blob/main/CONTRIBUTING.md` },
+            external("Changelog", `${REPOSITORY}/blob/main/CHANGELOG.md`),
+            external("Migration guide", `${REPOSITORY}/blob/main/MIGRATION.md`),
+            external("Contributing", `${REPOSITORY}/blob/main/CONTRIBUTING.md`),
           ],
         },
       ],
