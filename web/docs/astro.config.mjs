@@ -180,7 +180,11 @@ export default defineConfig({
       // folder of the same pages (`fr/`) and one more entry here.
       locales: { root: { label: "English", lang: "en" } },
       editLink: { baseUrl: `${REPOSITORY}/edit/main/web/docs/` },
-      customCss: ["../shared/tokens.css", "./src/styles/theme.css"],
+      customCss: [
+        "../shared/tokens.css",
+        "../shared/icons.css",
+        "./src/styles/theme.css",
+      ],
       components: {
         EditLink: "./src/components/EditLink.astro",
         Pagination: "./src/components/Pagination.astro",

@@ -77,6 +77,54 @@
   text-decoration-color: currentColor;
 }
 
+/* Icons: Lucide's (`web/shared/icons.ts`, `scripts/generate_icons.ts`), as
+   in the playground: a 2-unit round stroke on a 24-unit grid, no fill, in
+   the text's colour. */
+.icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The icons Starlight draws itself (search, the carets of the sidebar and
+   of "On this page", the phone menu's open and close) are redrawn with the
+   same icons: each SVG keeps its box, its own drawing is hidden, and a mask
+   of the Lucide icon (`web/shared/icons.css`) is painted in the text's
+   colour. */
+site-search button[data-open-modal] > svg,
+.sidebar-content svg.caret,
+mobile-starlight-toc svg.caret,
+button.sl-menu-button svg {
+  background: currentColor;
+  mask: var(--icon) center / contain no-repeat;
+}
+:is(
+    site-search button[data-open-modal] > svg,
+    .sidebar-content svg.caret,
+    mobile-starlight-toc svg.caret,
+    button.sl-menu-button svg
+  )
+  > * {
+  display: none;
+}
+site-search button[data-open-modal] > svg {
+  --icon: var(--icon-search);
+}
+.sidebar-content svg.caret,
+mobile-starlight-toc svg.caret {
+  --icon: var(--icon-chevron-right);
+}
+button.sl-menu-button svg.open-menu {
+  --icon: var(--icon-menu);
+}
+button.sl-menu-button svg.close-menu {
+  --icon: var(--icon-x);
+}
+
 /* Links that open in a new tab, as in the playground: a mark kept on the
    line of the last word. */
 .external-tail {
@@ -89,8 +137,7 @@
   margin-left: 0.2em;
   vertical-align: -0.05em;
   background: currentColor;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 7.5 8.5M12 9.5v3a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3'/%3E%3C/svg%3E")
-    center / contain no-repeat;
+  mask: var(--icon-external-link) center / contain no-repeat;
 }
 
 /* The sidebar's links that leave the documentation carry the same mark. */
@@ -102,8 +149,7 @@
   margin-left: 0.3em;
   vertical-align: -0.05em;
   background: currentColor;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 7.5 8.5M12 9.5v3a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3'/%3E%3C/svg%3E")
-    center / contain no-repeat;
+  mask: var(--icon-external-link) center / contain no-repeat;
 }
 
 /* Text: headings in Bricolage at display size, as the playground's name. */

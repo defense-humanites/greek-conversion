@@ -3,7 +3,7 @@
  * Starlight's edit link, which leads to GitHub: like every link that leaves
  * the documentation, it opens in a new tab and says so.
  */
-import { Icon } from "@astrojs/starlight/components";
+import { icon } from "../../../shared/icons.ts";
 
 const { editUrl } = Astro.locals.starlightRoute;
 const label = Astro.locals.t("page.editLink");
@@ -12,7 +12,7 @@ const label = Astro.locals.t("page.editLink");
 {
   editUrl && (
     <a href={editUrl} class="sl-flex print:hidden" target="_blank" rel="noopener">
-      <Icon name="pencil" size="1.2em" />
+      <Fragment set:html={icon("pencil")} />
       <span>
         <span class="external-tail">
           {label}
@@ -33,5 +33,10 @@ const label = Astro.locals.t("page.editLink");
   }
   a:hover {
     color: var(--sl-color-white);
+  }
+  a :global(.icon) {
+    flex: none;
+    width: 1.125rem;
+    height: 1.125rem;
   }
 </style>

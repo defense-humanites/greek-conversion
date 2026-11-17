@@ -17,6 +17,7 @@ import type {
   Preset,
 } from "../../src/mod.ts";
 import { parse, parseDetailed, validateDocument } from "../../src/document.ts";
+import { icon } from "../shared/icons.ts";
 import { detectFormat } from "./detect_format.ts";
 import { changedSpans, firstChange, PROBE_GREEK } from "./option_probe.ts";
 import { exampleFrom, EXAMPLES, INVALID_MARKS, sourceOf } from "./examples.ts";
@@ -1333,8 +1334,7 @@ function showOptions(from: Format, to: Format): void {
       remove.type = "button";
       remove.className = "pill-remove";
       remove.setAttribute("aria-label", `Remove ${name}`);
-      remove.innerHTML =
-        '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>';
+      remove.innerHTML = icon("x");
       remove.addEventListener("click", () => {
         setOption(entry, undefined);
         addOptionButton.focus();
@@ -1832,8 +1832,7 @@ function pill(label: string, remove: () => void, removeLabel: string) {
   button.type = "button";
   button.className = "pill-remove";
   button.setAttribute("aria-label", removeLabel);
-  button.innerHTML =
-    '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>';
+  button.innerHTML = icon("x");
   button.addEventListener("click", () => {
     // The row first: the pill leaves the page with the change.
     const row = inventoryRow(field(item));
@@ -1991,8 +1990,7 @@ function pickerHeading(text: string, back?: () => void): HTMLElement {
     button.className = "option-back";
     button.setAttribute("aria-label", "Back to the characters");
     button.title = "Back to the characters (Escape)";
-    button.innerHTML =
-      '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
+    button.innerHTML = icon("chevron-left");
     button.addEventListener("click", back);
     heading.append(button);
   }

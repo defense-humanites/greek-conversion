@@ -5,7 +5,7 @@
  * after "Next"; the title stands below, aligned with the line's start or
  * end. On hover, the title takes the links' blue.
  */
-import { Icon } from "@astrojs/starlight/components";
+import { icon } from "../../../shared/icons.ts";
 
 const { dir, pagination } = Astro.locals.starlightRoute;
 const { prev, next } = pagination;
@@ -17,7 +17,7 @@ const isRtl = dir === "rtl";
     prev && (
       <a href={prev.href} rel="prev">
         <span class="label">
-          <Icon name={isRtl ? "right-arrow" : "left-arrow"} size="1.25em" />
+          <Fragment set:html={icon(isRtl ? "arrow-right" : "arrow-left")} />
           {Astro.locals.t("page.previousLink")}
         </span>
         <span class="link-title">{prev.label}</span>
@@ -29,7 +29,7 @@ const isRtl = dir === "rtl";
       <a href={next.href} rel="next">
         <span class="label">
           {Astro.locals.t("page.nextLink")}
-          <Icon name={isRtl ? "left-arrow" : "right-arrow"} size="1.25em" />
+          <Fragment set:html={icon(isRtl ? "arrow-left" : "arrow-right")} />
         </span>
         <span class="link-title">{next.label}</span>
       </a>
@@ -65,6 +65,8 @@ const isRtl = dir === "rtl";
   }
   .label :global(svg) {
     flex-shrink: 0;
+    width: 1.25em;
+    height: 1.25em;
   }
   /* The arrow's ink starts 4px inside its box: pulled out by as much, it
      lines up with the title. */

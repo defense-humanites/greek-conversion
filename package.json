@@ -37,7 +37,7 @@
     "check:format": "dprint check",
     "check:lint": "oxlint --deny-warnings",
     "check:types": "tsc -p tsconfig.json && tsc -p tsconfig.build.json --noEmit && tsc -p web/playground",
-    "check:docs": "node scripts/check_api_docs.ts && node scripts/check_examples.ts && node scripts/generate_preset_docs.ts --check && node scripts/generate_option_relevance.ts --check && node scripts/check_metadata.ts",
+    "check:docs": "node scripts/check_api_docs.ts && node scripts/check_examples.ts && node scripts/generate_preset_docs.ts --check && node scripts/generate_option_relevance.ts --check && node scripts/generate_icons.ts --check && node scripts/check_metadata.ts",
     "format": "dprint fmt",
     "test": "node --test \"tests/**/*_test.ts\"",
     "bench": "node bench/main.ts",
@@ -46,6 +46,7 @@
     "npm:check": "npm run npm:build && node scripts/npm_smoke.mjs && node scripts/npm_types_smoke.mjs && npm pack ./npm --dry-run",
     "jsr:check": "jsr publish --dry-run",
     "site:options": "node scripts/generate_option_relevance.ts",
+    "site:icons": "node scripts/generate_icons.ts",
     "site:build": "tsc -p web/playground && node scripts/build_site.ts"
   },
   "devDependencies": {
@@ -56,6 +57,7 @@
     "dprint-plugin-yaml": "0.6.0",
     "esbuild": "0.28.2",
     "jsr": "0.14.3",
+    "lucide-static": "1.74.0",
     "mitata": "1.0.34",
     "oxlint": "1.93.0",
     "typedoc": "0.28.20",
