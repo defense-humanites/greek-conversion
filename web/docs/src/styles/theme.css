@@ -392,9 +392,12 @@ mobile-starlight-toc .display-current {
   font-size: 0.875rem;
 }
 
+/* 6px below the toggle, as the playground's floating lists below their
+   button: the panel rises over the bar's padding and bottom border. */
 mobile-starlight-toc .dropdown {
+  position: relative;
   max-width: 24rem;
-  margin: 0.5rem 1rem 0;
+  margin: -1.5px 1rem 0;
   padding: 0.375rem;
   border: 1px solid var(--line);
   border-radius: var(--radius);
