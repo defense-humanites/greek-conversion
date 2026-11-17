@@ -51,6 +51,12 @@
   --sl-text-h4: 1.125rem;
 }
 
+/* Keyboard focus, as in the playground: a cobalt ring, set off the shape. */
+:focus-visible {
+  outline: 2px solid var(--from);
+  outline-offset: 2px;
+}
+
 /* Text: headings in Bricolage at display size, as the playground's name. */
 .sl-markdown-content :is(h1, h2, h3, h4, h5, h6),
 h1#_top {
@@ -169,6 +175,11 @@ site-search button[data-open-modal] {
   border-radius: var(--radius);
   background: var(--raised);
 }
+/* As the playground's buttons: on hover, only the border darkens. */
+site-search button[data-open-modal],
+site-search button[data-open-modal]:hover {
+  color: var(--muted);
+}
 site-search button[data-open-modal]:hover {
   border-color: var(--muted);
 }
@@ -189,16 +200,23 @@ site-search button[data-open-modal]:hover {
     display: block;
   }
 }
-/* The menu button of a phone: its icon alone, centred, without a frame. */
-button.sl-menu-button,
-button.sl-menu-button:has(~ :popover-open) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  box-shadow: none;
+/* The menu button of a phone: its icon alone, centred, without a frame. On
+   a wider screen, Starlight hides it. */
+@media (max-width: 49.99rem) {
+  button.sl-menu-button,
+  button.sl-menu-button:has(~ :popover-open) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    box-shadow: none;
+  }
+  button.sl-menu-button svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
 }
 button.sl-menu-button:hover {
   color: var(--from);
@@ -233,6 +251,45 @@ site-search button[data-open-modal] > kbd kbd {
 }
 site-search dialog {
   border-radius: var(--radius);
+}
+
+/*
+ * The search dialog, in the same states as the rest of the site: fields and
+ * results with the line border and the 6px radius; on hover, the border
+ * darkens; with the keyboard, the cobalt ring, and only it.
+ */
+#starlight__search {
+  --pagefind-ui-border-width: 1.5px;
+  --pagefind-ui-border-radius: var(--radius);
+  --sl-search-corners: var(--radius);
+}
+#starlight__search input:focus {
+  --pagefind-ui-border: var(--line);
+}
+#starlight__search .pagefind-ui__search-input:hover {
+  --pagefind-ui-border: var(--muted);
+}
+#starlight__search .pagefind-ui__search-clear:focus {
+  outline: none;
+}
+#starlight__search .pagefind-ui__search-clear:focus-visible {
+  outline: 2px solid var(--from);
+  outline-offset: -4px;
+}
+#starlight__search .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)):hover,
+#starlight__search .pagefind-ui__result-nested:hover {
+  outline: 1.5px solid var(--muted);
+  outline-offset: -1.5px;
+}
+#starlight__search .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)):focus-within,
+#starlight__search .pagefind-ui__result-nested:focus-within {
+  /* Inside the result, where its neighbours cannot hide it. */
+  outline: 2px solid var(--from);
+  outline-offset: -2px;
+  background-color: var(--sl-color-black);
+}
+#starlight__search .pagefind-ui__result-link:focus-visible {
+  outline: none;
 }
 
 /*
