@@ -651,8 +651,17 @@ mobile-starlight-toc .isMobile a[aria-current="true"]::after {
 /* The terminal frame's three dots in the colours of a window's buttons
    (close, minimise, zoom), rather than in the line colour, where they were
    barely visible. Expressive Code draws them as one mask over a single
-   colour: a gradient in thirds gives each its own. */
+   colour: a gradient in thirds gives each its own. Its own mask, too:
+   Expressive Code's has no intrinsic size, which some browsers stretch into
+   ovals. Here three 10px circles, 6px apart, drawn at their own size; the
+   thirds of the gradient fall in the gaps. */
 .expressive-code .is-terminal .header::before {
+  width: 2.625rem;
+  height: 0.625rem;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='42' height='10' viewBox='0 0 42 10'%3E%3Ccircle cx='5' cy='5' r='5'/%3E%3Ccircle cx='21' cy='5' r='5'/%3E%3Ccircle cx='37' cy='5' r='5'/%3E%3C/svg%3E")
+    0 0 / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='42' height='10' viewBox='0 0 42 10'%3E%3Ccircle cx='5' cy='5' r='5'/%3E%3Ccircle cx='21' cy='5' r='5'/%3E%3Ccircle cx='37' cy='5' r='5'/%3E%3C/svg%3E")
+    0 0 / 100% 100% no-repeat;
   background: linear-gradient(
     90deg,
     #ff5f57 0 33.33%,

@@ -6,6 +6,20 @@ import starlightTypeDoc, { typeDocSidebarGroup } from "starlight-typedoc";
 
 const SITE = "https://defense-humanites.github.io";
 const BASE = "/greek-conversion";
+/** The social card (1280 × 640), copied by `scripts/sync_reference.ts`. */
+const SHARING_IMAGE = [
+  ["og:image", `${SITE}${BASE}/social.png`],
+  ["og:image:width", "1280"],
+  ["og:image:height", "640"],
+  [
+    "og:image:alt",
+    "greek conversion: bidirectional conversion between Greek, Beta Code, and transliteration.",
+  ],
+].map(([property, content]) => ({ tag: "meta", attrs: { property, content } }))
+  .concat({
+    tag: "meta",
+    attrs: { name: "twitter:image", content: `${SITE}${BASE}/social.png` },
+  });
 const REPOSITORY = "https://github.com/defense-humanites/greek-conversion";
 
 /**
@@ -177,7 +191,12 @@ export default defineConfig({
         ThemeProvider: "./src/components/ThemeProvider.astro",
         ThemeSelect: "./src/components/ThemeSelect.astro",
       },
-      head: [{ tag: "script", content: PLAYGROUND_REDIRECT }],
+      head: [
+        { tag: "script", content: PLAYGROUND_REDIRECT },
+        // The sharing image: the design system's social card, which
+        // Starlight's `summary_large_image` card announces.
+        ...SHARING_IMAGE,
+      ],
       routeMiddleware: "./src/routeData.ts",
       plugins: [
         starlightTypeDoc({
