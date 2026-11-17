@@ -1,7 +1,8 @@
 ---
 /*
  * The project's identity, as the playground's masthead writes it: the
- * tessera, "greek" in cobalt and "conversion" in orange, and the product.
+ * tessera, "greek" in cobalt and "conversion" in orange, and the product;
+ * on a phone, the tessera alone.
  * The symbol follows the system's appearance, as the whole site does.
  */
 const { siteTitleHref } = Astro.locals.starlightRoute;
@@ -56,9 +57,25 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
     text-transform: uppercase;
     color: var(--muted);
   }
-  @media (max-width: 50rem) {
+  /* On a narrow screen, room for the search field and the links. */
+  @media (max-width: 71.99rem) {
     .product {
       display: none;
+    }
+  }
+  /* On a phone, the symbol alone, to leave the search field its room; the
+     name stays for screen readers. */
+  @media (max-width: 49.99rem) {
+    .product {
+      display: none;
+    }
+    .name {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
     }
   }
 </style>

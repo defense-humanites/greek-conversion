@@ -34,8 +34,8 @@ const links = [
 <style>
   .links {
     display: flex;
-    flex-wrap: wrap;
     gap: 4px 20px;
+    white-space: nowrap;
     font-size: 15px;
     font-weight: 500;
   }
@@ -46,6 +46,11 @@ const links = [
     color: var(--link);
     text-decoration: none;
     text-underline-offset: 0.15em;
+  }
+  @media (max-width: 71.99rem) {
+    .links {
+      gap: 4px 14px;
+    }
   }
   a:hover {
     color: var(--ink);

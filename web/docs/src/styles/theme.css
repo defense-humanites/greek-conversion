@@ -167,6 +167,32 @@ site-search button[data-open-modal] {
 site-search button[data-open-modal]:hover {
   border-color: var(--muted);
 }
+/* On a phone, the field fills the header beside the symbol, as on a wide
+   screen, rather than shrinking to an icon. */
+@media (max-width: 49.99rem) {
+  .header > :nth-child(2) {
+    flex: 1;
+    min-width: 0;
+  }
+  site-search button[data-open-modal] {
+    width: 100%;
+    padding-inline: 0.75rem;
+    color: var(--muted);
+    font-size: var(--sl-text-sm);
+  }
+  site-search button[data-open-modal] > span {
+    display: block;
+  }
+}
+/* The menu button of a phone, shaped as the playground's buttons. */
+.sl-menu-button button,
+button.sl-menu-button {
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+  color: var(--ink);
+  box-shadow: none;
+}
 site-search kbd {
   border-radius: 4px;
 }
