@@ -36,7 +36,7 @@
 
   --sl-color-bg-nav: var(--surface);
   --sl-color-bg-sidebar: var(--surface);
-  --sl-color-bg-inline-code: var(--raised);
+  --sl-color-bg-inline-code: var(--code-bg);
   --sl-color-hairline-light: var(--line);
   --sl-color-hairline: var(--line);
   --sl-color-hairline-shade: var(--line);
@@ -121,14 +121,19 @@ h1#_top {
   border-top-color: transparent;
 }
 
-/* Inline code and keyboard keys: small raised chips. */
+/* Inline code and keyboard keys: small chips. Code has the background of
+   the code blocks; a key, raised, that of a panel. */
 .sl-markdown-content :not(pre) > code,
 .sl-markdown-content kbd {
   padding: 0.1em 0.35em;
   border: 1px solid var(--line);
   border-radius: 4px;
-  background: var(--raised);
+  background: var(--code-bg);
   font-size: 0.875em;
+}
+
+.sl-markdown-content kbd {
+  background: var(--raised);
 }
 
 /* Tables: a raised panel with rounded corners, headed by small capitals. */
