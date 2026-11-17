@@ -1,8 +1,8 @@
 ---
 /*
- * The opening of the home page: the vertical logo, which is the page's
- * heading, the project's description, and the two ways in; the example given
- * in the page's body sits beside them on a wide screen, under them otherwise.
+ * The home page, in one centred column: the vertical logo, which is the
+ * page's heading, the project's description and the two ways in, then the
+ * example given in the page's body.
  * The logo follows the system's appearance, as the whole site does.
  */
 import { LinkButton } from "@astrojs/starlight/components";
@@ -44,10 +44,11 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 
 <style>
   .home-hero {
-    display: grid;
-    gap: 2.5rem;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    padding-block: 2.5rem 1rem;
+    gap: 2.5rem;
+    padding-block: 2.5rem 3rem;
   }
   /* The vertical logo is centred on itself: so is what follows it. */
   .intro {
@@ -83,13 +84,14 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
     margin: 0;
   }
   .example {
+    width: 100%;
+    max-width: 46rem;
     min-width: 0;
   }
-  @media (min-width: 72rem) {
+  @media (min-width: 50rem) {
     .home-hero {
-      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-      gap: 3.5rem;
-      padding-block: 4rem 2rem;
+      gap: 3rem;
+      padding-block: 4rem 4rem;
     }
   }
 </style>

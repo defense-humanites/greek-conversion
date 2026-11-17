@@ -7,7 +7,6 @@ hero:
   title: greek conversion
 ---
 
-import { Card, CardGrid } from "@astrojs/starlight/components";
 import HomeHero from "../../components/HomeHero.astro";
 
 <HomeHero>
@@ -31,23 +30,3 @@ convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliter
 ```
 
 </HomeHero>
-
-<CardGrid>
-  <Card title="Every direction">
-    Unicode Greek, polytonic or monotonic, the Beta Code of the TLG, and
-    scientific transliteration all convert into one another, through one
-    canonical document.
-  </Card>
-  <Card title="Published standards">
-    Presets implement ALA-LC, the BnF, ISO 843 (ELOT 743), SBL, the TLG, and
-    Perseus, each with its references, coverage, and limits.
-  </Card>
-  <Card title="Losses, reported">
-    `convertDetailed()` tells you, token by token, what the target cannot
-    keep, and where each token went.
-  </Card>
-  <Card title="Checked options">
-    A misspelled option never falls back silently: every error names the
-    option, what it received, and what it accepts.
-  </Card>
-</CardGrid>
