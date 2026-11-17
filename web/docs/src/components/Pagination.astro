@@ -1,0 +1,85 @@
+---
+/*
+ * Starlight's links to the previous and next pages, without panels, under a
+ * single rule. The arrow belongs to the label's line: before "Previous",
+ * after "Next"; the title stands below, aligned with the line's start or
+ * end. On hover, the title takes the links' blue.
+ */
+import { Icon } from "@astrojs/starlight/components";
+
+const { dir, pagination } = Astro.locals.starlightRoute;
+const { prev, next } = pagination;
+const isRtl = dir === "rtl";
+---
+
+<div class="pagination-links print:hidden" dir={dir}>
+  {
+    prev && (
+      <a href={prev.href} rel="prev">
+        <span class="label">
+          <Icon name={isRtl ? "right-arrow" : "left-arrow"} size="1.25em" />
+          {Astro.locals.t("page.previousLink")}
+        </span>
+        <span class="link-title">{prev.label}</span>
+      </a>
+    )
+  }
+  {
+    next && (
+      <a href={next.href} rel="next">
+        <span class="label">
+          {Astro.locals.t("page.nextLink")}
+          <Icon name={isRtl ? "left-arrow" : "right-arrow"} size="1.25em" />
+        </span>
+        <span class="link-title">{next.label}</span>
+      </a>
+    )
+  }
+</div>
+
+<style>
+  .pagination-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+  a {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    color: var(--muted);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  [rel="next"] {
+    grid-column: -2;
+    align-items: flex-end;
+    text-align: end;
+  }
+  .label {
+    display: inline-flex;
+    gap: 0.375rem;
+    align-items: center;
+  }
+  .label :global(svg) {
+    flex-shrink: 0;
+  }
+  /* The arrow's ink starts 4px inside its box: pulled out by as much, it
+     lines up with the title. */
+  [rel="prev"] .label :global(svg) {
+    margin-inline-start: -0.2em;
+  }
+  [rel="next"] .label :global(svg) {
+    margin-inline-end: -0.2em;
+  }
+  .link-title {
+    color: var(--ink);
+    font-size: var(--sl-text-2xl);
+    line-height: var(--sl-line-height-headings);
+  }
+  a:hover .link-title {
+    color: var(--link);
+  }
+</style>

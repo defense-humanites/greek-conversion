@@ -169,6 +169,7 @@ export default defineConfig({
       customCss: ["../shared/tokens.css", "./src/styles/theme.css"],
       components: {
         EditLink: "./src/components/EditLink.astro",
+        Pagination: "./src/components/Pagination.astro",
         Footer: "./src/components/Footer.astro",
         Hero: "./src/components/Hero.astro",
         SiteTitle: "./src/components/SiteTitle.astro",
