@@ -17,8 +17,11 @@
   --sl-font-mono: var(--face-code);
 
   --sl-color-white: var(--ink);
-  --sl-color-gray-1: color-mix(in oklab, var(--ink) 88%, var(--surface));
-  --sl-color-gray-2: color-mix(in oklab, var(--ink) 74%, var(--surface));
+  /* The running text (gray 2) at 86% of the ink: a step softer than the
+     headings, above 8:1 on the page and on raised panels, in both
+     appearances. */
+  --sl-color-gray-1: color-mix(in oklab, var(--ink) 94%, var(--surface));
+  --sl-color-gray-2: color-mix(in oklab, var(--ink) 86%, var(--surface));
   --sl-color-gray-3: var(--muted);
   --sl-color-gray-4: color-mix(in oklab, var(--muted) 70%, var(--surface));
   --sl-color-gray-5: var(--line);
