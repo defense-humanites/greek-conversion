@@ -647,3 +647,17 @@ mobile-starlight-toc .isMobile a[aria-current="true"]::after {
   border-radius: var(--radius);
   font-weight: 600;
 }
+
+/* The terminal frame's three dots in the colours of a window's buttons
+   (close, minimise, zoom), rather than in the line colour, where they were
+   barely visible. Expressive Code draws them as one mask over a single
+   colour: a gradient in thirds gives each its own. */
+.expressive-code .is-terminal .header::before {
+  background: linear-gradient(
+    90deg,
+    #ff5f57 0 33.33%,
+    #febc2e 33.33% 66.67%,
+    #28c840 66.67%
+  );
+  opacity: 1;
+}
