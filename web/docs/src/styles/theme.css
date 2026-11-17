@@ -228,13 +228,47 @@ h1#_top {
   box-decoration-break: clone;
 }
 
-/* Asides, cards, and the previous and next links: raised panels. */
+/* Asides (note, tip, caution, danger), as the playground's notes: a panel
+   a tint darker than the page (--tip), a line border and the tessera's
+   radius, no coloured band. The title is in the ink; its Lucide icon tells
+   the kind, info and lightbulb in the link colour, triangle-alert and
+   octagon-alert in the target's orange, since the brand has no red. Links
+   keep the link colour. */
 .starlight-aside {
+  --sl-color-asides-text-accent: var(--ink);
   border: 1px solid var(--line);
-  border-inline-start-width: 4px;
   border-radius: var(--radius);
-  background: var(--raised);
+  background: var(--tip);
 }
+.starlight-aside__icon {
+  color: var(--aside-icon);
+  background: currentColor;
+  mask: var(--aside-mask) center / contain no-repeat;
+}
+.starlight-aside__icon > * {
+  display: none;
+}
+.starlight-aside--note {
+  --aside-icon: var(--link);
+  --aside-mask: var(--icon-info);
+}
+.starlight-aside--tip {
+  --aside-icon: var(--link);
+  --aside-mask: var(--icon-lightbulb);
+}
+.starlight-aside--caution {
+  --aside-icon: var(--to);
+  --aside-mask: var(--icon-triangle-alert);
+}
+.starlight-aside--danger {
+  --aside-icon: var(--to);
+  --aside-mask: var(--icon-octagon-alert);
+}
+.starlight-aside__content a {
+  color: var(--link);
+}
+
+/* Cards: raised panels. */
 .card {
   border: 1px solid var(--line);
   border-radius: var(--radius);

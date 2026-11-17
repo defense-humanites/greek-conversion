@@ -35,12 +35,16 @@ const ICONS: Readonly<Record<string, string>> = {
   "chevron-right": "documentation: sidebar groups, On this page (mask)",
   "copy": "playground: Copy, Copy code",
   "external-link": "links that open in a new tab (mask)",
+  "info": "documentation: note asides (mask)",
+  "lightbulb": "documentation: tip asides (mask)",
   "link": "playground: Share",
   "menu": "documentation: phone menu (mask)",
+  "octagon-alert": "documentation: danger asides (mask)",
   "pencil": "documentation: Edit page",
   "plus": "playground: add an option, a character, a spelling",
   "rotate-ccw": "playground: Reset",
   "search": "documentation: Search (mask)",
+  "triangle-alert": "documentation: caution asides (mask)",
   "x": "playground: Clear, remove; documentation: close the menu (mask)",
 };
 
@@ -53,8 +57,12 @@ const MASKS: Readonly<Record<string, number>> = {
   "chevron-down": 2.5,
   "chevron-right": 2,
   "external-link": 2.5,
+  "info": 2,
+  "lightbulb": 2,
   "menu": 2,
+  "octagon-alert": 2,
   "search": 2,
+  "triangle-alert": 2,
   "x": 2,
 };
 
