@@ -537,6 +537,14 @@ mobile-starlight-toc .isMobile a[aria-current="true"]::after {
   border-color: var(--muted);
 }
 
+/* The home page's column is centred at every width. Starlight centres the
+   content column only on wide screens: between 752 and 800px, where the
+   window outgrows the column (45rem and its margins), the home page sat
+   to the left. */
+:root:has(.home-hero) .sl-container {
+  margin-inline: auto;
+}
+
 /*
  * The home page keeps the sidebar for the phone's menu (`routeData.ts`); on a
  * wider screen it is a splash page, without the sidebar, at full width.
