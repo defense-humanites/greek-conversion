@@ -22,6 +22,10 @@ function theme(type, c) {
       "editor.selectionBackground": c.selection,
       "editorLineNumber.foreground": c.muted,
     },
+    // As the playground's code (`web/playground/styles.css`, `.tok-*`):
+    // keywords bold in cobalt, numbers in cobalt, strings in orange,
+    // functions bold, object keys, punctuation and comments muted, comments
+    // in italics, the rest in ink.
     tokenColors: [
       { settings: { foreground: c.ink } },
       {
@@ -33,13 +37,19 @@ function theme(type, c) {
           "keyword",
           "storage",
           "storage.type",
+          "storage.modifier",
           "constant.language",
           "variable.language",
         ],
-        settings: { foreground: c.keyword },
+        settings: { foreground: c.keyword, fontStyle: "bold" },
       },
       {
-        scope: ["string", "constant.character", "constant.numeric"],
+        scope: ["keyword.operator", "punctuation", "meta.brace"],
+        settings: { foreground: c.muted, fontStyle: "" },
+      },
+      { scope: ["constant.numeric"], settings: { foreground: c.keyword } },
+      {
+        scope: ["string", "constant.character"],
         settings: { foreground: c.string },
       },
       {
@@ -47,12 +57,12 @@ function theme(type, c) {
         settings: { foreground: c.function, fontStyle: "bold" },
       },
       {
-        scope: ["variable", "variable.other", "meta.object-literal.key"],
-        settings: { foreground: c.ink },
+        scope: ["meta.object-literal.key", "variable.other.property"],
+        settings: { foreground: c.muted },
       },
       {
-        scope: ["punctuation", "meta.brace", "keyword.operator"],
-        settings: { foreground: c.muted },
+        scope: ["variable", "variable.other.readwrite"],
+        settings: { foreground: c.ink },
       },
     ],
   });
@@ -80,6 +90,8 @@ const dark = theme("dark", {
 
 export default defineEcConfig({
   themes: [dark, light],
+  // The tokens' colors as they are: they already contrast enough.
+  minSyntaxHighlightingColorContrast: 0,
   styleOverrides: {
     borderRadius: "6px",
     borderColor: "var(--line)",
