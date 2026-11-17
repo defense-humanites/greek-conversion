@@ -16,7 +16,10 @@
     };
     try {
       localStorage.removeItem("starlight-theme");
-    } catch {}
+    } catch {
+      // Storage can be unavailable (private modes, blocked cookies): nothing
+      // was stored, then.
+    }
     apply();
     query.addEventListener("change", apply);
   })();
