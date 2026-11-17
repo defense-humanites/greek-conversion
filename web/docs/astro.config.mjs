@@ -31,16 +31,14 @@ function prefixBase() {
 }
 
 /**
- * Sets texts in the playground's typeface for texts. Inline code that is a
- * Greek or transliterated form (letters, marks, spaces, and the punctuation
- * of a text, with at least one letter beyond ASCII), such as `ἄνθρωπος` or
- * `ánthrōpos`, is a text rather than code: it takes the class `text`, and
- * Greek the language `grc`, as in the playground's fields. Code, Beta Code
- * included, stays in the monospace face.
+ * Marks Greek in inline code as such: code made only of the letters, marks,
+ * spaces, and punctuation of a text, with a Greek letter among them, such as
+ * `ἄνθρωπος`, takes the language `grc`, as the playground's Greek fields do,
+ * for screen readers and for the font's Greek forms. It stays in the
+ * monospace face, as all code does.
  */
-function markTexts() {
+function markGreek() {
   const TEXT = /^[\p{L}\p{M}\s’ʼ'ʹ͵·;.,:?!-]+$/u;
-  const BEYOND_ASCII = /\P{ASCII}/u;
   const GREEK = /[\u0370-\u03ff\u1f00-\u1fff]/;
   /** @param {any} node @param {any} parent */
   const visit = (node, parent) => {
@@ -51,11 +49,7 @@ function markTexts() {
       const text = (node.children ?? []).map((/** @type {any} */ child) =>
         child.type === "text" ? child.value : "\u0000"
       ).join("");
-      if (TEXT.test(text) && BEYOND_ASCII.test(text)) {
-        const classes = node.properties.className ?? [];
-        node.properties.className = [...classes, "text"];
-        if (GREEK.test(text)) node.properties.lang = "grc";
-      }
+      if (TEXT.test(text) && GREEK.test(text)) node.properties.lang = "grc";
       return;
     }
     for (const child of node.children ?? []) visit(child, node);
@@ -79,7 +73,7 @@ export default defineConfig({
   base: BASE,
   trailingSlash: "always",
   markdown: {
-    processor: unified({ rehypePlugins: [prefixBase(), markTexts()] }),
+    processor: unified({ rehypePlugins: [prefixBase(), markGreek()] }),
   },
   vite: { server: { fs: { allow: ["../.."] } } },
   integrations: [
