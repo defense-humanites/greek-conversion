@@ -173,6 +173,7 @@ export default defineConfig({
         Hero: "./src/components/Hero.astro",
         SiteTitle: "./src/components/SiteTitle.astro",
         SocialIcons: "./src/components/SocialIcons.astro",
+        ThemeProvider: "./src/components/ThemeProvider.astro",
         ThemeSelect: "./src/components/ThemeSelect.astro",
       },
       head: [{ tag: "script", content: PLAYGROUND_REDIRECT }],
