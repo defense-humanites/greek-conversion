@@ -69,7 +69,10 @@ change.
   or dark appearance. The playground moves to `/playground/`; a link shared
   before, to the site's root with its state in the fragment, opens the
   playground. The site is laid out for translations, English being the
-  source; none is published yet.
+  source; none is published yet. Code, in the site and the playground, is
+  set in Noto Sans Mono, served with the site, which covers polytonic Greek
+  and stacks diacritics on every system, with Fira Mono for the symbol forms
+  and lunate sigmas it does not tell apart.
 - The README is now a short entry point: installation, one example, the main
   functions, and links to the site. Its development notes move to
   `CONTRIBUTING.md`. `npm run check` (`scripts/check_examples.ts`, formerly

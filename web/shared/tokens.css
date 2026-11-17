@@ -34,6 +34,26 @@
   size-adjust: 95%;
   unicode-range: U+037B-037D, U+03D0-03D6, U+03F0-03F1, U+03F5, U+03FD-03FF;
 }
+/*
+ * The code, in every format: Noto Sans Mono covers polytonic Greek and the
+ * Latin of transliterations, and stacks their diacritics, on every system.
+ * It draws the symbol forms and the lunate sigmas as the ordinary letters
+ * (ϐ as β, Ϲ as Σ): Fira Mono, at the same advance, supplies them.
+ */
+@font-face {
+  font-family: "Noto Sans Mono";
+  src: url("./fonts/noto-sans-mono.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Sans Mono";
+  src: url("./fonts/fira-mono-greek-symbols.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+  unicode-range: U+037B-037D, U+03D0-03D6, U+03F0-03F2, U+03F4-03F5, U+03F9,
+    U+03FD-03FF;
+}
 
 :root {
   color-scheme: light;
@@ -56,8 +76,8 @@
   --tip: #e9e1d1;
   --face-ui: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
   --face-text: "Literata GC", "Gentium Plus", "Noto Serif", serif;
-  --face-code: ui-monospace, "SF Mono", "Cascadia Mono", "DejaVu Sans Mono",
-    Menlo, Consolas, monospace;
+  --face-code: "Noto Sans Mono", ui-monospace, "SF Mono", Menlo, Consolas,
+    monospace;
   --radius: 6px;
 }
 

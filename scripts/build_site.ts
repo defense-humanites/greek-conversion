@@ -34,6 +34,8 @@ for (
     "bricolage-grotesque.woff2",
     "literata-gc-light.woff2",
     "noto-serif-greek-symbols.woff2",
+    "noto-sans-mono.woff2",
+    "fira-mono-greek-symbols.woff2",
   ]
 ) {
   await cp(new URL(`fonts/${name}`, SHARED), new URL(`fonts/${name}`, SITE));

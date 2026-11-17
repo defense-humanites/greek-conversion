@@ -2,8 +2,8 @@
 
 The playground and the documentation site serve their typefaces themselves,
 so that they load nothing from another site. `web/shared/tokens.css` declares
-them. Both are under the
-[SIL Open Font License 1.1](../../../LICENSES/OFL-1.1.txt); neither declares a
+them. All are under the
+[SIL Open Font License 1.1](../../../LICENSES/OFL-1.1.txt); none declares a
 Reserved Font Name.
 
 | File | Source | Used for |
@@ -11,10 +11,13 @@ Reserved Font Name.
 | `bricolage-grotesque.woff2` | [Bricolage Grotesque](https://github.com/ateliertriay/bricolage), variable (`opsz` 12–96, `wght` 400–800) | The interface |
 | `literata-gc-light.woff2` | [Literata](https://github.com/googlefonts/literata), static Light (`wght` 300) at `opsz` 24, renamed Literata GC | The texts in all three formats: the fields, examples, and loss reports |
 | `noto-serif-greek-symbols.woff2` | [Noto Serif](https://github.com/notofonts/latin-greek-cyrillic), static Light, sixteen letters | The Greek letters Literata lacks, in the same family (`unicode-range`) |
+| `noto-sans-mono.woff2` | [Noto Sans Mono](https://github.com/notofonts/latin-greek-cyrillic), variable (`wght` 400–700) | The code, in all three formats |
+| `fira-mono-greek-symbols.woff2` | [Fira Mono](https://github.com/mozilla/Fira), Regular, nineteen letters | The Greek letter forms Noto Sans Mono draws as the ordinary letters, in the same family (`unicode-range`) |
 
-All three are subsets of the variable fonts of
+All are subsets of fonts of
 [google/fonts](https://github.com/google/fonts) (`ofl/bricolagegrotesque`,
-`ofl/literata`, `ofl/notoserif`), made with
+`ofl/literata`, `ofl/notoserif`, `ofl/notosansmono`, `ofl/firamono`), made
+with
 [fontTools](https://github.com/fonttools/fonttools) 4.67.0 by
 [`scripts/build_fonts.py`](../../../scripts/build_fonts.py):
 
@@ -57,3 +60,17 @@ Literata has no combining perispomeni (U+0342), combining comma above
 (U+0313, U+0314) or combining low line (U+0332). Precomposed letters cover
 the first three; text that uses the combining forms falls back to another
 font.
+
+- **Noto Sans Mono**: the `wdth` axis fixed at 100 and `wght` limited to
+  400–700, for the bold of keywords and functions, then subset as Literata
+  GC. It is the one monospace font of google/fonts that covers polytonic
+  Greek, Greek Extended and every combining diacritic, and stacks them with
+  its mark anchors; the code no longer depends on the system's monospace
+  font, which on some systems lacks Greek Extended or stacks two diacritics
+  on top of each other.
+- **Fira Mono**: Noto Sans Mono draws the symbol forms (`ϐ ϑ ϒ ϓ ϔ ϕ ϖ ϰ ϱ
+  ϵ ϴ`) as the ordinary letters, and the lunate sigmas `ϲ Ϲ` and the
+  reversed and dotted ones (U+037B–037D, U+03FD–03FF) as `σ` and `Σ`. These
+  nineteen letters are left out of its subset and taken from Fira Mono
+  Regular, which draws them apart at the same advance (600 units), loaded
+  under the same family name for those code points.
