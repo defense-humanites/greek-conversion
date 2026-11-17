@@ -58,7 +58,7 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
     flex-direction: column;
     align-items: center;
     gap: 2.5rem;
-    padding-block: 2.5rem 3rem;
+    padding-block: 2.5rem 0.9375rem;
   }
   /* The vertical logo is centred on itself: so is what follows it. */
   .intro {
@@ -111,7 +111,9 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
   @media (min-width: 50rem) {
     .home-hero {
       gap: 3rem;
-      padding-block: 4rem 4rem;
+      /* With the page's own margin under it, as much room under the example
+         as above the logo. */
+      padding-block: 4rem 2.5rem;
     }
   }
 </style>

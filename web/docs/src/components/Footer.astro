@@ -1,0 +1,12 @@
+---
+/*
+ * The home page has no footer: it has no edit link, no date, and no previous
+ * or next page, and the empty footer only added a margin under the example.
+ * Other pages keep Starlight's.
+ */
+import Default from "@astrojs/starlight/components/Footer.astro";
+
+const isHome = Astro.locals.starlightRoute.entry.data.template === "splash";
+---
+
+{!isHome && <Default><slot /></Default>}
