@@ -196,6 +196,13 @@ button.sl-menu-button {
   color: var(--ink);
   box-shadow: none;
 }
+/* Between a phone and 1152px, the search field leaves out its shortcut,
+   to keep its room beside the full name and the links. */
+@media (min-width: 50rem) and (max-width: 71.99rem) {
+  site-search button[data-open-modal] > kbd {
+    display: none !important;
+  }
+}
 site-search kbd {
   border-radius: 4px;
 }

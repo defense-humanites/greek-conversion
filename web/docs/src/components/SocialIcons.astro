@@ -47,11 +47,7 @@ const links = [
     text-decoration: none;
     text-underline-offset: 0.15em;
   }
-  @media (max-width: 64rem) {
-    .links {
-      gap: 4px 14px;
-    }
-  }
+
   a:hover {
     color: var(--ink);
     text-decoration: underline;
@@ -69,5 +65,17 @@ const links = [
     background: currentColor;
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 7.5 8.5M12 9.5v3a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3'/%3E%3C/svg%3E")
       center / contain no-repeat;
+  }
+  /* Between a phone and 1152px, the header also holds the full name: the
+     links draw closer and smaller, and leave out the new-tab mark, which
+     screen readers still announce. */
+  @media (min-width: 50rem) and (max-width: 71.99rem) {
+    .links {
+      gap: 4px 12px;
+      font-size: 14px;
+    }
+    .external-mark {
+      display: none;
+    }
   }
 </style>
