@@ -222,15 +222,29 @@ site-search button[data-open-modal]:hover {
 site-search button[data-open-modal]:hover {
   border-color: var(--muted);
 }
-/* On a phone, the field fills the header beside the symbol, as on a wide
-   screen, rather than shrinking to an icon. */
+/* On a wide screen, the field may grow to 30rem (Starlight: 22rem), two
+   thirds of the text's width, where the header leaves the room. */
+@media (min-width: 50rem) {
+  site-search button[data-open-modal] {
+    max-width: 30rem;
+  }
+}
+/* On a phone, a field rather than an icon, as on a wide screen: up to
+   22rem, centred on the screen. The symbol (40px) is 16px wider than the
+   menu icon (24px), so the field's room is off-centre by 8px: where the
+   room is wider than the field, the field moves back by up to those 8px. */
 @media (max-width: 49.99rem) {
   .header > :nth-child(2) {
+    display: flex;
     flex: 1;
+    justify-content: center;
     min-width: 0;
+    container-type: inline-size;
   }
   site-search button[data-open-modal] {
     width: 100%;
+    max-width: 22rem;
+    translate: calc(-1 * clamp(0px, (100cqw - 22rem) / 2, 8px));
     padding-inline: 0.75rem;
     color: var(--muted);
     font-size: var(--sl-text-sm);
