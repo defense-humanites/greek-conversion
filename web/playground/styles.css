@@ -151,8 +151,8 @@ code {
   padding: 0 12px;
 }
 .button.primary {
-  border-color: var(--from);
-  background: var(--from);
+  border-color: var(--link);
+  background: var(--link);
   color: var(--surface);
 }
 .button.primary:hover {
@@ -359,7 +359,7 @@ h1 span {
   cursor: pointer;
 }
 .share-done {
-  color: var(--from);
+  color: var(--link);
 }
 /* Half the width, clear of the links and the Share button. */
 .intro {
@@ -1336,7 +1336,7 @@ textarea.text::placeholder {
   visibility: hidden;
 }
 .tabs [role="tab"][aria-selected="true"] {
-  border-bottom-color: var(--from);
+  border-bottom-color: var(--link);
   font-weight: 700;
   color: var(--ink);
 }
@@ -1437,18 +1437,18 @@ pre.code code {
   cursor: pointer;
 }
 .check input:checked {
-  border-color: var(--from);
-  background-color: var(--from);
+  border-color: var(--link);
+  background-color: var(--link);
   background-image: var(--check-icon);
 }
 .picker-formats input {
   border-radius: 50%;
 }
 .picker-formats input:checked {
-  border-color: var(--from);
+  border-color: var(--link);
   background-image: radial-gradient(
     circle,
-    var(--from) 0 6px,
+    var(--link) 0 6px,
     transparent 6.5px
   );
 }

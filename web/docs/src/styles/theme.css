@@ -29,9 +29,9 @@
   --sl-color-gray-7: var(--code-bg);
   --sl-color-black: var(--surface);
 
-  --sl-color-accent-low: color-mix(in oklab, var(--from) 14%, var(--raised));
-  --sl-color-accent: var(--from);
-  --sl-color-accent-high: color-mix(in oklab, var(--from) 75%, var(--ink));
+  --sl-color-accent-low: color-mix(in oklab, var(--link) 14%, var(--raised));
+  --sl-color-accent: var(--link);
+  --sl-color-accent-high: color-mix(in oklab, var(--link) 75%, var(--ink));
   --sl-color-text-accent: var(--link);
 
   --sl-color-bg-nav: var(--surface);
@@ -284,7 +284,7 @@ site-search button[data-open-modal]:hover {
   }
 }
 button.sl-menu-button:hover {
-  color: var(--from);
+  color: var(--link);
 }
 /* Between a phone and 1152px, the search field leaves out its shortcut,
    to keep its room beside the full name and the links. */
@@ -495,8 +495,8 @@ mobile-starlight-toc .isMobile a[aria-current="true"]::after {
   font-weight: 600;
 }
 .sl-link-button.primary {
-  border-color: var(--from);
-  background: var(--from);
+  border-color: var(--link);
+  background: var(--link);
   color: var(--surface);
 }
 .sl-link-button.primary:hover {

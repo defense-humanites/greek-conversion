@@ -161,7 +161,7 @@ export default defineEcConfig({
       inlineButtonBackgroundActiveOpacity: "0",
       inlineButtonBorder: "var(--line)",
       inlineButtonBorderOpacity: "1",
-      tooltipSuccessBackground: "var(--from)",
+      tooltipSuccessBackground: "var(--link)",
       tooltipSuccessForeground: "var(--surface)",
     },
   },
