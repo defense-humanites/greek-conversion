@@ -42,6 +42,8 @@
      so that the search field lines up with the text, on Starlight's grid. */
   --sl-sidebar-width: 21.25rem;
   --sl-nav-height: 4.5rem;
+  /* A touch target of 44px, as the playground's buttons. */
+  --sl-menu-button-size: 2.75rem;
   --sl-line-height: 1.65;
   --sl-text-h1: 2.5rem;
   --sl-text-h2: 1.75rem;
@@ -187,14 +189,19 @@ site-search button[data-open-modal]:hover {
     display: block;
   }
 }
-/* The menu button of a phone, shaped as the playground's buttons. */
-.sl-menu-button button,
-button.sl-menu-button {
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--raised);
+/* The menu button of a phone: its icon alone, centred, without a frame. */
+button.sl-menu-button,
+button.sl-menu-button:has(~ :popover-open) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
   color: var(--ink);
   box-shadow: none;
+}
+button.sl-menu-button:hover {
+  color: var(--from);
 }
 /* Between a phone and 1152px, the search field leaves out its shortcut,
    to keep its room beside the full name and the links. */
