@@ -17,7 +17,8 @@ const result = convertDetailed("ἄνθρωπος", "greek", "greek", {
 //     offset: 0,
 //     length: 1,
 //     diacritic: "smooth",
-//     message: "The target representation does not retain the smooth breathing."
+//     message:
+//       "The target representation does not retain the smooth breathing."
 //   }],
 //   spans: [
 //     { inputStart: 0, inputEnd: 1, outputStart: 0, outputEnd: 1 },

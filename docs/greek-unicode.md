@@ -150,7 +150,9 @@ reencode("ϐίος ϑεός", "greek"); // ϐίος ϑεός
 reencode("ϐίος ϑεός", "greek", {
   greek: { medialBeta: "standard", symbolForms: "standard" },
 }); // βίος θεός
-reencode("βίος ἅβα", "greek", { greek: { medialBeta: "symbol" } }); // βίος ἅϐα
+reencode("βίος ἅβα", "greek", {
+  greek: { medialBeta: "symbol" },
+}); // βίος ἅϐα
 ```
 
 A form belongs to one case, except the lunate sigma, which has a capital and a

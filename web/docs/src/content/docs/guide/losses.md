@@ -64,7 +64,10 @@ const mixed = convertDetailed(
 );
 mixed.output; // → Voir lógos ? cf. psychḗ.
 mixed.lossy; // → true
-mixed.losses.filter((loss) => loss.code !== "unrepresented-literal").length; // → 0
+const aboutGreek = mixed.losses.filter(
+  (loss) => loss.code !== "unrepresented-literal",
+);
+aboutGreek.length; // → 0
 ```
 
 ## Round trips and loss codes

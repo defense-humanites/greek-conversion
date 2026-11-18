@@ -37,7 +37,7 @@
     "check:format": "dprint check",
     "check:lint": "oxlint --deny-warnings",
     "check:types": "tsc -p tsconfig.json && tsc -p tsconfig.build.json --noEmit && tsc -p web/playground",
-    "check:docs": "node scripts/check_api_docs.ts && node scripts/check_examples.ts && node scripts/generate_preset_docs.ts --check && node scripts/generate_option_relevance.ts --check && node scripts/generate_icons.ts --check && node scripts/check_metadata.ts",
+    "check:docs": "node scripts/check_api_docs.ts && node scripts/check_examples.ts && node scripts/check_code_width.ts && node scripts/generate_preset_docs.ts --check && node scripts/generate_option_relevance.ts --check && node scripts/generate_icons.ts --check && node scripts/check_metadata.ts",
     "format": "dprint fmt",
     "test": "node --test \"tests/**/*_test.ts\"",
     "bench": "node bench/main.ts",

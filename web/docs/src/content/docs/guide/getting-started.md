@@ -35,22 +35,23 @@ passage without diacritics, in Beta Code, and following the ISO 843 standard:
 ```ts
 import { convert } from "@humanities/greek-conversion";
 
-const thucydides =
-  "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων, ὡς δὲ εἰπεῖν καὶ ἐπὶ πλεῖστον ἀνθρώπων.";
+const thucydides = "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων";
 
 convert(thucydides, "greek", "transliteration");
-// → Héllēsin egéneto kaì mérei tinì tō̃n barbárōn, hōs dè eipeĩn kaì epì pleĩston anthrṓpōn.
+// → Héllēsin egéneto kaì mérei tinì tō̃n barbárōn
 
 convert(thucydides, "greek", "transliteration", {
   diacritics: { all: "remove", roughBreathing: "preserve" },
 });
-// → Hellēsin egeneto kai merei tini tōn barbarōn, hōs de eipein kai epi pleiston anthrōpōn.
+// → Hellēsin egeneto kai merei tini tōn barbarōn
 
 convert(thucydides, "greek", "beta-code");
-// → *(/ellhsin e)ge/neto kai\ me/rei tini\ tw=n barba/rwn, w(s de\ ei)pei=n kai\ e)pi\ plei=ston a)nqrw/pwn.
+// → *(/ellhsin e)ge/neto kai\ me/rei tini\ tw=n barba/rwn
 
-convert(thucydides, "greek", "transliteration", { preset: "iso-843-type-1" });
-// → Héllīsin ’egéneto kaì mérei tinì tō̂n varvárōn, hōs dè ’eipeîn kaì ’epì pleîston ’anthrṓpōn.
+convert(thucydides, "greek", "transliteration", {
+  preset: "iso-843-type-1",
+});
+// → Héllīsin ’egéneto kaì mérei tinì tō̂n varvárōn
 ```
 
 Without a preset, the transliteration is the SBL academic style. Removing the
@@ -68,8 +69,7 @@ convert(
 );
 // → Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων
 
-const thucydides =
-  "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων, ὡς δὲ εἰπεῖν καὶ ἐπὶ πλεῖστον ἀνθρώπων.";
+const thucydides = "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων";
 
 convertDetailed(thucydides, "greek", "transliteration").lossy; // → false
 

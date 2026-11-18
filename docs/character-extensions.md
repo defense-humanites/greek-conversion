@@ -182,7 +182,10 @@ Keeping a letter is not information loss, so it does not set `lossy`.
 For strict processing, select rejection when creating the converter:
 
 ```ts
-import { CharacterScopeError, createConverter } from "@humanities/greek-conversion";
+import {
+  CharacterScopeError,
+  createConverter,
+} from "@humanities/greek-conversion";
 
 const strict = createConverter({
   preset: "perseus",
@@ -193,7 +196,8 @@ try {
   strict.convert("αϝ", "greek", "beta-code");
 } catch (error) {
   if (error instanceof CharacterScopeError) {
-    error.diagnostics; // [{ code: "out-of-scope-character", index: 1, ... }]
+    error.diagnostics;
+    // [{ code: "out-of-scope-character", index: 1, ... }]
   } else {
     throw error;
   }

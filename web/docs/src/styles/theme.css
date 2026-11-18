@@ -286,6 +286,15 @@ h1#_top {
   letter-spacing: normal;
   text-transform: none;
 }
+/* A table of six columns or more, such as a matrix, tightens to fit the
+   column of text without scrolling: text at 15px, cells 0.6rem from their
+   neighbours rather than 0.9rem. */
+.sl-markdown-content table:has(th:nth-child(6)) :is(th, td) {
+  padding-inline: 0.6rem;
+}
+.sl-markdown-content table:has(th:nth-child(6)) td {
+  font-size: 0.9375rem;
+}
 /* An identifier heading a row stays on one line. */
 .sl-markdown-content td:first-child > code {
   white-space: nowrap;

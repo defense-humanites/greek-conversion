@@ -105,7 +105,8 @@ convert("*)/ANQRWPOS", "beta-code", "greek"); // → Ἄνθρωπος
 convert("ᾯ", "greek", "beta-code"); // → *(=w|
 convert("ᾱ ᾰ", "greek", "beta-code"); // → a%26 a%27
 convert("δῆσε(ν)", "greek", "beta-code"); // → dh=se[1n]1
-convert("ἄνθρωπος", "greek", "beta-code", { preset: "tlg-core" }); // → A)/NQRWPOS
+convert("ἄνθρωπος", "greek", "beta-code", { preset: "tlg-core" });
+// → A)/NQRWPOS
 ```
 
 `betaCode.case` selects lowercase or uppercase ASCII, and `betaCode.yot: "#401"`

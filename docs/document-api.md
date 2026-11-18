@@ -53,7 +53,11 @@ When deriving two independent versions from one parse, copy the tokens and
 assign new diacritic sets where the marks change:
 
 ```ts
-import { encode, parse, validateDocument } from "@humanities/greek-conversion/document";
+import {
+  encode,
+  parse,
+  validateDocument,
+} from "@humanities/greek-conversion/document";
 
 const source = parse("ἄνθρωπος", "greek");
 const edited = source.map((token) => ({ ...token }));

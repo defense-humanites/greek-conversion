@@ -48,7 +48,11 @@ every sigma medial, and can drop the case and the marks:
 import { reencode } from "@humanities/greek-conversion";
 
 const fold = {
-  greek: { sigma: "standard", medialBeta: "standard", symbolForms: "standard" },
+  greek: {
+    sigma: "standard",
+    medialBeta: "standard",
+    symbolForms: "standard",
+  },
 } as const;
 
 reencode("ϐίος λόγοσ ϲῶμα ϑεός", "greek", fold);

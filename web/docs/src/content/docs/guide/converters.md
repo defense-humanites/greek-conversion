@@ -24,11 +24,11 @@ const options = JSON.parse('{ "transliteration": { "eta": "ē" } }');
 try {
   convert("λόγος", "greek", "transliteration", options);
 } catch (error) {
-  if (error instanceof OptionError) {
-    error.message; // → Invalid value for transliteration.eta: "ē"; expected one of "e", "i".
-    error.path; // → transliteration.eta
-    error.accepted; // → ["e","i"]
-  }
+  if (!(error instanceof OptionError)) throw error;
+  error.message;
+  // → Invalid value for transliteration.eta: "ē"; expected one of "e", "i".
+  error.path; // → transliteration.eta
+  error.accepted; // → ["e","i"]
 }
 ```
 
@@ -54,7 +54,9 @@ converter new spellings or characters, or exclude some:
 import { createConverter } from "@humanities/greek-conversion";
 
 const converter = createConverter({
-  aliases: [{ letter: "theta", format: "transliteration", spellings: ["þ"] }],
+  aliases: [
+    { letter: "theta", format: "transliteration", spellings: ["þ"] },
+  ],
   exclude: ["stigma", "koppa", "sampi"],
 });
 

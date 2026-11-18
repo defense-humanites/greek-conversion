@@ -34,7 +34,9 @@ convert("Φίληβος ἢ Περὶ ἡδονῆς", "greek", "transliteration
 });
 // → Philēbos ē Peri hēdonēs
 
-convert("Βίος Μπάλα", "greek", "transliteration", { preset: "ala-lc-modern" });
+convert("Βίος Μπάλα", "greek", "transliteration", {
+  preset: "ala-lc-modern",
+});
 // → Vios Bala
 
 convert("Εύβοια, Ευρώπη, αυτός", "greek", "transliteration", {
@@ -77,7 +79,8 @@ import {
 
 getPresetMetadata("bnf-core").coverage; // → partial
 DEFAULT_CONVERSION_OPTIONS.transliteration.longVowels; // → macron
-resolveConversionOptions({ preset: "sbl-general" }).diacritics.accents; // → remove
+resolveConversionOptions({ preset: "sbl-general" }).diacritics.accents;
+// → remove
 ```
 
 A preset implements what can be done mechanically from the text. It does not
