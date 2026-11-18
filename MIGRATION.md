@@ -37,6 +37,10 @@ reported), and the transliteration `ap’ hēmō̃n` reads as `ἀπ’ ἡμῶ
 `ἀφ’ ἡμῶν`). The new `greek: { elidedStop: "aspirate" }` gives the output of
 rc.9.
 
+`createConverter()` rejects an unknown key of its configuration with an
+`OptionError`, as conversion options do; rc.9 ignored it, so that a
+misspelled `exclude` excluded nothing.
+
 ## Updating from `1.0.0-rc.8`
 
 Greek output keeps the letter forms the source writes, by default: the lunate

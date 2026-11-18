@@ -571,7 +571,7 @@ export interface DefaultConversionOptions {
  * earlier release knew, when there is one. The message is for humans.
  */
 export class OptionError extends RangeError {
-  /** Dotted path of the option, such as `"transliteration.eta"` or `"preset"`. */
+  /** Dotted path of the option, such as `"transliteration.eta"` or `"preset"`; for a key of a converter's configuration, such as `"exclude"` or `"aliases[0].spellings"`. */
   readonly path: string;
   /** The value received, or undefined for an unknown key. */
   readonly received: unknown;

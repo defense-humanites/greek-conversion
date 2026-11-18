@@ -19,11 +19,18 @@ import {
   type QuotationContext,
   sigmaEndsWord,
 } from "./context.ts";
-import { assertFormat, assertTextInput, grapheme, literal } from "./model.ts";
+import {
+  assertFormat,
+  assertTextInput,
+  FORMATS,
+  grapheme,
+  literal,
+} from "./model.ts";
 import type { Document, Format, Grapheme, Letter, Token } from "./model.ts";
 import {
   type ConversionOptions,
   DEFAULT_CONVERSION_OPTIONS,
+  OptionError,
   type Preset,
   type ResolvedConversionOptions,
 } from "./options.ts";
@@ -270,6 +277,7 @@ export class Converter {
 
   /** Creates an isolated converter from copied and validated definitions. */
   constructor(configuration: ConverterConfiguration = {}) {
+    assertConfiguration(configuration);
     if (configuration.preset !== undefined) {
       resolveConversionOptions({ preset: configuration.preset });
     }
@@ -770,11 +778,112 @@ export class Converter {
   }
 }
 
-/** Creates an immutable converter with isolated character extensions. */
+/**
+ * Creates an immutable converter with isolated character extensions.
+ *
+ * The configuration is checked as conversion options are: a misspelled key
+ * never falls back to a default.
+ *
+ * @throws {RangeError} An {@link OptionError} if a key of the configuration,
+ * of an alias, or of a custom character is unknown (its `path` is the key,
+ * such as `"exclude"` or `"aliases[0].spellings"`), or if the preset is.
+ * @throws {TypeError} If the configuration, one of its lists, or one of its
+ * definitions has the wrong type, or if a value is invalid: an unknown
+ * out-of-scope behavior or character identifier, an empty or ambiguous
+ * spelling, or a spelling that already has a meaning without `override`.
+ */
 export function createConverter(
   configuration: ConverterConfiguration = {},
 ): Converter {
   return new Converter(configuration);
+}
+
+const CONFIGURATION_KEYS = [
+  "preset",
+  "outOfScopeBehavior",
+  "aliases",
+  "characters",
+  "repertoire",
+  "exclude",
+];
+const ALIAS_KEYS = ["letter", "format", "spellings", "uppercase", "override"];
+const CHARACTER_KEYS = ["id", "forms", "override"];
+const FORM_KEYS = ["lowercase", "uppercase"];
+
+/**
+ * Checks the shape of a configuration, as conversion options are checked: a
+ * misspelled key never falls back to a default. An unknown key, at any depth,
+ * throws an `OptionError` that names it; a list or a definition of the wrong
+ * type, a `TypeError`. The values are checked where they are read.
+ */
+function assertConfiguration(configuration: unknown): void {
+  assertKeys(configuration, CONFIGURATION_KEYS, "");
+  const { aliases, characters, repertoire, exclude } = configuration as Record<
+    string,
+    unknown
+  >;
+  for (
+    const [name, list] of Object.entries({
+      aliases,
+      characters,
+      repertoire,
+      exclude,
+    })
+  ) {
+    if (list !== undefined && !Array.isArray(list)) {
+      throw new TypeError(
+        `Expected ${name} to be an array, received ${typeName(list)}.`,
+      );
+    }
+  }
+  (aliases as unknown[] | undefined)?.forEach((alias, index) => {
+    assertKeys(alias, ALIAS_KEYS, `aliases[${index}]`);
+  });
+  (characters as unknown[] | undefined)?.forEach((character, index) => {
+    const path = `characters[${index}]`;
+    assertKeys(character, CHARACTER_KEYS, path);
+    const { forms } = character as Record<string, unknown>;
+    assertKeys(forms, FORMATS, `${path}.forms`);
+    for (const format of FORMATS) {
+      assertKeys(
+        (forms as Record<string, unknown>)[format],
+        FORM_KEYS,
+        `${path}.forms.${format}`,
+      );
+    }
+  });
+}
+
+/** Checks that `value` is an object with no key outside `keys`. */
+function assertKeys(
+  value: unknown,
+  keys: readonly string[],
+  path: string,
+): void {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new TypeError(
+      `Expected ${
+        path === "" ? "the converter configuration" : path
+      } to be an object, received ${typeName(value)}.`,
+    );
+  }
+  for (const [key, entry] of Object.entries(value)) {
+    if (entry === undefined || keys.includes(key)) continue;
+    const option = path === "" ? key : `${path}.${key}`;
+    throw new OptionError(`Unknown converter option: ${option}`, {
+      path: option,
+      received: undefined,
+      accepted: keys,
+    });
+  }
+}
+
+function typeName(value: unknown): string {
+  return value === null
+    ? "null"
+    : Array.isArray(value)
+    ? "array"
+    : typeof value;
 }
 
 function normalizeAliases(
