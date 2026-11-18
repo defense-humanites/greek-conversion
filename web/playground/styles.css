@@ -158,6 +158,12 @@ code {
   background: var(--link);
   color: var(--surface);
 }
+/* Copy, in the target's field: the main action there, in its orange. */
+.button.target {
+  border-color: var(--to-strong);
+  background: var(--to-strong);
+  color: var(--surface);
+}
 .button:disabled {
   opacity: 0.5;
   cursor: default;
@@ -192,6 +198,10 @@ code {
     border-color: var(--link-hover);
     background: var(--link-hover);
   }
+  .button.target:hover:not(:disabled) {
+    border-color: var(--to-strong-hover);
+    background: var(--to-strong-hover);
+  }
   .segments label:not(:has(input:checked), .detected):hover {
     color: var(--ink);
   }
@@ -203,6 +213,10 @@ code {
 .button.primary:active:not(:disabled) {
   border-color: var(--link-press);
   background: var(--link-press);
+}
+.button.target:active:not(:disabled) {
+  border-color: var(--to-strong-press);
+  background: var(--to-strong-press);
 }
 @media (prefers-reduced-motion: no-preference) {
   .button:active:not(:disabled),
@@ -319,6 +333,11 @@ h1 span {
   min-height: 44px;
   text-decoration: none;
 }
+/* Documentation, the playground's companion, in bold, as the
+   documentation's header sets Playground. */
+.links .documentation {
+  font-weight: 700;
+}
 .links a:hover {
   color: var(--ink);
   text-decoration: underline;
@@ -412,7 +431,7 @@ h1 span {
   cursor: pointer;
 }
 .share-done {
-  color: var(--link);
+  color: inherit;
 }
 /* Half the width, clear of the links and the Share button. */
 .intro {

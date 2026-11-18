@@ -12,6 +12,14 @@ export const onRequest = defineRouteMiddleware((context) => {
    */
   if (route.entry.data.template === "splash") route.hasSidebar = true;
   /*
+   * The home page's title is the site's: its tab reads "greek conversion",
+   * not Starlight's "greek conversion | greek conversion".
+   */
+  if (route.entry.data.template === "splash") {
+    const title = route.head.find((entry) => entry.tag === "title");
+    if (title) title.content = route.siteTitle;
+  }
+  /*
    * Every page of the next release's documentation says so, and leads to
    * the same page in the released documentation.
    */

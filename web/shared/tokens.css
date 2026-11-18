@@ -92,6 +92,11 @@
      follow the theme's --link and --ink. */
   --link-hover: color-mix(in oklab, var(--link) 82%, var(--ink));
   --link-press: color-mix(in oklab, var(--link) 66%, var(--ink));
+  /* A button of the target's orange, deep enough to carry text in the
+     ground's colour (5.2:1 in light, 6.5:1 in dark): the strings' orange. */
+  --to-strong: var(--code-string);
+  --to-strong-hover: color-mix(in oklab, var(--to-strong) 82%, var(--ink));
+  --to-strong-press: color-mix(in oklab, var(--to-strong) 66%, var(--ink));
   --press: color-mix(in oklab, var(--ink) 8%, transparent);
   /* Pressed, an action button shrinks to --squish in 60ms, then springs
      back with a marked overshoot (--ease-bounce, 320ms). */
