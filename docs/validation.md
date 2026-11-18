@@ -38,14 +38,15 @@ import {
   validateDocument,
 } from "@humanities/greek-conversion/document";
 
-const document = parse(input, sourceFormat, options);
+const options = { preset: "tlg-core" } as const;
+const document = parse("A)/NQRWPOS", "beta-code", options);
 const diagnostics = validateDocument(document);
 
 if (diagnostics.length > 0) {
   // Report diagnostics or reject the input.
 }
 
-const output = encode(document, targetFormat, options);
+encode(document, "greek", options); // → ἄνθρωπος
 ```
 
 This checks the structure and Greek graphemes of the parsed document. It does

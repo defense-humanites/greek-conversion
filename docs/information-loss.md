@@ -319,10 +319,28 @@ For canonical output and one fixed, resolved option set without `source`,
 every format is idempotent:
 
 ```ts
-const once = convert(input, from, to, options);
-const twice = convert(once, to, to, options);
+import {
+  type ConversionOptions,
+  convert,
+  type Format,
+} from "@humanities/greek-conversion";
 
-once === twice;
+function isStable(
+  input: string,
+  from: Format,
+  to: Format,
+  options: ConversionOptions,
+): boolean {
+  const once = convert(input, from, to, options);
+  const twice = convert(once, to, to, options);
+
+  return once === twice;
+}
+
+isStable("Ἡ τοῦ Ὁμήρου Ἰλιάς", "greek", "transliteration", {
+  preset: "ala-lc-ancient",
+});
+// → true
 ```
 
 The first conversion may canonicalize aliases, mark order, punctuation, case,

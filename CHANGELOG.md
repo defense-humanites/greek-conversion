@@ -101,6 +101,12 @@ change.
 - The examples of the README and of the guide are checked code point for
   code point, no longer after NFC normalization: a result is written as it is
   returned, oxia or tonos.
+- The examples of the reference (`docs/`) are checked like those of the
+  guide. Each of its twenty-three examples is now a module with its imports
+  and its results, type-checked and run by `npm run check`, which also checks
+  the links between its documents and their headings. A result given inside
+  a block, such as a `catch`, is checked too: three of the guide were read as
+  plain comments.
 
 ### Added
 

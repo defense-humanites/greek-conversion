@@ -6,7 +6,12 @@ encoding, and `convertDetailed()` observes the same information loss as if the
 resolved options had been supplied individually.
 
 ```ts
-convert(input, from, to, { preset: "ala-lc-modern" });
+import { convert } from "@humanities/greek-conversion";
+
+convert("Βίος Μπάλα", "greek", "transliteration", {
+  preset: "ala-lc-modern",
+});
+// → Vios Bala
 ```
 
 Custom options can refine or override a preset. Resolution is recursive for
@@ -15,11 +20,14 @@ and `diacritics.all` is expanded where it is written, so the caller's `all`
 overrides every class a preset set:
 
 ```ts
-convert(input, from, to, {
+import { convert } from "@humanities/greek-conversion";
+
+convert("Βίος Μπάλα", "greek", "transliteration", {
   preset: "ala-lc-modern",
   diacritics: { accents: "preserve" },
   text: { letterCase: "uppercase" },
 });
+// → VÍOS BÁLA
 ```
 
 The precedence is always:
@@ -427,15 +435,24 @@ Descriptive metadata, sparse preset definitions, immutable defaults, and fully
 resolved option objects are public:
 
 ```ts
-listPresetMetadata();
-getPresetMetadata("ala-lc-modern");
+import {
+  DEFAULT_CONVERSION_OPTIONS,
+  getPresetMetadata,
+  getPresetOptions,
+  listPresetMetadata,
+  resolveConversionOptions,
+} from "@humanities/greek-conversion";
 
-DEFAULT_CONVERSION_OPTIONS;
-getPresetOptions("ala-lc-modern");
+listPresetMetadata().length; // → 9
+getPresetMetadata("ala-lc-modern").coverage; // → partial
+
+DEFAULT_CONVERSION_OPTIONS.transliteration.beta; // → b
+getPresetOptions("ala-lc-modern").transliteration?.beta; // → v
 resolveConversionOptions({
   preset: "ala-lc-modern",
   transliteration: { beta: "b" },
-});
+}).transliteration.beta;
+// → b
 ```
 
 `getPresetMetadata()` returns one preset's scope, references, coverage, and

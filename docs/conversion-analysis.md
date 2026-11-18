@@ -4,28 +4,30 @@
 information retained by the target representation:
 
 ```ts
+import { convertDetailed } from "@humanities/greek-conversion";
+
 const result = convertDetailed("ἄνθρωπος", "greek", "greek", {
   greek: { accentuation: "monotonic" },
 });
 
-// {
-//   output: "άνθρωπος",
-//   lossy: true,
-//   losses: [{
-//     code: "removed-diacritic",
-//     index: 0,
-//     offset: 0,
-//     length: 1,
-//     diacritic: "smooth",
-//     message:
-//       "The target representation does not retain the smooth breathing."
-//   }],
-//   spans: [
-//     { inputStart: 0, inputEnd: 1, outputStart: 0, outputEnd: 1 },
-//     { inputStart: 1, inputEnd: 2, outputStart: 1, outputEnd: 2 },
-//     // ... one per source token
-//   ]
-// }
+result.output; // → άνθρωπος
+result.lossy; // → true
+
+const [loss] = result.losses;
+loss.code; // → removed-diacritic
+loss.diacritic; // → smooth
+loss.index; // → 0
+loss.offset; // → 0
+loss.length; // → 1
+loss.message;
+// → The target representation does not retain the smooth breathing.
+
+// One span per source token.
+result.spans.length; // → 8
+result.spans[0];
+// → {"inputStart":0,"inputEnd":1,"outputStart":0,"outputEnd":1}
+result.spans[1];
+// → {"inputStart":1,"inputEnd":2,"outputStart":1,"outputEnd":2}
 ```
 
 `convert()` continues to return only a string. Both functions share the same

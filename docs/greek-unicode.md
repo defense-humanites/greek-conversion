@@ -10,9 +10,12 @@ Greek output is polytonic by default. Request the mechanical monotonic profile
 with `greek.accentuation`:
 
 ```ts
+import { convert } from "@humanities/greek-conversion";
+
 convert("Ποῦ εἶσαι; Ἢ ἐδῶ ἢ ἐκεῖ, καὶ ὄχι ἀλλοῦ.", "greek", "greek", {
   greek: { accentuation: "monotonic" },
-}); // Πού είσαι; Ή εδώ ή εκεί, και όχι αλλού.
+});
+// → Πού είσαι; Ή εδώ ή εκεί, και όχι αλλού.
 ```
 
 The monotonic transform:
@@ -71,9 +74,13 @@ Greek output is composed by default. Set `greek.composition` to
 `"decomposed"` to emit canonical base letters and combining marks:
 
 ```ts
-convert("ἄ", "greek", "greek", {
+import { convert } from "@humanities/greek-conversion";
+
+const decomposed = convert("ἄ", "greek", "greek", {
   greek: { composition: "decomposed" },
-}); // U+03B1 U+0313 U+0301
+});
+[...decomposed].map((c) => c.codePointAt(0)!.toString(16));
+// → ["3b1","313","301"]
 ```
 
 `"composed"` describes the intended structure, not a guarantee that the final
@@ -92,16 +99,22 @@ Greek therefore comes back as it was typed, and output under
 `accentuation: "monotonic"` always has tonos:
 
 ```ts
-reencode("λόγος", "greek");
-// λόγος — ό is U+03CC GREEK SMALL LETTER OMICRON WITH TONOS
+import { convert, reencode } from "@humanities/greek-conversion";
 
-reencode("ὁ λόγος", "greek");
-// ὁ λόγος — ό is U+1F79 GREEK SMALL LETTER OMICRON WITH OXIA
+const scalar = (text: string, at: number) =>
+  "U+" + text.codePointAt(at)!.toString(16).toUpperCase().padStart(4, "0");
 
-convert("ὁ λόγος", "greek", "greek", {
+// No polytonic mark: GREEK SMALL LETTER OMICRON WITH TONOS.
+scalar(reencode("λόγος", "greek"), 1); // → U+03CC
+
+// A breathing in the output: GREEK SMALL LETTER OMICRON WITH OXIA.
+scalar(reencode("ὁ λόγος", "greek"), 3); // → U+1F79
+
+const monotonic = convert("ὁ λόγος", "greek", "greek", {
   greek: { accentuation: "monotonic" },
 });
-// ο λόγος — ό is U+03CC
+monotonic; // → ο λόγος
+scalar(monotonic, 3); // → U+03CC
 ```
 
 The choice is made on the output, once the options have shaped it, so that
@@ -124,9 +137,13 @@ U+0387 GREEK ANO TELEIA to U+00B7 MIDDLE DOT. The canonical forms remain the
 default. Exact Greek scalars can be requested after composition:
 
 ```ts
-reencode("ά;·", "greek", {
+import { reencode } from "@humanities/greek-conversion";
+
+const exact = reencode("ά;·", "greek", {
   greek: { acute: "oxia", questionMark: "greek", anoTeleia: "greek" },
-}); // ά;·
+});
+[...exact].map((c) => c.codePointAt(0)!.toString(16));
+// → ["1f71","37e","387"]
 ```
 
 The alternatives are `"semicolon"` and `"middle-dot"`; `"canonical"` is the
@@ -170,13 +187,17 @@ Unicode reserves them for mathematics (§ 7.2), and leaves the shape of a
 letter to the font.
 
 ```ts
-reencode("ϐίος ϑεός", "greek"); // ϐίος ϑεός
+import { reencode } from "@humanities/greek-conversion";
+
+reencode("ϐίος ϑεός", "greek"); // → ϐίος ϑεός
 reencode("ϐίος ϑεός", "greek", {
   greek: { medialBeta: "standard", symbolForms: "standard" },
-}); // βίος θεός
+});
+// → βίος θεός
 reencode("βίος ἅβα", "greek", {
   greek: { medialBeta: "symbol" },
-}); // βίος ἅϐα
+});
+// → βίος ἅϐα
 ```
 
 A form belongs to one case, except the lunate sigma, which has a capital and a
@@ -207,10 +228,12 @@ the elided σε or σου, which Modern Greek also elides before a consonant
 (`σ’ το πω`), or the letter quoted (‘σ’).
 
 ```ts
+import { convert, reencode } from "@humanities/greek-conversion";
+
 const contextual = { greek: { finalSigma: "contextual" } } as const;
-reencode("ἔχους’ ἐγώ", "greek", contextual); // ἔχουσ’ ἐγώ
-reencode("‘λόγοσ’ est", "greek", contextual); // ‘λόγος’ est
-convert("e)/xous' e)gw/", "beta-code", "greek"); // ἔχουσ’ ἐγώ
+reencode("ἔχους’ ἐγώ", "greek", contextual); // → ἔχουσ’ ἐγώ
+reencode("‘λόγοσ’ est", "greek", contextual); // → ‘λόγος’ est
+convert("e)/xous' e)gw/", "beta-code", "greek"); // → ἔχουσ’ ἐγώ
 ```
 
 An apostrophe after punctuation or a digit cannot be an elision, and closes

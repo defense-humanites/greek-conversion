@@ -18,9 +18,11 @@ npm test             # unit, conformance, and property tests
 npm run bench        # throughput baseline
 ```
 
-`npm run check` type-checks and runs every TypeScript example of the README
-and of the guide pages of the documentation site, and compares its output with
-the `// →` comment, code point for code point. It also fails when a change to
+`npm run check` type-checks and runs every TypeScript example of the README,
+of the reference (`docs/`), and of the guide pages of the documentation site,
+and compares its output with the `// →` comment, code point for code point.
+Write an example as a module, with its imports; a ```ts block that is not
+one fails the check. It also fails when a change to
 the options leaves `web/playground/option_relevance.ts` out of date
 (`npm run site:options` updates it), or `docs/presets.md`, generated from the
 presets (`npm run docs:presets`), or the table of what each preset loses in

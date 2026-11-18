@@ -50,9 +50,18 @@ kept as they are, but reported as `unrepresented-literal` losses when the
 target format would read them as Greek:
 
 ```ts
-convertDetailed("Voir λόγος ; cf. ψυχή.", "greek", "transliteration");
-// output: "Voir lógos ? cf. psychḗ."; lossy: true, all losses
-// unrepresented-literal
+import { convertDetailed } from "@humanities/greek-conversion";
+
+const mixed = convertDetailed(
+  "Voir λόγος ; cf. ψυχή.",
+  "greek",
+  "transliteration",
+);
+
+mixed.output; // → Voir lógos ? cf. psychḗ.
+mixed.lossy; // → true
+[...new Set(mixed.losses.map((loss) => loss.code))];
+// → ["unrepresented-literal"]
 ```
 
 Filter the losses by `code` to keep those about the Greek, or extract the Greek

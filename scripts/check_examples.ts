@@ -1,7 +1,8 @@
 /**
- * Checks the TypeScript examples of README.md and of the guide pages of the
- * documentation site (`web/docs/src/content/docs/`, except the generated
- * reference and API pages), so that they cannot drift from the code: each
+ * Checks the TypeScript examples of README.md, of the reference (`docs/`),
+ * and of the guide pages of the documentation site
+ * (`web/docs/src/content/docs/`, except the reference pages generated from
+ * `docs/` and the API pages), so that they cannot drift from the code: each
  * ```ts block is type-checked as a module of its own, then executed, and its
  * results are compared with the documented ones. A translated page keeps its
  * examples, so they are checked in every language.
@@ -17,6 +18,9 @@
  *     });
  *     // → Hellēsin egeneto …
  *
+ * A result can be given inside a block, such as a `catch`, at the
+ * indentation of its statement.
+ *
  * `// throws RangeError: message` expects an exception instead. Text results
  * are compared code point for code point, as a reader who copies one compares
  * it: Greek with an oxia is not Greek with a tonos, nor a decomposed letter a
@@ -27,7 +31,8 @@
  * README, must exist in the working tree. A guide page links to other pages
  * by their path from the site's root (`/reference/presets/#coverage`); the
  * page and the heading must exist, in `docs/` for the reference, generated
- * from it.
+ * from it. A reference document links to the others, and to files of the
+ * repository, by their path from `docs/` (`presets.md#inspection`).
  *
  * Run with `node scripts/check_examples.ts`.
  */
@@ -39,6 +44,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = new URL("../", import.meta.url);
 const README = new URL("README.md", ROOT);
+const DOCS = new URL("docs/", ROOT);
 const PAGES = new URL("web/docs/src/content/docs/", ROOT);
 /** Folders of the site that are generated, from `docs/` and from the API. */
 const GENERATED = new Set(["reference", "api"]);
@@ -48,10 +54,10 @@ const TSC = fileURLToPath(
   new URL("../node_modules/typescript/bin/tsc", import.meta.url),
 );
 
-const ARROW = /^\/\/ → (.*)$/;
-const THROWS = /^\/\/ throws (\w+): (.*)$/;
-const INLINE_ARROW = /^(\S.*?);?\s*\/\/ → (.*)$/;
-const INLINE_THROWS = /^(\S.*?);?\s*\/\/ throws (\w+): (.*)$/;
+const ARROW = /^(\s*)\/\/ → (.*)$/;
+const THROWS = /^(\s*)\/\/ throws (\w+): (.*)$/;
+const INLINE_ARROW = /^(\s*)(\S.*?);?\s*\/\/ → (.*)$/;
+const INLINE_THROWS = /^(\s*)(\S.*?);?\s*\/\/ throws (\w+): (.*)$/;
 
 /** Defines `__check`, which records each outcome for the runner. */
 const HELPER = `
@@ -113,7 +119,7 @@ interface Expectation {
   line: number;
 }
 
-/** A checked document: the README or a guide page of the site. */
+/** A checked document: the README, a reference document, or a guide page. */
 interface Source {
   /** Its path from the repository's root, for messages. */
   name: string;
@@ -125,6 +131,14 @@ interface Source {
 const sources: Source[] = [
   { name: "README.md", lines: (await readFile(README, "utf8")).split("\n") },
 ];
+const references = (await readdir(DOCS)).filter((file) => file.endsWith(".md"))
+  .sort();
+for (const file of references) {
+  sources.push({
+    name: `docs/${file}`,
+    lines: (await readFile(new URL(file, DOCS), "utf8")).split("\n"),
+  });
+}
 for (const file of await guidePages(PAGES)) {
   const url = new URL(file, PAGES);
   sources.push({
@@ -211,6 +225,13 @@ for (const source of sources) {
         checked++;
         continue;
       }
+    } else if (
+      source.name.startsWith("docs/") && !/^[a-z][a-z0-9+.-]*:/i.test(target)
+    ) {
+      // A reference document links by path from docs/.
+      const [path, fragment] = target.split("#");
+      anchor = fragment;
+      file = new URL(path, "file:///docs/").pathname.slice(1);
     } else continue;
 
     let content: string;
@@ -238,8 +259,8 @@ if (failures.length > 0) {
   process.exit(1);
 }
 console.log(
-  `${checked} results and links check out in the README and ${
-    sources.length - 1
+  `${checked} results and links check out in the README, ${references.length} reference documents, and ${
+    sources.length - 1 - references.length
   } guide pages.`,
 );
 
@@ -343,18 +364,20 @@ function translate(
     const arrow = line.match(ARROW);
     const throws = line.match(THROWS);
     if (arrow || throws) {
-      // The checked statement is the last top-level statement before it.
+      // The checked statement is the last statement before it at the same
+      // indentation: the top level, or the block the result is given in.
+      const indent = (arrow ?? throws)![1];
       let first = pending.length - 1;
-      while (first > 0 && !startsStatement(pending[first])) first--;
+      while (first > 0 && !startsStatement(pending[first], indent)) first--;
       const statement = pending.slice(first).join("\n");
       pending = pending.slice(0, first);
       flush();
       check(
         statement,
-        arrow ? { kind: "value", expected: arrow[1], line: lineNumber } : {
+        arrow ? { kind: "value", expected: arrow[2], line: lineNumber } : {
           kind: "throws",
-          error: throws![1],
-          expected: throws![2],
+          error: throws![2],
+          expected: throws![3],
           line: lineNumber,
         },
       );
@@ -366,13 +389,13 @@ function translate(
     if (inlineArrow || inlineThrows) {
       flush();
       check(
-        (inlineArrow ?? inlineThrows)![1],
+        (inlineArrow ?? inlineThrows)![2],
         inlineArrow
-          ? { kind: "value", expected: inlineArrow[2], line: lineNumber }
+          ? { kind: "value", expected: inlineArrow[3], line: lineNumber }
           : {
             kind: "throws",
-            error: inlineThrows![2],
-            expected: inlineThrows![3],
+            error: inlineThrows![3],
+            expected: inlineThrows![4],
             line: lineNumber,
           },
       );
@@ -385,8 +408,11 @@ function translate(
   return `${HELPER}\n${out.join("\n")}`;
 }
 
-function startsStatement(line: string): boolean {
-  return line.length > 0 && !/^[\s})\]]/.test(line) && !line.startsWith("//");
+/** Whether `line` starts a statement at the indentation `indent`. */
+function startsStatement(line: string, indent: string): boolean {
+  if (!line.startsWith(indent)) return false;
+  const rest = line.slice(indent.length);
+  return rest.length > 0 && !/^[\s})\]]/.test(rest) && !rest.startsWith("//");
 }
 
 function rewriteImports(
