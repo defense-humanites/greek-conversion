@@ -16,11 +16,14 @@ export const onRequest = defineRouteMiddleware((context) => {
    * the same page in the released documentation.
    */
   const released = otherVersionHref(context.url.pathname);
-  if (VERSIONS.channel === "next" && released !== null) {
+  if (
+    VERSIONS.channel === "next" && released !== null &&
+    VERSIONS.release !== null
+  ) {
     route.entry.data.banner = {
       content: `This is the documentation of the next release, built from
         the main branch. <a href="${released}">Read the documentation of
-        ${VERSIONS.release}</a>, the latest release.`,
+        the latest release</a>, ${VERSIONS.release}.`,
     };
   }
 });

@@ -704,10 +704,13 @@ mobile-starlight-toc .display-current {
 }
 
 /* A taller bar (60px rather than 48px), so that the panel, 6px below the
-   toggle, does not land on the bar's bottom border but covers it. */
+   toggle, does not land on the bar's bottom border but covers it. Without
+   the column of "On this page", the header's search field lines up with
+   the text: Starlight's header leaves room for that column from 1152px. */
 @media (max-width: 89.99rem) {
   html[data-has-toc] {
     --sl-mobile-toc-height: 3.75rem;
+    --__toc-width: 0rem;
   }
 }
 
@@ -968,6 +971,12 @@ mobile-starlight-toc .toggle,
     --sl-content-inline-start: var(--sl-sidebar-width);
     --sl-content-width: 45rem;
     --__toc-width: initial;
+  }
+}
+/* …whose table of contents is a column from 1440px only. */
+@media (min-width: 68.75rem) and (max-width: 89.99rem) {
+  :root:has(.home-hero) .header {
+    --__toc-width: 0rem;
   }
 }
 

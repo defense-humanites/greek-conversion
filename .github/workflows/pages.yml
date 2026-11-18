@@ -1,10 +1,11 @@
 name: Site
 
 # The documentation site (web/docs) and the playground (web/playground), on
-# GitHub Pages, in two versions: at the root, those of the latest release
-# whose tree holds the site (a stable version if there is one, a
-# pre-release otherwise); under /next/, those of main, for the next release.
-# Until a release holds the site, main is served at the root alone. A pull
+# GitHub Pages, in two versions: at the root, those of the latest stable
+# release; under /next/, those of main, for the next release. A release
+# candidate is the next release by nature, and is not served on its own.
+# Until a stable release holds the site (1.0.0), main is served at the root
+# alone. A pull
 # request builds its own tree to check it; a push to main, a published
 # release, or a manual run deploys both versions.
 on:
@@ -60,18 +61,16 @@ jobs:
         id: release
         if: github.event_name != 'pull_request'
         run: |
-          holds_site() {
-            while read -r tag; do
-              if git cat-file -e "$tag:web/docs/package.json" 2>/dev/null; then
-                echo "$tag"
-                return
-              fi
-            done
-          }
-          # Newest first, a pre-release before its version (1.0.0-rc.9 < 1.0.0).
-          tags=$(git -c versionsort.suffix=- tag --list 'v*' --sort=-v:refname)
-          tag=$(grep -v -- - <<<"$tags" | holds_site || true)
-          [ -n "$tag" ] || tag=$(holds_site <<<"$tags" || true)
+          # The newest stable version (no pre-release suffix) that holds the
+          # site.
+          tag=""
+          for candidate in $(git tag --list 'v*' --sort=-v:refname); do
+            case "$candidate" in *-*) continue ;; esac
+            if git cat-file -e "$candidate:web/docs/package.json" 2>/dev/null; then
+              tag="$candidate"
+              break
+            fi
+          done
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
       - name: Build this tree (main, as the next release, beside a release)
         env:
@@ -95,7 +94,7 @@ jobs:
           cd "$RUNNER_TEMP/release"
           npm ci --ignore-scripts
           npm ci --prefix web/docs
-          DOCS_NEXT=1 npm run build --prefix web/docs
+          DOCS_RELEASE="${TAG#v}" DOCS_NEXT=1 npm run build --prefix web/docs
           npm run site:build
           cp -R web/docs/dist/. _site/
           mv _site "$GITHUB_WORKSPACE/_site"

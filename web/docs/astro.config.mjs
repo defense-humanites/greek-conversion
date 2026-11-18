@@ -4,23 +4,21 @@ import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 import starlightTypeDoc, { typeDocSidebarGroup } from "starlight-typedoc";
 
-import { readFileSync } from "node:fs";
-
 const SITE = "https://defense-humanites.github.io";
 /**
- * The site serves two versions of the documentation (`.github/workflows/
- * pages.yml`): at its root, that of the latest release, and under `/next/`,
- * that of `main`, for the next release. A build says which it is with
- * `DOCS_CHANNEL` (`release`, the default, or `next`), and gives the version
- * at the root with `DOCS_RELEASE` (by default, the package's); a release
- * build sets `DOCS_NEXT=1` when `/next/` is deployed beside it.
+ * The site serves two versions of the documentation from 1.0.0
+ * (`.github/workflows/pages.yml`): at its root, that of the latest stable
+ * release; under `/next/`, that of `main`, for the next release, release
+ * candidates included. A build says which it is with `DOCS_CHANNEL`
+ * (`release`, the default, or `next`) and gives the version at the root
+ * with `DOCS_RELEASE`; a release build sets `DOCS_NEXT=1` when `/next/` is
+ * deployed beside it. Before 1.0.0, `main` is served at the root alone,
+ * without a version.
  */
 const ROOT_BASE = "/greek-conversion";
 const CHANNEL = process.env.DOCS_CHANNEL === "next" ? "next" : "release";
 const BASE = CHANNEL === "next" ? `${ROOT_BASE}/next` : ROOT_BASE;
-const RELEASE = process.env.DOCS_RELEASE ||
-  JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"))
-    .version;
+const RELEASE = process.env.DOCS_RELEASE || null;
 const VERSIONS = {
   channel: CHANNEL,
   release: RELEASE,
