@@ -58,7 +58,8 @@ There is currently no separate source-syntax diagnostic API.
 Diagnostics contain a stable code, a token index in the canonical `Document`,
 and a human-readable message. The index is deliberately not a source-code-unit
 offset: a parser can normalize combining sequences or map several source
-characters to one grapheme.
+characters to one grapheme. For a document read with `parseDetailed()`,
+`spans[diagnostic.index]` is where that token was read in the input.
 
 Validation is pure and does not mutate the document. It currently checks
 conflicting accents, breathings and quantities, plus whether accents,
@@ -73,6 +74,36 @@ diacritics also receive diagnostics. Structural checks run over the whole
 document first; if any fail, contextual and combinatorial checks are deferred
 until those structural problems are corrected. This avoids interpreting the
 neighbors of an ill-formed token as valid Greek context.
+
+## Diagnostic codes
+
+The structural codes are reported first; the others only once the document
+has none of them.
+
+| Code | Reported on |
+| --- | --- |
+| `invalid-token` | A token that is not an object, or whose `kind` is neither `"grapheme"` nor `"literal"` |
+| `invalid-literal` | A literal whose `value` is not text |
+| `invalid-case` | A grapheme whose `uppercase` is not a boolean |
+| `invalid-diacritics` | A grapheme whose `diacritics` is not a `Set` |
+| `invalid-letter` | A grapheme whose `letter` is not a known Greek letter |
+| `invalid-diacritic` | A diacritic the model does not know |
+| `invalid-glyph-variant` | An unknown `glyphVariant`, or one that does not fit its letter or its case |
+| `conflicting-accents` | More than one accent on a grapheme |
+| `conflicting-breathings` | Both breathings on a grapheme |
+| `conflicting-coronis-breathing` | A coronis together with a breathing |
+| `conflicting-quantities` | A macron together with a breve |
+| `incompatible-diaeresis-breathing` | A diaeresis together with a breathing |
+| `invalid-accent` | An accent on a consonant |
+| `invalid-circumflex` | A circumflex on a vowel that cannot be long (epsilon, omicron) |
+| `invalid-breathing` | A breathing on a consonant other than rho |
+| `invalid-coronis` | A coronis on a consonant or on an initial vowel |
+| `invalid-diaeresis` | A diaeresis on a letter other than iota or upsilon |
+| `invalid-iota-subscript` | An iota subscript on a letter other than alpha, eta, or omega |
+| `invalid-quantity` | A macron or a breve on a letter that cannot bear it |
+
+The union is open: a minor release may add a code (see the
+[stability policy](stability.md#compatible-additions-minor)).
 
 ## Validation boundary
 

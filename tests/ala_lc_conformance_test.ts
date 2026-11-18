@@ -76,6 +76,13 @@ const CASES = [
   },
   {
     preset: "ala-lc-modern",
+    rule: "notes: monotonic text has no breathing, and none is supplied",
+    greek: "Η Ελληνική ιστορία, οι Έλληνες",
+    latin: "Ē Ellēnikē istoria, oi Ellēnes",
+    lossy: true,
+  },
+  {
+    preset: "ala-lc-modern",
     rule: "notes: accents, quantity, diaeresis, and subscript omitted",
     greek: "ά ᾱ αϋ ᾳ",
     latin: "a a ay a",

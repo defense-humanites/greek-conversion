@@ -1,6 +1,6 @@
 ---
 title: "Letters and text"
-description: "Keep or fold letter variants, write the iota on the line, and normalize case and whitespace."
+description: "Keep or fold letter variants, write the iota on the line, aspirate an elided consonant, and normalize case and whitespace."
 sidebar:
   order: 3
 ---
@@ -56,7 +56,7 @@ const fold = {
 } as const;
 
 reencode("ϐίος λόγοσ ϲῶμα ϑεός", "greek", fold);
-// → βίος λόγοσ σῶμα θεός
+// → βίος λόγοσ σῶμα θεός
 reencode("ϐΊΟΣ λόγος ϑεός", "greek", {
   greek: { ...fold.greek, finalSigma: "medial" },
   text: { letterCase: "lowercase" },
@@ -100,6 +100,24 @@ reencode("τῷ λόγῳ ἐστὶν ἀγαθός", "greek", {
   greek: { sigma: "lunate", iotaSubscript: "adscript" },
 });
 // → ΤΩΙ ΛΟΓΩΙ ΕϹΤΙΝ ΑΓΑΘΟϹ
+```
+
+## Aspirate an elided consonant
+
+Greek output keeps a final `π`, `τ`, or `κ` whose vowel is elided before a
+rough breathing as the source writes it, which is how Ionic prose is edited
+(`κατ’ ἑωυτούς` in Herodotus). `greek.elidedStop: "aspirate"` writes the
+aspirate that Attic spelling requires, and `convertDetailed()` then reports
+the consonant it replaced:
+
+```ts
+import { reencode } from "@humanities/greek-conversion";
+
+reencode("ἀπ’ οὗ κατ’ ἡμέραν", "greek"); // → ἀπ’ οὗ κατ’ ἡμέραν
+reencode("ἀπ’ οὗ κατ’ ἡμέραν", "greek", {
+  greek: { elidedStop: "aspirate" },
+});
+// → ἀφ’ οὗ καθ’ ἡμέραν
 ```
 
 ## Normalize case and whitespace

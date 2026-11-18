@@ -31,11 +31,20 @@ The monotonic transform:
 Syllables are counted on the written vowels: a diphthong is one syllable,
 and a diaeresis or an accent on the first of two vowels marks two. An acute
 on `πού` or `πώς` is kept, because that is how monotonic text writes the
-interrogative, so monotonic input is already canonical. Two cases need
-knowledge of the word and are left as written: a monosyllable by synizesis
+interrogative, so these words are already canonical in monotonic input. Two
+cases need knowledge of the word and are left as written: a monosyllable by synizesis
 (`γιὰ`, `μιὰ`, `δυὸ`, `πιὰ` keep their accent, since `Διός` and `κιών`, with
 the same vowels, are disyllables), and the optional accent that monotonic
 authors put on a weak pronoun to avoid ambiguity (`μού`), which is removed.
+
+The count takes as a word what stands between spaces and punctuation. On text
+that is already monotonic, it therefore removes an accent that usage keeps on
+a word of one vowel: `ό,τι` gives `ο,τι`, the abbreviation `κ.ά.` gives
+`κ.α.`, and `20ός` gives `20ος`. These are limits of the mechanical count,
+not choices: a release may keep these accents, and such output would then
+change as a correction. To read monotonic text back from transliteration
+without applying the rules, ask only for no breathing
+(`diacritics: { smoothBreathing: "remove" }`).
 
 It is applied only when the target format is Greek. Beta Code and
 transliteration retain the source document's polytonic distinctions. The

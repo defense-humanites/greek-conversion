@@ -52,7 +52,7 @@ Modern Greek to the ISO 843 transcription of passports and maps:
 import { convert } from "@humanities/greek-conversion";
 
 convert("Ἕλλησιν ἐγένετο", "greek", "transliteration"); // → Héllēsin egéneto
-convert("*(/ELLHSIN E)GE/NETO", "beta-code", "greek"); // → Ἕλλησιν ἐγένετο
+convert("*(/ELLHSIN E)GE/NETO", "beta-code", "greek"); // → Ἕλλησιν ἐγένετο
 convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliteration", {
   preset: "iso-843-type-2",
 });
@@ -66,7 +66,7 @@ convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliter
 | Convert a string                                                         | `convert(input, from, to, options?)`                                  |
 | Normalize or restyle a string without changing its format                | `reencode(input, format, options?)`                                   |
 | Know whether the conversion loses information, and where each token went | `convertDetailed(input, from, to, options?)`                          |
-| Reuse one configuration, add characters, or restrict the repertoire      | `createConverter(configuration)`                                      |
+| Bind a preset, add characters, or restrict the repertoire                | `createConverter(configuration)`                                      |
 | Inspect or edit the parsed text itself                                   | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
 
 The [documentation](https://defense-humanites.github.io/greek-conversion/) has the guide, the recipes, the

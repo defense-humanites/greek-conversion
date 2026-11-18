@@ -17,7 +17,7 @@ Nine presets cover the common library, scholarly, and interchange conventions:
 | `ala-lc-ancient` | transliteration | Ancient         | Library romanization, Medieval Greek included (before 1454)                 |
 | `ala-lc-modern`  | transliteration | Modern          | Library romanization after 1453, with its contextual digraphs               |
 | `bnf-core`       | transliteration | Ancient         | BnF/ISO-based romanization for cataloguing                                  |
-| `iso-843-type-1` | transliteration | Ancient, Modern | Strict, reversible transliteration, also that of ELOT 743                   |
+| `iso-843-type-1` | transliteration | Ancient, Modern | Strict transliteration, reversible for monotonic text; also ELOT 743        |
 | `iso-843-type-2` | transliteration | Modern          | Transcription by pronunciation, as ELOT 743: passports, road signs, maps    |
 | `sbl-academic`   | transliteration | Ancient         | Biblical studies, keeping scholarly diacritics; the default transliteration |
 | `sbl-general`    | transliteration | Ancient         | Biblical studies for general readers, without most diacritics               |
@@ -47,6 +47,9 @@ convert("Εύβοια, Ευρώπη, αυτός", "greek", "transliteration", {
 
 Type 2 follows pronunciation and is not reversible: `convertDetailed()` reports
 what it loses, such as eta written `i` or the upsilon of `ευ` written `v`.
+Type 1 converts monotonic text back without loss; on polytonic text, it
+writes the smooth breathing as an apostrophe, which does not read back as a
+breathing, where `bnf-core` writes a mark that does.
 [Modern Greek](/guide/modern-greek/) compares the three presets for Modern
 Greek and the options that complete them.
 

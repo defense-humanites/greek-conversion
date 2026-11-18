@@ -116,7 +116,7 @@ reads and writes monotonic Greek, which has no breathings:
 import { convert } from "@humanities/greek-conversion";
 
 convert("Ē Athḗna eínai ē prōteúousa", "transliteration", "greek");
-// → Ἠ Ἀθήνα εἴναι ἠ πρωτεύουσα
+// → Ἠ Ἀθήνα εἴναι ἠ πρωτεύουσα
 
 convert("Ē Athḗna eínai ē prōteúousa", "transliteration", "greek", {
   greek: { accentuation: "monotonic" },
@@ -124,8 +124,32 @@ convert("Ē Athḗna eínai ē prōteúousa", "transliteration", "greek", {
 // → Η Αθήνα είναι η πρωτεύουσα
 ```
 
-The three Modern Greek presets need no option: they read a smooth breathing
-only where the Latin text writes one.
+The three Modern Greek presets need no option: they infer no breathing.
+Greek output that carries no polytonic mark is written with the tonos, as
+monotonic Greek is typed, so that a text converts back to itself code point
+for code point.
+
+`accentuation: "monotonic"` also applies the monotonic rules to what it
+writes, and a monosyllable loses its accent. The count is mechanical: on text
+that is already monotonic, it takes the accent of `ό,τι`, of the abbreviation
+`κ.ά.`, and of `20ός`. To read Latin script back without touching its
+accents, ask only for no breathing:
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+const latin = "ó,ti eípe ē Athēná, k.á.";
+
+convert(latin, "transliteration", "greek", {
+  greek: { accentuation: "monotonic" },
+});
+// → ο,τι είπε η Αθηνά, κ.α.
+
+convert(latin, "transliteration", "greek", {
+  diacritics: { smoothBreathing: "remove" },
+});
+// → ό,τι είπε η Αθηνά, κ.ά.
+```
 
 ## From polytonic to monotonic
 
@@ -185,9 +209,11 @@ A preset applies its rules to the text it is given, and some rules need more:
   the preset cannot tell where the stress falls: `ΑΘΗΝΑ` gives `ATHINA`.
   BGN/PCGN asks for the stress all the same (`ATHÍNA`), which takes a
   dictionary.
-- **Rough breathing.** ALA-LC asks for an `h` where a word historically has
-  a rough breathing, which monotonic Greek does not mark; the preset writes
-  one only where the source marks the breathing. See the
+- **Rough breathing.** Monotonic Greek has no rough breathing, and ALA-LC
+  supplies none: `Ελληνική` gives `Ellēnikē`, as the table asks. In a
+  polytonic text, the table has the `h` supplied where the breathing is left
+  out, as in capitals; that takes knowledge of the word, and the preset
+  writes an `h` only where the source marks the breathing. See the
   [ALA-LC corpus](/reference/ala-lc-conformance-corpus/).
 - **The reversible UN system.** The United Nations system also has a
   reversible version, given in Annex B of ISO 843, which marks the letters

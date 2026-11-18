@@ -14,7 +14,7 @@ The library reads and writes three text formats, in any direction:
 
 | Format                                                                                 | Identifier          | `ἄνθρωπος` is written |
 | -------------------------------------------------------------------------------------- | ------------------- | --------------------- |
-| Unicode Greek, polytonic or monotonic                                                  | `"greek"`           | `ἄνθρωπος`            |
+| Greek script, polytonic or monotonic                                                   | `"greek"`           | `ἄνθρωπος`            |
 | [Beta Code](https://stephanus.tlg.uci.edu/encoding.php), the ASCII encoding of the TLG | `"beta-code"`       | `a)/nqrwpos`          |
 | Scientific transliteration in Latin script                                             | `"transliteration"` | `ánthrōpos`           |
 
@@ -52,7 +52,7 @@ Every option value is plain ASCII, so it can be typed on any keyboard.
 | Convert a string                                                         | `convert(input, from, to, options?)`                                  |
 | Normalize or restyle a string without changing its format                | `reencode(input, format, options?)`                                   |
 | Know whether the conversion loses information, and where each token went | `convertDetailed(input, from, to, options?)`                          |
-| Reuse one configuration, add characters, or restrict the repertoire      | `createConverter(configuration)`                                      |
+| Bind a preset, add characters, or restrict the repertoire                | `createConverter(configuration)`                                      |
 | [Inspect or edit the parsed text itself](#inspect-or-edit-the-document) | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
 
 ```ts

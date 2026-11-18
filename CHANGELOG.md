@@ -91,6 +91,17 @@ change.
   them since rc.9. `greek: { elidedStop: "aspirate" }` gives the earlier
   output; transliteration `ap’ hēmō̃n` now reads as `ἀπ’ ἡμῶν` without it.
 
+- The reference (`docs/`) says more: `validation.md` lists the codes of
+  `validateDocument()` and how to locate one in the input;
+  `greek-unicode.md` states where the monotonic rules take an accent that
+  usage keeps (`ό,τι`, `κ.ά.`, `20ός`), as limits that a release may correct;
+  `ala-lc-conformance-corpus.md` no longer counts the missing `h` of
+  monotonic text among the open rules, since the ALA-LC table supplies none
+  there (`Ελληνική` → `Ellēnikē`, now a case of the corpus).
+- The examples of the README and of the guide are checked code point for
+  code point, no longer after NFC normalization: a result is written as it is
+  returned, oxia or tonos.
+
 ### Added
 
 - `greek.elidedStop` decides how Greek output writes a final `π`, `τ`, or `κ`

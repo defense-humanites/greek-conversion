@@ -3,8 +3,8 @@ title: "Getting started"
 description: "Install greek-conversion and convert a first text."
 ---
 
-greek-conversion converts Ancient and Modern Greek between Unicode Greek, Beta
-Code, and Latin transliteration, in any direction, and implements published
+greek-conversion converts Ancient and Modern Greek between Greek script, Beta
+Code, and Latin script, in any direction, and implements published
 conventions as presets. This page installs the package and converts a first
 text.
 
@@ -24,8 +24,9 @@ npx jsr add @humanities/greek-conversion
 ```
 
 The [playground](/playground/) needs no installation. It runs the version
-this documentation describes: the latest release, or, under `/next/`, the
-next one, from the `main` branch.
+this documentation describes, which the header names: `next`, from the `main`
+branch, until 1.0.0 is released; from then on, the latest release, with the
+next one under `/next/`.
 
 ## A first conversion
 
@@ -67,7 +68,7 @@ convert(
   "beta-code",
   "greek",
 );
-// → Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων
+// → Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων
 
 const thucydides = "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων";
 

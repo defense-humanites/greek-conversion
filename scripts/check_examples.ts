@@ -18,8 +18,10 @@
  *     // → Hellēsin egeneto …
  *
  * `// throws RangeError: message` expects an exception instead. Text results
- * are compared after NFC normalization; other results are compared as JSON.
- * Comments without an arrow are illustrative and are not checked.
+ * are compared code point for code point, as a reader who copies one compares
+ * it: Greek with an oxia is not Greek with a tonos, nor a decomposed letter a
+ * composed one. Other results are compared as JSON. Comments without an arrow
+ * are illustrative and are not checked.
  *
  * Links to files of this repository, and to headings in them or in the
  * README, must exist in the working tree. A guide page links to other pages
@@ -55,14 +57,29 @@ const INLINE_THROWS = /^(\S.*?);?\s*\/\/ throws (\w+): (.*)$/;
 const HELPER = `
 const __results = (globalThis as any).__readme as { ok: boolean; detail: string }[];
 function __same(value: unknown, expected: string): boolean {
-  if (typeof value === "string") {
-    return value.normalize("NFC") === expected.normalize("NFC");
-  }
+  if (typeof value === "string") return value === expected;
   try {
     return JSON.stringify(value) === JSON.stringify(JSON.parse(expected));
   } catch {
     return false;
   }
+}
+/** Says where two writings of one text differ, which the eye cannot see. */
+function __scalars(value: unknown, expected: string): string {
+  if (
+    typeof value !== "string" ||
+    value.normalize("NFC") !== expected.normalize("NFC")
+  ) return "";
+  const got = [...value];
+  const wanted = [...expected];
+  const at = got.findIndex((char, index) => char !== wanted[index]);
+  const code = (char: string | undefined) =>
+    char === undefined
+      ? "nothing"
+      : "U+" + char.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0");
+  return " (the same text in other code points: at character " + (at + 1) +
+    ", the page writes " + code(wanted[at]) + " where " + code(got[at]) +
+    " is returned; copy the result as it is returned)";
 }
 function __check(run: () => unknown, index: number, expectation: any): void {
   const show = (value: unknown) =>
@@ -75,7 +92,8 @@ function __check(run: () => unknown, index: number, expectation: any): void {
         ok: false,
         detail: expectation.kind === "throws"
           ? \`expected \${expectation.error}, got \${show(value)}\`
-          : \`expected \${expectation.expected}, got \${show(value)}\`,
+          : \`expected \${expectation.expected}, got \${show(value)}\` +
+            __scalars(value, expectation.expected),
       };
   } catch (error) {
     const name = (error as Error).name;

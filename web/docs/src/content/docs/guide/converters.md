@@ -4,9 +4,9 @@ description: "Bind a configuration in a converter, add or restrict characters, a
 ---
 
 The conversion functions take their options on every call and check them
-strictly. A converter created with `createConverter()` binds a configuration
-once, can extend or restrict the characters it knows, and can enforce the
-repertoire of a preset.
+strictly. A converter created with `createConverter()` binds a preset once,
+can extend or restrict the characters it knows, and can enforce the
+repertoire of that preset; the other options are still given on each call.
 
 ## Options are checked
 
@@ -47,7 +47,7 @@ CONVERSION_OPTION_VALUES.transliteration.eta; // → ["e","i"]
 
 ## Add or exclude characters
 
-`createConverter()` binds a configuration, preset included, and can teach the
+`createConverter()` takes a preset, which it binds, and can teach the
 converter new spellings or characters, or exclude some:
 
 ```ts

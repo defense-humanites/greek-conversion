@@ -56,7 +56,10 @@ convertDetailed("Voir λόγος ; cf. ψυχή.", "greek", "transliteration");
 ```
 
 Filter the losses by `code` to keep those about the Greek, or extract the Greek
-before converting when the punctuation matters.
+before converting when the punctuation matters. The same code reports the few
+literals of the Greek itself that a target cannot keep, such as a parenthesis
+before a digit in Beta Code (see
+[Information loss](information-loss.md#canonical-spelling-and-unicode)).
 
 ## What the library does not do
 

@@ -52,7 +52,8 @@ detailed.output.slice(outputStart, outputEnd); // → th
 A text mixed with another language reports losses for the letters of that
 language, since the library converts the whole string and the target would read
 some of them as Greek. Filter the losses by `code` to keep the ones about the
-Greek:
+Greek. The filter also drops the few literals of the Greek itself that a
+target cannot keep, such as a parenthesis before a digit in Beta Code:
 
 ```ts
 import { convertDetailed } from "@humanities/greek-conversion";
