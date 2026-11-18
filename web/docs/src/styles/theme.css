@@ -491,6 +491,47 @@ site-search dialog {
   border-inline-start-color: transparent;
 }
 
+/* "On this page" in its own column, on a wide screen. Its title is a label,
+   as the sidebar's group names; the sections hang on a single rule, the
+   subsections indented, as the sidebar's lists. The current section, which
+   follows the reading, is marked as what is selected: in the ink, with an
+   orange stroke on the rule; not in semibold, which would rewrap the list
+   as the reading moves on. The others are muted, in the ink on hover. */
+.right-sidebar-panel starlight-toc h2 {
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.right-sidebar-panel starlight-toc nav > ul {
+  border-inline-start: 1px solid var(--line);
+}
+.right-sidebar-panel starlight-toc a {
+  --pad-inline: 0.875rem;
+  margin-inline-start: -1px;
+  padding-block: 0.3125rem;
+  border-inline-start: 2px solid transparent;
+  border-radius: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+@media (hover: hover) {
+  .right-sidebar-panel starlight-toc a:hover {
+    color: var(--ink);
+  }
+}
+.right-sidebar-panel starlight-toc a[aria-current="true"] {
+  border-inline-start-color: var(--to);
+  color: var(--ink);
+}
+
 /* "On this page", below the header where the table of contents has no
    column. The toggle is a secondary button, as in the playground; the list
    opens in a raised panel, with the playground's shadow, and the current
