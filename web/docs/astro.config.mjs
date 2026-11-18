@@ -4,7 +4,13 @@ import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 import starlightTypeDoc, { typeDocSidebarGroup } from "starlight-typedoc";
 
-const SITE = "https://defense-humanites.github.io";
+/**
+ * The site's own domain, which it holds alone: it is served from the
+ * domain's root, wherever it is hosted. The addresses that cite it
+ * (`package.json`, `CITATION.cff`, the README, the playground) are kept in
+ * agreement by `scripts/check_metadata.ts`.
+ */
+const SITE = "https://greek-conversion.humanites.fr";
 /**
  * The site serves two versions of the documentation from 1.0.0
  * (`.github/workflows/pages.yml`): at its root, that of the latest stable
@@ -14,8 +20,11 @@ const SITE = "https://defense-humanites.github.io";
  * with `DOCS_RELEASE`; a release build sets `DOCS_NEXT=1` when `/next/` is
  * deployed beside it. Before 1.0.0, `main` is served at the root alone,
  * without a version.
+ *
+ * `ROOT_BASE` is the path of the site's root on its domain: none, as the
+ * domain is its own.
  */
-const ROOT_BASE = "/greek-conversion";
+const ROOT_BASE = "";
 const CHANNEL = process.env.DOCS_CHANNEL === "next" ? "next" : "release";
 const BASE = CHANNEL === "next" ? `${ROOT_BASE}/next` : ROOT_BASE;
 const RELEASE = process.env.DOCS_RELEASE || null;
@@ -240,7 +249,7 @@ function external(label, link) {
 
 export default defineConfig({
   site: SITE,
-  base: BASE,
+  base: BASE || "/",
   trailingSlash: "always",
   // Fetch a page as soon as its link is hovered or touched: with the view
   // transition declared in theme.css, moving between pages then feels like an

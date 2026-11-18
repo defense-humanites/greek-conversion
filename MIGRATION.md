@@ -69,7 +69,7 @@ Without them:
   sigma whose shape contradicts its place: `λόγοσ` gives `lo/gos1`, and
   `lo/gos1` gives `λόγοσ` (rc.8: `lo/gos`, and `λόγος1`). To compare texts
   regardless of these forms, fold them (see
-  [Keep or fold letter variants](https://defense-humanites.github.io/greek-conversion/guide/recipes/letters-and-text/#keep-or-fold-letter-variants)).
+  [Keep or fold letter variants](https://greek-conversion.humanites.fr/guide/recipes/letters-and-text/#keep-or-fold-letter-variants)).
 - `convertDetailed()` reports a form the target cannot write, so that a
   conversion without loss still converts back to the same text: `ϐίος` gives
   `bíos` in transliteration, which reads back as `βίος`, with a
@@ -87,10 +87,10 @@ Without them:
 
 The API also gains two options, which change nothing by default:
 `greek.iotaSubscript`, which writes the iota subscript on the line (see
-[Write the iota on the line](https://defense-humanites.github.io/greek-conversion/guide/recipes/letters-and-text/#write-the-iota-on-the-line)), and
+[Write the iota on the line](https://greek-conversion.humanites.fr/guide/recipes/letters-and-text/#write-the-iota-on-the-line)), and
 `source`, which describes how the input is written when it is not written as
 the output, to restyle a transliteration
-([Restyle a transliteration](https://defense-humanites.github.io/greek-conversion/guide/recipes/transliteration-and-beta-code/#restyle-a-transliteration)). A restyle that went through
+([Restyle a transliteration](https://greek-conversion.humanites.fr/guide/recipes/transliteration-and-beta-code/#restyle-a-transliteration)). A restyle that went through
 Greek in two calls can take one,
 `reencode(text, "transliteration", { ...target, source })`, which also keeps
 what the Greek step dropped, such as a lunate sigma that the source writes
@@ -477,7 +477,7 @@ throwing during contextual checks. An incomplete uppercase Beta Code prefix is
 preserved as literal input instead of disappearing. If an application depended
 on any of those earlier behaviors, review its output.
 
-The separate [playground](https://defense-humanites.github.io/greek-conversion/)
+The separate [playground](https://greek-conversion.humanites.fr/playground/)
 can be used to inspect presets, conversion losses, scope diagnostics, and
 canonical documents in a browser. Its site files are not part of either
 published package.
