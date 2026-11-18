@@ -72,8 +72,10 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
     margin: 0;
     line-height: 0;
   }
+  /* 70% of the screen, between that of a 360px screen, the page's
+     narrowest (`theme.css`), and 19rem. */
   img {
-    width: min(19rem, 70vw);
+    width: clamp(15.75rem, 70vw, 19rem);
     height: auto;
   }
   /* As wide as the example: two lines on a wide screen. */

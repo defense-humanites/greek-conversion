@@ -40,6 +40,32 @@ const { hasSidebar } = Astro.locals.starlightRoute;
                 () => resetPopoverAttribute(),
               );
 
+              // Between 800 and 1100px, the drawer slides back out when its
+              // button closes it, as it slid in (theme.css); then it closes.
+              // Light dismiss and Escape close it at once.
+              const drawer = matchMedia(
+                "(min-width: 50rem) and (max-width: 68.74rem)",
+              );
+              const still = matchMedia("(prefers-reduced-motion: reduce)");
+              let closing = false;
+              this.closest("nav")?.querySelector("button.sl-menu-button")
+                ?.addEventListener("click", (event) => {
+                  if (
+                    !drawer.matches || still.matches ||
+                    !this.matches(":popover-open")
+                  ) return;
+                  event.preventDefault();
+                  if (closing) return;
+                  closing = true;
+                  this.animate([{ translate: "none" }, {
+                    translate: "-100% 0",
+                  }], { duration: 200, easing: "cubic-bezier(0.4, 0, 1, 1)" })
+                    .finished.then(() => {
+                      closing = false;
+                      if (this.matches(":popover-open")) this.hidePopover();
+                    });
+                });
+
               this.addEventListener(
                 "toggle",
                 (event) =>

@@ -925,20 +925,17 @@ mobile-starlight-toc .toggle,
   }
 }
 
-/* Below 1100px, the menu slides in from the left edge and back out
-   (0.25s), over the whole screen of a phone as in its drawer from 800px.
-   At rest it has no translation at all, so that its foot, fixed at the
-   bottom of the screen, does not scroll with the list. */
-@media (max-width: 68.74rem) and (prefers-reduced-motion: no-preference) {
-  .sidebar-pane {
-    translate: -100% 0;
-    transition:
-      translate 0.25s cubic-bezier(0.2, 0, 0, 1),
-      display 0.25s allow-discrete,
-      overlay 0.25s allow-discrete;
-  }
+/* Between 800 and 1100px, the menu's drawer slides in from the left edge
+   (0.25s); `PageFrame` slides it back out when its button closes it. On a
+   phone, the menu covers the screen, and appears at once. At rest the
+   drawer has no translation at all, so that its foot, fixed at the bottom
+   of the screen, does not scroll with the list. */
+@media (min-width: 50rem) and (max-width: 68.74rem) and
+  (prefers-reduced-motion: no-preference)
+{
   .sidebar-pane:popover-open {
     translate: none;
+    transition: translate 0.25s cubic-bezier(0.2, 0, 0, 1);
   }
   @starting-style {
     .sidebar-pane:popover-open {
