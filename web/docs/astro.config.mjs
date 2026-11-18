@@ -72,6 +72,43 @@ function markGreek() {
 }
 
 /**
+ * Inline code in a table breaks only between its words: each run of
+ * non-space characters, such as a key (`iotaSubscript:`) or a value
+ * (`"capital-adscript"`), stays on one line (`.code-word`), so that a long
+ * pair of key and value wraps at its space rather than widening its column,
+ * and never inside an identifier or at a hyphen. The text, and what is
+ * copied, are unchanged.
+ */
+function breakTableCode() {
+  /** @param {any} code */
+  const split = (code) => {
+    code.children = (code.children ?? []).flatMap((/** @type {any} */ child) =>
+      child.type !== "text" ? [child] : child.value.split(/(\s+)/).filter(
+        (/** @type {string} */ part) => part !== "",
+      ).map((/** @type {string} */ part) =>
+        /^\s+$/.test(part) ? { type: "text", value: part } : {
+          type: "element",
+          tagName: "span",
+          properties: { className: ["code-word"] },
+          children: [{ type: "text", value: part }],
+        }
+      )
+    );
+  };
+  /** @param {any} node @param {any} parent @param {boolean} inTable */
+  const visit = (node, parent, inTable) => {
+    if (node.type !== "element" && node.type !== "root") return;
+    if (inTable && node.tagName === "code" && parent?.tagName !== "pre") {
+      split(node);
+      return;
+    }
+    const table = inTable || node.tagName === "table";
+    for (const child of node.children ?? []) visit(child, node, table);
+  };
+  return () => (/** @type {any} */ tree) => visit(tree, undefined, false);
+}
+
+/**
  * Links that leave the documentation open in a new tab and say so, as the
  * header's do: links to other sites, and to the playground, a tool of its
  * own. The last word and the mark stay on one line (`.external-tail`), and
@@ -167,7 +204,14 @@ export default defineConfig({
   // application's.
   prefetch: { prefetchAll: true, defaultStrategy: "hover" },
   markdown: {
-    processor: unified({ rehypePlugins: [prefixBase(), markExternal(), markGreek()] }),
+    processor: unified({
+      rehypePlugins: [
+        prefixBase(),
+        markExternal(),
+        markGreek(),
+        breakTableCode(),
+      ],
+    }),
   },
   vite: { server: { fs: { allow: ["../.."] } } },
   integrations: [

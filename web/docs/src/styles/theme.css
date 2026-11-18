@@ -295,8 +295,9 @@ h1#_top {
 .sl-markdown-content table:has(th:nth-child(6)) td {
   font-size: 0.9375rem;
 }
-/* An identifier heading a row stays on one line. */
-.sl-markdown-content td:first-child > code {
+/* Code in a table breaks only between its words (`breakTableCode`, in
+   astro.config.mjs): a key or a value stays on one line. */
+.sl-markdown-content .code-word {
   white-space: nowrap;
 }
 /* A chip that wraps keeps its border on each line. */
