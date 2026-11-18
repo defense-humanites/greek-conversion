@@ -206,6 +206,19 @@ button.sl-menu-button svg.close-menu {
   line-height: inherit;
   color: inherit;
 }
+/* The lead belongs to the title: it sits close under it, and the first
+   section keeps its distance. The 404 page spaces its message itself. */
+:root:not(:has(.sidebar-content a[aria-current="page"][href*="/api/"], .not-found)):has(
+    .sl-markdown-content > p:first-child
+  )
+  main {
+  .content-panel:has(h1#_top) {
+    padding-bottom: 0.75rem;
+  }
+  .content-panel:has(> .sl-container > .sl-markdown-content > p:first-child) {
+    padding-top: 0;
+  }
+}
 
 /* Text: headings in Bricolage at display size, as the playground's name. */
 .sl-markdown-content :is(h1, h2, h3, h4, h5, h6),
