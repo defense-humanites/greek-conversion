@@ -554,9 +554,15 @@ site-search dialog {
 .sidebar-content li:has(> a) + li:has(> a) {
   padding-top: 3px;
 }
-/* The list's items, not the project's links below it on a phone. */
-.sidebar-content ul a:hover {
-  background: color-mix(in oklab, var(--raised) 60%, transparent);
+/* On hover, the list's items darken their text, from the body's ink to
+   the full ink, as "On this page" does; no background. */
+.sidebar-content ul a {
+  transition: color 0.15s ease;
+}
+@media (hover: hover) {
+  .sidebar-content ul a:hover {
+    color: var(--ink);
+  }
 }
 .sidebar-content a[aria-current="page"],
 .sidebar-content a[aria-current="page"]:hover,
