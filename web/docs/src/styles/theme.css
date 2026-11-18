@@ -300,6 +300,14 @@ h1#_top {
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
+/* Inline code stands out a little more in medium (500); in headings and
+   table headers, it keeps their weight. */
+.sl-markdown-content :not(pre) > code {
+  font-weight: 500;
+}
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6, th) code {
+  font-weight: inherit;
+}
 
 /* Asides (note, tip, caution, danger), as the playground's notes: a panel
    a tint darker than the page (--tip), a line border and the tessera's
