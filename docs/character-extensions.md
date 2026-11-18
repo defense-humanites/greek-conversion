@@ -5,6 +5,13 @@ alphabet. `createConverter()` creates an isolated immutable registry when an
 application needs additional input spellings, direct mappings for extra
 characters, or a smaller effective repertoire.
 
+The configuration is checked when the converter is created, as conversion
+options are. An unknown key throws an `OptionError`, whose `path` names it
+(`exclude`, `aliases[0].spellings`, `characters[0].forms.greek.lowercase`) and
+whose `accepted` lists the keys allowed there; a list or a definition of the
+wrong type throws a `TypeError`, as an invalid value does (an unknown
+character identifier, an empty or ambiguous spelling).
+
 ## Aliases of built-in letters
 
 An alias supplies another source spelling for an existing semantic letter:

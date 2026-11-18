@@ -89,6 +89,14 @@ change.
 
 ### Fixed
 
+- `createConverter()` checks the keys of its configuration, as conversion
+  options are checked: `createConverter({ exlude: ["stigma"] })` was
+  accepted and excluded nothing. An unknown key, of the configuration, of an
+  alias (`aliases[0].spelings`), or of a custom character
+  (`characters[0].forms.betacode`), throws an `OptionError` whose `path`
+  names it and whose `accepted` lists the keys allowed there. A configuration,
+  a list, or a definition of the wrong type throws a `TypeError` that says
+  which, where it failed on a property of `undefined`.
 - ISO 843 Type 2 (`iso-843-type-2`) writes `ωυ` letter by letter, as note 8
   requires of a combination that Table 2 does not list: `ἑωυτοῦ` gives
   `heoytoû` (rc.9: `heoutoû`). Omega was written as it reads back, omicron,

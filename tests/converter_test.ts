@@ -6,6 +6,7 @@ import {
   convert,
   createConverter,
   type Format,
+  OptionError,
 } from "../src/mod.ts";
 
 const SAN = {
@@ -175,6 +176,101 @@ test("strict repertoire exclusions cover custom and Beta Code forms", () => {
   assertEquals(error instanceof CharacterScopeError, true);
   assertEquals((error as CharacterScopeError).diagnostics[0].index, 1);
   assertEquals(beta.convert("ab", "beta-code", "greek"), "αβ");
+});
+
+test("checks the keys of a configuration, as options are checked", () => {
+  const unknown = (configuration: unknown): OptionError => {
+    try {
+      createConverter(configuration as never);
+    } catch (error) {
+      if (error instanceof OptionError) return error;
+      throw error;
+    }
+    throw new Error("The configuration was accepted.");
+  };
+  const forms = { ...SAN.forms };
+
+  const top = unknown({ exlude: ["stigma"] });
+  assertEquals(top.message, "Unknown converter option: exlude");
+  assertEquals(top instanceof RangeError, true);
+  assertEquals(top.path, "exlude");
+  assertEquals(top.received, undefined);
+  assertEquals(top.accepted, [
+    "preset",
+    "outOfScopeBehavior",
+    "aliases",
+    "characters",
+    "repertoire",
+    "exclude",
+  ]);
+  // Conversion options are given on each call, not bound.
+  assertEquals(unknown({ options: {} }).path, "options");
+
+  const alias = unknown({
+    aliases: [
+      { letter: "theta", format: "transliteration", spellings: ["þ"] },
+      { letter: "theta", format: "transliteration", spelings: ["ð"] },
+    ],
+  });
+  assertEquals(alias.path, "aliases[1].spelings");
+  assertEquals(alias.accepted, [
+    "letter",
+    "format",
+    "spellings",
+    "uppercase",
+    "override",
+  ]);
+  assertEquals(
+    unknown({ characters: [{ ...SAN, overide: true }] }).path,
+    "characters[0].overide",
+  );
+  const format = unknown({
+    characters: [{ id: "san", forms: { ...forms, betacode: forms.greek } }],
+  });
+  assertEquals(format.path, "characters[0].forms.betacode");
+  assertEquals(format.accepted, ["greek", "beta-code", "transliteration"]);
+  assertEquals(
+    unknown({
+      characters: [{
+        id: "san",
+        forms: { ...forms, greek: { lowercase: "ϻ", upper: "Ϻ" } },
+      }],
+    }).path,
+    "characters[0].forms.greek.upper",
+  );
+
+  // A key left undefined is no key, as in conversion options.
+  createConverter({ exclude: undefined, exlude: undefined } as never);
+  createConverter({ characters: [SAN], exclude: ["san"] });
+});
+
+test("says which part of a configuration has the wrong type", () => {
+  const message = (configuration: unknown): string => {
+    try {
+      createConverter(configuration as never);
+    } catch (error) {
+      if (error instanceof TypeError) return error.message;
+      throw error;
+    }
+    throw new Error("The configuration was accepted.");
+  };
+
+  assertEquals(
+    message(null),
+    "Expected the converter configuration to be an object, received null.",
+  );
+  assertEquals(
+    message({ exclude: "stigma" }),
+    "Expected exclude to be an array, received string.",
+  );
+  assertEquals(
+    message({ aliases: ["þ"] }),
+    "Expected aliases[0] to be an object, received string.",
+  );
+  assertEquals(
+    message({ characters: [{ id: "san", forms: { greek: SAN.forms.greek } }] }),
+    "Expected characters[0].forms.beta-code to be an object, received undefined.",
+  );
 });
 
 test("rejects invalid out-of-scope policies at construction", () => {

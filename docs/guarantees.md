@@ -35,7 +35,9 @@ protects these behaviors.
   (`replacement`). An unknown format throws a plain `RangeError`, an option
   group of the wrong type or an input that is not a string a `TypeError`.
   `FORMATS` and `CONVERSION_OPTION_VALUES` list everything that is accepted.
-  Every option value is plain ASCII.
+  Every option value is plain ASCII. The configuration of `createConverter()`
+  is checked the same way: an unknown key, of the configuration, of an alias,
+  or of a custom character, throws an `OptionError`.
 
 The first three properties are checked for every preset and every format pair
 on each change, over a corpus of difficult forms
