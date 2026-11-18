@@ -200,6 +200,28 @@ if (location.pathname === "${BASE}/" && location.hash.includes("=")) {
 }`;
 
 /**
+ * Below 360px, the page no longer narrows: a phone that narrow lays it out
+ * 360px wide and scales it to its screen, as the playground does
+ * (`web/playground/index.html`). The width is the screen's in its current
+ * orientation, which iOS does not swap in `screen.width`.
+ */
+const MIN_WIDTH = `
+(() => {
+  const viewport = document.querySelector('meta[name="viewport"]');
+  if (!viewport) return;
+  const fit = () => {
+    const { width, height } = screen;
+    const landscape = matchMedia("(orientation: landscape)").matches;
+    const across = landscape ? Math.max(width, height) : Math.min(width, height);
+    viewport.content = across < 360
+      ? "width=360"
+      : "width=device-width, initial-scale=1";
+  };
+  fit();
+  addEventListener("orientationchange", fit);
+})();`;
+
+/**
  * A sidebar link that leaves the documentation: it opens in a new tab, and
  * says so to screen readers; theme.css draws the mark.
  * @param {string} label @param {string} link
@@ -270,6 +292,7 @@ export default defineConfig({
       },
       head: [
         { tag: "script", content: PLAYGROUND_REDIRECT },
+        { tag: "script", content: MIN_WIDTH },
         // The sharing image: the design system's social card, which
         // Starlight's `summary_large_image` card announces.
         ...SHARING_IMAGE,

@@ -3,6 +3,27 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+      // Below 360px, the page no longer narrows: a phone that narrow lays it
+      // out 360px wide and scales it to its screen, as the documentation
+      // does. The width is the screen's in its current orientation, which
+      // iOS does not swap in screen.width.
+      (() => {
+        const viewport = document.querySelector('meta[name="viewport"]');
+        const fit = () => {
+          const { width, height } = screen;
+          const landscape = matchMedia("(orientation: landscape)").matches;
+          const across = landscape
+            ? Math.max(width, height)
+            : Math.min(width, height);
+          viewport.content = across < 360
+            ? "width=360"
+            : "width=device-width, initial-scale=1";
+        };
+        fit();
+        addEventListener("orientationchange", fit);
+      })();
+    </script>
     <meta name="description"
       content="Convert between Greek, Beta Code, and transliteration in your browser, with standards-based presets and a report of what each conversion loses.">
     <meta name="color-scheme" content="light dark">
