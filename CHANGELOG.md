@@ -65,8 +65,9 @@ change.
   `description`, the README's tagline, the text of the site's home page, and
   the documentation of the main module; the description of the site and the
   abstract of `CITATION.cff` give it after "A TypeScript library that
-  converts". `npm run check` keeps the copies identical. The playground's
-  description follows it.
+  converts". The social card shows it, on four balanced lines, and its text
+  alternative gives it after "greek conversion:". `npm run check` keeps the
+  copies identical. The playground's description follows it.
 
 ### Added
 

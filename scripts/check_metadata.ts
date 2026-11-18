@@ -7,7 +7,9 @@
  * `description` of `package.json`: the README's tagline, the home page of the
  * site, and the documentation of the main module repeat it; the description
  * of the site and the abstract of `CITATION.cff`, read without context,
- * repeat it after "A TypeScript library that converts".
+ * repeat it after "A TypeScript library that converts"; the text alternative
+ * of the social card, in the site and the playground, after "greek
+ * conversion: ". The card itself, an image, is checked by eye.
  *
  * Run with `node scripts/check_metadata.ts`.
  */
@@ -81,6 +83,21 @@ expect(
   "the description of the site's home page",
   plain(home.match(/^description: (.*)$/m)?.[1]),
   library,
+);
+const card = "greek conversion: " + sentence[0].toLowerCase() +
+  sentence.slice(1);
+const playground = await read("web/playground/index.html");
+expect(
+  "the text alternative of the site's social card",
+  plain(site.match(/"og:image:alt",\s*"([^"]*)"/)?.[1]),
+  card,
+);
+expect(
+  "the text alternative of the playground's social card",
+  plain(
+    playground.match(/property="og:image:alt"\s+content="([^"]*)"/)?.[1],
+  ),
+  card,
 );
 expect(
   "the first sentence of the CITATION.cff abstract",
