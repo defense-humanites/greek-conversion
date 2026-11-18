@@ -603,15 +603,20 @@ mobile-starlight-toc .isMobile a[aria-current="true"]::after {
 /* Button states, as in the playground: on hover, a secondary button's line
    darkens and a primary button's colour deepens (--link-hover); pressed, a
    secondary button takes a tint of the ink (--press), a primary one deepens
-   further (--link-press), and both sink by a pixel. Hover only where a
-   pointer hovers: on a touch screen, a tapped button would keep it. */
+   further (--link-press), and the action buttons shrink, then spring back
+   (--squish, --ease-bounce): flat at rest, as the whole identity. Hover only
+   where a pointer hovers: on a touch screen, a tapped button would keep
+   it. */
 .sl-link-button,
 site-search button[data-open-modal],
-mobile-starlight-toc .toggle {
+mobile-starlight-toc .toggle,
+.expressive-code .copy button {
   transition:
     border-color 0.15s ease,
     background-color 0.15s ease,
-    color 0.15s ease;
+    color 0.15s ease,
+    opacity 0.2s ease,
+    scale 0.32s var(--ease-bounce);
 }
 @media (hover: hover) {
   .sl-link-button.primary:hover {
@@ -630,10 +635,15 @@ mobile-starlight-toc .toggle {
 }
 @media (prefers-reduced-motion: no-preference) {
   .sl-link-button:active,
-  site-search button[data-open-modal]:active,
   mobile-starlight-toc .toggle:active,
   .expressive-code .copy button:active {
-    translate: 0 1px;
+    scale: var(--squish);
+    transition:
+      border-color 0.15s ease,
+      background-color 0.15s ease,
+      color 0.15s ease,
+      opacity 0.2s ease,
+      scale 0.06s ease-in;
   }
 }
 .sl-link-button.minimal {

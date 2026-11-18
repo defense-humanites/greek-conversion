@@ -93,6 +93,10 @@
   --link-hover: color-mix(in oklab, var(--link) 82%, var(--ink));
   --link-press: color-mix(in oklab, var(--link) 66%, var(--ink));
   --press: color-mix(in oklab, var(--ink) 8%, transparent);
+  /* Pressed, an action button shrinks to --squish in 60ms, then springs
+     back with a marked overshoot (--ease-bounce, 320ms). */
+  --squish: 0.96;
+  --ease-bounce: cubic-bezier(0.3, 2.2, 0.6, 1);
 }
 
 @media (prefers-color-scheme: dark) {

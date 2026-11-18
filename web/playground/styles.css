@@ -158,8 +158,10 @@ code {
  * Button states, as in the documentation. On hover, a secondary button's
  * line darkens and a primary button's colour deepens (--link-hover);
  * pressed, a secondary button takes a tint of the ink (--press), a primary
- * one deepens further (--link-press), and both sink by a pixel. Hover only
- * where a pointer hovers: on a touch screen, a tapped button would keep it.
+ * one deepens further (--link-press), and the action buttons shrink, then
+ * spring back (--squish, --ease-bounce): flat at rest, as the whole
+ * identity. Hover only where a pointer hovers: on a touch screen, a tapped
+ * button would keep it.
  */
 .button,
 .menu-button,
@@ -170,7 +172,8 @@ code {
   transition:
     border-color 0.15s ease,
     background-color 0.15s ease,
-    color 0.15s ease;
+    color 0.15s ease,
+    scale 0.32s var(--ease-bounce);
 }
 @media (hover: hover) {
   .button:hover:not(:disabled),
@@ -197,7 +200,12 @@ code {
   .button:active:not(:disabled),
   .menu-button:active,
   .add-option:active {
-    translate: 0 1px;
+    scale: var(--squish);
+    transition:
+      border-color 0.15s ease,
+      background-color 0.15s ease,
+      color 0.15s ease,
+      scale 0.06s ease-in;
   }
 }
 
