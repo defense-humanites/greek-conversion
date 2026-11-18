@@ -49,7 +49,7 @@ const versions = released === null || other === null ? [] : [
       </select>
     </label>
   ) : label !== null ? (
-    <span class="version">{label}</span>
+    <span class="version version-chip">{label}</span>
   ) : null
 }
 
@@ -88,8 +88,9 @@ const versions = released === null || other === null ? [] : [
   .name span {
     color: var(--to);
   }
-  /* The version: plain text in the muted ink, as a caption; where both
-     versions are deployed, a select of the same look, with a chevron. */
+  /* The version, in the muted ink: on its own, a chip, as the system's
+     labels (12px capitals, spaced); where both versions are deployed, a
+     select, with a chevron. */
   .version {
     flex: none;
     align-self: center;
@@ -99,6 +100,15 @@ const versions = released === null || other === null ? [] : [
     font-weight: 500;
     line-height: 1;
     white-space: nowrap;
+  }
+  .version-chip {
+    padding: 5px 7px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
   .version-select {
     position: relative;
