@@ -5,9 +5,9 @@
  * tessera alone. The symbol follows the system's appearance, as the whole
  * site does.
  *
- * Then the version this documentation describes, from 1.0.0 (`versions.ts`):
- * the series of the latest release (1.x) or "next". Where both are
- * deployed, a selector leads to the same page in the other.
+ * Then the version this documentation describes (`versions.ts`): the
+ * series of the latest release (1.x) or "next", as main is before 1.0.0.
+ * Where both are deployed, a selector leads to the same page in the other.
  */
 import { otherVersionHref, series, VERSIONS } from "../versions.ts";
 
@@ -16,7 +16,10 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 const other = otherVersionHref(Astro.url.pathname);
 const here = Astro.url.pathname;
 const released = VERSIONS.release === null ? null : series(VERSIONS.release);
-const label = VERSIONS.channel === "next" ? "next" : released;
+// Before 1.0.0, the root serves main alone: the next release.
+const label = VERSIONS.channel === "next" || released === null
+  ? "next"
+  : released;
 const versions = released === null || other === null ? [] : [
   { label: released, current: VERSIONS.channel === "release" },
   { label: "next", current: VERSIONS.channel === "next" },

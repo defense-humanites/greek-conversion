@@ -396,29 +396,28 @@ site-search button[data-open-modal]:hover {
 site-search button[data-open-modal]:active {
   background-color: color-mix(in oklab, var(--raised), var(--ink) 4%);
 }
-/* From 1100px, the field may grow to 30rem (Starlight: 22rem), two
-   thirds of the text's width, where the header leaves the room. */
-@media (min-width: 68.75rem) {
-  site-search button[data-open-modal] {
-    max-width: 30rem;
-  }
+/* The header is a row: the name and the version, the search field, then
+   the links or the menu button. The field is centred in the room between
+   them, at an equal distance from the version and from what follows it,
+   rather than in Starlight's grid, which lines it up with a column of text.
+   It grows to 30rem from 1100px (Starlight: 22rem), and to 22rem below. */
+header.header > .header {
+  display: flex;
 }
-/* Below 1100px, a field rather than an icon, as on a wide screen: up to
-   22rem, centred in its room. The symbol (40px) is 16px wider than the
-   menu icon (24px), so the field's room is off-centre by 8px: where the
-   room is wider than the field, the field moves back by up to those 8px. */
+.header > :nth-child(2) {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+}
+site-search button[data-open-modal] {
+  max-width: 30rem;
+}
+/* Below 1100px, a field rather than an icon, as on a wide screen. */
 @media (max-width: 68.74rem) {
-  .header > :nth-child(2) {
-    display: flex;
-    flex: 1;
-    justify-content: center;
-    min-width: 0;
-    container-type: inline-size;
-  }
   site-search button[data-open-modal] {
     width: 100%;
     max-width: 22rem;
-    translate: calc(-1 * clamp(0px, (100cqw - 22rem) / 2, 8px));
     padding-inline: 0.75rem;
     color: var(--muted);
     font-size: var(--sl-text-sm);
@@ -704,13 +703,10 @@ mobile-starlight-toc .display-current {
 }
 
 /* A taller bar (60px rather than 48px), so that the panel, 6px below the
-   toggle, does not land on the bar's bottom border but covers it. Without
-   the column of "On this page", the header's search field lines up with
-   the text: Starlight's header leaves room for that column from 1152px. */
+   toggle, does not land on the bar's bottom border but covers it. */
 @media (max-width: 89.99rem) {
   html[data-has-toc] {
     --sl-mobile-toc-height: 3.75rem;
-    --__toc-width: 0rem;
   }
 }
 
@@ -899,10 +895,6 @@ mobile-starlight-toc .toggle,
   .md\:sl-block {
     display: none;
   }
-  /* The header: the name, the search field and the menu button, in a row. */
-  header.header > .header {
-    display: flex;
-  }
   /* The menu opens as a drawer of the sidebar's width, over the page,
      rather than over the whole screen; its foot keeps that width. */
   .sidebar-pane {
@@ -963,20 +955,6 @@ mobile-starlight-toc .toggle,
   }
   :root:has(.home-hero) .sidebar-pane {
     display: none;
-  }
-  /* The header still lays out as on a page of the guide, with its sidebar,
-     its column of text, and its table of contents, so that the search field
-     keeps its place from page to page. */
-  :root:has(.home-hero) .header {
-    --sl-content-inline-start: var(--sl-sidebar-width);
-    --sl-content-width: 45rem;
-    --__toc-width: initial;
-  }
-}
-/* …whose table of contents is a column from 1440px only. */
-@media (min-width: 68.75rem) and (max-width: 89.99rem) {
-  :root:has(.home-hero) .header {
-    --__toc-width: 0rem;
   }
 }
 
