@@ -36,8 +36,9 @@ the row format to the column format and parsing the result again.
 ### Canonical spelling and Unicode
 
 All recognized output has a selected spelling. Transliteration is NFC. Greek is
-composed by default, but the system polytonic acute prefers oxia and is therefore
-not necessarily NFC. Accepted aliases do not round-trip byte for byte:
+composed by default. Output that carries a polytonic mark writes its acutes
+with oxia and is therefore not necessarily NFC; output that carries none is
+NFC (see [Tonos and oxia](greek-unicode.md#tonos-and-oxia)). Accepted aliases do not round-trip byte for byte:
 
 - letter forms follow the Greek options, which keep those of the source by
   default, and are lost where the target cannot write them (see
