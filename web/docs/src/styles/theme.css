@@ -405,13 +405,17 @@ site-search button[data-open-modal]:active {
     height: 1.5rem;
   }
 }
-@media (hover: hover) {
-  button.sl-menu-button:hover {
-    color: var(--link);
-  }
+/* The icon keeps the ink: no hover colour, on a button that lives on touch
+   screens, and no fill, which would show the target reaching past it.
+   Pressed, the icon alone shrinks and springs back, as the action buttons. */
+button.sl-menu-button svg {
+  transition: scale 0.32s var(--ease-bounce);
 }
-button.sl-menu-button:active {
-  color: var(--link-press);
+@media (prefers-reduced-motion: no-preference) {
+  button.sl-menu-button:active svg {
+    scale: var(--squish);
+    transition: scale 0.06s ease-in;
+  }
 }
 /* Between a phone and 1152px, the search field leaves out its shortcut,
    to keep its room beside the full name and the links. */
