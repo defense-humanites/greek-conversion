@@ -141,7 +141,7 @@ button.sl-menu-button svg.close-menu {
 }
 
 /* The sidebar's links that leave the documentation carry the same mark. */
-.sidebar-content a[target="_blank"] > span::after {
+.sidebar-content a[target="_blank"] > span:not(.external-tail)::after {
   content: "";
   display: inline-block;
   width: 0.75em;
