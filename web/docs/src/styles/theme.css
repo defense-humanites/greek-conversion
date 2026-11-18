@@ -500,7 +500,8 @@ site-search dialog {
 .sidebar-content li:has(> a) + li:has(> a) {
   padding-top: 3px;
 }
-.sidebar-content a:hover {
+/* The list's items, not the project's links below it on a phone. */
+.sidebar-content ul a:hover {
   background: color-mix(in oklab, var(--raised) 60%, transparent);
 }
 .sidebar-content a[aria-current="page"],
@@ -745,6 +746,47 @@ mobile-starlight-toc .toggle,
   .sl-link-button.secondary:hover {
     border-color: var(--muted);
   }
+}
+
+/* The 404 page (src/content/docs/404.md) is a content page, so that the
+   search field and the text column take their usual places, but its
+   message looks as the hero it replaces: a large "404" well below the
+   header, the sentence under it in a larger size, no rule. Its table of
+   contents keeps its column, hidden; on a narrower screen, its bar goes. */
+:root:has(.not-found) .right-sidebar-panel {
+  visibility: hidden;
+}
+:root:has(.not-found) .right-sidebar {
+  border-inline-start-color: transparent;
+}
+@media (max-width: 71.99rem) {
+  :root:has(.not-found) {
+    --sl-mobile-toc-height: 0rem;
+  }
+  :root:has(.not-found) mobile-starlight-toc {
+    display: none;
+  }
+}
+:root:has(.not-found) .content-panel:first-child {
+  padding-top: clamp(2.5rem, calc(1rem + 10vmin), 10rem);
+}
+:root:has(.not-found) .content-panel + .content-panel {
+  padding-top: 0;
+  border-top: 0;
+}
+:root:has(.not-found) h1#_top {
+  font-size: clamp(
+    var(--sl-text-3xl),
+    calc(0.25rem + 5vw),
+    var(--sl-text-6xl)
+  );
+}
+.sl-markdown-content .not-found {
+  font-size: clamp(
+    var(--sl-text-base),
+    calc(0.0625rem + 2vw),
+    var(--sl-text-xl)
+  );
 }
 
 /* The home page's column is centred at every width. Starlight centres the

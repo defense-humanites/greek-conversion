@@ -14,30 +14,34 @@ const { prev, next } = pagination;
 const isRtl = dir === "rtl";
 ---
 
-<div class="pagination-links print:hidden" dir={dir}>
-  {
-    prev && (
-      <a href={prev.href} rel="prev">
-        <span class="label">
-          <Fragment set:html={icon(isRtl ? "arrow-right" : "arrow-left")} />
-          {Astro.locals.t("page.previousLink")}
-        </span>
-        <span class="link-title">{prev.label}</span>
-      </a>
-    )
-  }
-  {
-    next && (
-      <a href={next.href} rel="next">
-        <span class="label">
-          {Astro.locals.t("page.nextLink")}
-          <Fragment set:html={icon(isRtl ? "arrow-left" : "arrow-right")} />
-        </span>
-        <span class="link-title">{next.label}</span>
-      </a>
-    )
-  }
-</div>
+{
+  (prev || next) && (
+    <div class="pagination-links print:hidden" dir={dir}>
+      {
+        prev && (
+          <a href={prev.href} rel="prev">
+            <span class="label">
+              <Fragment set:html={icon(isRtl ? "arrow-right" : "arrow-left")} />
+              {Astro.locals.t("page.previousLink")}
+            </span>
+            <span class="link-title">{prev.label}</span>
+          </a>
+        )
+      }
+      {
+        next && (
+          <a href={next.href} rel="next">
+            <span class="label">
+              {Astro.locals.t("page.nextLink")}
+              <Fragment set:html={icon(isRtl ? "arrow-left" : "arrow-right")} />
+            </span>
+            <span class="link-title">{next.label}</span>
+          </a>
+        )
+      }
+    </div>
+  )
+}
 
 <style>
   .pagination-links {
