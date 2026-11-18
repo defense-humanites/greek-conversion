@@ -22,7 +22,10 @@ npm run bench        # throughput baseline
 of the reference (`docs/`), and of the guide pages of the documentation site,
 and compares its output with the `// →` comment, code point for code point.
 Write an example as a module, with its imports; a ```ts block that is not
-one fails the check. It also fails when a change to
+one fails the check. A conversion cited in prose (`ἀπ’ οὗ` → `ἀφ’ οὗ`) is
+checked too: it must be what the library returns under the defaults, a
+preset the page names, or the options named around it
+(`scripts/check_cited_conversions.ts`, whose `--list` says which). It also fails when a change to
 the options leaves `web/playground/option_relevance.ts` out of date
 (`npm run site:options` updates it), or `docs/presets.md`, generated from the
 presets (`npm run docs:presets`), or one of the generated parts of the

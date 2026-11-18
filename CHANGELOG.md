@@ -107,6 +107,12 @@ change.
   the links between its documents and their headings. A result given inside
   a block, such as a `catch`, is checked too: three of the guide were read as
   plain comments.
+- The conversions the documentation cites in its prose (`Ἅιδῃ → Háidȩ̄`,
+  "`ἐϛὶ` gives `ec̄ì`") are checked by `npm run check`: each must be what the
+  library returns between the formats it is written in, under the defaults,
+  a preset its page names, or the options named around it. One citation of
+  `docs/information-loss.md` lacked the apostrophe of its smooth breathing
+  (`εὖ` → `’ẽf` under ISO 843 Type 1).
 
 ### Added
 

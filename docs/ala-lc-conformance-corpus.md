@@ -5,7 +5,7 @@ The executable examples in
 are checked against the Library of Congress's published
 [Ancient and Medieval Greek](https://www.loc.gov/catdir/cpso/romanization/greeka.pdf)
 and [Modern Greek](https://www.loc.gov/catdir/cpso/romanization/greekm.pdf)
-tables. The ancient text examples are quoted from the former table; the
+tables, which the `ala-lc-ancient` and `ala-lc-modern` presets implement. The ancient text examples are quoted from the former table; the
 short modern examples combine explicit alphabet and notes rows from the latter.
 The cases check Latin output, whether `convertDetailed()` detects information
 loss, and the stability of re-encoding that Latin output. They do not assert
