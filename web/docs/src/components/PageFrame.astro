@@ -1,9 +1,10 @@
 ---
 /*
- * Starlight's page frame, with the sidebar beside the page from 64rem
- * (1024px) rather than 50rem (800px): between 800 and 1024px, the sidebar
- * (340px) left the text 430 to 650px. Below 64rem, the sidebar is the menu
- * the header's button opens, as on a phone. Otherwise Starlight's
+ * Starlight's page frame, with the sidebar beside the page from 68.75rem
+ * (1100px) rather than 50rem (800px): below 1100px, the sidebar (340px)
+ * would leave the text less than 712px, where a code block of 76 columns
+ * (`scripts/check_code_width.ts`) scrolls. Below 68.75rem, the sidebar is
+ * the menu that the header's button opens, as on a phone. Otherwise Starlight's
  * component, with its breakpoint changed, in its styles and in the script
  * that makes the sidebar a popover.
  */
@@ -23,12 +24,12 @@ const { hasSidebar } = Astro.locals.starlightRoute;
         <MobileMenuToggle />
         <script>
           // The menu uses the popover API to open and close without
-          // JavaScript, below 64rem; focus stays inside it while it is open.
+          // JavaScript, below 68.75rem; focus stays inside it while it is open.
           class StarlightSidebarPane extends HTMLElement {
             constructor() {
               super();
 
-              const desktopMediaQuery = matchMedia("(min-width: 64rem)");
+              const desktopMediaQuery = matchMedia("(min-width: 68.75rem)");
 
               const resetPopoverAttribute = () => {
                 this.popover = desktopMediaQuery.matches ? null : "auto";
@@ -126,7 +127,7 @@ const { hasSidebar } = Astro.locals.starlightRoute;
       padding-inline-start: var(--sl-content-inline-start);
     }
 
-    @media (min-width: 64rem) {
+    @media (min-width: 68.75rem) {
       .sidebar-content::after {
         content: "";
         padding-bottom: 1px;
