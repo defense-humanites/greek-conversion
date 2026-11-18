@@ -1095,3 +1095,21 @@ mobile-starlight-toc .toggle,
   );
   opacity: 1;
 }
+
+/* The banner of the next release's documentation (`routeData.ts`): a note,
+   as the design system draws them, on the ground of the tips, between the
+   header and the page; its link leads to the released documentation. */
+.sl-banner {
+  padding: 0.75rem var(--sl-content-pad-x);
+  border-bottom: 1px solid var(--line);
+  background: var(--tip);
+  color: var(--ink);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-align: center;
+  text-wrap: balance;
+  box-shadow: none;
+}
+.sl-banner a {
+  color: var(--link);
+}

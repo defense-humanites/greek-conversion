@@ -23,9 +23,9 @@ npm install @humanities/greek-conversion
 npx jsr add @humanities/greek-conversion
 ```
 
-The [playground](/playground/) needs no
-installation. It is built from the `main` branch, so it may be ahead of the
-latest published release.
+The [playground](/playground/) needs no installation. It runs the version
+this documentation describes: the latest release, or, under `/next/`, the
+next one, from the `main` branch.
 
 ## A first conversion
 

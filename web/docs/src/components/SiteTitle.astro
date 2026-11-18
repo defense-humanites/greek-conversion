@@ -5,8 +5,21 @@
  * on a phone, the tessera alone.
  * The symbol follows the system's appearance, as the whole site does.
  */
+import { otherVersionHref, VERSIONS } from "../versions.ts";
+
 const { siteTitleHref } = Astro.locals.starlightRoute;
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+/*
+ * The version of this documentation, after the product: the released
+ * version or "next". Where both are deployed, a selector leads to the same
+ * page in the other.
+ */
+const other = otherVersionHref(Astro.url.pathname);
+const here = Astro.url.pathname;
+const versions = [
+  { label: VERSIONS.release, current: VERSIONS.channel === "release" },
+  { label: "next", current: VERSIONS.channel === "next" },
+].map((version) => ({ ...version, href: version.current ? here : other }));
 ---
 
 <a href={siteTitleHref} class="identity">
@@ -20,6 +33,32 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
   <span class="name" translate="no">greek <span>conversion</span></span>
   <span class="product">docs</span>
 </a>
+{
+  other === null ? (
+    <span class="version">{VERSIONS.release}</span>
+  ) : (
+    <label class="version version-select">
+      <span class="sr-only">Documentation version</span>
+      <select>
+        {versions.map(({ label, href, current }) => (
+          <option value={href} selected={current}>
+            {label}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
+<script>
+  for (const select of document.querySelectorAll<HTMLSelectElement>(
+    ".version-select select",
+  )) {
+    select.addEventListener("change", () => {
+      location.href = select.value + location.hash;
+    });
+  }
+</script>
 
 <style>
   .identity {
@@ -57,10 +96,54 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
     text-transform: uppercase;
     color: var(--muted);
   }
+  /* The version: plain text in the muted ink, as a caption; where both
+     versions are deployed, a select of the same look, with a chevron. */
+  .version {
+    flex: none;
+    margin-inline-start: 10px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .version-select {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .version-select select {
+    appearance: none;
+    margin: 0;
+    padding: 5px 22px 5px 7px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+  @media (hover: hover) {
+    .version-select select:hover {
+      border-color: var(--muted);
+    }
+  }
+  .version-select::after {
+    content: "";
+    position: absolute;
+    inset-inline-end: 6px;
+    width: 12px;
+    height: 12px;
+    background: currentColor;
+    mask: var(--icon-chevron-down) center / contain no-repeat;
+    pointer-events: none;
+  }
   /* On a phone, the symbol alone, to leave the search field its room; the
      name stays for screen readers. */
   @media (max-width: 49.99rem) {
-    .product {
+    .product,
+    .version {
       display: none;
     }
     .name {

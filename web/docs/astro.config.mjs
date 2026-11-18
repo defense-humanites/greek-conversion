@@ -4,8 +4,31 @@ import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 import starlightTypeDoc, { typeDocSidebarGroup } from "starlight-typedoc";
 
+import { readFileSync } from "node:fs";
+
 const SITE = "https://defense-humanites.github.io";
-const BASE = "/greek-conversion";
+/**
+ * The site serves two versions of the documentation (`.github/workflows/
+ * pages.yml`): at its root, that of the latest release, and under `/next/`,
+ * that of `main`, for the next release. A build says which it is with
+ * `DOCS_CHANNEL` (`release`, the default, or `next`), and gives the version
+ * at the root with `DOCS_RELEASE` (by default, the package's); a release
+ * build sets `DOCS_NEXT=1` when `/next/` is deployed beside it.
+ */
+const ROOT_BASE = "/greek-conversion";
+const CHANNEL = process.env.DOCS_CHANNEL === "next" ? "next" : "release";
+const BASE = CHANNEL === "next" ? `${ROOT_BASE}/next` : ROOT_BASE;
+const RELEASE = process.env.DOCS_RELEASE ||
+  JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"))
+    .version;
+const VERSIONS = {
+  channel: CHANNEL,
+  release: RELEASE,
+  releaseBase: ROOT_BASE,
+  nextBase: CHANNEL === "next" || process.env.DOCS_NEXT === "1"
+    ? `${ROOT_BASE}/next`
+    : null,
+};
 /** The social card (1280 × 640), copied by `scripts/sync_reference.ts`. */
 const SHARING_IMAGE = [
   ["og:image", `${SITE}${BASE}/social.png`],
@@ -213,7 +236,12 @@ export default defineConfig({
       ],
     }),
   },
-  vite: { server: { fs: { allow: ["../.."] } } },
+  vite: {
+    server: { fs: { allow: ["../.."] } },
+    // The versions served, for the header's selector and the banner of
+    // `/next/` (`src/versions.ts`).
+    define: { __DOCS_VERSIONS__: JSON.stringify(VERSIONS) },
+  },
   integrations: [
     starlight({
       title: "greek conversion",
@@ -247,6 +275,11 @@ export default defineConfig({
         // The sharing image: the design system's social card, which
         // Starlight's `summary_large_image` card announces.
         ...SHARING_IMAGE,
+        // The next release's documentation is not for search engines: they
+        // index the released one, at the root.
+        ...(CHANNEL === "next"
+          ? [{ tag: "meta", attrs: { name: "robots", content: "noindex" } }]
+          : []),
       ],
       routeMiddleware: "./src/routeData.ts",
       plugins: [

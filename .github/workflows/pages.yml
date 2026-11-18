@@ -1,8 +1,12 @@
 name: Site
 
-# The documentation site (web/docs) at the root of GitHub Pages, and the
-# playground (web/playground) under /playground/. A pull request builds the
-# site to check it; a push to main also deploys it.
+# The documentation site (web/docs) and the playground (web/playground), on
+# GitHub Pages, in two versions: at the root, those of the latest release
+# whose tree holds the site (a stable version if there is one, a
+# pre-release otherwise); under /next/, those of main, for the next release.
+# Until a release holds the site, main is served at the root alone. A pull
+# request builds its own tree to check it; a push to main, a published
+# release, or a manual run deploys both versions.
 on:
   push:
     branches: [main]
@@ -22,20 +26,29 @@ on:
       - scripts/build_site.ts
       - src/**
       - web/**
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: site-${{ github.ref }}
+  group: site-${{ github.event_name == 'pull_request' && github.ref || 'deploy' }}
   cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ASTRO_TELEMETRY_DISABLED: 1
     steps:
+      # main, whatever triggered the run, except a pull request's own tree;
+      # with the tags and their history, to build the release.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name != 'pull_request' && 'main' || '' }}
+          fetch-depth: 0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
@@ -43,13 +56,50 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             web/docs/package-lock.json
-      - run: npm ci --ignore-scripts
-      - run: npm ci --prefix web/docs
-      - run: npm run build --prefix web/docs
+      - name: Find the release to serve at the root
+        id: release
+        if: github.event_name != 'pull_request'
+        run: |
+          holds_site() {
+            while read -r tag; do
+              if git cat-file -e "$tag:web/docs/package.json" 2>/dev/null; then
+                echo "$tag"
+                return
+              fi
+            done
+          }
+          # Newest first, a pre-release before its version (1.0.0-rc.9 < 1.0.0).
+          tags=$(git -c versionsort.suffix=- tag --list 'v*' --sort=-v:refname)
+          tag=$(grep -v -- - <<<"$tags" | holds_site || true)
+          [ -n "$tag" ] || tag=$(holds_site <<<"$tags" || true)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+      - name: Build this tree (main, as the next release, beside a release)
         env:
-          ASTRO_TELEMETRY_DISABLED: 1
-      - run: npm run site:build
-      - run: cp -R web/docs/dist/. _site/
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          if [ -n "$TAG" ]; then
+            export DOCS_CHANNEL=next DOCS_RELEASE="${TAG#v}"
+          fi
+          npm ci --ignore-scripts
+          npm ci --prefix web/docs
+          npm run build --prefix web/docs
+          npm run site:build
+          cp -R web/docs/dist/. _site/
+      - name: Build the release at the root, and this tree under /next/
+        if: steps.release.outputs.tag != ''
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          mv _site "$RUNNER_TEMP/next"
+          git worktree add "$RUNNER_TEMP/release" "$TAG"
+          cd "$RUNNER_TEMP/release"
+          npm ci --ignore-scripts
+          npm ci --prefix web/docs
+          DOCS_NEXT=1 npm run build --prefix web/docs
+          npm run site:build
+          cp -R web/docs/dist/. _site/
+          mv _site "$GITHUB_WORKSPACE/_site"
+          mv "$RUNNER_TEMP/next" "$GITHUB_WORKSPACE/_site/next"
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
         if: github.event_name != 'pull_request'
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
