@@ -83,11 +83,15 @@ plain.losses[0].diacritic; // → acute
 
 ## Next steps
 
-- [How it works](/guide/how-it-works/): the three formats, the canonical
-  document, the option groups, and which function to use.
-- [Presets](/guide/presets/): the published conventions the library
-  implements.
-- The recipes, for the common tasks, starting with
-  [removing diacritics](/guide/recipes/diacritics-and-unicode/#remove-all-or-some-diacritics).
-- [Guarantees and limits](/reference/guarantees/): what every conversion keeps,
-  and what the library leaves to you.
+- To see why every format converts to every other with the same rules,
+  read [How it works](/guide/how-it-works/).
+- To follow a published convention, as `iso-843-type-1` does above, choose
+  among the [presets](/guide/presets/).
+- To find out what a conversion cannot keep, and where, as `lossy` hinted
+  above, see [Knowing what a conversion loses](/guide/losses/).
+- For a precise task, the recipes cover
+  [diacritics and Unicode output](/guide/recipes/diacritics-and-unicode/),
+  [transliteration and Beta Code](/guide/recipes/transliteration-and-beta-code/),
+  and [letters and text](/guide/recipes/letters-and-text/).
+- Before you rely on it, read
+  [Guarantees and limits](/reference/guarantees/).
