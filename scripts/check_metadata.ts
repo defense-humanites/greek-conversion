@@ -7,9 +7,10 @@
  * `description` of `package.json`: the README's tagline, the home page of the
  * site, and the documentation of the main module repeat it; the description
  * of the site and the abstract of `CITATION.cff`, read without context,
- * repeat it after "A TypeScript library that converts"; the text alternative
- * of the social card, in the site and the playground, after "greek
- * conversion: ". The card itself, an image, is checked by eye.
+ * repeat it after "A TypeScript library that converts". The social card,
+ * which must hold its text on three lines, gives a shorter form of it, and
+ * its text alternative, in the site and the playground, gives that form
+ * after "greek conversion: ". The card itself, an image, is checked by eye.
  *
  * Run with `node scripts/check_metadata.ts`.
  */
@@ -84,8 +85,10 @@ expect(
   plain(home.match(/^description: (.*)$/m)?.[1]),
   library,
 );
-const card = "greek conversion: " + sentence[0].toLowerCase() +
-  sentence.slice(1);
+/** The text of `docs/assets/greek-conversion-social-clair.png`. */
+const CARD =
+  "Convert Ancient and Modern Greek to and from Beta Code or Latin script, with standards-based presets and information-loss diagnostics.";
+const card = "greek conversion: " + CARD[0].toLowerCase() + CARD.slice(1);
 const playground = await read("web/playground/index.html");
 expect(
   "the text alternative of the site's social card",
