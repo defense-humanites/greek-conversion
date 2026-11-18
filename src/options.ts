@@ -103,6 +103,18 @@ export type KeraiaTransliteration = "greek" | "bnf";
 export type DentalSigmaOrthography = "preserve" | "assimilate";
 
 /**
+ * Selects how Greek output writes a final `π`, `τ`, or `κ` whose vowel is
+ * elided before a word with a rough breathing. `"preserve"` keeps the
+ * consonant the source writes: `ἀπ’ οὗ`, as Ionic prose and many editions
+ * have it, stays, and so does `ἀφ’ οὗ`. `"aspirate"` writes the aspirated
+ * consonant that Attic spelling requires (`ἀπ’ οὗ` → `ἀφ’ οὗ`, `κατ’
+ * ἡμέραν` → `καθ’ ἡμέραν`); the conversion then reports the consonant it
+ * replaced as lost. Beta Code and transliteration write the consonant of
+ * the source in either case.
+ */
+export type ElidedStopOrthography = "preserve" | "aspirate";
+
+/**
  * Selects the transliterated spelling of upsilon.
  *
  * `"y-with-ou-v-f"` follows ISO 843 Type 2: `y`, but `u` in the diphthong
@@ -145,7 +157,16 @@ export type GreekAccentuation = "polytonic" | "monotonic";
 /** Selects composed or canonically decomposed Greek Unicode output. */
 export type UnicodeComposition = "composed" | "decomposed";
 
-/** Selects the composed Unicode form used for eligible acute vowels. */
+/**
+ * Selects the composed Unicode form of an acute where Unicode has two: the
+ * tonos (`ά`, U+03AC), which is also what NFC gives, or the oxia (`ά`,
+ * U+1F71). `"system"` writes the oxia when the Greek output carries a
+ * polytonic mark (a breathing, a grave, a circumflex, an iota subscript, a
+ * coronis, or a quantity mark) and the tonos when it carries none, as
+ * monotonic text is written and as `accentuation: "monotonic"` writes it.
+ * The choice is made for the whole output of one conversion: a polytonic
+ * text converted word by word needs `"oxia"` to write every acute alike.
+ */
 export type GreekAcuteForm = "system" | "tonos" | "oxia";
 
 /** Selects the Unicode scalar used for Greek question marks. */
@@ -364,11 +385,13 @@ export interface GreekOptions {
   doubleRho?: DoubleRhoOrthography;
   /** Dental assimilation before sigma. Defaults to `"preserve"`. */
   dentalSigma?: DentalSigmaOrthography;
+  /** An elided `π`, `τ`, or `κ` before a rough breathing. Defaults to `"preserve"`, which keeps the consonant the source writes; `"aspirate"` writes `φ`, `θ`, or `χ`. */
+  elidedStop?: ElidedStopOrthography;
   /** Greek accentuation system. Defaults to `"polytonic"`; `"monotonic"` follows the monotonic rules, monosyllables included, as far as the written text allows. */
   accentuation?: GreekAccentuation;
   /** Composed or decomposed output. Defaults to `"composed"`. */
   composition?: UnicodeComposition;
-  /** Tonos/oxia preference for eligible acute vowels. Defaults to `"system"`. */
+  /** Tonos/oxia preference for eligible acute vowels. Defaults to `"system"`: oxia in output that carries a polytonic mark, tonos otherwise. */
   acute?: GreekAcuteForm;
   /** Greek question-mark scalar. Defaults to `"canonical"`. */
   questionMark?: GreekQuestionMarkForm;
@@ -510,6 +533,7 @@ export interface DefaultConversionOptions {
     readonly iotaSubscript: "subscript";
     readonly doubleRho: "unmarked";
     readonly dentalSigma: "preserve";
+    readonly elidedStop: "preserve";
     readonly accentuation: "polytonic";
     readonly composition: "composed";
     readonly acute: "system";
@@ -664,6 +688,7 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
     iotaSubscript: ["subscript", "capital-adscript", "adscript"],
     doubleRho: ["unmarked", "smooth-rough"],
     dentalSigma: ["preserve", "assimilate"],
+    elidedStop: ["preserve", "aspirate"],
     accentuation: ["polytonic", "monotonic"],
     composition: ["composed", "decomposed"],
     acute: ["system", "tonos", "oxia"],
@@ -730,6 +755,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         iotaSubscript: "subscript",
         doubleRho: "unmarked",
         dentalSigma: "preserve",
+        elidedStop: "preserve",
         accentuation: "polytonic",
         composition: "composed",
         acute: "system",

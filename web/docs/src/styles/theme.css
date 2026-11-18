@@ -1037,8 +1037,12 @@ button.sl-menu-button {
 mobile-starlight-toc nav {
   view-transition-name: site-toc-bar;
 }
-.right-sidebar {
-  view-transition-name: site-toc;
+/* The column only: below 1440px, the bar lives inside it, and a name there
+   would make it a stacking context that holds the bar below the page. */
+@media (min-width: 90rem) {
+  .right-sidebar {
+    view-transition-name: site-toc;
+  }
 }
 ::view-transition-group(site-toc-bar),
 ::view-transition-group(site-toc),
@@ -1096,8 +1100,12 @@ mobile-starlight-toc nav {
   }
 }
 
+/* Expressive Code draws the button's border on this pseudo-element: it
+   takes the buttons' transition itself, so that its colour changes gently
+   on hover, as the playground's buttons do. */
 .expressive-code .copy button::before {
   border-width: 1.5px;
+  transition: border-color 0.15s ease;
 }
 
 @media (hover: hover) {

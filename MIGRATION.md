@@ -18,9 +18,24 @@ The package is ESM-only.
 
 ## Updating from `1.0.0-rc.9`
 
-One kind of input converts differently: under ISO 843 Type 2, `ωυ` is written
-letter by letter, as the standard requires: `ἑωυτοῦ` gives `heoytoû` (rc.9:
-`heoutoû`), and `oy` without marks reads back as `ωυ`.
+Two kinds of input convert differently:
+
+- Under ISO 843 Type 2, `ωυ` is written letter by letter, as the standard
+  requires: `ἑωυτοῦ` gives `heoytoû` (rc.9: `heoutoû`), and `oy` without
+  marks reads back as `ωυ`.
+- Greek output that carries no polytonic mark writes its acutes with tonos:
+  `λόγος` converted alone gives `ό` as U+03CC (rc.9: U+1F79, oxia), so that
+  monotonic Greek converts back to itself. Output with a breathing, a grave,
+  a circumflex, an iota subscript, a coronis, or a quantity mark is
+  unchanged. The two forms are canonically equivalent; if you compare
+  strings scalar for scalar, or convert polytonic text one word at a time,
+  set `greek: { acute: "oxia" }` to keep the output of rc.9.
+
+Greek output also keeps an elided `π`, `τ`, or `κ` before a rough breathing
+as the source writes it: `ἀπ’ οὗ` stays (rc.9: `ἀφ’ οὗ`, with a loss
+reported), and the transliteration `ap’ hēmō̃n` reads as `ἀπ’ ἡμῶν` (rc.9:
+`ἀφ’ ἡμῶν`). The new `greek: { elidedStop: "aspirate" }` gives the output of
+rc.9.
 
 ## Updating from `1.0.0-rc.8`
 

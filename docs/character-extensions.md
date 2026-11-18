@@ -147,7 +147,8 @@ kept capital is among capitals (`ΘΕΟΣ`, with epsilon out of scope, gives
 - Monotonic accentuation leaves the accent of a word that contains a kept
   letter, whose syllables it cannot count.
 - A kept letter is not aspirated before a rough breathing: `ἀπ’ οὗ`, with pi
-  out of scope, keeps its `π`, which Greek output otherwise writes `φ`.
+  out of scope, keeps its `π`, which Greek output writes `φ` under
+  `elidedStop: "aspirate"`.
 - Transliteration writes the `h` of a diphthong with a rough breathing
   before both vowels. The `h` goes with the vowel that has the breathing:
   `hoi`, with iota out of scope, gives `οhi` in Greek.

@@ -115,7 +115,7 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       text: "lo/gos",
       from: "beta-code",
       to: "greek",
-      output: "λόγος",
+      output: "λόγος",
       sourceBound: true,
     },
     greek("Archaic letter", "Digamma, written w", "ϝάναξ", "wánax"),
