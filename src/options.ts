@@ -103,6 +103,18 @@ export type KeraiaTransliteration = "greek" | "bnf";
 export type DentalSigmaOrthography = "preserve" | "assimilate";
 
 /**
+ * Selects how Greek output writes a final `π`, `τ`, or `κ` whose vowel is
+ * elided before a word with a rough breathing. `"preserve"` keeps the
+ * consonant the source writes: `ἀπ’ οὗ`, as Ionic prose and many editions
+ * have it, stays, and so does `ἀφ’ οὗ`. `"aspirate"` writes the aspirated
+ * consonant that Attic spelling requires (`ἀπ’ οὗ` → `ἀφ’ οὗ`, `κατ’
+ * ἡμέραν` → `καθ’ ἡμέραν`); the conversion then reports the consonant it
+ * replaced as lost. Beta Code and transliteration write the consonant of
+ * the source in either case.
+ */
+export type ElidedStopOrthography = "preserve" | "aspirate";
+
+/**
  * Selects the transliterated spelling of upsilon.
  *
  * `"y-with-ou-v-f"` follows ISO 843 Type 2: `y`, but `u` in the diphthong
@@ -373,6 +385,8 @@ export interface GreekOptions {
   doubleRho?: DoubleRhoOrthography;
   /** Dental assimilation before sigma. Defaults to `"preserve"`. */
   dentalSigma?: DentalSigmaOrthography;
+  /** An elided `π`, `τ`, or `κ` before a rough breathing. Defaults to `"preserve"`, which keeps the consonant the source writes; `"aspirate"` writes `φ`, `θ`, or `χ`. */
+  elidedStop?: ElidedStopOrthography;
   /** Greek accentuation system. Defaults to `"polytonic"`; `"monotonic"` follows the monotonic rules, monosyllables included, as far as the written text allows. */
   accentuation?: GreekAccentuation;
   /** Composed or decomposed output. Defaults to `"composed"`. */
@@ -519,6 +533,7 @@ export interface DefaultConversionOptions {
     readonly iotaSubscript: "subscript";
     readonly doubleRho: "unmarked";
     readonly dentalSigma: "preserve";
+    readonly elidedStop: "preserve";
     readonly accentuation: "polytonic";
     readonly composition: "composed";
     readonly acute: "system";
@@ -673,6 +688,7 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
     iotaSubscript: ["subscript", "capital-adscript", "adscript"],
     doubleRho: ["unmarked", "smooth-rough"],
     dentalSigma: ["preserve", "assimilate"],
+    elidedStop: ["preserve", "aspirate"],
     accentuation: ["polytonic", "monotonic"],
     composition: ["composed", "decomposed"],
     acute: ["system", "tonos", "oxia"],
@@ -739,6 +755,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         iotaSubscript: "subscript",
         doubleRho: "unmarked",
         dentalSigma: "preserve",
+        elidedStop: "preserve",
         accentuation: "polytonic",
         composition: "composed",
         acute: "system",

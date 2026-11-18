@@ -949,6 +949,7 @@ const OPTION_SETS: ConversionOptions[] = [
   { text: { numerals: "decimal" } },
   { text: { whitespace: "collapse", numerals: "decimal" } },
   { greek: { dentalSigma: "assimilate" } },
+  { greek: { elidedStop: "aspirate" } },
   { text: { letterCase: "uppercase" } },
   {
     transliteration: {

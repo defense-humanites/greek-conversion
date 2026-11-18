@@ -31,6 +31,12 @@ Two kinds of input convert differently:
   strings scalar for scalar, or convert polytonic text one word at a time,
   set `greek: { acute: "oxia" }` to keep the output of rc.9.
 
+Greek output also keeps an elided `π`, `τ`, or `κ` before a rough breathing
+as the source writes it: `ἀπ’ οὗ` stays (rc.9: `ἀφ’ οὗ`, with a loss
+reported), and the transliteration `ap’ hēmō̃n` reads as `ἀπ’ ἡμῶν` (rc.9:
+`ἀφ’ ἡμῶν`). The new `greek: { elidedStop: "aspirate" }` gives the output of
+rc.9.
+
 ## Updating from `1.0.0-rc.8`
 
 Greek output keeps the letter forms the source writes, by default: the lunate
