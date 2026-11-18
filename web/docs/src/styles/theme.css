@@ -404,6 +404,9 @@ site-search button[data-open-modal]:active {
    up to 30rem, with its keyboard shortcut. */
 header.header > .header {
   display: flex;
+  /* Starlight widens the header's gap from 1152px (16px to 24px): the
+     field would move by 8px there. */
+  gap: 1rem;
 }
 .header > :nth-child(2) {
   display: flex;
@@ -1125,4 +1128,24 @@ mobile-starlight-toc .toggle,
 }
 .sl-banner a {
   color: var(--link);
+}
+
+/* Below 360px, where the viewport could not be widened to 360px (a narrow
+   desktop window, a simulator; on a phone, the head's script lays the page
+   out 360px wide), the page keeps 360px and scrolls sideways, its bars
+   with it rather than fixed to a narrower window. */
+@media (max-width: 22.49rem) {
+  html {
+    position: relative;
+    min-width: 22.5rem;
+  }
+  .page > .header,
+  mobile-starlight-toc nav,
+  button.sl-menu-button,
+  button.sl-menu-button:has(~ :popover-open) {
+    position: absolute;
+  }
+  .page > .header {
+    min-width: 22.5rem;
+  }
 }

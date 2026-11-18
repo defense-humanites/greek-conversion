@@ -9,6 +9,14 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
+/* Below 360px, where the viewport could not be widened to 360px (a narrow
+   desktop window, a simulator; on a phone, the head's script lays the page
+   out 360px wide), the page keeps 360px and scrolls sideways. */
+@media (max-width: 359.98px) {
+  html {
+    min-width: 360px;
+  }
+}
 :root {
   --check-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 12.5l4.5 4.5 8.5-9.5'/%3E%3C/svg%3E");
   font-family: var(--face-ui);
