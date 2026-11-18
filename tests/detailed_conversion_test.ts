@@ -200,7 +200,7 @@ test("folding glyph variants on request is independent from case folding", () =>
   assertNfcEquals(variants.output, "βίοσ σῶμα θεόσ");
   assertEquals(variants.lossy, false);
   assertEquals(variants.losses, []);
-  assertEquals(lowercase.output, "βίοσ");
+  assertEquals(lowercase.output, "βίοσ");
   assertEquals(lowercase.lossy, true);
   assertEquals(lowercase.losses.map(({ code }) => code), [
     "changed-case",

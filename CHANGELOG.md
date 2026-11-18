@@ -9,6 +9,19 @@ change.
 
 ### Changed
 
+- Greek output that carries no polytonic mark writes its acutes with tonos
+  (`ά`, U+03AC), the form monotonic text is typed in and the one NFC gives,
+  instead of oxia (`ά`, U+1F71). Monotonic Greek now converts back to itself
+  scalar for scalar: `reencode("Αθήνα", "greek")` returns its input, as does
+  a round trip through Beta Code or `iso-843-type-1`. Output that carries a
+  breathing, a grave, a circumflex, an iota subscript, a coronis, or a
+  quantity mark still writes every acute with oxia. This is what
+  `greek.acute: "system"`, the default, now means; `"oxia"` and `"tonos"`
+  still decide alone. The choice is made for the whole output of one
+  conversion, so a polytonic text converted word by word needs
+  `greek.acute: "oxia"` to write every acute alike (`λόγος` alone gives
+  U+03CC; in `ὁ λόγος`, U+1F79). The two forms are canonically equivalent,
+  and no loss is reported either way.
 - The names of the ISO 843 presets say what each type does, as the standard
   does: "ISO 843:1997 — Type 1 (transliteration)" and "ISO 843:1997 — Type 2
   (transcription)". Their ids are unchanged.

@@ -6,24 +6,123 @@ import { applyGreekOrthography, parse } from "../src/document.ts";
 const POLYTONIC = { greek: { accentuation: "polytonic" } } as const;
 const MONOTONIC = { greek: { accentuation: "monotonic" } } as const;
 
-test("uses the accentuation system to select tonos or oxia", () => {
-  // Polysyllables, because monotonic monosyllables carry no accent.
-  assertEquals(convert("άβα ΐβα", "greek", "greek", POLYTONIC), "άβα ΐβα");
-  assertEquals(convert("άβα ΐβα", "greek", "greek", MONOTONIC), "άβα ΐβα");
+test("writes oxia in output with a polytonic mark and tonos in output without one", () => {
+  const tonos = "\u{3AC}βα \u{390}βα";
+  const oxia = "\u{1F71}βα \u{1FD3}βα";
 
+  // No polytonic mark: tonos, as monotonic text is written, from either
+  // scalar of the source.
+  assertEquals(convert(tonos, "greek", "greek"), tonos);
+  assertEquals(convert(oxia, "greek", "greek"), tonos);
+  assertEquals(convert(tonos, "greek", "greek", POLYTONIC), tonos);
+  // Polysyllables, because monotonic monosyllables carry no accent.
+  assertEquals(convert(oxia, "greek", "greek", MONOTONIC), tonos);
+
+  // Any polytonic mark in the output: oxia, for every acute of the output.
+  for (
+    const marked of [
+      "\u{1F41}", // rough breathing
+      "\u{1F00}", // smooth breathing, or coronis
+      "\u{1F70}", // grave
+      "\u{1FB6}", // circumflex
+      "\u{1FB3}", // iota subscript
+      "\u{1FB1}", // macron
+      "\u{1FB0}", // breve
+      "\u{1FE5}", // rough breathing on rho
+      "\u{3B5}\u{304}", // a quantity mark with no composed letter
+    ]
+  ) {
+    assertEquals(
+      convert(`${tonos} ${marked}`, "greek", "greek"),
+      `${oxia} ${marked}`,
+      marked,
+    );
+  }
+  // The same marks on a letter of another script, or on their own, are not
+  // polytonic Greek.
+  for (const other of ["a\u{323}\u{300}", "e\u{313}", "\u{300}", "\u{E0}"]) {
+    assertEquals(
+      convert(`${other} ${tonos}`, "greek", "greek"),
+      `${other.normalize("NFC")} ${tonos}`,
+      other,
+    );
+  }
   assertEquals(
-    convert("άβα ΐβα", "greek", "greek", {
-      ...POLYTONIC,
-      greek: { acute: "tonos" },
-    }),
-    "άβα ΐβα",
+    convert("a)/ba o(", "beta-code", "greek"),
+    "\u{1F04}βα \u{1F41}",
   );
   assertEquals(
-    convert("άβα ΐβα", "greek", "greek", {
-      ...MONOTONIC,
-      greek: { acute: "oxia" },
+    convert("lógos", "transliteration", "greek"),
+    "λ\u{3CC}γος",
+  );
+  assertEquals(
+    convert("ho lógos", "transliteration", "greek"),
+    "\u{1F41} λ\u{1F79}γος",
+  );
+
+  // An explicit value decides, whatever the output carries.
+  assertEquals(
+    convert(`${oxia} \u{1F41}`, "greek", "greek", {
+      greek: { acute: "tonos" },
     }),
-    "άβα ΐβα",
+    `${tonos} \u{1F41}`,
+  );
+  assertEquals(
+    convert(tonos, "greek", "greek", { greek: { acute: "oxia" } }),
+    oxia,
+  );
+  assertEquals(
+    convert(tonos, "greek", "greek", {
+      ...MONOTONIC,
+      greek: { ...MONOTONIC.greek, acute: "oxia" },
+    }),
+    oxia,
+  );
+});
+
+test("the form of the acute follows the output, so that it is stable", () => {
+  // The marks an option removes no longer count: the output has none.
+  const options = { diacritics: { smoothBreathing: "remove" } } as const;
+  const once = convert(
+    "\u{1F04}νθρωπος καλ\u{1F79}ς",
+    "greek",
+    "greek",
+    options,
+  );
+  assertEquals(once, "\u{3AC}νθρωπος καλ\u{3CC}ς");
+  assertEquals(convert(once, "greek", "greek", options), once);
+
+  // The choice is made for the whole output of one conversion.
+  const text = "\u{1F41} λ\u{1F79}γος";
+  assertEquals(convert(text, "greek", "greek"), text);
+  assertEquals(
+    text.split(" ").map((word) => convert(word, "greek", "greek")).join(" "),
+    "\u{1F41} λ\u{3CC}γος",
+  );
+  const pinned = { greek: { acute: "oxia" } } as const;
+  assertEquals(
+    text.split(" ").map((word) => convert(word, "greek", "greek", pinned))
+      .join(" "),
+    text,
+  );
+
+  // Monotonic text converts back to itself, scalar for scalar.
+  const modern =
+    "Η Αθ\u{3AE}να ε\u{3AF}ναι η πρωτε\u{3CD}ουσα\u{B7} Μα\u{390}ου, Τα\u{3B0}γετος;";
+  assertEquals(convert(modern, "greek", "greek"), modern);
+  assertEquals(
+    convert(convert(modern, "greek", "beta-code"), "beta-code", "greek"),
+    modern,
+  );
+  const iso = { preset: "iso-843-type-1" } as const;
+  assertEquals(
+    convert(
+      convert(modern, "greek", "transliteration", iso),
+      "transliteration",
+      "greek",
+      iso,
+    ),
+    modern,
   );
 });
 

@@ -148,7 +148,7 @@ test("the letters of a modern digraph share its character", () => {
   const read = detailed("boukáli", "transliteration", "greek", {
     preset: "iso-843-type-2",
   });
-  assertEquals(read.output, "μπουκάλι");
+  assertEquals(read.output, "μπουκάλι");
   assertEquals(pieces(read).slice(0, 3), [
     ["b", "μ"],
     ["b", "π"],
@@ -326,11 +326,11 @@ test("segments are closed under normalization for every code point", () => {
 test("spans after letters that composition joins across characters", () => {
   // Hangul jamo, a Kaithi letter with nukta, a Kirat Rai vowel sign: the
   // output composes what the reader read as several literals. Greek output
-  // writes the acute as oxia by default.
+  // without a polytonic mark writes the acute as tonos.
   for (const prefix of ["한", "\u{1109A}", "\u{11099}\u{110BA}", "\u{16D68}"]) {
     assertEquals(
       pieces(detailed(`${prefix} λ\u{3CC}γος`, "greek", "greek")).slice(-5),
-      [["λ", "λ"], ["\u{3CC}", "\u{1F79}"], ["γ", "γ"], ["ο", "ο"], ["ς", "ς"]],
+      [["λ", "λ"], ["\u{3CC}", "\u{3CC}"], ["γ", "γ"], ["ο", "ο"], ["ς", "ς"]],
       prefix,
     );
     assertEquals(
@@ -355,13 +355,13 @@ test("spans after letters that composition joins across characters", () => {
 
 test("a character that normalization leaves unchanged keeps its own span", () => {
   // Changed alone, without moving: the ohm sign read as an omega, an oxia
-  // written as a tonos and back.
+  // written as a tonos.
   assertEquals(parseDetailed("\u{2126}\u{332}", "greek").spans, [
     { start: 0, end: 1 },
     { start: 1, end: 2 },
   ]);
   assertEquals(pieces(detailed("\u{1F71}\u{332}", "beta-code", "greek")), [
-    ["\u{1F71}", "\u{1F71}"],
+    ["\u{1F71}", "\u{3AC}"],
     ["\u{332}", "\u{332}"],
   ]);
 
@@ -676,7 +676,7 @@ test("an alias spelling is its letter's span", () => {
   ]);
   assertEquals(
     pieces(detailedBy(CUSTOM, "þeós", "transliteration", "greek")),
-    [["þ", "θ"], ["e", "ε"], ["ó", "ό"], ["s", "ς"]],
+    [["þ", "θ"], ["e", "ε"], ["ó", "ό"], ["s", "ς"]],
   );
 });
 

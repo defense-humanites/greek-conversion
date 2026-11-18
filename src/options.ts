@@ -145,7 +145,16 @@ export type GreekAccentuation = "polytonic" | "monotonic";
 /** Selects composed or canonically decomposed Greek Unicode output. */
 export type UnicodeComposition = "composed" | "decomposed";
 
-/** Selects the composed Unicode form used for eligible acute vowels. */
+/**
+ * Selects the composed Unicode form of an acute where Unicode has two: the
+ * tonos (`ά`, U+03AC), which is also what NFC gives, or the oxia (`ά`,
+ * U+1F71). `"system"` writes the oxia when the Greek output carries a
+ * polytonic mark (a breathing, a grave, a circumflex, an iota subscript, a
+ * coronis, or a quantity mark) and the tonos when it carries none, as
+ * monotonic text is written and as `accentuation: "monotonic"` writes it.
+ * The choice is made for the whole output of one conversion: a polytonic
+ * text converted word by word needs `"oxia"` to write every acute alike.
+ */
 export type GreekAcuteForm = "system" | "tonos" | "oxia";
 
 /** Selects the Unicode scalar used for Greek question marks. */
@@ -368,7 +377,7 @@ export interface GreekOptions {
   accentuation?: GreekAccentuation;
   /** Composed or decomposed output. Defaults to `"composed"`. */
   composition?: UnicodeComposition;
-  /** Tonos/oxia preference for eligible acute vowels. Defaults to `"system"`. */
+  /** Tonos/oxia preference for eligible acute vowels. Defaults to `"system"`: oxia in output that carries a polytonic mark, tonos otherwise. */
   acute?: GreekAcuteForm;
   /** Greek question-mark scalar. Defaults to `"canonical"`. */
   questionMark?: GreekQuestionMarkForm;

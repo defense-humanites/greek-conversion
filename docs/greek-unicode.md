@@ -73,19 +73,34 @@ singleton decompositions and are therefore not stable under NFC.
 
 ## Tonos and oxia
 
-`greek.acute` accepts `"system"`, `"tonos"`, and `"oxia"`. The default
-`"system"` policy selects oxia for polytonic output and tonos for monotonic
-output:
+Unicode encodes an acute on a vowel twice: with tonos (`ά`, U+03AC), the form
+NFC gives, and with oxia (`ά`, U+1F71), in the polytonic block. `greek.acute`
+accepts `"system"`, `"tonos"`, and `"oxia"`. The default `"system"` follows
+the output: it writes oxia when the Greek output carries a polytonic mark (a
+breathing, a grave, a circumflex, an iota subscript, a coronis, or a quantity
+mark), and tonos when it carries none, as monotonic text is written. Monotonic
+Greek therefore comes back as it was typed, and output under
+`accentuation: "monotonic"` always has tonos:
 
 ```ts
-convert("ά", "greek", "greek");
-// ά — U+1F71 GREEK SMALL LETTER ALPHA WITH OXIA
+reencode("λόγος", "greek");
+// λόγος — ό is U+03CC GREEK SMALL LETTER OMICRON WITH TONOS
 
-convert("ά", "greek", "greek", {
+reencode("ὁ λόγος", "greek");
+// ὁ λόγος — ό is U+1F79 GREEK SMALL LETTER OMICRON WITH OXIA
+
+convert("ὁ λόγος", "greek", "greek", {
   greek: { accentuation: "monotonic" },
 });
-// ά — U+03AC GREEK SMALL LETTER ALPHA WITH TONOS
+// ο λόγος — ό is U+03CC
 ```
+
+The choice is made on the output, once the options have shaped it, so that
+converting it again changes nothing: polytonic text whose other marks an
+option removes is written with tonos. It is made for the whole output of one
+conversion. A polytonic text converted one word at a time therefore writes
+with tonos the words that carry no other mark (`λόγος`): set
+`acute: "oxia"` to write every acute alike, whatever is converted.
 
 An explicit value overrides the system preference. It applies only where
 Unicode provides alternative composed scalars. Polytonic combinations such as
