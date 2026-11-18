@@ -648,6 +648,22 @@ mobile-starlight-toc nav {
 mobile-starlight-toc summary {
   padding-inline: var(--sl-nav-pad-x);
 }
+/* From 800px, the bar's toggle and its panel line up with the text, which
+   the page centres in its column (below). */
+@media (min-width: 50rem) {
+  mobile-starlight-toc nav {
+    --toc-inset: calc(
+      var(--sl-content-pad-x) +
+        max(0px, (100% - 2 * var(--sl-content-pad-x) - var(--sl-content-width)) / 2)
+    );
+  }
+  mobile-starlight-toc summary {
+    padding-inline-start: var(--toc-inset);
+  }
+  mobile-starlight-toc nav .dropdown {
+    inset-inline-start: var(--toc-inset);
+  }
+}
 
 mobile-starlight-toc .toggle {
   box-sizing: border-box;
@@ -679,7 +695,7 @@ mobile-starlight-toc .display-current {
 
 /* A taller bar (60px rather than 48px), so that the panel, 6px below the
    toggle, does not land on the bar's bottom border but covers it. */
-@media (max-width: 71.99rem) {
+@media (max-width: 89.99rem) {
   html[data-has-toc] {
     --sl-mobile-toc-height: 3.75rem;
   }
@@ -814,7 +830,7 @@ mobile-starlight-toc .toggle,
 :root:has(.not-found) .right-sidebar {
   border-inline-start-color: transparent;
 }
-@media (max-width: 71.99rem) {
+@media (max-width: 89.99rem) {
   :root:has(.not-found) {
     --sl-mobile-toc-height: 0rem;
   }
@@ -844,6 +860,24 @@ mobile-starlight-toc .toggle,
 :root:has(.not-found) main .content-panel + .content-panel {
   margin-top: 1rem;
   border-top: 0;
+}
+
+/* Beside the sidebar, a page's column is centred in the room it has, as
+   Starlight centres it only from 1152px; the column of "On this page"
+   pushes it to the end from 1440px (`TwoColumnContent`). */
+@media (min-width: 50rem) {
+  .content-panel > .sl-container {
+    margin-inline: var(--sl-content-margin-inline, auto);
+  }
+}
+
+/* Without the sidebar, below 800px, a page's column takes the whole width:
+   Starlight caps it at 45rem, which left a strip on its right between 752
+   and 800px. The home page centres its column instead. */
+@media (max-width: 49.99rem) {
+  :root:not(:has(.home-hero)) main .sl-container {
+    max-width: none;
+  }
 }
 
 /* The home page's column is centred at every width. Starlight centres the
