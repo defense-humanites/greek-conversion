@@ -75,6 +75,7 @@ export type {
   DiacriticDisposition,
   DiacriticOptions,
   DoubleRhoOrthography,
+  ElidedStopOrthography,
   EnotikonTransliteration,
   EtaTransliteration,
   FinalSigmaOrthography,

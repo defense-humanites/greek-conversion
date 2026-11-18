@@ -16,14 +16,17 @@
 export function checkPositionsUnicode(convertDetailed) {
   const tail = " \u{3BB}\u{3CC}\u{3B3}\u{3BF}\u{3C2}"; // " λόγος", with a tonos
   const formats = ["greek", "transliteration"];
+  // The oxia is pinned: by default, a prefix with a polytonic mark would
+  // change the form of the word's acute, which is not a drift of positions.
+  const options = { greek: { acute: "oxia" } };
   const reference = Object.fromEntries(
-    formats.map((to) => [to, convertDetailed(tail, "greek", to)]),
+    formats.map((to) => [to, convertDetailed(tail, "greek", to, options)]),
   );
   const failures = [];
   const check = (prefix) => {
     for (const to of formats) {
       const alone = reference[to];
-      const joined = convertDetailed(prefix + tail, "greek", to);
+      const joined = convertDetailed(prefix + tail, "greek", to, options);
       const count = alone.spans.length;
       const outShift = joined.output.length - alone.output.length;
       const spans = joined.spans.slice(-count);
