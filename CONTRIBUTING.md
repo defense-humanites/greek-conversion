@@ -20,10 +20,11 @@ npm run bench        # throughput baseline
 
 `npm run check` type-checks and runs every TypeScript example of the README
 and of the guide pages of the documentation site, and compares its output with
-the `// →` comment. It also fails when a change to the options leaves
-`web/playground/option_relevance.ts` out of date (`npm run site:options`
-updates it), or `docs/presets.md`, generated from the presets
-(`npm run docs:presets`).
+the `// →` comment, code point for code point. It also fails when a change to
+the options leaves `web/playground/option_relevance.ts` out of date
+(`npm run site:options` updates it), or `docs/presets.md`, generated from the
+presets (`npm run docs:presets`), or the table of what each preset loses in
+the guide's page on presets (`npm run docs:losses`).
 
 The behavior the version number protects is the one documented in `docs/`
 and in the API documentation; the [stability policy](docs/stability.md) says

@@ -122,6 +122,15 @@ change.
   set in Noto Sans Mono, served with the site, which covers polytonic Greek
   and stacks diacritics on every system, with Fira Mono for the symbol forms
   and lunate sigmas it does not tell apart.
+- The guide answers a reader who comes with a Greek. Pages on Ancient Greek
+  and on Byzantine and Medieval Greek join the one on Modern Greek, each
+  with the conventions that apply, what converts back, the tasks proper to
+  the period, and its limits; the Byzantine page says which signs are kept
+  but not read yet (`ϗ`, `ȣ`, a spacing breathing before a capital, the
+  overline of nomina sacra). The page on presets compares what each preset
+  loses on a monotonic and a polytonic text, in a table computed from the
+  library (`npm run docs:losses`) and kept up to date by `npm run check`. A
+  page on the canonical document takes the section that How it works had.
 - The README is now a short entry point: installation, one example, the main
   functions, and links to the site. Its development notes move to
   `CONTRIBUTING.md`. `npm run check` (`scripts/check_examples.ts`, formerly

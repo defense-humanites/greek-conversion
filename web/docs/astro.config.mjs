@@ -317,14 +317,43 @@ export default defineConfig({
           },
         }),
       ],
+      // The reader comes with a Greek (ancient, Byzantine, or modern), looks
+      // for the convention that applies to it, and asks what a conversion
+      // loses: the first three groups answer in that order. A reference page
+      // takes its title from `docs/`; its label here tells it from the guide
+      // page on the same subject.
       sidebar: [
         {
           label: "Start here",
           items: [
             "guide/getting-started",
             "guide/how-it-works",
-            "guide/presets",
+            "guide/losses",
+          ],
+        },
+        {
+          label: "Your Greek",
+          items: [
+            "guide/ancient-greek",
+            "guide/byzantine-greek",
             "guide/modern-greek",
+          ],
+        },
+        {
+          label: "Standards and presets",
+          items: [
+            "guide/presets",
+            { label: "Preset reference", slug: "reference/presets" },
+            {
+              label: "Conformance",
+              collapsed: true,
+              items: [
+                "reference/preset-conformance-corpus",
+                "reference/ala-lc-conformance-corpus",
+                "reference/preset-behavior-audit",
+                "reference/preset-repertoire-audit",
+              ],
+            },
           ],
         },
         {
@@ -334,8 +363,8 @@ export default defineConfig({
         {
           label: "Going further",
           items: [
-            "guide/losses",
             "guide/converters",
+            "guide/document",
           ],
         },
         {
@@ -343,23 +372,15 @@ export default defineConfig({
           items: [
             "reference/guarantees",
             "reference/stability",
-            "reference/presets",
-            "reference/information-loss",
-            "reference/conversion-analysis",
+            {
+              label: "Loss by format and option",
+              slug: "reference/information-loss",
+            },
+            { label: "Loss report", slug: "reference/conversion-analysis" },
             "reference/greek-unicode",
             "reference/character-extensions",
-            "reference/document-api",
+            { label: "Document contract", slug: "reference/document-api" },
             "reference/validation",
-          ],
-        },
-        {
-          label: "Standards and conformance",
-          collapsed: true,
-          items: [
-            "reference/preset-repertoire-audit",
-            "reference/preset-behavior-audit",
-            "reference/preset-conformance-corpus",
-            "reference/ala-lc-conformance-corpus",
           ],
         },
         typeDocSidebarGroup,

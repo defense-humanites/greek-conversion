@@ -53,7 +53,7 @@ Every option value is plain ASCII, so it can be typed on any keyboard.
 | Normalize or restyle a string without changing its format                | `reencode(input, format, options?)`                                   |
 | Know whether the conversion loses information, and where each token went | `convertDetailed(input, from, to, options?)`                          |
 | Bind a preset, add characters, or restrict the repertoire                | `createConverter(configuration)`                                      |
-| [Inspect or edit the parsed text itself](#inspect-or-edit-the-document) | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
+| [Inspect or edit the parsed text itself](/guide/document/)              | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
 
 ```ts
 import { convert, reencode } from "@humanities/greek-conversion";
@@ -68,30 +68,3 @@ always agree with one another. The recipes show the option forms of the common
 tasks, such as [removing diacritics](/guide/recipes/diacritics-and-unicode/#remove-all-or-some-diacritics),
 [folding letter variants](/guide/recipes/letters-and-text/#keep-or-fold-letter-variants), or
 [choosing a Unicode form](/guide/recipes/diacritics-and-unicode/#control-greek-unicode-output).
-
-## Inspect or edit the document
-
-The `@humanities/greek-conversion/document` entry point exposes the canonical
-document itself, for validation, analysis, or controlled edits:
-
-```ts
-import {
-  encode,
-  parse,
-  validateDocument,
-} from "@humanities/greek-conversion/document";
-
-const document = parse("a)/nqrwpos", "beta-code");
-validateDocument(document); // → []
-encode(document, "greek"); // → ἄνθρωπος
-encode(document, "transliteration"); // → ánthrōpos
-```
-
-Parse once and encode as many times as you need. `parseDetailed()` also returns
-the position of each token in the input, as `spans`. Validation checks the
-document, not the original spelling: a malformed source sequence can survive as
-a literal. The
-[document API contract](/reference/document-api/)
-describes ownership and editing rules, and
-[validation](/reference/validation/)
-lists the diagnostic codes.

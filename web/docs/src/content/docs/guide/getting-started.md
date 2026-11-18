@@ -13,7 +13,9 @@ text.
 The package is published as `@humanities/greek-conversion` on
 [JSR](https://jsr.io/@humanities/greek-conversion) and
 [npm](https://www.npmjs.com/package/@humanities/greek-conversion), with the same
-named exports in both. It is ESM-only and ships its own type declarations.
+named exports in both. It is ESM-only and ships its own type declarations. It
+has no dependencies and uses no runtime-specific API: it runs in Node.js,
+from version 24, and in browsers, as the playground does.
 
 ```sh
 # npm
@@ -100,12 +102,14 @@ convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliter
 
 - To see why every format converts to every other with the same rules,
   read [How it works](/guide/how-it-works/).
-- To follow a published convention, as `iso-843-type-1` does above, choose
-  among the [presets](/guide/presets/).
-- For Modern Greek names, passports, and catalogue records, and for reading
-  them back, see [Modern Greek](/guide/modern-greek/).
 - To find out what a conversion cannot keep, and where, as `lossy` hinted
   above, see [Knowing what a conversion loses](/guide/losses/).
+- For the conventions that apply to your Greek, what each keeps, and the
+  tasks proper to it, see [Ancient Greek](/guide/ancient-greek/),
+  [Byzantine and Medieval Greek](/guide/byzantine-greek/), or
+  [Modern Greek](/guide/modern-greek/).
+- To compare the published conventions, as `iso-843-type-1` above, and to
+  refine one, see [Choosing a preset](/guide/presets/).
 - For a precise task, the recipes cover
   [diacritics and Unicode output](/guide/recipes/diacritics-and-unicode/),
   [transliteration and Beta Code](/guide/recipes/transliteration-and-beta-code/),

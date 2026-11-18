@@ -1,11 +1,12 @@
 ---
-title: "Presets"
-description: "The presets that implement published conventions, and how to refine them."
+title: "Choosing a preset"
+description: "The presets that implement published conventions, what each one loses, and how to refine them."
 ---
 
 A preset bundles the options that implement one published convention, so that
-a single name selects a romanization standard or a Beta Code dialect. Your own
-options refine it, and each preset states its references and what it leaves
+a single name selects a romanization standard or a Beta Code dialect. This
+page lists the nine presets, compares what each one loses, and shows how your
+own options refine one; each preset states its references and what it leaves
 out.
 
 ## The presets
@@ -47,11 +48,45 @@ convert("Εύβοια, Ευρώπη, αυτός", "greek", "transliteration", {
 
 Type 2 follows pronunciation and is not reversible: `convertDetailed()` reports
 what it loses, such as eta written `i` or the upsilon of `ευ` written `v`.
-Type 1 converts monotonic text back without loss; on polytonic text, it
-writes the smooth breathing as an apostrophe, which does not read back as a
-breathing, where `bnf-core` writes a mark that does.
-[Modern Greek](/guide/modern-greek/) compares the three presets for Modern
-Greek and the options that complete them.
+[What each preset loses](#what-each-preset-loses) compares the nine on a
+monotonic and a polytonic text, and the pages on
+[Ancient](/guide/ancient-greek/),
+[Byzantine and Medieval](/guide/byzantine-greek/), and
+[Modern Greek](/guide/modern-greek/) say which ones apply to each.
+
+## What each preset loses
+
+A convention that drops marks or merges letters does not convert back to the
+Greek it was given. The table says what `convertDetailed()` reports as lost
+when each preset writes two reference texts, one monotonic and one polytonic.
+It is computed from the library, and covers these two texts only: a letter
+form such as `ϐ`, or a hiatus marked by a breathing alone, adds losses of its
+own (see [Knowing what a conversion loses](/guide/losses/)).
+
+<!-- BEGIN GENERATED LOSS PROFILE -->
+<!-- This section is generated. Do not edit it directly. -->
+
+- Monotonic: Η Αθήνα είναι η πρωτεύουσα της Ελλάδας· ο Ταΰγετος, το προϊόν, ευχαριστώ, αυτός, άγγελος, μπαμπάς.
+- Polytonic: Ἐν ἀρχῇ ἦν ὁ λόγος, καὶ ὁ λόγος ἦν πρὸς τὸν θεόν· Ῥόδος, ᾠδή, εὖ, ἄϋλος, κἀγώ.
+
+| Preset | Lost from the monotonic text | Lost from the polytonic text |
+| --- | --- | --- |
+| `ala-lc-ancient` | Accents; diaeresis | Accents; smooth breathing; iota subscript; coronis |
+| `ala-lc-modern` | Accents; diaeresis | Accents; smooth breathing; iota subscript; coronis |
+| `bnf-core` | Nothing | Nothing |
+| `iso-843-type-1` | Nothing | Smooth breathing; coronis |
+| `iso-843-type-2` | The letters eta, omega, upsilon | The letters eta, omega; smooth breathing; coronis |
+| `perseus` | Nothing | Nothing |
+| `sbl-academic`, the default | The absence of a breathing | Coronis |
+| `sbl-general` | Accents | Accents; smooth breathing; iota subscript; coronis |
+| `tlg-core` | Nothing | Nothing |
+
+<!-- END GENERATED LOSS PROFILE -->
+
+"Nothing" means that the output converts back to the same text under the same
+preset. Among the transliterations, `bnf-core` converts both texts back, and
+`iso-843-type-1` the monotonic one: on polytonic text, it writes the smooth
+breathing as an apostrophe, which does not read back as a breathing.
 
 ## Refine a preset
 
