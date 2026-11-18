@@ -1455,10 +1455,7 @@ pre.code code {
   font-weight: 700;
   color: var(--code-function);
 }
-/* Object keys keep the ink, apart from the muted comments. */
-.tok-punctuation {
-  color: var(--code-muted);
-}
+/* Object keys and punctuation keep the ink: only comments are muted. */
 .tok-comment {
   font-style: italic;
   color: var(--code-muted);

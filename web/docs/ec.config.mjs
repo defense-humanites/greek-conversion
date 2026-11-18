@@ -65,8 +65,9 @@ function theme(type, c) {
     },
     // As the playground's code (`web/playground/styles.css`, `.tok-*`):
     // keywords bold in cobalt, numbers in cobalt, strings in orange,
-    // functions bold, punctuation muted, comments muted and in italics, the
-    // rest, object keys included, in ink: a key reads apart from a comment.
+    // functions bold, comments muted and in italics, the rest in ink: object
+    // keys and punctuation read apart from a comment. A string's quotes take
+    // its colour.
     tokenColors: [
       { settings: { foreground: c.ink } },
       {
@@ -86,7 +87,11 @@ function theme(type, c) {
       },
       {
         scope: ["keyword.operator", "punctuation", "meta.brace"],
-        settings: { foreground: c.muted, fontStyle: "" },
+        settings: { foreground: c.ink, fontStyle: "" },
+      },
+      {
+        scope: ["punctuation.definition.string"],
+        settings: { foreground: c.string },
       },
       { scope: ["constant.numeric"], settings: { foreground: c.keyword } },
       {
