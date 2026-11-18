@@ -177,7 +177,9 @@ export function encodeGreek(
       continue;
     }
 
-    const outputLetter = elidedAspirate(doc, i) ?? token.letter;
+    const outputLetter = options.greek?.elidedStop === "aspirate"
+      ? elidedAspirate(doc, i) ?? token.letter
+      : token.letter;
     let base = outputLetter === token.letter
       ? greekGlyph(doc, i, token, options, quotations)
       : ALPHABET[outputLetter].greek;

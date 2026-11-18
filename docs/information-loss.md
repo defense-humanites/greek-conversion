@@ -26,7 +26,7 @@ the row format to the column format and parsing the result again.
 | --- | --- | --- | --- |
 | **Greek** | Selected glyph, accent, punctuation, and composition policies | Canonical spelling and mark order; symbol forms other than the lunate sigma | Symbol forms; the lunate sigma unless `lunateSigma: "c"`; a sigma whose shape contradicts its place; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; the absence of a breathing on an initial vowel (monotonic or uncial text), which reads back as a smooth breathing; `ν` before a velar under nasal-gamma inference; `τ`, `π`, or `ρ` before a rough breathing inside a word, which merges with its `h` |
 | **Beta Code** | Canonical Greek glyphs | Canonical ASCII case, asterisk placement, mark order, aliases, and punctuation | Same transliteration losses as Greek, including the lunate sigma unless `lunateSigma: "c"`, a sigma whose shape contradicts its place (`s1`, `s2`), coronis, and marked double rho |
-| **Transliteration** | Initial smooth breathing is inferred where quantity is not explicit; an elided mute may be aspirated before rough breathing | Initial smooth breathing is inferred where quantity is not explicit; accepted aliases converge to canonical Beta Code | Accepted aliases, punctuation, combining-mark order, NFC, and orthographic spelling converge |
+| **Transliteration** | Initial smooth breathing is inferred where quantity is not explicit; under `elidedStop: "aspirate"`, an elided mute is aspirated before a rough breathing | Initial smooth breathing is inferred where quantity is not explicit; accepted aliases converge to canonical Beta Code | Accepted aliases, punctuation, combining-mark order, NFC, and orthographic spelling converge |
 
 “Canonical documents” excludes invalid or ambiguous combinations. Use
 `validateDocument()` when that distinction matters.
@@ -36,8 +36,9 @@ the row format to the column format and parsing the result again.
 ### Canonical spelling and Unicode
 
 All recognized output has a selected spelling. Transliteration is NFC. Greek is
-composed by default, but the system polytonic acute prefers oxia and is therefore
-not necessarily NFC. Accepted aliases do not round-trip byte for byte:
+composed by default. Output that carries a polytonic mark writes its acutes
+with oxia and is therefore not necessarily NFC; output that carries none is
+NFC (see [Tonos and oxia](greek-unicode.md#tonos-and-oxia)). Accepted aliases do not round-trip byte for byte:
 
 - letter forms follow the Greek options, which keep those of the source by
   default, and are lost where the target cannot write them (see
@@ -188,9 +189,14 @@ never contracted to `ψ` or `ξ`. Psi and xi are read from their own spellings
 `ks` is two letters unless `transliteration.xi` is `"ks"`. Only the opt-in
 `dentalSigma: "assimilate"` merges a consonant with the following sigma.
 
-Greek output also applies the regular aspiration of an elided final `π`, `τ`,
-or `κ` before a rough breathing. The output records the aspirated consonant, not
-the pre-transform spelling.
+Greek output keeps a final `π`, `τ`, or `κ` whose vowel is elided before a
+rough breathing as the source writes it: `ἀπ’ οὗ`, as Ionic prose and many
+editions have it, stays, and so does `ἀφ’ οὗ`. The opt-in
+`elidedStop: "aspirate"` writes the aspirate that Attic spelling requires
+(`ἀπ’ οὗ` → `ἀφ’ οὗ`, `κατ’ ἡμέραν` → `καθ’ ἡμέραν`). The output then
+records the aspirated consonant, not the spelling of the source, and
+`convertDetailed()` reports the consonant it replaced
+(`unrepresented-grapheme`).
 
 ### Inference from transliteration
 
@@ -261,6 +267,7 @@ source can be reconstructed from the output: yes, no, or partly.
 | `symbolForms: "standard"` | Writes the ordinary letters | No, but the canonical text has no symbol form, so the change is not reported |
 | `iotaSubscript: "capital-adscript"` or `"adscript"` | Writes a kept iota subscript on the line, after a capital or after every vowel | No: the iota reads back as a letter, and the subscript is reported as removed (`removed-diacritic`) |
 | `dentalSigma: "assimilate"` | Deletes `τ`, `δ`, or `θ` before sigma in Greek output | No |
+| `elidedStop: "aspirate"` | Writes an elided final `π`, `τ`, or `κ` as `φ`, `θ`, or `χ` before a rough breathing in Greek output | No: the aspirate reads back as itself |
 | `accentuation: "monotonic"` | Keeps diaeresis, maps every accent to acute, removes other polytonic marks, and unaccents monosyllables except `ή`, `πού`, `πώς` | No |
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | Partly: the accent is recoverable; its scalar preference is not |

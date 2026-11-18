@@ -170,6 +170,11 @@ export const OPTION_RELEVANCE: Readonly<Record<string, readonly string[]>> = {
     "beta-code>greek",
     "transliteration>greek",
   ],
+  "greek.elidedStop": [
+    "greek>greek",
+    "beta-code>greek",
+    "transliteration>greek",
+  ],
   "greek.accentuation": [
     "greek>greek",
     "beta-code>greek",

@@ -41,25 +41,74 @@ test("makes nasal-gamma transliteration optional", () => {
   );
 });
 
-test("aspirates an elided final mute before a rough breathing", () => {
+const ASPIRATE = { greek: { elidedStop: "aspirate" } } as const;
+
+test("keeps an elided final mute before a rough breathing as written", () => {
+  // Ionic prose and many editions write the smooth mute (Herodotus).
+  for (const text of ["ἀπ’ οὗ", "κατ’ ἑωυτούς", "μετ’ ἡμέρην", "ἐπ’ ᾧ"]) {
+    const result = convertDetailed(text, "greek", "greek");
+    assertNfcEquals(result.output, text);
+    assertEquals(result.lossy, false, text);
+  }
+  // An aspirate the source writes stays too.
+  assertNfcEquals(convert("ἀφ’ οὗ", "greek", "greek"), "ἀφ’ οὗ");
   assertNfcEquals(
     convert("ap’ hēmō̃n", "transliteration", "greek"),
+    "ἀπ’ ἡμῶν",
+  );
+  assertNfcEquals(convert("a)p' ou(=", "beta-code", "greek"), "ἀπ’ οὗ");
+
+  // The consonant converts back from every format without loss.
+  for (const to of ["beta-code", "transliteration"] as const) {
+    const there = convertDetailed("ἀπ’ οὗ", "greek", to);
+    assertEquals(there.lossy, false, to);
+    assertNfcEquals(convert(there.output, to, "greek"), "ἀπ’ οὗ");
+  }
+});
+
+test("aspirates an elided final mute before a rough breathing on demand", () => {
+  assertNfcEquals(
+    convert("ap’ hēmō̃n", "transliteration", "greek", ASPIRATE),
     "ἀφ’ ἡμῶν",
   );
   assertNfcEquals(
-    convert("t’ hḗde", "transliteration", "greek"),
+    convert("t’ hḗde", "transliteration", "greek", ASPIRATE),
     "θ’ ἥδε",
   );
   assertNfcEquals(
-    convert("dek’ hén", "transliteration", "greek"),
+    convert("dek’ hén", "transliteration", "greek", ASPIRATE),
     "δεχ’ ἕν",
+  );
+  assertNfcEquals(
+    convert("ἀπ’ οὗ κατ’ ἡμέραν", "greek", "greek", ASPIRATE),
+    "ἀφ’ οὗ καθ’ ἡμέραν",
+  );
+
+  // The consonant replaced is reported, and the output is stable.
+  const result = convertDetailed("ἀπ’ οὗ", "greek", "greek", ASPIRATE);
+  assertEquals(result.losses.map(({ code, offset }) => [code, offset]), [
+    ["unrepresented-grapheme", 1],
+  ]);
+  assertNfcEquals(
+    convert(result.output, "greek", "greek", ASPIRATE),
+    result.output,
+  );
+
+  // Only Greek output writes it.
+  assertNfcEquals(
+    convert("ἀπ’ οὗ", "greek", "beta-code", ASPIRATE),
+    "a)p' ou(=",
+  );
+  assertNfcEquals(
+    convert("ἀπ’ οὗ", "greek", "transliteration", ASPIRATE),
+    "ap’ hoũ",
   );
 });
 
 test("recognizes common Unicode elision marks", () => {
   for (const mark of ["'", "\u02BC", "\u1FBD", "\u2019"]) {
     assertNfcEquals(
-      convert(`ap${mark} hēmō̃n`, "transliteration", "greek"),
+      convert(`ap${mark} hēmō̃n`, "transliteration", "greek", ASPIRATE),
       "ἀφ’ ἡμῶν",
     );
   }
@@ -67,15 +116,15 @@ test("recognizes common Unicode elision marks", () => {
 
 test("does not aspirate outside the elision context", () => {
   assertNfcEquals(
-    convert("ap’ emoũ", "transliteration", "greek"),
+    convert("ap’ emoũ", "transliteration", "greek", ASPIRATE),
     "ἀπ’ ἐμοῦ",
   );
   assertNfcEquals(
-    convert("ap hēmō̃n", "transliteration", "greek"),
+    convert("ap hēmō̃n", "transliteration", "greek", ASPIRATE),
     "ἀπ ἡμῶν",
   );
   assertNfcEquals(
-    convert("ap’ hēmō̃n", "transliteration", "beta-code"),
+    convert("ap’ hēmō̃n", "transliteration", "beta-code", ASPIRATE),
     "a)p' h(mw=n",
   );
 });

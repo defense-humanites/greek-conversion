@@ -49,7 +49,7 @@ export function substituteGreekSigns(
 
   if (
     (greek?.composition ?? "composed") === "composed" &&
-    acuteForm(options) === "oxia"
+    acuteForm(normalized, options) === "oxia"
   ) {
     output = output.replace(
       TONOS,
@@ -75,8 +75,36 @@ export function applyGreekUnicode(
   return substituteGreekSigns(normalizeGreek(input, options), options);
 }
 
-function acuteForm(options: ConversionOptions): "tonos" | "oxia" {
+/**
+ * A polytonic mark in normalized Greek. A letter of the Greek Extended block
+ * is one: NFC has already written the oxia forms as tonos, so what remains
+ * there carries a breathing, a grave, a circumflex, an iota subscript, or a
+ * quantity, or is a spacing polytonic sign. So is one of those marks left
+ * combining on a Greek letter, where Unicode has no composed form; the same
+ * marks on a letter of another script, or on their own, do not count.
+ */
+const GREEK_EXTENDED = /[\u1F00-\u1FFF]/;
+const POLYTONIC_MARK = /[\u0300\u0304\u0306\u0313\u0314\u0342\u0343\u0345]/;
+const MARKED_GREEK_LETTER =
+  /[\u0370-\u03FF]\p{M}*?[\u0300\u0304\u0306\u0313\u0314\u0342\u0343\u0345]/u;
+
+function hasPolytonicMark(normalized: string): boolean {
+  return GREEK_EXTENDED.test(normalized) ||
+    // Rare in composed text: look for a mark before looking for its letter.
+    (POLYTONIC_MARK.test(normalized) && MARKED_GREEK_LETTER.test(normalized));
+}
+
+/**
+ * The form of the acute. Under `"system"`, Greek that carries a polytonic
+ * mark is written with oxia, and Greek that carries none, which is monotonic
+ * as written, with tonos, as `accentuation: "monotonic"` writes it.
+ */
+function acuteForm(
+  normalized: string,
+  options: ConversionOptions,
+): "tonos" | "oxia" {
   const requested = options.greek?.acute ?? "system";
   if (requested !== "system") return requested;
-  return options.greek?.accentuation === "monotonic" ? "tonos" : "oxia";
+  if (options.greek?.accentuation === "monotonic") return "tonos";
+  return hasPolytonicMark(normalized) ? "oxia" : "tonos";
 }
