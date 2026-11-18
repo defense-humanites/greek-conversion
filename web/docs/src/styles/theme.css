@@ -900,14 +900,13 @@ mobile-starlight-toc .toggle,
   .sidebar-pane .mobile-preferences {
     inset-inline: 0 auto;
     width: var(--sl-sidebar-width);
+    padding-inline: calc(var(--sl-sidebar-pad-x) + 0.5rem);
     border-inline-end: 1px solid var(--line);
   }
-  /* The menu's list, at a phone's sizes. */
-  .sidebar-content .top-level > li + li {
-    margin-top: 0.75rem;
-  }
-  .sidebar-content a {
-    font-size: var(--sl-text-base);
+  /* Its links, at the size of the sidebar's items (14px), on the margins
+     of the group names. */
+  .sidebar-pane .mobile-preferences .links {
+    font-size: 14px;
   }
   body:has(#starlight__sidebar:popover-open) {
     overflow: hidden;
