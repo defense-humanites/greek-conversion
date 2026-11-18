@@ -65,8 +65,8 @@ function theme(type, c) {
     },
     // As the playground's code (`web/playground/styles.css`, `.tok-*`):
     // keywords bold in cobalt, numbers in cobalt, strings in orange,
-    // functions bold, object keys, punctuation and comments muted, comments
-    // in italics, the rest in ink.
+    // functions bold, punctuation muted, comments muted and in italics, the
+    // rest, object keys included, in ink: a key reads apart from a comment.
     tokenColors: [
       { settings: { foreground: c.ink } },
       {
@@ -99,7 +99,7 @@ function theme(type, c) {
       },
       {
         scope: ["meta.object-literal.key", "variable.other.property"],
-        settings: { foreground: c.muted },
+        settings: { foreground: c.ink },
       },
       {
         scope: ["variable", "variable.other.readwrite"],
