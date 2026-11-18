@@ -3,7 +3,7 @@
  * Starlight's links to the previous and next pages, without panels, under a
  * single rule. The arrow belongs to the label's line: before "Previous",
  * after "Next"; the title stands below, aligned with the line's start or
- * end. On hover, the title takes the links' blue.
+ * end. On hover, the title is underlined, as a link in the text.
  */
 import { icon } from "../../../shared/icons.ts";
 
@@ -76,12 +76,21 @@ const isRtl = dir === "rtl";
   [rel="next"] .label :global(svg) {
     margin-inline-end: -0.2em;
   }
+  /* As the links in the text: the colour stays, the title's 2px underline
+     shows on hover, with the same fade. */
   .link-title {
     color: var(--ink);
     font-size: var(--sl-text-2xl);
     line-height: var(--sl-line-height-headings);
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+    text-decoration-color: transparent;
+    transition: text-decoration-color 0.15s ease;
   }
-  a:hover .link-title {
-    color: var(--link);
+  @media (hover: hover) {
+    a:hover .link-title {
+      text-decoration-color: currentColor;
+    }
   }
 </style>

@@ -25,14 +25,22 @@ const label = Astro.locals.t("page.editLink");
 }
 
 <style>
+  /* As the links in the text: the colour stays (muted, as a page's
+     footnote), the 2px underline shows on hover, with the same fade. */
   a {
     gap: 0.5rem;
     align-items: center;
-    text-decoration: none;
     color: var(--sl-color-gray-3);
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+    text-decoration-color: transparent;
+    transition: text-decoration-color 0.15s ease;
   }
-  a:hover {
-    color: var(--sl-color-white);
+  @media (hover: hover) {
+    a:hover {
+      text-decoration-color: currentColor;
+    }
   }
   a :global(.icon) {
     flex: none;

@@ -309,12 +309,15 @@ h1 span {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  text-decoration: none;
+  /* As the links in the text, without the faint underline at rest: the
+     header says they are links. The colour stays; the underline shows on
+     hover. */
+  text-decoration-color: transparent;
 }
-.links a:hover {
-  color: var(--ink);
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
+@media (hover: hover) {
+  .links a:hover {
+    text-decoration-color: currentColor;
+  }
 }
 /* Reset and Share act on the whole page: they sit together, top right. */
 .page-actions {
