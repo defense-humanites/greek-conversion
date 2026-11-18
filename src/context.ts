@@ -529,8 +529,9 @@ export function followsNasalGamma(
 
 /**
  * Returns the aspirated spelling of an elided final mute before a word with a
- * rough breathing. The apostrophe itself and any intervening whitespace remain
- * literal tokens, so the transformation is confined to Greek output.
+ * rough breathing, which Greek output writes under `elidedStop: "aspirate"`.
+ * The apostrophe itself and any intervening whitespace remain literal tokens,
+ * so the transformation is confined to Greek output.
  */
 export function elidedAspirate(
   document: Document,

@@ -26,7 +26,7 @@ the row format to the column format and parsing the result again.
 | --- | --- | --- | --- |
 | **Greek** | Selected glyph, accent, punctuation, and composition policies | Canonical spelling and mark order; symbol forms other than the lunate sigma | Symbol forms; the lunate sigma unless `lunateSigma: "c"`; a sigma whose shape contradicts its place; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; the absence of a breathing on an initial vowel (monotonic or uncial text), which reads back as a smooth breathing; `ν` before a velar under nasal-gamma inference; `τ`, `π`, or `ρ` before a rough breathing inside a word, which merges with its `h` |
 | **Beta Code** | Canonical Greek glyphs | Canonical ASCII case, asterisk placement, mark order, aliases, and punctuation | Same transliteration losses as Greek, including the lunate sigma unless `lunateSigma: "c"`, a sigma whose shape contradicts its place (`s1`, `s2`), coronis, and marked double rho |
-| **Transliteration** | Initial smooth breathing is inferred where quantity is not explicit; an elided mute may be aspirated before rough breathing | Initial smooth breathing is inferred where quantity is not explicit; accepted aliases converge to canonical Beta Code | Accepted aliases, punctuation, combining-mark order, NFC, and orthographic spelling converge |
+| **Transliteration** | Initial smooth breathing is inferred where quantity is not explicit; under `elidedStop: "aspirate"`, an elided mute is aspirated before a rough breathing | Initial smooth breathing is inferred where quantity is not explicit; accepted aliases converge to canonical Beta Code | Accepted aliases, punctuation, combining-mark order, NFC, and orthographic spelling converge |
 
 “Canonical documents” excludes invalid or ambiguous combinations. Use
 `validateDocument()` when that distinction matters.
@@ -188,9 +188,14 @@ never contracted to `ψ` or `ξ`. Psi and xi are read from their own spellings
 `ks` is two letters unless `transliteration.xi` is `"ks"`. Only the opt-in
 `dentalSigma: "assimilate"` merges a consonant with the following sigma.
 
-Greek output also applies the regular aspiration of an elided final `π`, `τ`,
-or `κ` before a rough breathing. The output records the aspirated consonant, not
-the pre-transform spelling.
+Greek output keeps a final `π`, `τ`, or `κ` whose vowel is elided before a
+rough breathing as the source writes it: `ἀπ’ οὗ`, as Ionic prose and many
+editions have it, stays, and so does `ἀφ’ οὗ`. The opt-in
+`elidedStop: "aspirate"` writes the aspirate that Attic spelling requires
+(`ἀπ’ οὗ` → `ἀφ’ οὗ`, `κατ’ ἡμέραν` → `καθ’ ἡμέραν`). The output then
+records the aspirated consonant, not the spelling of the source, and
+`convertDetailed()` reports the consonant it replaced
+(`unrepresented-grapheme`).
 
 ### Inference from transliteration
 
@@ -242,6 +247,7 @@ nu; this changes the accepted spelling contract for transliteration input.
 | `lunateSigma: "c"` | Transliterates only a provenanced lunate sigma as `c` and recognizes `c/C` on input | Yes; marked `c̄/ĉ` remains stigma |
 | `numerals: "decimal"` | Replaces a valid marked alphabetic numeral group with decimal digits | No |
 | `dentalSigma: "assimilate"` | Deletes `τ`, `δ`, or `θ` before sigma in Greek output | No |
+| `elidedStop: "aspirate"` | Writes an elided final `π`, `τ`, or `κ` as `φ`, `θ`, or `χ` before a rough breathing in Greek output | No: the aspirate reads back as itself |
 | `nasalGamma: "nasal"` (default) | Converges nasal gamma and nu-before-velar transliteration spellings | No |
 | `nasalGamma: "nasal-except-kappa"` | As `"nasal"`, but writes `γκ` as `gk` (ISO 843 Type 2) | Yes for `γκ`; as `"nasal"` otherwise |
 | `coronis: "omit"` (default) | Omits coronis from transliteration | No |

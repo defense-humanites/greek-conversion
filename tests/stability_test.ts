@@ -121,7 +121,7 @@ const PROFILES = [
     name: "lossy output policies",
     options: {
       diacritics: { all: "remove" },
-      greek: { dentalSigma: "assimilate" },
+      greek: { dentalSigma: "assimilate", elidedStop: "aspirate" },
       text: { numerals: "decimal" },
     },
   },

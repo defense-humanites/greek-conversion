@@ -22,6 +22,12 @@ One kind of input converts differently: under ISO 843 Type 2, `ωυ` is written
 letter by letter, as the standard requires: `ἑωυτοῦ` gives `heoytoû` (rc.9:
 `heoutoû`), and `oy` without marks reads back as `ωυ`.
 
+Greek output also keeps an elided `π`, `τ`, or `κ` before a rough breathing
+as the source writes it: `ἀπ’ οὗ` stays (rc.9: `ἀφ’ οὗ`, with a loss
+reported), and the transliteration `ap’ hēmō̃n` reads as `ἀπ’ ἡμῶν` (rc.9:
+`ἀφ’ ἡμῶν`). The new `greek: { elidedStop: "aspirate" }` gives the output of
+rc.9.
+
 ## Updating from `1.0.0-rc.8`
 
 Greek output keeps the letter forms the source writes, by default: the lunate

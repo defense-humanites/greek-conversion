@@ -110,6 +110,10 @@ const DENTAL_SIGMA_ASSIMILATION = {
   greek: { dentalSigma: "assimilate" },
 } as const satisfies ConversionOptions;
 
+const ELIDED_STOP_ASPIRATION = {
+  greek: { elidedStop: "aspirate" },
+} as const satisfies ConversionOptions;
+
 const DECIMAL_NUMERALS = {
   text: { numerals: "decimal" },
 } as const satisfies ConversionOptions;
@@ -210,12 +214,14 @@ export const LOSSY_CONVERSIONS = [
     options: DENTAL_SIGMA_ASSIMILATION,
   },
   {
-    name: "an elided smooth mute is aspirated before a rough breathing",
+    name:
+      "an elided smooth mute is aspirated before a rough breathing on demand",
     sourceFormat: "transliteration",
     intermediateFormat: "greek",
     source: "ap’ hēmō̃n",
     intermediate: "ἀφ’ ἡμῶν",
     canonicalRoundTrip: "aph’ hēmō̃n",
+    options: ELIDED_STOP_ASPIRATION,
   },
   {
     name: "tau before a rough breathing merges into theta",

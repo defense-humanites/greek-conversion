@@ -7,6 +7,14 @@ change.
 
 ## [Unreleased]
 
+### Added
+
+- `greek.elidedStop` decides how Greek output writes a final `π`, `τ`, or `κ`
+  whose vowel is elided before a word with a rough breathing: `"preserve"`,
+  the default, keeps the consonant of the source, and `"aspirate"` writes
+  `φ`, `θ`, or `χ` (`ἀπ’ οὗ` → `ἀφ’ οὗ`). Its type is
+  `ElidedStopOrthography`.
+
 ### Changed
 
 - The names of the ISO 843 presets say what each type does, as the standard
@@ -58,6 +66,13 @@ change.
   removed, and what a restyle with `source` cannot restore; and the Beta Code
   apostrophe and font shifts to `docs/information-loss.md`. The English text
   prevails over the `README`, guides, and translations. No behavior changes.
+- Greek output no longer aspirates an elided consonant before a rough
+  breathing unless asked: `ἀπ’ οὗ`, `κατ’ ἑωυτούς`, and `μετ’ ἡμέρην`, as
+  Herodotus and other Ionic prose are edited, stay as written, where every
+  Greek output rewrote them (`ἀφ’ οὗ`, `καθ’ ἑωυτούς`, `μεθ’ ἡμέρην`) and
+  reported a loss. This follows the letter forms, kept as the source writes
+  them since rc.9. `greek: { elidedStop: "aspirate" }` gives the earlier
+  output; transliteration `ap’ hēmō̃n` now reads as `ἀπ’ ἡμῶν` without it.
 
 ### Fixed
 
