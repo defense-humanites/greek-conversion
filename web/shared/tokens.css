@@ -86,6 +86,13 @@
   --face-code: "Noto Sans Mono", ui-monospace, "SF Mono", Menlo, Consolas,
     monospace;
   --radius: 6px;
+  /* Button states: the link colour mixed with the ink deepens it, darker
+     in the light theme and lighter in the dark one, still blue; a tint of
+     the ink marks a pressed secondary button. Defined on the root, they
+     follow the theme's --link and --ink. */
+  --link-hover: color-mix(in oklab, var(--link) 82%, var(--ink));
+  --link-press: color-mix(in oklab, var(--link) 66%, var(--ink));
+  --press: color-mix(in oklab, var(--ink) 8%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {

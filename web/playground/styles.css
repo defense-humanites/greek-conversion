@@ -141,9 +141,6 @@ code {
   font-weight: 600;
   line-height: 1;
 }
-.button:hover {
-  border-color: var(--muted);
-}
 .button.small {
   min-height: 40px;
   padding: 0 12px;
@@ -153,13 +150,55 @@ code {
   background: var(--link);
   color: var(--surface);
 }
-.button.primary:hover {
-  border-color: var(--ink);
-  background: var(--ink);
-}
 .button:disabled {
   opacity: 0.5;
   cursor: default;
+}
+/*
+ * Button states, as in the documentation. On hover, a secondary button's
+ * line darkens and a primary button's colour deepens (--link-hover);
+ * pressed, a secondary button takes a tint of the ink (--press), a primary
+ * one deepens further (--link-press), and both sink by a pixel. Hover only
+ * where a pointer hovers: on a touch screen, a tapped button would keep it.
+ */
+.button,
+.menu-button,
+.add-option,
+.pill-remove,
+.option-back,
+.segments label {
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+@media (hover: hover) {
+  .button:hover:not(:disabled),
+  .menu-button:hover {
+    border-color: var(--muted);
+  }
+  .button.primary:hover:not(:disabled) {
+    border-color: var(--link-hover);
+    background: var(--link-hover);
+  }
+  .segments label:not(:has(input:checked), .detected):hover {
+    color: var(--ink);
+  }
+}
+.button:active:not(:disabled),
+.menu-button:active {
+  background-color: var(--press);
+}
+.button.primary:active:not(:disabled) {
+  border-color: var(--link-press);
+  background: var(--link-press);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .button:active:not(:disabled),
+  .menu-button:active,
+  .add-option:active {
+    translate: 0 1px;
+  }
 }
 
 /* Layout */
@@ -513,13 +552,12 @@ h1 span {
   content: "";
   position: absolute;
   top: 50%;
-  right: 14px;
-  width: 8px;
-  height: 8px;
-  margin-top: -6px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg);
+  right: 12px;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  background: currentColor;
+  mask: var(--icon-chevron-down) center / contain no-repeat;
   pointer-events: none;
 }
 .chip-select select {
@@ -712,8 +750,14 @@ h1 span {
   background: none;
   color: var(--muted);
 }
-.pill-remove:hover {
-  background: var(--raised);
+@media (hover: hover) {
+  .pill-remove:hover {
+    background: var(--raised);
+    color: var(--ink);
+  }
+}
+.pill-remove:active {
+  background: var(--press);
   color: var(--ink);
 }
 .pill-remove .icon {
@@ -734,9 +778,13 @@ h1 span {
   font-weight: 600;
   line-height: 1;
 }
-.add-option:hover,
 .add-option[aria-expanded="true"] {
   border-style: solid;
+}
+@media (hover: hover) {
+  .add-option:hover {
+    border-style: solid;
+  }
 }
 /* Same format on both sides and nothing set yet: the options are the point. */
 .add-option.prompt {
@@ -806,8 +854,14 @@ h1 span {
   background: none;
   color: var(--muted);
 }
-.option-back:hover {
-  background: var(--code-bg);
+@media (hover: hover) {
+  .option-back:hover {
+    background: var(--code-bg);
+    color: var(--ink);
+  }
+}
+.option-back:active {
+  background: var(--press);
   color: var(--ink);
 }
 .option-back .icon {
@@ -1039,12 +1093,11 @@ h1 span {
 }
 .menu-button::after {
   content: "";
-  width: 6px;
-  height: 6px;
-  margin: -3px 2px 0 2px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg);
+  width: 0.75em;
+  height: 0.75em;
+  margin-left: 0.1em;
+  background: currentColor;
+  mask: var(--icon-chevron-down) center / contain no-repeat;
 }
 .menu-button select {
   position: absolute;
@@ -1060,9 +1113,6 @@ h1 span {
 .menu-button:has(select:focus-visible) {
   outline: 2px solid var(--link);
   outline-offset: 2px;
-}
-.menu-button:hover {
-  border-color: var(--muted);
 }
 /*
  * The source sits over a copy of itself in which the letters that lose a
@@ -1338,8 +1388,10 @@ textarea.text::placeholder {
   font-weight: 700;
   color: var(--ink);
 }
-.tabs [role="tab"]:hover {
-  color: var(--ink);
+@media (hover: hover) {
+  .tabs [role="tab"]:hover {
+    color: var(--ink);
+  }
 }
 .panel {
   position: relative;

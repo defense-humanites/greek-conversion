@@ -297,8 +297,13 @@ site-search button[data-open-modal],
 site-search button[data-open-modal]:hover {
   color: var(--muted);
 }
-site-search button[data-open-modal]:hover {
-  border-color: var(--muted);
+@media (hover: hover) {
+  site-search button[data-open-modal]:hover {
+    border-color: var(--muted);
+  }
+}
+site-search button[data-open-modal]:active {
+  background-color: color-mix(in oklab, var(--raised), var(--ink) 4%);
 }
 /* On a wide screen, the field may grow to 30rem (Starlight: 22rem), two
    thirds of the text's width, where the header leaves the room. */
@@ -369,8 +374,13 @@ site-search button[data-open-modal]:hover {
     height: 1.5rem;
   }
 }
-button.sl-menu-button:hover {
-  color: var(--link);
+@media (hover: hover) {
+  button.sl-menu-button:hover {
+    color: var(--link);
+  }
+}
+button.sl-menu-button:active {
+  color: var(--link-press);
 }
 /* Between a phone and 1152px, the search field leaves out its shortcut,
    to keep its room beside the full name and the links. */
@@ -505,10 +515,15 @@ mobile-starlight-toc .toggle {
   font-weight: 600;
 }
 
-mobile-starlight-toc details[open] .toggle,
-mobile-starlight-toc details .toggle:hover {
+mobile-starlight-toc details[open] .toggle {
   border-color: var(--muted);
   color: var(--ink);
+}
+@media (hover: hover) {
+  mobile-starlight-toc details .toggle:hover {
+    border-color: var(--muted);
+    color: var(--ink);
+  }
 }
 
 mobile-starlight-toc .display-current {
@@ -585,17 +600,51 @@ mobile-starlight-toc .isMobile a[aria-current="true"]::after {
   background: var(--link);
   color: var(--surface);
 }
-.sl-link-button.primary:hover {
-  border-color: var(--ink);
-  background: var(--ink);
-  color: var(--surface);
+/* Button states, as in the playground: on hover, a secondary button's line
+   darkens and a primary button's colour deepens (--link-hover); pressed, a
+   secondary button takes a tint of the ink (--press), a primary one deepens
+   further (--link-press), and both sink by a pixel. Hover only where a
+   pointer hovers: on a touch screen, a tapped button would keep it. */
+.sl-link-button,
+site-search button[data-open-modal],
+mobile-starlight-toc .toggle {
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+@media (hover: hover) {
+  .sl-link-button.primary:hover {
+    border-color: var(--link-hover);
+    background: var(--link-hover);
+    color: var(--surface);
+  }
+}
+.sl-link-button.primary:active {
+  border-color: var(--link-press);
+  background: var(--link-press);
+}
+.sl-link-button.minimal:active,
+.sl-link-button.secondary:active {
+  background: var(--press);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sl-link-button:active,
+  site-search button[data-open-modal]:active,
+  mobile-starlight-toc .toggle:active,
+  .expressive-code .copy button:active {
+    translate: 0 1px;
+  }
 }
 .sl-link-button.minimal {
   background: transparent;
   color: var(--ink);
 }
-.sl-link-button.minimal:hover {
-  border-color: var(--muted);
+@media (hover: hover) {
+  .sl-link-button.minimal:hover,
+  .sl-link-button.secondary:hover {
+    border-color: var(--muted);
+  }
 }
 
 /* The home page's column is centred at every width. Starlight centres the
@@ -715,8 +764,10 @@ mobile-starlight-toc .isMobile a[aria-current="true"]::after {
   border-width: 1.5px;
 }
 
-.expressive-code .copy button:hover::before {
-  border-color: var(--muted);
+@media (hover: hover) {
+  .expressive-code .copy button:hover::before {
+    border-color: var(--muted);
+  }
 }
 
 .expressive-code .copy button::after {
