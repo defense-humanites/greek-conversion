@@ -188,6 +188,7 @@ export default defineConfig({
       components: {
         EditLink: "./src/components/EditLink.astro",
         Pagination: "./src/components/Pagination.astro",
+        PageFrame: "./src/components/PageFrame.astro",
         PageSidebar: "./src/components/PageSidebar.astro",
         TwoColumnContent: "./src/components/TwoColumnContent.astro",
         Footer: "./src/components/Footer.astro",

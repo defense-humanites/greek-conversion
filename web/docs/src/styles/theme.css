@@ -140,11 +140,11 @@ button.sl-menu-button svg.close-menu {
   mask: var(--icon-external-link) center / contain no-repeat;
 }
 
-/* In the phone menu, the project's links (Playground, Source, npm, JSR)
+/* In the menu below 1024px, the project's links (Playground, Source, npm, JSR)
    stay at the foot of the screen, on a bar of the page's colour, rather
    than at the end of the list, which scrolls behind it; the list keeps
    room below for its last items. */
-@media (max-width: 49.99rem) {
+@media (max-width: 63.99rem) {
   .sidebar-pane .mobile-preferences {
     position: fixed;
     inset-inline: 0;
@@ -386,18 +386,18 @@ site-search button[data-open-modal]:hover {
 site-search button[data-open-modal]:active {
   background-color: color-mix(in oklab, var(--raised), var(--ink) 4%);
 }
-/* On a wide screen, the field may grow to 30rem (Starlight: 22rem), two
+/* From 1024px, the field may grow to 30rem (Starlight: 22rem), two
    thirds of the text's width, where the header leaves the room. */
-@media (min-width: 50rem) {
+@media (min-width: 64rem) {
   site-search button[data-open-modal] {
     max-width: 30rem;
   }
 }
-/* On a phone, a field rather than an icon, as on a wide screen: up to
-   22rem, centred on the screen. The symbol (40px) is 16px wider than the
+/* Below 1024px, a field rather than an icon, as on a wide screen: up to
+   22rem, centred in its room. The symbol (40px) is 16px wider than the
    menu icon (24px), so the field's room is off-centre by 8px: where the
    room is wider than the field, the field moves back by up to those 8px. */
-@media (max-width: 49.99rem) {
+@media (max-width: 63.99rem) {
   .header > :nth-child(2) {
     display: flex;
     flex: 1;
@@ -417,23 +417,23 @@ site-search button[data-open-modal]:active {
     display: block;
   }
 }
-/* On a phone, where everything stacks, the header and the "On this page"
+/* Below 1024px, where the sidebar is a menu, the header and the "On this page"
    bar sit 4px closer to the edges than the text (12px rather than 16px):
    the break in alignment sets them off, and the floating panel stands out
    from the text below it. */
-@media (max-width: 49.99rem) {
+@media (max-width: 63.99rem) {
   :root {
     --sl-nav-pad-x: 0.75rem;
   }
 }
 
-/* The menu button of a phone: its icon alone, without a frame, its right
+/* The menu button, below 1024px: its icon alone, without a frame, its right
    edge on the header's margin, as the symbol's left edge. The button itself
    reaches the screen's edge, a target at least 44px wide, which shows
    nothing since it has no background. The header keeps the usual gap
-   between the search field and the icon. On a wider screen, Starlight hides
-   the button. */
-@media (max-width: 49.99rem) {
+   between the search field and the icon. From 1024px, the sidebar stays
+   beside the page, and the button is hidden. */
+@media (max-width: 63.99rem) {
   [data-has-sidebar] .page > .header {
     padding-inline-end: calc(var(--sl-nav-gap) + var(--sl-nav-pad-x) + 1.5rem);
   }
@@ -467,9 +467,9 @@ button.sl-menu-button svg {
     transition: scale 0.06s ease-in;
   }
 }
-/* Between a phone and 1152px, the search field leaves out its shortcut,
+/* Between 1024 and 1152px, the search field leaves out its shortcut,
    to keep its room beside the full name and the links. */
-@media (min-width: 50rem) and (max-width: 71.99rem) {
+@media (min-width: 64rem) and (max-width: 71.99rem) {
   site-search button[data-open-modal] > kbd {
     display: none !important;
   }
@@ -862,6 +862,58 @@ mobile-starlight-toc .toggle,
   border-top: 0;
 }
 
+/*
+ * Between 800 and 1024px, the page has no sidebar beside it: the sidebar is
+ * the menu the header's button opens, as on a phone (`PageFrame`). Starlight
+ * lays out the header, the menu and its button for a wide screen from
+ * 800px; these rules keep them as below 800px up to 1024px.
+ */
+@media (min-width: 50rem) and (max-width: 63.99rem) {
+  /* Above Starlight's rule for 800px and up (in `Page`). */
+  html:root[data-has-sidebar] {
+    --sl-content-inline-start: 0rem;
+  }
+  /* Starlight's utilities for 800px and up: the menu button, the close
+     button of the search and the menu's foot show; the header's links and
+     the search shortcut do not. */
+  .sl-flex.md\:sl-hidden {
+    display: flex;
+  }
+  .md\:sl-hidden:not(.sl-flex) {
+    display: block;
+  }
+  .md\:sl-flex,
+  .md\:sl-block {
+    display: none;
+  }
+  /* The header: the name, the search field and the menu button, in a row. */
+  header.header > .header {
+    display: flex;
+  }
+  /* The menu opens as a drawer of the sidebar's width, over the page,
+     rather than over the whole screen; its foot keeps that width. */
+  .sidebar-pane {
+    width: var(--sl-sidebar-width);
+    border-inline-end: 1px solid var(--line);
+    box-shadow: var(--shadow);
+  }
+  .sidebar-pane .mobile-preferences {
+    inset-inline: 0 auto;
+    width: var(--sl-sidebar-width);
+    border-inline-end: 1px solid var(--line);
+  }
+  /* The menu's list, at a phone's sizes. */
+  .sidebar-content .top-level > li + li {
+    margin-top: 0.75rem;
+  }
+  .sidebar-content a {
+    font-size: var(--sl-text-base);
+  }
+  body:has(#starlight__sidebar:popover-open) {
+    overflow: hidden;
+  }
+}
+
 /* Beside the sidebar, a page's column is centred in the room it has, as
    Starlight centres it only from 1152px; the column of "On this page"
    pushes it to the end from 1440px (`TwoColumnContent`). */
@@ -889,10 +941,10 @@ mobile-starlight-toc .toggle,
 }
 
 /*
- * The home page keeps the sidebar for the phone's menu (`routeData.ts`); on a
- * wider screen it is a splash page, without the sidebar, at full width.
+ * The home page keeps the sidebar for the menu below 1024px (`routeData.ts`);
+ * from there it is a splash page, without the sidebar, at full width.
  */
-@media (min-width: 50rem) {
+@media (min-width: 64rem) {
   :root[data-has-sidebar]:has(.home-hero) {
     --sl-content-inline-start: 0rem;
     --sl-content-width: 67.5rem;
@@ -926,7 +978,7 @@ mobile-starlight-toc .toggle,
   view-transition-name: site-header;
 }
 
-@media (min-width: 50rem) {
+@media (min-width: 64rem) {
   .sidebar-pane {
     view-transition-name: site-sidebar;
   }
