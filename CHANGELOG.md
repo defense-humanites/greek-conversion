@@ -102,7 +102,8 @@ change.
   corpus checks every example of the BGN/PCGN table. The rules that need more
   than the text are recorded: the stress of unaccented capitals, unaccented
   abbreviations, and older polytonic accents. The package's keywords include
-  `elot-743`.
+  `elot-743`, `byzantine-greek`, and `medieval-greek`, and those of
+  `CITATION.cff` Byzantine and Medieval Greek.
 
 ### Fixed
 
