@@ -219,47 +219,74 @@ nu; this changes the accepted spelling contract for transliteration input.
 
 ## Option-induced loss
 
+Some options ask for an output that says less than the source. The tables
+below take them group by group; the last column opens with whether the
+source can be reconstructed from the output: yes, no, or partly.
+
+### `transliteration`
+
 | Option | Effect | Reconstructible from output? |
 | --- | --- | --- |
-| `diacritics.all: "remove"` | Removes every semantic class, breathings included; a class named alongside is the exception, so `{ all: "remove", roughBreathing: "preserve" }` keeps the rough breathing and its `h` in transliteration | No |
-| `diacritics.<class>: "remove"` | Removes only the selected semantic class during rendering | No when that class occurs; unselected classes remain recoverable |
-| `letterCase: "lowercase"`, `"uppercase"`, or `"title"` | Applies deterministic case to recognized Greek graphemes; under `"title"`, an apostrophe between two letters does not start a word | No when source case changes; unknown literals are untouched |
-| `betaCode.case: "lowercase"` or `"uppercase"` | Selects the insignificant ASCII case of Beta Code letters without changing `*` markers | Yes; the canonical graphemes are unchanged |
-| `betaCode.yot: "#401"` | Uses the TLG character code instead of `j` for yot | Yes; both spellings parse as yot |
-| `archaicKoppa: "q"` | Uses the same transliteration for both koppa forms | No; `q` parses as modern koppa |
-| `finalSigma: "preserve"` (default) | Writes the sigma shape the source notes in lowercase Greek output, and places any other sigma by its position; Beta Code writes a shape that contradicts its place as `s1` or `s2` | Yes in Greek and Beta Code; a shape that contradicts its place is lost in transliteration |
-| `finalSigma: "contextual"` | Places every sigma by its position in lowercase Greek output | No, but the canonical text has no other shape, so the change is not reported |
-| `finalSigma: "medial"` | Uses `σ` instead of contextual `ς` in lowercase Greek output | Yes; both are the same canonical sigma letter |
-| `sigma: "preserve"` (default) | Uses lunate Greek or Beta Code glyphs only where the source notes a lunate sigma, numerals included | Yes in Greek and Beta Code; in transliteration with `lunateSigma: "c"` |
-| `sigma: "standard"` | Replaces a lunate sigma with the standard Greek or Beta Code glyph | No, but the canonical text has no lunate sigma, so the change is not reported |
-| `sigma: "lunate"` | Uses lunate glyphs for all non-numeral sigma in Greek or Beta Code output | Source letters remain recoverable; the added lunate sigma is not a loss, unless it reads back as another spelling (`c` under `lunateSigma: "c"`) |
-| `medialBeta: "preserve"` (default) | Writes `ϐ` where the source notes it, and `β` elsewhere | Yes in Greek; no in Beta Code and transliteration, which report `removed-glyph-variant` |
-| `medialBeta: "standard"` | Writes `β` everywhere | No, but the canonical text has no `ϐ`, so the change is not reported |
-| `medialBeta: "symbol"` | Writes `ϐ` inside a word and `β` at its start, whatever the source has | Yes from every format, since the position decides the form |
-| `symbolForms: "preserve"` (default) | Writes the symbol forms `ϑ ϴ ϕ ϖ ϰ ϱ ϵ ϒ` the source notes | Yes in Greek; no in Beta Code and transliteration, which report `removed-glyph-variant` |
-| `symbolForms: "standard"` | Writes the ordinary letters | No, but the canonical text has no symbol form, so the change is not reported |
-| `lunateSigma: "s"` (default) | Transliterates every sigma as `s` | No when the source sigma was known to be lunate |
-| `lunateSigma: "c"` | Transliterates only a provenanced lunate sigma as `c` and recognizes `c/C` on input | Yes; marked `c̄/ĉ` remains stigma |
-| `numerals: "decimal"` | Replaces a valid marked alphabetic numeral group with decimal digits | No |
-| `dentalSigma: "assimilate"` | Deletes `τ`, `δ`, or `θ` before sigma in Greek output | No |
+| `archaicKoppa: "q"` | Uses the same transliteration for both koppa forms | No: `q` parses as modern koppa |
+| `lunateSigma: "s"` (default) | Transliterates every sigma as `s` | No, when the source sigma was known to be lunate |
+| `lunateSigma: "c"` | Transliterates only a provenanced lunate sigma as `c` and recognizes `c/C` on input | Yes: marked `c̄/ĉ` remains stigma |
 | `nasalGamma: "nasal"` (default) | Converges nasal gamma and nu-before-velar transliteration spellings | No |
-| `nasalGamma: "nasal-except-kappa"` | As `"nasal"`, but writes `γκ` as `gk` (ISO 843 Type 2) | Yes for `γκ`; as `"nasal"` otherwise |
+| `nasalGamma: "nasal-except-kappa"` | As `"nasal"`, but writes `γκ` as `gk` (ISO 843 Type 2) | Partly: yes for `γκ`; as `"nasal"` otherwise |
+| `nasalGamma: "nasal-medial-kappa"` | Writes `γκ` as `nk` inside a word and `gk` at its edges (ALA-LC) | Yes |
 | `coronis: "omit"` (default) | Omits coronis from transliteration | No |
 | `coronis: "apostrophe"` | Emits U+2019 as display punctuation; a letter right after it, as in `τοὔμπαλιν`, still counts as inside the word for the `μπ`, `ντ`, and `γκ` rules | No |
-| `coronis: "greek"` | Emits semantic U+1FBD after the affected vowel | Yes for implemented coronis contexts |
-| `accentuation: "monotonic"` | Keeps diaeresis, maps every accent to acute, removes other polytonic marks, and unaccents monosyllables except `ή`, `πού`, `πώς` | No |
-| `muPi: "b-initial"` or `"b-initial-final"` | Writes `μπ` as `b` at the beginning of a word, or at either end (ISO 843 Type 2) | Yes with `beta: "v"`; otherwise `b` is also beta |
-| `nuTau: "d-initial"` | Writes word-initial `ντ` as `d` | No; `d` is also delta |
-| `nuTau: "d-underline-initial"` | Writes word-initial `ντ` as `d̲` (ALA-LC) | Yes; `d̲` remains distinct from delta |
-| `nasalGamma: "nasal-medial-kappa"` | Writes `γκ` as `nk` inside a word and `gk` at its edges (ALA-LC) | Yes |
-| `upsilon: "y-with-ou-v-f"` | Writes the upsilon of `αυ/ευ/ηυ` as `v` or `f` and moves its accent to the vowel (ISO 843 Type 2) | Yes alone; no with `beta: "v"` or `phi: "f"`, as in ISO 843 Type 2, under which `v` and `f` read back as beta and phi, and the accent stays on the vowel. A circumflex moved to epsilon is written as a tilde where `ê` is eta (`εὖ` → `ẽf` under ISO 843 Type 1), and a `v` or `f` after an eta written `i` without a length mark reads back as the upsilon of `ηυ`. Under `longVowels: "omit"`, `ωυ` is written letter by letter (`oy`) and reads back as omega and upsilon, except in a numeral, written as it reads back (`ωυʹ` → `ouʹ`) |
+| `coronis: "greek"` | Emits semantic U+1FBD after the affected vowel | Yes, in the implemented coronis contexts |
+| `muPi: "b-initial"` or `"b-initial-final"` | Writes `μπ` as `b` at the beginning of a word, or at either end (ISO 843 Type 2) | Partly: yes with `beta: "v"`; otherwise `b` is also beta |
+| `nuTau: "d-initial"` | Writes word-initial `ντ` as `d` | No: `d` is also delta |
+| `nuTau: "d-underline-initial"` | Writes word-initial `ντ` as `d̲` (ALA-LC) | Yes: `d̲` remains distinct from delta |
+| `upsilon: "y-with-ou-v-f"` | Writes the upsilon of `αυ/ευ/ηυ` as `v` or `f` and moves its accent to the vowel (ISO 843 Type 2) | Partly: yes alone; no with `beta: "v"` or `phi: "f"`, as in ISO 843 Type 2, under which `v` and `f` read back as beta and phi, and the accent stays on the vowel. A circumflex moved to epsilon is written as a tilde where `ê` is eta (`εὖ` → `ẽf` under ISO 843 Type 1), and a `v` or `f` after an eta written `i` without a length mark reads back as the upsilon of `ηυ`. Under `longVowels: "omit"`, `ωυ` is written letter by letter (`oy`) and reads back as omega and upsilon, except in a numeral, written as it reads back (`ωυʹ` → `ouʹ`) |
 | `longVowels: "omit"` | Writes eta and omega without a length mark (ISO 843 Type 2); a vowel pair is written as it reads back, so `ωυ` is written like `ου` (but `oy` under `upsilon: "y-with-ou-v-f"`, outside a numeral), and `ηἱ` like `εἱ` (or like `ιἱ` under `eta: "i"`) | No: they read back as epsilon (or iota) and omicron, except where a circumflex or an iota subscript only fits the long vowel, and a bare `o` before `y` under `upsilon: "y-with-ou-v-f"` |
-| `rho: "systematic"` | Adds one final `h` to every contiguous rho group | The rho letters are recoverable; an explicit rough breathing is not |
-| `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
-| `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | The accent is recoverable; its scalar preference is not |
-| Greek question-mark or ano-teleia scalar | Selects a canonically unstable punctuation scalar | The punctuation meaning is recoverable; its scalar preference is not |
+| `rho: "systematic"` | Adds one final `h` to every contiguous rho group | Partly: the rho letters are recoverable; an explicit rough breathing is not |
+| Letter spellings (`beta`, `eta`, …), `upsilon`, `longVowels` | Selects a canonical output spelling | Partly: the canonical letters normally remain recoverable, but `eta: "i"` with `longVowels: "macron"` writes eta like iota with a macron |
+
+### `greek`
+
+| Option | Effect | Reconstructible from output? |
+| --- | --- | --- |
+| `finalSigma: "preserve"` (default) | Writes the sigma shape the source notes in lowercase Greek output, and places any other sigma by its position; Beta Code writes a shape that contradicts its place as `s1` or `s2` | Partly: yes in Greek and Beta Code; a shape that contradicts its place is lost in transliteration |
+| `finalSigma: "contextual"` | Places every sigma by its position in lowercase Greek output | No, but the canonical text has no other shape, so the change is not reported |
+| `finalSigma: "medial"` | Uses `σ` instead of contextual `ς` in lowercase Greek output | Yes: both are the same canonical sigma letter |
+| `sigma: "preserve"` (default) | Uses lunate Greek or Beta Code glyphs only where the source notes a lunate sigma, numerals included | Partly: yes in Greek and Beta Code, and in transliteration with `lunateSigma: "c"` |
+| `sigma: "standard"` | Replaces a lunate sigma with the standard Greek or Beta Code glyph | No, but the canonical text has no lunate sigma, so the change is not reported |
+| `sigma: "lunate"` | Uses lunate glyphs for all non-numeral sigma in Greek or Beta Code output | Yes: the source letters remain recoverable; the added lunate sigma is not a loss, unless it reads back as another spelling (`c` under `lunateSigma: "c"`) |
+| `medialBeta: "preserve"` (default) | Writes `ϐ` where the source notes it, and `β` elsewhere | Partly: yes in Greek; no in Beta Code and transliteration, which report `removed-glyph-variant` |
+| `medialBeta: "standard"` | Writes `β` everywhere | No, but the canonical text has no `ϐ`, so the change is not reported |
+| `medialBeta: "symbol"` | Writes `ϐ` inside a word and `β` at its start, whatever the source has | Yes from every format, since the position decides the form |
+| `symbolForms: "preserve"` (default) | Writes the symbol forms `ϑ ϴ ϕ ϖ ϰ ϱ ϵ ϒ` the source notes | Partly: yes in Greek; no in Beta Code and transliteration, which report `removed-glyph-variant` |
+| `symbolForms: "standard"` | Writes the ordinary letters | No, but the canonical text has no symbol form, so the change is not reported |
 | `iotaSubscript: "capital-adscript"` or `"adscript"` | Writes a kept iota subscript on the line, after a capital or after every vowel | No: the iota reads back as a letter, and the subscript is reported as removed (`removed-diacritic`) |
-| `doubleRho`, letter variants, `upsilon`, `longVowels` | Selects a canonical output spelling | The canonical letters normally remain recoverable, but `eta: "i"` with `longVowels: "macron"` writes eta like iota with a macron |
+| `dentalSigma: "assimilate"` | Deletes `τ`, `δ`, or `θ` before sigma in Greek output | No |
+| `accentuation: "monotonic"` | Keeps diaeresis, maps every accent to acute, removes other polytonic marks, and unaccents monosyllables except `ή`, `πού`, `πώς` | No |
+| `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
+| `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | Partly: the accent is recoverable; its scalar preference is not |
+| `questionMark: "greek"`, `anoTeleia: "greek"` | Selects a canonically unstable punctuation scalar | Partly: the punctuation meaning is recoverable; its scalar preference is not |
+| `doubleRho` | Selects a canonical output spelling | Yes: the canonical letters remain recoverable |
+
+### `betaCode`
+
+| Option | Effect | Reconstructible from output? |
+| --- | --- | --- |
+| `case: "lowercase"` or `"uppercase"` | Selects the insignificant ASCII case of Beta Code letters without changing `*` markers | Yes: the canonical graphemes are unchanged |
+| `yot: "#401"` | Uses the TLG character code instead of `j` for yot | Yes: both spellings parse as yot |
+
+### `text`
+
+| Option | Effect | Reconstructible from output? |
+| --- | --- | --- |
+| `letterCase: "lowercase"`, `"uppercase"`, or `"title"` | Applies deterministic case to recognized Greek graphemes; under `"title"`, an apostrophe between two letters does not start a word | No, when source case changes; unknown literals are untouched |
+| `numerals: "decimal"` | Replaces a valid marked alphabetic numeral group with decimal digits | No |
+
+### `diacritics`
+
+| Option | Effect | Reconstructible from output? |
+| --- | --- | --- |
+| `all: "remove"` | Removes every semantic class, breathings included; a class named alongside is the exception, so `{ all: "remove", roughBreathing: "preserve" }` keeps the rough breathing and its `h` in transliteration | No |
+| `<class>: "remove"` | Removes only the selected semantic class during rendering | No, when that class occurs; unselected classes remain recoverable |
 
 `longVowels` chooses either a macron or a circumflex for structural eta and
 omega length, on the letter that `eta` selects (`ē`/`ê` or `ī`/`î`). A
