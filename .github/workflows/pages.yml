@@ -8,6 +8,12 @@ name: Site
 # alone. A pull
 # request builds its own tree to check it; a push to main, a published
 # release, or a manual run deploys both versions.
+#
+# The site is served at the root of its own domain,
+# greek-conversion.humanites.fr (SITE in web/docs/astro.config.mjs). The
+# domain is set in the repository's Pages settings, not here: a deployment
+# by workflow ignores a CNAME file. Its DNS record is a CNAME to
+# defense-humanites.github.io.
 on:
   push:
     branches: [main]

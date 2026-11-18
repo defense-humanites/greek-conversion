@@ -122,8 +122,9 @@ change.
   `φ`, `θ`, or `χ` (`ἀπ’ οὗ` → `ἀφ’ οὗ`). Its type is
   `ElidedStopOrthography`.
 
-- A documentation site, at https://defense-humanites.github.io/greek-conversion/,
-  built with Starlight (`web/docs/`): a guide and nine recipes taken from the
+- A documentation site, at https://greek-conversion.humanites.fr/, a domain
+  of its own (the address the playground had on GitHub Pages redirects to
+  it), built with Starlight (`web/docs/`): a guide and nine recipes taken from the
   README, the reference generated from `docs/` at each build, and the API
   reference generated from the TSDoc of both entry points, with search. It
   uses the playground's design (`web/shared/`) and follows the system's light

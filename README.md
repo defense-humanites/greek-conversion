@@ -21,8 +21,8 @@
 </p>
 
 <p align="center">
-  <a href="https://defense-humanites.github.io/greek-conversion/"><b>Documentation</b></a> ·
-  <a href="https://defense-humanites.github.io/greek-conversion/playground/"><b>Playground</b></a>
+  <a href="https://greek-conversion.humanites.fr/"><b>Documentation</b></a> ·
+  <a href="https://greek-conversion.humanites.fr/playground/"><b>Playground</b></a>
 </p>
 
 <br>
@@ -69,10 +69,10 @@ convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliter
 | Bind a preset, add characters, or restrict the repertoire                | `createConverter(configuration)`                                      |
 | Inspect or edit the parsed text itself                                   | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
 
-The [documentation](https://defense-humanites.github.io/greek-conversion/) has the guide, the recipes, the
-[presets](https://defense-humanites.github.io/greek-conversion/guide/presets/), a page on
-[Modern Greek](https://defense-humanites.github.io/greek-conversion/guide/modern-greek/), the reference, and the
-[API](https://defense-humanites.github.io/greek-conversion/api/). What every conversion guarantees is stated in
+The [documentation](https://greek-conversion.humanites.fr/) has the guide, the recipes, the
+[presets](https://greek-conversion.humanites.fr/guide/presets/), a page on
+[Modern Greek](https://greek-conversion.humanites.fr/guide/modern-greek/), the reference, and the
+[API](https://greek-conversion.humanites.fr/api/). What every conversion guarantees is stated in
 [Guarantees and limits](https://github.com/defense-humanites/greek-conversion/blob/main/docs/guarantees.md);
 to contribute, see
 [CONTRIBUTING.md](https://github.com/defense-humanites/greek-conversion/blob/main/CONTRIBUTING.md).
