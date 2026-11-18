@@ -54,16 +54,4 @@ const links = [
     text-decoration: underline;
     text-decoration-thickness: 2px;
   }
-  /* Between 1100 and 1152px, the header also holds the full name: the
-     links draw closer and smaller, and leave out the new-tab mark, which
-     screen readers still announce. */
-  @media (min-width: 68.75rem) and (max-width: 71.99rem) {
-    .links {
-      gap: 4px 12px;
-      font-size: 14px;
-    }
-    .links :global(.external-mark) {
-      display: none;
-    }
-  }
 </style>

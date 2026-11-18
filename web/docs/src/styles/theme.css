@@ -413,12 +413,36 @@ header.header > .header {
 site-search button[data-open-modal] {
   max-width: 30rem;
 }
-/* Between 800 and 1100px, where the header holds the name and the menu
-   button, the centred field would sit far to the right: it follows the
-   version, at the header's gap. */
-@media (min-width: 50rem) and (max-width: 68.74rem) {
+/* Between 800 and 1152px, the field follows the version, at the header's
+   gap: centred, it would sit far to the right of a header that holds the
+   name and the menu button only (below 1100px); and from 1100px it fills
+   the room the links leave it, which keep their size. */
+@media (min-width: 50rem) and (max-width: 71.99rem) {
   .header > :nth-child(2) {
     justify-content: flex-start;
+  }
+}
+/* Below 800px, the field is centred on the screen itself. The header is a
+   grid of three columns: the symbol and the version (7rem: 40px, 8px, and
+   the version's 4rem, `SiteTitle.astro`), the field (22rem at most), and
+   as much again on the other side, where the menu button sits. Where the
+   screen is too narrow for that, the third column gives up room down to
+   the button's, so that the field keeps 9rem; it then sits a little right
+   of the centre. */
+@media (max-width: 49.99rem) {
+  html[data-has-sidebar] .page > .header {
+    padding-inline-end: var(--sl-nav-pad-x);
+  }
+  header.header > .header {
+    display: grid;
+    grid-template-columns:
+      7rem minmax(0, 22rem)
+      clamp(1.5rem, 100% - 16rem - 2 * var(--sl-nav-gap), 7rem);
+    justify-content: space-between;
+    column-gap: var(--sl-nav-gap);
+  }
+  [data-has-sidebar] header.header > .header::after {
+    content: "";
   }
 }
 /* Below 1100px, a field rather than an icon, as on a wide screen. */
@@ -482,13 +506,6 @@ button.sl-menu-button svg {
   button.sl-menu-button:active svg {
     scale: var(--squish);
     transition: scale 0.06s ease-in;
-  }
-}
-/* Between 1100 and 1152px, the search field leaves out its shortcut,
-   to keep its room beside the full name and the links. */
-@media (min-width: 68.75rem) and (max-width: 71.99rem) {
-  site-search button[data-open-modal] > kbd {
-    display: none !important;
   }
 }
 /* The search shortcut, as one label drawn like the header's "docs". */

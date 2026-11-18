@@ -145,8 +145,16 @@ const versions = released === null || other === null ? [] : [
   /* On a phone, the symbol and the version, to leave the search field its
      room; the name stays for screen readers. */
   @media (max-width: 49.99rem) {
+    /* A fixed width, which the header's grid counts on to centre the
+       search field (theme.css). */
     .version {
+      box-sizing: border-box;
+      width: 4rem;
       margin-inline-start: 8px;
+      text-align: center;
+    }
+    .version-select select {
+      width: 100%;
     }
     .name {
       position: absolute;
