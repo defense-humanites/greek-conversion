@@ -140,6 +140,37 @@ button.sl-menu-button svg.close-menu {
   mask: var(--icon-external-link) center / contain no-repeat;
 }
 
+/* In the phone menu, the project's links (Playground, Source, npm, JSR)
+   stay at the foot of the screen, on a bar of the page's colour, rather
+   than at the end of the list, which scrolls behind it; the list keeps
+   room below for its last items. */
+@media (max-width: 49.99rem) {
+  .sidebar-pane .mobile-preferences {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 1;
+    justify-content: center;
+    padding: 0.25rem var(--sl-nav-pad-x)
+      calc(0.25rem + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .sidebar-pane .mobile-preferences .social-icons {
+    flex: 1;
+    margin: 0;
+    padding: 0;
+  }
+  .sidebar-pane .mobile-preferences .links {
+    justify-content: space-between;
+    width: 100%;
+    column-gap: 0.75rem;
+  }
+  .sidebar-pane .sidebar-content {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  }
+}
+
 /* The sidebar's links that leave the documentation carry the same mark. */
 .sidebar-content a[target="_blank"] > span:not(.external-tail)::after {
   content: "";
