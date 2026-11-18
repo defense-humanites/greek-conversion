@@ -1,5 +1,11 @@
 # Validation contract
 
+`validateDocument()` checks that a canonical document is well-formed Greek: that
+its tokens are structurally sound, and that each mark suits its letter and its
+context. This contract explains why validation is a step of its own rather than
+an option of conversion, what it checks, and at which stage of a pipeline it
+applies.
+
 ## Decision
 
 `validateDocument()` remains explicitly separate from `parse()`, `encode()`,

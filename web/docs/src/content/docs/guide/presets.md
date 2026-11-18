@@ -2,7 +2,15 @@
 title: "Presets"
 description: "The presets that implement published conventions, and how to refine them."
 ---
-A preset bundles the options that implement one published convention:
+
+A preset bundles the options that implement one published convention, so that
+a single name selects a romanization standard or a Beta Code dialect. Your own
+options refine it, and each preset states its references and what it leaves
+out.
+
+## The presets
+
+Nine presets cover the common library, scholarly, and interchange conventions:
 
 | Preset           | Target          | For                                                                          |
 | ---------------- | --------------- | ---------------------------------------------------------------------------- |
@@ -15,6 +23,8 @@ A preset bundles the options that implement one published convention:
 | `sbl-general`    | transliteration | Biblical studies for general readers, without most diacritics                |
 | `tlg-core`       | Beta Code       | Uppercase-ASCII TLG Beta Code for polytonic interchange                      |
 | `perseus`        | Beta Code       | Lowercase-ASCII Beta Code for Perseus and Morpheus                           |
+
+Select one with `preset`:
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
@@ -36,6 +46,8 @@ convert("Εύβοια, Ευρώπη, αυτός", "greek", "transliteration", {
 Type 2 follows pronunciation and is not reversible: `convertDetailed()` reports
 what it loses, such as eta written `i` or the upsilon of `ευ` written `v`.
 
+## Refine a preset
+
 Your own options override only the fields they name; the rest of the preset
 stays in force. Defaults apply first, then the preset, then your options:
 
@@ -48,6 +60,8 @@ convert("Βίος Μπάλα", "greek", "transliteration", {
 });
 // → Bios Bala
 ```
+
+## References and limits
 
 Each preset documents its references, its coverage, and what it does not
 implement, both in the

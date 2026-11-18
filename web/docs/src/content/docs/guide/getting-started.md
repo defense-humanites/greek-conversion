@@ -3,6 +3,11 @@ title: "Getting started"
 description: "Install greek-conversion and convert a first text."
 ---
 
+greek-conversion converts Ancient and Modern Greek between Unicode Greek, Beta
+Code, and Latin transliteration, in any direction, and implements published
+conventions as presets. This page installs the package and converts a first
+text.
+
 ## Installation
 
 The package is published as `@humanities/greek-conversion` on
@@ -83,6 +88,6 @@ plain.losses[0].diacritic; // → acute
 - [Presets](/guide/presets/): the published conventions the library
   implements.
 - The recipes, for the common tasks, starting with
-  [removing diacritics](/guide/recipes/remove-diacritics/).
+  [removing diacritics](/guide/recipes/diacritics-and-unicode/#remove-all-or-some-diacritics).
 - [Guarantees and limits](/reference/guarantees/): what every conversion keeps,
   and what the library leaves to you.

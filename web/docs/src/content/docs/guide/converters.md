@@ -1,9 +1,54 @@
 ---
-title: "Custom characters and strict repertoires"
-description: "Add spellings and characters, or restrict a converter to a repertoire."
+title: "Converters, options and errors"
+description: "Bind a configuration in a converter, add or restrict characters, and handle the errors of invalid options."
 ---
-A converter created with `createConverter()` binds a preset and can extend or
-restrict the character inventory:
+
+The conversion functions take their options on every call and check them
+strictly. A converter created with `createConverter()` binds a configuration
+once, can extend or restrict the characters it knows, and can enforce the
+repertoire of a preset.
+
+## Options are checked
+
+A misspelled option never falls back silently to a default. An unknown key,
+value, or preset throws an `OptionError`, a `RangeError` that names the option
+(`path`), what it received, what it accepts, and the current spelling of a key
+or value an earlier release knew; an unknown format throws a plain `RangeError`,
+and an option group of the wrong type a `TypeError`. This matters most when
+options come from a configuration file or a form:
+
+```ts
+import { convert, OptionError } from "@humanities/greek-conversion";
+
+const options = JSON.parse('{ "transliteration": { "eta": "ē" } }');
+try {
+  convert("λόγος", "greek", "transliteration", options);
+} catch (error) {
+  if (error instanceof OptionError) {
+    error.message; // → Invalid value for transliteration.eta: "ē"; expected one of "e", "i".
+    error.path; // → transliteration.eta
+    error.accepted; // → ["e","i"]
+  }
+}
+```
+
+`FORMATS` and `CONVERSION_OPTION_VALUES` list everything that is accepted, which
+is convenient for building a user interface:
+
+```ts
+import {
+  CONVERSION_OPTION_VALUES,
+  FORMATS,
+} from "@humanities/greek-conversion";
+
+FORMATS; // → ["greek","beta-code","transliteration"]
+CONVERSION_OPTION_VALUES.transliteration.eta; // → ["e","i"]
+```
+
+## Add or exclude characters
+
+`createConverter()` binds a configuration, preset included, and can teach the
+converter new spellings or characters, or exclude some:
 
 ```ts
 import { createConverter } from "@humanities/greek-conversion";
@@ -32,6 +77,8 @@ noStigma.convert("λόγος ϛ", "greek", "transliteration", {
 });
 // → LÓGOS Ϛ
 ```
+
+## Restrict to a repertoire
 
 A converter bound to a preset also enforces the preset's character scope.
 Characters outside it are preserved and reported; with

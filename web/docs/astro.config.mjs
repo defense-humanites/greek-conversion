@@ -233,9 +233,7 @@ export default defineConfig({
           label: "Going further",
           items: [
             "guide/losses",
-            "guide/custom-characters",
-            "guide/options-and-errors",
-            "guide/canonical-document",
+            "guide/converters",
           ],
         },
         {
