@@ -37,28 +37,22 @@ const links = [
     font-size: 15px;
     font-weight: 500;
   }
-  /* As the links in the text, without the faint underline at rest: the
-     header says they are links. The colour stays; the 2px underline shows
-     on hover, with the same fade. */
   a {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
     color: var(--link);
-    text-decoration-line: underline;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 0.2em;
-    text-decoration-color: transparent;
-    transition: text-decoration-color 0.15s ease;
+    text-decoration: none;
+    text-underline-offset: 0.15em;
   }
 
   .lead {
     font-weight: 700;
   }
-  @media (hover: hover) {
-    a:hover {
-      text-decoration-color: currentColor;
-    }
+  a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
   }
   /* Between a phone and 1152px, the header also holds the full name: the
      links draw closer and smaller, and leave out the new-tab mark, which

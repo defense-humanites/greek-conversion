@@ -1,7 +1,9 @@
 ---
 /*
  * Starlight's edit link, which leads to GitHub: like every link that leaves
- * the documentation, it opens in a new tab and says so.
+ * the documentation, it opens in a new tab and says so. It reads as a
+ * secondary button, as "Try the playground" on the home page, and shares
+ * its states (theme.css, .sl-link-button.minimal).
  */
 import { icon } from "../../../shared/icons.ts";
 
@@ -11,7 +13,12 @@ const label = Astro.locals.t("page.editLink");
 
 {
   editUrl && (
-    <a href={editUrl} class="sl-flex print:hidden" target="_blank" rel="noopener">
+    <a
+      href={editUrl}
+      class="sl-link-button minimal print:hidden"
+      target="_blank"
+      rel="noopener"
+    >
       <Fragment set:html={icon("pencil")} />
       <span>
         <span class="external-tail">
@@ -25,22 +32,15 @@ const label = Astro.locals.t("page.editLink");
 }
 
 <style>
-  /* As the links in the text: the colour stays (muted, as a page's
-     footnote), the 2px underline shows on hover, with the same fade. */
   a {
+    display: inline-flex;
     gap: 0.5rem;
     align-items: center;
-    color: var(--sl-color-gray-3);
-    text-decoration-line: underline;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 0.2em;
-    text-decoration-color: transparent;
-    transition: text-decoration-color 0.15s ease;
-  }
-  @media (hover: hover) {
-    a:hover {
-      text-decoration-color: currentColor;
-    }
+    min-height: 2.5rem;
+    padding-inline: 0.875rem;
+    color: var(--ink);
+    font-size: 0.9375rem;
+    text-decoration: none;
   }
   a :global(.icon) {
     flex: none;
