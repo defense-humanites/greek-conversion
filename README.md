@@ -8,9 +8,9 @@
 </p>
 
 <p align="center">
-  <b>Convert Ancient and Modern Greek between Unicode, Beta Code, and Latin
-  script, in every direction, and know exactly what each conversion
-  keeps.</b>
+  <b>Convert Ancient and Modern Greek between Greek script, Beta Code, and
+  Latin script, with standards-based presets and information-loss
+  diagnostics.</b>
 </p>
 
 <p align="center">

@@ -2,7 +2,7 @@
   "name": "@humanities/greek-conversion",
   "version": "1.0.0-rc.9",
   "private": true,
-  "description": "Bidirectional conversion between Greek, Beta Code, and transliteration, with standards-based presets and information-loss diagnostics.",
+  "description": "Convert Ancient and Modern Greek between Greek script, Beta Code, and Latin script, with standards-based presets and information-loss diagnostics.",
   "keywords": [
     "greek",
     "polytonic",

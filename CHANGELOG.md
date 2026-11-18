@@ -59,6 +59,14 @@ change.
   removed, and what a restyle with `source` cannot restore; and the Beta Code
   apostrophe and font shifts to `docs/information-loss.md`. The English text
   prevails over the `README`, guides, and translations. No behavior changes.
+- One sentence describes the project: "Convert Ancient and Modern Greek
+  between Greek script, Beta Code, and Latin script, with standards-based
+  presets and information-loss diagnostics." It is the package's
+  `description`, the README's tagline, the text of the site's home page, and
+  the documentation of the main module; the description of the site and the
+  abstract of `CITATION.cff` give it after "A TypeScript library that
+  converts". `npm run check` keeps the copies identical. The playground's
+  description follows it.
 
 ### Added
 
