@@ -490,6 +490,24 @@ site-search dialog {
 .sidebar-content ul ul {
   border-inline-start-color: transparent;
 }
+/* A group's chevron weighs no more than its label: 16px, muted. The group's
+   line answers the pointer: label and chevron in the ink. */
+.sidebar-content summary svg.caret {
+  width: 1rem;
+  height: 1rem;
+  font-size: 1rem;
+  color: var(--muted);
+}
+.sidebar-content summary :is(svg.caret, .group-label .large) {
+  transition:
+    color 0.15s ease,
+    transform 0.2s ease-in-out;
+}
+@media (hover: hover) {
+  .sidebar-content summary:hover :is(svg.caret, .group-label .large) {
+    color: var(--ink);
+  }
+}
 
 /* "On this page" in its own column, on a wide screen. Its title is a label,
    as the sidebar's group names; the sections hang on a single rule, the
