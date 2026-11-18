@@ -81,12 +81,28 @@ plain.losses[0].code; // → removed-diacritic
 plain.losses[0].diacritic; // → acute
 ```
 
+## Modern Greek
+
+Monotonic Greek converts the same way. Choose a preset made for Modern Greek,
+such as the ISO 843 transcription that passports and maps use:
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliteration", {
+  preset: "iso-843-type-2",
+});
+// → I Athína eínai i protévousa
+```
+
 ## Next steps
 
 - To see why every format converts to every other with the same rules,
   read [How it works](/guide/how-it-works/).
 - To follow a published convention, as `iso-843-type-1` does above, choose
   among the [presets](/guide/presets/).
+- For Modern Greek names, passports, and catalogue records, and for reading
+  them back, see [Modern Greek](/guide/modern-greek/).
 - To find out what a conversion cannot keep, and where, as `lossy` hinted
   above, see [Knowing what a conversion loses](/guide/losses/).
 - For a precise task, the recipes cover

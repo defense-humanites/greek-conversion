@@ -324,6 +324,7 @@ export default defineConfig({
             "guide/getting-started",
             "guide/how-it-works",
             "guide/presets",
+            "guide/modern-greek",
           ],
         },
         {

@@ -8,8 +8,8 @@
 </p>
 
 <p align="center">
-  <b>Convert Greek text between Unicode Greek, Beta Code, and scientific
-  transliteration, in every direction, and know exactly what each conversion
+  <b>Convert Ancient and Modern Greek between Unicode, Beta Code, and Latin
+  script, in every direction, and know exactly what each conversion
   keeps.</b>
 </p>
 
@@ -27,9 +27,10 @@
 
 <br>
 
-`greek-conversion` is a TypeScript library for classicists, librarians, and
-digital-humanities developers. It handles polytonic and monotonic Greek,
-implements published conventions (ALA-LC, BnF, ISO 843, SBL, TLG, Perseus) as
+`greek-conversion` is a TypeScript library for classicists, librarians,
+digital-humanities developers, and anyone who writes Greek names in Latin
+script. It handles polytonic and monotonic Greek, implements published
+conventions (ALA-LC, BnF, ISO 843 and ELOT 743, SBL, TLG, Perseus) as
 ready-made presets, and tells you when a conversion loses information instead of
 quietly guessing. It has no dependencies and uses no runtime-specific API.
 
@@ -69,7 +70,8 @@ convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliter
 | Inspect or edit the parsed text itself                                   | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
 
 The [documentation](https://defense-humanites.github.io/greek-conversion/) has the guide, the recipes, the
-[presets](https://defense-humanites.github.io/greek-conversion/guide/presets/), the reference, and the
+[presets](https://defense-humanites.github.io/greek-conversion/guide/presets/), a page on
+[Modern Greek](https://defense-humanites.github.io/greek-conversion/guide/modern-greek/), the reference, and the
 [API](https://defense-humanites.github.io/greek-conversion/api/). What every conversion guarantees is stated in
 [Guarantees and limits](https://github.com/defense-humanites/greek-conversion/blob/main/docs/guarantees.md);
 to contribute, see

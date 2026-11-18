@@ -80,6 +80,21 @@ change.
   `check_readme.ts`) type-checks and runs the examples of the guide pages as
   well as the README's, and checks the links between pages. The package's
   `homepage` is the site.
+- A Modern Greek page in the guide: which preset to use for names on
+  passports and maps (`iso-843-type-2`), for a reversible transliteration
+  (`iso-843-type-1`), and for library records (`ala-lc-modern`); how to read
+  transliteration back as monotonic Greek, romanize a polytonic text as a
+  monotonic one, and make search keys and URL slugs; and what needs more than
+  the text. The README, Getting started, and Presets lead to it, and the
+  table of presets says which Greek each one is for.
+- The ISO 843 presets name ELOT 743, the Greek national standard: Type 2 is
+  its transcription, which the United Nations and BGN/PCGN adopted for
+  geographical names, and Type 1 its transliteration since 2001.
+  `iso-843-type-2` cites the BGN/PCGN and UNGEGN tables, and its conformance
+  corpus checks every example of the BGN/PCGN table. The rules that need more
+  than the text are recorded: the stress of unaccented capitals, unaccented
+  abbreviations, and older polytonic accents. The package's keywords include
+  `elot-743`.
 
 ### Fixed
 

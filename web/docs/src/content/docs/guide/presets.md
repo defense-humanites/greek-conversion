@@ -12,17 +12,17 @@ out.
 
 Nine presets cover the common library, scholarly, and interchange conventions:
 
-| Preset           | Target          | For                                                                          |
-| ---------------- | --------------- | ---------------------------------------------------------------------------- |
-| `ala-lc-ancient` | transliteration | Library romanization of Ancient and pre-1454 Medieval Greek                  |
-| `ala-lc-modern`  | transliteration | Library romanization of post-1453 Modern Greek, with its contextual digraphs |
-| `bnf-core`       | transliteration | BnF/ISO-based romanization for Ancient Greek cataloguing                     |
-| `iso-843-type-1` | transliteration | ISO 843 Type 1 transliteration for Ancient and Modern Greek                  |
-| `iso-843-type-2` | transliteration | ISO 843 Type 2 transcription, by pronunciation (passports, road signs, maps) |
-| `sbl-academic`   | transliteration | Biblical studies, keeping scholarly diacritics; the default transliteration  |
-| `sbl-general`    | transliteration | Biblical studies for general readers, without most diacritics                |
-| `tlg-core`       | Beta Code       | Uppercase-ASCII TLG Beta Code for polytonic interchange                      |
-| `perseus`        | Beta Code       | Lowercase-ASCII Beta Code for Perseus and Morpheus                           |
+| Preset           | Target          | Greek           | For                                                                         |
+| ---------------- | --------------- | --------------- | --------------------------------------------------------------------------- |
+| `ala-lc-ancient` | transliteration | Ancient         | Library romanization, Medieval Greek included (before 1454)                 |
+| `ala-lc-modern`  | transliteration | Modern          | Library romanization after 1453, with its contextual digraphs               |
+| `bnf-core`       | transliteration | Ancient         | BnF/ISO-based romanization for cataloguing                                  |
+| `iso-843-type-1` | transliteration | Ancient, Modern | Strict, reversible transliteration, also that of ELOT 743                   |
+| `iso-843-type-2` | transliteration | Modern          | Transcription by pronunciation, as ELOT 743: passports, road signs, maps    |
+| `sbl-academic`   | transliteration | Ancient         | Biblical studies, keeping scholarly diacritics; the default transliteration |
+| `sbl-general`    | transliteration | Ancient         | Biblical studies for general readers, without most diacritics               |
+| `tlg-core`       | Beta Code       | Ancient         | Uppercase-ASCII TLG Beta Code for polytonic interchange                     |
+| `perseus`        | Beta Code       | Ancient         | Lowercase-ASCII Beta Code for Perseus and Morpheus                          |
 
 Select one with `preset`:
 
@@ -47,6 +47,8 @@ convert("Εύβοια, Ευρώπη, αυτός", "greek", "transliteration", {
 
 Type 2 follows pronunciation and is not reversible: `convertDetailed()` reports
 what it loses, such as eta written `i` or the upsilon of `ευ` written `v`.
+[Modern Greek](/guide/modern-greek/) compares the three presets for Modern
+Greek and the options that complete them.
 
 ## Refine a preset
 
