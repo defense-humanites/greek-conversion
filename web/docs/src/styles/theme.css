@@ -1037,8 +1037,12 @@ button.sl-menu-button {
 mobile-starlight-toc nav {
   view-transition-name: site-toc-bar;
 }
-.right-sidebar {
-  view-transition-name: site-toc;
+/* The column only: below 1440px, the bar lives inside it, and a name there
+   would make it a stacking context that holds the bar below the page. */
+@media (min-width: 90rem) {
+  .right-sidebar {
+    view-transition-name: site-toc;
+  }
 }
 ::view-transition-group(site-toc-bar),
 ::view-transition-group(site-toc),
