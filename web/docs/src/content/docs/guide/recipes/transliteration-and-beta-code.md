@@ -44,7 +44,7 @@ throws a `RangeError`, since `ῆ` would be written like `η`.
 
 Further options cover nasal gamma, Modern Greek digraphs, systematic `rh`,
 double rho, the coronis, numerals, and more; every key and its accepted values
-are listed in `CONVERSION_OPTION_VALUES`. Supply the same options when reading
+are listed in the [option reference](/reference/options/#transliteration). Supply the same options when reading
 transliteration back, and the chosen spellings are recognized.
 
 A reader follows the convention of its options and does not guess another one:

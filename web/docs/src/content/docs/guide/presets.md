@@ -5,8 +5,8 @@ description: "The presets that implement published conventions, what each one lo
 
 A preset bundles the options that implement one published convention, so that
 a single name selects a romanization standard or a Beta Code dialect. This
-page lists the nine presets, compares what each one loses, and shows how your
-own options refine one; each preset states its references and what it leaves
+page lists the nine presets, compares how each one writes Greek and what it
+loses, and shows how your own options refine one; each preset states its references and what it leaves
 out.
 
 ## The presets
@@ -53,6 +53,70 @@ monotonic and a polytonic text, and the pages on
 [Ancient](/guide/ancient-greek/),
 [Byzantine and Medieval](/guide/byzantine-greek/), and
 [Modern Greek](/guide/modern-greek/) say which ones apply to each.
+
+## How each preset writes Greek
+
+The conventions differ on a few letters, on the vowel pairs with upsilon, on
+the digraphs of Modern Greek, and on the marks they keep. These tables give
+what each transliteration preset returns; the two Beta Code presets write the
+same codes, `tlg-core` in capitals and `perseus` in lowercase, but for yot
+(`#401` and `j`).
+
+<!-- BEGIN GENERATED PRESET COMPARISON -->
+<!-- This section is generated. Do not edit it directly. -->
+
+**Letters**
+
+| Preset | `β` | `η` | `υ` | `φ` | `χ` | `ω` |
+| --- | --- | --- | --- | --- | --- | --- |
+| `ala-lc-ancient` | `b` | `ē` | `y` | `ph` | `ch` | `ō` |
+| `ala-lc-modern` | `v` | `ē` | `y` | `ph` | `ch` | `ō` |
+| `bnf-core` | `b` | `ē` | `y` | `ph` | `ch` | `ō` |
+| `iso-843-type-1` | `v` | `ī` | `y` | `f` | `ch` | `ō` |
+| `iso-843-type-2` | `v` | `i` | `y` | `f` | `ch` | `o` |
+| `sbl-academic`, the default | `b` | `ē` | `y` | `ph` | `ch` | `ō` |
+| `sbl-general` | `b` | `ē` | `y` | `ph` | `ch` | `ō` |
+
+**Vowel pairs with upsilon**
+
+| Preset | `αυτός` | `ευχή` | `ούτε` |
+| --- | --- | --- | --- |
+| `ala-lc-ancient` | `autos` | `euchē` | `oute` |
+| `ala-lc-modern` | `autos` | `euchē` | `oute` |
+| `bnf-core` | `autós` | `euchḗ` | `oúte` |
+| `iso-843-type-1` | `autós` | `euchī́` | `oúte` |
+| `iso-843-type-2` | `aftós` | `efchí` | `oúte` |
+| `sbl-academic`, the default | `autós` | `euchḗ` | `oúte` |
+| `sbl-general` | `autos` | `euchē` | `oute` |
+
+**Gamma before a velar, and the digraphs of Modern Greek**
+
+| Preset | `άγγελος` | `αγκαλιά` | `μπαμπάς` | `ντομάτα` |
+| --- | --- | --- | --- | --- |
+| `ala-lc-ancient` | `angelos` | `ankalia` | `mpampas` | `ntomata` |
+| `ala-lc-modern` | `angelos` | `ankalia` | `bampas` | `d̲omata` |
+| `bnf-core` | `ángelos` | `ankaliá` | `mpampás` | `ntomáta` |
+| `iso-843-type-1` | `ággelos` | `agkaliá` | `mpampás` | `ntomáta` |
+| `iso-843-type-2` | `ángelos` | `agkaliá` | `bampás` | `ntomáta` |
+| `sbl-academic`, the default | `ángelos` | `ankaliá` | `mpampás` | `ntomáta` |
+| `sbl-general` | `angelos` | `ankalia` | `mpampas` | `ntomata` |
+
+**Breathings, iota subscript, and accents**
+
+| Preset | `ἁ` | `ἀ` | `ᾳ` | `ά` | `ῶ` |
+| --- | --- | --- | --- | --- | --- |
+| `ala-lc-ancient` | `ha` | `a` | `a` | `a` | `ō` |
+| `ala-lc-modern` | `ha` | `a` | `a` | `a` | `ō` |
+| `bnf-core` | `ha` | `a̓` | `a̧` | `á` | `ō̂` |
+| `iso-843-type-1` | `ha` | `’a` | `a̧` | `á` | `ō̂` |
+| `iso-843-type-2` | `ha` | `’a` | `a̧` | `á` | `ô` |
+| `sbl-academic`, the default | `ha` | `a` | `a̧` | `á` | `ō̃` |
+| `sbl-general` | `ha` | `a` | `a` | `a` | `ō` |
+
+<!-- END GENERATED PRESET COMPARISON -->
+
+Every key behind these spellings, with its values and the presets that select
+each, is in the [option reference](/reference/options/).
 
 ## What each preset loses
 

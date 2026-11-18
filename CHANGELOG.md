@@ -137,6 +137,15 @@ change.
   loses on a monotonic and a polytonic text, in a table computed from the
   library (`npm run docs:losses`) and kept up to date by `npm run check`. A
   page on the canonical document takes the section that How it works had.
+- A reference of the conversion options, `docs/options.md`: each of the 46
+  options with what its API documentation says, its values, its default, an
+  example of what each other value changes, and the presets that select it.
+  It is generated from the library (`npm run docs:options`): the texts are
+  the TSDoc of the options, and each example is the first word of the
+  playground's probe text that the value writes otherwise. In the guide, the
+  page on presets compares how each transliteration preset writes the
+  letters, vowel pairs, digraphs, and marks on which the conventions differ
+  (`npm run docs:comparison`). `npm run check` keeps both up to date.
 - The README is now a short entry point: installation, one example, the main
   functions, and links to the site. Its development notes move to
   `CONTRIBUTING.md`. `npm run check` (`scripts/check_examples.ts`, formerly

@@ -25,8 +25,11 @@ Write an example as a module, with its imports; a ```ts block that is not
 one fails the check. It also fails when a change to
 the options leaves `web/playground/option_relevance.ts` out of date
 (`npm run site:options` updates it), or `docs/presets.md`, generated from the
-presets (`npm run docs:presets`), or the table of what each preset loses in
-the guide's page on presets (`npm run docs:losses`).
+presets (`npm run docs:presets`), or one of the generated parts of the
+documentation: the option reference `docs/options.md`
+(`npm run docs:options`), and, in the guide's page on presets, the tables of
+how each preset writes Greek (`npm run docs:comparison`) and of what it loses
+(`npm run docs:losses`).
 
 The behavior the version number protects is the one documented in `docs/`
 and in the API documentation; the [stability policy](docs/stability.md) says

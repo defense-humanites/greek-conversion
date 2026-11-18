@@ -43,7 +43,9 @@ the coronis is kept, `transliteration.coronis` how it is written in Latin.
 | `text`            | Transformations of the whole text, in every format                                                                                            | `letterCase: "lowercase"`, `whitespace: "collapse"`, `numerals: "decimal"`       |
 | `diacritics`      | Which classes of marks are kept at all; `all` sets every class, a class named with it is the exception                                        | `accents: "remove"`, `all: "remove"`                                             |
 
-Every option value is plain ASCII, so it can be typed on any keyboard.
+Every option value is plain ASCII, so it can be typed on any keyboard. The
+[option reference](/reference/options/) lists every option with its values,
+its default, an example, and the presets that select it.
 
 ## Which function to use
 

@@ -97,6 +97,7 @@ forms), archaic letters, Greek punctuation, and marked alphabetic numerals.
 | Topic                                              | Document                                                                                              |
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | Options, functions, and types                      | The API documentation (TSDoc of the exported declarations)                                            |
+| Options, their values, defaults, and presets       | [Options](options.md)                                                                                 |
 | Presets and their exact options                    | [Presets](presets.md)                                                                                 |
 | Loss by format pair and option                     | [Information loss](information-loss.md)                                                               |
 | Detailed results, positions, and spans             | [Conversion analysis](conversion-analysis.md)                                                         |

@@ -358,7 +358,10 @@ export default defineConfig({
         },
         {
           label: "Recipes",
-          items: [{ autogenerate: { directory: "guide/recipes" } }],
+          items: [
+            { autogenerate: { directory: "guide/recipes" } },
+            { label: "Option reference", slug: "reference/options" },
+          ],
         },
         {
           label: "Going further",
