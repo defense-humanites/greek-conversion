@@ -71,8 +71,8 @@ metadata or options.
 | `ala-lc-ancient` | Romanization profile for Ancient and Medieval Greek before 1454. | Ancient Greek; Medieval Greek before 1454 | partial |
 | `ala-lc-modern` | Romanization profile for Modern Greek after 1453. | Modern Greek after 1453 | partial |
 | `bnf-core` | Core mechanically expressible profile for the BnF adaptation of ISO 843 for Ancient Greek. | Ancient Greek; French library cataloguing | partial |
-| `iso-843-type-1` | Type 1 transliteration of Greek characters into Latin characters. | Ancient Greek; Modern Greek | partial |
-| `iso-843-type-2` | Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility (identity documents, road signs, maps). | Modern Greek; Ancient Greek | partial |
+| `iso-843-type-1` | Type 1 transliteration of Greek characters into Latin characters, also that of ELOT 743, the Greek national standard, since its 2001 edition. | Ancient Greek; Modern Greek | partial |
+| `iso-843-type-2` | Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility: the transcription of ELOT 743, the Greek national standard, for identity documents, road signs, and maps, which the United Nations and BGN/PCGN adopted for geographical names. | Modern Greek; Ancient Greek | partial |
 | `perseus` | Lowercase-ASCII subset of TLG Beta Code used by the Perseus Digital Library project. | Polytonic Greek; Perseus and Morpheus interchange | complete |
 | `sbl-academic` | Academic transliteration retaining the engine's scientific diacritics. | Ancient Greek; Biblical studies | adapted |
 | `sbl-general` | Readable transliteration omitting most scholarly diacritics while retaining rough breathing and diaeresis. | Ancient Greek; Biblical studies; General readers | adapted |
@@ -219,7 +219,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
 - **Coverage:** `partial`
 - **Out-of-scope behavior:** `engine-default`
 
-Type 1 transliteration of Greek characters into Latin characters.
+Type 1 transliteration of Greek characters into Latin characters, also that of ELOT 743, the Greek national standard, since its 2001 edition.
 
 **References:**
 
@@ -258,11 +258,13 @@ Type 1 transliteration of Greek characters into Latin characters.
 - **Coverage:** `partial`
 - **Out-of-scope behavior:** `engine-default`
 
-Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility (identity documents, road signs, maps).
+Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility: the transcription of ELOT 743, the Greek national standard, for identity documents, road signs, and maps, which the United Nations and BGN/PCGN adopted for geographical names.
 
 **References:**
 
 - [ISO 843:1997](https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf)
+- [BGN/PCGN, Romanization of Greek: ELOT 743 System, 1996 Agreement](https://assets.publishing.service.gov.uk/media/5ab4df04e5274a1aa2d41460/ROMANIZATION_OF_GREEK.pdf)
+- [UNGEGN, Report on the Current Status of United Nations Romanization Systems for Geographical Names: Greek](https://unstats.un.org/unsd/ungegn/working_groups/wg5/documents/wgrr4greek.pdf)
 
 **Contributed options:**
 

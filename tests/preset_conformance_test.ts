@@ -239,6 +239,69 @@ const CASES = [
     latin: "w j",
     lossy: false,
   },
+  // BGN/PCGN, Romanization of Greek: ELOT 743 System, 1996 Agreement: every
+  // example of the table and of notes 1 and 2.
+  {
+    preset: "iso-843-type-2",
+    rule: "BGN/PCGN table: α, αι, αϊ, ε, ει, εϊ, ι, ο, οι, οϊ, ου",
+    greek:
+      "Άρτα Ακταίο Νεράϊδα Ερέτρια Μαρινέϊκα Ίρια Όθος Δελφοί Δοϊράνι Βούναργο",
+    latin:
+      "Árta Aktaío Neráïda Erétria Marinéïka Íria Óthos Delfoí Doïráni Voúnargo",
+    lossy: false,
+  },
+  {
+    preset: "iso-843-type-2",
+    rule: "BGN/PCGN table: αυ is av, af, or ay; ευ is ev or ef",
+    greek: "Μαυροβούνι Ναύπλιο Ταΰγετος Ρεύματα Λευκάδα Παύλος Χαραυγή",
+    latin: "Mavrovoúni Náfplio Taÿ́getos Révmata Lefkáda Pávlos Charavgí",
+    lossy: true,
+  },
+  {
+    preset: "iso-843-type-2",
+    rule: "BGN/PCGN table: η is i, υ is y, ω is o",
+    greek: "Ηράκλειο Λίμνη Νεστάνη Ξάνθη Υλίκη Φιλοθέη Μαραθώνας Ωρωπός",
+    latin: "Irákleio Límni Nestáni Xánthi Ylíki Filothéi Marathónas Oropós",
+    lossy: true,
+  },
+  {
+    preset: "iso-843-type-2",
+    rule: "BGN/PCGN table: γ is g, n before ξ and χ; γγ is ng, γκ is gk",
+    greek: "Γαράζο Γουριά Άγναντα Γλυφάδα Αγχίαλος Λόγγος Λαγκάδα",
+    latin: "Garázo Gouriá Ágnanta Glyfáda Anchíalos Lóngos Lagkáda",
+    lossy: false,
+  },
+  {
+    preset: "iso-843-type-2",
+    rule:
+      "BGN/PCGN table: μπ is b at either end of a word, mp inside; ντ is nt",
+    greek: "Μπέχρος Τέμπη Ντία Πέντε Βρύσες",
+    latin: "Béchros Témpi Ntía Pénte Vrýses",
+    lossy: true,
+  },
+  {
+    preset: "iso-843-type-2",
+    rule: "BGN/PCGN table: the other consonants",
+    greek:
+      "Βόλος Δένδρα Ζεμενό Θεσπιές Καλαμάκι Μερόπι Άσσος Σάμος Τίρυνθα Ψαρά",
+    latin:
+      "Vólos Déndra Zemenó Thespiés Kalamáki Merópi Ássos Sámos Tíryntha Psará",
+    lossy: false,
+  },
+  {
+    preset: "iso-843-type-2",
+    rule: "BGN/PCGN note 1: the stress, on the vowel before v or f",
+    greek: "Αθήνα Οινούσσες Οίτη Αύρα Γαύριο Καλλιπεύκα Κως",
+    latin: "Athína Oinoússes Oíti Ávra Gávrio Kallipéfka Kos",
+    lossy: true,
+  },
+  {
+    preset: "iso-843-type-2",
+    rule: "BGN/PCGN note 2: the diaeresis",
+    greek: "Αχαΐα",
+    latin: "Achaḯa",
+    lossy: false,
+  },
 ] as const;
 
 for (const { preset, rule, greek, latin, lossy } of CASES) {

@@ -196,7 +196,7 @@ const PRESET_DEFINITIONS = {
       name: "ISO 843:1997 — Type 1 (transliteration)",
       authority: "International Organization for Standardization",
       description:
-        "Type 1 transliteration of Greek characters into Latin characters.",
+        "Type 1 transliteration of Greek characters into Latin characters, also that of ELOT 743, the Greek national standard, since its 2001 edition.",
       scope: ["Ancient Greek", "Modern Greek"],
       coverage: "partial",
       outOfScopeBehavior: "engine-default",
@@ -233,15 +233,29 @@ const PRESET_DEFINITIONS = {
       name: "ISO 843:1997 — Type 2 (transcription)",
       authority: "International Organization for Standardization",
       description:
-        "Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility (identity documents, road signs, maps).",
+        "Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility: the transcription of ELOT 743, the Greek national standard, for identity documents, road signs, and maps, which the United Nations and BGN/PCGN adopted for geographical names.",
       scope: ["Modern Greek", "Ancient Greek"],
       coverage: "partial",
       outOfScopeBehavior: "engine-default",
-      references: [{
-        title: "ISO 843:1997",
-        url:
-          "https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf",
-      }],
+      references: [
+        {
+          title: "ISO 843:1997",
+          url:
+            "https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf",
+        },
+        {
+          title:
+            "BGN/PCGN, Romanization of Greek: ELOT 743 System, 1996 Agreement",
+          url:
+            "https://assets.publishing.service.gov.uk/media/5ab4df04e5274a1aa2d41460/ROMANIZATION_OF_GREEK.pdf",
+        },
+        {
+          title:
+            "UNGEGN, Report on the Current Status of United Nations Romanization Systems for Geographical Names: Greek",
+          url:
+            "https://unstats.un.org/unsd/ungegn/working_groups/wg5/documents/wgrr4greek.pdf",
+        },
+      ],
       limitations: [
         "A transcription is not reversible by design: the v and f of αυ, ευ, ηυ read back as beta and phi, i and o as iota and omicron, and b at the edge of a word as μπ; convertDetailed() reports these losses. An o without marks before a y without diaeresis reads back as omega: Table 2 does not list ωυ, which note 8 writes letter by letter, while ου is written ou, or oy with an accent or a diaeresis (note 9).",
         "Reading back is designed for the preset's own output: an e with a circumflex is read as εῦ before v or f, where Type 2 writes it, and otherwise as epsilon with a circumflex, which validateDocument() rejects.",
