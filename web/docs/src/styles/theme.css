@@ -547,16 +547,11 @@ site-search dialog {
   border: 1.5px solid transparent;
   border-radius: var(--radius);
 }
-/* Items keep a 3px gap, as the playground's option list does, so that a
-   hovered item's background never touches its neighbour's. A padding
-   rather than a margin, so that the rule the nested lists draw on their
-   items' edge runs on unbroken. */
-.sidebar-content li:has(> a) + li:has(> a) {
-  padding-top: 3px;
-}
-/* On hover, the list's items darken their text, from the body's ink to
-   the full ink, as "On this page" does; no background. */
+/* The list's items are muted, and take the ink on hover, as "On this
+   page" does; no background. The current page, in the ink and semibold,
+   stands out. */
 .sidebar-content ul a {
+  color: var(--muted);
   transition: color 0.15s ease;
 }
 @media (hover: hover) {
