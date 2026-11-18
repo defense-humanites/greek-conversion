@@ -206,6 +206,11 @@ convert("Άγιος Νικόλαος, Κρήτη", "greek", "transliteration", {
 
 A preset applies its rules to the text it is given, and some rules need more:
 
+- **Punctuation and numerals.** The Greek question mark `;` is written `?`
+  in Latin script, and a `?` typed in Greek text is read as one. A numeral
+  is read with a keraia (`ιβʹ`), not with the tonos that often stands for it
+  (`ιβ΄`). See
+  [Punctuation and numerals](/reference/punctuation-and-numerals/).
 - **Stress in capitals.** Monotonic Greek writes no accent on capitals, and
   the preset cannot tell where the stress falls: `ΑΘΗΝΑ` gives `ATHINA`.
   BGN/PCGN asks for the stress all the same (`ATHÍNA`), which takes a

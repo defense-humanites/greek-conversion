@@ -115,4 +115,5 @@ convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliter
   [transliteration and Beta Code](/guide/recipes/transliteration-and-beta-code/),
   and [letters and text](/guide/recipes/letters-and-text/).
 - Before you rely on it, read
-  [Guarantees and limits](/reference/guarantees/).
+  [Guarantees and limits](/reference/guarantees/); for a word of this
+  documentation, see the [Glossary](/guide/glossary/).

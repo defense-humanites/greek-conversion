@@ -146,6 +146,12 @@ change.
   page on presets compares how each transliteration preset writes the
   letters, vowel pairs, digraphs, and marks on which the conventions differ
   (`npm run docs:comparison`). `npm run check` keeps both up to date.
+- The reference states how punctuation and numerals are read and written,
+  in `docs/punctuation-and-numerals.md`: the six signs read for what they
+  mean in Greek and their spelling in each format, the spellings each reader
+  accepts, what Greek output therefore changes in a text converted to itself
+  (`?` to `;`, `-` to `‐`, `'` to `’`), what a numeral is, its signs, and
+  what is not read as one. The guide gains a glossary.
 - The README is now a short entry point: installation, one example, the main
   functions, and links to the site. Its development notes move to
   `CONTRIBUTING.md`. `npm run check` (`scripts/check_examples.ts`, formerly

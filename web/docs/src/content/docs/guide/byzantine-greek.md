@@ -53,8 +53,10 @@ convert("Χριϲτόϲ", "greek", "transliteration", { preset: "bnf-core" });
 ## Numerals and dates
 
 Alphabetic numerals are read with their keraia, stigma, koppa, and sampi
-included. The ALA-LC presets write them as numbers, and
-`text.numerals: "decimal"` does so under any convention:
+included (see
+[Punctuation and numerals](/reference/punctuation-and-numerals/#alphabetic-numerals)).
+The ALA-LC presets write them as numbers, and `text.numerals: "decimal"` does
+so under any convention:
 
 ```ts
 import { convert } from "@humanities/greek-conversion";

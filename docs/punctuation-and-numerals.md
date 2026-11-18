@@ -1,0 +1,142 @@
+# Punctuation and numerals
+
+Greek writes a few signs otherwise than Latin script does, and counts with
+letters marked by a keraia. This document states which signs the library
+reads, how it writes them in each format, and what it reads as a numeral.
+Every other character is copied as it is.
+
+## Punctuation
+
+Six signs are read for what they mean in Greek, and written as each format
+writes them:
+
+| Sign | Greek | Beta Code | Transliteration |
+| --- | --- | --- | --- |
+| Question mark | `;` | `;` | `?` |
+| Ano teleia | `·` | `:` | `;` |
+| Apostrophe | `’` | `'` | `’` |
+| Hyphen | `‐` (U+2010) | `-` | `-` |
+| Enotikon | `‿` | `‿` | `‿` |
+| Parentheses | `(` and `)` | `[1` and `]1` | `(` and `)` |
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+const greek = "τί; ναί· ἀλλ’ οὖν (ὡς).";
+
+convert(greek, "greek", "transliteration"); // → tí? naí; all’ oũn (hōs).
+convert(greek, "greek", "beta-code"); // → ti/; nai/: a)ll' ou)=n [1w(s]1.
+```
+
+The full stop, the comma, the exclamation mark, quotation marks, and square
+brackets are literals: every format copies them.
+
+### Spellings read
+
+Each reader accepts more than one spelling of a sign, and the output has one:
+
+- the Greek reader takes `;`, the Greek question mark (U+037E), and `?` for
+  the question mark; `·` (U+00B7) and the Greek ano teleia (U+0387) for the
+  ano teleia; `-` and `‐` for the hyphen;
+- every reader takes `'`, `ʼ` (U+02BC), `᾽` (U+1FBD), and `’` (U+2019) for the
+  apostrophe;
+- every reader takes `‿` (U+203F) and the combining U+035C for the enotikon.
+
+Greek output therefore changes these signs in a text converted to itself,
+without loss, since their meaning is kept:
+
+```ts
+import { convertDetailed } from "@humanities/greek-conversion";
+
+const typed = "τί? καλο-κἀγαθός, ἀλλ' οὖν";
+const result = convertDetailed(typed, "greek", "greek");
+
+result.output; // → τί; καλο‐κἀγαθός, ἀλλ’ οὖν
+result.lossy; // → false
+```
+
+The Greek question mark and ano teleia are written as the characters Unicode
+normalization gives, `;` (U+003B) and `·` (U+00B7); `greek.questionMark` and
+`greek.anoTeleia` select the Greek scalars instead (see
+[Greek punctuation scalars](greek-unicode.md#greek-punctuation-scalars)).
+In transliteration, `transliteration.hyphen: "typographic"` writes the hyphen
+`‐`, and `transliteration.enotikon: "hyphen"` writes the enotikon `-`, which
+then reads back as a hyphen.
+
+### Consequences
+
+- **The whole text is read as Greek.** In a text that mixes Greek with
+  another language, the punctuation of that language is converted with the
+  rest: a `?` becomes `;` in Greek output, and a `;` becomes `?` in
+  transliteration (see
+  [Guarantees and limits](guarantees.md#text-that-mixes-greek-with-another-language)).
+- **A colon is a literal in Greek**, and is copied. In Beta Code it would
+  read back as an ano teleia, and `convertDetailed()` reports it
+  (`unrepresented-literal`). So does a parenthesis followed by a digit (see
+  [Canonical spelling and Unicode](information-loss.md#canonical-spelling-and-unicode)).
+- **An apostrophe written for a smooth breathing or a coronis**
+  (`smoothBreathing: "apostrophe"`, `coronis: "apostrophe"`) reads back as
+  an apostrophe, not as the mark.
+
+## Alphabetic numerals
+
+A numeral is a group of letters that a keraia marks. The library reads one
+when:
+
+- the letters carry no mark and follow no other letter;
+- their values go down from one letter to the next: hundreds, tens, units;
+- a right keraia `ʹ` closes the group;
+- thousands, if any, come first, as a left keraia `͵` and a letter from 1
+  to 9. A group that has them needs no right keraia (`͵α` is 1000).
+
+The letters have their usual values, with stigma `ϛ` and digamma `ϝ` for 6,
+the two koppas `ϟ` and `ϙ` for 90, and sampi `ϡ` for 900. `στ` before the
+keraia is also 6, alone or as the units of a longer numeral, as the ALA-LC
+tables list it. The highest numeral is 9999.
+
+The right keraia is read from U+0374 or U+02B9, which are canonically
+equivalent, and written U+02B9; the left keraia is U+0375. An apostrophe, a
+tonos (`΄`, U+0384), or a prime (`′`) is not a keraia: `ιβ΄` is not read as a
+numeral.
+
+| Number | Greek | Beta Code | Transliteration |
+| --- | --- | --- | --- |
+| 12 | `ιβʹ` | `ib#` | `ibʹ` |
+| 1821 | `͵αωκαʹ` | `#22awka#` | `͵aōkaʹ` |
+
+`text.numerals: "decimal"` writes a numeral as a number, in every format. The
+letters cannot be recovered from it, and `convertDetailed()` reports them as
+lost. The ALA-LC presets select it:
+
+```ts
+import { convert, convertDetailed } from "@humanities/greek-conversion";
+
+const decimal = { text: { numerals: "decimal" } } as const;
+
+convert("ἔτος ͵αωκαʹ, βιβλίον ιβʹ, ϛʹ καὶ στʹ", "greek", "greek", decimal);
+// → ἔτος 1821, βιβλίον 12, 6 καὶ 6
+
+convert("ιβʹ", "greek", "transliteration", { preset: "ala-lc-modern" });
+// → 12
+
+convertDetailed("ιβʹ", "greek", "transliteration", decimal).lossy; // → true
+```
+
+Under `transliteration.keraia: "bnf"`, transliteration writes the right
+keraia as an acute and the left one as a comma (see
+[Scope limits](presets.md#scope-limits)).
+
+### What is not read as a numeral
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+const decimal = { text: { numerals: "decimal" } } as const;
+
+// Values that do not go down, a letter with a mark, a tonos for the keraia.
+convert("αιʹ ἀʹ ιβ΄", "greek", "transliteration", decimal);
+// → aiʹ aʹ ib΄
+```
+
+A final sigma written for the stigma, as some editions print it, is read as a
+sigma: `ςʹ` is 200, and `ιςʹ` is not read as 16.

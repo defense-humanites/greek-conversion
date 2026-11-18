@@ -104,7 +104,9 @@ marked.lossy; // → false
 - **Beta Code.** For capitals, quantity, and the TLG's codes, see
   [Write Beta Code the TLG way](/guide/recipes/transliteration-and-beta-code/#write-beta-code-the-tlg-way).
 - **Numerals.** `text.numerals: "decimal"` writes a marked alphabetic numeral
-  as a number, as the ALA-LC presets do:
+  as a number, as the ALA-LC presets do;
+  [Punctuation and numerals](/reference/punctuation-and-numerals/#alphabetic-numerals)
+  says what is read as one:
 
 ```ts
 import { convert } from "@humanities/greek-conversion";

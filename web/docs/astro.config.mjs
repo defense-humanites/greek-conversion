@@ -329,6 +329,7 @@ export default defineConfig({
             "guide/getting-started",
             "guide/how-it-works",
             "guide/losses",
+            "guide/glossary",
           ],
         },
         {
@@ -381,6 +382,7 @@ export default defineConfig({
             },
             { label: "Loss report", slug: "reference/conversion-analysis" },
             "reference/greek-unicode",
+            "reference/punctuation-and-numerals",
             "reference/character-extensions",
             { label: "Document contract", slug: "reference/document-api" },
             "reference/validation",

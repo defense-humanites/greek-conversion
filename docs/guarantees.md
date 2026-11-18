@@ -102,6 +102,7 @@ forms), archaic letters, Greek punctuation, and marked alphabetic numerals.
 | Loss by format pair and option                     | [Information loss](information-loss.md)                                                               |
 | Detailed results, positions, and spans             | [Conversion analysis](conversion-analysis.md)                                                         |
 | Accentuation, letter forms, and Unicode output     | [Greek Unicode](greek-unicode.md)                                                                     |
+| Punctuation and alphabetic numerals                | [Punctuation and numerals](punctuation-and-numerals.md)                                               |
 | Custom characters and repertoires                  | [Character extensions](character-extensions.md)                                                       |
 | The canonical document and its validation          | [Document API](document-api.md) and [Validation](validation.md)                                       |
 | What the version number protects, and reading rules | [Stability policy](stability.md)                                                                      |
