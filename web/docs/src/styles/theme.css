@@ -750,7 +750,7 @@ mobile-starlight-toc .toggle,
 
 /* The 404 page (src/content/docs/404.md) is a content page, so that the
    search field and the text column take their usual places, but its
-   message looks as the hero it replaces: a large "404" well below the
+   message looks as the hero it replaces: a large title well below the
    header, the sentence under it in a larger size, no rule. Its table of
    contents keeps its column, hidden; on a narrower screen, its bar goes. */
 :root:has(.not-found) .right-sidebar-panel {
