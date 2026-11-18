@@ -754,8 +754,8 @@ mobile-starlight-toc .toggle,
 
 /* The 404 page (src/content/docs/404.md) is a content page, so that the
    search field and the text column take their usual places, but its
-   message looks as the hero it replaces: a large title well below the
-   header, the sentence under it in a larger size, no rule. Its table of
+   message is set apart: in the middle of the free area, the title at its
+   usual size, the sentence under it a size up, no rule. Its table of
    contents keeps its column, hidden; on a narrower screen, its bar goes. */
 :root:has(.not-found) .right-sidebar-panel {
   visibility: hidden;
@@ -771,26 +771,36 @@ mobile-starlight-toc .toggle,
     display: none;
   }
 }
-:root:has(.not-found) .content-panel:first-child {
-  padding-top: clamp(2.5rem, calc(1rem + 10vmin), 10rem);
+:root:has(.not-found) main {
+  /* Centred in the whole area right of the sidebar and below the header,
+     the hidden table of contents' column included. */
+  position: fixed;
+  inset: var(--sl-nav-height) 0 0 var(--sl-content-inline-start, 0);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
-:root:has(.not-found) .content-panel + .content-panel {
-  padding-top: 0;
+:root:has(.not-found) main .content-panel {
+  padding-block: 0;
+}
+/* Its footer, empty here (no edit link, no previous or next), would push
+   the message up. */
+:root:has(.not-found) main footer {
+  display: none;
+}
+:root:has(.not-found) main .content-panel + .content-panel {
+  margin-top: 1rem;
   border-top: 0;
 }
-:root:has(.not-found) h1#_top {
-  font-size: clamp(
-    var(--sl-text-3xl),
-    calc(0.25rem + 5vw),
-    var(--sl-text-6xl)
-  );
-}
 .sl-markdown-content .not-found {
-  font-size: clamp(
-    var(--sl-text-base),
-    calc(0.0625rem + 2vw),
-    var(--sl-text-xl)
-  );
+  font-size: var(--sl-text-lg);
+}
+@media (min-width: 50rem) {
+  .sl-markdown-content .not-found {
+    font-size: var(--sl-text-xl);
+  }
 }
 
 /* The home page's column is centred at every width. Starlight centres the
