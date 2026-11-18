@@ -192,6 +192,10 @@ button.sl-menu-button svg.close-menu {
   line-height: 1.5;
   color: var(--muted);
   text-wrap: pretty;
+  /* Followed by text, code, or a table rather than a heading, it keeps the
+     space between blocks of a section (space-8); margins collapse, so the
+     larger space before a heading wins. */
+  margin-bottom: 2rem;
 }
 @media (min-width: 50rem) {
   .sl-markdown-content > p:first-child {
@@ -205,6 +209,7 @@ button.sl-menu-button svg.close-menu {
   font-size: inherit;
   line-height: inherit;
   color: inherit;
+  margin-bottom: 0;
 }
 /* The lead belongs to the title: it sits close under it, and the first
    section keeps its distance. The 404 page spaces its message itself. */
