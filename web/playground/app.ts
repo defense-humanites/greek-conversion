@@ -118,13 +118,20 @@ const FORMAT_NAMES: Readonly<Record<Format, string>> = {
 };
 
 /**
- * Opens a link to another site in a new tab, so that following it never
- * leaves the playground and its work in progress, and marks it as such: an
- * icon kept on the line of the last word, and a phrase for screen readers.
- * Links on the playground's own origin are left as they are.
+ * Opens a link that leaves the playground in a new tab, so that following
+ * it never loses the work in progress, and marks it as such: an icon kept
+ * on the line of the last word, and a phrase for screen readers. That is a
+ * link to another site, or to the documentation, as the documentation
+ * opens the playground; links within the playground are left as they are.
  */
+const PLAYGROUND = new URL("./", location.href).pathname;
+
 function markExternal(link: HTMLAnchorElement): void {
-  if (new URL(link.href, location.href).origin === location.origin) return;
+  const target = new URL(link.href, location.href);
+  if (
+    target.origin === location.origin &&
+    target.pathname.startsWith(PLAYGROUND)
+  ) return;
   link.target = "_blank";
   link.rel = "noopener";
   if (link.querySelector(".external-mark") !== null) return;
