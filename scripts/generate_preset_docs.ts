@@ -41,16 +41,15 @@ function renderPresetReference(metadata: readonly PresetMetadata[]): string {
     START,
     "<!-- This section is generated. Do not edit it directly. -->",
     "",
-    "| Preset | Description | Scope | Coverage | Out of scope | Reference |",
-    "| --- | --- | --- | --- | --- | --- |",
-    ...metadata.map((preset) => {
-      const references = preset.references.map((reference) =>
-        `[${escapeTable(reference.title)}](${reference.url})`
-      ).join("; ");
-      return `| \`${preset.id}\` | ${escapeTable(preset.description)} | ${
+    // A summary that fits the documentation's column: each preset's section
+    // below gives its out-of-scope behavior and its references.
+    "| Preset | Description | Scope | Coverage |",
+    "| --- | --- | --- | --- |",
+    ...metadata.map((preset) =>
+      `| \`${preset.id}\` | ${escapeTable(preset.description)} | ${
         preset.scope.map(escapeTable).join("; ")
-      } | ${preset.coverage} | ${preset.outOfScopeBehavior} | ${references} |`;
-    }),
+      } | ${preset.coverage} |`
+    ),
     "",
   ];
 

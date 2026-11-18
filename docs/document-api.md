@@ -53,7 +53,11 @@ When deriving two independent versions from one parse, copy the tokens and
 assign new diacritic sets where the marks change:
 
 ```ts
-import { encode, parse, validateDocument } from "@humanities/greek-conversion/document";
+import {
+  encode,
+  parse,
+  validateDocument,
+} from "@humanities/greek-conversion/document";
 
 const source = parse("ἄνθρωπος", "greek");
 const edited = source.map((token) => ({ ...token }));
@@ -64,11 +68,9 @@ if (edited[0].kind === "grapheme") {
   );
 }
 
-const diagnostics = validateDocument(edited);
-if (diagnostics.length === 0) {
-  encode(edited, "greek"); // ἀνθρωπος
-}
-encode(source, "greek"); // ἄνθρωπος
+validateDocument(edited); // → []
+encode(edited, "greek"); // → ἀνθρωπος
+encode(source, "greek"); // → ἄνθρωπος
 ```
 
 A shallow copy of a grapheme shares its diacritic set. That is safe for a set
@@ -94,9 +96,11 @@ options when encoding the result, unless a deliberate change of policy is
 intended:
 
 ```ts
+import { encode, parse } from "@humanities/greek-conversion/document";
+
 const options = { preset: "bnf-core" } as const;
 const document = parse("Chará", "transliteration", options);
-const output = encode(document, "greek", options); // Χαρά
+encode(document, "greek", options); // → Χαρά
 ```
 
 For multiple target formats, encode each from that same original document.
@@ -119,8 +123,10 @@ import { parseDetailed } from "@humanities/greek-conversion/document";
 
 const input = "ἄνθρωπος";
 const { document, spans } = parseDetailed(input, "greek");
-input.slice(spans[2].start, spans[2].end); // θ
-document[2]; // { kind: "grapheme", letter: "theta", ... }
+input.slice(spans[2].start, spans[2].end); // → θ
+
+const third = document[2];
+third.kind === "grapheme" && third.letter; // → theta
 ```
 
 `convertDetailed()` in the main entry point reports the same input spans

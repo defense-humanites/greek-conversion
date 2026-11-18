@@ -1,0 +1,122 @@
+---
+/*
+ * The home page, in one centred column: the vertical logo, which is the
+ * page's heading, the project's description and the two ways in, then the
+ * example given in the page's body. The playground opens in a new tab, as
+ * from the header.
+ * The logo follows the system's appearance, as the whole site does.
+ */
+import { LinkButton } from "@astrojs/starlight/components";
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+---
+
+<section class="home-hero not-content">
+  <div class="intro">
+    <h1 id="_top">
+      <picture>
+        <source
+          media="(prefers-color-scheme: dark)"
+          srcset={`${base}logo-dark.svg`}
+        />
+        <img
+          src={`${base}logo-light.svg`}
+          alt="greek conversion"
+          width="308"
+          height="168"
+        />
+      </picture>
+    </h1>
+    <p class="description">
+      Convert Ancient and Modern Greek between Greek&nbsp;script, Beta Code, and
+      Latin&nbsp;script, with standards‑based presets and
+      information‑loss&nbsp;diagnostics.
+    </p>
+    <div class="actions">
+      <LinkButton href={`${base}guide/getting-started/`} icon="right-arrow">
+        Get started
+      </LinkButton>
+      <LinkButton
+        href={`${base}playground/`}
+        variant="minimal"
+        target="_blank"
+        rel="noopener"
+      >
+        <span
+          >Try the <span class="external-tail"
+            >playground<span class="external-mark" aria-hidden="true" /></span
+          ><span class="sr-only"> (opens in a new tab)</span></span
+        >
+      </LinkButton>
+    </div>
+  </div>
+  <div class="example"><slot /></div>
+</section>
+
+<style>
+  .home-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2.5rem;
+    padding-block: 2.5rem 0.9375rem;
+  }
+  /* The vertical logo is centred on itself: so is what follows it. */
+  .intro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    text-align: center;
+  }
+  h1 {
+    margin: 0;
+    line-height: 0;
+  }
+  /* 70% of the screen, between that of a 360px screen, the page's
+     narrowest (`theme.css`), and 19rem. */
+  img {
+    width: clamp(15.75rem, 70vw, 19rem);
+    height: auto;
+  }
+  /* As wide as the example: two lines on a wide screen. */
+  .description {
+    max-width: 46rem;
+    margin: 0;
+    font-size: 1.25rem;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: balance;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+  .actions :global(.sl-link-button) {
+    margin: 0;
+  }
+  /* On a phone, both buttons on one line. */
+  @media (max-width: 30rem) {
+    .actions {
+      gap: 0.5rem;
+    }
+    .actions :global(.sl-link-button) {
+      padding-inline: 0.75rem;
+    }
+  }
+  .example {
+    width: 100%;
+    max-width: 46rem;
+    min-width: 0;
+  }
+  @media (min-width: 50rem) {
+    .home-hero {
+      gap: 3rem;
+      /* With the page's own margin under it, as much room under the example
+         as above the logo. */
+      padding-block: 4rem 2.5rem;
+    }
+  }
+</style>

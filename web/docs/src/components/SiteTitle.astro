@@ -1,0 +1,160 @@
+---
+/*
+ * The project's identity, as the playground's masthead writes it: the
+ * tessera, "greek" in cobalt and "conversion" in orange; on a phone, the
+ * tessera alone. The symbol follows the system's appearance, as the whole
+ * site does.
+ *
+ * Then the version this documentation describes (`versions.ts`): the
+ * series of the latest release (1.x) or "next", as main is before 1.0.0.
+ * Where both are deployed, a selector leads to the same page in the other.
+ */
+import { otherVersionHref, series, VERSIONS } from "../versions.ts";
+
+const { siteTitleHref } = Astro.locals.starlightRoute;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const other = otherVersionHref(Astro.url.pathname);
+const here = Astro.url.pathname;
+const released = VERSIONS.release === null ? null : series(VERSIONS.release);
+// Before 1.0.0, the root serves main alone: the next release.
+const label = VERSIONS.channel === "next" || released === null
+  ? "next"
+  : released;
+const versions = released === null || other === null ? [] : [
+  { label: released, current: VERSIONS.channel === "release" },
+  { label: "next", current: VERSIONS.channel === "next" },
+].map((version) => ({ ...version, href: version.current ? here : other }));
+---
+
+<a href={siteTitleHref} class="identity">
+  <picture>
+    <source
+      media="(prefers-color-scheme: dark)"
+      srcset={`${base}symbol-dark.svg`}
+    />
+    <img src={`${base}symbol-light.svg`} alt="" width="40" height="40" />
+  </picture>
+  <span class="name" translate="no">greek <span>conversion</span></span>
+</a>
+{
+  versions.length > 0 ? (
+    <label class="version version-select">
+      <span class="sr-only">Documentation version</span>
+      <select>
+        {versions.map(({ label, href, current }) => (
+          <option value={href} selected={current}>
+            {label}
+          </option>
+        ))}
+      </select>
+    </label>
+  ) : label !== null ? (
+    <span class="version version-chip">{label}</span>
+  ) : null
+}
+
+<script>
+  for (const select of document.querySelectorAll<HTMLSelectElement>(
+    ".version-select select",
+  )) {
+    select.addEventListener("change", () => {
+      location.href = select.value + location.hash;
+    });
+  }
+</script>
+
+<style>
+  .identity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    text-decoration: none;
+  }
+  img {
+    display: block;
+    width: 40px;
+    height: 40px;
+  }
+  .name {
+    font-size: 24px;
+    font-weight: 700;
+    font-variation-settings: "opsz" 72;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    color: var(--from);
+  }
+  .name span {
+    color: var(--to);
+  }
+  /* The version, in the muted ink: on its own, a chip, as the system's
+     labels (12px capitals, spaced); where both versions are deployed, a
+     select, with a chevron. */
+  .version {
+    flex: none;
+    align-self: center;
+    margin-inline-start: 12px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .version-chip {
+    padding: 5px 7px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .version-select {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .version-select select {
+    appearance: none;
+    margin: 0;
+    padding: 5px 22px 5px 7px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+  @media (hover: hover) {
+    .version-select select:hover {
+      border-color: var(--muted);
+    }
+  }
+  .version-select::after {
+    content: "";
+    position: absolute;
+    inset-inline-end: 6px;
+    width: 12px;
+    height: 12px;
+    background: currentColor;
+    mask: var(--icon-chevron-down) center / contain no-repeat;
+    pointer-events: none;
+  }
+  /* On a phone, the symbol and the version, to leave the search field its
+     room; the name stays for screen readers. */
+  @media (max-width: 49.99rem) {
+    .version {
+      margin-inline-start: 8px;
+    }
+    .name {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+</style>

@@ -1,0 +1,57 @@
+---
+/*
+ * The project's links, as the playground's masthead gives them: the
+ * playground, set off by its weight, the source, and the two registries, in
+ * words. Each opens in a new tab and says so, as the playground's links to
+ * other sites do: the playground is a tool of its own, beside the reading.
+ */
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const links = [
+  { label: "Playground", href: `${base}playground/`, lead: true },
+  { label: "Source", href: "https://github.com/defense-humanites/greek-conversion" },
+  { label: "npm", href: "https://www.npmjs.com/package/@humanities/greek-conversion" },
+  { label: "JSR", href: "https://jsr.io/@humanities/greek-conversion" },
+];
+---
+
+<nav class="links" aria-label="Project">
+  {
+    links.map(({ label, href, lead }) => (
+      <a {href} class:list={{ lead }} target="_blank" rel="noopener">
+        <span class="external-tail">
+          {label}
+          <span class="external-mark" aria-hidden="true" />
+        </span>
+        <span class="sr-only"> (opens in a new tab)</span>
+      </a>
+    ))
+  }
+</nav>
+
+<style>
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 20px;
+    white-space: nowrap;
+    font-size: 15px;
+    font-weight: 500;
+  }
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--link);
+    text-decoration: none;
+    text-underline-offset: 0.15em;
+  }
+
+  .lead {
+    font-weight: 700;
+  }
+  a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+</style>

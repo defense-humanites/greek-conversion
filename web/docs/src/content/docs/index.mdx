@@ -1,0 +1,33 @@
+---
+title: greek conversion
+description: A TypeScript library that converts Ancient and Modern Greek between Greek script, Beta Code, and Latin script, with standards-based presets and information-loss diagnostics.
+template: splash
+editUrl: false
+# The opening is drawn by HomeHero, below; this only leaves out the title.
+hero:
+  title: greek conversion
+---
+
+import HomeHero from "../../components/HomeHero.astro";
+
+<HomeHero>
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+// Ancient Greek, in the SBL academic style
+convert("Ἕλλησιν ἐγένετο", "greek", "transliteration");
+// → Héllēsin egéneto
+
+// Beta Code, as the TLG writes it
+convert("*(/ELLHSIN E)GE/NETO", "beta-code", "greek");
+// → Ἕλλησιν ἐγένετο
+
+// Modern Greek, as passports and maps write it
+convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliteration", {
+  preset: "iso-843-type-2",
+});
+// → I Athína eínai i protévousa
+```
+
+</HomeHero>

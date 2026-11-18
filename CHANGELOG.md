@@ -7,14 +7,6 @@ change.
 
 ## [Unreleased]
 
-### Added
-
-- `greek.elidedStop` decides how Greek output writes a final `π`, `τ`, or `κ`
-  whose vowel is elided before a word with a rough breathing: `"preserve"`,
-  the default, keeps the consonant of the source, and `"aspirate"` writes
-  `φ`, `θ`, or `χ` (`ἀπ’ οὗ` → `ἀφ’ οὗ`). Its type is
-  `ElidedStopOrthography`.
-
 ### Changed
 
 - Greek output that carries no polytonic mark writes its acutes with tonos
@@ -61,7 +53,8 @@ change.
   a tab beside the generated code and the canonical document, both
   highlighted. Texts in all three formats are set in
   Literata Light, served by the playground with the letters it lacked
-  (`web/shared/fonts/README.md`). Reset, beside Share, brings the page back to its
+  (`web/shared/fonts/README.md`); its icons are Lucide's, shared with the
+  documentation site (`npm run site:icons`). Reset, beside Share, brings the page back to its
   opening state, and offers to undo it for a few seconds. On a touch screen,
   Share opens the system's share sheet; elsewhere, it copies the link. By
   touch, the pickers of options and characters show their lists without a
@@ -79,6 +72,17 @@ change.
   removed, and what a restyle with `source` cannot restore; and the Beta Code
   apostrophe and font shifts to `docs/information-loss.md`. The English text
   prevails over the `README`, guides, and translations. No behavior changes.
+- One sentence describes the project: "Convert Ancient and Modern Greek
+  between Greek script, Beta Code, and Latin script, with standards-based
+  presets and information-loss diagnostics." It is the package's
+  `description`, the README's tagline, the text of the site's home page, and
+  the documentation of the main module; the description of the site and the
+  abstract of `CITATION.cff` give it after "A TypeScript library that
+  converts". `npm run check` keeps the copies identical. The playground's
+  description follows it. The social card, which must hold its text on three
+  lines, gives a shorter form: "Convert Ancient and Modern Greek to and from
+  Beta Code or Latin script, with standards-based presets and
+  information-loss diagnostics."; its text alternative follows the card.
 - Greek output no longer aspirates an elided consonant before a rough
   breathing unless asked: `ἀπ’ οὗ`, `κατ’ ἑωυτούς`, and `μετ’ ἡμέρην`, as
   Herodotus and other Ionic prose are edited, stay as written, where every
@@ -86,6 +90,98 @@ change.
   reported a loss. This follows the letter forms, kept as the source writes
   them since rc.9. `greek: { elidedStop: "aspirate" }` gives the earlier
   output; transliteration `ap’ hēmō̃n` now reads as `ἀπ’ ἡμῶν` without it.
+
+- The reference (`docs/`) says more: `validation.md` lists the codes of
+  `validateDocument()` and how to locate one in the input;
+  `greek-unicode.md` states where the monotonic rules take an accent that
+  usage keeps (`ό,τι`, `κ.ά.`, `20ός`), as limits that a release may correct;
+  `ala-lc-conformance-corpus.md` no longer counts the missing `h` of
+  monotonic text among the open rules, since the ALA-LC table supplies none
+  there (`Ελληνική` → `Ellēnikē`, now a case of the corpus).
+- The examples of the README and of the guide are checked code point for
+  code point, no longer after NFC normalization: a result is written as it is
+  returned, oxia or tonos.
+- The examples of the reference (`docs/`) are checked like those of the
+  guide. Each of its twenty-three examples is now a module with its imports
+  and its results, type-checked and run by `npm run check`, which also checks
+  the links between its documents and their headings. A result given inside
+  a block, such as a `catch`, is checked too: three of the guide were read as
+  plain comments.
+- The conversions the documentation cites in its prose (`Ἅιδῃ → Háidȩ̄`,
+  "`ἐϛὶ` gives `ec̄ì`") are checked by `npm run check`: each must be what the
+  library returns between the formats it is written in, under the defaults,
+  a preset its page names, or the options named around it. One citation of
+  `docs/information-loss.md` lacked the apostrophe of its smooth breathing
+  (`εὖ` → `’ẽf` under ISO 843 Type 1).
+
+### Added
+
+- `greek.elidedStop` decides how Greek output writes a final `π`, `τ`, or `κ`
+  whose vowel is elided before a word with a rough breathing: `"preserve"`,
+  the default, keeps the consonant of the source, and `"aspirate"` writes
+  `φ`, `θ`, or `χ` (`ἀπ’ οὗ` → `ἀφ’ οὗ`). Its type is
+  `ElidedStopOrthography`.
+
+- A documentation site, at https://defense-humanites.github.io/greek-conversion/,
+  built with Starlight (`web/docs/`): a guide and nine recipes taken from the
+  README, the reference generated from `docs/` at each build, and the API
+  reference generated from the TSDoc of both entry points, with search. It
+  uses the playground's design (`web/shared/`) and follows the system's light
+  or dark appearance. The playground moves to `/playground/`; a link shared
+  before, to the site's root with its state in the fragment, opens the
+  playground. The site is laid out for translations, English being the
+  source; none is published yet. Code, in the site and the playground, is
+  set in Noto Sans Mono, served with the site, which covers polytonic Greek
+  and stacks diacritics on every system, with Fira Mono for the symbol forms
+  and lunate sigmas it does not tell apart.
+- The guide answers a reader who comes with a Greek. Pages on Ancient Greek
+  and on Byzantine and Medieval Greek join the one on Modern Greek, each
+  with the conventions that apply, what converts back, the tasks proper to
+  the period, and its limits; the Byzantine page says which signs are kept
+  but not read yet (`ϗ`, `ȣ`, a spacing breathing before a capital, the
+  overline of nomina sacra). The page on presets compares what each preset
+  loses on a monotonic and a polytonic text, in a table computed from the
+  library (`npm run docs:losses`) and kept up to date by `npm run check`. A
+  page on the canonical document takes the section that How it works had.
+- A reference of the conversion options, `docs/options.md`: each of the 46
+  options with what its API documentation says, its values, its default, an
+  example of what each other value changes, and the presets that select it.
+  It is generated from the library (`npm run docs:options`): the texts are
+  the TSDoc of the options, and each example is the first word of the
+  playground's probe text that the value writes otherwise. In the guide, the
+  page on presets compares how each transliteration preset writes the
+  letters, vowel pairs, digraphs, and marks on which the conventions differ
+  (`npm run docs:comparison`). `npm run check` keeps both up to date.
+- The reference states how punctuation and numerals are read and written,
+  in `docs/punctuation-and-numerals.md`: the six signs read for what they
+  mean in Greek and their spelling in each format, the spellings each reader
+  accepts, what Greek output therefore changes in a text converted to itself
+  (`?` to `;`, `-` to `‐`, `'` to `’`), what a numeral is, its signs, and
+  what is not read as one. The guide gains a glossary.
+- The README is now a short entry point: installation, one example, the main
+  functions, and links to the site. Its development notes move to
+  `CONTRIBUTING.md`. `npm run check` (`scripts/check_examples.ts`, formerly
+  `check_readme.ts`) type-checks and runs the examples of the guide pages as
+  well as the README's, and checks the links between pages. The package's
+  `homepage` is the site.
+- A Modern Greek page in the guide: which preset to use for names on
+  passports and maps (`iso-843-type-2`), for a reversible transliteration
+  (`iso-843-type-1`), and for library records (`ala-lc-modern`); how to read
+  transliteration back as monotonic Greek, romanize a polytonic text as a
+  monotonic one, and make search keys and URL slugs; and what needs more than
+  the text. The README, Getting started, and Presets lead to it, and the
+  table of presets says which Greek each one is for.
+- The ISO 843 presets name ELOT 743, the Greek national standard: Type 2 is
+  its transcription, which the United Nations and BGN/PCGN adopted for
+  geographical names, and Type 1 its transliteration since 2001.
+  `iso-843-type-2` cites the BGN/PCGN and UNGEGN tables, and its conformance
+  corpus checks every example of the BGN/PCGN table. The rules that need more
+  than the text are recorded: the stress of unaccented capitals, unaccented
+  abbreviations, and older polytonic accents. The package's keywords include
+  `elot743`, `byzantine-greek`, and `medieval-greek`, and those of
+  `CITATION.cff` Byzantine and Medieval Greek. The keywords `beta-code` and
+  `iso-843` become `betacode` and `iso843`, the spellings that the
+  repository's topics and other Greek packages on npm use.
 
 ### Fixed
 

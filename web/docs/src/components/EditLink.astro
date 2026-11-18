@@ -1,0 +1,50 @@
+---
+/*
+ * Starlight's edit link, which leads to GitHub: like every link that leaves
+ * the documentation, it opens in a new tab and says so. It reads as a
+ * secondary button, as "Try the playground" on the home page, and shares
+ * its states (theme.css, .sl-link-button.minimal).
+ */
+import { icon } from "../../../shared/icons.ts";
+
+const { editUrl } = Astro.locals.starlightRoute;
+const label = Astro.locals.t("page.editLink");
+---
+
+{
+  editUrl && (
+    <a
+      href={editUrl}
+      class="sl-link-button minimal print:hidden"
+      target="_blank"
+      rel="noopener"
+    >
+      <Fragment set:html={icon("pencil")} />
+      <span>
+        <span class="external-tail">
+          {label}
+          <span class="external-mark" aria-hidden="true" />
+        </span>
+        <span class="sr-only"> (opens in a new tab)</span>
+      </span>
+    </a>
+  )
+}
+
+<style>
+  a {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    min-height: 2.5rem;
+    padding-inline: 0.875rem;
+    color: var(--ink);
+    font-size: 0.9375rem;
+    text-decoration: none;
+  }
+  a :global(.icon) {
+    flex: none;
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+</style>

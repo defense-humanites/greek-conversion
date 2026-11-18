@@ -1,6 +1,6 @@
 /**
- * Bidirectional conversion between Greek, Beta Code, and scientific
- * transliteration.
+ * Convert Ancient and Modern Greek between Greek script, Beta Code, and Latin
+ * script, with standards-based presets and information-loss diagnostics.
  *
  * Use {@link convert} for ordinary conversions and {@link convertDetailed}
  * when information-loss diagnostics are required. Advanced access to the

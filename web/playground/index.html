@@ -3,10 +3,45 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+      // Below 360px, the page no longer narrows: a phone that narrow lays it
+      // out 360px wide and scales it to its screen, as the documentation
+      // does. The width is the screen's in its current orientation, which
+      // iOS does not swap in screen.width.
+      (() => {
+        const viewport = document.querySelector('meta[name="viewport"]');
+        const fit = () => {
+          const { width, height } = screen;
+          const landscape = matchMedia("(orientation: landscape)").matches;
+          const across = landscape
+            ? Math.max(width, height)
+            : Math.min(width, height);
+          viewport.content = across < 360
+            ? "width=360"
+            : "width=device-width, initial-scale=1";
+        };
+        fit();
+        addEventListener("orientationchange", fit);
+      })();
+    </script>
     <meta name="description"
-      content="Convert between Greek, Beta Code, and transliteration in your browser, with standards-based presets and a report of what each conversion loses.">
+      content="Convert Ancient and Modern Greek between Greek script, Beta Code, and Latin script in your browser, with standards-based presets and a report of what each conversion loses.">
     <meta name="color-scheme" content="light dark">
-    <title>greek conversion playground</title>
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Playground">
+    <meta property="og:site_name" content="greek conversion">
+    <meta property="og:description"
+      content="Convert Ancient and Modern Greek between Greek script, Beta Code, and Latin script in your browser, with standards-based presets and a report of what each conversion loses.">
+    <meta property="og:url"
+      content="https://defense-humanites.github.io/greek-conversion/playground/">
+    <meta property="og:image"
+      content="https://defense-humanites.github.io/greek-conversion/social.png">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="640">
+    <meta property="og:image:alt"
+      content="greek conversion: convert Ancient and Modern Greek to and from Beta Code or Latin script, with standards-based presets and information-loss diagnostics.">
+    <meta name="twitter:card" content="summary_large_image">
+    <title>Playground | greek conversion</title>
     <link rel="icon" type="image/svg+xml"
       href="./assets/greek-conversion-favicon.svg">
     <link rel="preload" href="./fonts/bricolage-grotesque.woff2" as="font"
@@ -31,8 +66,7 @@
           <span class="product">playground</span>
         </div>
         <nav class="links" aria-label="Project">
-          <a
-            href="https://github.com/defense-humanites/greek-conversion#readme">Documentation</a>
+          <a href="../" class="documentation">Documentation</a>
           <a href="https://github.com/defense-humanites/greek-conversion">Source</a>
           <a href="https://www.npmjs.com/package/@humanities/greek-conversion">npm</a>
           <a href="https://jsr.io/@humanities/greek-conversion">JSR</a>
@@ -41,21 +75,16 @@
         <div class="reset">
           <button id="reset" class="button" type="button"
             title="Clear the text and every setting">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
-                d="M4 12a8 8 0 1 0 2.4-5.7" /><path d="M4 4v5h5" /></svg>
+            <svg data-icon="rotate-ccw"></svg>
             <span class="button-label">Reset</span>
           </button>
           <p id="reset-note" class="reset-note" role="status"></p>
         </div>
         <div class="share">
-          <button id="share" class="button" type="button"
+          <button id="share" class="button primary" type="button"
             aria-describedby="share-help">
-            <svg class="icon share-link" viewBox="0 0 24 24"
-              aria-hidden="true"><path
-                d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path
-                d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></svg>
-            <svg class="icon share-done" viewBox="0 0 24 24" aria-hidden="true"
-              hidden><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+            <svg data-icon="link" class="share-link"></svg>
+            <svg data-icon="check" class="share-done" hidden></svg>
             <span class="button-label">Share</span>
           </button>
           <p id="share-help" class="share-note" role="status"
@@ -129,8 +158,7 @@
               aria-labelledby="options-word"></ul>
             <button id="add-option" class="add-option" type="button"
               aria-expanded="false" aria-controls="option-picker">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
-                  d="M12 5v14M5 12h14" /></svg>
+              <svg data-icon="plus"></svg>
               option
             </button>
             <div id="option-picker" class="option-picker" hidden>
@@ -141,9 +169,7 @@
               <p id="option-step" class="option-step" hidden><button
                   id="option-back" class="option-back" type="button"
                   aria-label="Back to the options"
-                  title="Back to the options (← or Escape)"><svg class="icon"
-                    viewBox="0 0 24 24" aria-hidden="true"><path
-                      d="M15 18l-6-6 6-6" /></svg></button><span
+                  title="Back to the options (← or Escape)"><svg data-icon="chevron-left"></svg></button><span
                   id="option-step-name"></span></p>
               <div id="option-list" class="option-list" role="listbox"
                 aria-label="Conversion options"></div>
@@ -167,16 +193,14 @@
                   class="label">Greek</span></label>
               <div class="field-actions">
                 <span class="button small menu-button">
-                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
-                      d="M5 4h10a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4zM5 16a4 4 0 0 1 4-4h10" /></svg>
+                  <svg data-icon="book"></svg>
                   <span aria-hidden="true">Examples</span>
                   <select id="examples" aria-label="Examples">
                     <option value="">Choose an example</option>
                   </select>
                 </span>
                 <button id="clear" class="button small" type="button">
-                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
-                      d="M6 6l12 12M18 6L6 18" /></svg>
+                  <svg data-icon="x"></svg>
                   Clear
                 </button>
               </div>
@@ -197,14 +221,11 @@
               <div class="field-actions">
                 <button id="swap" class="button small" type="button"
                   title="Swap: the result becomes the text to convert, and the formats change sides">
-                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
-                      d="M4 8h15l-4-4" /><path d="M20 16H5l4 4" /></svg>
+                  <svg data-icon="arrow-right-left"></svg>
                   Swap
                 </button>
-                <button id="copy" class="button small primary" type="button">
-                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect
-                      x="8" y="8" width="12" height="12" rx="2" /><path
-                      d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></svg>
+                <button id="copy" class="button small target" type="button">
+                  <svg data-icon="copy"></svg>
                   <span class="button-label">Copy</span>
                 </button>
               </div>
@@ -251,9 +272,7 @@
               <p
                 class="hint">The same call with the library, input text included. The comment shows what it returns.</p>
               <button id="copy-code" class="button" type="button">
-                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect
-                    x="8" y="8" width="12" height="12" rx="2" /><path
-                    d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></svg>
+                <svg data-icon="copy"></svg>
                 <span class="button-label">Copy code</span>
               </button>
             </div>
@@ -277,7 +296,7 @@
             <p class="hint inventory-intro">Change the characters the
               conversion knows: leave some out, keep only some, add spellings
               of a letter, or define new characters. <a
-                href="https://github.com/defense-humanites/greek-conversion/blob/main/docs/character-extensions.md">Character
+                href="../reference/character-extensions/">Character
                 extensions and repertoires</a></p>
             <div class="inventory" id="inventory">
               <div class="inventory-row" data-field="exclude">
@@ -286,9 +305,7 @@
                   <ul class="option-pills" role="list"
                     aria-labelledby="exclude-word"></ul>
                   <button class="add-option" type="button"
-                    aria-expanded="false" aria-controls="inventory-picker"><svg
-                      class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
-                        d="M12 5v14M5 12h14" /></svg> character</button>
+                    aria-expanded="false" aria-controls="inventory-picker"><svg data-icon="plus"></svg> character</button>
                 </div>
               </div>
               <div class="inventory-row" data-field="repertoire">
@@ -297,9 +314,7 @@
                   <ul class="option-pills" role="list"
                     aria-labelledby="repertoire-word"></ul>
                   <button class="add-option" type="button"
-                    aria-expanded="false" aria-controls="inventory-picker"><svg
-                      class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
-                        d="M12 5v14M5 12h14" /></svg> character</button>
+                    aria-expanded="false" aria-controls="inventory-picker"><svg data-icon="plus"></svg> character</button>
                 </div>
               </div>
               <div class="inventory-row" data-field="aliases">
@@ -308,9 +323,7 @@
                   <ul class="option-pills" role="list"
                     aria-labelledby="aliases-word"></ul>
                   <button class="add-option" type="button"
-                    aria-expanded="false" aria-controls="inventory-picker"><svg
-                      class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
-                        d="M12 5v14M5 12h14" /></svg> spelling</button>
+                    aria-expanded="false" aria-controls="inventory-picker"><svg data-icon="plus"></svg> spelling</button>
                 </div>
               </div>
               <div class="inventory-row" data-field="characters">
@@ -319,9 +332,7 @@
                   <ul class="option-pills" role="list"
                     aria-labelledby="characters-word"></ul>
                   <button class="add-option" type="button"
-                    aria-expanded="false" aria-controls="inventory-picker"><svg
-                      class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
-                        d="M12 5v14M5 12h14" /></svg> character</button>
+                    aria-expanded="false" aria-controls="inventory-picker"><svg data-icon="plus"></svg> character</button>
                 </div>
               </div>
               <div id="inventory-picker" class="option-picker" hidden></div>

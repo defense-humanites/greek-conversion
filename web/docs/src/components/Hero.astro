@@ -1,0 +1,13 @@
+---
+/*
+ * The home page draws its own opening (`HomeHero.astro`, in the page), with
+ * the logo, the description and the example; its `hero` front matter only
+ * tells Starlight to leave out the usual page title. Every other page with a
+ * hero, the 404 page among them, keeps Starlight's.
+ */
+import Default from "@astrojs/starlight/components/Hero.astro";
+
+const isHome = Astro.locals.starlightRoute.id === "";
+---
+
+{!isHome && <Default />}

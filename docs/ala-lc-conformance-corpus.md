@@ -5,7 +5,7 @@ The executable examples in
 are checked against the Library of Congress's published
 [Ancient and Medieval Greek](https://www.loc.gov/catdir/cpso/romanization/greeka.pdf)
 and [Modern Greek](https://www.loc.gov/catdir/cpso/romanization/greekm.pdf)
-tables. The ancient text examples are quoted from the former table; the
+tables, which the `ala-lc-ancient` and `ala-lc-modern` presets implement. The ancient text examples are quoted from the former table; the
 short modern examples combine explicit alphabet and notes rows from the latter.
 The cases check Latin output, whether `convertDetailed()` detects information
 loss, and the stability of re-encoding that Latin output. They do not assert
@@ -24,7 +24,7 @@ marks or replaces alphabetic numerals with decimal numbers.
 | --- | --- |
 | Ancient table, all-capitals examples such as `ΗΣΙΟΔΟΥ …` → `Hēsiodou …` | Greek capitals do not mark the missing rough breathing, and title-style Latin case requires editorial choices. A mechanical `letterCase` override does not infer either from the text. |
 | Ancient example `κεῖται παρ’ Ἅιδῃ` → `keitai par’ Hadē` | The table omits the iota adscript of `Ἅιδῃ`. The engine recognizes the marks on the capital as excluding a diphthong and keeps the iota as a letter; the preset produces `Haidē`. |
-| Modern table, missing rough breathing in monotonic or all-capitals text | Supplying `h` where historically appropriate requires language knowledge and sometimes evidence from the item. The preset uses only explicitly marked breathings. |
+| Modern table, rough breathing missing from a polytonic text, as in all-capitals text | Supplying `h` where the breathing does not appear requires language knowledge and sometimes evidence from the item. The preset uses only explicitly marked breathings. The table supplies none in monotonic text, which has only the acute and the diaeresis: `Ελληνική` gives `Ellēnikē`, as the preset writes it. |
 | Modern table, polytonic versus monotonic identification | The source asks cataloguers to inspect the item or use a publication-date fallback when orthography is unclear. A source string alone cannot supply that bibliographic context. |
 
 The selected corpus establishes specific, traceable behavior, not exhaustive

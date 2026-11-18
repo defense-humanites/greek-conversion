@@ -9,10 +9,16 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
+/* Below 360px, where the viewport could not be widened to 360px (a narrow
+   desktop window, a simulator; on a phone, the head's script lays the page
+   out 360px wide), the page keeps 360px and scrolls sideways. */
+@media (max-width: 359.98px) {
+  html {
+    min-width: 360px;
+  }
+}
 :root {
   --check-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 12.5l4.5 4.5 8.5-9.5'/%3E%3C/svg%3E");
-  --disclosure-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 6 8 10.5 12.5 6'/%3E%3C/svg%3E");
-  --external-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2.5h4v4M13.5 2.5 7.5 8.5M12 9.5v3a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3'/%3E%3C/svg%3E");
   font-family: var(--face-ui);
   color: var(--ink);
   background: var(--surface);
@@ -43,16 +49,25 @@ button,
 select {
   cursor: pointer;
 }
-a {
+/* Links keep their blue, hovered or not, as in the documentation. The 2px
+   underline is faint at rest and takes the link's own colour on hover. */
+a,
+.link-button,
+.reset-note button {
   color: var(--link);
-  text-underline-offset: 0.15em;
-}
-a:hover {
-  color: var(--ink);
+  text-decoration-line: underline;
   text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+  transition: text-decoration-color 0.15s ease;
+}
+a:hover,
+.link-button:hover,
+.reset-note button:hover {
+  text-decoration-color: currentColor;
 }
 :focus-visible {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 2px;
 }
 /* Links to other sites open in a new tab; the mark says so. */
@@ -66,7 +81,7 @@ a:hover {
   margin-left: 0.2em;
   vertical-align: -0.05em;
   background: currentColor;
-  mask: var(--external-icon) center / contain no-repeat;
+  mask: var(--icon-external-link) center / contain no-repeat;
 }
 /* A button that unfolds a list: the chevron turns when it is open. */
 .disclosure-mark {
@@ -76,7 +91,7 @@ a:hover {
   margin-left: 0.25em;
   vertical-align: -0.05em;
   background: currentColor;
-  mask: var(--disclosure-icon) center / contain no-repeat;
+  mask: var(--icon-chevron-down) center / contain no-repeat;
   transition: transform 0.15s;
 }
 [aria-expanded="true"] .disclosure-mark {
@@ -134,25 +149,86 @@ code {
   font-weight: 600;
   line-height: 1;
 }
-.button:hover {
-  border-color: var(--muted);
-}
 .button.small {
   min-height: 40px;
   padding: 0 12px;
 }
 .button.primary {
-  border-color: var(--from);
-  background: var(--from);
+  border-color: var(--link);
+  background: var(--link);
   color: var(--surface);
 }
-.button.primary:hover {
-  border-color: var(--ink);
-  background: var(--ink);
+/* Copy, in the target's field: the main action there, in its orange. */
+.button.target {
+  border-color: var(--to-strong);
+  background: var(--to-strong);
+  color: var(--surface);
 }
 .button:disabled {
   opacity: 0.5;
   cursor: default;
+}
+/*
+ * Button states, as in the documentation. On hover, a secondary button's
+ * line darkens and a primary button's colour deepens (--link-hover);
+ * pressed, a secondary button takes a tint of the ink (--press), a primary
+ * one deepens further (--link-press), and the action buttons shrink, then
+ * spring back (--squish, --ease-bounce): flat at rest, as the whole
+ * identity. Hover only where a pointer hovers: on a touch screen, a tapped
+ * button would keep it.
+ */
+.button,
+.menu-button,
+.add-option,
+.pill-remove,
+.option-back,
+.segments label {
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease,
+    scale 0.32s var(--ease-bounce);
+}
+@media (hover: hover) {
+  .button:hover:not(:disabled),
+  .menu-button:hover {
+    border-color: var(--muted);
+  }
+  .button.primary:hover:not(:disabled) {
+    border-color: var(--link-hover);
+    background: var(--link-hover);
+  }
+  .button.target:hover:not(:disabled) {
+    border-color: var(--to-strong-hover);
+    background: var(--to-strong-hover);
+  }
+  .segments label:not(:has(input:checked), .detected):hover {
+    color: var(--ink);
+  }
+}
+.button:active:not(:disabled),
+.menu-button:active {
+  background-color: var(--press);
+}
+.button.primary:active:not(:disabled) {
+  border-color: var(--link-press);
+  background: var(--link-press);
+}
+.button.target:active:not(:disabled) {
+  border-color: var(--to-strong-press);
+  background: var(--to-strong-press);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .button:active:not(:disabled),
+  .menu-button:active,
+  .add-option:active {
+    scale: var(--squish);
+    transition:
+      border-color 0.15s ease,
+      background-color 0.15s ease,
+      color 0.15s ease,
+      scale 0.06s ease-in;
+  }
 }
 
 /* Layout */
@@ -257,8 +333,15 @@ h1 span {
   min-height: 44px;
   text-decoration: none;
 }
+/* Documentation, the playground's companion, in bold, as the
+   documentation's header sets Playground. */
+.links .documentation {
+  font-weight: 700;
+}
 .links a:hover {
+  color: var(--ink);
   text-decoration: underline;
+  text-decoration-thickness: 2px;
 }
 /* Reset and Share act on the whole page: they sit together, top right. */
 .page-actions {
@@ -345,12 +428,10 @@ h1 span {
   background: none;
   font: inherit;
   font-weight: 600;
-  color: var(--link, var(--from));
-  text-decoration: underline;
   cursor: pointer;
 }
 .share-done {
-  color: var(--from);
+  color: inherit;
 }
 /* Half the width, clear of the links and the Share button. */
 .intro {
@@ -506,13 +587,12 @@ h1 span {
   content: "";
   position: absolute;
   top: 50%;
-  right: 14px;
-  width: 8px;
-  height: 8px;
-  margin-top: -6px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg);
+  right: 12px;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  background: currentColor;
+  mask: var(--icon-chevron-down) center / contain no-repeat;
   pointer-events: none;
 }
 .chip-select select {
@@ -620,7 +700,7 @@ h1 span {
   color: var(--from);
 }
 .segments label:has(input:focus-visible) {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 2px;
 }
 /* Options: one pill per departure from the standard, then a picker */
@@ -691,7 +771,7 @@ h1 span {
 }
 .pill-value:has(select:focus-visible) {
   border-radius: 6px;
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 1px;
 }
 .pill-remove {
@@ -705,8 +785,14 @@ h1 span {
   background: none;
   color: var(--muted);
 }
-.pill-remove:hover {
-  background: var(--raised);
+@media (hover: hover) {
+  .pill-remove:hover {
+    background: var(--raised);
+    color: var(--ink);
+  }
+}
+.pill-remove:active {
+  background: var(--press);
   color: var(--ink);
 }
 .pill-remove .icon {
@@ -727,9 +813,13 @@ h1 span {
   font-weight: 600;
   line-height: 1;
 }
-.add-option:hover,
 .add-option[aria-expanded="true"] {
   border-style: solid;
+}
+@media (hover: hover) {
+  .add-option:hover {
+    border-style: solid;
+  }
 }
 /* Same format on both sides and nothing set yet: the options are the point. */
 .add-option.prompt {
@@ -773,7 +863,7 @@ h1 span {
   font-size: 16px;
 }
 .option-picker input[type="text"]:focus-visible {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 0;
 }
 .option-step {
@@ -799,8 +889,14 @@ h1 span {
   background: none;
   color: var(--muted);
 }
-.option-back:hover {
-  background: var(--code-bg);
+@media (hover: hover) {
+  .option-back:hover {
+    background: var(--code-bg);
+    color: var(--ink);
+  }
+}
+.option-back:active {
+  background: var(--press);
   color: var(--ink);
 }
 .option-back .icon {
@@ -902,16 +998,8 @@ h1 span {
   padding: 0;
   border: none;
   background: none;
-  color: var(--link);
   font-size: inherit;
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
   cursor: pointer;
-}
-/* As a link does. */
-.preset-line .link-button:hover {
-  color: var(--ink);
-  text-decoration-thickness: 2px;
 }
 .preset-limits {
   margin: 10px 0 0;
@@ -1040,12 +1128,11 @@ h1 span {
 }
 .menu-button::after {
   content: "";
-  width: 6px;
-  height: 6px;
-  margin: -3px 2px 0 2px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg);
+  width: 0.75em;
+  height: 0.75em;
+  margin-left: 0.1em;
+  background: currentColor;
+  mask: var(--icon-chevron-down) center / contain no-repeat;
 }
 .menu-button select {
   position: absolute;
@@ -1059,11 +1146,8 @@ h1 span {
   cursor: pointer;
 }
 .menu-button:has(select:focus-visible) {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 2px;
-}
-.menu-button:hover {
-  border-color: var(--muted);
 }
 /*
  * The source sits over a copy of itself in which the letters that lose a
@@ -1105,7 +1189,7 @@ h1 span {
   outline: none;
 }
 .field:focus-within {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 3px;
 }
 .field.to:focus-within {
@@ -1335,12 +1419,14 @@ textarea.text::placeholder {
   visibility: hidden;
 }
 .tabs [role="tab"][aria-selected="true"] {
-  border-bottom-color: var(--from);
+  border-bottom-color: var(--link);
   font-weight: 700;
   color: var(--ink);
 }
-.tabs [role="tab"]:hover {
-  color: var(--ink);
+@media (hover: hover) {
+  .tabs [role="tab"]:hover {
+    color: var(--ink);
+  }
 }
 .panel {
   position: relative;
@@ -1396,10 +1482,7 @@ pre.code code {
   font-weight: 700;
   color: var(--code-function);
 }
-.tok-key,
-.tok-punctuation {
-  color: var(--code-muted);
-}
+/* Object keys and punctuation keep the ink: only comments are muted. */
 .tok-comment {
   font-style: italic;
   color: var(--code-muted);
@@ -1436,24 +1519,24 @@ pre.code code {
   cursor: pointer;
 }
 .check input:checked {
-  border-color: var(--from);
-  background-color: var(--from);
+  border-color: var(--link);
+  background-color: var(--link);
   background-image: var(--check-icon);
 }
 .picker-formats input {
   border-radius: 50%;
 }
 .picker-formats input:checked {
-  border-color: var(--from);
+  border-color: var(--link);
   background-image: radial-gradient(
     circle,
-    var(--from) 0 6px,
+    var(--link) 0 6px,
     transparent 6.5px
   );
 }
 .check input:focus-visible,
 .picker-formats input:focus-visible {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 2px;
 }
 /* The character inventory: rows of pills, as for the options */
@@ -1495,7 +1578,7 @@ pre.code code {
 }
 .picker-search:focus-visible,
 .picker-field input:focus-visible {
-  outline: 2px solid var(--from);
+  outline: 2px solid var(--link);
   outline-offset: 0;
 }
 .picker-form {

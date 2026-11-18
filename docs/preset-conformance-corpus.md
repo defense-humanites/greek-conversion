@@ -1,4 +1,4 @@
-# BnF and ISO 843 conformance corpus
+# BnF, ISO 843, and BGN/PCGN conformance corpus
 
 The spellings in the executable cases in
 [`tests/preset_conformance_test.ts`](../tests/preset_conformance_test.ts)
@@ -17,7 +17,9 @@ whether a catalogue record also needs the main form or an access-point
 variant. `iso-843-type-1` selects the main ISO forms. `iso-843-type-2` is a
 transcription, not reversible by design (§ 1 of the standard): most of its
 cases report loss, and the test checks that the output is nevertheless
-stable.
+stable. The BGN/PCGN table romanizes Modern Greek by the transcription of
+ELOT 743, the Greek national standard, which is also ISO 843 Type 2: every
+example of its table and of its notes 1 and 2 is a case for `iso-843-type-2`.
 
 | Reference | Covered cases | Inverse assessment |
 | --- | --- | --- |
@@ -28,6 +30,7 @@ stable.
 | ISO 843:1997, Tables 3–4 | Smooth and rough breathings, perispomeni as circumflex (`τοῦ → toû`), question mark versus ano teleia, iota subscript, enotikon, digamma and yot; missing archaic mappings in a bound strict converter | An apostrophe for smooth breathing and a hyphen for enotikon are insufficient to reconstruct those distinctions: both cases report loss. |
 | ISO 843:1997, Table 2, lines 5–7, 19–21, 24–26, notes 3, 4, 9, 10 (Type 2) | `αυ/ευ/ηυ → av/ev/iv` before a voiced sound, `af/ef/if` before a voiceless one or at the end of a word, `ay` after an accented vowel or before `ϋ`; the accent of that upsilon moves to the vowel (`Εύβοια → Évvoia`, `δεῦρο → dêvro`) | `v` and `f` reparse as beta and phi; loss is reported. A circumflex on `e` before `v` or `f` can only come from `εῦ` and reparses as such. |
 | ISO 843:1997, Table 2, lines 10–13, 32–35, 41–42, 48 (Type 2) | `γγ/γξ/γχ → ng/nx/nch`, `γκ → gk`; `μπ → b` at either end of a word and `mp` inside; `ντ → nt`; `ου → ou`, `oy` after an accented vowel; `υι → yi` | Reparse without reported loss. |
+| [BGN/PCGN, ELOT 743 System, 1996 Agreement](https://assets.publishing.service.gov.uk/media/5ab4df04e5274a1aa2d41460/ROMANIZATION_OF_GREEK.pdf), table and notes 1–2 (Type 2) | Every example: vowels and vowel pairs, with or without diaeresis (`Δοϊράνι → Doïráni`); `αυ/ευ → av/af/ay, ev/ef` (`Ταΰγετος → Taÿ́getos`); `η/υ/ω → i/y/o`; `γ/γγ/γκ/γχ`; `μπ/ντ`; the other consonants; the stress, moved to the vowel before `v` or `f` (`Καλλιπεύκα → Kallipéfka`); the diaeresis with the stress (`Αχαΐα → Achaḯa`) | Vowels, vowel pairs, and consonant pairs reparse without reported loss; eta, omega, and the `v` or `f` of `αυ/ευ` read back as iota, omicron, beta, and phi, and loss is reported. |
 | ISO 843:1997, Table 2, lines 23, 52, and Tables 1, 3 (Type 2) | `η → i`, `ω → o`, capitals (`ΕΥΡΩΠΗ → EVROPI`), perispomeni and ypogegrammeni (`ᾠδῇ → ’o̧dî̧`) | Eta and omega reparse as iota and omicron, except where a circumflex or an iota subscript only fits the long vowel (`tôn → τῶν`); loss is reported. |
 
 ## Rules still open
@@ -36,6 +39,9 @@ stable.
 | --- | --- | --- |
 | BnF, § 4.1.2: Cypriot syndyazomeno | Upper U+0306 and lower U+032E are retained | U+0306 is also the ordinary breve that BnF omits; the source character alone cannot identify which meaning applies. U+032E is not modelled as a semantic mark. |
 | ISO 843:1997, note 2: reading `s` back | A Latin `s` followed by a letter or a hyphen is read as medial `σ` | The parser treats a hyphen as a word boundary and reads final `ς` (`as-ta → ας‐τα`). The note concerns a word divided at the end of a line; a hyphen in running text more often joins two words. |
+| BGN/PCGN, note 1: stress in unaccented text | The stress is marked even where the Greek leaves it out, as in capitals (`ΑΘΗΝΑ → ATHÍNA`) | Where the stress falls cannot be read from unaccented letters; it takes a dictionary. The preset gives `ATHINA`. |
+| BGN/PCGN, note 1: abbreviations | An abbreviation is written without accent | Nothing in the text tells an abbreviation from a word; the preset keeps any accent the source writes. |
+| BGN/PCGN, note 3: older accents | A grave or circumflex accent is written as an acute, and the other polytonic marks are left out | The preset follows ISO 843 Table 3, which writes them. Converting the text to monotonic first (`reencode()` with `greek.accentuation: "monotonic"`) writes every remaining accent as an acute and, by the monotonic rules, drops that of most monosyllables. |
 | BnF, §§ 2.1–2.2 and 9.4: catalogue variants and Homeric numerals | Additional forms depend on the record and work | Neither the source text nor a preset identifier provides the required cataloguing context. |
 
 The `outOfScopeBehavior: "reject"` policy checks recognized characters and

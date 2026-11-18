@@ -6,7 +6,12 @@ encoding, and `convertDetailed()` observes the same information loss as if the
 resolved options had been supplied individually.
 
 ```ts
-convert(input, from, to, { preset: "ala-lc-modern" });
+import { convert } from "@humanities/greek-conversion";
+
+convert("Βίος Μπάλα", "greek", "transliteration", {
+  preset: "ala-lc-modern",
+});
+// → Vios Bala
 ```
 
 Custom options can refine or override a preset. Resolution is recursive for
@@ -15,11 +20,14 @@ and `diacritics.all` is expanded where it is written, so the caller's `all`
 overrides every class a preset set:
 
 ```ts
-convert(input, from, to, {
+import { convert } from "@humanities/greek-conversion";
+
+convert("Βίος Μπάλα", "greek", "transliteration", {
   preset: "ala-lc-modern",
   diacritics: { accents: "preserve" },
   text: { letterCase: "uppercase" },
 });
+// → VÍOS BÁLA
 ```
 
 The precedence is always:
@@ -66,17 +74,17 @@ metadata or options.
 <!-- BEGIN GENERATED PRESET REFERENCE -->
 <!-- This section is generated. Do not edit it directly. -->
 
-| Preset | Description | Scope | Coverage | Out of scope | Reference |
-| --- | --- | --- | --- | --- | --- |
-| `ala-lc-ancient` | Romanization profile for Ancient and Medieval Greek before 1454. | Ancient Greek; Medieval Greek before 1454 | partial | engine-default | [ALA-LC Romanization Tables: Greek (Ancient and Medieval)](https://www.loc.gov/catdir/cpso/romanization/greeka.pdf) |
-| `ala-lc-modern` | Romanization profile for Modern Greek after 1453. | Modern Greek after 1453 | partial | engine-default | [ALA-LC Romanization Tables: Greek (Modern)](https://www.loc.gov/catdir/cpso/romanization/greekm.pdf) |
-| `bnf-core` | Core mechanically expressible profile for the BnF adaptation of ISO 843 for Ancient Greek. | Ancient Greek; French library cataloguing | partial | engine-default | [Translittération du grec — Kitcat BnF](https://kitcat.bnf.fr/consignes-catalogage/translitteration-du-grec) |
-| `iso-843-type-1` | Type 1 transliteration of Greek characters into Latin characters. | Ancient Greek; Modern Greek | partial | engine-default | [ISO 843:1997](https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf) |
-| `iso-843-type-2` | Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility (identity documents, road signs, maps). | Modern Greek; Ancient Greek | partial | engine-default | [ISO 843:1997](https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf) |
-| `perseus` | Lowercase-ASCII subset of TLG Beta Code used by the Perseus Digital Library project. | Polytonic Greek; Perseus and Morpheus interchange | complete | engine-default | [The Care and Feeding of Morpheus](https://github.com/PerseusDL/morpheus/blob/master/doc/morpheus.html); [Perseids Tools Beta Code JSON mappings](https://github.com/perseids-tools/beta-code-json); [TLG Beta Code Quick Reference Guide](https://stephanus.tlg.uci.edu/encoding/quickbeta.pdf) |
-| `sbl-academic` | Academic transliteration retaining the engine's scientific diacritics. | Ancient Greek; Biblical studies | adapted | engine-default | [The SBL Handbook of Style, second edition](https://archive.org/details/sblhandbookofsty0000unse_g7i4/) |
-| `sbl-general` | Readable transliteration omitting most scholarly diacritics while retaining rough breathing and diaeresis. | Ancient Greek; Biblical studies; General readers | adapted | engine-default | [The SBL Handbook of Style, second edition](https://archive.org/details/sblhandbookofsty0000unse_g7i4/) |
-| `tlg-core` | Canonical Beta Code together with the TLG characters implemented by the engine. | Polytonic Greek; Beta Code interchange | partial | engine-default | [TLG Beta Code Quick Reference Guide](https://stephanus.tlg.uci.edu/encoding/quickbeta.pdf) |
+| Preset | Description | Scope | Coverage |
+| --- | --- | --- | --- |
+| `ala-lc-ancient` | Romanization profile for Ancient and Medieval Greek before 1454. | Ancient Greek; Medieval Greek before 1454 | partial |
+| `ala-lc-modern` | Romanization profile for Modern Greek after 1453. | Modern Greek after 1453 | partial |
+| `bnf-core` | Core mechanically expressible profile for the BnF adaptation of ISO 843 for Ancient Greek. | Ancient Greek; French library cataloguing | partial |
+| `iso-843-type-1` | Type 1 transliteration of Greek characters into Latin characters, also that of ELOT 743, the Greek national standard, since its 2001 edition. | Ancient Greek; Modern Greek | partial |
+| `iso-843-type-2` | Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility: the transcription of ELOT 743, the Greek national standard, for identity documents, road signs, and maps, which the United Nations and BGN/PCGN adopted for geographical names. | Modern Greek; Ancient Greek | partial |
+| `perseus` | Lowercase-ASCII subset of TLG Beta Code used by the Perseus Digital Library project. | Polytonic Greek; Perseus and Morpheus interchange | complete |
+| `sbl-academic` | Academic transliteration retaining the engine's scientific diacritics. | Ancient Greek; Biblical studies | adapted |
+| `sbl-general` | Readable transliteration omitting most scholarly diacritics while retaining rough breathing and diaeresis. | Ancient Greek; Biblical studies; General readers | adapted |
+| `tlg-core` | Canonical Beta Code together with the TLG characters implemented by the engine. | Polytonic Greek; Beta Code interchange | partial |
 
 ### `ala-lc-ancient` — ALA-LC — Ancient and Medieval Greek
 
@@ -219,7 +227,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
 - **Coverage:** `partial`
 - **Out-of-scope behavior:** `engine-default`
 
-Type 1 transliteration of Greek characters into Latin characters.
+Type 1 transliteration of Greek characters into Latin characters, also that of ELOT 743, the Greek national standard, since its 2001 edition.
 
 **References:**
 
@@ -258,11 +266,13 @@ Type 1 transliteration of Greek characters into Latin characters.
 - **Coverage:** `partial`
 - **Out-of-scope behavior:** `engine-default`
 
-Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility (identity documents, road signs, maps).
+Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility: the transcription of ELOT 743, the Greek national standard, for identity documents, road signs, and maps, which the United Nations and BGN/PCGN adopted for geographical names.
 
 **References:**
 
 - [ISO 843:1997](https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf)
+- [BGN/PCGN, Romanization of Greek: ELOT 743 System, 1996 Agreement](https://assets.publishing.service.gov.uk/media/5ab4df04e5274a1aa2d41460/ROMANIZATION_OF_GREEK.pdf)
+- [UNGEGN, Report on the Current Status of United Nations Romanization Systems for Geographical Names: Greek](https://unstats.un.org/unsd/ungegn/working_groups/wg5/documents/wgrr4greek.pdf)
 
 **Contributed options:**
 
@@ -425,15 +435,24 @@ Descriptive metadata, sparse preset definitions, immutable defaults, and fully
 resolved option objects are public:
 
 ```ts
-listPresetMetadata();
-getPresetMetadata("ala-lc-modern");
+import {
+  DEFAULT_CONVERSION_OPTIONS,
+  getPresetMetadata,
+  getPresetOptions,
+  listPresetMetadata,
+  resolveConversionOptions,
+} from "@humanities/greek-conversion";
 
-DEFAULT_CONVERSION_OPTIONS;
-getPresetOptions("ala-lc-modern");
+listPresetMetadata().length; // → 9
+getPresetMetadata("ala-lc-modern").coverage; // → partial
+
+DEFAULT_CONVERSION_OPTIONS.transliteration.beta; // → b
+getPresetOptions("ala-lc-modern").transliteration?.beta; // → v
 resolveConversionOptions({
   preset: "ala-lc-modern",
   transliteration: { beta: "b" },
-});
+}).transliteration.beta;
+// → b
 ```
 
 `getPresetMetadata()` returns one preset's scope, references, coverage, and

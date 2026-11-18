@@ -5,7 +5,7 @@ This is a targeted audit of diacritics, punctuation, and numerals beyond the
 check specific rules; passing them is not a certification of a complete
 standard. The precise current options and limitations are listed in the
 [generated preset reference](presets.md).
-The [source-traceable BnF and ISO corpus](preset-conformance-corpus.md) records
+The [source-traceable BnF, ISO, and BGN/PCGN corpus](preset-conformance-corpus.md) records
 executable examples and rules that remain open.
 The [ALA-LC corpus](ala-lc-conformance-corpus.md) does the same for the ancient
 and modern Greek tables.
@@ -16,7 +16,7 @@ and modern Greek tables.
 | `ala-lc-modern` | Published letter/notes rows for `μπ/ντ/γκ`, explicitly marked rho, omitted marks, and documented numeral variants | Supplying absent rough breathings or identifying uncertain polytonic/monotonic sources requires lexical or bibliographic context. |
 | `bnf-core` | Ancient-Greek variant letters; `αυ/ευ/ου`; known smooth breathing, circumflex, keraiai, and marked archaic numerals in Latin output; omission of explicit macron/breve | The upper Cypriot syndyazomeno shares U+0306 with breve; cataloguing variants and the Iliad/Odyssey numeral exception require external context. |
 | `iso-843-type-1` | Type 1 letter choices; `αυ/ευ/ου`; capitals of multi-letter spellings; initial smooth breathing; perispomeni as circumflex; question mark, ano teleia, and enotikon; undefined and unresolved archaic mappings | Some reference provisions remain unimplemented; a Latin apostrophe or hyphen cannot by itself establish a smooth breathing or enotikon, and `s` before a hyphen is read as final sigma (note 2). |
-| `iso-843-type-2` | Table 2 transcription: `αυ/ευ/ηυ` as `v` or `f` by the next sound, accent moved to the vowel, nasal gamma except before kappa, `μπ` as `b` at word edges, unmarked eta and omega; Table 3 marks and punctuation as for Type 1; undefined and unresolved archaic mappings | Not reversible by design; before an archaic letter, upsilon follows that letter's sound; the same apostrophe, hyphen, and note 2 limits as Type 1. |
+| `iso-843-type-2` | Table 2 transcription: `αυ/ευ/ηυ` as `v` or `f` by the next sound, accent moved to the vowel, nasal gamma except before kappa, `μπ` as `b` at word edges, unmarked eta and omega; Table 3 marks and punctuation as for Type 1; undefined and unresolved archaic mappings; every example of the BGN/PCGN table of the ELOT 743 transcription | Not reversible by design; before an archaic letter, upsilon follows that letter's sound; the same apostrophe, hyphen, and note 2 limits as Type 1. The stress that BGN/PCGN marks in unaccented capitals needs a dictionary. |
 | `perseus` | Lowercase ASCII Beta Code, letters, and supported diacritics | TLG escapes are outside the cited Perseus subset. |
 | `sbl-academic` | The library's academic diacritic profile | This is an adaptation, not a separate SBL table. |
 | `sbl-general` | The library's general-purpose removal and retention of diacritics | The profile covers an engine adaptation of SBL's single general-purpose table. |
@@ -56,9 +56,11 @@ required. Ordinary `convert(..., { preset })` retains the documented
 
 - [ALA-LC Ancient and Medieval Greek](https://www.loc.gov/catdir/cpso/romanization/greeka.pdf)
 - [ALA-LC Modern Greek](https://www.loc.gov/catdir/cpso/romanization/greekm.pdf)
+- [BGN/PCGN, Romanization of Greek: ELOT 743 System, 1996 Agreement](https://assets.publishing.service.gov.uk/media/5ab4df04e5274a1aa2d41460/ROMANIZATION_OF_GREEK.pdf)
 - [BnF transliteration of Greek](https://kitcat.bnf.fr/consignes-catalogage/translitteration-du-grec)
 - [ISO 843:1997](https://cdn.standards.iteh.ai/samples/5215/ebfdc4425f834833a5fe07c44f2dca79/ISO-843-1997.pdf)
 - [Perseus Morpheus documentation](https://github.com/PerseusDL/morpheus/blob/master/doc/morpheus.html)
 - [Perseids Beta Code mappings](https://github.com/perseids-tools/beta-code-json)
 - [SBL Handbook of Style](https://archive.org/details/sblhandbookofsty0000unse_g7i4/)
 - [TLG Beta Code Quick Reference Guide](https://stephanus.tlg.uci.edu/encoding/quickbeta.pdf)
+- [UNGEGN report on United Nations romanization systems: Greek](https://unstats.un.org/unsd/ungegn/working_groups/wg5/documents/wgrr4greek.pdf)

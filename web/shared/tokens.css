@@ -34,6 +34,26 @@
   size-adjust: 95%;
   unicode-range: U+037B-037D, U+03D0-03D6, U+03F0-03F1, U+03F5, U+03FD-03FF;
 }
+/*
+ * The code, in every format: Noto Sans Mono covers polytonic Greek and the
+ * Latin of transliterations, and stacks their diacritics, on every system.
+ * It draws the symbol forms and the lunate sigmas as the ordinary letters
+ * (ϐ as β, Ϲ as Σ): Fira Mono, at the same advance, supplies them.
+ */
+@font-face {
+  font-family: "Noto Sans Mono";
+  src: url("./fonts/noto-sans-mono.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Sans Mono";
+  src: url("./fonts/fira-mono-greek-symbols.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+  unicode-range: U+037B-037D, U+03D0-03D6, U+03F0-03F2, U+03F4-03F5, U+03F9,
+    U+03FD-03FF;
+}
 
 :root {
   color-scheme: light;
@@ -42,6 +62,13 @@
   --line: #e2d9c8;
   --ink: #1f2a44;
   --muted: #5e5a63;
+  /* --from: the cobalt of identity and meaning (the name's "greek", the
+     symbol's half, the source side of the playground's source and target).
+     --link: links and active elements (primary buttons, checked controls,
+     selected tabs, hover colours, the focus ring), as the design system's
+     link and focus-ring tokens. In
+     the light theme the two are the same cobalt; in the dark theme --from
+     is bleu-clair and --link cobalt-clair. */
   --from: #2f4fa8;
   --to: #c85a26;
   --to-fill: #dd6a33;
@@ -56,9 +83,25 @@
   --tip: #e9e1d1;
   --face-ui: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
   --face-text: "Literata GC", "Gentium Plus", "Noto Serif", serif;
-  --face-code: ui-monospace, "SF Mono", "Cascadia Mono", "DejaVu Sans Mono",
-    Menlo, Consolas, monospace;
+  --face-code: "Noto Sans Mono", ui-monospace, "SF Mono", Menlo, Consolas,
+    monospace;
   --radius: 6px;
+  /* Button states: the link colour mixed with the ink deepens it, darker
+     in the light theme and lighter in the dark one, still blue; a tint of
+     the ink marks a pressed secondary button. Defined on the root, they
+     follow the theme's --link and --ink. */
+  --link-hover: color-mix(in oklab, var(--link) 82%, var(--ink));
+  --link-press: color-mix(in oklab, var(--link) 66%, var(--ink));
+  /* A button of the target's orange, deep enough to carry text in the
+     ground's colour (5.2:1 in light, 6.5:1 in dark): the strings' orange. */
+  --to-strong: var(--code-string);
+  --to-strong-hover: color-mix(in oklab, var(--to-strong) 82%, var(--ink));
+  --to-strong-press: color-mix(in oklab, var(--to-strong) 66%, var(--ink));
+  --press: color-mix(in oklab, var(--ink) 8%, transparent);
+  /* Pressed, an action button shrinks to --squish in 60ms, then springs
+     back with a marked overshoot (--ease-bounce, 320ms). */
+  --squish: 0.96;
+  --ease-bounce: cubic-bezier(0.3, 2.2, 0.6, 1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -72,7 +115,12 @@
     --from: #c9d3ec;
     --to: #e08a5e;
     --to-fill: #e08a5e;
-    --link: #c9d3ec;
+    /* cobalt-clair: the cobalt's hue (oklch 0.76 0.12 265.8), lightened as
+       orange-clair lightens the orange, and as saturated as the screen
+       allows; 7.9:1 on nuit, 7:1 on surface-raised. bleu-clair, nearly
+       grey, stays the symbol's and the name's: as a link colour it read
+       as text a shade lighter rather than as blue. */
+    --link: #8daffe;
     --code-bg: #191f31;
     --code-keyword: #c9d3ec;
     --code-string: #e08a5e;

@@ -1,0 +1,1185 @@
+/*
+ * Starlight in the playground's design (`web/shared/tokens.css`): Papier and
+ * Nuit, cobalt for what is read and orange for what is written, Bricolage
+ * Grotesque, and the same shapes: raised panels with a thin line and a 6px
+ * radius on the page's paper, bordered buttons, pills. The site has no theme
+ * switch, so Starlight's `data-theme` follows the system's appearance, as the
+ * tokens do, and one mapping serves both.
+ */
+:root,
+::backdrop,
+:root[data-theme="light"],
+[data-theme="light"] ::backdrop {
+  /* Greek in running text, which Bricolage lacks, falls back to Literata,
+     as in the playground. */
+  --sl-font: "Bricolage Grotesque", "Literata GC", ui-sans-serif, system-ui,
+    sans-serif;
+  --sl-font-mono: var(--face-code);
+
+  --sl-color-white: var(--ink);
+  /* The running text (gray 2) at 86% of the ink: a step softer than the
+     headings, above 8:1 on the page and on raised panels, in both
+     appearances. */
+  --sl-color-gray-1: color-mix(in oklab, var(--ink) 94%, var(--surface));
+  --sl-color-gray-2: color-mix(in oklab, var(--ink) 86%, var(--surface));
+  --sl-color-gray-3: var(--muted);
+  --sl-color-gray-4: color-mix(in oklab, var(--muted) 70%, var(--surface));
+  --sl-color-gray-5: var(--line);
+  --sl-color-gray-6: var(--raised);
+  --sl-color-gray-7: var(--code-bg);
+  --sl-color-black: var(--surface);
+
+  --sl-color-accent-low: color-mix(in oklab, var(--link) 14%, var(--raised));
+  --sl-color-accent: var(--link);
+  --sl-color-accent-high: color-mix(in oklab, var(--link) 75%, var(--ink));
+  --sl-color-text-accent: var(--link);
+
+  --sl-color-bg-nav: var(--surface);
+  --sl-color-bg-sidebar: var(--surface);
+  --sl-color-bg-inline-code: var(--code-bg);
+  --sl-color-hairline-light: var(--line);
+  --sl-color-hairline: var(--line);
+  --sl-color-hairline-shade: var(--line);
+
+  /* Wide enough for the full name and its label to sit above the sidebar,
+     so that the search field lines up with the text, on Starlight's grid. */
+  --sl-sidebar-width: 21.25rem;
+  --sl-nav-height: 4.5rem;
+  /* A touch target of 44px, as the playground's buttons. */
+  --sl-menu-button-size: 2.75rem;
+  --sl-line-height: 1.65;
+  --sl-text-h1: 2.5rem;
+  --sl-text-h2: 1.75rem;
+  --sl-text-h3: 1.375rem;
+  --sl-text-h4: 1.125rem;
+}
+
+/* Keyboard focus, as in the playground: a ring in the link colour (cobalt,
+   cobalt-clair in the dark theme), set off the shape. */
+:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+/* Links in the text keep their blue, hovered or not. The 2px underline is
+   faint at rest and takes the link's own colour on hover. */
+.sl-markdown-content a:not(:where(.not-content *, .sl-anchor-link)) {
+  color: var(--link);
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+  transition: text-decoration-color 0.15s ease;
+}
+
+.sl-markdown-content a:hover:not(:where(.not-content *, .sl-anchor-link)) {
+  color: var(--link);
+  text-decoration-color: currentColor;
+}
+
+/* Icons: Lucide's (`web/shared/icons.ts`, `scripts/generate_icons.ts`), as
+   in the playground: a 2-unit round stroke on a 24-unit grid, no fill, in
+   the text's colour. */
+.icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The icons Starlight draws itself (search, the carets of the sidebar and
+   of "On this page", the phone menu's open and close) are redrawn with the
+   same icons: each SVG keeps its box, its own drawing is hidden, and a mask
+   of the Lucide icon (`web/shared/icons.css`) is painted in the text's
+   colour. */
+site-search button[data-open-modal] > svg,
+.sidebar-content svg.caret,
+mobile-starlight-toc svg.caret,
+button.sl-menu-button svg {
+  background: currentColor;
+  mask: var(--icon) center / contain no-repeat;
+}
+:is(
+    site-search button[data-open-modal] > svg,
+    .sidebar-content svg.caret,
+    mobile-starlight-toc svg.caret,
+    button.sl-menu-button svg
+  )
+  > * {
+  display: none;
+}
+site-search button[data-open-modal] > svg {
+  --icon: var(--icon-search);
+}
+.sidebar-content svg.caret,
+mobile-starlight-toc svg.caret {
+  --icon: var(--icon-chevron-right);
+}
+button.sl-menu-button svg.open-menu {
+  --icon: var(--icon-menu);
+}
+button.sl-menu-button svg.close-menu {
+  --icon: var(--icon-x);
+}
+
+/* Links that open in a new tab, as in the playground: a mark kept on the
+   line of the last word. */
+.external-tail {
+  white-space: nowrap;
+}
+.external-mark {
+  display: inline-block;
+  width: 0.75em;
+  height: 0.75em;
+  margin-left: 0.2em;
+  vertical-align: -0.05em;
+  background: currentColor;
+  mask: var(--icon-external-link) center / contain no-repeat;
+}
+
+/* In the menu below 1100px, the project's links (Playground, Source, npm, JSR)
+   stay at the foot of the screen, on a bar of the page's colour, rather
+   than at the end of the list, which scrolls behind it; the list keeps
+   room below for its last items. */
+@media (max-width: 68.74rem) {
+  .sidebar-pane .mobile-preferences {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 1;
+    justify-content: center;
+    padding: 0.25rem var(--sl-nav-pad-x)
+      calc(0.25rem + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .sidebar-pane .mobile-preferences .social-icons {
+    flex: 1;
+    margin: 0;
+    padding: 0;
+  }
+  .sidebar-pane .mobile-preferences .links {
+    justify-content: space-between;
+    width: 100%;
+    column-gap: 0.75rem;
+  }
+  .sidebar-pane .sidebar-content {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* The sidebar's links that leave the documentation carry the same mark. */
+.sidebar-content a[target="_blank"] > span:not(.external-tail)::after {
+  content: "";
+  display: inline-block;
+  width: 0.75em;
+  height: 0.75em;
+  margin-left: 0.3em;
+  vertical-align: -0.05em;
+  background: currentColor;
+  mask: var(--icon-external-link) center / contain no-repeat;
+}
+
+/* Every page opens with a lead paragraph, set as the design system's
+   "chapo" (20px on 28px), in the muted ink, as the home page's
+   description. The API pages, generated by TypeDoc, open otherwise and are
+   left out. */
+.sl-markdown-content > p:first-child {
+  font-size: 1.125rem;
+  line-height: 1.5;
+  color: var(--muted);
+  text-wrap: pretty;
+  /* Followed by text, code, or a table rather than a heading, it keeps the
+     space between blocks of a section (space-8); margins collapse, so the
+     larger space before a heading wins. */
+  margin-bottom: 2rem;
+}
+@media (min-width: 50rem) {
+  .sl-markdown-content > p:first-child {
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+}
+:root:has(.sidebar-content a[aria-current="page"][href*="/api/"])
+  .sl-markdown-content
+  > p:first-child {
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  margin-bottom: 0;
+}
+/* The lead belongs to the title: it sits close under it, and the first
+   section keeps its distance. The 404 page spaces its message itself. */
+:root:not(:has(.sidebar-content a[aria-current="page"][href*="/api/"], .not-found)):has(
+    .sl-markdown-content > p:first-child
+  )
+  main {
+  .content-panel:has(h1#_top) {
+    padding-bottom: 0.75rem;
+  }
+  .content-panel:has(> .sl-container > .sl-markdown-content > p:first-child) {
+    padding-top: 0;
+  }
+}
+
+/* Text: headings in Bricolage at display size, as the playground's name. */
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6),
+h1#_top {
+  font-weight: 700;
+  font-variation-settings: "opsz" 72;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.sl-markdown-content :is(h3, h4, h5, h6) {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.content-panel + .content-panel {
+  border-top-color: transparent;
+}
+
+/* Inline code and keyboard keys: small chips. Code has the background of
+   the code blocks; a key, raised, that of a panel. */
+.sl-markdown-content :not(pre) > code,
+.sl-markdown-content kbd {
+  padding: 0.1em 0.35em;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--code-bg);
+  font-size: 0.875em;
+}
+
+.sl-markdown-content kbd {
+  background: var(--raised);
+}
+
+/* Tables: a raised panel with rounded corners, headed by small capitals. */
+.sl-markdown-content table {
+  display: block;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: var(--radius);
+  background: var(--raised);
+}
+.sl-markdown-content :is(th, td) {
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+}
+.sl-markdown-content tr:last-child td {
+  border-bottom: none;
+}
+.sl-markdown-content th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--raised);
+}
+/* Capitals would change Greek in a heading's code. */
+.sl-markdown-content th code {
+  letter-spacing: normal;
+  text-transform: none;
+}
+/* A table of six columns or more, such as a matrix, tightens to fit the
+   column of text without scrolling: text at 15px, cells 0.6rem from their
+   neighbours rather than 0.9rem. */
+.sl-markdown-content table:has(th:nth-child(6)) :is(th, td) {
+  padding-inline: 0.6rem;
+}
+.sl-markdown-content table:has(th:nth-child(6)) td {
+  font-size: 0.9375rem;
+}
+/* Code in a table breaks only between its words (`breakTableCode`, in
+   astro.config.mjs): a key or a value stays on one line. */
+.sl-markdown-content .code-word {
+  white-space: nowrap;
+}
+/* A chip that wraps keeps its border on each line. */
+/* Inline code in the ink, the running text's accented version (the text
+   itself is at 86%); in a link, the link's colour. */
+.sl-markdown-content :not(pre, a) > code {
+  color: var(--ink);
+}
+.sl-markdown-content :not(pre) > code {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+/* Inline code stands out a little more in medium (500); in headings and
+   table headers, it keeps their weight. */
+.sl-markdown-content :not(pre) > code {
+  font-weight: 500;
+}
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6, th) code {
+  font-weight: inherit;
+}
+
+/* Asides (note, tip, caution, danger), as the playground's notes: a panel
+   a tint darker than the page (--tip), a line border and the tessera's
+   radius, no coloured band. The title is in the ink; its Lucide icon tells
+   the kind, info and lightbulb in the link colour, triangle-alert and
+   octagon-alert in the target's orange, since the brand has no red. Links
+   keep the link colour. */
+.starlight-aside {
+  --sl-color-asides-text-accent: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--tip);
+}
+.starlight-aside__icon {
+  color: var(--aside-icon);
+  background: currentColor;
+  mask: var(--aside-mask) center / contain no-repeat;
+}
+.starlight-aside__icon > * {
+  display: none;
+}
+.starlight-aside--note {
+  --aside-icon: var(--link);
+  --aside-mask: var(--icon-info);
+}
+.starlight-aside--tip {
+  --aside-icon: var(--link);
+  --aside-mask: var(--icon-lightbulb);
+}
+.starlight-aside--caution {
+  --aside-icon: var(--to);
+  --aside-mask: var(--icon-triangle-alert);
+}
+.starlight-aside--danger {
+  --aside-icon: var(--to);
+  --aside-mask: var(--icon-octagon-alert);
+}
+.starlight-aside__content a {
+  color: var(--link);
+}
+
+/* Cards: raised panels. */
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+}
+.card .title {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+/* Previous and next: see the Pagination override. */
+
+/* Header: no divider after the project's links, which end the line. */
+.header .social-icons::after {
+  content: none;
+}
+
+/* The search field as a bordered button. */
+site-search button[data-open-modal] {
+  min-height: 2.75rem;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+}
+/* As the playground's buttons: on hover, only the border darkens. */
+site-search button[data-open-modal],
+site-search button[data-open-modal]:hover {
+  color: var(--muted);
+}
+@media (hover: hover) {
+  site-search button[data-open-modal]:hover {
+    border-color: var(--muted);
+  }
+}
+site-search button[data-open-modal]:active {
+  background-color: color-mix(in oklab, var(--raised), var(--ink) 4%);
+}
+/* The header is a row: the name and the version, the search field, then
+   the links or the menu button. The field follows the version, at the
+   header's gap, and takes the room it has up to 22rem (Starlight's width);
+   on a phone, all of it. From 1440px, where the header has room to spare,
+   it takes its fullest form, centred between the version and the links:
+   up to 30rem, with its keyboard shortcut. */
+header.header > .header {
+  display: flex;
+  /* Starlight widens the header's gap from 1152px (16px to 24px): the
+     field would move by 8px there. */
+  gap: 1rem;
+}
+.header > :nth-child(2) {
+  display: flex;
+  flex: 1;
+  justify-content: flex-start;
+  min-width: 0;
+}
+@media (max-width: 89.99rem) {
+  site-search button[data-open-modal] > kbd {
+    display: none !important;
+  }
+}
+@media (min-width: 90rem) {
+  .header > :nth-child(2) {
+    justify-content: center;
+  }
+  site-search button[data-open-modal] {
+    max-width: 30rem;
+  }
+}
+/* Below 1100px, a field rather than an icon, as on a wide screen. */
+@media (max-width: 68.74rem) {
+  site-search button[data-open-modal] {
+    width: 100%;
+    max-width: 22rem;
+    padding-inline: 0.75rem;
+    color: var(--muted);
+    font-size: var(--sl-text-sm);
+  }
+  site-search button[data-open-modal] > span {
+    display: block;
+  }
+}
+/* Below 1100px, where the sidebar is a menu, the header and the "On this page"
+   bar sit 4px closer to the edges than the text (12px rather than 16px):
+   the break in alignment sets them off, and the floating panel stands out
+   from the text below it. */
+@media (max-width: 68.74rem) {
+  :root {
+    --sl-nav-pad-x: 0.75rem;
+  }
+}
+
+/* The menu button, below 1100px: its icon alone, without a frame, its right
+   edge on the header's margin, as the symbol's left edge. The button itself
+   reaches the screen's edge, a target at least 44px wide, which shows
+   nothing since it has no background. The header keeps the usual gap
+   between the search field and the icon. From 1100px, the sidebar stays
+   beside the page, and the button is hidden. */
+@media (max-width: 68.74rem) {
+  [data-has-sidebar] .page > .header {
+    padding-inline-end: calc(var(--sl-nav-gap) + var(--sl-nav-pad-x) + 1.5rem);
+  }
+  button.sl-menu-button,
+  button.sl-menu-button:has(~ :popover-open) {
+    inset-inline-end: 0;
+    width: calc(1.5rem + var(--sl-nav-pad-x) + 0.75rem);
+    padding-inline-end: var(--sl-nav-pad-x);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    box-shadow: none;
+  }
+  button.sl-menu-button svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+/* The icon keeps the ink: no hover colour, on a button that lives on touch
+   screens, and no fill, which would show the target reaching past it.
+   Pressed, the icon alone shrinks and springs back, as the action buttons. */
+button.sl-menu-button svg {
+  transition: scale 0.32s var(--ease-bounce);
+}
+@media (prefers-reduced-motion: no-preference) {
+  button.sl-menu-button:active svg {
+    scale: var(--squish);
+    transition: scale 0.06s ease-in;
+  }
+}
+/* The search shortcut, as one label drawn like the header's "docs". */
+site-search button[data-open-modal] > kbd {
+  gap: 0.3em;
+  padding: 3px 6px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: transparent;
+  font-family: var(--face-ui);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+site-search button[data-open-modal] > kbd kbd {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+}
+site-search dialog {
+  border-radius: var(--radius);
+}
+
+/*
+ * The search dialog, in the same states as the rest of the site: fields and
+ * results with the line border and the 6px radius; on hover, the border
+ * darkens; with the keyboard, the cobalt ring, and only it.
+ */
+#starlight__search {
+  --pagefind-ui-border-width: 1.5px;
+  --pagefind-ui-border-radius: var(--radius);
+  --sl-search-corners: var(--radius);
+}
+#starlight__search input:focus {
+  --pagefind-ui-border: var(--line);
+}
+#starlight__search .pagefind-ui__search-input:hover {
+  --pagefind-ui-border: var(--muted);
+}
+#starlight__search .pagefind-ui__search-clear:focus {
+  outline: none;
+}
+#starlight__search .pagefind-ui__search-clear:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: -4px;
+}
+#starlight__search .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)):hover,
+#starlight__search .pagefind-ui__result-nested:hover {
+  outline: 1.5px solid var(--muted);
+  outline-offset: -1.5px;
+}
+#starlight__search .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)):focus-within,
+#starlight__search .pagefind-ui__result-nested:focus-within {
+  /* Inside the result, where its neighbours cannot hide it. */
+  outline: 2px solid var(--link);
+  outline-offset: -2px;
+  background-color: var(--sl-color-black);
+}
+#starlight__search .pagefind-ui__result-link:focus-visible {
+  outline: none;
+}
+
+/*
+ * Sidebar: rounded entries; the current page is marked as the playground
+ * marks its target, raised, with a border in the orange of the tessera's
+ * Latin half.
+ */
+.sidebar-content a {
+  border: 1.5px solid transparent;
+  border-radius: var(--radius);
+}
+/* The list's items are muted, and take the ink on hover, as "On this
+   page" does; no background. The current page, in the ink and semibold,
+   stands out. */
+.sidebar-content ul a {
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+@media (hover: hover) {
+  .sidebar-content ul a:hover {
+    color: var(--ink);
+  }
+}
+.sidebar-content a[aria-current="page"],
+.sidebar-content a[aria-current="page"]:hover,
+.sidebar-content a[aria-current="page"]:focus {
+  border-color: var(--to);
+  background: var(--raised);
+  color: var(--ink);
+  font-weight: 600;
+}
+.sidebar-content summary .group-label .large {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sidebar-content ul ul {
+  border-inline-start-color: transparent;
+}
+/* A group's chevron weighs no more than its label: 16px, muted. The group's
+   line answers the pointer: label and chevron in the ink. */
+.sidebar-content summary svg.caret {
+  width: 1rem;
+  height: 1rem;
+  font-size: 1rem;
+  color: var(--muted);
+}
+.sidebar-content summary :is(svg.caret, .group-label .large) {
+  transition:
+    color 0.15s ease,
+    transform 0.2s ease-in-out;
+}
+@media (hover: hover) {
+  .sidebar-content summary:hover :is(svg.caret, .group-label .large) {
+    color: var(--ink);
+  }
+}
+
+/* "On this page" in its own column, on a wide screen. Its title is a label,
+   as the sidebar's group names; the sections hang on a single rule, the
+   subsections indented, as the sidebar's lists. The current section, which
+   follows the reading, is marked as what is selected: in the ink, with an
+   orange stroke on the rule; not in semibold, which would rewrap the list
+   as the reading moves on. The others are muted, in the ink on hover. */
+.right-sidebar-panel starlight-toc h2 {
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.right-sidebar-panel starlight-toc nav > ul {
+  border-inline-start: 1px solid var(--line);
+}
+.right-sidebar-panel starlight-toc a {
+  --pad-inline: 0.875rem;
+  margin-inline-start: -1px;
+  padding-block: 0.3125rem;
+  border-inline-start: 2px solid transparent;
+  border-radius: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+@media (hover: hover) {
+  .right-sidebar-panel starlight-toc a:hover {
+    color: var(--ink);
+  }
+}
+.right-sidebar-panel starlight-toc a[aria-current="true"] {
+  border-inline-start-color: var(--to);
+  color: var(--ink);
+}
+
+/* "On this page", below the header where the table of contents has no
+   column. The toggle is a secondary button, as in the playground; the list
+   opens in a raised panel, with the playground's shadow, and the current
+   section is marked as the sidebar marks the current page. */
+mobile-starlight-toc nav {
+  --toggle-height: 2.125rem;
+}
+
+mobile-starlight-toc summary {
+  padding-inline: var(--sl-nav-pad-x);
+}
+/* From 800px, the bar's toggle and its panel line up with the text, which
+   the page centres in its column (below). */
+@media (min-width: 50rem) {
+  mobile-starlight-toc nav {
+    --toc-inset: calc(
+      var(--sl-content-pad-x) +
+        max(0px, (100% - 2 * var(--sl-content-pad-x) - var(--sl-content-width)) / 2)
+    );
+  }
+  mobile-starlight-toc summary {
+    padding-inline-start: var(--toc-inset);
+  }
+  mobile-starlight-toc nav .dropdown {
+    inset-inline-start: var(--toc-inset);
+  }
+}
+
+mobile-starlight-toc .toggle {
+  box-sizing: border-box;
+  height: var(--toggle-height);
+  padding-block: 0;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+mobile-starlight-toc details[open] .toggle {
+  border-color: var(--muted);
+  color: var(--ink);
+}
+@media (hover: hover) {
+  mobile-starlight-toc details .toggle:hover {
+    border-color: var(--muted);
+    color: var(--ink);
+  }
+}
+
+mobile-starlight-toc .display-current {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+/* A taller bar (60px rather than 48px), so that the panel, 6px below the
+   toggle, does not land on the bar's bottom border but covers it. */
+@media (max-width: 89.99rem) {
+  html[data-has-toc] {
+    --sl-mobile-toc-height: 3.75rem;
+  }
+}
+
+/* The panel floats: out of the flow, the bar keeps its height and its
+   background stops at the bar instead of running, full width, behind the
+   panel and over the text. 6px below the toggle, as the playground's
+   floating lists below their button. */
+mobile-starlight-toc .dropdown {
+  position: absolute;
+  top: calc((var(--sl-mobile-toc-height) - 1px + var(--toggle-height)) / 2 + 6px);
+  inset-inline-start: var(--sl-nav-pad-x);
+  width: min(24rem, 100% - 2 * var(--sl-nav-pad-x));
+  margin: 0;
+  padding: 0.375rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+  box-shadow: var(--shadow);
+}
+
+mobile-starlight-toc .isMobile li + li,
+mobile-starlight-toc .isMobile li > ul {
+  margin-top: 3px;
+}
+
+mobile-starlight-toc .isMobile a {
+  padding-block: 0.5rem;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-size: 0.9375rem;
+}
+
+mobile-starlight-toc .isMobile a:hover {
+  background: var(--code-bg);
+}
+
+mobile-starlight-toc .isMobile a[aria-current="true"],
+mobile-starlight-toc .isMobile a[aria-current="true"]:hover,
+mobile-starlight-toc .isMobile a[aria-current="true"]:focus {
+  border-color: var(--to);
+  background: var(--raised);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+mobile-starlight-toc .isMobile a[aria-current="true"]::after {
+  display: none;
+}
+
+/* Buttons, as the playground's: bordered, with the same radius. */
+.sl-link-button {
+  min-height: 2.75rem;
+  padding-inline: 1rem;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
+}
+.sl-link-button.primary {
+  border-color: var(--link);
+  background: var(--link);
+  color: var(--surface);
+}
+/* Button states, as in the playground: on hover, a secondary button's line
+   darkens and a primary button's colour deepens (--link-hover); pressed, a
+   secondary button takes a tint of the ink (--press), a primary one deepens
+   further (--link-press), and the action buttons shrink, then spring back
+   (--squish, --ease-bounce): flat at rest, as the whole identity. Hover only
+   where a pointer hovers: on a touch screen, a tapped button would keep
+   it. */
+.sl-link-button,
+site-search button[data-open-modal],
+mobile-starlight-toc .toggle,
+.expressive-code .copy button {
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.2s ease,
+    scale 0.32s var(--ease-bounce);
+}
+@media (hover: hover) {
+  .sl-link-button.primary:hover {
+    border-color: var(--link-hover);
+    background: var(--link-hover);
+    color: var(--surface);
+  }
+}
+.sl-link-button.primary:active {
+  border-color: var(--link-press);
+  background: var(--link-press);
+}
+.sl-link-button.minimal:active,
+.sl-link-button.secondary:active {
+  background: var(--press);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sl-link-button:active,
+  mobile-starlight-toc .toggle:active,
+  .expressive-code .copy button:active {
+    scale: var(--squish);
+    transition:
+      border-color 0.15s ease,
+      background-color 0.15s ease,
+      color 0.15s ease,
+      opacity 0.2s ease,
+      scale 0.06s ease-in;
+  }
+}
+.sl-link-button.minimal {
+  background: transparent;
+  color: var(--ink);
+}
+@media (hover: hover) {
+  .sl-link-button.minimal:hover,
+  .sl-link-button.secondary:hover {
+    border-color: var(--muted);
+  }
+}
+
+/* The 404 page (src/content/docs/404.md) is a content page, so that the
+   search field and the text column take their usual places, but its
+   message is set apart: in the middle of the free area, the title at its
+   usual size, the sentence under it a size up, no rule. Its table of
+   contents keeps its column, hidden; on a narrower screen, its bar goes. */
+:root:has(.not-found) .right-sidebar-panel {
+  visibility: hidden;
+}
+:root:has(.not-found) .right-sidebar {
+  border-inline-start-color: transparent;
+}
+@media (max-width: 89.99rem) {
+  :root:has(.not-found) {
+    --sl-mobile-toc-height: 0rem;
+  }
+  :root:has(.not-found) mobile-starlight-toc {
+    display: none;
+  }
+}
+:root:has(.not-found) main {
+  /* Centred in the whole area right of the sidebar and below the header,
+     the hidden table of contents' column included. */
+  position: fixed;
+  inset: var(--sl-nav-height) 0 0 var(--sl-content-inline-start, 0);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+:root:has(.not-found) main .content-panel {
+  padding-block: 0;
+}
+/* Its footer, empty here (no edit link, no previous or next), would push
+   the message up. */
+:root:has(.not-found) main footer {
+  display: none;
+}
+:root:has(.not-found) main .content-panel + .content-panel {
+  margin-top: 1rem;
+  border-top: 0;
+}
+
+/*
+ * Between 800 and 1100px, the page has no sidebar beside it: the sidebar is
+ * the menu the header's button opens, as on a phone (`PageFrame`). Starlight
+ * lays out the header, the menu and its button for a wide screen from
+ * 800px; these rules keep them as below 800px up to 1100px.
+ */
+@media (min-width: 50rem) and (max-width: 68.74rem) {
+  /* Above Starlight's rule for 800px and up (in `Page`). */
+  html:root[data-has-sidebar] {
+    --sl-content-inline-start: 0rem;
+  }
+  /* Starlight's utilities for 800px and up: the menu button, the close
+     button of the search and the menu's foot show; the header's links and
+     the search shortcut do not. */
+  .sl-flex.md\:sl-hidden {
+    display: flex;
+  }
+  .md\:sl-hidden:not(.sl-flex) {
+    display: block;
+  }
+  .md\:sl-flex,
+  .md\:sl-block {
+    display: none;
+  }
+  /* The menu opens as a drawer of the sidebar's width, over the page,
+     rather than over the whole screen; its foot keeps that width. */
+  .sidebar-pane {
+    width: var(--sl-sidebar-width);
+    border-inline-end: 1px solid var(--line);
+    box-shadow: var(--shadow);
+  }
+  .sidebar-pane .mobile-preferences {
+    inset-inline: 0 auto;
+    width: var(--sl-sidebar-width);
+    padding-inline: calc(var(--sl-sidebar-pad-x) + 0.5rem);
+    border-inline-end: 1px solid var(--line);
+  }
+  /* Its links, at the size of the sidebar's items (14px), on the margins
+     of the group names. */
+  .sidebar-pane .mobile-preferences .links {
+    font-size: 14px;
+  }
+  body:has(#starlight__sidebar:popover-open) {
+    overflow: hidden;
+  }
+}
+
+/* Between 800 and 1100px, the menu's drawer slides in from the left edge
+   (0.25s); `PageFrame` slides it back out when its button closes it. On a
+   phone, the menu covers the screen, and appears at once. At rest the
+   drawer has no translation at all, so that its foot, fixed at the bottom
+   of the screen, does not scroll with the list. */
+@media (min-width: 50rem) and (max-width: 68.74rem) and
+  (prefers-reduced-motion: no-preference)
+{
+  .sidebar-pane:popover-open {
+    translate: none;
+    transition: translate 0.25s cubic-bezier(0.2, 0, 0, 1);
+  }
+  @starting-style {
+    .sidebar-pane:popover-open {
+      translate: -100% 0;
+    }
+  }
+}
+
+/* Beside the sidebar, a page's column is centred in the room it has, as
+   Starlight centres it only from 1152px; the column of "On this page"
+   pushes it to the end from 1440px (`TwoColumnContent`). */
+@media (min-width: 50rem) {
+  .content-panel > .sl-container {
+    margin-inline: var(--sl-content-margin-inline, auto);
+  }
+}
+
+/* Without the sidebar, below 800px, a page's column takes the whole width:
+   Starlight caps it at 45rem, which left a strip on its right between 752
+   and 800px. The home page centres its column instead. */
+@media (max-width: 49.99rem) {
+  :root:not(:has(.home-hero)) main .sl-container {
+    max-width: none;
+  }
+}
+
+/* The home page's column is centred at every width. Starlight centres the
+   content column only on wide screens: between 752 and 800px, where the
+   window outgrows the column (45rem and its margins), the home page sat
+   to the left. */
+:root:has(.home-hero) .sl-container {
+  margin-inline: auto;
+}
+
+/*
+ * The home page keeps the sidebar for the menu below 1100px (`routeData.ts`);
+ * from there it is a splash page, without the sidebar, at full width.
+ */
+@media (min-width: 68.75rem) {
+  :root[data-has-sidebar]:has(.home-hero) {
+    --sl-content-inline-start: 0rem;
+    --sl-content-width: 67.5rem;
+  }
+  :root:has(.home-hero) .sidebar-pane {
+    display: none;
+  }
+}
+
+/* Moving between pages. The browser itself cross-fades the content while the
+   header and the sidebar stay put (cross-document view transitions: Chrome,
+   Edge, Safari; other browsers load the page as before). Nothing moves for
+   those who ask for less motion. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+
+/* Starlight's frame header; code frames and the header's own content also use
+   the class, and a name must be unique. */
+.page > .header {
+  view-transition-name: site-header;
+}
+
+@media (min-width: 68.75rem) {
+  .sidebar-pane {
+    view-transition-name: site-sidebar;
+  }
+}
+
+/* The menu button, below 1100px, sits beside the header, not in it: it
+   stays put too. */
+button.sl-menu-button {
+  view-transition-name: site-menu-button;
+}
+
+::view-transition-group(site-header),
+::view-transition-group(site-sidebar),
+::view-transition-group(site-menu-button),
+::view-transition-old(site-header),
+::view-transition-old(site-sidebar),
+::view-transition-old(site-menu-button),
+::view-transition-new(site-header),
+::view-transition-new(site-sidebar),
+::view-transition-new(site-menu-button) {
+  animation: none;
+}
+
+::view-transition-old(site-header),
+::view-transition-old(site-sidebar),
+::view-transition-old(site-menu-button) {
+  display: none;
+}
+
+/* "On this page", as a bar below 1440px and as a column from there, keeps
+   its frame from page to page: the old one blends straight into the new
+   one, so that the frame stays still and only the sections' names change,
+   rather than fading out and back in with the page. */
+mobile-starlight-toc nav {
+  view-transition-name: site-toc-bar;
+}
+/* The column only: below 1440px, the bar lives inside it, and a name there
+   would make it a stacking context that holds the bar below the page. */
+@media (min-width: 90rem) {
+  .right-sidebar {
+    view-transition-name: site-toc;
+  }
+}
+::view-transition-group(site-toc-bar),
+::view-transition-group(site-toc),
+::view-transition-old(site-toc-bar),
+::view-transition-old(site-toc),
+::view-transition-new(site-toc-bar),
+::view-transition-new(site-toc) {
+  animation-duration: 180ms;
+}
+
+/* The sidebar appears or leaves with the home page: let it fade. */
+::view-transition-old(site-sidebar):only-child,
+::view-transition-new(site-sidebar):only-child {
+  display: block;
+  animation: 180ms ease both page-fade-in;
+}
+
+::view-transition-old(site-sidebar):only-child {
+  animation-name: page-fade-out;
+}
+
+::view-transition-old(root) {
+  animation: 90ms ease-in both page-fade-out;
+}
+
+::view-transition-new(root) {
+  animation: 180ms ease-out 60ms both page-fade-in;
+}
+
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The copy button of code blocks, as the playground's secondary buttons: a
+   6px radius, a 1.5px line that darkens on hover, the 18px icon. */
+.expressive-code .copy button {
+  border-radius: var(--radius);
+}
+
+/* Where there is a pointer, Expressive Code shows the button when the block
+   is hovered, dimmed: shown, it is shown whole. */
+@media (hover: hover) {
+  .expressive-code .frame:hover .copy button:not(:hover),
+  .expressive-code .frame:focus-within :focus-visible ~ .copy button:not(:hover),
+  .expressive-code .frame .copy .feedback.show ~ button:not(:hover) {
+    opacity: 1;
+  }
+}
+
+/* Expressive Code draws the button's border on this pseudo-element: it
+   takes the buttons' transition itself, so that its colour changes gently
+   on hover, as the playground's buttons do. */
+.expressive-code .copy button::before {
+  border-width: 1.5px;
+  transition: border-color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .expressive-code .copy button:hover::before {
+    border-color: var(--muted);
+  }
+}
+
+.expressive-code .copy button::after {
+  margin: calc(50% - 9px);
+}
+
+.expressive-code .copy .feedback {
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+
+/* The terminal frame's three dots in the colours of a window's buttons
+   (close, minimise, zoom), rather than in the line colour, where they were
+   barely visible. Expressive Code draws them as one mask over a single
+   colour: a gradient in thirds gives each its own. Its own mask, too:
+   Expressive Code's has no intrinsic size, which some browsers stretch into
+   ovals. Here three 10px circles, 6px apart, drawn at their own size; the
+   thirds of the gradient fall in the gaps. */
+.expressive-code .is-terminal .header::before {
+  width: 2.625rem;
+  height: 0.625rem;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='42' height='10' viewBox='0 0 42 10'%3E%3Ccircle cx='5' cy='5' r='5'/%3E%3Ccircle cx='21' cy='5' r='5'/%3E%3Ccircle cx='37' cy='5' r='5'/%3E%3C/svg%3E")
+    0 0 / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='42' height='10' viewBox='0 0 42 10'%3E%3Ccircle cx='5' cy='5' r='5'/%3E%3Ccircle cx='21' cy='5' r='5'/%3E%3Ccircle cx='37' cy='5' r='5'/%3E%3C/svg%3E")
+    0 0 / 100% 100% no-repeat;
+  background: linear-gradient(
+    90deg,
+    #ff5f57 0 33.33%,
+    #febc2e 33.33% 66.67%,
+    #28c840 66.67%
+  );
+  opacity: 1;
+}
+
+/* The banner of the next release's documentation (`routeData.ts`): a note,
+   as the design system draws them, on the ground of the tips, between the
+   header and the page; its link leads to the released documentation. */
+.sl-banner {
+  padding: 0.75rem var(--sl-content-pad-x);
+  border-bottom: 1px solid var(--line);
+  background: var(--tip);
+  color: var(--ink);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-align: center;
+  text-wrap: balance;
+  box-shadow: none;
+}
+.sl-banner a {
+  color: var(--link);
+}
+
+/* Below 360px, where the viewport could not be widened to 360px (a narrow
+   desktop window, a simulator; on a phone, the head's script lays the page
+   out 360px wide), the page keeps 360px and scrolls sideways, its bars
+   with it rather than fixed to a narrower window. */
+@media (max-width: 22.49rem) {
+  html {
+    position: relative;
+    min-width: 22.5rem;
+  }
+  .page > .header,
+  mobile-starlight-toc nav,
+  button.sl-menu-button,
+  button.sl-menu-button:has(~ :popover-open) {
+    position: absolute;
+  }
+  .page > .header {
+    min-width: 22.5rem;
+  }
+}

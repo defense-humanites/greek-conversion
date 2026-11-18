@@ -50,6 +50,12 @@ Both registries use the same package name and version:
 8. Verify both registry pages, provenance, documentation, and installation
    commands, then reset `PUBLISH_ENABLED` to `false` if releases should require
    a fresh manual authorization.
+9. Publishing the release also redeploys the site (`.github/workflows/
+   pages.yml`): its root then shows this release's documentation and
+   playground, and `/next/` those of `main`, for a stable version; a release
+   candidate is the next release by nature, and changes nothing there. Check
+   that the header's version selector names the new series (`1.x`), and the
+   banner of `/next/` the new version.
 
 ## A slow JSR step
 

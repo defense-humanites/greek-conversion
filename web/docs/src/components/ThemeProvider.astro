@@ -1,0 +1,26 @@
+---
+// The site follows the system's light or dark appearance, as the playground
+// does, and has no theme switch (ThemeSelect renders nothing). Starlight's
+// provider sets `data-theme` once, when the page loads, and from a choice
+// stored by a switch: the code blocks, styled by `data-theme`, kept their
+// theme when the system changed appearance until the page was reloaded.
+// Here `data-theme` follows the system, and keeps following it.
+---
+
+{/* Inline, so that the theme is set before the first paint. */}
+<script is:inline>
+  (() => {
+    const query = matchMedia("(prefers-color-scheme: light)");
+    const apply = () => {
+      document.documentElement.dataset.theme = query.matches ? "light" : "dark";
+    };
+    try {
+      localStorage.removeItem("starlight-theme");
+    } catch {
+      // Storage can be unavailable (private modes, blocked cookies): nothing
+      // was stored, then.
+    }
+    apply();
+    query.addEventListener("change", apply);
+  })();
+</script>

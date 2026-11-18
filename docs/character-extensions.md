@@ -17,6 +17,8 @@ character identifier, an empty or ambiguous spelling).
 An alias supplies another source spelling for an existing semantic letter:
 
 ```ts
+import { createConverter } from "@humanities/greek-conversion";
+
 const converter = createConverter({
   aliases: [{
     letter: "theta",
@@ -24,6 +26,8 @@ const converter = createConverter({
     spellings: ["þ"],
   }],
 });
+
+converter.convert("þeós", "transliteration", "greek"); // → θεός
 ```
 
 The alias is replaced by the canonical source-format spelling before parsing.
@@ -40,6 +44,8 @@ A custom character declares a stable identifier and one lowercase plus an
 optional uppercase spelling in every format:
 
 ```ts
+import { createConverter } from "@humanities/greek-conversion";
+
 const converter = createConverter({
   characters: [{
     id: "san",
@@ -51,6 +57,9 @@ const converter = createConverter({
     override: true,
   }],
 });
+
+converter.convert("ϻαν Ϻ", "greek", "transliteration"); // → šan Š
+converter.convert("ϻαν Ϻ", "greek", "beta-code"); // → #9an *#9
 ```
 
 Custom characters are opaque inside the Greek engine. The converter guarantees
@@ -101,11 +110,25 @@ instead of risking silent corruption.
 registered custom characters. `exclude` is applied afterwards and always wins:
 
 ```ts
+import { createConverter } from "@humanities/greek-conversion";
+
+const san = {
+  id: "san",
+  forms: {
+    greek: { lowercase: "ϻ" },
+    "beta-code": { lowercase: "#9" },
+    transliteration: { lowercase: "š" },
+  },
+  override: true,
+};
 const converter = createConverter({
-  characters: [customSan],
+  characters: [san],
   repertoire: ["alpha", "beta", "san"],
   exclude: ["san"],
 });
+
+// Gamma is outside the allow-list, and san is excluded from it.
+converter.convert("αβγϻ", "greek", "transliteration"); // → abγϻ
 ```
 
 The policy is semantic rather than graphical. Excluding `stigma` applies to
@@ -134,11 +157,14 @@ written as one number. A matched custom form retains its registered spelling.
 The target may consequently contain a deliberate source-format fragment:
 
 ```ts
+import { createConverter } from "@humanities/greek-conversion";
+
 const noSigma = createConverter({ exclude: ["sigma"] });
 
 noSigma.convert("λόγος σῶμα", "greek", "transliteration", {
   text: { letterCase: "title" },
-}); // Lógoς Σō̃ma
+});
+// → Lógoς Σō̃ma
 ```
 
 A kept letter is a letter of its word, so the letters around it keep their
@@ -166,16 +192,20 @@ kept capital is among capitals (`ΘΕΟΣ`, with epsilon out of scope, gives
 `convertDetailed()` keeps scope diagnostics separate from conversion losses:
 
 ```ts
+import { createConverter } from "@humanities/greek-conversion";
+
+const converter = createConverter({ exclude: ["stigma"] });
 const result = converter.convertDetailed(
   "ἀϛβ",
   "greek",
   "transliteration",
 );
 
-result.output; // aϛb
-result.lossy; // false
-result.diagnostics[0].code; // out-of-scope-character
-result.diagnostics[0].offset; // 1, in UTF-16 code units of the input
+result.output; // → aϛb
+result.lossy; // → false
+result.diagnostics[0].code; // → out-of-scope-character
+// In UTF-16 code units of the input.
+result.diagnostics[0].offset; // → 1
 ```
 
 Each diagnostic carries the `index` of its token in the source document as
@@ -190,7 +220,10 @@ Keeping a letter is not information loss, so it does not set `lossy`.
 For strict processing, select rejection when creating the converter:
 
 ```ts
-import { CharacterScopeError, createConverter } from "@humanities/greek-conversion";
+import {
+  CharacterScopeError,
+  createConverter,
+} from "@humanities/greek-conversion";
 
 const strict = createConverter({
   preset: "perseus",
@@ -200,11 +233,10 @@ const strict = createConverter({
 try {
   strict.convert("αϝ", "greek", "beta-code");
 } catch (error) {
-  if (error instanceof CharacterScopeError) {
-    error.diagnostics; // [{ code: "out-of-scope-character", index: 1, ... }]
-  } else {
-    throw error;
-  }
+  if (!(error instanceof CharacterScopeError)) throw error;
+  error.message; // → Conversion rejected: 1 out-of-scope character.
+  error.diagnostics.map(({ code, index }) => [code, index]);
+  // → [["out-of-scope-character",1]]
 }
 ```
 
@@ -230,10 +262,12 @@ Bind a preset to a converter to apply both its conversion options and every
 scope boundary established by the audit:
 
 ```ts
+import { createConverter } from "@humanities/greek-conversion";
+
 const perseus = createConverter({ preset: "perseus" });
 
 perseus.convert("Ἄνθρωπος ϝ", "greek", "beta-code");
-// *)/anqrwpos ϝ
+// → *)/anqrwpos ϝ
 ```
 
 Here digamma is recognized but preserved because it is outside the Perseus

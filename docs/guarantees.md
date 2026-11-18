@@ -52,13 +52,25 @@ kept as they are, but reported as `unrepresented-literal` losses when the
 target format would read them as Greek:
 
 ```ts
-convertDetailed("Voir λόγος ; cf. ψυχή.", "greek", "transliteration");
-// output: "Voir lógos ? cf. psychḗ."; lossy: true, all losses
-// unrepresented-literal
+import { convertDetailed } from "@humanities/greek-conversion";
+
+const mixed = convertDetailed(
+  "Voir λόγος ; cf. ψυχή.",
+  "greek",
+  "transliteration",
+);
+
+mixed.output; // → Voir lógos ? cf. psychḗ.
+mixed.lossy; // → true
+[...new Set(mixed.losses.map((loss) => loss.code))];
+// → ["unrepresented-literal"]
 ```
 
 Filter the losses by `code` to keep those about the Greek, or extract the Greek
-before converting when the punctuation matters.
+before converting when the punctuation matters. The same code reports the few
+literals of the Greek itself that a target cannot keep, such as a parenthesis
+before a digit in Beta Code (see
+[Information loss](information-loss.md#canonical-spelling-and-unicode)).
 
 ## What the library does not do
 
@@ -87,10 +99,12 @@ forms), archaic letters, Greek punctuation, and marked alphabetic numerals.
 | Topic                                              | Document                                                                                              |
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | Options, functions, and types                      | The API documentation (TSDoc of the exported declarations)                                            |
+| Options, their values, defaults, and presets       | [Options](options.md)                                                                                 |
 | Presets and their exact options                    | [Presets](presets.md)                                                                                 |
 | Loss by format pair and option                     | [Information loss](information-loss.md)                                                               |
 | Detailed results, positions, and spans             | [Conversion analysis](conversion-analysis.md)                                                         |
 | Accentuation, letter forms, and Unicode output     | [Greek Unicode](greek-unicode.md)                                                                     |
+| Punctuation and alphabetic numerals                | [Punctuation and numerals](punctuation-and-numerals.md)                                               |
 | Custom characters and repertoires                  | [Character extensions](character-extensions.md)                                                       |
 | The canonical document and its validation          | [Document API](document-api.md) and [Validation](validation.md)                                       |
 | What the version number protects, and reading rules | [Stability policy](stability.md)                                                                      |

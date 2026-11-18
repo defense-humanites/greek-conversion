@@ -1,0 +1,114 @@
+---
+/*
+ * Starlight's links to the previous and next pages, without panels, under a
+ * single rule. The arrow belongs to the label's line: before "Previous",
+ * after "Next"; the title stands below, aligned with the line's start or
+ * end. Not links in a link colour, but the way on: the label reads as
+ * the sidebar's group names, the title as a heading, in the ink; on hover,
+ * the label darkens and the arrow steps ahead.
+ */
+import { icon } from "../../../shared/icons.ts";
+
+const { dir, pagination } = Astro.locals.starlightRoute;
+const { prev, next } = pagination;
+const isRtl = dir === "rtl";
+---
+
+{
+  (prev || next) && (
+    <div class="pagination-links print:hidden" dir={dir}>
+      {
+        prev && (
+          <a href={prev.href} rel="prev">
+            <span class="label">
+              <Fragment set:html={icon(isRtl ? "arrow-right" : "arrow-left")} />
+              {Astro.locals.t("page.previousLink")}
+            </span>
+            <span class="link-title">{prev.label}</span>
+          </a>
+        )
+      }
+      {
+        next && (
+          <a href={next.href} rel="next">
+            <span class="label">
+              {Astro.locals.t("page.nextLink")}
+              <Fragment set:html={icon(isRtl ? "arrow-left" : "arrow-right")} />
+            </span>
+            <span class="link-title">{next.label}</span>
+          </a>
+        )
+      }
+    </div>
+  )
+}
+
+<style>
+  .pagination-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+  a {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    color: var(--muted);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  [rel="next"] {
+    grid-column: -2;
+    align-items: flex-end;
+    text-align: end;
+  }
+  /* The label as the sidebar's group names: small spaced capitals. */
+  .label {
+    display: inline-flex;
+    gap: 0.375rem;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    line-height: 1.5;
+    text-transform: uppercase;
+    transition: color 0.15s ease;
+  }
+  .label :global(svg) {
+    flex-shrink: 0;
+    width: 1.125rem;
+    height: 1.125rem;
+    transition: translate 0.32s var(--ease-bounce);
+  }
+  /* The arrow's ink starts 3px inside its box: pulled out by as much, it
+     lines up with the title. */
+  [rel="prev"] .label :global(svg) {
+    margin-inline-start: -0.1875rem;
+  }
+  [rel="next"] .label :global(svg) {
+    margin-inline-end: -0.1875rem;
+  }
+  .link-title {
+    margin-top: 0.25rem;
+    color: var(--ink);
+    font-size: var(--sl-text-2xl);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: var(--sl-line-height-headings);
+  }
+  @media (hover: hover) {
+    a:hover .label {
+      color: var(--ink);
+    }
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    [rel="prev"]:hover .label :global(svg) {
+      translate: -0.25rem 0;
+    }
+    [rel="next"]:hover .label :global(svg) {
+      translate: 0.25rem 0;
+    }
+  }
+</style>

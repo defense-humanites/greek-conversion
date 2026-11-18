@@ -1,0 +1,172 @@
+---
+/*
+ * Starlight's page frame, with the sidebar beside the page from 68.75rem
+ * (1100px) rather than 50rem (800px): below 1100px, the sidebar (340px)
+ * would leave the text less than 712px, where a code block of 76 columns
+ * (`scripts/check_code_width.ts`) scrolls. Below 68.75rem, the sidebar is
+ * the menu that the header's button opens, as on a phone. Otherwise Starlight's
+ * component, with its breakpoint changed, in its styles and in the script
+ * that makes the sidebar a popover.
+ */
+import MobileMenuToggle from "virtual:starlight/components/MobileMenuToggle";
+
+const { hasSidebar } = Astro.locals.starlightRoute;
+---
+
+<div class="page sl-flex">
+  <header class="header"><slot name="header" /></header>
+  {
+    hasSidebar && (
+      <nav
+        class="sidebar print:hidden"
+        aria-label={Astro.locals.t("sidebarNav.accessibleLabel")}
+      >
+        <MobileMenuToggle />
+        <script>
+          // The menu uses the popover API to open and close without
+          // JavaScript, below 68.75rem; focus stays inside it while it is open.
+          class StarlightSidebarPane extends HTMLElement {
+            constructor() {
+              super();
+
+              const desktopMediaQuery = matchMedia("(min-width: 68.75rem)");
+
+              const resetPopoverAttribute = () => {
+                this.popover = desktopMediaQuery.matches ? null : "auto";
+              };
+              resetPopoverAttribute();
+              desktopMediaQuery.addEventListener(
+                "change",
+                () => resetPopoverAttribute(),
+              );
+
+              // Between 800 and 1100px, the drawer slides back out when its
+              // button closes it, as it slid in (theme.css); then it closes.
+              // Light dismiss and Escape close it at once.
+              const drawer = matchMedia(
+                "(min-width: 50rem) and (max-width: 68.74rem)",
+              );
+              const still = matchMedia("(prefers-reduced-motion: reduce)");
+              let closing = false;
+              this.closest("nav")?.querySelector("button.sl-menu-button")
+                ?.addEventListener("click", (event) => {
+                  if (
+                    !drawer.matches || still.matches ||
+                    !this.matches(":popover-open")
+                  ) return;
+                  event.preventDefault();
+                  if (closing) return;
+                  closing = true;
+                  this.animate([{ translate: "none" }, {
+                    translate: "-100% 0",
+                  }], { duration: 200, easing: "cubic-bezier(0.4, 0, 1, 1)" })
+                    .finished.then(() => {
+                      closing = false;
+                      if (this.matches(":popover-open")) this.hidePopover();
+                    });
+                });
+
+              this.addEventListener(
+                "toggle",
+                (event) =>
+                  this.trapFocus((event as ToggleEvent).newState === "open"),
+              );
+            }
+            /** Keeps keyboard focus in the header and the menu while it is open. */
+            trapFocus(shouldTrap: boolean) {
+              document
+                .querySelectorAll<HTMLElement>(".main-frame, .sl-skip-link")
+                .forEach((el) => {
+                  el.toggleAttribute("inert", shouldTrap);
+                });
+            }
+          }
+          customElements.define("sl-sidebar-pane", StarlightSidebarPane);
+        </script>
+        <sl-sidebar-pane
+          popover=""
+          id="starlight__sidebar"
+          class="sidebar-pane"
+        >
+          <div class="sidebar-content sl-flex">
+            <slot name="sidebar" />
+          </div>
+        </sl-sidebar-pane>
+      </nav>
+    )
+  }
+  <div class="main-frame"><slot /></div>
+</div>
+
+<style>
+  @layer starlight.core {
+    .page {
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .header {
+      z-index: var(--sl-z-index-navbar);
+      position: fixed;
+      inset-inline-start: 0;
+      inset-block-start: 0;
+      width: 100%;
+      height: var(--sl-nav-height);
+      border-bottom: 1px solid var(--sl-color-hairline-shade);
+      padding: var(--sl-nav-pad-y) var(--sl-nav-pad-x);
+      padding-inline-end: var(--sl-nav-pad-x);
+      background-color: var(--sl-color-bg-nav);
+    }
+
+    :global([data-has-sidebar]) .header {
+      padding-inline-end: calc(
+        var(--sl-nav-gap) + var(--sl-nav-pad-x) + var(--sl-menu-button-size)
+      );
+    }
+
+    .sidebar-pane {
+      border: unset;
+      padding: unset;
+      height: unset;
+      color: unset;
+
+      position: fixed;
+      z-index: var(--sl-z-index-menu);
+      inset-block: var(--sl-nav-height) 0;
+      inset-inline-start: 0;
+      width: 100%;
+      background-color: var(--sl-color-black);
+      overflow-y: auto;
+      scrollbar-gutter: stable;
+    }
+
+    .sidebar-content {
+      height: 100%;
+      min-height: max-content;
+      padding: 1rem var(--sl-sidebar-pad-x) 0;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .main-frame {
+      padding-top: calc(var(--sl-nav-height) + var(--sl-mobile-toc-height));
+      padding-inline-start: var(--sl-content-inline-start);
+    }
+
+    @media (min-width: 68.75rem) {
+      .sidebar-content::after {
+        content: "";
+        padding-bottom: 1px;
+      }
+      :global([data-has-sidebar]) .header {
+        padding-inline-end: var(--sl-nav-pad-x);
+      }
+      .sidebar-pane {
+        display: block;
+        width: var(--sl-sidebar-width);
+        background-color: var(--sl-color-bg-sidebar);
+        border-inline-end: 1px solid var(--sl-color-hairline-shade);
+      }
+    }
+  }
+</style>

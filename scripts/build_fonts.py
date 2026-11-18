@@ -5,7 +5,7 @@ from the files of google/fonts.
     pip install "fonttools[woff]==4.67.0"
     python3 scripts/build_fonts.py [--sources DIR] [--output DIR]
 
-Without --sources, the three variable fonts are downloaded from google/fonts.
+Without --sources, the source fonts are downloaded from google/fonts.
 With it, DIR holds them under the names google/fonts gives them. Either way,
 each file is checked against the SHA-256 the fonts were built from, so that a
 newer release is a deliberate change: pass --any-version to accept one.
@@ -63,6 +63,16 @@ NOTO_SERIF = Source(
     "notoserif",
     "4d8e6761424656867019081a1a01336f3cb086982682698714054fc33f782713",
 )
+NOTO_SANS_MONO = Source(
+    "NotoSansMono[wdth,wght].ttf",
+    "notosansmono",
+    "2cb2adb378a8f574213e23df697050b83c54c27df465a2015552740b2769a081",
+)
+FIRA_MONO = Source(
+    "FiraMono-Regular.ttf",
+    "firamono",
+    "2e00b0cf3106a3d792f35711b7722740b76c02ee7300ea8c60f940584b7a8ac9",
+)
 
 
 def span(first: int, last: int) -> list[int]:
@@ -107,6 +117,36 @@ NOTO_UNICODES = (
     + [0x03F0, 0x03F1, 0x03F5]
     + span(0x03FD, 0x03FF)
 )
+
+# The letter forms that Noto Sans Mono draws as the ordinary letters (ϐ as β,
+# ϑ as θ, Ϲ as Σ...): the reversed and dotted lunate sigmas, the symbol forms,
+# the lunate sigmas. Fira Mono, at the same advance, draws them apart.
+MONO_SYMBOLS = (
+    span(0x037B, 0x037D)
+    + span(0x03D0, 0x03D6)
+    + [0x03F0, 0x03F1, 0x03F2, 0x03F4, 0x03F5, 0x03F9]
+    + span(0x03FD, 0x03FF)
+)
+
+# Noto Sans Mono: the code of the playground and the site, in all three
+# formats, with the Latin of transliterations, every combining diacritic
+# and Greek Extended, less the forms Fira Mono draws.
+MONO_UNICODES = [
+    codepoint
+    for codepoint in (
+        span(0x0020, 0x007E)
+        + span(0x00A0, 0x024F)
+        + span(0x02B0, 0x02FF)
+        + span(0x0300, 0x036F)
+        + span(0x0370, 0x03FF)
+        + span(0x1E00, 0x1EFF)
+        + span(0x1F00, 0x1FFF)
+        + span(0x2000, 0x206F)
+        + span(0x2190, 0x2199)
+        + SYMBOLS
+    )
+    if codepoint not in MONO_SYMBOLS
+]
 
 # Modified, Literata takes another name, as a courtesy: the font declares no
 # Reserved Font Name (OFL 1.1).
@@ -304,6 +344,22 @@ def noto(path: Path, output: Path) -> None:
     save_woff2(font, output / "noto-serif-greek-symbols.woff2", modified)
 
 
+def noto_sans_mono(path: Path, output: Path) -> None:
+    """Width fixed at 100, weight limited to 400–700 for bold code."""
+    font, modified = instance(path, {"wdth": 100, "wght": (400, 700)})
+    subset_font(font, MONO_UNICODES)
+    save_woff2(font, output / "noto-sans-mono.woff2", modified)
+
+
+def fira_mono(path: Path, output: Path) -> None:
+    """The letter forms Noto Sans Mono does not tell apart."""
+    font = TTFont(path)
+    modified = font["head"].modified
+    # Noto Sans Mono's .notdef shows a missing glyph: the fallback needs none.
+    subset_font(font, MONO_SYMBOLS, notdef_outline=False)
+    save_woff2(font, output / "fira-mono-greek-symbols.woff2", modified)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Builds the shared fonts from google/fonts.",
@@ -328,13 +384,15 @@ def main() -> None:
     arguments.output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as cache:
         paths = {}
-        for source in (BRICOLAGE, LITERATA, NOTO_SERIF):
+        for source in (BRICOLAGE, LITERATA, NOTO_SERIF, NOTO_SANS_MONO, FIRA_MONO):
             path = fetch(source, arguments.sources, Path(cache))
             check(source, path, arguments.any_version)
             paths[source.name] = path
         bricolage(paths[BRICOLAGE.name], arguments.output)
         literata(paths[LITERATA.name], arguments.output)
         noto(paths[NOTO_SERIF.name], arguments.output)
+        noto_sans_mono(paths[NOTO_SANS_MONO.name], arguments.output)
+        fira_mono(paths[FIRA_MONO.name], arguments.output)
 
 
 if __name__ == "__main__":
