@@ -397,52 +397,31 @@ site-search button[data-open-modal]:active {
   background-color: color-mix(in oklab, var(--raised), var(--ink) 4%);
 }
 /* The header is a row: the name and the version, the search field, then
-   the links or the menu button. The field is centred in the room between
-   them, at an equal distance from the version and from what follows it,
-   rather than in Starlight's grid, which lines it up with a column of text.
-   It grows to 30rem from 1100px (Starlight: 22rem), and to 22rem below. */
+   the links or the menu button. The field follows the version, at the
+   header's gap, and takes the room it has up to 22rem (Starlight's width);
+   on a phone, all of it. From 1440px, where the header has room to spare,
+   it takes its fullest form, centred between the version and the links:
+   up to 30rem, with its keyboard shortcut. */
 header.header > .header {
   display: flex;
 }
 .header > :nth-child(2) {
   display: flex;
   flex: 1;
-  justify-content: center;
+  justify-content: flex-start;
   min-width: 0;
 }
-site-search button[data-open-modal] {
-  max-width: 30rem;
+@media (max-width: 89.99rem) {
+  site-search button[data-open-modal] > kbd {
+    display: none !important;
+  }
 }
-/* Between 800 and 1152px, the field follows the version, at the header's
-   gap: centred, it would sit far to the right of a header that holds the
-   name and the menu button only (below 1100px); and from 1100px it fills
-   the room the links leave it, which keep their size. */
-@media (min-width: 50rem) and (max-width: 71.99rem) {
+@media (min-width: 90rem) {
   .header > :nth-child(2) {
-    justify-content: flex-start;
+    justify-content: center;
   }
-}
-/* Below 800px, the field is centred on the screen itself. The header is a
-   grid of three columns: the symbol and the version (7rem: 40px, 8px, and
-   the version's 4rem, `SiteTitle.astro`), the field (22rem at most), and
-   as much again on the other side, where the menu button sits. Where the
-   screen is too narrow for that, the third column gives up room down to
-   the button's, so that the field keeps 9rem; it then sits a little right
-   of the centre. */
-@media (max-width: 49.99rem) {
-  html[data-has-sidebar] .page > .header {
-    padding-inline-end: var(--sl-nav-pad-x);
-  }
-  header.header > .header {
-    display: grid;
-    grid-template-columns:
-      7rem minmax(0, 22rem)
-      clamp(1.5rem, 100% - 16rem - 2 * var(--sl-nav-gap), 7rem);
-    justify-content: space-between;
-    column-gap: var(--sl-nav-gap);
-  }
-  [data-has-sidebar] header.header > .header::after {
-    content: "";
+  site-search button[data-open-modal] {
+    max-width: 30rem;
   }
 }
 /* Below 1100px, a field rather than an icon, as on a wide screen. */
