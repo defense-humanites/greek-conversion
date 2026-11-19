@@ -48,6 +48,7 @@ test("diacritics.all is expanded where it is written", () => {
       diaeresis: "remove",
       iotaSubscript: "remove",
       quantity: "remove",
+      overline: "remove",
     },
   );
   // A class named alongside it is the exception, and a preset's classes
@@ -65,6 +66,7 @@ test("diacritics.all is expanded where it is written", () => {
       diaeresis: "remove",
       iotaSubscript: "remove",
       quantity: "remove",
+      overline: "remove",
     },
   );
   assertEquals(

@@ -100,10 +100,11 @@ const OUTPUT: Record<Format, ReadonlyMap<string, string>> = {
  * psili and dasia here, where the TLG gives U+02BC and U+02BD, which are
  * apostrophes to every reader.
  *
- * Left out: the codes of `&`, `"`, `<`, and `>` (`%9`, `%98`, `#18`, `#15`),
- * signs that the TLG also uses, bare, as mark-up (a font, quotation marks,
- * an overline), which the reader keeps as text and the writer writes as it
- * reads them, so that Beta Code converted to itself keeps its mark-up.
+ * `<` and `>` are written `#18` and `#15`, since bare they write an
+ * overline (`<QS>`). Left out: the codes of `&` and `"` (`%9`, `%98`),
+ * signs that the TLG also uses, bare, as mark-up (a font, quotation marks),
+ * which the reader keeps as text and the writer writes as it reads them, so
+ * that Beta Code converted to itself keeps its mark-up.
  */
 const TLG_CODES: readonly (readonly [code: string, sign: string])[] = [
   ["[1", "("],
@@ -150,6 +151,8 @@ const TLG_CODES: readonly (readonly [code: string, sign: string])[] = [
   ["#8", "\u2E10"],
   ["#13", "\u203B"],
   ["#14", "\u2E16"],
+  ["#15", ">"],
+  ["#18", "<"],
   ["#55", "\u2059"],
   ["#73", "\u205A"],
   ["#532", "\u2E12"],

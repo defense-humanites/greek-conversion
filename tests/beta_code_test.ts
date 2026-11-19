@@ -228,12 +228,13 @@ test("reads and writes signs with their TLG codes", () => {
   assertNfcEquals(convert("〈α〉 〈β〉", "greek", "greek"), "⟨α⟩ ⟨β⟩");
   assertNfcEquals(convert("%1 %12", "beta-code", "greek"), "; *");
   // `#12` and `#17`, which the TLG gives as a dash and a solidus, and the
-  // codes of signs that are mark-up when bare, stay text.
+  // codes of signs that are mark-up when bare, stay text. `<` and `>`,
+  // which bare write an overline, take their codes.
   assertNfcEquals(
     convert("#12 #17 %9 %98 #15 #18", "beta-code", "greek"),
-    "#12 #17 %9 %98 #15 #18",
+    "#12 #17 %9 %98 > <",
   );
-  assertEquals(convert("a < b & c", "greek", "beta-code"), "a < b & c");
+  assertEquals(convert("a < b & c", "greek", "beta-code"), "a #18 b & c");
 });
 
 test("writes a sign as itself before a digit where it reads back", () => {

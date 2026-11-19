@@ -47,6 +47,10 @@ const LIGATURES: Readonly<Partial<Record<GlyphVariant, Ligature>>> = {
   },
 };
 
+/** The number of letters a sign stands for, by the variant noting it. */
+export const ligatureLength = (variant: GlyphVariant | undefined): number =>
+  variant === undefined ? 1 : LIGATURES[variant]?.letters.length ?? 1;
+
 /** A sign as a reader finds it: the variant it notes, and its case. */
 interface ReadLigature {
   readonly variant: GlyphVariant;

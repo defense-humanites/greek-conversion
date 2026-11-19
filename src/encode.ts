@@ -85,6 +85,7 @@ const LATIN_ORDER: readonly Diacritic[] = [
   "grave",
   "circumflex",
   "iota-subscript",
+  "overline",
 ];
 
 const marks = (token: Grapheme, options: ConversionOptions, format: Format) =>
@@ -241,8 +242,6 @@ export function greekGlyph(
   quotations: QuotationContext,
 ): string {
   const ordinary = ALPHABET[token.letter].greek;
-  const ligature = writtenLigature(document, index, options, token);
-  if (ligature !== undefined) return ligature.greek;
   if (token.letter === "sigma") {
     if (writesLunateSigma(document, index, token, options)) return "ϲ";
     // In a numeral, a sigma is 200, written `σ`; a final sigma the source
@@ -309,7 +308,8 @@ export function glyphForm(
 ): string {
   switch (format) {
     case "greek":
-      return greekGlyph(document, index, token, options, quotations);
+      return writtenLigature(document, index, options, token)?.greek ??
+        greekGlyph(document, index, token, options, quotations);
     case "beta-code":
       return betaLigature(document, index, options, token)?.code ??
         (token.letter === "sigma"
@@ -456,6 +456,47 @@ function digitsFrom(document: Document, start: number): string {
 }
 
 /**
+ * Puts `<` and `>` around each run of letters under an overline, as the TLG
+ * writes it. The letters a ligature's code writes are one unit, under the
+ * overline when its last one is, which bears its marks. Before a digit, `>`
+ * would be another code: the overline is not written there.
+ */
+function writeOverlines(
+  pieces: string[],
+  rendered: Document,
+  doc: Document,
+  options: ConversionOptions,
+  betaMarks: (token: Grapheme) => readonly Diacritic[],
+): void {
+  const overline = rendered.map((token) =>
+    token.kind === "grapheme" && betaMarks(token).includes("overline")
+  );
+  // The last letter of the unit that each ligature begins.
+  const lasts: number[] = [];
+  for (let index = 0; index < rendered.length; index++) {
+    const ligature = betaLigature(doc, index, options);
+    if (ligature === undefined) continue;
+    const last = index + ligature.length - 1;
+    overline.fill(overline[last], index, last);
+    lasts[index] = last;
+    index = last;
+  }
+  const overlined = (index: number): boolean => overline[index] === true;
+  for (let index = 0; index < rendered.length; index++) {
+    const last = lasts[index] ?? index;
+    if (overlined(last) && pieces[index] !== "") {
+      let end = last + 1;
+      while (overlined(end)) end++;
+      if (digitsFrom(rendered, end) === "") {
+        pieces[index] = (overlined(index - 1) ? "" : "<") + pieces[index] +
+          (end === last + 1 ? ">" : "");
+      }
+    }
+    index = last;
+  }
+}
+
+/**
  * Writes Beta Code. With `written`, records the range of each token's output
  * (see `parsers/positions.ts`).
  */
@@ -465,7 +506,13 @@ export function encodeBetaCode(
   written?: WrittenPositions,
 ) {
   const rendered = prepareDiacriticsForRendering(doc, options, "beta-code");
-  const betaMarks = byMarks((token) => marks(token, options, "beta-code"));
+  // Whether a letter keeps the overline, noted once for each set of marks.
+  let overline = false;
+  const betaMarks = byMarks((token) => {
+    const kept = marks(token, options, "beta-code");
+    if (kept.includes("overline")) overline = true;
+    return kept;
+  });
   const quotations: QuotationContext = {};
   // The letters after the first of a ligature, which its code writes.
   let ligatureEnd = 0;
@@ -523,6 +570,9 @@ export function encodeBetaCode(
     const capital = extendedByDigit(doc, index, options) ? "%2" : "*";
     return `${capital}${beforeLetter}${base}${afterLetter}`;
   });
+  // Every letter's marks are read above: the code of a ligature writes
+  // those of its last one, and the others have none.
+  if (overline) writeOverlines(pieces, rendered, doc, options, betaMarks);
   return written === undefined ? pieces.join("") : joinPieces(pieces, written);
 }
 
@@ -1199,6 +1249,8 @@ function trMark(mark: Diacritic, options: ConversionOptions) {
       return "\u0304";
     case "breve":
       return "\u0306";
+    case "overline":
+      return "\u0305";
     case "coronis":
       switch (options.transliteration?.coronis) {
         case "apostrophe":

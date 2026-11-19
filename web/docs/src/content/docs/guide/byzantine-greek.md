@@ -1,13 +1,13 @@
 ---
 title: "Byzantine and Medieval Greek"
-description: "Convert Byzantine texts: the convention that covers the period, breathings written before a capital, the lunate sigma, numerals, uncial-style output, signs for several letters, and what is not read yet."
+description: "Convert Byzantine texts: the convention that covers the period, breathings written before a capital, the lunate sigma, numerals, uncial-style output, signs for several letters, the overline, and punctuation."
 ---
 
 Byzantine texts are written in polytonic Greek, and convert as Ancient Greek
 does: the same reading, the same presets. This page says which convention
-covers the period, shows what matters most for it (breathings written
-before a capital, the lunate sigma, numerals, uncial-style output, and signs
-for several letters), and states what the library does not read yet.
+covers the period, and shows what matters most for it: breathings written
+before a capital, the lunate sigma, numerals, uncial-style output, signs for
+several letters, the overline, and punctuation.
 
 ## Choose a convention
 
@@ -125,15 +125,23 @@ convert("ἐϛὶ", "greek", "greek", {
 // → ἐστὶ
 ```
 
-## What is not read yet
+## The overline
 
-Some signs of Byzantine manuscripts and of their digitizations are kept but
-not interpreted. None is ever dropped: each is copied to the output as it
-is, in every format, Beta Code included.
+The line drawn over abbreviations and numerals, as over the nomina sacra, is a
+mark of its letters, which every format keeps: `θ̅ς̅` gives `th̅s̅`, and Beta
+Code writes it as the TLG does, `<qs>`. Abbreviations are not expanded, and an
+overlined numeral is read as its letters. `diacritics.overline: "remove"`
+removes the line.
 
-| In the text | Today |
-| --- | --- |
-| The overline of nomina sacra, as in `θ̅ς̅` | Copied on the letters as an unknown mark: `th̅s̅`; abbreviations are not expanded |
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("θ̅ς̅ κ̅ς̅", "greek", "beta-code"); // → <qs> <ks>
+convert("θ̅ς̅", "greek", "greek", { diacritics: { overline: "remove" } });
+// → θς
+```
+
+## Punctuation and what is outside the library
 
 Byzantine punctuation, such as the hypodiastole `⸒` and the four dots `⁘`, is
 copied in Greek and transliteration, and Beta Code writes it with the TLG's

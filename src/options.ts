@@ -318,6 +318,11 @@ export interface DiacriticClassOptions {
   iotaSubscript?: DiacriticDisposition;
   /** Explicit macron and breve quantity marks. Defaults to `"preserve"`. */
   quantity?: DiacriticDisposition;
+  /**
+   * The overline of abbreviations and numerals, such as the nomina sacra
+   * (`θ̅ς̅`). Defaults to `"preserve"`.
+   */
+  overline?: DiacriticDisposition;
 }
 
 /**
@@ -594,6 +599,7 @@ export interface DefaultConversionOptions {
     readonly diaeresis: "preserve";
     readonly iotaSubscript: "preserve";
     readonly quantity: "preserve";
+    readonly overline: "preserve";
   };
 }
 
@@ -749,6 +755,7 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
     diaeresis: ["preserve", "remove"],
     iotaSubscript: ["preserve", "remove"],
     quantity: ["preserve", "remove"],
+    overline: ["preserve", "remove"],
   }),
 });
 
@@ -819,6 +826,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         diaeresis: "preserve",
         iotaSubscript: "preserve",
         quantity: "preserve",
+        overline: "preserve",
       }),
     } as const satisfies ResolvedConversionOptions,
   );

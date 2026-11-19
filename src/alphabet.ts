@@ -76,6 +76,7 @@ export const GREEK_MARKS = new Map<string, Diacritic>([
   ["\u0345", "iota-subscript"],
   ["\u0304", "macron"],
   ["\u0306", "breve"],
+  ["\u0305", "overline"],
 ]);
 
 export const GREEK_FOR: Record<Diacritic, string> = {
@@ -89,6 +90,7 @@ export const GREEK_FOR: Record<Diacritic, string> = {
   "iota-subscript": "\u0345",
   macron: "\u0304",
   breve: "\u0306",
+  overline: "\u0305",
 };
 
 export const BETA_FOR: Record<Diacritic, string> = {
@@ -104,17 +106,22 @@ export const BETA_FOR: Record<Diacritic, string> = {
   // `&` shifts to the Latin font and `'` is the apostrophe.
   macron: "%26",
   breve: "%27",
+  // The TLG writes the overline over a run of letters, `<` before and `>`
+  // after it, which the reader and the writer handle themselves.
+  overline: "",
 };
 
 export const BETA_MARKS = new Map(
-  Object.entries(BETA_FOR).map(([name, mark]) => [mark, name as Diacritic]),
+  Object.entries(BETA_FOR)
+    .filter(([, mark]) => mark !== "")
+    .map(([name, mark]) => [mark, name as Diacritic]),
 );
 
 BETA_MARKS.set(")", "smooth");
 
 /**
  * Order of combining marks in Greek output: quantity first, then breathing,
- * diaeresis, accent, and iota subscript.
+ * diaeresis, accent, overline, and iota subscript.
  *
  * Marks of the same canonical combining class stack outward from the letter
  * in sequence order, so the macron or breve sits on the vowel and the
@@ -132,6 +139,7 @@ export const GREEK_ORDER: readonly Diacritic[] = [
   "acute",
   "grave",
   "circumflex",
+  "overline",
   "iota-subscript",
 ];
 

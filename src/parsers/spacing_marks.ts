@@ -1,4 +1,5 @@
 import { GREEK_MARKS } from "../alphabet.ts";
+import { ligatureLength } from "../ligatures.ts";
 import { isVowel } from "../context.ts";
 import {
   type Diacritic,
@@ -140,9 +141,15 @@ export function readSpacingMarks(tokens: Token[], starts?: number[]): void {
       !(letter.letter === "rho" || isVowel(letter.letter)) ||
       letter.letter === "rho" && marks.some((mark) => ACCENTS.has(mark))
     ) continue;
-    let diacritics = letter.diacritics;
+    // The marks of a sign that stands for several letters are its last
+    // letter's (`᾿Ȣ` is `Οὐ`, as `Ȣ̓` is).
+    const last = capital + ligatureLength(letter.glyphVariant) - 1;
+    const bearer = tokens[last];
+    if (bearer?.kind !== "grapheme") continue;
+    let diacritics = bearer.diacritics;
     for (const mark of marks) diacritics = withDiacritic(diacritics, mark);
-    join(tokens, starts, i, capital + 1, { ...letter, diacritics });
+    tokens[last] = { ...bearer, diacritics };
+    join(tokens, starts, i, capital + 1, tokens[capital]);
   }
 }
 

@@ -13,8 +13,13 @@ import {
   literal,
   ownedGrapheme,
   type Token,
+  withDiacritic,
 } from "../model.ts";
-import { BETA_LIGATURES, ligatureLetters } from "../ligatures.ts";
+import {
+  BETA_LIGATURES,
+  ligatureLength,
+  ligatureLetters,
+} from "../ligatures.ts";
 import { parsePunctuation, TLG_SIGNS } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
 import type { ReadPositions } from "./positions.ts";
@@ -108,6 +113,8 @@ const HASH_LETTERS: ReadonlyMap<string, Letter> = new Map([
 const NO_CODE = -1;
 
 const ASTERISK = 0x2a;
+const LESS = 0x3c;
+const GREATER = 0x3e;
 const HASH = 0x23;
 const PERCENT = 0x25;
 const LEFT_BRACKET = 0x5b;
@@ -130,10 +137,23 @@ export function parseBetaCode(
   const out: Token[] = [];
   const starts = positions?.starts;
   if (positions !== undefined) positions.text = text;
+  // The first token under an overline that `<` opened, or NO_CODE.
+  let overline = NO_CODE;
 
   for (let i = 0; i < text.length;) {
+    if (overline !== NO_CODE && text.charCodeAt(i) === GREATER) {
+      // The `>` that closes an overline belongs to the token before it.
+      overlineFrom(out, overline);
+      overline = NO_CODE;
+      i++;
+      continue;
+    }
     const start = i;
     if (starts !== undefined) starts.push(start);
+    if (overline === NO_CODE && opensOverline(text, i)) {
+      overline = out.length;
+      i++;
+    }
     let upper = false;
 
     if (text.charCodeAt(i) === ASTERISK && i + 1 < text.length) {
@@ -297,6 +317,44 @@ function digitsEnd(text: string, start: number): number {
     index++;
   }
   return index;
+}
+
+/**
+ * Whether the `<` at `start` opens an overline, which the TLG writes over the
+ * letters between `<` and `>` (`<QS>`, θ̅ς̅): no digit follows it or its `>`,
+ * which would make them codes of another mark-up, and a letter, but no
+ * whitespace, stands between them.
+ */
+function opensOverline(text: string, start: number): boolean {
+  if (text.charCodeAt(start) !== LESS || isDigitAt(text, start + 1)) {
+    return false;
+  }
+  const end = text.indexOf(">", start + 1);
+  if (end === -1 || isDigitAt(text, end + 1)) return false;
+  const between = text.slice(start + 1, end);
+  return !/[\s<]/.test(between) && /[a-z]|#\d/i.test(between);
+}
+
+const isDigitAt = (text: string, index: number): boolean => {
+  const unit = text.charCodeAt(index);
+  return unit >= DIGIT_0 && unit <= DIGIT_9;
+};
+
+/**
+ * Gives an overline to the letters from `start`; to the last letter only of
+ * those a sign stands for, which bears the sign's marks (`<#1532>`, `ϗ̅`).
+ */
+function overlineFrom(out: Token[], start: number): void {
+  for (let k = start; k < out.length; k++) {
+    const token = out[k];
+    if (token.kind !== "grapheme") continue;
+    k += ligatureLength(token.glyphVariant) - 1;
+    const last = out[k] as typeof token;
+    out[k] = {
+      ...last,
+      diacritics: withDiacritic(last.diacritics, "overline"),
+    };
+  }
 }
 
 /** Whether `code` is a mark after a letter: `%26`, the macron, or `%27`. */

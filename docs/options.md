@@ -606,4 +606,13 @@ Explicit macron and breve quantity marks. Defaults to `"preserve"`.
 | `"preserve"`, the default |  |  |
 | `"remove"` | Greek to Greek: `ᾱ̓́` gives `ἄ` instead of `ᾱ̓́` | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
 
+### `diacritics.overline`
+
+The overline of abbreviations and numerals, such as the nomina sacra (`θ̅ς̅`). Defaults to `"preserve"`.
+
+| Value | Example | Presets |
+| --- | --- | --- |
+| `"preserve"`, the default |  |  |
+| `"remove"` | Greek to Greek: `θ̅ς̅` gives `θς` instead of `θ̅ς̅` | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
+
 <!-- END GENERATED OPTION REFERENCE -->

@@ -394,7 +394,7 @@ export function getPresetMetadata(preset: Preset): PresetMetadata {
  * Returns a detached copy of one bundled preset configuration.
  *
  * A preset written with `diacritics.all` is returned with the shorthand
- * expanded into the seven classes, as `resolveConversionOptions()` reads it.
+ * expanded into the eight classes, as `resolveConversionOptions()` reads it.
  *
  * @throws {RangeError} If the identifier is not registered at runtime.
  */
@@ -562,7 +562,7 @@ type ExpandedOptions = Omit<PresetOptions, "diacritics"> & {
   diacritics?: DiacriticClassOptions;
 };
 
-/** The seven diacritic classes, in the order of the defaults. */
+/** The eight diacritic classes, in the order of the defaults. */
 const DIACRITIC_CLASSES: readonly string[] = Object.keys(
   DEFAULT_CONVERSION_OPTIONS.diacritics,
 );

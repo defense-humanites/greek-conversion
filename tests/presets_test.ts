@@ -110,6 +110,7 @@ test("resolves custom options after nested preset options", () => {
       diaeresis: "remove",
       iotaSubscript: "remove",
       quantity: "remove",
+      overline: "remove",
     },
     transliteration: {
       ...DEFAULT_CONVERSION_OPTIONS.transliteration,

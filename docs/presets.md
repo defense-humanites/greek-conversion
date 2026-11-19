@@ -115,7 +115,8 @@ Romanization profile for Ancient and Medieval Greek before 1454.
     "coronis": "remove",
     "diaeresis": "remove",
     "iotaSubscript": "remove",
-    "quantity": "remove"
+    "quantity": "remove",
+    "overline": "remove"
   }
 }
 ```
@@ -162,7 +163,8 @@ Romanization profile for Modern Greek after 1453.
     "coronis": "remove",
     "diaeresis": "remove",
     "iotaSubscript": "remove",
-    "quantity": "remove"
+    "quantity": "remove",
+    "overline": "remove"
   }
 }
 ```
@@ -360,7 +362,8 @@ The Greek transliteration of the SBL Handbook: η and ω with a macron, h for th
     "coronis": "remove",
     "diaeresis": "remove",
     "iotaSubscript": "remove",
-    "quantity": "remove"
+    "quantity": "remove",
+    "overline": "remove"
   }
 }
 ```

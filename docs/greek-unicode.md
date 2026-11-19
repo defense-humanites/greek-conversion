@@ -64,16 +64,39 @@ accentuation.
 ## Order of marks
 
 Greek output writes the marks of one vowel in the order quantity, breathing,
-diaeresis, accent, iota subscript. Marks of the same combining class stack
-outward from the letter in that order, so the macron or breve sits on the
-vowel with the breathing and accent above it, as Greek is typeset. Composed
-output therefore keeps the precomposed long or short vowel and adds the
-other marks: `ᾱ́` is U+1FB1 U+0301, and `ᾱ̓́` is U+1FB1 U+0313 U+0301. Input
-in another order is accepted and converges to this one. Beta Code writes the
-breathing, diaeresis, and accent first and the iota subscript last, as the TLG
-does, with the quantity between them as a TLG percent code, `%26` for the
-macron and `%27` for the breve (`a)/%26`); transliteration uses the same
-quantity-first order as Greek (`ā́`).
+diaeresis, accent, overline, iota subscript. Marks of the same combining
+class stack outward from the letter in that order, so the macron or breve
+sits on the vowel with the breathing and accent above it, as Greek is
+typeset. Composed output therefore keeps the precomposed long or short
+vowel and adds the other marks: `ᾱ́` is U+1FB1 U+0301, and `ᾱ̓́` is U+1FB1
+U+0313 U+0301. Input in another order is accepted and converges to this one.
+Beta Code writes the breathing, diaeresis, and accent first and the iota
+subscript last, as the TLG does, with the quantity between them as a TLG
+percent code, `%26` for the macron and `%27` for the breve (`a)/%26`);
+transliteration uses the same quantity-first order as Greek (`ā́`).
+
+### Overline
+
+Manuscripts and editions draw a line over abbreviations and numerals, the
+nomina sacra among them (`θ̅ς̅` for θεός). The overline U+0305 is a mark of
+its letter, on a consonant as on a vowel, and every format keeps it: Greek
+and transliteration write it after the letter (`θ̅ς̅`, `th̅s̅`), and Beta Code
+over a run of letters, between `<` and `>`, as the TLG does (`<qs>`).
+`diacritics.overline: "remove"` removes it, as `diacritics.all: "remove"`
+does, and monotonic accentuation keeps it. The library does not expand an
+abbreviation, nor read an overlined numeral as one: `ι̅β̅` is the letters ι
+and β.
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("θ̅ς̅ Χ̅Σ̅", "greek", "beta-code"); // → <qs> <*x*s>
+convert("<qs>", "beta-code", "transliteration"); // → th̅s̅
+```
+
+Before a digit, `>` would begin another TLG code, so a run of overlined
+letters followed by one is written without its overline, and
+`convertDetailed()` reports it.
 
 ## Composed and decomposed output
 

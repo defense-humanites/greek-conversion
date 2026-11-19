@@ -86,7 +86,8 @@ export type Diacritic =
   | "diaeresis"
   | "iota-subscript"
   | "macron"
-  | "breve";
+  | "breve"
+  | "overline";
 
 /**
  * Source glyph distinctions retained independently from the Greek letter:
@@ -222,6 +223,7 @@ export const ORDER: readonly Diacritic[] = [
   "macron",
   "breve",
   "iota-subscript",
+  "overline",
 ];
 
 const BITS = new Map<unknown, number>(
@@ -234,7 +236,7 @@ const READ_ONLY_MESSAGE =
 /**
  * Diacritic sets shared by every grapheme that carries the same marks.
  *
- * There are at most 2^10 distinct sets, so one instance per combination
+ * There are at most 2^11 distinct sets, so one instance per combination
  * replaces one allocation per grapheme. They stay plain `Set` objects, so
  * structural equality with a caller's `new Set(...)` still holds; their
  * mutating methods are shadowed by non-enumerable throwing ones, since a

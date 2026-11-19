@@ -108,6 +108,7 @@ const DIACRITIC_NAMES: Readonly<Record<Diacritic, string>> = {
   "iota-subscript": "iota subscript",
   macron: "macron",
   breve: "breve",
+  overline: "overline",
 };
 
 /** Where the output was written and read again, in output code units. */

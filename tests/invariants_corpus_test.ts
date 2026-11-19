@@ -27,7 +27,8 @@ import { parse, validateDocument } from "../src/document.ts";
  * breathings inside a word, where the h meets a consonant, spacing
  * breathings before a capital and after a letter, archaic letters that a
  * digit extends into another TLG code in Beta Code, signs that Beta Code
- * writes with a TLG code, and signs that stand for several letters.
+ * writes with a TLG code, signs that stand for several letters, and the
+ * overline, with the signs that write it in Beta Code.
  */
 const WORDS = [
   "ἄνθρωπος",
@@ -151,6 +152,10 @@ const WORDS = [
   "Ϗ",
   "ἀκȣ́ων",
   "Ȣ̓τος",
+  "θ̅ς̅",
+  "Χ̅Σ̅",
+  "ϗ̅",
+  "α<β>γ",
 ] as const;
 
 const SEPARATORS = [" ", " ", ", ", "\n", " · "] as const;

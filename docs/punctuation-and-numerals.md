@@ -91,6 +91,7 @@ Code Manual*, §3), which the library reads and writes:
 | `~` | `%107` | `‖` | `%17` | `※` | `#13` |
 | `#` | `%101` | `⁙` | `#55` | `⸖` | `#14` |
 | `⸒` (hypodiastole) | `#532` | `⁚` | `#73` | `⁘` | `#544` |
+| `<` | `#18` | `>` | `#15` | | |
 
 The reader also takes `%1` for the question mark and `%12` for the asterisk.
 The TLG writes the spacing breathings of a lacuna `%30` and `%31` as U+02BC
@@ -100,10 +101,13 @@ every digit after it; a code the library does not know is kept as text,
 `#1532` or `%40`, and so are `#12` and `#17`, obeli that the TLG gives as a
 dash and a solidus. Before anything but a letter, `*` is an asterisk.
 
-The codes of `&`, `"`, `<`, and `>` (`%9`, `%98`, `#18`, and `#15`) are
-left out: bare, the TLG uses these signs for mark-up (a font, quotation
-marks, an overline), which the reader keeps as text, and the writer writes
-them bare, so that Beta Code converted to itself keeps its mark-up.
+Bare, `<` and `>` write an overline over the letters between them (`<qs>`,
+`θ̅ς̅`), as in the TLG; where no letter stands between them, or a digit
+follows one (`<1`…`>1`, other mark-up of the TLG), they are kept as text.
+The codes of `&` and `"` (`%9` and `%98`) are left out: bare, the TLG uses
+these signs for mark-up (a font, quotation marks), which the reader keeps as
+text, and the writer writes them bare, so that Beta Code converted to itself
+keeps its mark-up.
 
 So are the TLG's quotation marks. Bare, `"` is `“` or `”` in the TLG, after
 its place, and `"1` to `"8` write the other marks (`"3` is `‘` or `’`, `"6`
