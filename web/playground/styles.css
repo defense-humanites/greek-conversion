@@ -1597,10 +1597,12 @@ pre.code code {
   gap: 14px;
 }
 /* The words share a column, so that the pills start on one line and wrap
-   under one another, never under the word. */
+   under one another, never under the word. The column is measured in the
+   row's em (16px), not the words' (18px): 10em holds "New characters" on
+   one line (137px), with room to spare for other renderings. */
 .inventory-row {
   display: grid;
-  grid-template-columns: 8.5em minmax(0, 1fr);
+  grid-template-columns: 10em minmax(0, 1fr);
   align-items: baseline;
   gap: 10px 12px;
 }
