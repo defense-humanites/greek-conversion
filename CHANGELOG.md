@@ -32,6 +32,9 @@ change.
   give the default in a row of its own, and the playground describes it as
   the letters of the SBL Handbook with the marks that the Handbook leaves
   out; a link shared with `sbl-academic` opens the defaults.
+- The API documentation of `Format` and the glossary say in which sense the
+  Latin format is named `"transliteration"`: the broad sense that software
+  gives the word after Unicode CLDR, which holds transcriptions as well.
 
 ## [1.0.0-rc.10] - 2026-11-19
 

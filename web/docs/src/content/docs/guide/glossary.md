@@ -12,10 +12,15 @@ page that says more about each.
 **Romanization.** Any writing of Greek in Latin script, whatever its
 principle. Libraries speak of romanization tables.
 
-**Transliteration** (μεταγραμματισμός). A romanization letter by letter, so
-that the Greek can be found again: `η` is `ē` or `ī`, never the `i` of iota.
-ISO 843 Type 1 is one. It is also the name of the library's Latin format,
-`"transliteration"`, whatever the convention written in it.
+**Transliteration** (μεταγραμματισμός). In the strict sense of the standards, a
+romanization letter by letter, so that the Greek can be found again: `η` is
+`ē` or `ī`, never the `i` of iota. ISO 843 Type 1 is one. Software gives the
+word a broader sense, after the
+[Unicode CLDR](https://cldr.unicode.org/index/cldr-spec/transliteration-guidelines):
+any conversion from one script to another, which may convert back or not, so
+that a romanization is a transliteration into Latin script. The library's
+Latin format, `"transliteration"`, is named in that sense: it holds every
+convention, transcriptions included.
 
 **Transcription** (μεταγραφή). A romanization by pronunciation, which merges the
 letters that sound alike and does not convert back: `η` and `ι` are both `i`,

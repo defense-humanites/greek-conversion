@@ -1,4 +1,12 @@
-/** Text representations understood by the conversion engine. */
+/**
+ * Text representations understood by the conversion engine: Greek script
+ * (`"greek"`), Beta Code (`"beta-code"`), and Greek in Latin script
+ * (`"transliteration"`). The last is named in the broad sense that software
+ * gives the word after Unicode CLDR, for which a transliteration may convert
+ * back or not: it holds every convention, a transliteration in the strict
+ * sense, such as ISO 843 Type 1, as well as a transcription, such as ISO 843
+ * Type 2.
+ */
 export type Format = "greek" | "beta-code" | "transliteration";
 
 /** Every supported format identifier, in documentation order. */
