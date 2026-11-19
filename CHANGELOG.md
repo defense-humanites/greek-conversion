@@ -36,6 +36,19 @@ change.
   Latin format is named `"transliteration"`: the broad sense that software
   gives the word after Unicode CLDR, which holds transcriptions as well.
 
+### Fixed
+
+- The Beta Code reader takes every digit after `#` as the number of one TLG
+  code, as it did for `%` and the brackets: `#12`, the obelus, was read as
+  koppa followed by `2`, `#532`, the hypodiastole, as sampi followed by `32`,
+  and `#6`, the paragraphos, as a keraia followed by `6`. The codes the
+  library reads are unchanged (`#`, `#1`, `#2`, `#3`, `#5`, `#22`, `#401`);
+  any other is kept as text, whole. A letter written as a code before a digit
+  (`ϛ5`, which gives `#25`) therefore no longer reads back, like a
+  parenthesis before a digit, and `convertDetailed()` reports the loss; a
+  sigma before it is written as one that ends its word, so that the output
+  stays idempotent.
+
 ## [1.0.0-rc.10] - 2026-11-19
 
 Tenth release candidate for `1.0.0`. Greek output writes the acutes of

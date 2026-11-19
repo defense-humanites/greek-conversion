@@ -104,3 +104,6 @@ is, in every format, Beta Code included.
 A text that writes the breathing before its capital converts as intended
 once the two are joined (`Ῥωμαῖοι` gives `Rhōmaĩoi`). Musical notation and
 the conventions of diplomatic editions are outside the scope of the library.
+
+Beta Code input keeps the TLG codes of these signs as text: `#1532`, the καί
+symbol, and `#532`, the hypodiastole, give `#1532` and `#532`.

@@ -10,6 +10,7 @@ import {
   type Document,
   type GlyphVariant,
   grapheme,
+  type Letter,
   literal,
   ownedGrapheme,
   type Token,
@@ -89,6 +90,22 @@ const PERCENT_MARK_BIT = new Map(
     .map(([mark, diacritic]) => [mark.slice(1), diacriticBit(diacritic)]),
 );
 
+/**
+ * The letters of the TLG `#` codes. As for `%` and the brackets, the number
+ * is every digit after `#`: `#12` is the obelus, not koppa followed by `2`.
+ * `#` alone is the keraia and `#22` the lower keraia; any other code is kept
+ * as text, whole.
+ */
+const HASH_LETTERS: ReadonlyMap<string, Letter> = new Map([
+  ["1", "koppa"],
+  ["2", "stigma"],
+  ["3", "archaic-koppa"],
+  ["5", "sampi"],
+  ["401", "yot"],
+]);
+/** Where a `#` code ends, when none starts at the current unit. */
+const NO_CODE = -1;
+
 const ASTERISK = 0x2a;
 const HASH = 0x23;
 const PERCENT = 0x25;
@@ -159,10 +176,13 @@ export function parseBetaCode(
       continue;
     }
 
-    const additional = additionalCharacter(text, i);
-    if (additional && marks === 0) {
-      out.push(grapheme(additional.letter, upper));
-      i += additional.length;
+    const hash = text.charCodeAt(i) === HASH ? digitsEnd(text, i + 1) : NO_CODE;
+    const hashLetter = hash === NO_CODE
+      ? undefined
+      : HASH_LETTERS.get(text.slice(i + 1, hash));
+    if (hashLetter !== undefined && marks === 0) {
+      out.push(grapheme(hashLetter, upper));
+      i = hash;
       continue;
     }
 
@@ -179,14 +199,15 @@ export function parseBetaCode(
       continue;
     }
 
-    if (text.charCodeAt(i) === HASH && !upper) {
-      if (text[i + 1] === "2" && text[i + 2] === "2") {
-        out.push(literal(ARISTERI_KERAIA));
-        i += 3;
-      } else {
-        out.push(literal(DEXIA_KERAIA));
-        i++;
-      }
+    if (hash !== NO_CODE && !upper) {
+      const number = text.slice(i + 1, hash);
+      const value = number === ""
+        ? DEXIA_KERAIA
+        : number === "22"
+        ? ARISTERI_KERAIA
+        : text.slice(i, hash);
+      out.push(share ? sharedLiteral(value) : literal(value));
+      i = hash;
       continue;
     }
 
@@ -273,35 +294,4 @@ function parenthesisAt(text: string, start: number): "(" | ")" | undefined {
     digitsEnd(text, start + 1) !== start + 2
   ) return undefined;
   return unit === LEFT_BRACKET ? "(" : ")";
-}
-
-function additionalCharacter(
-  text: string,
-  start: number,
-):
-  | { letter: "stigma" | "koppa" | "archaic-koppa" | "sampi"; length: 2 }
-  | { letter: "yot"; length: 4 }
-  | undefined {
-  if (text.charCodeAt(start) !== HASH) return undefined;
-
-  if (
-    text[start + 1] === "4" && text[start + 2] === "0" &&
-    text[start + 3] === "1"
-  ) {
-    return { letter: "yot", length: 4 };
-  }
-
-  switch (text[start + 1]) {
-    case "1":
-      return { letter: "koppa", length: 2 };
-    case "2":
-      if (text[start + 2] === "2") return undefined;
-      return { letter: "stigma", length: 2 };
-    case "3":
-      return { letter: "archaic-koppa", length: 2 };
-    case "5":
-      return { letter: "sampi", length: 2 };
-    default:
-      return undefined;
-  }
 }

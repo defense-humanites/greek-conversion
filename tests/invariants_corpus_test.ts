@@ -23,8 +23,9 @@ import { parse, validateDocument } from "../src/document.ts";
  *
  * The corpus deliberately contains hiatus and iota-adscript forms, initial
  * diaeresis, explicit quantity marks, archaic letters and numerals, lunate
- * and medial variants, monotonic and uncial text, Greek punctuation, and
- * rough breathings inside a word, where the h meets a consonant.
+ * and medial variants, monotonic and uncial text, Greek punctuation, rough
+ * breathings inside a word, where the h meets a consonant, and archaic
+ * letters that a digit extends into another TLG code in Beta Code.
  */
 const WORDS = [
   "ἄνθρωπος",
@@ -130,6 +131,8 @@ const WORDS = [
   "Θύιλλος",
   "δῆσε(ν)",
   "αυἱ",
+  "ςϛ5",
+  "σϟ2",
 ] as const;
 
 const SEPARATORS = [" ", " ", ", ", "\n", " · "] as const;

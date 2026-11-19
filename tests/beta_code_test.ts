@@ -131,3 +131,52 @@ test("reads a bracket code after an asterisk, and reports a digit after a bracke
   assertNfcEquals(convert("[11]1", "beta-code", "greek"), "[11)");
   assertEquals(convertDetailed("(1)", "greek", "beta-code").lossy, true);
 });
+
+test("reads a TLG # code to its last digit", () => {
+  // As for % and the brackets, the number is every digit after #: #12 is the
+  // obelus, #532 the hypodiastole, #1532 the καί symbol, none a letter
+  // followed by digits. A code the library does not read is kept whole.
+  for (const code of ["#6", "#10", "#12", "#13", "#532", "#544", "#1532"]) {
+    const result = convertDetailed(`a)lla/ ${code} kai/`, "beta-code", "greek");
+    assertNfcEquals(result.output, `ἀλλά ${code} καί`);
+    assertEquals(result.lossy, false, code);
+    assertEquals(
+      reencode(`a)lla/ ${code} kai/`, "beta-code"),
+      `a)lla/ ${code} kai/`,
+    );
+    assertNfcEquals(
+      convert(`${code}a`, "beta-code", "transliteration"),
+      `${code}a`,
+    );
+  }
+  // The codes it reads are unchanged.
+  assertNfcEquals(
+    convert("#1 #2 #3 #5 #401 a# #22a *#2", "beta-code", "greek"),
+    "ϟ ϛ ϙ ϡ ϳ αʹ ͵α Ϛ",
+  );
+  // A capital marker before another code is kept as text, as before any
+  // character that is not a letter.
+  assertNfcEquals(convert("*#12", "beta-code", "greek"), "*#12");
+  // The code is one token, and its span covers it whole.
+  const spans = convertDetailed("a#532b", "beta-code", "greek").spans;
+  assertEquals(spans.length, 3);
+  assertEquals([spans[1].inputStart, spans[1].inputEnd], [1, 5]);
+});
+
+test("reports a TLG code that a digit would extend", () => {
+  // Beta Code cannot write a letter or mark code before a digit: TLG reads
+  // ϟ2 as #12, the obelus, and ᾱ5 as a%265, a code it does not know.
+  for (
+    const [greek, beta, options] of [
+      ["ϟ2", "#12", {}],
+      ["ϡ32", "#532", {}],
+      ["ϛ2", "#22", {}],
+      ["ᾱ5", "a%265", {}],
+      ["ϳ0", "#4010", { preset: "tlg-core" }],
+    ] as const
+  ) {
+    const result = convertDetailed(greek, "greek", "beta-code", options);
+    assertEquals(result.output.toLowerCase(), beta, greek);
+    assertEquals(result.lossy, true, greek);
+  }
+});

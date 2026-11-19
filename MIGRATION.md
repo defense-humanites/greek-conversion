@@ -27,6 +27,10 @@ remove `preset: "sbl-academic"`, and write `source: {}` for
 `ἀΐδιος` gives `aidios` (rc.10: `aïdios`). Add
 `diacritics: { diaeresis: "preserve" }` to keep it.
 
+In Beta Code, every digit after `#` is the number of one TLG code, as after
+`%`: `#12` is kept as text (rc.10: koppa followed by `2`). The codes `#`,
+`#1`, `#2`, `#3`, `#5`, `#22`, and `#401` read as before.
+
 ## Updating from `1.0.0-rc.9`
 
 Six kinds of input convert differently. The first two concern every

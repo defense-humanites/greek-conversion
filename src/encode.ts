@@ -301,6 +301,34 @@ export function glyphForm(
   }
 }
 
+/** The letters that Beta Code writes as a TLG `#` code (`#2`, stigma). */
+const HASH_CODE_LETTERS: ReadonlySet<Letter> = new Set(
+  (Object.keys(ALPHABET) as Letter[]).filter((letter) =>
+    ALPHABET[letter].beta.startsWith("#")
+  ),
+);
+
+/**
+ * Whether the token at `index` is a letter written as a `#` code that the
+ * digit after it extends into another code (`ϛ5` gives `#25`): read back, it
+ * is text, and a sigma before it ends its word.
+ */
+function extendedByDigit(
+  document: Document,
+  index: number,
+  options: ConversionOptions,
+): boolean {
+  const token = document[index];
+  if (token?.kind !== "grapheme" || token.diacritics.size !== 0) return false;
+  if (
+    !HASH_CODE_LETTERS.has(token.letter) &&
+    !(token.letter === "yot" && options.betaCode?.yot === "#401")
+  ) return false;
+  const next = document[index + 1];
+  const unit = next?.kind === "literal" ? next.value.charCodeAt(0) : 0;
+  return unit >= 0x30 && unit <= 0x39;
+}
+
 /**
  * The Beta Code of a sigma: `s3` for a lunate sigma, `s1` or `s2` for a
  * sigma whose noted shape (`σ` or `ς`) contradicts its place, kept under
@@ -331,7 +359,9 @@ export function betaSigma(
     (token.glyphVariant === "final-sigma" ||
       !numeral && token.glyphVariant === "medial-sigma");
   if (!noted && !beforeDigit) return "s";
-  const ends = !numeral && sigmaEndsWord(document, index, quotations);
+  const ends = !numeral &&
+    (sigmaEndsWord(document, index, quotations) ||
+      extendedByDigit(document, index + 1, options));
   const final = noted
     ? token.glyphVariant === "final-sigma"
     : policy !== "medial" && ends;

@@ -96,7 +96,9 @@ accent, then iota subscript, with the asterisk and marks before an uppercase
 letter. Vowel quantity takes the TLG percent codes, `%26` for the macron and
 `%27` for the breve, after the accent. As in the TLG, `'` is the apostrophe,
 `[1` and `]1` are the parentheses (`(` and `)` being the breathings), and `&`, a
-shift to the Latin font, is kept as text.
+shift to the Latin font, is kept as text. A `#` or `%` code runs to its last
+digit, so `#12`, the TLG's obelus, is not koppa followed by `2`; a code the
+library does not read, such as `#532`, the hypodiastole, is kept as text.
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
