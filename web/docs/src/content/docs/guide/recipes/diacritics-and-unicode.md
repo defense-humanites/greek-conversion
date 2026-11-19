@@ -80,9 +80,10 @@ convert("Ποῦ εἶσαι; Ἢ ἐδῶ ἢ ἐκεῖ, καὶ ὄχι ἀλ
 Every accent becomes a tonos, breathings and other polytonic marks are removed,
 and the diaeresis is kept. Monosyllables lose their accent, except disjunctive
 `ή` and interrogative `πού` and `πώς`, which the polytonic marks identify (`ἢ`,
-`ποῦ`, `πῶς`). The rules are applied mechanically from the written text: a
-monosyllable by synizesis such as `γιὰ` keeps its accent, and a word of one
-vowel loses it even where usage keeps it (`ό,τι`, the abbreviation `κ.ά.`). See
+`ποῦ`, `πῶς`), and the words that abbreviate a longer one (`ό,τι`, `κ.ά.`,
+`20ός`). The rules are applied mechanically from the written text: a
+monosyllable by synizesis such as `γιὰ` keeps its accent, and the accent that
+an author puts on a weak pronoun to avoid ambiguity is removed (`μού`). See
 [Greek output](/reference/greek-unicode/#accentuation-systems).
 
 ## Control Greek Unicode output

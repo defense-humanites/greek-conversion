@@ -271,20 +271,95 @@ test("says which part of a configuration has the wrong type", () => {
     message({ characters: [{ id: "san", forms: { greek: SAN.forms.greek } }] }),
     "Expected characters[0].forms.beta-code to be an object, received undefined.",
   );
+  const alias = {
+    letter: "theta",
+    format: "transliteration",
+    spellings: ["þ"],
+  };
+  assertEquals(
+    message({ aliases: [{ ...alias, spellings: "þ" }] }),
+    "Expected aliases[0].spellings to be an array, received string.",
+  );
+  assertEquals(
+    message({ aliases: [{ ...alias, spellings: ["þ", 5] }] }),
+    "Expected aliases[0].spellings[1] to be a string, received number.",
+  );
+  assertEquals(
+    message({ aliases: [{ ...alias, uppercase: "yes" }] }),
+    "Expected aliases[0].uppercase to be a boolean, received string.",
+  );
+  assertEquals(
+    message({ aliases: [{ ...alias, override: 1 }] }),
+    "Expected aliases[0].override to be a boolean, received number.",
+  );
+  assertEquals(
+    message({ characters: [{ ...SAN, id: 5 }] }),
+    "Expected characters[0].id to be a string, received number.",
+  );
+  assertEquals(
+    message({ characters: [{ ...SAN, override: "yes" }] }),
+    "Expected characters[0].override to be a boolean, received string.",
+  );
+  assertEquals(
+    message({
+      characters: [{
+        ...SAN,
+        forms: { ...SAN.forms, greek: { lowercase: "ϻ", uppercase: null } },
+      }],
+    }),
+    "Expected characters[0].forms.greek.uppercase to be a string, received null.",
+  );
 });
 
-test("rejects invalid out-of-scope policies at construction", () => {
-  let error: unknown;
-  try {
-    createConverter({ outOfScopeBehavior: "unknown" as never });
-  } catch (caught) {
-    error = caught;
-  }
-  assertEquals(error instanceof TypeError, true);
+test("checks the values of a configuration from a known set, as options are checked", () => {
+  const invalid = (configuration: unknown): OptionError => {
+    try {
+      createConverter(configuration as never);
+    } catch (error) {
+      if (error instanceof OptionError) return error;
+      throw error;
+    }
+    throw new Error("The configuration was accepted.");
+  };
+
+  const behavior = invalid({ outOfScopeBehavior: "rejct" });
+  assertEquals(behavior instanceof RangeError, true);
   assertEquals(
-    (error as Error).message,
-    "Unknown out-of-scope behavior: unknown.",
+    behavior.message,
+    'Invalid value for outOfScopeBehavior: "rejct"; expected one of "preserve", "reject".',
   );
+  assertEquals(behavior.path, "outOfScopeBehavior");
+  assertEquals(behavior.received, "rejct");
+  assertEquals(behavior.accepted, ["preserve", "reject"]);
+  assertEquals(invalid({ outOfScopeBehavior: 5 }).received, 5);
+
+  const excluded = invalid({ exclude: ["stigma", "stigam"] });
+  assertEquals(
+    excluded.message,
+    'Unknown character identifier in exclude[1]: "stigam".',
+  );
+  assertEquals(excluded.path, "exclude[1]");
+  assertEquals(excluded.received, "stigam");
+  assertEquals(excluded.accepted.includes("stigma"), true);
+  // A custom character is an identifier of its converter.
+  const repertoire = invalid({ characters: [SAN], repertoire: ["alpha", 5] });
+  assertEquals(repertoire.path, "repertoire[1]");
+  assertEquals(repertoire.accepted.includes("san"), true);
+
+  const letter = invalid({
+    aliases: [{
+      letter: "thetta",
+      format: "transliteration",
+      spellings: ["þ"],
+    }],
+  });
+  assertEquals(
+    letter.message,
+    'Unknown letter in aliases[0].letter: "thetta".',
+  );
+  assertEquals(letter.path, "aliases[0].letter");
+  assertEquals(letter.accepted.includes("theta"), true);
+  assertEquals(letter.accepted.includes("san"), false);
 });
 
 test("bound preset scopes match the audited additional-letter matrix", () => {

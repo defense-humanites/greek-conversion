@@ -8,9 +8,13 @@ characters, or a smaller effective repertoire.
 The configuration is checked when the converter is created, as conversion
 options are. An unknown key throws an `OptionError`, whose `path` names it
 (`exclude`, `aliases[0].spellings`, `characters[0].forms.greek.lowercase`) and
-whose `accepted` lists the keys allowed there; a list or a definition of the
-wrong type throws a `TypeError`, as an invalid value does (an unknown
-character identifier, an empty or ambiguous spelling).
+whose `accepted` lists the keys allowed there. So does a value outside a known
+set: an out-of-scope behavior, the letter of an alias (`aliases[0].letter`),
+or an identifier of `repertoire` or `exclude` that names no character
+(`exclude[1]`), whose `accepted` lists the identifiers of the converter. A
+list, a definition, or a field of the wrong type throws a `TypeError`, as an
+invalid definition does (an empty or ambiguous spelling, a duplicate
+identifier, a spelling that already has a meaning without `override`).
 
 ## Aliases of built-in letters
 

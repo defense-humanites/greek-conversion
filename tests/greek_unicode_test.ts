@@ -192,6 +192,23 @@ test("monotonic monosyllables carry no accent except ή, πού, and πώς", ()
   assertEquals(convert(monotonic, "greek", "greek", MONOTONIC), monotonic);
   // Numerals are not words.
   assertEquals(convert("αʹ ιβʹ", "greek", "greek", MONOTONIC), "αʹ ιβʹ");
+  // A word that abbreviates a longer one keeps its accent: the comma of ό,τι
+  // is inside its word, and a period joins an abbreviation, as a digit does
+  // the ending of an ordinal.
+  assertEquals(
+    convert(
+      "ὅ,τι κ.ἄ. ὅ.π. 20ός, ὃ τι, ὅ, τι τῶν. ἤ. ...τῶν",
+      "greek",
+      "greek",
+      MONOTONIC,
+    ),
+    "ό,τι κ.ά. ό.π. 20ός, ο τι, ο, τι των. ή. ...των",
+  );
+  const abbreviations = "Ό,τι είπε, κ.ά., το 20ό.";
+  assertEquals(
+    convert(abbreviations, "greek", "greek", MONOTONIC),
+    abbreviations,
+  );
 });
 
 test("monotonic rendering does not create blocked contractions", () => {

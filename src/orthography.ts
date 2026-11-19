@@ -10,13 +10,24 @@ import {
   isWordLetter,
 } from "./context.ts";
 import {
+  diacriticBit,
   GLYPH_VARIANTS,
   literal,
+  ORDER,
   sharedDiacritics,
+  sharedMask,
   withDiacritic as addDiacritic,
   withoutDiacritic,
 } from "./model.ts";
-import type { Diacritic, Document, Grapheme, Letter, Token } from "./model.ts";
+import { preservesDiacritic } from "./diacritics.ts";
+import type {
+  Diacritic,
+  Document,
+  Format,
+  Grapheme,
+  Letter,
+  Token,
+} from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
 import { composeTargets, type TokenTargets } from "./parsers/positions.ts";
 
@@ -53,8 +64,8 @@ const NUMERAL_VALUES = new Map<Letter, number>([
 ]);
 
 /**
- * Applies the orthography of Greek and Beta Code output. With `targets`,
- * records where each token of the original document ends up (see
+ * Applies the orthography of Greek and Beta Code output, in `format`. With
+ * `targets`, records where each token of the original document ends up (see
  * `parsers/positions.ts`); only the passes that change the token count
  * touch it.
  */
@@ -62,8 +73,9 @@ export function applyOrthography(
   document: Document,
   options: ConversionOptions = {},
   targets?: TokenTargets,
+  format: "greek" | "beta-code" = "greek",
 ): Document {
-  const numbered = applyNumeralOrthography(document, options, targets);
+  const numbered = applyNumeralOrthography(document, options, targets, format);
   if (options.greek?.doubleRho !== "smooth-rough") return numbered;
 
   return numbered.map((token, index) => {
@@ -86,7 +98,8 @@ export function applyOrthography(
  * collapses acute/grave/circumflex to one acute, removes breathings, coronis,
  * iota subscript, and explicit quantity, and leaves monosyllables unaccented
  * except for the three the monotonic system distinguishes (see
- * {@link keepsMonosyllableAccent}). It does not use lexical or morphological
+ * {@link keepsMonosyllableAccent}) and those that abbreviate a longer word
+ * (`ό,τι`, `κ.ά.`, `20ός`). It does not use lexical or morphological
  * knowledge.
  */
 export function applyGreekOrthography(
@@ -148,8 +161,13 @@ function unaccentMonosyllables(
       const token = monotonic[end];
       if (token.kind === "grapheme") word.push(end);
       else if (isWordLetter(token)) kept = true;
+      // A comma does not end the count: before a letter, it is the
+      // hypodiastole of `ό,τι`, inside its word, and before anything else,
+      // what follows it ends the word.
+      else if (isLiteral(token, ",")) continue;
       else if (!isBoundaryTransparent(token)) break;
     }
+    const first = start;
     start = end - 1;
 
     const accented = word.filter((index) =>
@@ -158,6 +176,7 @@ function unaccentMonosyllables(
     if (
       kept || accented.length === 0 ||
       isGreekNumeralContext(monotonic, word[0]) ||
+      isAbbreviation(monotonic, first, end) ||
       syllableCount(monotonic, word) !== 1 ||
       keepsMonosyllableAccent(source, word)
     ) continue;
@@ -172,6 +191,26 @@ function unaccentMonosyllables(
     changed = true;
   }
   return changed;
+}
+
+/**
+ * Whether the word from `start` to `end` (excluded) abbreviates a longer one,
+ * whose accent it keeps: the ending of an ordinal written with digits
+ * (`20ός`), or a word that a period joins to a letter (`κ.ά.`, for `και
+ * άλλα`).
+ */
+function isAbbreviation(
+  document: Document,
+  start: number,
+  end: number,
+): boolean {
+  const before = document[start - 1];
+  if (before?.kind === "literal") {
+    const unit = before.value.charCodeAt(before.value.length - 1);
+    if (unit >= 0x30 && unit <= 0x39) return true;
+  }
+  return isLiteral(before, ".") && isWordLetter(document[start - 2]) ||
+    isLiteral(document[end], ".") && isWordLetter(document[end + 1]);
 }
 
 function syllableCount(document: Document, word: readonly number[]): number {
@@ -222,21 +261,32 @@ function keepsMonosyllableAccent(
   return false;
 }
 
+/**
+ * Applies the transformations of the whole text that every format shares:
+ * whitespace, letter case, and decimal numerals. A numeral is read on its
+ * letters as `format` writes them: a letter whose marks the options all
+ * remove is a digit (`σόʹ` is 270 with the accents removed), since the
+ * output would read back as one.
+ */
 export function applyNumeralOrthography(
   document: Document,
   options: ConversionOptions = {},
   targets?: TokenTargets,
+  format: Format = "greek",
 ): Document {
   const spaced = applyWhitespaceOrthography(document, options, targets);
   const cased = applyLetterCaseOrthography(spaced, options);
-  if (options.text?.numerals !== "decimal") return cased;
+  if (options.text?.numerals !== "decimal" || !cased.some(isKeraia)) {
+    return cased;
+  }
 
+  const reading = writtenReading(options, format);
   const output: Token[] = [];
   const next = targets === undefined
     ? undefined
     : new Array<number>(cased.length).fill(0);
   for (let index = 0; index < cased.length;) {
-    const numeral = readNumeral(cased, index);
+    const numeral = readNumeral(cased, index, reading);
     if (numeral === undefined) {
       if (next !== undefined) next[index] = output.length;
       output.push(cased[index]);
@@ -256,14 +306,20 @@ export function applyNumeralOrthography(
 }
 
 /**
- * Marks the tokens that `numerals: "decimal"` writes as numbers: `marks[i]`
- * is 1 when token `i` is a letter or keraia of a numeral, as
+ * Marks the tokens that `numerals: "decimal"` writes as numbers in `format`:
+ * `marks[i]` is 1 when token `i` is a letter or keraia of a numeral, as
  * `applyNumeralOrthography()` reads them.
  */
-export function decimalNumeralTokens(document: Document): Uint8Array {
+export function decimalNumeralTokens(
+  document: Document,
+  options: ConversionOptions,
+  format: Format,
+): Uint8Array {
   const marks = new Uint8Array(document.length);
+  if (!document.some(isKeraia)) return marks;
+  const reading = writtenReading(options, format);
   for (let index = 0; index < document.length;) {
-    const numeral = readNumeral(document, index);
+    const numeral = readNumeral(document, index, reading);
     if (numeral === undefined) {
       index++;
       continue;
@@ -350,9 +406,136 @@ function applyWhitespaceOrthography(
   return output;
 }
 
+/**
+ * Reads a final sigma that is the units of a numeral as a stigma written
+ * with the sign it resembles (`ςʹ` 6, `ιςʹ` 16, `͵αςʹ` 1006): keyboards
+ * lack the stigma, and `ς` is no numeral sign of its own, 200 being `σʹ`.
+ * Returns `document` itself when no sigma is such.
+ */
+export function readFinalSigmaStigmas(document: Document): Document {
+  let output: Token[] | undefined;
+  for (let index = 0; index < document.length; index++) {
+    const token = document[index];
+    if (
+      token.kind !== "grapheme" || token.letter !== "sigma" ||
+      token.glyphVariant !== "final-sigma" || !isNumeralUnits(document, index)
+    ) continue;
+    output ??= [...document];
+    output[index] = {
+      kind: "grapheme",
+      letter: "stigma",
+      uppercase: false,
+      diacritics: token.diacritics,
+      glyphVariant: "final-sigma-stigma",
+    };
+  }
+  return output ?? document;
+}
+
+/**
+ * Whether the small letter at `index` is read as the units of a numeral
+ * when it is a stigma written `ς`: it stands before a right keraia, without
+ * a mark, at the end of letters that read as a numeral with it. Greek output
+ * writes such a stigma `ς` only there, where it reads back as one.
+ */
+export function isNumeralUnits(document: Document, index: number): boolean {
+  const token = document[index];
+  if (
+    token?.kind !== "grapheme" ||
+    !isLiteral(document[index + 1], DEXIA_KERAIA)
+  ) return false;
+
+  // The letters before it, up to a left keraia or any other token, would
+  // be the rest of the numeral, which reads no letter with a mark.
+  let start = index;
+  while (document[start - 1]?.kind === "grapheme") start--;
+  if (isLiteral(document[start - 1], ARISTERI_KERAIA)) start--;
+  const stigma: Grapheme = {
+    kind: "grapheme",
+    letter: "stigma",
+    uppercase: false,
+    diacritics: token.diacritics,
+  };
+  const from = Math.max(0, start - 1);
+  const window = [
+    ...document.slice(from, index),
+    stigma,
+    document[index + 1],
+  ];
+  return readNumeral(window, start - from) !== undefined;
+}
+
+/**
+ * How a numeral is read: which letters count as written without a mark, as
+ * the letters of a numeral are, and whether a final sigma before the keraia
+ * is a stigma, as `ς` reads back (`ιςʹ`, 16).
+ */
+interface NumeralReading {
+  readonly bare: (token: Grapheme) => boolean;
+  readonly finalSigma: boolean;
+}
+
+/**
+ * The reading of a document as it is. A final sigma that could be the units
+ * of a numeral is a stigma already (`readFinalSigmaStigmas()`).
+ */
+const AS_READ: NumeralReading = {
+  bare: (token) => token.diacritics.size === 0,
+  finalSigma: false,
+};
+
+/** The marks that monotonic Greek keeps, an accent becoming an acute. */
+const MONOTONIC_MARKS: ReadonlySet<Diacritic> = new Set([
+  "diaeresis",
+  "acute",
+  "grave",
+  "circumflex",
+]);
+
+/**
+ * The reading of a document as `format` writes it under these options, so
+ * that a numeral is the one the output reads back as. A letter is bare when
+ * it has no mark, or when the options remove each of its marks, monotonic
+ * Greek those that are not an accent or a diaeresis. A final sigma is
+ * written `ς`, a stigma before the keraia, under `greek.finalSigma:
+ * "preserve"` in Greek and Beta Code; transliteration has no final sigma.
+ */
+function writtenReading(
+  options: ConversionOptions,
+  format: Format,
+): NumeralReading {
+  const monotonic = format === "greek" &&
+    options.greek?.accentuation === "monotonic";
+  const removed = new Set(
+    ORDER.filter((mark) =>
+      !preservesDiacritic(mark, options, format) ||
+      monotonic && !MONOTONIC_MARKS.has(mark)
+    ),
+  );
+  const finalSigma = format !== "transliteration" &&
+    (options.greek?.finalSigma ?? "preserve") === "preserve";
+  if (removed.size === 0) return { bare: AS_READ.bare, finalSigma };
+  let removedMask = 0;
+  for (const mark of removed) removedMask |= diacriticBit(mark);
+  return {
+    bare: (token) => {
+      if (token.diacritics.size === 0) return true;
+      // Marks read from text share a set that carries their mask.
+      const mask = sharedMask(token.diacritics);
+      if (mask !== undefined) return (mask & ~removedMask) === 0;
+      for (const mark of token.diacritics) {
+        if (!removed.has(mark)) return false;
+      }
+      return true;
+    },
+    finalSigma,
+  };
+}
+
 function readNumeral(
   document: Document,
   start: number,
+  reading: NumeralReading = AS_READ,
 ): { value: number; end: number } | undefined {
   const previousToken = document[start - 1];
   if (
@@ -367,7 +550,7 @@ function readNumeral(
   let hasThousands = false;
 
   if (isLiteral(document[index], ARISTERI_KERAIA)) {
-    const thousands = numericValue(document[index + 1]);
+    const thousands = numericValue(document, index + 1, reading);
     if (thousands === undefined || thousands > 9) return undefined;
     value = thousands * 1000;
     index += 2;
@@ -382,13 +565,13 @@ function readNumeral(
     // 16, ͵αστʹ 1006. Read as 200 and 300, the pair would break the
     // descending order, so before a keraia it reads only one way.
     if (
-      previous >= 10 && isLetter(document[index], "sigma") &&
-      isLetter(document[index + 1], "tau") &&
+      previous >= 10 && isLetter(document[index], "sigma", reading) &&
+      isLetter(document[index + 1], "tau", reading) &&
       isLiteral(document[index + 2], DEXIA_KERAIA)
     ) {
       return { value: value + 6, end: index + 3 };
     }
-    const current = numericValue(document[index]);
+    const current = numericValue(document, index, reading);
     if (current === undefined || current >= previous) break;
     value += current;
     previous = current;
@@ -408,13 +591,32 @@ function readNumeral(
   return undefined;
 }
 
-function isLetter(token: Token | undefined, letter: Letter): boolean {
-  return token?.kind === "grapheme" && token.letter === letter &&
-    token.diacritics.size === 0;
+/** Whether a token is a keraia, which every numeral has. */
+function isKeraia(token: Token): boolean {
+  return token.kind === "literal" &&
+    (token.value === DEXIA_KERAIA || token.value === ARISTERI_KERAIA);
 }
 
-function numericValue(token: Token | undefined): number | undefined {
-  if (token?.kind !== "grapheme" || token.diacritics.size > 0) return undefined;
+function isLetter(
+  token: Token | undefined,
+  letter: Letter,
+  reading: NumeralReading,
+): boolean {
+  return token?.kind === "grapheme" && token.letter === letter &&
+    reading.bare(token);
+}
+
+function numericValue(
+  document: Document,
+  index: number,
+  reading: NumeralReading,
+): number | undefined {
+  const token = document[index];
+  if (token?.kind !== "grapheme" || !reading.bare(token)) return undefined;
+  if (
+    reading.finalSigma && token.glyphVariant === "final-sigma" &&
+    !token.uppercase && isLiteral(document[index + 1], DEXIA_KERAIA)
+  ) return 6;
   return NUMERAL_VALUES.get(token.letter);
 }
 

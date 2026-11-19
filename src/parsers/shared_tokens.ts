@@ -56,6 +56,7 @@ export const VARIANTS: readonly (GlyphVariant | undefined)[] = [
   "rho-symbol",
   "lunate-epsilon",
   "upsilon-hook",
+  "final-sigma-stigma",
 ];
 
 /** Upper bound of the shared graphemes. */

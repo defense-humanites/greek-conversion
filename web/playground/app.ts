@@ -675,6 +675,7 @@ const GLYPH_NAMES: Readonly<Record<string, string>> = {
   "rho-symbol": "rho symbol ϱ",
   "lunate-epsilon": "lunate epsilon ϵ",
   "upsilon-hook": "upsilon with hook ϒ",
+  "final-sigma-stigma": "final sigma ς for a stigma in a numeral",
 };
 
 /** The losses where the target writes what the source does not have. */

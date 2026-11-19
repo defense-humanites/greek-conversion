@@ -132,8 +132,9 @@ coronis contexts without guessing from ordinary apostrophes.
 ### Letter forms
 
 The Greek reader remembers the form of a letter as its `glyphVariant`: the
-lunate sigma `ϲ` (`Ϲ`), a final `ς` or medial `σ`, and the symbol forms `ϐ`,
-`ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, and `ϒ`. Beta Code notes the lunate sigma
+lunate sigma `ϲ` (`Ϲ`), a final `ς` or medial `σ`, the symbol forms `ϐ`,
+`ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, and `ϒ`, and the `ς` that writes a stigma
+as the units of a numeral (`ιςʹ`). Beta Code notes the lunate sigma
 (`s3`), and the medial and final sigma (`s1`, `s2`), which it writes only
 where the shape contradicts the place, under `finalSigma: "preserve"`, or
 before a digit from 1 to 3; transliteration notes the lunate sigma as `c`
@@ -269,7 +270,7 @@ source can be reconstructed from the output: yes, no, or partly.
 | `iotaSubscript: "capital-adscript"` or `"adscript"` | Writes a kept iota subscript on the line, after a capital or after every vowel | No: the iota reads back as a letter, and the subscript is reported as removed (`removed-diacritic`) |
 | `dentalSigma: "assimilate"` | Deletes `τ`, `δ`, or `θ` before sigma in Greek output | No |
 | `elidedStop: "aspirate"` | Writes an elided final `π`, `τ`, or `κ` as `φ`, `θ`, or `χ` before a rough breathing in Greek output | No: the aspirate reads back as itself |
-| `accentuation: "monotonic"` | Keeps diaeresis, maps every accent to acute, removes other polytonic marks, and unaccents monosyllables except `ή`, `πού`, `πώς` | No |
+| `accentuation: "monotonic"` | Keeps diaeresis, maps every accent to acute, removes other polytonic marks, and unaccents monosyllables except `ή`, `πού`, `πώς`, and abbreviations (`κ.ά.`) | No |
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | Partly: the accent is recoverable; its scalar preference is not |
 | `questionMark: "greek"`, `anoTeleia: "greek"` | Selects a canonically unstable punctuation scalar | Partly: the punctuation meaning is recoverable; its scalar preference is not |

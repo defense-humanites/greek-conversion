@@ -11,11 +11,12 @@ export type MedialBetaOrthography = "preserve" | "standard" | "symbol";
 
 /**
  * Selects the symbol forms of letters in Greek output: `ϑ`, `ϴ`, `ϕ`, `ϖ`,
- * `ϰ`, `ϱ`, `ϵ`, and `ϒ` with its accented forms `ϓ` and `ϔ`. `"preserve"`
- * writes those the source notes, and `"standard"` the ordinary letters. No
- * value writes a symbol form where the source has an ordinary letter, which
- * Unicode reserves them for mathematics. The beta symbol `ϐ` follows
- * `medialBeta`, and the lunate sigma `ϲ` follows `sigma`.
+ * `ϰ`, `ϱ`, `ϵ`, and `ϒ` with its accented forms `ϓ` and `ϔ`, and the final
+ * sigma `ς` written for a stigma as the units of a numeral (`ιςʹ`, 16).
+ * `"preserve"` writes those the source notes, and `"standard"` the ordinary
+ * letters (`ιϛʹ`). No value writes a symbol form where the source has an
+ * ordinary letter, which Unicode reserves them for mathematics. The beta
+ * symbol `ϐ` follows `medialBeta`, and the lunate sigma `ϲ` follows `sigma`.
  */
 export type SymbolFormOrthography = "preserve" | "standard";
 

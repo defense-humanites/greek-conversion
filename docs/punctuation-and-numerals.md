@@ -83,7 +83,8 @@ then reads back as a hyphen.
 A numeral is a group of letters that a keraia marks. The library reads one
 when:
 
-- the letters carry no mark and follow no other letter;
+- the letters carry no mark (under `numerals: "decimal"`, no mark that the
+  output keeps, as said below) and follow no other letter;
 - their values go down from one letter to the next: hundreds, tens, units;
 - a right keraia `ʹ` closes the group;
 - thousands, if any, come first, as a left keraia `͵` and a letter from 1
@@ -93,6 +94,13 @@ The letters have their usual values, with stigma `ϛ` and digamma `ϝ` for 6,
 the two koppas `ϟ` and `ϙ` for 90, and sampi `ϡ` for 900. `στ` before the
 keraia is also 6, alone or as the units of a longer numeral, as the ALA-LC
 tables list it. The highest numeral is 9999.
+
+A final sigma `ς` before the keraia, as the units, is a stigma written with
+the sign it resembles, which keyboards have: `ςʹ` is 6 and `ιςʹ` 16, while
+200 is `σʹ`, the final sigma being no numeral sign of its own. Greek output
+writes it `ς`, as the source does, or `ϛ` under `greek.symbolForms:
+"standard"`; Beta Code and transliteration write a stigma (`i#2#`, `ic̄ʹ`),
+and `convertDetailed()` reports the form as lost (`final-sigma-stigma`).
 
 The right keraia is read from U+0374 or U+02B9, which are canonically
 equivalent, and written U+02B9; the left keraia is U+0375. An apostrophe, a
@@ -122,6 +130,14 @@ convert("ιβʹ", "greek", "transliteration", { preset: "ala-lc-modern" });
 convertDetailed("ιβʹ", "greek", "transliteration", decimal).lossy; // → true
 ```
 
+The numeral is read on its letters as the output would write them, so that
+converting the output again gives the same text. A letter whose marks the
+options all remove counts as bare: the ALA-LC presets remove the accents and
+the smooth breathing, so that `ἰβʹ` gives `12` there, as `ιβʹ` does, and
+monotonic Greek output removes the breathings too. A final sigma before the
+keraia is a stigma where the output writes it `ς`, in Greek and Beta Code
+under `greek.finalSigma: "preserve"`.
+
 Under `transliteration.keraia: "bnf"`, transliteration writes the right
 keraia as an acute and the left one as a comma (see
 [Scope limits](presets.md#scope-limits)).
@@ -138,5 +154,5 @@ convert("αιʹ ἀʹ ιβ΄", "greek", "transliteration", decimal);
 // → aiʹ aʹ ib΄
 ```
 
-A final sigma written for the stigma, as some editions print it, is read as a
-sigma: `ςʹ` is 200, and `ιςʹ` is not read as 16.
+A final sigma that is not the units before the keraia is a sigma: `ςαʹ` is
+201, and `αςʹ`, whose values do not go down, is not a numeral.

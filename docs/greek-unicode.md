@@ -29,7 +29,8 @@ The monotonic transform:
   except the three the monotonic system distinguishes, which the polytonic
   marks identify: disjunctive `ή` from `ἤ` or `ἢ` (not the article `ἡ`, nor
   `ἦ` or `ἥ`), and interrogative `πού` and `πώς` from `ποῦ` and `πῶς` (not the
-  relative or indefinite `ποὺ`, `που`, `πὼς`, `πως`).
+  relative or indefinite `ποὺ`, `που`, `πὼς`, `πως`), and except a word that
+  abbreviates a longer one (`ὅ,τι → ό,τι`, `κ.ἄ. → κ.ά.`, `20ός`).
 
 Syllables are counted on the written vowels: a diphthong is one syllable, and a
 diaeresis or an accent on the first of two vowels marks two. An acute on `πού`
@@ -40,14 +41,20 @@ knowledge of the word and are left as written: a monosyllable by synizesis
 same vowels, are disyllables), and the optional accent that monotonic authors
 put on a weak pronoun to avoid ambiguity (`μού`), which is removed.
 
-The count takes as a word what stands between spaces and punctuation. On text
-that is already monotonic, it therefore removes an accent that usage keeps on
-a word of one vowel: `ό,τι` gives `ο,τι`, the abbreviation `κ.ά.` gives
-`κ.α.`, and `20ός` gives `20ος`. These are limits of the mechanical count,
-not choices: a release may keep these accents, and such output would then
-change as a correction. To read monotonic text back from transliteration
-without applying the rules, ask only for no breathing
-(`diacritics: { smoothBreathing: "remove" }`).
+The count takes as a word what stands between spaces and punctuation, except
+where usage keeps the accent of a word of one vowel, because it abbreviates a
+longer one:
+
+- the comma of `ό,τι` (the hypodiastole), before a letter, is inside its
+  word, which has two syllables;
+- a word that a period joins to a letter, with no space, belongs to an
+  abbreviation and keeps its accent (`κ.ά.`, `ό.π.`), as a word before a
+  full stop does not (`των.`);
+- the ending of an ordinal written with digits keeps its accent (`20ός`,
+  `το 20ό`).
+
+To read monotonic text back from transliteration without applying the rules,
+ask only for no breathing (`diacritics: { smoothBreathing: "remove" }`).
 
 It is applied only when the target format is Greek. Beta Code and
 transliteration retain the source document's polytonic distinctions. The

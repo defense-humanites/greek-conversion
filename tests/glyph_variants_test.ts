@@ -420,3 +420,59 @@ test("a symbol form fits its letter and its case", () => {
     "Θβπ",
   );
 });
+
+test("a final sigma as the units of a numeral is a stigma", () => {
+  const decimal = { text: { numerals: "decimal" } } as const;
+  assertNfcEquals(
+    convert("ςʹ ιςʹ ρκςʹ ͵αςʹ σʹ", "greek", "greek", decimal),
+    "6 16 126 1006 200",
+  );
+  assertNfcEquals(convert("s2# is2#", "beta-code", "greek", decimal), "6 16");
+  // The Greek numeral sign is the keraia, after NFC.
+  assertNfcEquals(convert("ις\u0374", "greek", "greek", decimal), "16");
+  assertEquals(
+    parse("ιςʹ", "greek").map((token) =>
+      token.kind === "grapheme" ? [token.letter, token.glyphVariant] : []
+    ),
+    [["iota", undefined], ["stigma", "final-sigma-stigma"], []],
+  );
+
+  // Greek output keeps the sign of the source, which the other formats
+  // cannot write.
+  assertNfcEquals(convert("ιςʹ", "greek", "greek"), "ιςʹ");
+  assertEquals(glyphLosses("ιςʹ", "greek", "greek"), []);
+  assertNfcEquals(
+    convert("ιςʹ", "greek", "greek", { greek: { symbolForms: "standard" } }),
+    "ιϛʹ",
+  );
+  assertNfcEquals(
+    convert("ιςʹ", "greek", "greek", { text: { letterCase: "uppercase" } }),
+    "ΙϚʹ",
+  );
+  assertNfcEquals(convert("ιςʹ", "greek", "beta-code"), "i#2#");
+  assertNfcEquals(convert("ιςʹ", "greek", "transliteration"), "ic̄ʹ");
+  for (const format of ["beta-code", "transliteration"] as const) {
+    assertEquals(glyphLosses("ιςʹ", "greek", format), [
+      "removed-glyph-variant:final-sigma-stigma@1",
+    ]);
+  }
+
+  // A final sigma that is not the units before the keraia stays a sigma,
+  // which Greek output keeps, and a capital sigma has no final form.
+  assertNfcEquals(
+    convert("αςʹ ςαʹ ς́ʹ ͵ας ΙΣʹ", "greek", "greek", decimal),
+    "αςʹ 201 ς́ʹ 1200 ΙΣʹ",
+  );
+  assertNfcEquals(convert("αςʹ ςαʹ", "greek", "greek"), "αςʹ ςαʹ");
+  assertNfcEquals(
+    convert("αςʹ ςαʹ ς́ʹ", "greek", "beta-code"),
+    "as2# s2a# s2/#",
+  );
+  assertNfcEquals(convert("as2# s2a#", "beta-code", "greek"), "αςʹ ςαʹ");
+
+  // Elsewhere, where `ς` would read back as a sigma, the stigma is written.
+  assertNfcEquals(
+    encode([grapheme("stigma", false, [], "final-sigma-stigma")], "greek"),
+    "ϛ",
+  );
+});

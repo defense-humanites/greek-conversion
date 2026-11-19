@@ -13,7 +13,11 @@ import type {
   ConversionOptions,
   ResolvedConversionOptions,
 } from "./options.ts";
-import { applyNumeralOrthography, applyOrthography } from "./orthography.ts";
+import {
+  applyNumeralOrthography,
+  applyOrthography,
+  readFinalSigmaStigmas,
+} from "./orthography.ts";
 import { parseBetaCode } from "./parsers/beta_code.ts";
 import { parseGreek } from "./parsers/greek.ts";
 import {
@@ -141,12 +145,27 @@ export function parseResolved(
 ): Document {
   switch (format) {
     case "greek":
-      return parseGreek(input, share, read);
+      return readStigmas(input, parseGreek(input, share, read));
     case "beta-code":
-      return parseBetaCode(input, share, read);
+      return readStigmas(input, parseBetaCode(input, share, read));
     case "transliteration":
       return parseTransliteration(input, options, read);
   }
+}
+
+/**
+ * The right keraia as Greek and Beta Code write it: `ʹ`, the Greek numeral
+ * sign that NFC turns into it, and Beta Code `#`.
+ */
+const KERAIA = /[#\u0374\u02B9]/;
+
+/**
+ * Greek and Beta Code note the final sigma, which writes a stigma as the
+ * units of a numeral, before a right keraia. An input without one, most
+ * text, is not searched for them.
+ */
+function readStigmas(input: string, document: Document): Document {
+  return KERAIA.test(input) ? readFinalSigmaStigmas(document) : document;
 }
 
 /**
@@ -180,8 +199,8 @@ export function encodeResolved(
   options: ResolvedConversionOptions,
 ): string {
   const prepared = format === "transliteration"
-    ? applyNumeralOrthography(document, options)
-    : applyOrthography(document, options);
+    ? applyNumeralOrthography(document, options, undefined, format)
+    : applyOrthography(document, options, undefined, format);
 
   switch (format) {
     case "greek":
@@ -210,8 +229,8 @@ export function encodeTracked(
 ): { output: string; spans: SpanTable } {
   const targets: TokenTargets = {};
   const prepared = format === "transliteration"
-    ? applyNumeralOrthography(document, options, targets)
-    : applyOrthography(document, options, targets);
+    ? applyNumeralOrthography(document, options, targets, format)
+    : applyOrthography(document, options, targets, format);
   const written: WrittenPositions = {
     text: "",
     starts: new Array<number>(prepared.length).fill(0),

@@ -283,8 +283,21 @@ export class Converter {
     }
     this.#preset = configuration.preset;
     const behavior = configuration.outOfScopeBehavior ?? "preserve";
-    if (behavior !== "preserve" && behavior !== "reject") {
-      throw new TypeError(`Unknown out-of-scope behavior: ${behavior}.`);
+    if (!OUT_OF_SCOPE_BEHAVIORS.includes(behavior)) {
+      throw new OptionError(
+        `Invalid value for outOfScopeBehavior: ${
+          JSON.stringify(behavior)
+        }; expected one of ${
+          OUT_OF_SCOPE_BEHAVIORS.map((value) => JSON.stringify(value)).join(
+            ", ",
+          )
+        }.`,
+        {
+          path: "outOfScopeBehavior",
+          received: behavior,
+          accepted: OUT_OF_SCOPE_BEHAVIORS,
+        },
+      );
     }
     this.#outOfScopeBehavior = behavior;
 
@@ -317,9 +330,11 @@ export class Converter {
     const known = new Set([...BUILTIN_LETTERS, ...this.#characters.keys()]);
     this.#repertoire = configuration.repertoire === undefined
       ? undefined
-      : new Set(validateCharacterIds(configuration.repertoire, known));
+      : new Set(
+        validateCharacterIds(configuration.repertoire, known, "repertoire"),
+      );
     this.#excluded = new Set(
-      validateCharacterIds(configuration.exclude ?? [], known),
+      validateCharacterIds(configuration.exclude ?? [], known, "exclude"),
     );
     this.#keepsLetters = this.#excluded.size > 0 ||
       this.#repertoire !== undefined || this.#preset !== undefined;
@@ -558,6 +573,7 @@ export class Converter {
       format,
       reading,
       options,
+      target,
       value: input.value,
       read,
     };
@@ -786,17 +802,25 @@ export class Converter {
  *
  * @throws {RangeError} An {@link OptionError} if a key of the configuration,
  * of an alias, or of a custom character is unknown (its `path` is the key,
- * such as `"exclude"` or `"aliases[0].spellings"`), or if the preset is.
+ * such as `"exclude"` or `"aliases[0].spellings"`), if the preset or the
+ * out-of-scope behavior is, or if `repertoire` or `exclude` names no
+ * character (its `path` is the identifier's place, such as `"exclude[0]"`).
  * @throws {TypeError} If the configuration, one of its lists, or one of its
- * definitions has the wrong type, or if a value is invalid: an unknown
- * out-of-scope behavior or character identifier, an empty or ambiguous
- * spelling, or a spelling that already has a meaning without `override`.
+ * definitions has the wrong type, or if a definition is invalid: an empty or
+ * ambiguous spelling, a duplicate identifier, or a spelling that already has
+ * a meaning without `override`.
  */
 export function createConverter(
   configuration: ConverterConfiguration = {},
 ): Converter {
   return new Converter(configuration);
 }
+
+/** The accepted values of `outOfScopeBehavior`. */
+const OUT_OF_SCOPE_BEHAVIORS: readonly ConverterOutOfScopeBehavior[] = [
+  "preserve",
+  "reject",
+];
 
 const CONFIGURATION_KEYS = [
   "preset",
@@ -813,8 +837,9 @@ const FORM_KEYS = ["lowercase", "uppercase"];
 /**
  * Checks the shape of a configuration, as conversion options are checked: a
  * misspelled key never falls back to a default. An unknown key, at any depth,
- * throws an `OptionError` that names it; a list or a definition of the wrong
- * type, a `TypeError`. The values are checked where they are read.
+ * or an alias of no built-in letter, throws an `OptionError` that names it; a
+ * list, a definition, or a field of the wrong type, a `TypeError`. The other
+ * values are checked where they are read.
  */
 function assertConfiguration(configuration: unknown): void {
   assertKeys(configuration, CONFIGURATION_KEYS, "");
@@ -837,21 +862,67 @@ function assertConfiguration(configuration: unknown): void {
     }
   }
   (aliases as unknown[] | undefined)?.forEach((alias, index) => {
-    assertKeys(alias, ALIAS_KEYS, `aliases[${index}]`);
+    const path = `aliases[${index}]`;
+    assertKeys(alias, ALIAS_KEYS, path);
+    const { letter, spellings, uppercase, override } = alias as Record<
+      string,
+      unknown
+    >;
+    if (typeof letter !== "string" || !BUILTIN_LETTERS.has(letter)) {
+      throw new OptionError(
+        `Unknown letter in ${path}.letter: ${JSON.stringify(letter)}.`,
+        {
+          path: `${path}.letter`,
+          received: letter,
+          accepted: [...BUILTIN_LETTERS],
+        },
+      );
+    }
+    if (!Array.isArray(spellings)) {
+      throw new TypeError(
+        `Expected ${path}.spellings to be an array, received ${
+          typeName(spellings)
+        }.`,
+      );
+    }
+    spellings.forEach((spelling, at) => {
+      assertType(spelling, "string", `${path}.spellings[${at}]`);
+    });
+    assertType(uppercase, "boolean", `${path}.uppercase`, true);
+    assertType(override, "boolean", `${path}.override`, true);
   });
   (characters as unknown[] | undefined)?.forEach((character, index) => {
     const path = `characters[${index}]`;
     assertKeys(character, CHARACTER_KEYS, path);
-    const { forms } = character as Record<string, unknown>;
+    const { id, forms, override } = character as Record<string, unknown>;
+    assertType(id, "string", `${path}.id`);
+    assertType(override, "boolean", `${path}.override`, true);
     assertKeys(forms, FORMATS, `${path}.forms`);
     for (const format of FORMATS) {
-      assertKeys(
-        (forms as Record<string, unknown>)[format],
-        FORM_KEYS,
-        `${path}.forms.${format}`,
-      );
+      const formsPath = `${path}.forms.${format}`;
+      const spelled = (forms as Record<string, unknown>)[format];
+      assertKeys(spelled, FORM_KEYS, formsPath);
+      const { lowercase, uppercase } = spelled as Record<string, unknown>;
+      assertType(lowercase, "string", `${formsPath}.lowercase`);
+      assertType(uppercase, "string", `${formsPath}.uppercase`, true);
     }
   });
+}
+
+/**
+ * Checks that a field of a definition has the expected type, or is absent
+ * when it is optional.
+ */
+function assertType(
+  value: unknown,
+  type: "string" | "boolean",
+  path: string,
+  optional = false,
+): void {
+  if (typeof value === type || (optional && value === undefined)) return;
+  throw new TypeError(
+    `Expected ${path} to be a ${type}, received ${typeName(value)}.`,
+  );
 }
 
 /** Checks that `value` is an object with no key outside `keys`. */
@@ -1041,13 +1112,23 @@ function freezeEntries(entries: readonly InputEntry[]): readonly InputEntry[] {
   );
 }
 
+/**
+ * Checks the identifiers of `repertoire` or `exclude`: one that names no
+ * character throws an `OptionError` whose `path` is its place in the list and
+ * whose `accepted` lists the identifiers of the converter.
+ */
 function validateCharacterIds(
   values: readonly string[],
   known: ReadonlySet<string>,
+  name: "repertoire" | "exclude",
 ): readonly string[] {
-  return values.map((value) => {
+  return values.map((value, index) => {
     if (!known.has(value)) {
-      throw new TypeError(`Unknown character identifier: ${value}.`);
+      const path = `${name}[${index}]`;
+      throw new OptionError(
+        `Unknown character identifier in ${path}: ${JSON.stringify(value)}.`,
+        { path, received: value, accepted: [...known] },
+      );
     }
     return value;
   });
@@ -1167,6 +1248,8 @@ interface KeptLetters {
   readonly reading: ResolvedConversionOptions;
   /** The options that write the output. */
   readonly options: ResolvedConversionOptions;
+  /** The format they write, when the conversion writes one. */
+  readonly target: Format | undefined;
   /** The preprocessed text the document was read from. */
   readonly value: string;
   /** Where each token was read in it, when the reading recorded it. */
@@ -1200,7 +1283,11 @@ interface WrittenWord {
  */
 function inDecimalNumeral(kept: KeptLetters, index: number): boolean {
   if (kept.options.text.numerals !== "decimal") return false;
-  kept.numerals ??= decimalNumeralTokens(kept.parsed);
+  kept.numerals ??= decimalNumeralTokens(
+    kept.parsed,
+    kept.options,
+    kept.target ?? "greek",
+  );
   return kept.numerals[index] === 1;
 }
 
