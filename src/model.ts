@@ -87,6 +87,9 @@ export type Diacritic =
  * one case: `ϴ` and `ϒ` are capitals, and the others small letters. The
  * sigma shapes fit both cases: the lunate sigma has a capital and a small
  * form, and a final or medial shape remains as provenance on a capital.
+ * `final-sigma-stigma` is a stigma written `ς`, the sign it resembles, as
+ * the units of a numeral (`ιςʹ`, 16); it is a small letter, and Greek output
+ * writes it `ς` only there, where it reads back as a stigma.
  *
  * A name is the Unicode name of the form without `GREEK`, and without
  * `SYMBOL` where a qualifier already tells the form from the letter:
@@ -106,7 +109,8 @@ export type GlyphVariant =
   | "kappa-symbol"
   | "rho-symbol"
   | "lunate-epsilon"
-  | "upsilon-hook";
+  | "upsilon-hook"
+  | "final-sigma-stigma";
 
 /**
  * The letter each glyph variant belongs to, its case when it has only one,
@@ -134,6 +138,9 @@ export const GLYPH_VARIANTS: Readonly<
   "rho-symbol": { letter: "rho", uppercase: false, symbol: "ϱ" },
   "lunate-epsilon": { letter: "epsilon", uppercase: false, symbol: "ϵ" },
   "upsilon-hook": { letter: "upsilon", uppercase: true, symbol: "ϒ" },
+  // The units of a numeral written with the final sigma it resembles (`ιςʹ`
+  // for `ιϛʹ`, 16), since keyboards lack the stigma.
+  "final-sigma-stigma": { letter: "stigma", uppercase: false, symbol: "ς" },
 });
 
 /** One canonical Greek letter with mutable case and semantic diacritics. */

@@ -13,7 +13,11 @@ import type {
   ConversionOptions,
   ResolvedConversionOptions,
 } from "./options.ts";
-import { applyNumeralOrthography, applyOrthography } from "./orthography.ts";
+import {
+  applyNumeralOrthography,
+  applyOrthography,
+  readFinalSigmaStigmas,
+} from "./orthography.ts";
 import { parseBetaCode } from "./parsers/beta_code.ts";
 import { parseGreek } from "./parsers/greek.ts";
 import {
@@ -140,10 +144,12 @@ export function parseResolved(
   read?: ReadPositions,
 ): Document {
   switch (format) {
+    // Greek and Beta Code note the final sigma, which writes a stigma as the
+    // units of a numeral.
     case "greek":
-      return parseGreek(input, share, read);
+      return readFinalSigmaStigmas(parseGreek(input, share, read));
     case "beta-code":
-      return parseBetaCode(input, share, read);
+      return readFinalSigmaStigmas(parseBetaCode(input, share, read));
     case "transliteration":
       return parseTransliteration(input, options, read);
   }

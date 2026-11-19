@@ -57,7 +57,7 @@ import type {
   NuTauTransliteration,
 } from "./options.ts";
 import { greekUpper } from "./case.ts";
-import { applyGreekOrthography } from "./orthography.ts";
+import { applyGreekOrthography, isNumeralUnits } from "./orthography.ts";
 import { joinPieces, type WrittenPositions } from "./parsers/positions.ts";
 import { encodePunctuation } from "./punctuation.ts";
 import {
@@ -225,7 +225,14 @@ export function greekGlyph(
   const ordinary = ALPHABET[token.letter].greek;
   if (token.letter === "sigma") {
     if (writesLunateSigma(document, index, token, options)) return "ϲ";
-    if (isGreekNumeralContext(document, index)) return ordinary;
+    // In a numeral, a sigma is 200, written `σ`; a final sigma the source
+    // writes there, which no numeral reads, is kept under `"preserve"`.
+    if (isGreekNumeralContext(document, index)) {
+      return token.glyphVariant === "final-sigma" &&
+          (options.greek?.finalSigma ?? "preserve") === "preserve"
+        ? "ς"
+        : ordinary;
+    }
     return ((options.greek?.finalSigma ?? "preserve") === "preserve"
         ? token.glyphVariant === "final-sigma" ||
           token.glyphVariant !== "medial-sigma" &&
@@ -258,7 +265,9 @@ export function greekGlyph(
   }
   return variant?.symbol !== undefined &&
       variant.uppercase === token.uppercase &&
-      options.greek?.symbolForms !== "standard"
+      options.greek?.symbolForms !== "standard" &&
+      (token.glyphVariant !== "final-sigma-stigma" ||
+        isNumeralUnits(document, index))
     ? variant.symbol
     : ordinary;
 }
@@ -295,11 +304,12 @@ export function glyphForm(
 /**
  * The Beta Code of a sigma: `s3` for a lunate sigma, `s1` or `s2` for a
  * sigma whose noted shape (`σ` or `ς`) contradicts its place, kept under
- * `greek.finalSigma: "preserve"`, and `s` otherwise, whose shape the
- * position decides. Before a digit from 1 to 3, which would make a code of
- * `s`, a small sigma always takes its code, with the shape Greek output
- * writes. A capital has no shape, and the TLG defines no `*s1` or `*s2`; so
- * a capital sigma before `3` reads back as a lunate sigma.
+ * `greek.finalSigma: "preserve"` (in a numeral, where a sigma is `σ`, the
+ * final shape only), and `s` otherwise, whose shape the position decides.
+ * Before a digit from 1 to 3, which would make a code of `s`, a small sigma
+ * always takes its code, with the shape Greek output writes. A capital has
+ * no shape, and the TLG defines no `*s1` or `*s2`; so a capital sigma
+ * before `3` reads back as a lunate sigma.
  */
 export function betaSigma(
   document: Document,
@@ -315,9 +325,11 @@ export function betaSigma(
   const beforeDigit = code >= 0x31 && code <= 0x33;
   const numeral = isGreekNumeralContext(document, index);
   const policy = options.greek?.finalSigma ?? "preserve";
-  const noted = !numeral && policy === "preserve" &&
-    (token.glyphVariant === "medial-sigma" ||
-      token.glyphVariant === "final-sigma");
+  // In a numeral, a sigma is `σ`; a final sigma there is kept, as Greek
+  // output keeps it.
+  const noted = policy === "preserve" &&
+    (token.glyphVariant === "final-sigma" ||
+      !numeral && token.glyphVariant === "medial-sigma");
   if (!noted && !beforeDigit) return "s";
   const ends = !numeral && sigmaEndsWord(document, index, quotations);
   const final = noted

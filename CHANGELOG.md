@@ -210,6 +210,16 @@ change.
   without loss. A rough breathing on its upsilon stays there (`κωὑ` gives
   `kohy`). A numeral, whose letters are digits, is still written as it reads
   back (`ωυʹ` gives `ouʹ`, with a reported loss).
+- A final sigma before the keraia, as the units of a numeral, is read as a
+  stigma written with the sign it resembles, which keyboards have: `ςʹ` is 6,
+  `ιςʹ` 16, and `͵αςʹ` 1006 (rc.9: 200, no numeral, and 1200). 200 is `σʹ`,
+  the final sigma being no numeral sign of its own. Greek output keeps the
+  `ς`, or writes `ϛ` under `greek.symbolForms: "standard"`; Beta Code and
+  transliteration write a stigma (`i#2#`, `ic̄ʹ`), and `convertDetailed()`
+  reports the form as lost, under the new glyph variant
+  `final-sigma-stigma`. A final sigma that is not the units of a numeral
+  stays a sigma, which Greek output and Beta Code now keep before a keraia
+  (`αςʹ`, `as2#`), where rc.9 wrote `ασʹ` and `as#`.
 
 ## [1.0.0-rc.9] - 2026-11-15
 

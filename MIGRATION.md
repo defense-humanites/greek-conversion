@@ -37,6 +37,11 @@ reported), and the transliteration `ap’ hēmō̃n` reads as `ἀπ’ ἡμῶ
 `ἀφ’ ἡμῶν`). The new `greek: { elidedStop: "aspirate" }` gives the output of
 rc.9.
 
+A final sigma before the keraia, as the units of a numeral, is a stigma:
+`ιςʹ` is 16, and converts to `i#2#` and `ic̄ʹ` (rc.9: `is#` and `isʹ`, as
+`ισʹ`). Code that reads `glyphVariant` gets a new value,
+`final-sigma-stigma`. To write 200, write `σʹ`.
+
 `createConverter()` rejects an unknown key of its configuration with an
 `OptionError`, as conversion options do; rc.9 ignored it, so that a
 misspelled `exclude` excluded nothing. An invalid `outOfScopeBehavior`, or an

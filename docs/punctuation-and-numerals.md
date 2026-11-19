@@ -94,6 +94,13 @@ the two koppas `ϟ` and `ϙ` for 90, and sampi `ϡ` for 900. `στ` before the
 keraia is also 6, alone or as the units of a longer numeral, as the ALA-LC
 tables list it. The highest numeral is 9999.
 
+A final sigma `ς` before the keraia, as the units, is a stigma written with
+the sign it resembles, which keyboards have: `ςʹ` is 6 and `ιςʹ` 16, while
+200 is `σʹ`, the final sigma being no numeral sign of its own. Greek output
+writes it `ς`, as the source does, or `ϛ` under `greek.symbolForms:
+"standard"`; Beta Code and transliteration write a stigma (`i#2#`, `ic̄ʹ`),
+and `convertDetailed()` reports the form as lost (`final-sigma-stigma`).
+
 The right keraia is read from U+0374 or U+02B9, which are canonically
 equivalent, and written U+02B9; the left keraia is U+0375. An apostrophe, a
 tonos (`΄`, U+0384), or a prime (`′`) is not a keraia: `ιβ΄` is not read as a

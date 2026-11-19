@@ -27,9 +27,11 @@ modifies it for every grapheme that shares it, including those of later
 parses in the same process. Do not mutate a set you did not create.
 
 The optional `glyphVariant` records the form of the letter in the source: a
-sigma shape (`lunate-sigma`, `final-sigma`, `medial-sigma`) or a symbol form
+sigma shape (`lunate-sigma`, `final-sigma`, `medial-sigma`), a symbol form
 (`beta-symbol` for `ϐ`, `theta-symbol`, `capital-theta-symbol`, `phi-symbol`,
-`pi-symbol`, `kappa-symbol`, `rho-symbol`, `lunate-epsilon`, `upsilon-hook`).
+`pi-symbol`, `kappa-symbol`, `rho-symbol`, `lunate-epsilon`, `upsilon-hook`),
+or `final-sigma-stigma`, a stigma written `ς` as the units of a numeral
+(`ιςʹ`, 16).
 Each name is the Unicode name of the form without `GREEK`, and without
 `SYMBOL` where a qualifier already tells the form from the letter (lunate,
 hook). A symbol form belongs to one case, and `validateDocument()` reports it

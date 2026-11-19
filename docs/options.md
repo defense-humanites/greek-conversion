@@ -325,7 +325,7 @@ Selects the beta of Greek output. `"preserve"` writes `ϐ` where the source note
 
 Symbol forms of letters, such as `ϑ`. Defaults to `"preserve"`.
 
-Selects the symbol forms of letters in Greek output: `ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, and `ϒ` with its accented forms `ϓ` and `ϔ`. `"preserve"` writes those the source notes, and `"standard"` the ordinary letters. No value writes a symbol form where the source has an ordinary letter, which Unicode reserves them for mathematics. The beta symbol `ϐ` follows `medialBeta`, and the lunate sigma `ϲ` follows `sigma`.
+Selects the symbol forms of letters in Greek output: `ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, and `ϒ` with its accented forms `ϓ` and `ϔ`, and the final sigma `ς` written for a stigma as the units of a numeral (`ιςʹ`, 16). `"preserve"` writes those the source notes, and `"standard"` the ordinary letters (`ιϛʹ`). No value writes a symbol form where the source has an ordinary letter, which Unicode reserves them for mathematics. The beta symbol `ϐ` follows `medialBeta`, and the lunate sigma `ϲ` follows `sigma`.
 
 | Value | Example | Presets |
 | --- | --- | --- |

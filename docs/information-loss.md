@@ -132,8 +132,9 @@ coronis contexts without guessing from ordinary apostrophes.
 ### Letter forms
 
 The Greek reader remembers the form of a letter as its `glyphVariant`: the
-lunate sigma `ϲ` (`Ϲ`), a final `ς` or medial `σ`, and the symbol forms `ϐ`,
-`ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, and `ϒ`. Beta Code notes the lunate sigma
+lunate sigma `ϲ` (`Ϲ`), a final `ς` or medial `σ`, the symbol forms `ϐ`,
+`ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, and `ϒ`, and the `ς` that writes a stigma
+as the units of a numeral (`ιςʹ`). Beta Code notes the lunate sigma
 (`s3`), and the medial and final sigma (`s1`, `s2`), which it writes only
 where the shape contradicts the place, under `finalSigma: "preserve"`, or
 before a digit from 1 to 3; transliteration notes the lunate sigma as `c`

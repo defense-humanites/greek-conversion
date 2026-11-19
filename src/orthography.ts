@@ -350,6 +350,65 @@ function applyWhitespaceOrthography(
   return output;
 }
 
+/**
+ * Reads a final sigma that is the units of a numeral as a stigma written
+ * with the sign it resembles (`ςʹ` 6, `ιςʹ` 16, `͵αςʹ` 1006): keyboards
+ * lack the stigma, and `ς` is no numeral sign of its own, 200 being `σʹ`.
+ * Returns `document` itself when no sigma is such.
+ */
+export function readFinalSigmaStigmas(document: Document): Document {
+  let output: Token[] | undefined;
+  for (let index = 0; index < document.length; index++) {
+    const token = document[index];
+    if (
+      token.kind !== "grapheme" || token.letter !== "sigma" ||
+      token.glyphVariant !== "final-sigma" || !isNumeralUnits(document, index)
+    ) continue;
+    output ??= [...document];
+    output[index] = {
+      kind: "grapheme",
+      letter: "stigma",
+      uppercase: false,
+      diacritics: token.diacritics,
+      glyphVariant: "final-sigma-stigma",
+    };
+  }
+  return output ?? document;
+}
+
+/**
+ * Whether the small letter at `index` is read as the units of a numeral
+ * when it is a stigma written `ς`: it stands before a right keraia, without
+ * a mark, at the end of letters that read as a numeral with it. Greek output
+ * writes such a stigma `ς` only there, where it reads back as one.
+ */
+export function isNumeralUnits(document: Document, index: number): boolean {
+  const token = document[index];
+  if (
+    token?.kind !== "grapheme" ||
+    !isLiteral(document[index + 1], DEXIA_KERAIA)
+  ) return false;
+
+  // The letters before it, up to a left keraia or any other token, would
+  // be the rest of the numeral, which reads no letter with a mark.
+  let start = index;
+  while (document[start - 1]?.kind === "grapheme") start--;
+  if (isLiteral(document[start - 1], ARISTERI_KERAIA)) start--;
+  const stigma: Grapheme = {
+    kind: "grapheme",
+    letter: "stigma",
+    uppercase: false,
+    diacritics: token.diacritics,
+  };
+  const from = Math.max(0, start - 1);
+  const window = [
+    ...document.slice(from, index),
+    stigma,
+    document[index + 1],
+  ];
+  return readNumeral(window, start - from) !== undefined;
+}
+
 function readNumeral(
   document: Document,
   start: number,
