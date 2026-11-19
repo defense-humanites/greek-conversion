@@ -46,6 +46,10 @@ Under `greek: { accentuation: "monotonic" }`, `ό,τι`, an abbreviation such as
 `κ.ά.`, and the ending of an ordinal such as `20ός` keep their accent (rc.9:
 `ο,τι`, `κ.α.`, `20ος`).
 
+Under `text: { numerals: "decimal" }`, and so under the ALA-LC presets, a
+numeral whose letters carry only marks that the output removes is written as
+a number: `ἰβʹ` gives `12` under `ala-lc-modern` (rc.9: `ιβʹ`).
+
 `createConverter()` rejects an unknown key of its configuration with an
 `OptionError`, as conversion options do; rc.9 ignored it, so that a
 misspelled `exclude` excluded nothing. An invalid `outOfScopeBehavior`, or an

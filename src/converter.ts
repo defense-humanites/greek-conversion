@@ -573,6 +573,7 @@ export class Converter {
       format,
       reading,
       options,
+      target,
       value: input.value,
       read,
     };
@@ -1247,6 +1248,8 @@ interface KeptLetters {
   readonly reading: ResolvedConversionOptions;
   /** The options that write the output. */
   readonly options: ResolvedConversionOptions;
+  /** The format they write, when the conversion writes one. */
+  readonly target: Format | undefined;
   /** The preprocessed text the document was read from. */
   readonly value: string;
   /** Where each token was read in it, when the reading recorded it. */
@@ -1280,7 +1283,11 @@ interface WrittenWord {
  */
 function inDecimalNumeral(kept: KeptLetters, index: number): boolean {
   if (kept.options.text.numerals !== "decimal") return false;
-  kept.numerals ??= decimalNumeralTokens(kept.parsed);
+  kept.numerals ??= decimalNumeralTokens(
+    kept.parsed,
+    kept.options,
+    kept.target ?? "greek",
+  );
   return kept.numerals[index] === 1;
 }
 

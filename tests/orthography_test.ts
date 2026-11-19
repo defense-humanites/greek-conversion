@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import { assertEquals, assertNfcEquals } from "./assertions.ts";
-import { convert, convertDetailed } from "../src/mod.ts";
+import { convert, convertDetailed, createConverter } from "../src/mod.ts";
 import { parse } from "../src/document.ts";
 import { MEDIAL_BETA_SYMBOL, SMOOTH_ROUGH_DOUBLE_RHO } from "./fixtures.ts";
 
@@ -945,6 +945,68 @@ test("converts marked alphabetic numerals to decimal on demand", () => {
     convert("στʹ ͵α ͵αα ͵αβ", "greek", "greek", decimal),
     "6 1000 1001 1002",
   );
+});
+
+test("reads a numeral on its letters as the output writes them", () => {
+  // ALA-LC removes the accents and the smooth breathing, and writes numerals
+  // as numbers: a letter whose marks it removes is a digit, as the output
+  // would read back. The rough breathing stays.
+  const alaLc = { preset: "ala-lc-modern" } as const;
+  assertNfcEquals(
+    convert("σόʹ ἰβʹ ἰστʹ σ́τʹ ς́ʹ ἱβʹ", "greek", "greek", alaLc),
+    "270 12 16 6 6 ἱβʹ",
+  );
+  assertNfcEquals(
+    convert("σόʹ ἰβʹ ἱβʹ", "greek", "beta-code", alaLc),
+    "270 12 i(b#",
+  );
+  // Transliteration writes no final sigma.
+  assertNfcEquals(
+    convert("σόʹ ς́ʹ ἱβʹ", "greek", "transliteration", alaLc),
+    "270 200 hivʹ",
+  );
+
+  // Monotonic Greek removes the breathings, and transliteration the quantity
+  // marks under `quantity: "omit"`; each format reads its own.
+  const decimal = { text: { numerals: "decimal" } } as const;
+  const monotonic = {
+    ...decimal,
+    greek: { accentuation: "monotonic" },
+  } as const;
+  assertNfcEquals(convert("ἱβʹ", "greek", "greek", monotonic), "12");
+  assertNfcEquals(convert("ἱβʹ", "greek", "beta-code", monotonic), "i(b#");
+  const omit = { ...decimal, transliteration: { quantity: "omit" } } as const;
+  assertNfcEquals(convert("ᾱʹ", "greek", "transliteration", omit), "1");
+  assertNfcEquals(convert("ᾱʹ", "greek", "greek", omit), "ᾱʹ");
+  assertEquals(
+    convertDetailed("ᾱʹ", "greek", "transliteration", omit).output,
+    "1",
+  );
+
+  // A final sigma is a stigma before the keraia only where it is written ς:
+  // not in capitals, nor under another finalSigma, nor elsewhere.
+  const both = { ...alaLc, ...monotonic } as const;
+  assertNfcEquals(convert("ὃςʹ ςαʹ", "greek", "greek", both), "76 201");
+  assertNfcEquals(
+    convert("ὃςʹ", "greek", "greek", {
+      ...both,
+      text: { numerals: "decimal", letterCase: "uppercase" },
+    }),
+    "ΟΣʹ",
+  );
+  assertNfcEquals(
+    convert("ὃςʹ", "greek", "greek", {
+      ...both,
+      greek: { accentuation: "monotonic", finalSigma: "medial" },
+    }),
+    "οσʹ",
+  );
+
+  // A converter writes a letter it keeps in such a numeral as the number,
+  // read for the format it writes.
+  const noAlpha = createConverter({ exclude: ["alpha"] });
+  assertNfcEquals(noAlpha.convert("ᾱʹ", "greek", "transliteration", omit), "1");
+  assertNfcEquals(noAlpha.convert("ᾱʹ", "greek", "greek", omit), "ᾱʹ");
 });
 
 test("numeral glyphs override contextual letter styling", () => {

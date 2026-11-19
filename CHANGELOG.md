@@ -227,6 +227,14 @@ change.
   abbreviation, and the ending of an ordinal written with digits keeps its
   accent (`20ός`). rc.9 counted each as a monosyllable and wrote `ο,τι`,
   `κ.α.`, and `20ος`, which the documentation listed as limits of the count.
+- Under `text.numerals: "decimal"`, a numeral is read on its letters as the
+  output writes them, so that converting the output again gives the same
+  text. A letter whose marks the options remove counts as bare: under the
+  ALA-LC presets, which remove the accents and the smooth breathing, `ἰβʹ`
+  gives `12` and `σόʹ` gives `270`, where rc.9 wrote `ιβʹ` and `σοʹ`, which
+  read back as those numbers. So does a letter whose breathing monotonic
+  Greek output removes, and a final sigma before the keraia that the output
+  writes `ς` is a stigma there.
 
 ## [1.0.0-rc.9] - 2026-11-15
 

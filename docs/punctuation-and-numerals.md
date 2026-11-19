@@ -83,7 +83,8 @@ then reads back as a hyphen.
 A numeral is a group of letters that a keraia marks. The library reads one
 when:
 
-- the letters carry no mark and follow no other letter;
+- the letters carry no mark (under `numerals: "decimal"`, no mark that the
+  output keeps, as said below) and follow no other letter;
 - their values go down from one letter to the next: hundreds, tens, units;
 - a right keraia `ʹ` closes the group;
 - thousands, if any, come first, as a left keraia `͵` and a letter from 1
@@ -128,6 +129,14 @@ convert("ιβʹ", "greek", "transliteration", { preset: "ala-lc-modern" });
 
 convertDetailed("ιβʹ", "greek", "transliteration", decimal).lossy; // → true
 ```
+
+The numeral is read on its letters as the output would write them, so that
+converting the output again gives the same text. A letter whose marks the
+options all remove counts as bare: the ALA-LC presets remove the accents and
+the smooth breathing, so that `ἰβʹ` gives `12` there, as `ιβʹ` does, and
+monotonic Greek output removes the breathings too. A final sigma before the
+keraia is a stigma where the output writes it `ς`, in Greek and Beta Code
+under `greek.finalSigma: "preserve"`.
 
 Under `transliteration.keraia: "bnf"`, transliteration writes the right
 keraia as an acute and the left one as a comma (see

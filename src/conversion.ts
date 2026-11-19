@@ -199,8 +199,8 @@ export function encodeResolved(
   options: ResolvedConversionOptions,
 ): string {
   const prepared = format === "transliteration"
-    ? applyNumeralOrthography(document, options)
-    : applyOrthography(document, options);
+    ? applyNumeralOrthography(document, options, undefined, format)
+    : applyOrthography(document, options, undefined, format);
 
   switch (format) {
     case "greek":
@@ -229,8 +229,8 @@ export function encodeTracked(
 ): { output: string; spans: SpanTable } {
   const targets: TokenTargets = {};
   const prepared = format === "transliteration"
-    ? applyNumeralOrthography(document, options, targets)
-    : applyOrthography(document, options, targets);
+    ? applyNumeralOrthography(document, options, targets, format)
+    : applyOrthography(document, options, targets, format);
   const written: WrittenPositions = {
     text: "",
     starts: new Array<number>(prepared.length).fill(0),
