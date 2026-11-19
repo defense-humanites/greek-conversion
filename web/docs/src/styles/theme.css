@@ -427,8 +427,9 @@ site-search button[data-open-modal]:active {
    the links or the menu button. The field follows the version, at the
    header's gap, and takes the room it has up to 22rem (Starlight's width);
    on a phone, all of it. From 1440px, where the header has room to spare,
-   it takes its fullest form, centred between the version and the links:
-   up to 30rem, with its keyboard shortcut. */
+   it takes its fullest form, up to 30rem, with its keyboard shortcut, and
+   is centred on the page rather than between the version and the links:
+   the header becomes three columns, the outer two of equal width. */
 header.header > .header {
   display: flex;
   /* Starlight widens the header's gap from 1152px (16px to 24px): the
@@ -447,10 +448,19 @@ header.header > .header {
   }
 }
 @media (min-width: 90rem) {
+  header.header > .header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 30rem) minmax(0, 1fr);
+    align-items: center;
+  }
   .header > :nth-child(2) {
     justify-content: center;
   }
+  .header > :nth-child(3) {
+    justify-self: end;
+  }
   site-search button[data-open-modal] {
+    width: 100%;
     max-width: 30rem;
   }
 }
