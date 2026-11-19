@@ -1122,6 +1122,15 @@ mobile-starlight-toc nav {
   border-radius: var(--radius);
   font-weight: 600;
 }
+/* Expressive Code puts the "Copied!" tooltip in a live region beside the
+   button and centres it as if it were the button's sibling: it sat at the
+   region's top, above the button's middle by a font-dependent amount. The
+   region now spans the button's height and centres the tooltip. */
+.expressive-code .copy [aria-live] {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+}
 
 /* The terminal frame's three dots in the colours of a window's buttons
    (close, minimise, zoom), rather than in the line colour, where they were
