@@ -35,6 +35,14 @@ change.
 - The API documentation of `Format` and the glossary say in which sense the
   Latin format is named `"transliteration"`: the broad sense that software
   gives the word after Unicode CLDR, which holds transcriptions as well.
+- The Greek reader takes a spacing breathing before a capital for the
+  capital's, as older editions and their digitizations write it: at the start
+  of a word, before a capital vowel or rho, psili U+1FBF and dasia U+1FFE, and
+  their compounds with an accent, join the capital (`῾Ρωμαῖοι` gives
+  `Rhōmaĩoi`, rc.10: `῾Rōmaĩoi`, and Greek output writes `Ῥωμαῖοι`). A psili
+  after a letter is the apostrophe of an elision (`τ᾿ ἐστί` gives `t’ estí`),
+  so that a sigma before it stays medial (`ὅσ᾿ ἂν` gives `o(/s' a)\n` in Beta
+  Code, rc.10: `o(/s1᾿ a)\n`). Elsewhere, the signs are kept as before.
 
 ### Fixed
 

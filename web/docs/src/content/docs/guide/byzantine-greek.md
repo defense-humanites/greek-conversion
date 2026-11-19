@@ -1,13 +1,13 @@
 ---
 title: "Byzantine and Medieval Greek"
-description: "Convert Byzantine texts: the convention that covers the period, the lunate sigma, numerals, uncial-style output, and what is not read yet."
+description: "Convert Byzantine texts: the convention that covers the period, breathings written before a capital, the lunate sigma, numerals, uncial-style output, and what is not read yet."
 ---
 
 Byzantine texts are written in polytonic Greek, and convert as Ancient Greek
 does: the same reading, the same presets. This page says which convention
-covers the period, shows what matters most for it (the lunate sigma,
-numerals, and uncial-style output), and states what the library does not
-read yet.
+covers the period, shows what matters most for it (breathings written
+before a capital, the lunate sigma, numerals, and uncial-style output), and
+states what the library does not read yet.
 
 ## Choose a convention
 
@@ -28,6 +28,16 @@ convert(title, "greek", "transliteration", { preset: "ala-lc-ancient" });
 
 A diaeresis on an initial vowel, as manuscripts and their editions write it,
 is kept in every format: `ϊδεῖν` gives `ïdeĩn`, and reads back.
+
+## Breathings before a capital
+
+Older printed editions, and their digitizations, write the breathing of a
+capital before it, as a sign of its own (U+1FBF, U+1FFE, or one of their
+compounds with an accent). At the start of a word, before a capital vowel or
+rho, the library reads such a breathing, and its accent, as the capital's:
+`῾Ρωμαῖοι` gives `Rhōmaĩoi`, and Greek output writes `Ῥωμαῖοι`. Elsewhere the
+sign is kept as it is, except a psili after a letter, which is the apostrophe
+of an elision: `τ᾿ ἐστί` gives `t’ estí`.
 
 ## The lunate sigma
 
@@ -92,18 +102,15 @@ Some signs of Byzantine manuscripts and of their digitizations are kept but
 not interpreted. None is ever dropped: each is copied to the output as it
 is, in every format, Beta Code included.
 
-| In the text                                            | Today                                                                                |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| `ϗ`, the abbreviation of καί                           | Copied as it is, not read as the word                                                |
-| `ȣ`, the ligature of ου                                | Copied as it is                                                                      |
-| `ϛ` inside a word, as the ligature of στ               | Read as the letter stigma: `ἐϛὶ` gives `ec̄ì`                                         |
-| A spacing breathing before a capital, as in `῾Ρωμαῖοι` | Copied as a sign of its own; the capital is read without it: `῾Rōmaĩoi`, with no `h` |
-| The overline of nomina sacra, as in `θ̅ς̅`               | Copied on the letters as an unknown mark: `th̅s̅`; abbreviations are not expanded      |
-| Byzantine punctuation, such as `⸒` and `⁘`             | Copied as it is                                                                      |
-
-A text that writes the breathing before its capital converts as intended
-once the two are joined (`Ῥωμαῖοι` gives `Rhōmaĩoi`). Musical notation and
-the conventions of diplomatic editions are outside the scope of the library.
+| In the text                                | Today                                                                           |
+| ------------------------------------------ | ------------------------------------------------------------------------------- |
+| `ϗ`, the abbreviation of καί               | Copied as it is, not read as the word                                           |
+| `ȣ`, the ligature of ου                    | Copied as it is                                                                 |
+| `ϛ` inside a word, as the ligature of στ   | Read as the letter stigma: `ἐϛὶ` gives `ec̄ì`                                    |
+| The overline of nomina sacra, as in `θ̅ς̅`   | Copied on the letters as an unknown mark: `th̅s̅`; abbreviations are not expanded |
+| Byzantine punctuation, such as `⸒` and `⁘` | Copied as it is                                                                 |
 
 Beta Code input keeps the TLG codes of these signs as text: `#1532`, the καί
-symbol, and `#532`, the hypodiastole, give `#1532` and `#532`.
+symbol, and `#532`, the hypodiastole, give `#1532` and `#532`. Musical
+notation and the conventions of diplomatic editions are outside the scope of
+the library.
