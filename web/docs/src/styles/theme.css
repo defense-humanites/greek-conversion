@@ -253,9 +253,14 @@ h1#_top {
   background: var(--raised);
 }
 
-/* Tables: a raised panel with rounded corners, headed by small capitals. */
+/* Tables: a raised panel with rounded corners, headed by small capitals.
+   The panel fits its table, up to the column's width (where the table
+   scrolls): a short table would otherwise leave its rows' lines stopping
+   short of the panel's edge. */
 .sl-markdown-content table {
   display: block;
+  width: fit-content;
+  max-width: 100%;
   overflow-x: auto;
   border: 1px solid var(--line);
   border-collapse: separate;
@@ -277,6 +282,25 @@ h1#_top {
   text-transform: uppercase;
   color: var(--muted);
   background: var(--raised);
+}
+/* An example of a conversion, as the playground shows one: the texts in
+   their face, a step above the text around them, the arrow muted; Beta
+   Code stays in code. */
+.sl-markdown-content .conversion {
+  font-family: var(--face-text);
+  font-size: 1.0625em;
+}
+.sl-markdown-content .conversion .to {
+  color: var(--muted);
+}
+.sl-markdown-content .conversion code {
+  font-size: 0.875em;
+}
+/* An empty cell (no example, no preset) shows a muted dash rather than a
+   gap, read as "none". */
+.sl-markdown-content td:empty::before {
+  content: "—" / "none";
+  color: var(--muted);
 }
 /* Capitals would change Greek in a heading's code. */
 .sl-markdown-content th code {

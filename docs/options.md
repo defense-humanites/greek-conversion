@@ -2,7 +2,7 @@
 
 Every conversion function takes the same `ConversionOptions`. This document
 lists each option with its values, its default, an example of what each
-other value changes, and the presets that select it.
+value writes, and the presets that write it.
 
 Options come in five groups, named after what they describe: `transliteration`
 is the Latin writing system, `greek` the Greek one, `betaCode` the Beta Code
@@ -33,10 +33,13 @@ DEFAULT_CONVERSION_OPTIONS.transliteration.beta; // → b
 
 The reference below is generated from the library: the texts are those of its
 API documentation, and each example is the first word of a probe text that
-the value writes otherwise than the default does. Run `npm run docs:options`
-after changing an option, its documentation, or a preset. A value with no
-example writes the probe text as the default does, or changes only its
-spacing.
+the value writes otherwise than the default does. The head of each table names
+the conversion its examples go through; the default writes the words that the
+other values change, and two writings that look alike are told apart by the
+scalars that differ. A preset writes the default when it sets other options of
+the same group and leaves this one as it is. Run `npm run docs:options` after
+changing an option, its documentation, or a preset. A value with no example
+writes the probe text as the default does, or changes only its spacing.
 
 <!-- BEGIN GENERATED OPTION REFERENCE -->
 <!-- This section is generated. Do not edit it directly. -->
@@ -51,10 +54,10 @@ Beta transliteration. Defaults to `"b"`.
 
 Selects `b` or modern `v` for beta in transliteration.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"b"`, the default |  |  |
-| `"v"` | Greek to transliteration: `βαρβάρων` gives `varvárōn` instead of `barbárōn` | `ala-lc-modern`, `iso-843-type-1`, `iso-843-type-2` |
+| `"b"` (default) | <span class="conversion"><span lang="el">βαρβάρων</span> <span class="to">→</span> barbárōn</span> | `ala-lc-ancient`, `bnf-core`, `sbl-academic`, `sbl-general` |
+| `"v"` | <span class="conversion"><span lang="el">βαρβάρων</span> <span class="to">→</span> varvárōn</span> | `ala-lc-modern`, `iso-843-type-1`, `iso-843-type-2` |
 
 ### `transliteration.eta`
 
@@ -62,10 +65,10 @@ Latin letter for eta, which carries the `longVowels` mark: `"e"` (`ē`) or `"i"`
 
 Selects the Latin letter for eta in transliteration: `e` or `i`. The letter carries the length mark selected by `transliteration.longVowels`: `ē` or `ī` by default, `ê` or `î` under `longVowels: "circumflex"`.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"e"`, the default |  |  |
-| `"i"` | Greek to transliteration: `Ἕλλησιν` gives `Héllīsin` instead of `Héllēsin` | `iso-843-type-1`, `iso-843-type-2` |
+| `"e"` (default) | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> Héllēsin</span> | `ala-lc-ancient`, `ala-lc-modern`, `bnf-core`, `sbl-academic`, `sbl-general` |
+| `"i"` | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> Héllīsin</span> | `iso-843-type-1`, `iso-843-type-2` |
 
 ### `transliteration.xi`
 
@@ -73,10 +76,10 @@ Xi transliteration. Defaults to `"x"`.
 
 Selects `x` or `ks` for xi in transliteration.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"x"`, the default |  |  |
-| `"ks"` | Greek to transliteration: `σφίγξ` gives `sphínks` instead of `sphínx` |  |
+| `"x"` (default) | <span class="conversion"><span lang="el">σφίγξ</span> <span class="to">→</span> sphínx</span> | `ala-lc-ancient`, `ala-lc-modern`, `bnf-core`, `iso-843-type-1`, `iso-843-type-2`, `sbl-academic`, `sbl-general` |
+| `"ks"` | <span class="conversion"><span lang="el">σφίγξ</span> <span class="to">→</span> sphínks</span> |  |
 
 ### `transliteration.phi`
 
@@ -84,10 +87,10 @@ Phi transliteration. Defaults to `"ph"`.
 
 Selects `ph` or `f` for phi in transliteration.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"ph"`, the default |  |  |
-| `"f"` | Greek to transliteration: `σφίγξ` gives `sfínx` instead of `sphínx` | `iso-843-type-1`, `iso-843-type-2` |
+| `"ph"` (default) | <span class="conversion"><span lang="el">σφίγξ</span> <span class="to">→</span> sphínx</span> | `ala-lc-ancient`, `ala-lc-modern`, `bnf-core`, `sbl-academic`, `sbl-general` |
+| `"f"` | <span class="conversion"><span lang="el">σφίγξ</span> <span class="to">→</span> sfínx</span> | `iso-843-type-1`, `iso-843-type-2` |
 
 ### `transliteration.chi`
 
@@ -95,10 +98,10 @@ Chi transliteration. Defaults to `"ch"`.
 
 Selects `ch` or `kh` for chi in transliteration.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"ch"`, the default |  |  |
-| `"kh"` | Greek to transliteration: `ἔλεγχος` gives `élenkhos` instead of `élenchos` |  |
+| `"ch"` (default) | <span class="conversion"><span lang="el">ἔλεγχος</span> <span class="to">→</span> élenchos</span> | `ala-lc-ancient`, `ala-lc-modern`, `bnf-core`, `iso-843-type-1`, `iso-843-type-2`, `sbl-academic`, `sbl-general` |
+| `"kh"` | <span class="conversion"><span lang="el">ἔλεγχος</span> <span class="to">→</span> élenkhos</span> |  |
 
 ### `transliteration.upsilon`
 
@@ -108,13 +111,13 @@ Selects the transliterated spelling of upsilon.
 
 `"y-with-ou-v-f"` follows ISO 843 Type 2: `y`, but `u` in the diphthong `ου`, and in the diphthongs `αυ`, `ευ`, `ηυ` a `v` before a voiced consonant (β, γ, δ, ζ, λ, μ, ν, ρ) or a vowel and an `f` before a voiceless consonant (θ, κ, ξ, π, σ, τ, φ, χ, ψ) or at the end of a word; an accent on that upsilon moves to the preceding vowel (`Εύβοια` → `Évvoia`). The `v` and `f` are read back as beta and phi under `beta: "v"` and `phi: "f"`, as in the `iso-843-type-2` preset, where the spelling is not reversible. Otherwise they read back as that upsilon, with its accent.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"u"` | Greek to transliteration: `ὑπὲρ` gives `hupèr` instead of `hypèr` |  |
-| `"y"` | Greek to transliteration: `εὐθύς` gives `eythýs` instead of `euthýs` |  |
-| `"y-with-diphthong-u"`, the default |  | `ala-lc-ancient`, `ala-lc-modern`, `sbl-academic`, `sbl-general` |
-| `"y-with-au-eu-ou"` | Greek to transliteration: `ηὑρέθη` gives `hēyréthē` instead of `hēuréthē` | `bnf-core`, `iso-843-type-1` |
-| `"y-with-ou-v-f"` | Greek to transliteration: `εὐθύς` gives `efthýs` instead of `euthýs` | `iso-843-type-2` |
+| `"u"` | <span class="conversion"><span lang="el">ὑπὲρ</span> <span class="to">→</span> hupèr</span> |  |
+| `"y"` | <span class="conversion"><span lang="el">εὐθύς</span> <span class="to">→</span> eythýs</span> |  |
+| `"y-with-diphthong-u"` (default) | <span class="conversion"><span lang="el">ὑπὲρ</span> <span class="to">→</span> hypèr</span><br><span class="conversion"><span lang="el">εὐθύς</span> <span class="to">→</span> euthýs</span><br><span class="conversion"><span lang="el">ηὑρέθη</span> <span class="to">→</span> hēuréthē</span> | `ala-lc-ancient`, `ala-lc-modern`, `sbl-academic`, `sbl-general` |
+| `"y-with-au-eu-ou"` | <span class="conversion"><span lang="el">ηὑρέθη</span> <span class="to">→</span> hēyréthē</span> | `bnf-core`, `iso-843-type-1` |
+| `"y-with-ou-v-f"` | <span class="conversion"><span lang="el">εὐθύς</span> <span class="to">→</span> efthýs</span> | `iso-843-type-2` |
 
 ### `transliteration.muPi`
 
@@ -122,11 +125,11 @@ Transliteration of `μπ`. Defaults to `"mp"`.
 
 Selects the transliteration of `μπ`: `mp` letter by letter, or `b` at the beginning of a word (`"b-initial"`, ALA-LC) or at either end of it (`"b-initial-final"`, ISO 843 Type 2), `mp` elsewhere. `b` is read back as `μπ` only under `beta: "v"`; otherwise it is also the spelling of beta.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"mp"`, the default |  |  |
-| `"b-initial"` | Greek to transliteration: `μπαμπάς` gives `bampás` instead of `mpampás` | `ala-lc-modern` |
-| `"b-initial-final"` | Greek to transliteration: `μπαμπάς` gives `bampás` instead of `mpampás` | `iso-843-type-2` |
+| `"mp"` (default) | <span class="conversion"><span lang="el">μπαμπάς</span> <span class="to">→</span> mpampás</span> | `ala-lc-ancient`, `bnf-core`, `iso-843-type-1`, `sbl-academic`, `sbl-general` |
+| `"b-initial"` | <span class="conversion"><span lang="el">μπαμπάς</span> <span class="to">→</span> bampás</span> | `ala-lc-modern` |
+| `"b-initial-final"` | <span class="conversion"><span lang="el">μπαμπάς</span> <span class="to">→</span> bampás</span> | `iso-843-type-2` |
 
 ### `transliteration.nuTau`
 
@@ -134,11 +137,11 @@ Transliteration of `ντ`. Defaults to `"nt"`.
 
 Selects the transliteration of `ντ`: `nt` letter by letter, or, at the beginning of a word, `d` (`"d-initial"`) or `d̲` (`"d-underline-initial"`, ALA-LC). Only `d̲` is read back as `ντ`, since `d` is also delta.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"nt"`, the default |  |  |
-| `"d-initial"` | Greek to transliteration: `ντομάτα` gives `domáta` instead of `ntomáta` |  |
-| `"d-underline-initial"` | Greek to transliteration: `ντομάτα` gives `d̲omáta` instead of `ntomáta` | `ala-lc-modern` |
+| `"nt"` (default) | <span class="conversion"><span lang="el">ντομάτα</span> <span class="to">→</span> ntomáta</span> | `ala-lc-ancient`, `bnf-core`, `iso-843-type-1`, `iso-843-type-2`, `sbl-academic`, `sbl-general` |
+| `"d-initial"` | <span class="conversion"><span lang="el">ντομάτα</span> <span class="to">→</span> domáta</span> |  |
+| `"d-underline-initial"` | <span class="conversion"><span lang="el">ντομάτα</span> <span class="to">→</span> d̲omáta</span> | `ala-lc-modern` |
 
 ### `transliteration.rho`
 
@@ -146,10 +149,10 @@ Rho transliteration. Defaults to `"contextual"`.
 
 Selects contextual rho spelling or one final `h` per contiguous rho group.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"contextual"`, the default |  |  |
-| `"systematic"` | Greek to transliteration: `μέρει` gives `mérhei` instead of `mérei` |  |
+| `"contextual"` (default) | <span class="conversion"><span lang="el">μέρει</span> <span class="to">→</span> mérei</span> | `ala-lc-ancient`, `ala-lc-modern`, `bnf-core`, `iso-843-type-1`, `iso-843-type-2`, `sbl-academic`, `sbl-general` |
+| `"systematic"` | <span class="conversion"><span lang="el">μέρει</span> <span class="to">→</span> mérhei</span> |  |
 
 ### `transliteration.nasalGamma`
 
@@ -159,12 +162,12 @@ Selects contextual nasal gamma (`n`) or literal gamma (`g`).
 
 `"nasal"` writes `n` for gamma before gamma, kappa, xi, and chi (`γγ` → `ng`, `γκ` → `nk`); `"nasal-except-kappa"` does so except before kappa (`γκ` → `gk`), as ISO 843 Type 2 does; `"nasal-medial-kappa"` writes `γκ` as `nk` inside a word and `gk` at its beginning or end, as ALA-LC does for Modern Greek; `"literal"` always writes `g`.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"nasal"`, the default |  |  |
-| `"nasal-except-kappa"` | Greek to transliteration: `ἀνάγκη` gives `anágkē` instead of `anánkē` | `iso-843-type-2` |
-| `"nasal-medial-kappa"` | Greek to transliteration: `γκρι` gives `gkri` instead of `nkri` | `ala-lc-modern` |
-| `"literal"` | Greek to transliteration: `ἄγγελος` gives `ággelos` instead of `ángelos` | `iso-843-type-1` |
+| `"nasal"` (default) | <span class="conversion"><span lang="el">ἀνάγκη</span> <span class="to">→</span> anánkē</span><br><span class="conversion"><span lang="el">γκρι</span> <span class="to">→</span> nkri</span><br><span class="conversion"><span lang="el">ἄγγελος</span> <span class="to">→</span> ángelos</span> | `ala-lc-ancient`, `bnf-core`, `sbl-academic`, `sbl-general` |
+| `"nasal-except-kappa"` | <span class="conversion"><span lang="el">ἀνάγκη</span> <span class="to">→</span> anágkē</span> | `iso-843-type-2` |
+| `"nasal-medial-kappa"` | <span class="conversion"><span lang="el">γκρι</span> <span class="to">→</span> gkri</span> | `ala-lc-modern` |
+| `"literal"` | <span class="conversion"><span lang="el">ἄγγελος</span> <span class="to">→</span> ággelos</span> | `iso-843-type-1` |
 
 ### `transliteration.longVowels`
 
@@ -174,11 +177,11 @@ Selects the mark that shows the length of eta and omega in transliteration: a ma
 
 `"omit"` writes eta and omega like epsilon (or iota) and omicron, so they are read back as those letters. `"circumflex"` cannot be combined with `circumflexAccent: "circumflex"`, which would write the length mark and the accent alike.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"macron"`, the default |  |  |
-| `"circumflex"` | Greek to transliteration: `Ἕλλησιν` gives `Héllêsin` instead of `Héllēsin` |  |
-| `"omit"` | Greek to transliteration: `Ἕλλησιν` gives `Héllesin` instead of `Héllēsin` | `iso-843-type-2` |
+| `"macron"` (default) | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> Héllēsin</span> | `ala-lc-ancient`, `ala-lc-modern`, `bnf-core`, `iso-843-type-1`, `sbl-academic`, `sbl-general` |
+| `"circumflex"` | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> Héllêsin</span> |  |
+| `"omit"` | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> Héllesin</span> | `iso-843-type-2` |
 
 ### `transliteration.circumflexAccent`
 
@@ -186,10 +189,10 @@ Circumflex accent in transliteration. Defaults to `"tilde"` (U+0303); `"circumfl
 
 Selects the combining mark used for a transliterated circumflex accent.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"tilde"`, the default |  |  |
-| `"circumflex"` | Greek to transliteration: `τῶν` gives `tō̂n` instead of `tō̃n` | `bnf-core`, `iso-843-type-1`, `iso-843-type-2` |
+| `"tilde"` (default) | <span class="conversion"><span lang="el">τῶν</span> <span class="to">→</span> tō̃n</span> | `ala-lc-ancient`, `ala-lc-modern`, `sbl-academic`, `sbl-general` |
+| `"circumflex"` | <span class="conversion"><span lang="el">τῶν</span> <span class="to">→</span> tō̂n</span> | `bnf-core`, `iso-843-type-1`, `iso-843-type-2` |
 
 ### `transliteration.quantity`
 
@@ -197,10 +200,10 @@ Explicit macron/breve in transliteration. Defaults to `"preserve"`.
 
 Selects whether explicit source quantity marks appear in Latin output.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"omit"` | Greek to transliteration: `ᾱ̓́` gives `á` instead of `ā́` | `bnf-core` |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">ᾱ̓́</span> <span class="to">→</span> ā́</span> | `ala-lc-ancient`, `ala-lc-modern`, `iso-843-type-1`, `iso-843-type-2`, `sbl-academic`, `sbl-general` |
+| `"omit"` | <span class="conversion"><span lang="el">ᾱ̓́</span> <span class="to">→</span> á</span> | `bnf-core` |
 
 ### `transliteration.smoothBreathing`
 
@@ -208,11 +211,11 @@ Smooth breathing in transliteration; `"apostrophe"` prefixes an initial vowel. D
 
 Selects whether a known smooth breathing is rendered on a Latin letter.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"omit"`, the default |  |  |
-| `"greek"` | Greek to transliteration: `ἐγένετο` gives `e̓géneto` instead of `egéneto` | `bnf-core` |
-| `"apostrophe"` | Greek to transliteration: `ἐγένετο` gives `’egéneto` instead of `egéneto` | `iso-843-type-1`, `iso-843-type-2` |
+| `"omit"` (default) | <span class="conversion"><span lang="el">ἐγένετο</span> <span class="to">→</span> egéneto</span> | `ala-lc-ancient`, `ala-lc-modern`, `sbl-academic`, `sbl-general` |
+| `"greek"` | <span class="conversion"><span lang="el">ἐγένετο</span> <span class="to">→</span> e̓géneto</span> | `bnf-core` |
+| `"apostrophe"` | <span class="conversion"><span lang="el">ἐγένετο</span> <span class="to">→</span> ’egéneto</span> | `iso-843-type-1`, `iso-843-type-2` |
 
 ### `transliteration.coronis`
 
@@ -220,11 +223,11 @@ Coronis representation in transliteration. Defaults to `"omit"`.
 
 Selects how a semantic coronis is represented in transliteration.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"omit"`, the default |  |  |
-| `"apostrophe"` | Greek to transliteration: `κἀγώ` gives `ka’gṓ` instead of `kagṓ` | `iso-843-type-1`, `iso-843-type-2` |
-| `"greek"` | Greek to transliteration: `κἀγώ` gives `ka᾽gṓ` instead of `kagṓ` | `bnf-core` |
+| `"omit"` (default) | <span class="conversion"><span lang="el">κἀγώ</span> <span class="to">→</span> kagṓ</span> | `ala-lc-ancient`, `ala-lc-modern`, `sbl-academic`, `sbl-general` |
+| `"apostrophe"` | <span class="conversion"><span lang="el">κἀγώ</span> <span class="to">→</span> ka’gṓ</span> | `iso-843-type-1`, `iso-843-type-2` |
+| `"greek"` | <span class="conversion"><span lang="el">κἀγώ</span> <span class="to">→</span> ka᾽gṓ</span> | `bnf-core` |
 
 ### `transliteration.hyphen`
 
@@ -232,10 +235,10 @@ Transliteration hyphen. Defaults to `"ascii"`.
 
 Selects ASCII or typographic hyphen in transliteration output.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"ascii"`, the default |  |  |
-| `"typographic"` | Greek to transliteration: `πολυ-λογία` gives `poly‐logía` instead of `poly-logía` | `bnf-core` |
+| `"ascii"` (default) | <span class="conversion"><span lang="el">πολυ-λογία</span> <span class="to">→</span> poly-logía</span> | `ala-lc-ancient`, `ala-lc-modern`, `iso-843-type-1`, `iso-843-type-2`, `sbl-academic`, `sbl-general` |
+| `"typographic"` | <span class="conversion"><span lang="el">πολυ-λογία</span> <span class="to">→</span> poly‐logía</span> | `bnf-core` |
 
 ### `transliteration.keraia`
 
@@ -243,10 +246,10 @@ Keraia marks in transliteration. Defaults to `"greek"`; `"bnf"` is not always re
 
 Selects Greek keraia marks or the BnF comma and combining acute in Latin output. Under `"bnf"`, an acute after a consonant reads back as the right keraia, which a consonant cannot bear as an accent, and a comma before `c̄` or `s̄`, the stigma and sampi of numerals, as the left keraia; after a vowel, the acute reads back as an accent (`αʹ` and `ά` are both `á`). When the acute accents are removed, the right keraia is written `ʹ`, which an acute would not survive.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"greek"`, the default |  |  |
-| `"bnf"` | Greek to transliteration: `ϛʹ` gives `c̄́` instead of `c̄ʹ` | `bnf-core` |
+| `"greek"` (default) | <span class="conversion"><span lang="el">ϛʹ</span> <span class="to">→</span> c̄ʹ</span> | `ala-lc-ancient`, `ala-lc-modern`, `iso-843-type-1`, `iso-843-type-2`, `sbl-academic`, `sbl-general` |
+| `"bnf"` | <span class="conversion"><span lang="el">ϛʹ</span> <span class="to">→</span> c̄́</span> | `bnf-core` |
 
 ### `transliteration.enotikon`
 
@@ -254,10 +257,10 @@ Transliteration of Greek enotikon (U+203F). Defaults to `"preserve"`.
 
 Preserves the enotikon or renders it as an ambiguous Latin hyphen.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"hyphen"` | Greek to transliteration: `πολυ‿λογία` gives `poly-logía` instead of `poly‿logía` | `iso-843-type-1`, `iso-843-type-2` |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">πολυ‿λογία</span> <span class="to">→</span> poly‿logía</span> | `ala-lc-ancient`, `ala-lc-modern`, `bnf-core`, `sbl-academic`, `sbl-general` |
+| `"hyphen"` | <span class="conversion"><span lang="el">πολυ‿λογία</span> <span class="to">→</span> poly-logía</span> | `iso-843-type-1`, `iso-843-type-2` |
 
 ### `transliteration.lunateSigma`
 
@@ -265,10 +268,10 @@ Provenanced lunate sigma transliteration. Defaults to `"s"`.
 
 Selects `s` or `c` for a provenanced lunate sigma in transliteration.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"s"`, the default |  |  |
-| `"c"` | Greek to transliteration: `ϲοφία` gives `cophía` instead of `sophía` | `bnf-core` |
+| `"s"` (default) | <span class="conversion"><span lang="el">ϲοφία</span> <span class="to">→</span> sophía</span> | `ala-lc-ancient`, `ala-lc-modern`, `iso-843-type-1`, `iso-843-type-2`, `sbl-academic`, `sbl-general` |
+| `"c"` | <span class="conversion"><span lang="el">ϲοφία</span> <span class="to">→</span> cophía</span> | `bnf-core` |
 
 ### `transliteration.archaicKoppa`
 
@@ -276,10 +279,10 @@ Archaic-koppa transliteration. Defaults to `"k-dot-below"`; BnF uses `"q"`.
 
 Selects the transliteration emitted for archaic koppa.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"k-dot-below"`, the default |  |  |
-| `"q"` | Greek to transliteration: `ϙ` gives `q` instead of `ḳ` | `bnf-core` |
+| `"k-dot-below"` (default) | <span class="conversion"><span lang="el">ϙ</span> <span class="to">→</span> ḳ</span> | `ala-lc-ancient`, `ala-lc-modern`, `iso-843-type-1`, `iso-843-type-2`, `sbl-academic`, `sbl-general` |
+| `"q"` | <span class="conversion"><span lang="el">ϙ</span> <span class="to">→</span> q</span> | `bnf-core` |
 
 ## `greek`
 
@@ -291,11 +294,11 @@ Sigma glyph policy. Defaults to `"preserve"`, which keeps a lunate sigma the sou
 
 Selects the sigma glyph of Greek and Beta Code output. `"preserve"` writes a lunate sigma where the source notes one (`ϲ`, Beta Code `s3`), numerals included, and a standard sigma elsewhere; `"standard"` writes every sigma as `σ` or `ς`; `"lunate"` writes every sigma as `ϲ`, except in numerals.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"standard"` | Greek to Greek: `ϲοφία` gives `σοφία` instead of `ϲοφία` |  |
-| `"lunate"` | Greek to Greek: `Ἕλλησιν` gives `Ἕλληϲιν` instead of `Ἕλλησιν` |  |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">ϲοφία</span> <span class="to">→</span> <span lang="el">ϲοφία</span></span><br><span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> <span lang="el">Ἕλλησιν</span></span> | `bnf-core` |
+| `"standard"` | <span class="conversion"><span lang="el">ϲοφία</span> <span class="to">→</span> <span lang="el">σοφία</span></span> |  |
+| `"lunate"` | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> <span lang="el">Ἕλληϲιν</span></span> |  |
 
 ### `greek.finalSigma`
 
@@ -303,11 +306,11 @@ Lowercase final sigma policy in Greek output. Defaults to `"preserve"`, which re
 
 Selects the shape of a standard sigma in lowercase Greek output. `"preserve"` writes the shape the source notes, and places by its position a sigma whose shape the source does not note; `"contextual"` places every sigma by its position (`ς` at the end of a word, `σ` elsewhere); `"medial"` writes `σ` everywhere. Under `"preserve"`, Beta Code writes a noted shape that contradicts the place as `s1` (`σ`) or `s2` (`ς`), as the TLG defines them; otherwise it writes `s`, whose shape the place decides.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"contextual"` | Greek to Greek: `λόγοσ` gives `λόγος` instead of `λόγοσ` |  |
-| `"medial"` | Greek to Greek: `λέγεις` gives `λέγεισ` instead of `λέγεις` |  |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">λόγοσ</span> <span class="to">→</span> <span lang="el">λόγοσ</span></span><br><span class="conversion"><span lang="el">λέγεις</span> <span class="to">→</span> <span lang="el">λέγεις</span></span> | `bnf-core` |
+| `"contextual"` | <span class="conversion"><span lang="el">λόγοσ</span> <span class="to">→</span> <span lang="el">λόγος</span></span> |  |
+| `"medial"` | <span class="conversion"><span lang="el">λέγεις</span> <span class="to">→</span> <span lang="el">λέγεισ</span></span> |  |
 
 ### `greek.medialBeta`
 
@@ -315,11 +318,11 @@ Beta glyph. Defaults to `"preserve"`, which keeps a `ϐ` the source notes.
 
 Selects the beta of Greek output. `"preserve"` writes `ϐ` where the source notes it and `β` elsewhere; `"symbol"` writes `ϐ` inside a word and `β` at its start, as French typography does, whatever the source; `"standard"` writes `β` everywhere.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"standard"` | Greek to Greek: `ϐίος` gives `βίος` instead of `ϐίος` |  |
-| `"symbol"` | Greek to Greek: `βαρβάρων` gives `βαρϐάρων` instead of `βαρβάρων` |  |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">ϐίος</span> <span class="to">→</span> <span lang="el">ϐίος</span></span><br><span class="conversion"><span lang="el">βαρβάρων</span> <span class="to">→</span> <span lang="el">βαρβάρων</span></span> | `bnf-core` |
+| `"standard"` | <span class="conversion"><span lang="el">ϐίος</span> <span class="to">→</span> <span lang="el">βίος</span></span> |  |
+| `"symbol"` | <span class="conversion"><span lang="el">βαρβάρων</span> <span class="to">→</span> <span lang="el">βαρϐάρων</span></span> |  |
 
 ### `greek.symbolForms`
 
@@ -327,10 +330,10 @@ Symbol forms of letters, such as `ϑ`. Defaults to `"preserve"`.
 
 Selects the symbol forms of letters in Greek output: `ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`, `ϱ`, `ϵ`, and `ϒ` with its accented forms `ϓ` and `ϔ`. `"preserve"` writes those the source notes, and `"standard"` the ordinary letters. No value writes a symbol form where the source has an ordinary letter, which Unicode reserves them for mathematics. The beta symbol `ϐ` follows `medialBeta`, and the lunate sigma `ϲ` follows `sigma`.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"standard"` | Greek to Greek: `ϑεός` gives `θεός` instead of `ϑεός` |  |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">ϑεός</span> <span class="to">→</span> <span lang="el">ϑεός</span></span> | `bnf-core` |
+| `"standard"` | <span class="conversion"><span lang="el">ϑεός</span> <span class="to">→</span> <span lang="el">θεός</span></span> |  |
 
 ### `greek.iotaSubscript`
 
@@ -340,11 +343,11 @@ Selects where Greek output writes a kept iota subscript.
 
 `"subscript"` writes it below the line, and after a capital as the prosgegrammeni (`ᾳ`, `ᾼ`). `"capital-adscript"` writes it on the line after a capital, as Smyth (§ 5) describes and as Unicode's uppercase mapping does (`ᾨδῇ` → `Ὠιδῇ`, `ΤΗΙ ΩΙΔΗΙ`), and below the line elsewhere; `"adscript"` writes it on the line after every vowel (`τῶι`), as some editions and papyrological transcriptions do. An iota written on the line reads back as the letter iota, so a conversion that writes one reports the loss of the subscript.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"subscript"`, the default |  |  |
-| `"capital-adscript"` | Greek to Greek: `ᾨδῇ` gives `Ὠιδῇ` instead of `ᾨδῇ` |  |
-| `"adscript"` | Greek to Greek: `ᾠδῇ` gives `ὠιδῆι` instead of `ᾠδῇ` |  |
+| `"subscript"` (default) | <span class="conversion"><span lang="el">ᾨδῇ</span> <span class="to">→</span> <span lang="el">ᾨδῇ</span></span><br><span class="conversion"><span lang="el">ᾠδῇ</span> <span class="to">→</span> <span lang="el">ᾠδῇ</span></span> | `bnf-core` |
+| `"capital-adscript"` | <span class="conversion"><span lang="el">ᾨδῇ</span> <span class="to">→</span> <span lang="el">Ὠιδῇ</span></span> |  |
+| `"adscript"` | <span class="conversion"><span lang="el">ᾠδῇ</span> <span class="to">→</span> <span lang="el">ὠιδῆι</span></span> |  |
 
 ### `greek.doubleRho`
 
@@ -352,10 +355,10 @@ Double-rho marks in Greek output. Defaults to `"unmarked"`.
 
 Controls marks added to a pair of consecutive rho in Greek output.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"unmarked"`, the default |  |  |
-| `"smooth-rough"` | Greek to Greek: `ἄρρητος` gives `ἄῤῥητος` instead of `ἄρρητος` |  |
+| `"unmarked"` (default) | <span class="conversion"><span lang="el">ἄρρητος</span> <span class="to">→</span> <span lang="el">ἄρρητος</span></span> | `bnf-core` |
+| `"smooth-rough"` | <span class="conversion"><span lang="el">ἄρρητος</span> <span class="to">→</span> <span lang="el">ἄῤῥητος</span></span> |  |
 
 ### `greek.dentalSigma`
 
@@ -363,10 +366,10 @@ Dental assimilation before sigma. Defaults to `"preserve"`.
 
 Preserves a dental before sigma or applies the lossy assimilation.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"assimilate"` | Greek to Greek: `ἐλπίδσι` gives `ἐλπίσι` instead of `ἐλπίδσι` |  |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">ἐλπίδσι</span> <span class="to">→</span> <span lang="el">ἐλπίδσι</span></span> | `bnf-core` |
+| `"assimilate"` | <span class="conversion"><span lang="el">ἐλπίδσι</span> <span class="to">→</span> <span lang="el">ἐλπίσι</span></span> |  |
 
 ### `greek.elidedStop`
 
@@ -374,10 +377,10 @@ An elided `π`, `τ`, or `κ` before a rough breathing. Defaults to `"preserve"`
 
 Selects how Greek output writes a final `π`, `τ`, or `κ` whose vowel is elided before a word with a rough breathing. `"preserve"` keeps the consonant the source writes: `ἀπ’ οὗ`, as Ionic prose and many editions have it, stays, and so does `ἀφ’ οὗ`. `"aspirate"` writes the aspirated consonant that Attic spelling requires (`ἀπ’ οὗ` → `ἀφ’ οὗ`, `κατ’ ἡμέραν` → `καθ’ ἡμέραν`); the conversion then reports the consonant it replaced as lost. Beta Code and transliteration write the consonant of the source in either case.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"aspirate"` | Greek to Greek: `ἀπ’` gives `ἀφ’` instead of `ἀπ’` |  |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">ἀπ’</span> <span class="to">→</span> <span lang="el">ἀπ’</span></span> | `bnf-core` |
+| `"aspirate"` | <span class="conversion"><span lang="el">ἀπ’</span> <span class="to">→</span> <span lang="el">ἀφ’</span></span> |  |
 
 ### `greek.accentuation`
 
@@ -385,10 +388,10 @@ Greek accentuation system. Defaults to `"polytonic"`; `"monotonic"` follows the 
 
 Selects polytonic output or a mechanical, lossy monotonic transformation.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"polytonic"`, the default |  |  |
-| `"monotonic"` | Greek to Greek: `Ἕλλησιν` gives `Έλλησιν` instead of `Ἕλλησιν` |  |
+| `"polytonic"` (default) | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> <span lang="el">Ἕλλησιν</span></span> | `bnf-core` |
+| `"monotonic"` | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> <span lang="el">Έλλησιν</span></span> |  |
 
 ### `greek.composition`
 
@@ -396,10 +399,10 @@ Composed or decomposed output. Defaults to `"composed"`.
 
 Selects composed or canonically decomposed Greek Unicode output.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"composed"`, the default |  |  |
-| `"decomposed"` | Greek to Greek: U+0395 U+0314 U+0301 instead of U+1F1D in `Ἕλλησιν` |  |
+| `"composed"` (default) | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> <span lang="el">Ἕλλησιν</span></span> (U+1F1D) | `bnf-core` |
+| `"decomposed"` | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> <span lang="el">Ἕλλησιν</span></span> (U+0395 U+0314 U+0301) |  |
 
 ### `greek.acute`
 
@@ -407,11 +410,11 @@ Tonos/oxia preference for eligible acute vowels. Defaults to `"system"`: oxia in
 
 Selects the composed Unicode form of an acute where Unicode has two: the tonos (`ά`, U+03AC), which is also what NFC gives, or the oxia (`ά`, U+1F71). `"system"` writes the oxia when the Greek output carries a polytonic mark (a breathing, a grave, a circumflex, an iota subscript, a coronis, or a quantity mark) and the tonos when it carries none, as monotonic text is written and as `accentuation: "monotonic"` writes it. The choice is made for the whole output of one conversion: a polytonic text converted word by word needs `"oxia"` to write every acute alike.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"system"`, the default |  |  |
-| `"tonos"` | Greek to Greek: U+03AD instead of U+1F73 in `ἐγένετο` |  |
-| `"oxia"` | Greek to Greek: U+1F77 instead of U+03AF in `ϲοφία` |  |
+| `"system"` (default) | <span class="conversion"><span lang="el">ἐγένετο</span> <span class="to">→</span> <span lang="el">ἐγένετο</span></span> (U+1F73)<br><span class="conversion"><span lang="el">ϲοφία</span> <span class="to">→</span> <span lang="el">ϲοφία</span></span> (U+03AF) | `bnf-core` |
+| `"tonos"` | <span class="conversion"><span lang="el">ἐγένετο</span> <span class="to">→</span> <span lang="el">ἐγένετο</span></span> (U+03AD) |  |
+| `"oxia"` | <span class="conversion"><span lang="el">ϲοφία</span> <span class="to">→</span> <span lang="el">ϲοφία</span></span> (U+1F77) |  |
 
 ### `greek.questionMark`
 
@@ -419,11 +422,11 @@ Greek question-mark scalar. Defaults to `"canonical"`.
 
 Selects the Unicode scalar used for Greek question marks.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"canonical"`, the default |  |  |
+| `"canonical"` (default) | <span class="conversion"><span lang="el">λέγεις;</span> <span class="to">→</span> <span lang="el">λέγεις;</span></span> (U+003B) |  |
 | `"semicolon"` |  |  |
-| `"greek"` | Greek to Greek: U+037E instead of U+003B in `λέγεις;` | `bnf-core` |
+| `"greek"` | <span class="conversion"><span lang="el">λέγεις;</span> <span class="to">→</span> <span lang="el">λέγεις;</span></span> (U+037E) | `bnf-core` |
 
 ### `greek.anoTeleia`
 
@@ -431,11 +434,11 @@ Greek ano-teleia scalar. Defaults to `"canonical"`.
 
 Selects the Unicode scalar used for Greek ano teleia.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"canonical"`, the default |  |  |
+| `"canonical"` (default) | <span class="conversion"><span lang="el">βαρβάρων·</span> <span class="to">→</span> <span lang="el">βαρβάρων·</span></span> (U+00B7) | `bnf-core` |
 | `"middle-dot"` |  |  |
-| `"greek"` | Greek to Greek: U+0387 instead of U+00B7 in `βαρβάρων·` |  |
+| `"greek"` | <span class="conversion"><span lang="el">βαρβάρων·</span> <span class="to">→</span> <span lang="el">βαρβάρων·</span></span> (U+0387) |  |
 
 ## `betaCode`
 
@@ -447,10 +450,10 @@ Insignificant ASCII letter case of Beta Code output. Defaults to `"lowercase"`.
 
 Selects the insignificant ASCII letter case used in Beta Code output.
 
-| Value | Example | Presets |
+| Value | Greek → Beta Code | Presets |
 | --- | --- | --- |
-| `"lowercase"`, the default |  | `perseus` |
-| `"uppercase"` | Greek to Beta Code: `Ἕλλησιν` gives `*(/ELLHSIN` instead of `*(/ellhsin` | `tlg-core` |
+| `"lowercase"` (default) | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> <code>*(/ellhsin</code></span> | `perseus` |
+| `"uppercase"` | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> <code>*(/ELLHSIN</code></span> | `tlg-core` |
 
 ### `betaCode.yot`
 
@@ -458,10 +461,10 @@ Beta Code spelling of yot. Defaults to `"j"`; TLG uses `"#401"`.
 
 Selects the Beta Code spelling emitted for yot.
 
-| Value | Example | Presets |
+| Value | Greek → Beta Code | Presets |
 | --- | --- | --- |
-| `"j"`, the default |  |  |
-| `"#401"` | Greek to Beta Code: `ϳ` gives `#401` instead of `j` | `tlg-core` |
+| `"j"` (default) | <span class="conversion"><span lang="el">ϳ</span> <span class="to">→</span> <code>j</code></span> | `perseus` |
+| `"#401"` | <span class="conversion"><span lang="el">ϳ</span> <span class="to">→</span> <code>#401</code></span> | `tlg-core` |
 
 ## `text`
 
@@ -477,12 +480,12 @@ Selects the mechanical case transformation applied during rendering.
 
 `"title"` capitalizes the first letter of each word; an apostrophe between two letters, as a coronis written so (`Ka’gṓ`), does not start a word.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"lowercase"` | Greek to transliteration: `Ἕλλησιν` gives `héllēsin` instead of `Héllēsin` |  |
-| `"uppercase"` | Greek to transliteration: `Ἕλλησιν` gives `HÉLLĒSIN` instead of `Héllēsin` |  |
-| `"title"` | Greek to transliteration: `ἐγένετο` gives `Egéneto` instead of `egéneto` |  |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> Héllēsin</span><br><span class="conversion"><span lang="el">ἐγένετο</span> <span class="to">→</span> egéneto</span> | `ala-lc-ancient`, `ala-lc-modern` |
+| `"lowercase"` | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> héllēsin</span> |  |
+| `"uppercase"` | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> HÉLLĒSIN</span> |  |
+| `"title"` | <span class="conversion"><span lang="el">ἐγένετο</span> <span class="to">→</span> Egéneto</span> |  |
 
 ### `text.whitespace`
 
@@ -490,9 +493,9 @@ Whitespace rendering. Defaults to `"preserve"`.
 
 Preserves whitespace, or collapses it: `"collapse"` trims the text and reduces each run of Unicode whitespace to one space.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
+| `"preserve"` (default) |  | `ala-lc-ancient`, `ala-lc-modern` |
 | `"collapse"` |  |  |
 
 ### `text.numerals`
@@ -501,10 +504,10 @@ Alphabetic or decimal numeral output. Defaults to `"alphabetic"`.
 
 Preserves marked alphabetic numerals or renders valid groups as decimals.
 
-| Value | Example | Presets |
+| Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"alphabetic"`, the default |  |  |
-| `"decimal"` | Greek to transliteration: `ϛʹ` gives `6` instead of `c̄ʹ` | `ala-lc-ancient`, `ala-lc-modern` |
+| `"alphabetic"` (default) | <span class="conversion"><span lang="el">ϛʹ</span> <span class="to">→</span> c̄ʹ</span> |  |
+| `"decimal"` | <span class="conversion"><span lang="el">ϛʹ</span> <span class="to">→</span> 6</span> | `ala-lc-ancient`, `ala-lc-modern` |
 
 ## `diacritics`
 
@@ -516,72 +519,72 @@ Removing a class removes its marks from the output in every format. In translite
 
 Disposition of every class not named alongside.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
 | `"preserve"` |  |  |
-| `"remove"` | Greek to Greek: `Ἕλλησιν` gives `Ελλησιν` instead of `Ἕλλησιν` |  |
+| `"remove"` | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> <span lang="el">Ελλησιν</span></span> |  |
 
 ### `diacritics.accents`
 
 Accent marks: acute, grave, and circumflex. Defaults to `"preserve"`.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"remove"` | Greek to Greek: `Ἕλλησιν` gives `Ἑλλησιν` instead of `Ἕλλησιν` | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> <span lang="el">Ἕλλησιν</span></span> |  |
+| `"remove"` | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> <span lang="el">Ἑλλησιν</span></span> | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
 
 ### `diacritics.smoothBreathing`
 
 Initial smooth breathing marks. Defaults to `"preserve"`.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"remove"` | Greek to Greek: `ἐγένετο` gives `εγένετο` instead of `ἐγένετο` | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">ἐγένετο</span> <span class="to">→</span> <span lang="el">ἐγένετο</span></span> |  |
+| `"remove"` | <span class="conversion"><span lang="el">ἐγένετο</span> <span class="to">→</span> <span lang="el">εγένετο</span></span> | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
 
 ### `diacritics.roughBreathing`
 
 Initial rough breathing marks. Defaults to `"preserve"`.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
-| `"remove"` | Greek to Greek: `Ἕλλησιν` gives `Έλλησιν` instead of `Ἕλλησιν` |  |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> <span lang="el">Ἕλλησιν</span></span> | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
+| `"remove"` | <span class="conversion"><span lang="el">Ἕλλησιν</span> <span class="to">→</span> <span lang="el">Έλλησιν</span></span> |  |
 
 ### `diacritics.coronis`
 
 Internal coronides marking crasis. Defaults to `"preserve"`.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"remove"` | Greek to Greek: `κἀγώ` gives `καγώ` instead of `κἀγώ` | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">κἀγώ</span> <span class="to">→</span> <span lang="el">κἀγώ</span></span> |  |
+| `"remove"` | <span class="conversion"><span lang="el">κἀγώ</span> <span class="to">→</span> <span lang="el">καγώ</span></span> | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
 
 ### `diacritics.diaeresis`
 
 Diaeresis marks. Defaults to `"preserve"`.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  | `sbl-general` |
-| `"remove"` | Greek to Greek: `ὑϊός` gives `ὑιός` instead of `ὑϊός` | `ala-lc-ancient`, `ala-lc-modern` |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">ὑϊός</span> <span class="to">→</span> <span lang="el">ὑϊός</span></span> | `sbl-general` |
+| `"remove"` | <span class="conversion"><span lang="el">ὑϊός</span> <span class="to">→</span> <span lang="el">ὑιός</span></span> | `ala-lc-ancient`, `ala-lc-modern` |
 
 ### `diacritics.iotaSubscript`
 
 Iota subscripts. Defaults to `"preserve"`.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"remove"` | Greek to Greek: `ᾠδῇ` gives `ὠδῆ` instead of `ᾠδῇ` | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">ᾠδῇ</span> <span class="to">→</span> <span lang="el">ᾠδῇ</span></span> |  |
+| `"remove"` | <span class="conversion"><span lang="el">ᾠδῇ</span> <span class="to">→</span> <span lang="el">ὠδῆ</span></span> | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
 
 ### `diacritics.quantity`
 
 Explicit macron and breve quantity marks. Defaults to `"preserve"`.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"remove"` | Greek to Greek: `ᾱ̓́` gives `ἄ` instead of `ᾱ̓́` | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">ᾱ̓́</span> <span class="to">→</span> <span lang="el">ᾱ̓́</span></span> |  |
+| `"remove"` | <span class="conversion"><span lang="el">ᾱ̓́</span> <span class="to">→</span> <span lang="el">ἄ</span></span> | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
 
 <!-- END GENERATED OPTION REFERENCE -->
