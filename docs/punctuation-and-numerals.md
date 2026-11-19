@@ -39,8 +39,8 @@ Each reader accepts more than one spelling of a sign, and the output has one:
   the question mark; `·` (U+00B7) and the Greek ano teleia (U+0387) for the
   ano teleia; `-` and `‐` for the hyphen;
 - every reader takes `'`, `ʼ` (U+02BC), `᾽` (U+1FBD), and `’` (U+2019) for the
-  apostrophe, and the Greek reader also the psili `᾿` (U+1FBF) after a letter,
-  which some texts write for the elision (`τ᾿ ἐστί`);
+  apostrophe, and also the psili `᾿` (U+1FBF) after a letter, which some
+  texts write for the elision (`τ᾿ ἐστί`);
 - every reader takes `‿` (U+203F) and the combining U+035C for the enotikon.
 
 Greek output therefore changes these signs in a text converted to itself,

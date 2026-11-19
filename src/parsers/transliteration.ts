@@ -31,6 +31,7 @@ import { parsePunctuation } from "../punctuation.ts";
 import { Trie } from "../trie.ts";
 import { codeUnitTable } from "./code_units.ts";
 import type { ReadPositions } from "./positions.ts";
+import { readSpacingMarks } from "./spacing_marks.ts";
 
 const CANONICAL_ENTRIES = [
   ...Object.entries(ALPHABET)
@@ -450,6 +451,7 @@ export function parseTransliteration(
     for (let k = 0; k < starts.length; k++) starts[k] = offsets[starts[k]];
   }
 
+  readSpacingMarks(text, out, starts);
   if (nasalGamma !== "literal") {
     inferNasalGammas(out, nasalGamma === "nasal-except-kappa");
   }

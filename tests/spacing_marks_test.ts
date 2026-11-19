@@ -64,3 +64,30 @@ test("a psili after a letter is an apostrophe", () => {
   // With an accent on it, it is not.
   assertNfcEquals(convert("α῎", "greek", "greek"), "α῎");
 });
+
+test("every format reads spacing breathings alike", () => {
+  // Text written by 1.0.0-rc.10 from a Greek source that had them reads back.
+  for (
+    const [text, format] of [
+      ["῾*rwmai=oi", "beta-code"],
+      ["῾Rōmaĩoi", "transliteration"],
+    ] as const
+  ) {
+    for (const to of ["greek", "beta-code", "transliteration"] as const) {
+      const once = convert(text, format, to);
+      assertEquals(convert(once, to, to), once, `${text} → ${to}`);
+    }
+    assertNfcEquals(convert(text, format, "greek"), "Ῥωμαῖοι");
+  }
+  assertNfcEquals(convert("t᾿ e)sti/", "beta-code", "greek"), "τ’ ἐστί");
+  assertNfcEquals(convert("t᾿ estí", "transliteration", "greek"), "τ’ ἐστί");
+  // After a letter that the format does not read, a word goes on: the `h`
+  // before a sign is not a breathing, and the sign is not the capital's.
+  const restyled = convert("h῎A", "transliteration", "transliteration");
+  assertEquals(
+    convert(restyled, "transliteration", "transliteration"),
+    restyled,
+  );
+  const spans = convertDetailed("῾*rw", "beta-code", "greek").spans;
+  assertEquals([spans[0].inputStart, spans[0].inputEnd], [0, 3]);
+});

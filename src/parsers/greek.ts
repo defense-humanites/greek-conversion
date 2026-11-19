@@ -1,6 +1,6 @@
 import { BY_GREEK, GREEK_MARKS } from "../alphabet.ts";
 import { greekLower } from "../case.ts";
-import { classifyCoronides, isVowel } from "../context.ts";
+import { classifyCoronides } from "../context.ts";
 import {
   diacriticBit,
   diacriticsFromMask,
@@ -10,9 +10,10 @@ import {
   ownedGrapheme,
   type Token,
 } from "../model.ts";
-import { APOSTROPHE, parsePunctuation } from "../punctuation.ts";
+import { parsePunctuation } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
 import type { ReadPositions } from "./positions.ts";
+import { readSpacingMarks } from "./spacing_marks.ts";
 import {
   LETTERS,
   sharedGrapheme,
@@ -106,69 +107,6 @@ const markBit = (unit: number): number =>
     : 0;
 
 /**
- * The spacing breathings, psili U+1FBF and dasia U+1FFE. NFD keeps them, and
- * splits their compounds with an accent (U+1FCD–U+1FCF, U+1FDD–U+1FDF) into
- * the breathing and a combining accent.
- */
-const PSILI = 0x1fbf;
-const DASIA = 0x1ffe;
-const SMOOTH = diacriticBit("smooth");
-const ROUGH = diacriticBit("rough");
-const ACCENTS = diacriticBit("acute") | diacriticBit("grave") |
-  diacriticBit("circumflex");
-const RHO = LETTERS.indexOf("rho");
-/** Whether a letter takes a breathing: a vowel or rho, by letter index. */
-const TAKES_BREATHING = LETTERS.map((letter) =>
-  letter === "rho" || isVowel(letter)
-);
-
-const isCombining = (unit: number): boolean =>
-  unit >= MARKS_START && unit < MARKS_START + 0x70;
-
-/**
- * A spacing breathing that older typesetting, and the digitizations of it,
- * writes before a capital (`῾Ρωμαῖοι`, `῎Ανθρωπος`): at `start`, the start of
- * a word, followed by nothing but accents or other spacing breathings, then
- * by a capital vowel, or by a capital rho if no accent came. Returns the
- * index of the capital, where its own marks end, and the marks of all of
- * them, which the capital takes as its own; or undefined, and the breathing
- * stays a sign of its own.
- */
-function breathingBeforeCapital(
-  text: string,
-  start: number,
-): { capital: number; end: number; marks: number } | undefined {
-  let marks = 0;
-  let capital = start;
-  for (; capital < text.length; capital++) {
-    const unit = text.charCodeAt(capital);
-    if (unit === PSILI) marks |= SMOOTH;
-    else if (unit === DASIA) marks |= ROUGH;
-    else if (!isCombining(unit)) break;
-    else {
-      const bit = markBit(unit);
-      if (bit === 0 || (bit & ~ACCENTS) !== 0) return undefined;
-      marks |= bit;
-    }
-  }
-  const unit = text.charCodeAt(capital);
-  const letter = letterOf(unit);
-  if (
-    letter === NOT_A_LETTER || !TAKES_BREATHING[letter] ||
-    (FLAGS_OF[unit - LETTERS_START] & 1) === 0 ||
-    // A rho takes a breathing, never an accent.
-    letter === RHO && (marks & ACCENTS) !== 0
-  ) return undefined;
-  let end = capital + 1;
-  for (; end < text.length; end++) {
-    const bit = markBit(text.charCodeAt(end));
-    if (bit === 0) break;
-    marks |= bit;
-  }
-  return { capital, end, marks };
-}
-
-/**
  * Reads Greek. With `share`, equal tokens are one shared object (see
  * `shared_tokens.ts`): only for documents that never reach the caller. With
  * `positions`, records where each token starts in the text read (see
@@ -190,32 +128,8 @@ export function parseGreek(
     if (starts !== undefined) starts.push(i);
 
     if (letter === NOT_A_LETTER) {
-      const joined = (unit === PSILI || unit === DASIA) &&
-          out.at(-1)?.kind !== "grapheme"
-        ? breathingBeforeCapital(text, i)
-        : undefined;
-      if (joined !== undefined) {
-        const capital = text.charCodeAt(joined.capital);
-        const index = letterOf(capital);
-        const flags = FLAGS_OF[capital - LETTERS_START];
-        out.push(
-          share ? sharedGrapheme(index, flags, joined.marks) : ownedGrapheme(
-            LETTERS[index],
-            true,
-            diacriticsFromMask(joined.marks),
-            VARIANTS[flags >> 1],
-          ),
-        );
-        i = joined.end;
-        continue;
-      }
       const source = codePointAt(text, i);
-      // After a letter, a psili is the apostrophe of elision that it looks
-      // like (`τ᾿ ἐστί`), unless an accent stands on it.
-      const value = unit === PSILI && out.at(-1)?.kind === "grapheme" &&
-          !isCombining(text.charCodeAt(i + 1))
-        ? APOSTROPHE
-        : parsePunctuation(source, "greek") ?? source;
+      const value = parsePunctuation(source, "greek") ?? source;
       out.push(share ? sharedLiteral(value) : literal(value));
       i += source.length;
       continue;
@@ -245,6 +159,7 @@ export function parseGreek(
 
   if (starts !== undefined) starts.push(text.length);
 
+  readSpacingMarks(text, out, starts);
   classifyCoronides(out);
 
   return out;

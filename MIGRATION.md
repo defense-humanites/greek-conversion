@@ -32,10 +32,10 @@ Two kinds of input read differently:
 - In Beta Code, every digit after `#` is the number of one TLG code, as
   after `%`: `#12` is kept as text (rc.10: koppa followed by `2`). The codes
   `#`, `#1`, `#2`, `#3`, `#5`, `#22`, and `#401` read as before.
-- In Greek, a spacing breathing at the start of a word, before a capital
-  vowel or rho, is the capital's (`῾Ρωμαῖοι` gives `Ῥωμαῖοι`), and a psili
-  after a letter is an apostrophe (`τ᾿` gives `τ’`); rc.10 kept both as
-  signs of their own.
+- In every format, a spacing breathing at the start of a word, before a
+  capital vowel or rho, is the capital's (`῾Ρωμαῖοι` gives `Ῥωμαῖοι`), and a
+  psili after a letter is an apostrophe (`τ᾿` gives `τ’`); rc.10 kept both
+  as signs of their own.
 
 ## Updating from `1.0.0-rc.9`
 
