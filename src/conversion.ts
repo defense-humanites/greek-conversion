@@ -144,15 +144,28 @@ export function parseResolved(
   read?: ReadPositions,
 ): Document {
   switch (format) {
-    // Greek and Beta Code note the final sigma, which writes a stigma as the
-    // units of a numeral.
     case "greek":
-      return readFinalSigmaStigmas(parseGreek(input, share, read));
+      return readStigmas(input, parseGreek(input, share, read));
     case "beta-code":
-      return readFinalSigmaStigmas(parseBetaCode(input, share, read));
+      return readStigmas(input, parseBetaCode(input, share, read));
     case "transliteration":
       return parseTransliteration(input, options, read);
   }
+}
+
+/**
+ * The right keraia as Greek and Beta Code write it: `ʹ`, the Greek numeral
+ * sign that NFC turns into it, and Beta Code `#`.
+ */
+const KERAIA = /[#\u0374\u02B9]/;
+
+/**
+ * Greek and Beta Code note the final sigma, which writes a stigma as the
+ * units of a numeral, before a right keraia. An input without one, most
+ * text, is not searched for them.
+ */
+function readStigmas(input: string, document: Document): Document {
+  return KERAIA.test(input) ? readFinalSigmaStigmas(document) : document;
 }
 
 /**
