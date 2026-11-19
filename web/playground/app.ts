@@ -2443,16 +2443,42 @@ function update(): void {
   if (!preview) saveState();
 }
 
+const copyTimers = new WeakMap<
+  HTMLButtonElement,
+  ReturnType<typeof setTimeout>
+>();
+/**
+ * Copies a text, as Share copies its link: the button keeps its label, its
+ * icon turns into a check for a moment, and a note under it says that the
+ * text was copied, or, where the clipboard refuses, how to copy it.
+ */
 async function copy(text: string, button: HTMLButtonElement): Promise<void> {
-  const label = button.querySelector(".button-label") ?? button;
-  const original = label.textContent;
+  clearTimeout(copyTimers.get(button));
+  const holder = button.parentElement!;
+  const note = holder.querySelector<HTMLElement>(".copy-note")!;
+  const icon = button.querySelector(".copy-icon")!;
+  const done = button.querySelector(".copy-done")!;
+  let copied = true;
   try {
     await navigator.clipboard.writeText(text);
-    label.textContent = "Copied";
   } catch {
-    label.textContent = "Select and copy manually";
+    copied = false;
   }
-  setTimeout(() => (label.textContent = original), 1600);
+  note.textContent = copied
+    ? "Copied to the clipboard."
+    : "The text could not be copied: select it and copy it by hand.";
+  icon.toggleAttribute("hidden", copied);
+  done.toggleAttribute("hidden", !copied);
+  placeNote(note);
+  holder.classList.add("shown");
+  copyTimers.set(
+    button,
+    setTimeout(() => {
+      holder.classList.remove("shown");
+      icon.removeAttribute("hidden");
+      done.setAttribute("hidden", "");
+    }, copied ? 2000 : 6000),
+  );
 }
 
 let shareTimer: ReturnType<typeof setTimeout> | undefined;
@@ -2497,7 +2523,12 @@ function placeShareNote(): void {
 function placeNote(note: HTMLElement): void {
   note.style.setProperty("--nudge", "0px");
   const margin = 12;
-  const { left, right } = note.getBoundingClientRect();
+  // From its centre and its layout width, as a hidden note is drawn a
+  // little smaller (--squish) before it comes in.
+  const box = note.getBoundingClientRect();
+  const centre = (box.left + box.right) / 2;
+  const left = centre - note.offsetWidth / 2;
+  const right = centre + note.offsetWidth / 2;
   const page = document.documentElement.clientWidth;
   const nudge = right > page - margin
     ? right - (page - margin)

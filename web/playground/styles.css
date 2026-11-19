@@ -353,14 +353,16 @@ h1 span {
   gap: 8px;
 }
 .share,
-.reset {
+.reset,
+.copy-action {
   position: relative;
 }
 /*
- * The note of the Share button: centred under it, with a pointer, in a tint
- * darker than the page, so as not to read as one of the raised pickers.
+ * The notes of the Share, Copy and Reset buttons: centred under the button,
+ * with a pointer, in a tint darker than the page, so as not to read as one
+ * of the raised pickers.
  */
-.share-note,
+.note,
 .reset-note {
   position: absolute;
   top: calc(100% + 12px);
@@ -376,10 +378,13 @@ h1 span {
   font-size: 15px;
   line-height: 21px;
   text-align: center;
-  /* Moved left by --nudge when it would leave the page (placeShareNote). */
-  transform: translateX(calc(-50% - var(--nudge, 0px)));
+  /*
+   * Moved left by --nudge when it would leave the page (placeNote). With
+   * `translate`, not `transform`, so that `scale` grows it from its pointer.
+   */
+  translate: calc(-50% - var(--nudge, 0px)) 0;
 }
-.share-note::before,
+.note::before,
 .reset-note::before {
   content: "";
   position: absolute;
@@ -392,21 +397,42 @@ h1 span {
   background: var(--tip);
   transform: translateX(-50%) rotate(45deg);
 }
-/* Shown on hover and keyboard focus, or after a click, unless dismissed. */
-.share-note {
+/*
+ * A note comes in as the buttons spring back: it fades in while it grows
+ * from 96% to its size with the buttons' overshoot (--ease-bounce, 320ms),
+ * from its pointer; it leaves faster (120ms), shrinking a little as it
+ * fades. Shown on hover and keyboard focus (Share's), or after a click,
+ * unless dismissed.
+ */
+.note {
   visibility: hidden;
   opacity: 0;
-  transition: opacity 0.12s;
+  scale: var(--squish);
+  transform-origin: calc(50% + var(--nudge, 0px)) top;
+  transition:
+    opacity 0.12s ease-in,
+    scale 0.12s ease-in,
+    visibility 0s linear 0.12s;
 }
 .share:hover .share-note,
 .share:has(#share:focus-visible) .share-note,
-.share.shown .share-note {
+.share.shown .share-note,
+.copy-action.shown .copy-note {
   visibility: visible;
   opacity: 1;
+  scale: 1;
+  transition:
+    opacity 0.16s ease-out,
+    scale 0.32s var(--ease-bounce),
+    visibility 0s;
 }
 .share.dismissed .share-note {
   visibility: hidden;
   opacity: 0;
+  scale: var(--squish);
+}
+.copy-action svg[hidden] {
+  display: none;
 }
 /* A bridge over the gap, so that the pointer can reach the note. */
 .share-note::after {
@@ -420,7 +446,22 @@ h1 span {
 .share svg[hidden] {
   display: none;
 }
-/* The note of Reset shows while its Undo is offered. */
+/*
+ * The note of Reset shows while its Undo is offered. It comes in as the
+ * other notes do; it leaves at once, its text gone with the offer.
+ */
+.reset-note {
+  transform-origin: calc(50% + var(--nudge, 0px)) top;
+  transition:
+    opacity 0.16s ease-out,
+    scale 0.32s var(--ease-bounce);
+}
+@starting-style {
+  .reset-note {
+    opacity: 0;
+    scale: var(--squish);
+  }
+}
 .reset-note:empty {
   display: none;
 }
@@ -1896,7 +1937,13 @@ footer strong {
 @media (prefers-reduced-motion: reduce) {
   .tessera .half,
   .disclosure-mark,
-  .share-note {
+  .note,
+  .reset-note,
+  .share:hover .share-note,
+  .share:has(#share:focus-visible) .share-note,
+  .share.shown .share-note,
+  .copy-action.shown .copy-note {
     transition: none;
+    scale: 1;
   }
 }
