@@ -138,15 +138,21 @@ mobile-starlight-toc svg.caret {
 }
 
 /* In the menu below 1100px, the project's links (Playground, Source, npm, JSR)
-   stay at the foot of the screen, on a bar of the page's colour, rather
-   than at the end of the list, which scrolls behind it; the list keeps
-   room below for its last items. */
+   stay at the foot of the menu, on a bar of the page's colour, rather
+   than at the end of the list, which scrolls behind it. The bar sticks to
+   the foot of the menu but is part of the list, whose end it follows: the
+   last items always scroll clear of it, whatever its height (on iOS,
+   Safari draws it taller), where a fixed bar left them under it. */
 @media (max-width: 68.74rem) {
+  .sidebar-pane .sidebar-content div:has(> .mobile-preferences) {
+    display: contents;
+  }
   .sidebar-pane .mobile-preferences {
-    position: fixed;
-    inset-inline: 0;
+    position: sticky;
     bottom: 0;
     z-index: 1;
+    margin-top: auto;
+    margin-inline: calc(-1 * var(--sl-sidebar-pad-x));
     justify-content: center;
     padding: 0.25rem var(--sl-nav-pad-x)
       calc(0.25rem + env(safe-area-inset-bottom));
@@ -164,7 +170,7 @@ mobile-starlight-toc svg.caret {
     column-gap: 0.75rem;
   }
   .sidebar-pane .sidebar-content {
-    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+    padding-bottom: 0;
   }
 }
 
@@ -985,22 +991,21 @@ mobile-starlight-toc .toggle,
     display: none;
   }
   /* The menu opens as a drawer of the sidebar's width, over the page,
-     rather than over the whole screen; its foot keeps that width. */
+     rather than over the whole screen; its foot with it. */
   .sidebar-pane {
     width: var(--sl-sidebar-width);
     border-inline-end: 1px solid var(--line);
     box-shadow: var(--shadow);
   }
   .sidebar-pane .mobile-preferences {
-    inset-inline: 0 auto;
-    width: var(--sl-sidebar-width);
     padding-inline: calc(var(--sl-sidebar-pad-x) + 0.5rem);
-    border-inline-end: 1px solid var(--line);
   }
   /* Its links, at the size of the sidebar's items (14px), on the margins
-     of the group names. */
+     of the group names; 8px apart at least, so that they hold on one line
+     beside a scrollbar that takes room. */
   .sidebar-pane .mobile-preferences .links {
     font-size: 14px;
+    column-gap: 0.5rem;
   }
   body:has(#starlight__sidebar:popover-open) {
     overflow: hidden;
