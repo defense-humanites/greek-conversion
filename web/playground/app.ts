@@ -2571,6 +2571,8 @@ function confirmShare(message: string): void {
 
 async function share(): Promise<void> {
   clearTimeout(shareTimer);
+  // Sharing ends Reset's offer of Undo: one note at a time in the header.
+  hideUndo();
   const holder = shareNote.parentElement;
   holder?.classList.remove("dismissed");
   if (SHARES_NATIVELY) {
@@ -2695,6 +2697,11 @@ function hideUndo(): void {
 
 function resetAll(): void {
   const before = location.hash;
+  // Share's message, if any, gives way to Reset's note.
+  if (shareNote.parentElement!.classList.contains("shown")) {
+    clearTimeout(shareTimer);
+    resetShare();
+  }
   for (const format of FORMATS) delete lastPreset[format];
   setTarget("transliteration");
   applyState(START);

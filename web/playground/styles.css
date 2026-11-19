@@ -429,7 +429,7 @@ h1 span {
     scale 0.32s var(--ease-bounce),
     visibility 0s;
 }
-.share.dismissed .share-note {
+.share.dismissed #share-help {
   visibility: hidden;
   opacity: 0;
   scale: var(--squish);
@@ -483,6 +483,20 @@ h1 span {
 }
 .reset-note:empty {
   display: none;
+}
+/* The two rules that hide Share's note name it by its id: the rule that
+   shows it on keyboard focus names the button by its own. */
+/* One note at a time in the header: while Reset's offers Undo, Share's help
+   waits, rather than lying over it; a click on Share ends the offer
+   (`share`), and a click on Reset ends Share's message (`resetAll`). */
+.page-actions:has(.reset-note:not(:empty)) .share:not(.shown) #share-help {
+  visibility: hidden;
+  opacity: 0;
+  scale: var(--squish);
+  transition:
+    opacity 0.12s ease-in,
+    scale 0.12s ease-in,
+    visibility 0s linear 0.12s;
 }
 .reset-note button {
   margin-left: 6px;
@@ -1963,7 +1977,8 @@ footer strong {
   .disclosure-mark,
   .note,
   .reset-note,
-  .share.dismissed .share-note,
+  .share.dismissed #share-help,
+  .page-actions:has(.reset-note:not(:empty)) .share:not(.shown) #share-help,
   .share:hover .share-note,
   .share:has(#share:focus-visible) .share-note,
   .share.shown .share-note,
