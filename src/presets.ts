@@ -318,55 +318,29 @@ const PRESET_DEFINITIONS = {
       },
     },
   },
-  "sbl-academic": {
-    metadata: {
-      id: "sbl-academic",
-      name: "SBL — Academic style",
-      authority: "Society of Biblical Literature",
-      description:
-        "Academic transliteration retaining the engine's scientific diacritics.",
-      scope: ["Ancient Greek", "Biblical studies"],
-      coverage: "adapted",
-      outOfScopeBehavior: "engine-default",
-      references: [{
-        title: "The SBL Handbook of Style, second edition",
-        url: "https://archive.org/details/sblhandbookofsty0000unse_g7i4/",
-      }],
-      limitations: [
-        "The SBL handbook defines one general-purpose Greek transliteration style; this academic profile is an engine adaptation and not a separate official SBL table.",
-        "The cited Greek table does not provide conversions for the engine's additional archaic letters.",
-      ],
-    },
-    options: {
-      transliteration: {
-        upsilon: "y-with-diphthong-u",
-      },
-    },
-  },
   "sbl-general": {
     metadata: {
       id: "sbl-general",
       name: "SBL — General-purpose style",
       authority: "Society of Biblical Literature",
       description:
-        "Readable transliteration omitting most scholarly diacritics while retaining rough breathing and diaeresis.",
+        "The Greek transliteration of the SBL Handbook: η and ω with a macron, h for the rough breathing, and no accent, iota subscript, or diaeresis.",
       scope: ["Ancient Greek", "Biblical studies", "General readers"],
-      coverage: "adapted",
+      coverage: "complete",
       outOfScopeBehavior: "engine-default",
       references: [{
-        title: "The SBL Handbook of Style, second edition",
+        title: "The SBL Handbook of Style, second edition, §5.3 (Greek)",
         url: "https://archive.org/details/sblhandbookofsty0000unse_g7i4/",
       }],
       limitations: [
-        "The SBL handbook defines one general-purpose Greek transliteration style; the academic/general preset pair should not be read as two official SBL tables.",
-        "The cited Greek table does not provide conversions for the engine's additional archaic letters.",
+        "The Handbook gives one style for Greek, the general-purpose one: for academic readers, it asks for Greek characters.",
+        "The Handbook makes no provision for the digamma or the other archaic letters, and asks for Greek characters where they matter: a converter bound to the preset keeps them in Greek, while convert() writes the engine's spellings.",
       ],
     },
     options: {
       diacritics: {
         all: "remove",
         roughBreathing: "preserve",
-        diaeresis: "preserve",
       },
       transliteration: {
         upsilon: "y-with-diphthong-u",
@@ -596,6 +570,15 @@ const DIACRITIC_CLASSES: readonly string[] = Object.keys(
 /** Each preset's options with `diacritics.all` expanded, filled on first use. */
 const EXPANDED_PRESETS = new Map<Preset, ExpandedOptions>();
 
+/**
+ * Presets removed before 1.0.0, with what to do instead, named in the error
+ * for them.
+ */
+const REMOVED_PRESETS: Readonly<Record<string, string>> = {
+  "sbl-academic":
+    "the SBL Handbook defines no academic style for Greek; the defaults write what it wrote, so omit the preset",
+};
+
 /** Values renamed before 1.0.0, named in the error for the old value. */
 const RENAMED_VALUES: Readonly<
   Record<string, Readonly<Record<string, string>>>
@@ -796,7 +779,6 @@ export function isCharacterInPresetScope(
       return ALA_LC_NUMERAL_ONLY.has(letter) &&
         isGreekNumeralContext(document, index);
     case "perseus":
-    case "sbl-academic":
     case "sbl-general":
       return false;
     case "bnf-core":
@@ -840,10 +822,13 @@ function registeredDefinition(
   prefix = "",
 ): PresetDefinition {
   if (!Object.hasOwn(PRESET_DEFINITIONS, preset)) {
+    const removed = Object.hasOwn(REMOVED_PRESETS, preset)
+      ? REMOVED_PRESETS[preset]
+      : undefined;
     throw new OptionError(
       `Unknown conversion preset${
         prefix === "" ? "" : ` for ${prefix}preset`
-      }: ${preset}`,
+      }: ${preset}${removed === undefined ? "" : ` (removed: ${removed})`}`,
       {
         path: `${prefix}preset`,
         received: preset,

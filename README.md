@@ -64,10 +64,8 @@ The package is ESM-only and ships its own type declarations.
 ```ts
 import { convert } from "@humanities/greek-conversion";
 
-// Ancient Greek, in the SBL academic style
-convert("Ἕλλησιν ἐγένετο", "greek", "transliteration", {
-  preset: "sbl-academic",
-});
+// Ancient Greek, with every accent and breathing
+convert("Ἕλλησιν ἐγένετο", "greek", "transliteration");
 // → Héllēsin egéneto
 
 // Beta Code, as the TLG writes it

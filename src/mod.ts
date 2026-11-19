@@ -139,8 +139,9 @@ export type {
  * conversion is not necessarily lossless; use {@link convertDetailed} when
  * that distinction matters.
  *
- * Without a preset, transliteration follows the SBL academic style, which the
- * `sbl-academic` preset names.
+ * Without a preset, transliteration is the library's own: the letters of the
+ * SBL Handbook of Style, with the accents, iota subscript, diaeresis, and
+ * quantity marks that the Handbook leaves out.
  *
  * @throws {TypeError} If `input` is not a string.
  * @throws {RangeError} If a format is unknown; an {@link OptionError} (a

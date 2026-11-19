@@ -173,7 +173,6 @@ const PROFILES = [
   { name: "ISO 843 Type 1 preset", options: { preset: "iso-843-type-1" } },
   { name: "ancient ALA-LC preset", options: { preset: "ala-lc-ancient" } },
   { name: "modern ALA-LC preset", options: { preset: "ala-lc-modern" } },
-  { name: "academic SBL preset", options: { preset: "sbl-academic" } },
   { name: "general SBL preset", options: { preset: "sbl-general" } },
   { name: "TLG core preset", options: { preset: "tlg-core" } },
   { name: "BnF core preset", options: { preset: "bnf-core" } },

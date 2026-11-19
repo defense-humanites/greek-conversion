@@ -378,10 +378,6 @@ test("bound preset scopes match the audited additional-letter matrix", () => {
       ["digamma", "yot", "stigma", "koppa", "archaic-koppa", "sampi"],
     ],
     [
-      "sbl-academic",
-      ["digamma", "yot", "stigma", "koppa", "archaic-koppa", "sampi"],
-    ],
-    [
       "sbl-general",
       ["digamma", "yot", "stigma", "koppa", "archaic-koppa", "sampi"],
     ],

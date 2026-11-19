@@ -31,7 +31,6 @@ matrix records only the six additional entries.
 | `iso-843-type-1` | Exact | Exact | Undefined | Undefined | Unresolved | Undefined |
 | `iso-843-type-2` | Exact | Exact | Undefined | Undefined | Unresolved | Undefined |
 | `perseus` | Outside | Outside | Outside | Outside | Outside | Outside |
-| `sbl-academic` | Outside | Outside | Outside | Outside | Outside | Outside |
 | `sbl-general` | Outside | Outside | Outside | Outside | Outside | Outside |
 | `tlg-core` | Exact | Exact | Exact | Exact | Exact | Exact |
 
@@ -102,12 +101,12 @@ twenty-four letters as its exact semantic allow-list.
 
 ### SBL
 
-The SBL handbook provides one general-purpose Greek transliteration table and
-explicitly leaves distinctions such as digamma to Greek type when they matter.
-The library's `sbl-academic` preset is an adapted scientific profile, not a
-second official SBL table. Both presets should therefore treat the six
-additional entries as outside their cited SBL scope, while retaining their
-existing `adapted` coverage label.
+The SBL Handbook provides one Greek transliteration, a general-purpose one
+(§5.3): for academic readers, it asks for Greek characters, and it leaves
+distinctions such as the digamma to Greek type when they matter. `sbl-general`
+therefore treats the six additional entries as outside its scope. The library
+had a second preset, `sbl-academic`, which the Handbook does not define: it
+was removed before `1.0.0`, and the defaults write what it wrote.
 
 ### TLG
 

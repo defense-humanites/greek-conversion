@@ -16,6 +16,17 @@ npx jsr add @humanities/greek-conversion@1.0.0-rc.10
 
 The package is ESM-only.
 
+## Updating from `1.0.0-rc.10`
+
+The `sbl-academic` preset is removed: the SBL Handbook of Style defines no
+academic transliteration of Greek. The defaults write what it wrote, so
+remove `preset: "sbl-academic"`, and write `source: {}` for
+`source: { preset: "sbl-academic" }`; the old name throws an `OptionError`.
+
+`sbl-general` writes no diaeresis, as the Handbook provides for none:
+`ἀΐδιος` gives `aidios` (rc.10: `aïdios`). Add
+`diacritics: { diaeresis: "preserve" }` to keep it.
+
 ## Updating from `1.0.0-rc.9`
 
 Six kinds of input convert differently. The first two concern every

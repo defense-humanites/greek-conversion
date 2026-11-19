@@ -276,7 +276,6 @@ export type Preset =
   | "iso-843-type-1"
   | "iso-843-type-2"
   | "perseus"
-  | "sbl-academic"
   | "sbl-general"
   | "tlg-core";
 
@@ -332,7 +331,7 @@ export interface TransliterationOptions {
   phi?: PhiTransliteration;
   /** Chi transliteration. Defaults to `"ch"`. */
   chi?: ChiTransliteration;
-  /** Upsilon transliteration. Defaults to `"y-with-diphthong-u"`, the SBL academic spelling; `"y-with-au-eu-ou"` uses `u` only in the three cited pairs. */
+  /** Upsilon transliteration. Defaults to `"y-with-diphthong-u"`, the spelling of the SBL Handbook; `"y-with-au-eu-ou"` uses `u` only in the three cited pairs. */
   upsilon?: UpsilonTransliteration;
   /** Transliteration of `μπ`. Defaults to `"mp"`. */
   muPi?: MuPiTransliteration;
@@ -466,7 +465,7 @@ export interface ConversionOptions {
    * ```ts
    * reencode("tōn barbarōn", "transliteration", {
    *   preset: "ala-lc-modern",
-   *   source: { preset: "sbl-academic" },
+   *   source: { preset: "sbl-general" },
    * }); // "tōn varvarōn"
    * ```
    */
@@ -502,7 +501,10 @@ export interface ResolvedConversionOptions {
 
 /** Read-only view exposed by {@link DEFAULT_CONVERSION_OPTIONS}. */
 export interface DefaultConversionOptions {
-  /** Literal default transliteration spellings: SBL academic style. */
+  /**
+   * Literal default transliteration spellings: the letters of the SBL
+   * Handbook, with the marks it leaves out.
+   */
   readonly transliteration: {
     readonly beta: "b";
     readonly eta: "e";
@@ -720,8 +722,10 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
 /**
  * Complete, immutable defaults used when no preset or custom option overrides
  * them. Inspect this value in an IDE to discover the engine's effective
- * baseline configuration. The default transliteration is the SBL academic
- * style: without a preset, `convert()` writes what `sbl-academic` writes.
+ * baseline configuration. The default transliteration is the library's own:
+ * the letters of the SBL Handbook of Style (§5.3), which `sbl-general`
+ * writes, with the accents, iota subscript, diaeresis, and quantity marks
+ * that the Handbook leaves out.
  */
 export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
   .freeze(

@@ -7,6 +7,32 @@ change.
 
 ## [Unreleased]
 
+### Removed
+
+- The `sbl-academic` preset. The SBL Handbook of Style gives Greek a single
+  transliteration, for general readers (§5.3), and asks for Greek characters
+  for academic readers: it defines no academic style, which the preset's name
+  claimed. The defaults write what the preset wrote, so leaving it out
+  changes nothing; `preset: "sbl-academic"` now throws an `OptionError` that
+  says so. The documentation describes the default transliteration as the
+  library's own: the letters of the Handbook, with the accents, iota
+  subscript, diaeresis, and quantity marks that the Handbook leaves out.
+
+### Changed
+
+- `sbl-general` writes no diaeresis, which the SBL Handbook does not provide
+  for: `ἀΐδιος` gives `aidios` (rc.10: `aïdios`). An upsilon written `y`
+  still says that it is not in a diphthong (`Θύιλλος` gives `Thyillos`). The
+  preset cites §5.3 of the Handbook, and its coverage becomes `complete`.
+- The README presents the library by task, for Ancient and Byzantine Greek
+  and for Modern Greek, says what the presets are tested against, and shows
+  what a conversion loses. Its example is that of the site's home page, which
+  `npm run check` keeps identical, and converts Ancient Greek without a
+  preset, "with every accent and breathing". The tables of the presets guide
+  give the default in a row of its own, and the playground describes it as
+  the letters of the SBL Handbook with the marks that the Handbook leaves
+  out; a link shared with `sbl-academic` opens the defaults.
+
 ## [1.0.0-rc.10] - 2026-11-19
 
 Tenth release candidate for `1.0.0`. Greek output writes the acutes of

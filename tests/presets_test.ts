@@ -19,7 +19,6 @@ test("exposes descriptive metadata for every preset", () => {
     "iso-843-type-1",
     "iso-843-type-2",
     "perseus",
-    "sbl-academic",
     "sbl-general",
     "tlg-core",
   ]);
@@ -350,18 +349,18 @@ test("applies modern ALA-LC contextual spellings", () => {
   );
 });
 
-test("distinguishes academic and general SBL diacritics", () => {
+test("the SBL preset writes no mark but the rough breathing", () => {
+  // The SBL Handbook (§5.3) makes no provision for accents, the iota
+  // subscript, or the diaeresis, which the default transliteration keeps.
   assertNfcEquals(
-    convert("ἄϋλος υἱός", "greek", "transliteration", {
-      preset: "sbl-academic",
-    }),
-    "áÿlos huiós",
+    convert("ἄϋλος υἱός ᾠδῇ Ἠσαΐας", "greek", "transliteration"),
+    "áÿlos huiós ō̧dȩ̄̃ Ēsaḯas",
   );
   assertNfcEquals(
-    convert("ἄϋλος υἱός", "greek", "transliteration", {
+    convert("ἄϋλος υἱός ᾠδῇ Ἠσαΐας", "greek", "transliteration", {
       preset: "sbl-general",
     }),
-    "aÿlos huios",
+    "aylos huios ōdē Ēsaias",
   );
 });
 
@@ -437,33 +436,32 @@ test("convertDetailed reports losses introduced by presets", () => {
   ]);
 });
 
-test("the default transliteration is the SBL academic style", () => {
+test("the default transliteration is the SBL letters with every mark", () => {
   const texts = [
     "Θουκυδίδης Ἀθηναῖος ξυνέγραψε τὸν πόλεμον τῶν Πελοποννησίων καὶ Ἀθηναίων",
     "ψυχή ῥήτωρ αὐτός Ἅιδης ὑΐδιον εὕρηκα οὗτος ἄϋλος Μοῦσα",
     "ΑΙΑΣ Αἴας ᾍδης ῠ ῡ υἱός",
   ];
   for (const text of texts) {
+    // Without its marks, the default writes what `sbl-general` writes.
+    const bare = {
+      diacritics: { all: "remove", roughBreathing: "preserve" },
+    } as const;
     for (const from of ["greek", "beta-code"] as const) {
       const input = convert(text, "greek", from);
       assertEquals(
-        convert(input, from, "transliteration"),
-        convert(input, from, "transliteration", { preset: "sbl-academic" }),
+        convert(input, from, "transliteration", bare),
+        convert(input, from, "transliteration", { preset: "sbl-general" }),
         text,
       );
     }
-    const latin = convert(text, "greek", "transliteration");
-    assertEquals(
-      convert(latin, "transliteration", "greek"),
-      convert(latin, "transliteration", "greek", { preset: "sbl-academic" }),
-    );
   }
   assertEquals(
     DEFAULT_CONVERSION_OPTIONS.transliteration.upsilon,
     "y-with-diphthong-u",
   );
   assertEquals(
-    resolveConversionOptions({ preset: "sbl-academic" }),
-    resolveConversionOptions(),
+    resolveConversionOptions({ preset: "sbl-general" }).transliteration,
+    resolveConversionOptions().transliteration,
   );
 });

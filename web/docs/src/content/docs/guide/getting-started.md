@@ -57,10 +57,12 @@ convert(thucydides, "greek", "transliteration", {
 // → Héllīsin ’egéneto kaì mérei tinì tō̂n varvárōn
 ```
 
-Without a preset, the transliteration is the SBL academic style. Removing the
-diacritics but keeping the rough breathing keeps its `h`: in Latin script it is
-a letter. Every conversion also works in reverse, and when it matters whether
-you can get back to where you started, `convertDetailed()` tells you:
+Without a preset, the transliteration is the library's own: the letters of the
+SBL Handbook, with the accents, iota subscript, diaeresis, and quantity marks
+that the Handbook leaves out. Removing the diacritics but keeping the rough
+breathing keeps its `h`: in Latin script it is a letter. Every conversion also
+works in reverse, and when it matters whether you can get back to where you
+started, `convertDetailed()` tells you:
 
 ```ts
 import { convert, convertDetailed } from "@humanities/greek-conversion";

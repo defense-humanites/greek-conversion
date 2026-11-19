@@ -28,7 +28,6 @@ const PRESETS = [
   "iso-843-type-1",
   "iso-843-type-2",
   "perseus",
-  "sbl-academic",
   "sbl-general",
   "tlg-core",
 ] as const;
@@ -91,7 +90,7 @@ test("source restyles a transliteration that its options would read otherwise", 
     assertNfcEquals(
       reencode(input, "transliteration", {
         ...options,
-        source: { preset: "sbl-academic" },
+        source: {},
       }),
       restyled,
       label,
@@ -215,7 +214,7 @@ test("convertDetailed reports what a restyle loses", () => {
     "tōn barbarōn",
     "transliteration",
     "transliteration",
-    { preset: "ala-lc-modern", source: { preset: "sbl-academic" } },
+    { preset: "ala-lc-modern", source: {} },
   );
   assertNfcEquals(restyle.output, "tōn varvarōn");
   assertEquals(restyle.lossy, false);
@@ -243,7 +242,7 @@ test("a converter reads the input as source describes it", () => {
   const modern = createConverter({ preset: "ala-lc-modern" });
   assertNfcEquals(
     modern.convert("tōn barbarōn", "transliteration", "transliteration", {
-      source: { preset: "sbl-academic" },
+      source: {},
     }),
     "tōn varvarōn",
   );

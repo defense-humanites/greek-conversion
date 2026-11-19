@@ -102,7 +102,7 @@ Selects `ch` or `kh` for chi in transliteration.
 
 ### `transliteration.upsilon`
 
-Upsilon transliteration. Defaults to `"y-with-diphthong-u"`, the SBL academic spelling; `"y-with-au-eu-ou"` uses `u` only in the three cited pairs.
+Upsilon transliteration. Defaults to `"y-with-diphthong-u"`, the spelling of the SBL Handbook; `"y-with-au-eu-ou"` uses `u` only in the three cited pairs.
 
 Selects the transliterated spelling of upsilon.
 
@@ -112,7 +112,7 @@ Selects the transliterated spelling of upsilon.
 | --- | --- | --- |
 | `"u"` | Greek to transliteration: `ὑπὲρ` gives `hupèr` instead of `hypèr` |  |
 | `"y"` | Greek to transliteration: `εὐθύς` gives `eythýs` instead of `euthýs` |  |
-| `"y-with-diphthong-u"`, the default |  | `ala-lc-ancient`, `ala-lc-modern`, `sbl-academic`, `sbl-general` |
+| `"y-with-diphthong-u"`, the default |  | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
 | `"y-with-au-eu-ou"` | Greek to transliteration: `ηὑρέθη` gives `hēyréthē` instead of `hēuréthē` | `bnf-core`, `iso-843-type-1` |
 | `"y-with-ou-v-f"` | Greek to transliteration: `εὐθύς` gives `efthýs` instead of `euthýs` | `iso-843-type-2` |
 
@@ -563,8 +563,8 @@ Diaeresis marks. Defaults to `"preserve"`.
 
 | Value | Example | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  | `sbl-general` |
-| `"remove"` | Greek to Greek: `ὑϊός` gives `ὑιός` instead of `ὑϊός` | `ala-lc-ancient`, `ala-lc-modern` |
+| `"preserve"`, the default |  |  |
+| `"remove"` | Greek to Greek: `ὑϊός` gives `ὑιός` instead of `ὑϊός` | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
 
 ### `diacritics.iotaSubscript`
 

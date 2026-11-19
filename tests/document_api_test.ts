@@ -131,7 +131,6 @@ test("preset Greek views remain valid across source formats", () => {
     "iso-843-type-1",
     "iso-843-type-2",
     "perseus",
-    "sbl-academic",
     "sbl-general",
     "tlg-core",
   ] as const;

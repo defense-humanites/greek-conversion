@@ -333,12 +333,18 @@ test("writes vowel pairs as they read back, under the ISO and SBL presets", () =
   assertNfcEquals(convert("ηὔδα", "greek", "transliteration", iso), "’ívda");
   assertNfcEquals(convert("ηὕηνα", "greek", "transliteration", iso), "hívina");
   assertNfcEquals(reencode("toú’mpalin", "transliteration", iso), "toú’mpalin");
-  // sbl-general removes the accent that marks the hiatus of υι: y says it,
-  // and the diaeresis that the reader infers from it is written at once.
-  const sbl = { preset: "sbl-general" } as const;
+  // Without its accent, the hiatus of υι is said by y, and the diaeresis
+  // that the reader infers from it is written at once. sbl-general writes no
+  // diaeresis, which the SBL Handbook does not provide for: y alone says it.
   assertNfcEquals(
-    convert("Θύιλλος", "greek", "transliteration", sbl),
+    convert("Θύιλλος", "greek", "transliteration", {
+      diacritics: { accents: "remove" },
+    }),
     "Thyïllos",
+  );
+  assertNfcEquals(
+    convert("Θύιλλος", "greek", "transliteration", { preset: "sbl-general" }),
+    "Thyillos",
   );
   // A separation diaeresis goes before the accent, where a written one would.
   assertNfcEquals(

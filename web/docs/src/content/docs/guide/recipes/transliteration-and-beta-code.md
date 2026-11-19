@@ -66,7 +66,7 @@ import { reencode } from "@humanities/greek-conversion";
 
 reencode("tōn barbarōn", "transliteration", {
   preset: "ala-lc-modern",
-  source: { preset: "sbl-academic" },
+  source: { preset: "sbl-general" },
 });
 // → tōn varvarōn
 

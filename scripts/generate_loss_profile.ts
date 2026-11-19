@@ -16,7 +16,6 @@ import {
   getPresetOptions,
   listPresetMetadata,
   type Preset,
-  resolveConversionOptions,
 } from "../src/mod.ts";
 import { parse } from "../src/document.ts";
 
@@ -86,15 +85,18 @@ if (process.argv.includes("--check")) {
 }
 
 function render(): string {
-  const rows = listPresetMetadata().map(({ id }) => {
-    const to = targetOf(id);
-    const name = to === "transliteration" && isDefault(id)
-      ? `\`${id}\`, the default`
-      : `\`${id}\``;
-    return `| ${name} | ${lost(MONOTONIC, to, id)} | ${
-      lost(POLYTONIC, to, id)
-    } |`;
-  });
+  // The default transliteration first: no preset names it.
+  const rows = [
+    `| No preset (the default) | ${lost(MONOTONIC, "transliteration")} | ${
+      lost(POLYTONIC, "transliteration")
+    } |`,
+    ...listPresetMetadata().map(({ id }) => {
+      const to = targetOf(id);
+      return `| \`${id}\` | ${lost(MONOTONIC, to, id)} | ${
+        lost(POLYTONIC, to, id)
+      } |`;
+    }),
+  ];
   return [
     START,
     "<!-- This section is generated. Do not edit it directly. -->",
@@ -110,12 +112,6 @@ function render(): string {
   ].join("\n");
 }
 
-/** Whether a preset resolves to the options of a conversion without one. */
-function isDefault(preset: Preset): boolean {
-  return JSON.stringify(resolveConversionOptions({ preset })) ===
-    JSON.stringify(resolveConversionOptions());
-}
-
 /** The format a preset writes: Beta Code if it sets only Beta Code options. */
 function targetOf(preset: Preset): Format {
   const groups = Object.keys(getPresetOptions(preset));
@@ -125,7 +121,7 @@ function targetOf(preset: Preset): Format {
 }
 
 /** What `convertDetailed()` reports as lost, in words. */
-function lost(text: string, to: Format, preset: Preset): string {
+function lost(text: string, to: Format, preset?: Preset): string {
   const { losses } = convertDetailed(text, "greek", to, { preset });
   if (losses.length === 0) return "Nothing";
   const document = parse(text, "greek");
