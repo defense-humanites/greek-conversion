@@ -39,7 +39,11 @@ rc.9.
 
 `createConverter()` rejects an unknown key of its configuration with an
 `OptionError`, as conversion options do; rc.9 ignored it, so that a
-misspelled `exclude` excluded nothing.
+misspelled `exclude` excluded nothing. An invalid `outOfScopeBehavior`, or an
+identifier of `repertoire` or `exclude` that names no character, now throws
+an `OptionError` too, a `RangeError`, where rc.9 threw a `TypeError`: code
+that tells a misconfigured converter by `instanceof TypeError` should test
+`instanceof OptionError`.
 
 ## Updating from `1.0.0-rc.8`
 

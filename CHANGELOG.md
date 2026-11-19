@@ -192,9 +192,15 @@ change.
   accepted and excluded nothing. An unknown key, of the configuration, of an
   alias (`aliases[0].spelings`), or of a custom character
   (`characters[0].forms.betacode`), throws an `OptionError` whose `path`
-  names it and whose `accepted` lists the keys allowed there. A configuration,
-  a list, or a definition of the wrong type throws a `TypeError` that says
-  which, where it failed on a property of `undefined`.
+  names it and whose `accepted` lists the keys allowed there. So does a value
+  outside a known set, as an option value does: an out-of-scope behavior
+  (`outOfScopeBehavior: "rejct"`), an identifier of `repertoire` or `exclude`
+  that names no character (`path: "exclude[1]"`), both a `TypeError` in rc.9,
+  and the letter of an alias, which rc.9 accepted, then failed on at the
+  first conversion. A configuration, a list, a definition, or a field of the
+  wrong type throws a `TypeError` that says which (`aliases[0].spellings`, a
+  string, or `characters[0].override`, `"yes"`, which rc.9 took for `true`),
+  where it failed on a property of `undefined`.
 - ISO 843 Type 2 (`iso-843-type-2`) writes `ωυ` letter by letter, as note 8
   requires of a combination that Table 2 does not list: `ἑωυτοῦ` gives
   `heoytoû` (rc.9: `heoutoû`). Omega was written as it reads back, omicron,

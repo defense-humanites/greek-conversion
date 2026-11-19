@@ -37,7 +37,9 @@ protects these behaviors.
   `FORMATS` and `CONVERSION_OPTION_VALUES` list everything that is accepted.
   Every option value is plain ASCII. The configuration of `createConverter()`
   is checked the same way: an unknown key, of the configuration, of an alias,
-  or of a custom character, throws an `OptionError`.
+  or of a custom character, throws an `OptionError`, as does a value outside a
+  known set (an out-of-scope behavior, the letter of an alias, a character
+  identifier).
 
 The first three properties are checked for every preset and every format pair
 on each change, over a corpus of difficult forms
