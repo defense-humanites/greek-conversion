@@ -102,15 +102,16 @@ Some signs of Byzantine manuscripts and of their digitizations are kept but
 not interpreted. None is ever dropped: each is copied to the output as it
 is, in every format, Beta Code included.
 
-| In the text                                | Today                                                                           |
-| ------------------------------------------ | ------------------------------------------------------------------------------- |
-| `ϗ`, the abbreviation of καί               | Copied as it is, not read as the word                                           |
-| `ȣ`, the ligature of ου                    | Copied as it is                                                                 |
-| `ϛ` inside a word, as the ligature of στ   | Read as the letter stigma: `ἐϛὶ` gives `ec̄ì`                                    |
-| The overline of nomina sacra, as in `θ̅ς̅`   | Copied on the letters as an unknown mark: `th̅s̅`; abbreviations are not expanded |
-| Byzantine punctuation, such as `⸒` and `⁘` | Copied as it is                                                                 |
+| In the text                              | Today                                                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------- |
+| `ϗ`, the abbreviation of καί             | Copied as it is, not read as the word                                           |
+| `ȣ`, the ligature of ου                  | Copied as it is                                                                 |
+| `ϛ` inside a word, as the ligature of στ | Read as the letter stigma: `ἐϛὶ` gives `ec̄ì`                                    |
+| The overline of nomina sacra, as in `θ̅ς̅` | Copied on the letters as an unknown mark: `th̅s̅`; abbreviations are not expanded |
 
 Beta Code input keeps the TLG codes of these signs as text: `#1532`, the καί
-symbol, and `#532`, the hypodiastole, give `#1532` and `#532`. Musical
-notation and the conventions of diplomatic editions are outside the scope of
-the library.
+symbol, gives `#1532`. Byzantine punctuation, such as the hypodiastole `⸒`
+and the four dots `⁘`, is copied in Greek and transliteration, and Beta Code
+writes it with the TLG's codes, `#532` and `#544`, which it reads back.
+Musical notation and the conventions of diplomatic editions are outside the
+scope of the library.

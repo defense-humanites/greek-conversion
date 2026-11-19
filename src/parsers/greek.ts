@@ -13,7 +13,7 @@ import {
 import { parsePunctuation } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
 import type { ReadPositions } from "./positions.ts";
-import { readSpacingMarks } from "./spacing_marks.ts";
+import { mayHaveSpacingSigns, readSpacingMarks } from "./spacing_marks.ts";
 import {
   LETTERS,
   sharedGrapheme,
@@ -159,7 +159,7 @@ export function parseGreek(
 
   if (starts !== undefined) starts.push(text.length);
 
-  readSpacingMarks(text, out, starts);
+  if (mayHaveSpacingSigns(text)) readSpacingMarks(out, starts);
   classifyCoronides(out);
 
   return out;

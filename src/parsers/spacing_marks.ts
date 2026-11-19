@@ -20,6 +20,13 @@ const SPACING_BASES = new Set([0x1fbf, 0x1ffe, 0x00a8]);
 const SPACING_SIGN =
   /[\u00A8\u0385\u1FBF\u1FC1\u1FCD-\u1FCF\u1FDD-\u1FDF\u1FED\u1FEE\u1FFE]/;
 
+/**
+ * Whether a text may have a spacing sign, so that its reader calls
+ * {@link readSpacingMarks}; a Beta Code text may also write one as a code.
+ */
+export const mayHaveSpacingSigns = (text: string): boolean =>
+  SPACING_SIGN.test(text);
+
 const ACCENTS: ReadonlySet<Diacritic> = new Set([
   "acute",
   "grave",
@@ -27,13 +34,19 @@ const ACCENTS: ReadonlySet<Diacritic> = new Set([
 ]);
 
 /**
- * Whether a token is a letter: a Greek letter, or one that the format does
- * not read (a Latin `h` with no vowel after it in transliteration). A word
- * goes on after it.
+ * Whether a token ends with a letter: a Greek letter, or one that the format
+ * does not read (a Latin `h` with no vowel after it in transliteration).
+ * With `digits`, a digit counts as well, which a numeral may become in the
+ * output. Only the last character of a literal counts, so that a code read
+ * as one piece of text (`%811`) and the same text read one character at a
+ * time agree.
  */
-const isLetter = (token: Token | undefined): boolean =>
-  token?.kind === "grapheme" ||
-  token?.kind === "literal" && /^\p{L}/u.test(token.value);
+function endsWithLetter(token: Token | undefined, digits = false): boolean {
+  if (token === undefined) return false;
+  if (token.kind === "grapheme") return true;
+  const last = token.value.at(-1)!;
+  return digits ? /[\p{L}\p{N}]/u.test(last) : /\p{L}/u.test(last);
+}
 
 /** The accent of a literal that is one combining accent, or undefined. */
 function accentOf(value: string): Diacritic | undefined {
@@ -70,24 +83,18 @@ function breathingMarks(value: string): Diacritic[] | undefined {
  *
  * - a spacing sign and the combining accents after it are one literal, the
  *   sign that Unicode composes (`᾿` and an acute, `῎`);
- * - at the start of a word (not after a letter), spacing breathings, with
+ * - at the start of a word (not after a letter or a digit), spacing breathings, with
  *   their accents, before a capital vowel, or before a capital rho if no
  *   accent came, are the capital's: older typesetting, and the digitizations
  *   of it, writes `῾Ρωμαῖοι` for `Ῥωμαῖοι`;
  * - after a letter, a psili is the apostrophe of elision that it looks like
  *   (`τ᾿ ἐστί`).
  *
- * Elsewhere, the signs stay as they are. `text` is the text read, and
- * `starts`, when given, loses the starts of the tokens joined to the one
- * before them.
+ * Elsewhere, the signs stay as they are. `starts`, when given, loses the
+ * starts of the tokens joined to the one before them. A reader calls it only
+ * on a text that may have a spacing sign ({@link mayHaveSpacingSigns}).
  */
-export function readSpacingMarks(
-  text: string,
-  tokens: Token[],
-  starts?: number[],
-): void {
-  if (!SPACING_SIGN.test(text)) return;
-
+export function readSpacingMarks(tokens: Token[], starts?: number[]): void {
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
     if (
@@ -111,8 +118,11 @@ export function readSpacingMarks(
     if (token.kind !== "literal") continue;
     let marks = breathingMarks(token.value);
     if (marks === undefined) continue;
-    if (isLetter(tokens[i - 1])) {
-      if (token.value === PSILI) tokens[i] = literal(APOSTROPHE);
+    const previous = tokens[i - 1];
+    if (endsWithLetter(previous, true)) {
+      if (token.value === PSILI && endsWithLetter(previous)) {
+        tokens[i] = literal(APOSTROPHE);
+      }
       continue;
     }
     let capital = i + 1;

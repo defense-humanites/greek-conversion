@@ -9,16 +9,15 @@ import {
   diacriticsFromMask,
   type Document,
   type GlyphVariant,
-  grapheme,
   type Letter,
   literal,
   ownedGrapheme,
   type Token,
 } from "../model.ts";
-import { parsePunctuation } from "../punctuation.ts";
+import { parsePunctuation, TLG_SIGNS } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
 import type { ReadPositions } from "./positions.ts";
-import { readSpacingMarks } from "./spacing_marks.ts";
+import { mayHaveSpacingSigns, readSpacingMarks } from "./spacing_marks.ts";
 import {
   LETTERS,
   sharedGrapheme,
@@ -113,7 +112,6 @@ const PERCENT = 0x25;
 const LEFT_BRACKET = 0x5b;
 const RIGHT_BRACKET = 0x5d;
 const DIGIT_0 = 0x30;
-const DIGIT_1 = 0x31;
 const DIGIT_9 = 0x39;
 
 /**
@@ -144,6 +142,21 @@ export function parseBetaCode(
 
     let marks = 0;
     if (upper) [i, marks] = consumeMarks(text, i);
+
+    const hash = text.charCodeAt(i) === HASH ? digitsEnd(text, i + 1) : NO_CODE;
+    const hashLetter = hash === NO_CODE
+      ? undefined
+      : HASH_LETTERS.get(text.slice(i + 1, hash));
+    if (
+      upper && !(hashLetter !== undefined && marks === 0) &&
+      signAt(text, i) !== undefined
+    ) {
+      // Before anything but a letter, `*` is an asterisk, and what follows
+      // it is read as if it were not there.
+      out.push(literal("*"));
+      i = start + 1;
+      continue;
+    }
 
     // `s3` is the lunate sigma, and `s1` and `s2` the medial and final
     // sigma, which have no capital (`*s1` is a capital sigma and a digit).
@@ -177,55 +190,38 @@ export function parseBetaCode(
       continue;
     }
 
-    const hash = text.charCodeAt(i) === HASH ? digitsEnd(text, i + 1) : NO_CODE;
-    const hashLetter = hash === NO_CODE
-      ? undefined
-      : HASH_LETTERS.get(text.slice(i + 1, hash));
     if (hashLetter !== undefined && marks === 0) {
-      out.push(grapheme(hashLetter, upper));
-      i = hash;
+      // Marks follow the code, as they follow a letter.
+      [i, marks] = consumeMarks(text, hash);
+      out.push(
+        ownedGrapheme(hashLetter, upper, diacriticsFromMask(marks)),
+      );
       continue;
     }
 
-    const parenthesis = parenthesisAt(text, i);
-    if (parenthesis !== undefined) {
-      // After `*`, as before any character that is not a letter, the prefix
-      // is kept as text.
-      if (upper) {
-        out.push(literal(text.slice(start, i)));
-        if (starts !== undefined) starts.push(i);
-      }
-      out.push(share ? sharedLiteral(parenthesis) : literal(parenthesis));
-      i += 2;
+    const sign = upper ? undefined : signAt(text, i);
+    if (sign !== undefined) {
+      out.push(share ? sharedLiteral(sign.value) : literal(sign.value));
+      i = sign.end;
       continue;
     }
 
-    if (hash !== NO_CODE && !upper) {
-      const number = text.slice(i + 1, hash);
-      const value = number === ""
-        ? DEXIA_KERAIA
-        : number === "22"
-        ? ARISTERI_KERAIA
-        : text.slice(i, hash);
-      out.push(share ? sharedLiteral(value) : literal(value));
-      i = hash;
+    if (i >= text.length && upper) {
+      out.push(literal("*"));
+      i = start + 1;
       continue;
-    }
-
-    if (i >= text.length) {
-      if (upper) out.push(literal(text.slice(start, i)));
-      break;
     }
 
     const unit = text.charCodeAt(i);
     const letter = letterOf(unit);
 
     if (letter === NOT_A_LETTER) {
-      const source = codePointAt(text, i);
       if (upper) {
-        out.push(literal(text.slice(start, i)));
-        if (starts !== undefined) starts.push(i);
+        out.push(literal("*"));
+        i = start + 1;
+        continue;
       }
+      const source = codePointAt(text, i);
       out.push(share ? sharedLiteral(source) : literal(source));
       i += source.length;
       continue;
@@ -243,7 +239,9 @@ export function parseBetaCode(
 
   if (starts !== undefined) starts.push(text.length);
 
-  readSpacingMarks(text, out, starts);
+  if (mayHaveSpacingSigns(text) || text.includes("%")) {
+    readSpacingMarks(out, starts);
+  }
   classifyCoronides(out);
 
   return out;
@@ -283,17 +281,42 @@ function digitsEnd(text: string, start: number): number {
   return index;
 }
 
+/** Whether `code` is a mark after a letter: `%26`, the macron, or `%27`. */
+export const isMarkCode = (code: string): boolean =>
+  code[0] === "%" && PERCENT_MARK_BIT.has(code.slice(1));
+
 /**
- * The parenthesis that a TLG bracket code writes at `start`: `[1` or `]1`.
- * The number is every digit after the bracket, so `[10` is another bracket,
- * kept as text like the other bracket codes.
+ * Whether the reader keeps `code`, a `%` or `#` and its digits, as text: no
+ * letter, keraia, or sign of the TLG that the library knows.
  */
-function parenthesisAt(text: string, start: number): "(" | ")" | undefined {
+export function isUnreadCode(code: string): boolean {
+  return code !== "#" && code !== "#22" && !TLG_SIGNS.has(code) &&
+    !(code[0] === "#" && HASH_LETTERS.has(code.slice(1)));
+}
+
+/**
+ * The sign that a TLG code writes at `start`, and where the code ends: `%`,
+ * `#`, `[`, or `]`, and every digit after it (`#12` is not koppa and `2`,
+ * and `[10` another bracket than `[1`). `#` alone is the keraia and `#22` the lower
+ * keraia. A `%` or `#` code that writes no sign the library knows is kept
+ * as text, whole, and a bracket code as the bracket and its digits, read
+ * one by one.
+ */
+function signAt(
+  text: string,
+  start: number,
+): { value: string; end: number } | undefined {
   const unit = text.charCodeAt(start);
-  if (unit !== LEFT_BRACKET && unit !== RIGHT_BRACKET) return undefined;
   if (
-    text.charCodeAt(start + 1) !== DIGIT_1 ||
-    digitsEnd(text, start + 1) !== start + 2
+    unit !== PERCENT && unit !== HASH && unit !== LEFT_BRACKET &&
+    unit !== RIGHT_BRACKET
   ) return undefined;
-  return unit === LEFT_BRACKET ? "(" : ")";
+  const end = digitsEnd(text, start + 1);
+  const code = text.slice(start, end);
+  const sign = TLG_SIGNS.get(code);
+  if (sign !== undefined) return { value: sign, end };
+  if (unit === LEFT_BRACKET || unit === RIGHT_BRACKET) return undefined;
+  if (code === "#") return { value: DEXIA_KERAIA, end };
+  if (code === "#22") return { value: ARISTERI_KERAIA, end };
+  return { value: code, end };
 }

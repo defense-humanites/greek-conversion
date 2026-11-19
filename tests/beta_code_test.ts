@@ -35,10 +35,25 @@ test("separates semantic case from Beta Code ASCII case", () => {
   );
 });
 
-test("preserves incomplete uppercase Beta Code prefixes", () => {
-  for (const input of ["*(", "*(?", "*(#1", "*#22", "*%26"]) {
-    assertNfcEquals(reencode(input, "beta-code"), input);
+test("reads * before anything but a letter as an asterisk", () => {
+  // The TLG writes the asterisk %2. Before anything but a letter, * is one,
+  // and what follows it is read as if it were not there.
+  for (
+    const [input, written] of [
+      ["*(", "%2[1"],
+      ["*(?", "%2[1?"],
+      ["*(#1", "%2[1#1"],
+      ["*#22", "%2#22"],
+      ["*%26", "%2%26"],
+    ]
+  ) {
+    assertNfcEquals(reencode(input, "beta-code"), written);
+    assertNfcEquals(
+      convert(written, "beta-code", "greek"),
+      convert(input, "beta-code", "greek"),
+    );
   }
+  assertNfcEquals(convert("*(#1", "beta-code", "greek"), "*(ϟ");
   assertNfcEquals(convert("*#1", "beta-code", "greek"), "Ϟ");
   assertNfcEquals(convert("*(/A", "beta-code", "greek"), "Ἅ");
 });
@@ -73,8 +88,9 @@ test("reads and writes vowel quantity with the TLG percent codes", () => {
     convert("ᾱ ᾰ", "greek", "beta-code", { preset: "tlg-core" }),
     "A%26 A%27",
   );
-  // The code is every digit after %: %260 and %2 are not quantity marks.
-  assertNfcEquals(convert("a%260 a%2", "beta-code", "greek"), "α%260 α%2");
+  // The code is every digit after %: %260 is no quantity mark, and %2 is
+  // the asterisk.
+  assertNfcEquals(convert("a%260 a%2", "beta-code", "greek"), "α%260 α*");
   // A percent code belongs to the span of its letter.
   const { spans } = convertDetailed("a)/%26 *%27a", "beta-code", "greek");
   assertEquals(
@@ -107,10 +123,10 @@ test("writes and reads parentheses with the TLG bracket codes", () => {
   assertNfcEquals(written, "dhse[1n]1");
   assertNfcEquals(reencode(written, "beta-code", options), written);
   // The number is every digit after the bracket: [10 is another bracket,
-  // kept as text like the other bracket codes and the bare brackets.
+  // kept as text like the bare brackets, and [2 the angle bracket.
   assertNfcEquals(
     convert("[10a]10 [2a]2 [a]", "beta-code", "greek"),
-    "[10α]10 [2α]2 [α]",
+    "[10α]10 ⟨α⟩ [α]",
   );
   // ( and ) after a letter stay breathings.
   assertNfcEquals(convert("a) a(", "beta-code", "greek"), "ἀ ἁ");
@@ -126,17 +142,21 @@ test("reads a bracket code after an asterisk, and reports a digit after a bracke
   // As before any character that is not a letter, * is kept as text.
   assertNfcEquals(convert("*[1a]1", "beta-code", "greek"), "*(α)");
   // The number after a bracket is read whole, as in the TLG: [11 is another
-  // bracket, so a parenthesis before a digit does not read back.
-  assertNfcEquals(convert("(1)", "greek", "beta-code"), "[11]1");
+  // bracket. Before a digit, a parenthesis is written as itself, which reads
+  // back as one where no letter comes before it.
   assertNfcEquals(convert("[11]1", "beta-code", "greek"), "[11)");
-  assertEquals(convertDetailed("(1)", "greek", "beta-code").lossy, true);
+  assertNfcEquals(convert("(1)", "greek", "beta-code"), "(1]1");
+  assertEquals(convertDetailed("(1)", "greek", "beta-code").lossy, false);
+  assertNfcEquals(convert("α(1)", "greek", "beta-code"), "a[11]1");
+  assertEquals(convertDetailed("α(1)", "greek", "beta-code").lossy, true);
 });
 
 test("reads a TLG # code to its last digit", () => {
-  // As for % and the brackets, the number is every digit after #: #12 is the
-  // obelus, #532 the hypodiastole, #1532 the καί symbol, none a letter
-  // followed by digits. A code the library does not read is kept whole.
-  for (const code of ["#6", "#10", "#12", "#13", "#532", "#544", "#1532"]) {
+  // As for % and the brackets, the number is every digit after #: #10 is
+  // the reversed lunate sigma, #12 the obelus, #1532 the καί symbol, none a
+  // letter followed by digits. A code the library does not read is kept as
+  // text, whole.
+  for (const code of ["#7", "#10", "#12", "#300", "#1532"]) {
     const result = convertDetailed(`a)lla/ ${code} kai/`, "beta-code", "greek");
     assertNfcEquals(result.output, `ἀλλά ${code} καί`);
     assertEquals(result.lossy, false, code);
@@ -157,10 +177,12 @@ test("reads a TLG # code to its last digit", () => {
   // A capital marker before another code is kept as text, as before any
   // character that is not a letter.
   assertNfcEquals(convert("*#12", "beta-code", "greek"), "*#12");
-  // The code is one token, and its span covers it whole.
+  // A code read as a sign is one token, whose span covers it whole.
   const spans = convertDetailed("a#532b", "beta-code", "greek").spans;
   assertEquals(spans.length, 3);
   assertEquals([spans[1].inputStart, spans[1].inputEnd], [1, 5]);
+  // After a letter, a % code that is no mark is kept as text too, whole.
+  assertEquals(reencode("a%40 a%265", "beta-code"), "a%40 a%265");
 });
 
 test("reports a TLG code that a digit would extend", () => {
@@ -178,5 +200,66 @@ test("reports a TLG code that a digit would extend", () => {
     const result = convertDetailed(greek, "greek", "beta-code", options);
     assertEquals(result.output.toLowerCase(), beta, greek);
     assertEquals(result.lossy, true, greek);
+  }
+});
+
+test("reads and writes signs with their TLG codes", () => {
+  const signs = [
+    ["⟨λόγος⟩ {α} ⟦β⟧", "[2lo/gos]2 [3a]3 [4b]4"],
+    ["†λόγος† —", "%lo/gos% _"],
+    ["λόγος/ψυχή *α α: β 50% #", "lo/gos%3yuxh/ %2a a%10 b 50%8 %101"],
+    ["! | = + \\ ^ ~", "%4 %5 %6 %7 %103 %104 %107"],
+    ["• ‡ § ˈ ¦ ‖", "%11 %13 %14 %15 %16 %17"],
+    ["⸏ ⸐ ※ ⸖", "#6 #8 #13 #14"],
+    ["ὅ⸒τι ⁘ ⁙ ⁚", "o(/#532ti #544 #55 #73"],
+    [
+      "᾿ ῾ ´ ` ῀ ῎ ῞ ῝ ῟ ¨ ΅ ῍ ῏",
+      "%30 %31 %32 %33 %34 %35 %36 %37 %38 %39 %132 %133 %134",
+    ],
+  ] as const;
+  for (const [greek, beta] of signs) {
+    const result = convertDetailed(greek, "greek", "beta-code");
+    assertEquals(result.output, beta);
+    assertEquals(result.lossy, false, greek);
+    assertNfcEquals(convert(beta, "beta-code", "greek"), greek);
+  }
+  // Other spellings of the angle brackets, and codes read but not written.
+  assertNfcEquals(convert("〈α〉 〈β〉", "greek", "greek"), "⟨α⟩ ⟨β⟩");
+  assertNfcEquals(convert("%1 %12", "beta-code", "greek"), "; *");
+  // `#12` and `#17`, which the TLG gives as a dash and a solidus, and the
+  // codes of signs that are mark-up when bare, stay text.
+  assertNfcEquals(
+    convert("#12 #17 %9 %98 #15 #18", "beta-code", "greek"),
+    "#12 #17 %9 %98 #15 #18",
+  );
+  assertEquals(convert("a < b & c", "greek", "beta-code"), "a < b & c");
+});
+
+test("writes a sign as itself before a digit where it reads back", () => {
+  // A digit after a code would extend it: `#1` and `2` are `#12`.
+  for (
+    const [greek, beta] of [
+      ["1/2", "1/2"],
+      ["(1)", "(1]1"],
+      ["†1", "†1"],
+      ["⟨1⟩", "⟨1]2"],
+    ]
+  ) {
+    const result = convertDetailed(greek, "greek", "beta-code");
+    assertEquals(result.output, beta, greek);
+    assertEquals(result.lossy, false, greek);
+  }
+  // After a letter, a mark sign would be the letter's; and `:` is always
+  // the ano teleia, `%5` the vertical bar.
+  // A `#` before digits is written as itself where it makes a code read as
+  // text, which reads back as one piece: the loss reported is only that.
+  assertEquals(convert("#25", "greek", "beta-code"), "#25");
+  assertNfcEquals(convert("#25", "beta-code", "greek"), "#25");
+  for (const greek of ["α/2", "α(1)", "10:30", "%5", "#1"]) {
+    assertEquals(
+      convertDetailed(greek, "greek", "beta-code").lossy,
+      true,
+      greek,
+    );
   }
 });

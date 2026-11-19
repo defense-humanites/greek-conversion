@@ -58,8 +58,9 @@ import type {
 } from "./options.ts";
 import { greekUpper } from "./case.ts";
 import { applyGreekOrthography, isNumeralUnits } from "./orthography.ts";
+import { isMarkCode, isUnreadCode } from "./parsers/beta_code.ts";
 import { joinPieces, type WrittenPositions } from "./parsers/positions.ts";
-import { encodePunctuation } from "./punctuation.ts";
+import { encodePunctuation, TLG_CODE_OF } from "./punctuation.ts";
 import {
   applyGreekUnicode,
   normalizeGreek,
@@ -386,6 +387,54 @@ function writesIotaAdscript(
     (policy === "adscript" || token.uppercase);
 }
 
+/** The Beta Code of the signs that it writes with a code. */
+const BETA_SIGN_CODES: ReadonlyMap<string, string> = new Map([
+  ...TLG_CODE_OF,
+  [DEXIA_KERAIA, "#"],
+  [ARISTERI_KERAIA, "#22"],
+]);
+
+/** A code that a digit after it would extend: `%`, `#`, or one with digits. */
+const EXTENDED_CODE = /[%#\d]$/;
+
+/** Signs that the Beta Code reader reads as marks after a letter. */
+const MARK_SIGNS = new Set(["(", ")", "/", "\\", "=", "+", "|"]);
+
+/**
+ * Whether Beta Code reads `sign`, written as itself after `previous` and
+ * before `digits`, back as itself: a sign outside ASCII; `#` or `%` when it
+ * makes with the digits a code read as text (`#25`), and no mark after a
+ * letter (`%26`); `:` never, the ano teleia; and the other signs, except
+ * those that are marks after a letter when they follow one.
+ */
+function readsBackAsItself(
+  sign: string,
+  previous: Token | undefined,
+  digits: string,
+): boolean {
+  if (sign.charCodeAt(0) >= 0x80) return true;
+  if (sign === ":") return false;
+  if (sign === "#" || sign === "%") {
+    const code = sign + digits;
+    return isUnreadCode(code) &&
+      !(previous?.kind === "grapheme" && isMarkCode(code));
+  }
+  return !MARK_SIGNS.has(sign) || previous?.kind !== "grapheme";
+}
+
+/** The digits that the literals from `start` begin with. */
+function digitsFrom(document: Document, start: number): string {
+  let digits = "";
+  for (let index = start; index < document.length; index++) {
+    const token = document[index];
+    if (token.kind !== "literal") break;
+    const match = /^\d*/.exec(token.value)![0];
+    digits += match;
+    if (match.length < token.value.length) break;
+  }
+  return digits;
+}
+
 /**
  * Writes Beta Code. With `written`, records the range of each token's output
  * (see `parsers/positions.ts`).
@@ -402,15 +451,19 @@ export function encodeBetaCode(
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
       if (isKeptLetter(token)) return token.value;
-      if (token.value === DEXIA_KERAIA) {
-        // `#` and a digit are a TLG character code (`#1` is koppa): before a
-        // digit, the keraia is written as itself, which reads back as one.
-        const next = rendered[index + 1];
-        const unit = next?.kind === "literal" ? next.value.charCodeAt(0) : 0;
-        return unit >= 0x30 && unit <= 0x39 ? DEXIA_KERAIA : "#";
+      const code = BETA_SIGN_CODES.get(token.value);
+      if (code === undefined) {
+        return encodePunctuation(token.value, "beta-code") ?? token.value;
       }
-      if (token.value === ARISTERI_KERAIA) return "#22";
-      return encodePunctuation(token.value, "beta-code") ?? token.value;
+      // A digit after a code would extend it into another (`#1` is koppa,
+      // `#12` the obelus): before one, a sign is written as itself where it
+      // reads back as itself.
+      if (!EXTENDED_CODE.test(code)) return code;
+      const digits = digitsFrom(rendered, index + 1);
+      return digits !== "" &&
+          readsBackAsItself(token.value, rendered[index - 1], digits)
+        ? token.value
+        : code;
     }
     let base = token.letter === "sigma"
       ? betaSigma(doc, index, token, options, quotations)

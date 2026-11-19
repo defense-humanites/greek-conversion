@@ -25,8 +25,9 @@ import { parse, validateDocument } from "../src/document.ts";
  * diaeresis, explicit quantity marks, archaic letters and numerals, lunate
  * and medial variants, monotonic and uncial text, Greek punctuation, rough
  * breathings inside a word, where the h meets a consonant, spacing
- * breathings before a capital and after a letter, and archaic letters that a
- * digit extends into another TLG code in Beta Code.
+ * breathings before a capital and after a letter, archaic letters that a
+ * digit extends into another TLG code in Beta Code, and signs that Beta
+ * Code writes with a TLG code.
  */
 const WORDS = [
   "ἄνθρωπος",
@@ -138,6 +139,14 @@ const WORDS = [
   "ὅσ᾿",
   "ςϛ5",
   "σϟ2",
+  "⟨λόγ⟩ος",
+  "†ἄνθρωπος†",
+  "ὅ⸒τι",
+  "1/2",
+  "(1)",
+  "*α",
+  "50%",
+  "λόγος/ψυχή",
 ] as const;
 
 const SEPARATORS = [" ", " ", ", ", "\n", " · "] as const;

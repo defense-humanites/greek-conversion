@@ -27,11 +27,20 @@ remove `preset: "sbl-academic"`, and write `source: {}` for
 `ἀΐδιος` gives `aidios` (rc.10: `aïdios`). Add
 `diacritics: { diaeresis: "preserve" }` to keep it.
 
-Two kinds of input read differently:
+Beta Code writes many signs with the TLG's codes, which it reads back:
+`/` is `%3`, `*` `%2`, `:` `%10`, `†` `%`, `⟨` `[2` (see the reference on
+punctuation for the others). Text that rc.10 wrote reads as it did, except
+where it has `%` or `_`, which are now the dagger and the dash.
+
+Three kinds of input read differently:
 
 - In Beta Code, every digit after `#` is the number of one TLG code, as
   after `%`: `#12` is kept as text (rc.10: koppa followed by `2`). The codes
-  `#`, `#1`, `#2`, `#3`, `#5`, `#22`, and `#401` read as before.
+  `#`, `#1`, `#2`, `#3`, `#5`, `#22`, and `#401` read as before; the codes
+  of signs give the signs (`#532` gives `⸒`, `%` `†`, `_` `—`).
+- In Beta Code, `*` before anything but a letter is an asterisk, and what
+  follows it is read without it: `*(` is an asterisk and a parenthesis
+  (rc.10: one piece of text).
 - In every format, a spacing breathing at the start of a word, before a
   capital vowel or rho, is the capital's (`῾Ρωμαῖοι` gives `Ῥωμαῖοι`), and a
   psili after a letter is an apostrophe (`τ᾿` gives `τ’`); rc.10 kept both

@@ -18,6 +18,7 @@ writes them:
 | Hyphen | `‐` (U+2010) | `-` | `-` |
 | Enotikon | `‿` | `‿` | `‿` |
 | Parentheses | `(` and `)` | `[1` and `]1` | `(` and `)` |
+| Dash | `—` (U+2014) | `_` | `—` |
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
@@ -28,8 +29,9 @@ convert(greek, "greek", "transliteration"); // → tí? naí; all’ oũn (hōs)
 convert(greek, "greek", "beta-code"); // → ti/; nai/: a)ll' ou)=n [1w(s]1.
 ```
 
-The full stop, the comma, the exclamation mark, quotation marks, and square
-brackets are literals: every format copies them.
+The full stop, the comma, quotation marks, and square brackets are literals:
+every format copies them. So are the other signs, but Beta Code writes many
+of them with the TLG's codes (see [Signs with a TLG code](#signs-with-a-tlg-code)).
 
 ### Spellings read
 
@@ -41,7 +43,10 @@ Each reader accepts more than one spelling of a sign, and the output has one:
 - every reader takes `'`, `ʼ` (U+02BC), `᾽` (U+1FBD), and `’` (U+2019) for the
   apostrophe, and also the psili `᾿` (U+1FBF) after a letter, which some
   texts write for the elision (`τ᾿ ἐστί`);
-- every reader takes `‿` (U+203F) and the combining U+035C for the enotikon.
+- every reader takes `‿` (U+203F) and the combining U+035C for the enotikon,
+  and `⟨` (U+27E8), `〈` (U+2329), and `〈` (U+3008) for the left angle
+  bracket, which the output writes `⟨`, and the same for the right one;
+- the Beta Code reader takes `_` for the dash, as the TLG does.
 
 Greek output therefore changes these signs in a text converted to itself,
 without loss, since their meaning is kept:
@@ -64,6 +69,57 @@ In transliteration, `transliteration.hyphen: "typographic"` writes the hyphen
 `‐`, and `transliteration.enotikon: "hyphen"` writes the enotikon `-`, which
 then reads back as a hyphen.
 
+### Signs with a TLG code
+
+In Beta Code, `(` and `/` are marks, `*` marks a capital, `:` is the ano
+teleia, and `%`, `#`, `[`, and `]` begin a code. The TLG therefore writes
+these signs, and others that are not ASCII, with codes of their own (*Beta
+Code Manual*, §3), which the library reads and writes:
+
+| Sign | Code | Sign | Code | Sign | Code |
+| --- | --- | --- | --- | --- | --- |
+| `(` `)` | `[1` `]1` | `\|` | `%5` | `᾿` (psili) | `%30` |
+| `⟨` `⟩` | `[2` `]2` | `=` | `%6` | `῾` (dasia) | `%31` |
+| `{` `}` | `[3` `]3` | `+` | `%7` | `´` | `%32` |
+| `⟦` `⟧` | `[4` `]4` | `%` | `%8` | `` ` `` | `%33` |
+| `†` | `%` | `:` | `%10` | `῀` | `%34` |
+| `*` | `%2` | `•` | `%11` | `῎` `῞` `῝` `῟` | `%35` to `%38` |
+| `/` | `%3` | `‡` | `%13` | `¨` | `%39` |
+| `!` | `%4` | `§` | `%14` | `΅` `῍` `῏` | `%132` to `%134` |
+| `\` | `%103` | `ˈ` | `%15` | `⸏` (paragraphos) | `#6` |
+| `^` | `%104` | `¦` | `%16` | `⸐` | `#8` |
+| `~` | `%107` | `‖` | `%17` | `※` | `#13` |
+| `#` | `%101` | `⁙` | `#55` | `⸖` | `#14` |
+| `⸒` (hypodiastole) | `#532` | `⁚` | `#73` | `⁘` | `#544` |
+
+The reader also takes `%1` for the question mark and `%12` for the asterisk.
+The TLG writes the spacing breathings of a lacuna `%30` and `%31` as U+02BC
+and U+02BD, which every reader takes for an apostrophe; the library reads
+them as the Greek psili and dasia. As in the TLG, the number of a code is
+every digit after it; a code the library does not know is kept as text,
+`#1532` or `%40`, and so are `#12` and `#17`, obeli that the TLG gives as a
+dash and a solidus. Before anything but a letter, `*` is an asterisk.
+
+The codes of `&`, `"`, `<`, and `>` (`%9`, `%98`, `#18`, and `#15`) are
+left out: bare, the TLG uses these signs for mark-up (a font, quotation
+marks, an overline), which the reader keeps as text, and the writer writes
+them bare, so that Beta Code converted to itself keeps its mark-up.
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("†⟨λόγος⟩† ὅ⸒τι", "greek", "beta-code");
+// → %[2lo/gos]2% o(/#532ti
+convert("[2lo/gos]2 _ %", "beta-code", "greek"); // → ⟨λόγος⟩ — †
+```
+
+A digit after a code would make it another (`#1` and `2` are `#12`): before
+a digit, a sign is written as itself where it reads back as itself, as a
+sign outside ASCII does, or a parenthesis or a solidus after anything but a
+letter (`1/2` and `(1)` give `1/2` and `(1]1`). Where it does not, the sign
+is lost, and `convertDetailed()` reports it (see
+[Canonical spelling and Unicode](information-loss.md#canonical-spelling-and-unicode)).
+
 ### Consequences
 
 - **The whole text is read as Greek.** In a text that mixes Greek with
@@ -71,9 +127,11 @@ then reads back as a hyphen.
   rest: a `?` becomes `;` in Greek output, and a `;` becomes `?` in
   transliteration (see
   [Guarantees and limits](guarantees.md#text-that-mixes-greek-with-another-language)).
-- **A colon is a literal in Greek**, and is copied. In Beta Code it would
-  read back as an ano teleia, and `convertDetailed()` reports it
-  (`unrepresented-literal`). So does a parenthesis followed by a digit (see
+- **A colon is a literal in Greek**, and is copied. Beta Code writes it
+  `%10`, since `:` is the ano teleia there; before a digit, as in `10:30`, it
+  cannot be written, and `convertDetailed()` reports it
+  (`unrepresented-literal`). So does a parenthesis after a letter and before
+  a digit (see
   [Canonical spelling and Unicode](information-loss.md#canonical-spelling-and-unicode)).
 - **An apostrophe written for a smooth breathing or a coronis**
   (`smoothBreathing: "apostrophe"`, `coronis: "apostrophe"`) reads back as

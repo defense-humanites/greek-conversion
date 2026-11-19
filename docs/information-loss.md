@@ -59,21 +59,26 @@ canonical document. An asterisk is the sole uppercase marker. Consequently,
 uppercase alpha.
 
 Beta Code writes parentheses as the TLG bracket codes `[1` and `]1`, since `(`
-and `)` are breathings. As in the TLG, the number of a bracket, `#`, or `%`
-code is every digit after it: `[10` is another bracket code, `#12` is the
-obelus, not koppa followed by `2`, and `%265` is no macron. The reader knows
-`[1` and `]1`, `#` and `#22` (the keraiai), `#1`, `#2`, `#3`, `#5`, and `#401`
-(koppa, stigma, archaic koppa, sampi, and yot), and `%26` and `%27` (macron
-and breve); it keeps any other code as text, a `#` code whole: `#532`, the
-hypodiastole, gives `#532`. A code followed by a digit therefore does not
-read back: `(1)` is written `[11]1`, which reads as `[11)`, `[1]` reads as
-`(]`, `ϟ2` is written `#12`, and `ᾱ5` `a%265`. `convertDetailed()` reports the
-loss. A keraia followed by a digit is written as itself, `ʹ`: `αʹ1` gives
-`aʹ1`.
+and `)` are breathings, and other signs with their TLG codes too, those that
+it would read as something else and many that are not ASCII (see
+[Signs with a TLG code](punctuation-and-numerals.md#signs-with-a-tlg-code)).
+As in the TLG, the number of a bracket, `#`, or `%` code is every digit after
+it: `[10` is another bracket code, `#12` is not koppa followed by `2`, and
+`%265` is no macron. The reader keeps a code it does not know as text, a `#`
+or `%` code whole: `#1532`, the καί symbol, gives `#1532`. Since a digit
+after a code would extend it, a sign before a digit is written as itself
+where it reads back as itself: a sign outside ASCII (`αʹ1` gives `aʹ1`), or a
+parenthesis or a solidus that no letter precedes (`(1)` gives `(1]1`).
+Otherwise it does not read back: `α(1)` is written `a[11]1`, which reads as
+`α[11)`, `[1]` reads as `(]`, `ϟ2` is written `#12`, and `ᾱ5` `a%265`.
+`convertDetailed()` reports the loss.
 
 As in the TLG, `'` is the apostrophe (U+2019): `ἀλλ’` gives `a)ll'`. The font
 shifts `&` (Latin) and `$` (Greek) are not interpreted: they are kept as text,
 and the letters after them are still read as Beta Code, so `&x` gives `&χ`.
+Before anything but a letter, `*` is an asterisk, which is written `%2`, and
+what follows it is read as if it were not there: `*(` gives `*(`, and
+converted to itself, `%2[1`.
 
 Unrecognized characters, including unrecognized combining marks, remain
 literals and are preserved.

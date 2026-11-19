@@ -45,19 +45,41 @@ change.
   Code, rc.10: `o(/s1᾿ a)\n`). Elsewhere, the signs are kept as before. Text
   that rc.10 wrote from such a source reads back: `῾*rwmai=oi` and
   `῾Rōmaĩoi` give `Ῥωμαῖοι`.
+- Beta Code reads and writes signs with the TLG's codes (*Beta Code Manual*,
+  §3), listed in the reference on punctuation: the ASCII signs that Beta
+  Code would read as something else (`/` is `%3`, `*` `%2`, `:` `%10`, `%`
+  `%8`, `#` `%101`), the dagger (`%`), the dash (`_`), the angle brackets,
+  braces, and double square brackets (`[2`, `[3`, `[4`), editorial signs (the
+  paragraphos `#6`), Byzantine punctuation (`⸒` `#532`, `⁘` `#544`), and the
+  spacing accents and breathings of a lacuna (`%30` to `%39`, `%132` to
+  `%134`). rc.10 wrote them as themselves: `λόγος/ψυχή` gave `lo/gos/yuxh/`,
+  which read back with an acute on the sigma, and `*α` gave `*a`, a capital;
+  they now give `lo/gos%3yuxh/` and `%2a`. Before a digit, which would
+  extend a code, a sign is written as itself where it reads back as itself:
+  `(1)` gives `(1]1`, which reads back (rc.10: `[11]1`, which did not). The
+  codes of `&`, `"`, `<`, and `>` are left out, since the TLG uses these
+  signs, bare, for mark-up, which Beta Code converted to itself keeps. Every
+  reader takes `〈` (U+2329 or U+3008) for `⟨`, and the right bracket
+  likewise. Before anything but a letter, `*` is an asterisk, and what
+  follows it is read as if it were not there: `*(` was one piece of text,
+  and is now an asterisk and a parenthesis.
 
 ### Fixed
 
 - The Beta Code reader takes every digit after `#` as the number of one TLG
   code, as it did for `%` and the brackets: `#12`, the obelus, was read as
   koppa followed by `2`, `#532`, the hypodiastole, as sampi followed by `32`,
-  and `#6`, the paragraphos, as a keraia followed by `6`. The codes the
-  library reads are unchanged (`#`, `#1`, `#2`, `#3`, `#5`, `#22`, `#401`);
-  any other is kept as text, whole. A letter written as a code before a digit
+  and `#6`, the paragraphos, as a keraia followed by `6`. The letters and
+  the keraiai read as before (`#`, `#1`, `#2`, `#3`, `#5`, `#22`, `#401`),
+  the signs as above, and any other code is kept as text, whole. A letter
+  written as a code before a digit
   (`ϛ5`, which gives `#25`) therefore no longer reads back, like a
   parenthesis before a digit, and `convertDetailed()` reports the loss; a
   sigma before it is written as one that ends its word, so that the output
   stays idempotent.
+- The Beta Code reader reads the marks after a letter written as a `#` code,
+  as after any letter: `#1/`, which Beta Code output gives for a koppa with
+  an acute, was read as a koppa followed by `/`.
 
 ## [1.0.0-rc.10] - 2026-11-19
 
