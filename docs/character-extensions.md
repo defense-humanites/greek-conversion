@@ -73,8 +73,8 @@ character:
 - has an alphabetic-numeral value;
 - belongs to any bundled preset.
 
-The lowercase or uppercase form is selected from the semantic case recognized
-in the source. General output options such as `text.letterCase` and `betaCode.case`
+The lowercase or uppercase form is selected from the semantic case recognized in
+the source. General output options such as `text.letterCase` and `betaCode.case`
 do not rewrite opaque forms; declare the exact forms required by the custom
 profile. Beta Code input remains ASCII-case-insensitive, and `*` remains the
 only semantic uppercase marker.
@@ -248,12 +248,12 @@ every such occurrence, with the same source token indices as
 literal: strict mode checks recognized characters, not arbitrary text.
 
 Rejection checks a recognized character against the converter's effective
-repertoire and the known missing mappings for the bound preset and target.
-It does not guarantee a reversible or fully standards-conformant conversion.
-For example, a strict BnF converter accepts `αʹ` and emits `á`, whose numeral
-mark cannot be recovered reliably. This can have `lossy: true` without scope
-diagnostics. Check `convertDetailed().losses` independently
-when these distinctions matter. See the [preset behavior audit](preset-behavior-audit.md)
+repertoire and the known missing mappings for the bound preset and target. It
+does not guarantee a reversible or fully standards-conformant conversion. For
+example, a strict BnF converter accepts `αʹ` and emits `á`, whose numeral mark
+cannot be recovered reliably. This can have `lossy: true` without scope
+diagnostics. Check `convertDetailed().losses` independently when these
+distinctions matter. See the [preset behavior audit](preset-behavior-audit.md)
 for other rules that require contextual information.
 
 ## Preset boundary

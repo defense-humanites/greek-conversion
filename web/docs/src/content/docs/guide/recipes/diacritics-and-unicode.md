@@ -83,7 +83,7 @@ and the diaeresis is kept. Monosyllables lose their accent, except disjunctive
 `ποῦ`, `πῶς`). The rules are applied mechanically from the written text: a
 monosyllable by synizesis such as `γιὰ` keeps its accent, and a word of one
 vowel loses it even where usage keeps it (`ό,τι`, the abbreviation `κ.ά.`). See
-[Greek accentuation and Unicode](/reference/greek-unicode/#accentuation-systems).
+[Greek output](/reference/greek-unicode/#accentuation-systems).
 
 ## Control Greek Unicode output
 
@@ -106,4 +106,4 @@ const styled = reencode("ά;", "greek", {
 
 These are representation choices: they never change the text's meaning, and
 they are not reported as loss. See
-[Greek accentuation and Unicode](/reference/greek-unicode/).
+[Greek output](/reference/greek-unicode/).

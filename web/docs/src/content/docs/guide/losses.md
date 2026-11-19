@@ -7,6 +7,8 @@ Some conversions necessarily merge distinctions. `convertDetailed()` runs the
 conversion once and reports, token by token, what the target cannot express and
 where, so that an application can warn about a loss, highlight it, or rely on
 a round trip.
+[What formats and options lose](/guide/format-and-option-losses/) says which
+distinctions each format and option can lose, in general.
 
 ## What a conversion loses
 
@@ -90,7 +92,7 @@ The loss codes are:
 | `unrepresented-literal`  | A literal token                                                                                                                     |
 
 See the
-[information-loss matrix](/reference/information-loss/)
+[information-loss contract](/reference/information-loss/)
 for each format pair and option, and the
 [conversion-analysis contract](/reference/conversion-analysis/)
 for the result format.

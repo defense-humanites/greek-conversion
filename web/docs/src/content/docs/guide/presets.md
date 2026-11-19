@@ -3,11 +3,11 @@ title: "Choosing a preset"
 description: "The presets that implement published conventions, what each one loses, and how to refine them."
 ---
 
-A preset bundles the options that implement one published convention, so that
-a single name selects a romanization standard or a Beta Code dialect. This
-page lists the nine presets, compares how each one writes Greek and what it
-loses, and shows how your own options refine one; each preset states its references and what it leaves
-out.
+A preset bundles the options that implement one published convention, so that a
+single name selects a romanization standard or a Beta Code dialect. This page
+lists the nine presets, compares how each one writes Greek and what it loses,
+and shows how your own options refine one; each preset states its references and
+what it leaves out.
 
 ## The presets
 

@@ -328,7 +328,9 @@ export default defineConfig({
       ],
       // The reader comes with a Greek (ancient, Byzantine, or modern), looks
       // for the convention that applies to it, and asks what a conversion
-      // loses: the first three groups answer in that order. A page is listed
+      // loses: the groups after "Start here" answer in that order. The guide
+      // introduces; the Reference group holds the documents of docs/, the
+      // preset reference apart, beside the guide to presets. A page is listed
       // under its own title, so that the menu and the page agree: to rename
       // an entry, rename the page.
       sidebar: [
@@ -337,7 +339,6 @@ export default defineConfig({
           items: [
             "guide/getting-started",
             "guide/how-it-works",
-            "guide/losses",
             "guide/glossary",
           ],
         },
@@ -358,13 +359,17 @@ export default defineConfig({
               label: "Conformance",
               collapsed: true,
               items: [
-                "reference/preset-conformance-corpus",
-                "reference/ala-lc-conformance-corpus",
                 "reference/preset-behavior-audit",
                 "reference/preset-repertoire-audit",
+                "reference/ala-lc-conformance-corpus",
+                "reference/preset-conformance-corpus",
               ],
             },
           ],
+        },
+        {
+          label: "Information loss",
+          items: ["guide/format-and-option-losses", "guide/losses"],
         },
         {
           label: "Recipes",
@@ -380,16 +385,16 @@ export default defineConfig({
         {
           label: "Reference",
           items: [
-            "reference/options",
             "reference/guarantees",
-            "reference/stability",
-            "reference/information-loss",
-            "reference/conversion-analysis",
+            "reference/options",
             "reference/greek-unicode",
             "reference/punctuation-and-numerals",
+            "reference/information-loss",
+            "reference/conversion-analysis",
             "reference/character-extensions",
             "reference/document-api",
             "reference/validation",
+            "reference/stability",
           ],
         },
         typeDocSidebarGroup,

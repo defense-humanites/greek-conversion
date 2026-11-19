@@ -100,7 +100,7 @@ marked.lossy; // → false
   [Write the iota on the line](/guide/recipes/letters-and-text/#write-the-iota-on-the-line).
 - **Letter forms.** The lunate sigma, `ϐ`, and `ϑ` are kept in Greek output
   and can be folded: see
-  [Keep or fold letter variants](/guide/recipes/letters-and-text/#keep-or-fold-letter-variants).
+  [Keep or fold letter forms](/guide/recipes/letters-and-text/#keep-or-fold-letter-forms).
 - **Beta Code.** For capitals, quantity, and the TLG's codes, see
   [Write Beta Code the TLG way](/guide/recipes/transliteration-and-beta-code/#write-beta-code-the-tlg-way).
 - **Numerals.** `text.numerals: "decimal"` writes a marked alphabetic numeral

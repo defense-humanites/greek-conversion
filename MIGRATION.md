@@ -69,7 +69,7 @@ Without them:
   sigma whose shape contradicts its place: `λόγοσ` gives `lo/gos1`, and
   `lo/gos1` gives `λόγοσ` (rc.8: `lo/gos`, and `λόγος1`). To compare texts
   regardless of these forms, fold them (see
-  [Keep or fold letter variants](https://greek-conversion.humanites.fr/guide/recipes/letters-and-text/#keep-or-fold-letter-variants)).
+  [Keep or fold letter forms](https://greek-conversion.humanites.fr/guide/recipes/letters-and-text/#keep-or-fold-letter-forms)).
 - `convertDetailed()` reports a form the target cannot write, so that a
   conversion without loss still converts back to the same text: `ϐίος` gives
   `bíos` in transliteration, which reads back as `βίος`, with a

@@ -102,8 +102,10 @@ convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliter
 
 - To see why every format converts to every other with the same rules,
   read [How it works](/guide/how-it-works/).
-- To find out what a conversion cannot keep, and where, as `lossy` hinted
-  above, see [Knowing what a conversion loses](/guide/losses/).
+- To find out what a conversion cannot keep, see
+  [What formats and options lose](/guide/format-and-option-losses/); to find
+  where a given text loses it, as `lossy` hinted above, see
+  [Knowing what a conversion loses](/guide/losses/).
 - For the conventions that apply to your Greek, what each keeps, and the
   tasks proper to it, see [Ancient Greek](/guide/ancient-greek/),
   [Byzantine and Medieval Greek](/guide/byzantine-greek/), or

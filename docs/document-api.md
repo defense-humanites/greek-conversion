@@ -1,4 +1,4 @@
-# Canonical document API
+# Document API contract
 
 The `@humanities/greek-conversion/document` entry point is for applications
 that need to inspect, validate, or transform one parsed Greek representation.
@@ -38,11 +38,11 @@ when a case policy changes the case. The sigma shapes fit both cases.
 
 `parse()` allocates new tokens on each call. `grapheme()` reads the supplied
 diacritics into the shared set for those marks, so a later change to the
-caller's iterable does not reach the grapheme. `encode()`,
-`validateDocument()`, and `applyGreekOrthography()` do not modify their input
-document. The public helper returns an independent document, with new token
-objects even if no orthographic change was needed. Like `parse()` and `encode()`,
-it resolves a supplied preset before applying its options.
+caller's iterable does not reach the grapheme. `encode()`, `validateDocument()`,
+and `applyGreekOrthography()` do not modify their input document. The public
+helper returns an independent document, with new token objects even if no
+orthographic change was needed. Like `parse()` and `encode()`, it resolves a
+supplied preset before applying its options.
 
 `encode(document, "greek", options)` already applies Greek-output orthography.
 Use `applyGreekOrthography()` when the transformed tokens themselves must be
@@ -107,16 +107,16 @@ For multiple target formats, encode each from that same original document.
 Encoding a lossy orthographic view into a second format cannot restore the
 source distinctions removed by the view.
 
-`parseDetailed(input, format, options)` returns the same document together
-with `spans`, the range of each token in the input, as offsets in UTF-16 code
-units in the input exactly as supplied (the reader normalizes the text, but
-the spans are mapped back to the caller's string). Spans are in order (their
-starts and their ends never decrease) and cover the input; tokens read from
-one character share its span, and a token read from part of a character that
-the previous token also draws on lies inside that token's span and ends with
-it (see [the positions contract](conversion-analysis.md#positions)). The ranges let
-an application relate tokens to a selection or an editor position, or slice
-the input text of a token:
+`parseDetailed(input, format, options)` returns the same document together with
+`spans`, the range of each token in the input, as offsets in UTF-16 code units
+in the input exactly as supplied (the reader normalizes the text, but the spans
+are mapped back to the caller's string). Spans are in order (their starts and
+their ends never decrease) and cover the input; tokens read from one character
+share its span, and a token read from part of a character that the previous
+token also draws on lies inside that token's span and ends with it (see
+[the positions contract](conversion-analysis.md#positions)). The ranges let an
+application relate tokens to a selection or an editor position, or slice the
+input text of a token:
 
 ```ts
 import { parseDetailed } from "@humanities/greek-conversion/document";

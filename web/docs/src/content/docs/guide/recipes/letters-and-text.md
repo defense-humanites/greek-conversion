@@ -1,18 +1,18 @@
 ---
 title: "Letters and text"
-description: "Keep or fold letter variants, write the iota on the line, aspirate an elided consonant, and normalize case and whitespace."
+description: "Keep or fold letter forms, write the iota on the line, aspirate an elided consonant, normalize case and whitespace, and build a search key."
 sidebar:
   order: 3
 ---
 
 Some choices concern the letters themselves and the text around them: which
-form of a letter Greek output writes, where it writes an iota subscript, and
-how a conversion treats letter case and whitespace, in every format. These
-choices are options of two groups, each listed with its values in the option
-reference: [`greek`](/reference/options/#greek) and
-[`text`](/reference/options/#text).
+form of a letter Greek output writes, where it writes an iota subscript, how
+a conversion treats letter case and whitespace, in every format, and how they
+combine into a search key. These choices are options of two groups, each
+listed with its values in the option reference:
+[`greek`](/reference/options/#greek) and [`text`](/reference/options/#text).
 
-## Keep or fold letter variants
+## Keep or fold letter forms
 
 Some letters have more than one form: the lunate sigma `ϲ`, the final and
 medial sigma `ς` and `σ`, and the symbol forms `ϐ`, `ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ`,
@@ -44,8 +44,7 @@ convert("σϲς", "greek", "beta-code"); // → ss3s
 convert("λόγοσ", "greek", "beta-code"); // → lo/gos1
 ```
 
-To write the ordinary letters, fold the variants. A comparison key also writes
-every sigma medial, and can drop the case and the marks:
+To write the ordinary letters, fold the forms:
 
 ```ts
 import { reencode } from "@humanities/greek-conversion";
@@ -60,13 +59,9 @@ const fold = {
 
 reencode("ϐίος λόγοσ ϲῶμα ϑεός", "greek", fold);
 // → βίος λόγοσ σῶμα θεός
-reencode("ϐΊΟΣ λόγος ϑεός", "greek", {
-  greek: { ...fold.greek, finalSigma: "medial" },
-  text: { letterCase: "lowercase" },
-  diacritics: { all: "remove" },
-});
-// → βιοσ λογοσ θεοσ
 ```
+
+A search key folds them too: see [Build a search key](#build-a-search-key).
 
 ## Write the iota on the line
 
@@ -89,21 +84,9 @@ reencode("τῷ ᾠδῷ, ᾨδῇ", "greek", { greek: { iotaSubscript: "adscrip
 
 An iota written on the line reads back as the letter iota, so
 `convertDetailed()` reports the loss of the subscript (`removed-diacritic`).
-
-Greek in the style of the uncial manuscripts combines it with capitals, the
-lunate sigma, and no other mark. The shapes of the uncial letters are a matter
-of font, and removing the spaces between words is left to the caller:
-
-```ts
-import { reencode } from "@humanities/greek-conversion";
-
-reencode("τῷ λόγῳ ἐστὶν ἀγαθός", "greek", {
-  text: { letterCase: "uppercase" },
-  diacritics: { all: "remove", iotaSubscript: "preserve" },
-  greek: { sigma: "lunate", iotaSubscript: "adscript" },
-});
-// → ΤΩΙ ΛΟΓΩΙ ΕϹΤΙΝ ΑΓΑΘΟϹ
-```
+With capitals, the lunate sigma, and no other mark, the adscript gives Greek in
+the style of the uncial manuscripts: see
+[Uncial-style output](/guide/byzantine-greek/#uncial-style-output).
 
 ## Aspirate an elided consonant
 
@@ -161,3 +144,36 @@ convert("Θάλασσα Ἑλλάς Θ.", "greek", "transliteration");
 convert("Θ, θ (θῆτα). Ὁ δὲ", "greek", "transliteration");
 // → TH, th (thē̃ta). Ho dè
 ```
+
+## Build a search key
+
+A search key writes a word so that all its spellings give the same key,
+whatever their accents, their case, and the forms of their letters. Remove
+every mark, set the case, fold the letter forms, and write every sigma medial,
+since a sigma the source writes `σ` at the end of a word, as in an
+abbreviation, stays `σ`:
+
+```ts
+import { convert, reencode } from "@humanities/greek-conversion";
+
+const key = {
+  diacritics: { all: "remove" },
+  text: { letterCase: "lowercase" },
+  greek: {
+    sigma: "standard",
+    finalSigma: "medial",
+    medialBeta: "standard",
+    symbolForms: "standard",
+  },
+} as const;
+
+reencode("ΧΡΙΣΤΟΣ", "greek", key); // → χριστοσ
+reencode("Χριϲτόϲ", "greek", key); // → χριστοσ
+reencode("ϐίος ϑεός", "greek", key); // → βιοσ θεοσ
+
+convert("*XRISTO/S", "beta-code", "greek", key); // → χριστοσ
+convert("Christós", "transliteration", "greek", key); // → χριστοσ
+```
+
+Converting to Greek with the same options gives the key of a text written in
+Beta Code or in Latin script.
