@@ -2471,6 +2471,7 @@ async function copy(text: string, button: HTMLButtonElement): Promise<void> {
   icon.toggleAttribute("hidden", copied);
   done.toggleAttribute("hidden", !copied);
   placeNote(note);
+  renew(note);
   holder.classList.add("shown");
   copyTimers.set(
     button,
@@ -2497,13 +2498,31 @@ shareNote.textContent = SHARE_HELP;
 const shareLinkIcon = shareButton.querySelector<SVGElement>(".share-link")!;
 const shareDoneIcon = shareButton.querySelector<SVGElement>(".share-done")!;
 
-/** Back to the button's resting state: its icon, and the note on hover. */
+/**
+ * Back to the button's resting state: its icon, and the note on hover. The
+ * message leaves rather than turning back into the help under the pointer:
+ * the note stays hidden until the pointer or the focus leaves the button,
+ * and takes the help again once it has faded out.
+ */
 function resetShare(): void {
   shareLinkIcon.removeAttribute("hidden");
   shareDoneIcon.setAttribute("hidden", "");
-  shareNote.textContent = SHARE_HELP;
-  placeShareNote();
-  shareNote.parentElement?.classList.remove("shown");
+  const holder = shareNote.parentElement!;
+  holder.classList.remove("shown");
+  if (holder.matches(":hover") || shareButton.matches(":focus-visible")) {
+    holder.classList.add("dismissed");
+  }
+  shareTimer = setTimeout(() => {
+    shareNote.textContent = SHARE_HELP;
+    placeShareNote();
+  }, 150);
+}
+
+/** Plays a note's entrance again, for a new message in a note already shown. */
+function renew(note: HTMLElement): void {
+  note.classList.remove("renewed");
+  void note.offsetWidth;
+  note.classList.add("renewed");
 }
 
 /**
@@ -2545,12 +2564,15 @@ function confirmShare(message: string): void {
   shareDoneIcon.removeAttribute("hidden");
   shareNote.textContent = message;
   placeShareNote();
+  renew(shareNote);
   shareNote.parentElement?.classList.add("shown");
   shareTimer = setTimeout(resetShare, 2000);
 }
 
 async function share(): Promise<void> {
   clearTimeout(shareTimer);
+  // Sharing ends Reset's offer of Undo: one note at a time in the header.
+  hideUndo();
   const holder = shareNote.parentElement;
   holder?.classList.remove("dismissed");
   if (SHARES_NATIVELY) {
@@ -2573,6 +2595,7 @@ async function share(): Promise<void> {
     shareNote.textContent =
       "The link could not be copied: copy the address from the address bar.";
     placeShareNote();
+    renew(shareNote);
     holder?.classList.add("shown");
     shareTimer = setTimeout(resetShare, 6000);
   }
@@ -2674,6 +2697,11 @@ function hideUndo(): void {
 
 function resetAll(): void {
   const before = location.hash;
+  // Share's message, if any, gives way to Reset's note.
+  if (shareNote.parentElement!.classList.contains("shown")) {
+    clearTimeout(shareTimer);
+    resetShare();
+  }
   for (const format of FORMATS) delete lastPreset[format];
   setTarget("transliteration");
   applyState(START);
@@ -2769,14 +2797,18 @@ document.addEventListener("keydown", (event) => {
     shareHolder.classList.remove("shown");
   }
 });
+// The focus a click leaves on the button does not keep it hidden: only the
+// keyboard's, which shows the note.
 for (const type of ["mouseleave", "focusout"] as const) {
   shareHolder.addEventListener(type, () => {
-    if (
-      !shareHolder.matches(":hover") &&
-      !shareHolder.contains(document.activeElement)
-    ) {
-      shareHolder.classList.remove("dismissed");
-    }
+    requestAnimationFrame(() => {
+      if (
+        !shareHolder.matches(":hover") &&
+        !shareButton.matches(":focus-visible")
+      ) {
+        shareHolder.classList.remove("dismissed");
+      }
+    });
   });
 }
 document.addEventListener("click", (event) => {
