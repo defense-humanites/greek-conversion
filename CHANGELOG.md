@@ -75,14 +75,15 @@ change.
 - One sentence describes the project: "Convert Ancient and Modern Greek
   between Greek script, Beta Code, and Latin script, with standards-based
   presets and information-loss diagnostics." It is the package's
-  `description`, the README's tagline, the text of the site's home page, and
-  the documentation of the main module; the description of the site and the
-  abstract of `CITATION.cff` give it after "A TypeScript library that
+  `description`, the README's tagline, and the documentation of the main
+  module; the text of the site's home page, the description of the site, and
+  the abstract of `CITATION.cff` give it after "A TypeScript library that
   converts". `npm run check` keeps the copies identical. The playground's
   description follows it. The social card, which must hold its text on three
   lines, gives a shorter form: "Convert Ancient and Modern Greek to and from
   Beta Code or Latin script, with standards-based presets and
-  information-loss diagnostics."; its text alternative follows the card.
+  information-loss diagnostics."; its foot reads "TypeScript library on npm
+  and JSR", and its text alternative follows the card.
 - Greek output no longer aspirates an elided consonant before a rough
   breathing unless asked: `ἀπ’ οὗ`, `κατ’ ἑωυτούς`, and `μετ’ ἡμέρην`, as
   Herodotus and other Ionic prose are edited, stay as written, where every
