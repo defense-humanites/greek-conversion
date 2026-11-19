@@ -1028,8 +1028,9 @@ mobile-starlight-toc .toggle,
 
 /* Moving between pages. The browser itself cross-fades the content while the
    header and the sidebar stay put (cross-document view transitions: Chrome,
-   Edge, Safari; other browsers load the page as before). Nothing moves for
-   those who ask for less motion. */
+   Edge; Safari skips them, its tab bar flashing during one, see
+   `NO_SAFARI_FADE` in astro.config.mjs; other browsers load the page as
+   before). Nothing moves for those who ask for less motion. */
 @media (prefers-reduced-motion: no-preference) {
   @view-transition {
     navigation: auto;

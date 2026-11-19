@@ -231,6 +231,23 @@ const MIN_WIDTH = `
 })();`;
 
 /**
+ * No cross-fade between pages in Safari (WebKit, on macOS and iOS, where
+ * every browser is WebKit): Safari tints its tab bar from the page, and
+ * while a view transition shows snapshots of the two pages rather than the
+ * page, its tab bar flashes to its own colour, whatever the transition
+ * names. The old page skips it as it is left, before any snapshot, and the
+ * new one as it is revealed; Chrome and Edge keep it (theme.css).
+ */
+const NO_SAFARI_FADE = `
+(() => {
+  const ua = navigator.userAgent;
+  if (!ua.includes("AppleWebKit") || ua.includes("Chrome/") || ua.includes("Chromium/")) return;
+  const skip = (event) => event.viewTransition?.skipTransition();
+  addEventListener("pageswap", skip);
+  addEventListener("pagereveal", skip);
+})();`;
+
+/**
  * A sidebar link that leaves the documentation: it opens in a new tab, and
  * says so to screen readers; theme.css draws the mark.
  * @param {string} label @param {string} link
@@ -304,6 +321,7 @@ export default defineConfig({
       head: [
         { tag: "script", content: PLAYGROUND_REDIRECT },
         { tag: "script", content: MIN_WIDTH },
+        { tag: "script", content: NO_SAFARI_FADE },
         // Where the menu stays beside the page (from 1100px), the new page is
         // not drawn before its menu is whole: from one page to the next, the
         // menu stays put (theme.css), and Safari would otherwise show it cut
