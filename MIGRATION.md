@@ -5,24 +5,22 @@ the `0.14.x` API.
 
 ## Installation
 
-The release candidate `1.0.0-rc.9` is published on JSR, and on npm under the
+The release candidate `1.0.0-rc.10` is published on JSR, and on npm under the
 `next` distribution tag; the stable `1.0.0` will follow with the same content
 unless a problem is found:
 
 ```sh
 npm install @humanities/greek-conversion@next
-npx jsr add @humanities/greek-conversion@1.0.0-rc.9
+npx jsr add @humanities/greek-conversion@1.0.0-rc.10
 ```
 
 The package is ESM-only.
 
 ## Updating from `1.0.0-rc.9`
 
-Two kinds of input convert differently:
+Six kinds of input convert differently. The first two concern every
+conversion to Greek:
 
-- Under ISO 843 Type 2, `ωυ` is written letter by letter, as the standard
-  requires: `ἑωυτοῦ` gives `heoytoû` (rc.9: `heoutoû`), and `oy` without
-  marks reads back as `ωυ`.
 - Greek output that carries no polytonic mark writes its acutes with tonos:
   `λόγος` converted alone gives `ό` as U+03CC (rc.9: U+1F79, oxia), so that
   monotonic Greek converts back to itself. Output with a breathing, a grave,
@@ -30,25 +28,24 @@ Two kinds of input convert differently:
   unchanged. The two forms are canonically equivalent; if you compare
   strings scalar for scalar, or convert polytonic text one word at a time,
   set `greek: { acute: "oxia" }` to keep the output of rc.9.
-
-Greek output also keeps an elided `π`, `τ`, or `κ` before a rough breathing
-as the source writes it: `ἀπ’ οὗ` stays (rc.9: `ἀφ’ οὗ`, with a loss
-reported), and the transliteration `ap’ hēmō̃n` reads as `ἀπ’ ἡμῶν` (rc.9:
-`ἀφ’ ἡμῶν`). The new `greek: { elidedStop: "aspirate" }` gives the output of
-rc.9.
-
-A final sigma before the keraia, as the units of a numeral, is a stigma:
-`ιςʹ` is 16, and converts to `i#2#` and `ic̄ʹ` (rc.9: `is#` and `isʹ`, as
-`ισʹ`). Code that reads `glyphVariant` gets a new value,
-`final-sigma-stigma`. To write 200, write `σʹ`.
-
-Under `greek: { accentuation: "monotonic" }`, `ό,τι`, an abbreviation such as
-`κ.ά.`, and the ending of an ordinal such as `20ός` keep their accent (rc.9:
-`ο,τι`, `κ.α.`, `20ος`).
-
-Under `text: { numerals: "decimal" }`, and so under the ALA-LC presets, a
-numeral whose letters carry only marks that the output removes is written as
-a number: `ἰβʹ` gives `12` under `ala-lc-modern` (rc.9: `ιβʹ`).
+- Greek output keeps an elided `π`, `τ`, or `κ` before a rough breathing as
+  the source writes it: `ἀπ’ οὗ` stays (rc.9: `ἀφ’ οὗ`, with a loss
+  reported), and the transliteration `ap’ hēmō̃n` reads as `ἀπ’ ἡμῶν` (rc.9:
+  `ἀφ’ ἡμῶν`). The new `greek: { elidedStop: "aspirate" }` gives the output
+  of rc.9.
+- A final sigma before the keraia, as the units of a numeral, is a stigma:
+  `ιςʹ` is 16, and converts to `i#2#` and `ic̄ʹ` (rc.9: `is#` and `isʹ`, as
+  `ισʹ`). Code that reads `glyphVariant` gets a new value,
+  `final-sigma-stigma`. To write 200, write `σʹ`.
+- Under ISO 843 Type 2, `ωυ` is written letter by letter, as the standard
+  requires: `ἑωυτοῦ` gives `heoytoû` (rc.9: `heoutoû`), and `oy` without
+  marks reads back as `ωυ`.
+- Under `greek: { accentuation: "monotonic" }`, `ό,τι`, an abbreviation such
+  as `κ.ά.`, and the ending of an ordinal such as `20ός` keep their accent
+  (rc.9: `ο,τι`, `κ.α.`, `20ος`).
+- Under `text: { numerals: "decimal" }`, and so under the ALA-LC presets, a
+  numeral whose letters carry only marks that the output removes is written
+  as a number: `ἰβʹ` gives `12` under `ala-lc-modern` (rc.9: `ιβʹ`).
 
 `createConverter()` rejects an unknown key of its configuration with an
 `OptionError`, as conversion options do; rc.9 ignored it, so that a

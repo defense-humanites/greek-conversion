@@ -7,113 +7,20 @@ change.
 
 ## [Unreleased]
 
-### Changed
+## [1.0.0-rc.10] - 2026-11-19
 
-- Greek output that carries no polytonic mark writes its acutes with tonos
-  (`ά`, U+03AC), the form monotonic text is typed in and the one NFC gives,
-  instead of oxia (`ά`, U+1F71). Monotonic Greek now converts back to itself
-  scalar for scalar: `reencode("Αθήνα", "greek")` returns its input, as does
-  a round trip through Beta Code or `iso-843-type-1`. Output that carries a
-  breathing, a grave, a circumflex, an iota subscript, a coronis, or a
-  quantity mark still writes every acute with oxia. This is what
-  `greek.acute: "system"`, the default, now means; `"oxia"` and `"tonos"`
-  still decide alone. The choice is made for the whole output of one
-  conversion, so a polytonic text converted word by word needs
-  `greek.acute: "oxia"` to write every acute alike (`λόγος` alone gives
-  U+03CC; in `ὁ λόγος`, U+1F79). The two forms are canonically equivalent,
-  and no loss is reported either way.
-- The names of the ISO 843 presets say what each type does, as the standard
-  does: "ISO 843:1997 — Type 1 (transliteration)" and "ISO 843:1997 — Type 2
-  (transcription)". Their ids are unchanged.
-- The playground has a new design, in the project's identity (tessera
-  symbol, Bricolage Grotesque, Papier and Nuit themes). Source and target are
-  chosen from two segmented groups; the source is detected from the text by
-  default, plain Latin letters reading as transliteration. The standards
-  offered are those of the formats in use. Conversion options are pills after
-  the standard, added from a searchable list of the options that change the
-  result of the conversion in use (measured by `npm run site:options`),
-  instead of a JSON field; the sentence says "Restyle" when both sides share
-  a format. A transliteration converted to transliteration or Beta Code says
-  what it is written in ("written in", the `source` option): read as the
-  output writes it, the default, it is normalized ("Normalize"); written in
-  another style, it is restyled; towards Greek, the style becomes the
-  standard. Losses name the letter form they are about (`glyphVariant`), one
-  card per form, and the forms and marks the target adds are listed apart.
-  Examples, in a menu of the source field, now go with the selected
-  standard, each with a note on the rule it shows, and are checked against
-  the library by `tests/playground_examples_test.ts`. Letters whose distinctions the
-  target loses are underlined in the source; letters of another script,
-  copied as is but read back as Greek (`unrepresented-literal`), are dotted,
-  listed under their own heading, and not counted as lost distinctions.
-  Marks the reader keeps but Greek does not allow (`validateDocument()`) are
-  dashed and listed too, with an example per format in the menu. The
-  character inventory is edited as pills too, in place of a JSON field:
-  characters left out or kept alone, spellings added to letters, and new
-  characters, each added from a searchable list or a short form. It sits in
-  a tab beside the generated code and the canonical document, both
-  highlighted. Texts in all three formats are set in
-  Literata Light, served by the playground with the letters it lacked
-  (`web/shared/fonts/README.md`); its icons are Lucide's, shared with the
-  documentation site (`npm run site:icons`). Reset, beside Share, brings the page back to its
-  opening state, and offers to undo it for a few seconds. On a touch screen,
-  Share opens the system's share sheet; elsewhere, it copies the link. By
-  touch, the pickers of options and characters show their lists without a
-  search field, whose keyboard would hide them. The result reads on the
-  ground of the code blocks, says where it will appear while empty, and,
-  typed in, where to write instead.
-- The contract is stated in `docs/` and the API documentation alone: the
-  stability policy no longer counts the `README`, which will become a short
-  entry point to a documentation site, among the documents that define
-  behavior. What only the `README` stated has moved: the guarantees and limits
-  to the new `docs/guarantees.md` (the stability policy linked to a heading
-  that no longer existed); to the API documentation of their options, the
-  capitals of `letterCase: "preserve"` and `"title"`, the trimming of
-  `whitespace: "collapse"`, the spelling of eta and omega when diacritics are
-  removed, and what a restyle with `source` cannot restore; and the Beta Code
-  apostrophe and font shifts to `docs/information-loss.md`. The English text
-  prevails over the `README`, guides, and translations. No behavior changes.
-- One sentence describes the project: "Convert Ancient and Modern Greek
-  between Greek script, Beta Code, and Latin script, with standards-based
-  presets and information-loss diagnostics." It is the package's
-  `description`, the README's tagline, and the documentation of the main
-  module; the text of the site's home page, the description of the site, and
-  the abstract of `CITATION.cff` give it after "A TypeScript library that
-  converts". `npm run check` keeps the copies identical. The playground's
-  description follows it. The social card, which must hold its text on three
-  lines, gives a shorter form: "Convert Ancient and Modern Greek to and from
-  Beta Code or Latin script, with standards-based presets and
-  information-loss diagnostics."; its foot reads "TypeScript library on npm
-  and JSR", and its text alternative follows the card.
-- Greek output no longer aspirates an elided consonant before a rough
-  breathing unless asked: `ἀπ’ οὗ`, `κατ’ ἑωυτούς`, and `μετ’ ἡμέρην`, as
-  Herodotus and other Ionic prose are edited, stay as written, where every
-  Greek output rewrote them (`ἀφ’ οὗ`, `καθ’ ἑωυτούς`, `μεθ’ ἡμέρην`) and
-  reported a loss. This follows the letter forms, kept as the source writes
-  them since rc.9. `greek: { elidedStop: "aspirate" }` gives the earlier
-  output; transliteration `ap’ hēmō̃n` now reads as `ἀπ’ ἡμῶν` without it.
-
-- The reference (`docs/`) says more: `validation.md` lists the codes of
-  `validateDocument()` and how to locate one in the input;
-  `greek-unicode.md` states where the monotonic rules take an accent that
-  usage keeps (`ό,τι`, `κ.ά.`, `20ός`), as limits that a release may correct;
-  `ala-lc-conformance-corpus.md` no longer counts the missing `h` of
-  monotonic text among the open rules, since the ALA-LC table supplies none
-  there (`Ελληνική` → `Ellēnikē`, now a case of the corpus).
-- The examples of the README and of the guide are checked code point for
-  code point, no longer after NFC normalization: a result is written as it is
-  returned, oxia or tonos.
-- The examples of the reference (`docs/`) are checked like those of the
-  guide. Each of its twenty-three examples is now a module with its imports
-  and its results, type-checked and run by `npm run check`, which also checks
-  the links between its documents and their headings. A result given inside
-  a block, such as a `catch`, is checked too: three of the guide were read as
-  plain comments.
-- The conversions the documentation cites in its prose (`Ἅιδῃ → Háidȩ̄`,
-  "`ἐϛὶ` gives `ec̄ì`") are checked by `npm run check`: each must be what the
-  library returns between the formats it is written in, under the defaults,
-  a preset its page names, or the options named around it. One citation of
-  `docs/information-loss.md` lacked the apostrophe of its smooth breathing
-  (`εὖ` → `’ẽf` under ISO 843 Type 1).
+Tenth release candidate for `1.0.0`. Greek output writes the acutes of
+monotonic text with tonos, so that monotonic Greek converts back to itself,
+and keeps an elided consonant before a rough breathing as the source writes
+it (`greek.elidedStop`). ISO 843 Type 2 writes `ωυ` letter by letter. A final
+sigma that is the units of a numeral is read as a stigma (`ιςʹ`, 16),
+monotonic accentuation keeps the accent of `ό,τι`, `κ.ά.`, and `20ός`, and a
+decimal numeral is read on its letters as the output writes them, which made
+the ALA-LC presets idempotent. `createConverter()` checks its configuration
+as conversion options are checked. The documentation has a site of its own,
+https://greek-conversion.humanites.fr/, with a guide for Ancient, Byzantine,
+and Modern Greek, a reference of every option, and the redesigned
+playground.
 
 ### Added
 
@@ -122,20 +29,18 @@ change.
   the default, keeps the consonant of the source, and `"aspirate"` writes
   `φ`, `θ`, or `χ` (`ἀπ’ οὗ` → `ἀφ’ οὗ`). Its type is
   `ElidedStopOrthography`.
-
-- A documentation site, at https://greek-conversion.humanites.fr/, a domain
-  of its own (the address the playground had on GitHub Pages redirects to
-  it), built with Starlight (`web/docs/`): a guide and nine recipes taken from the
+- A documentation site, at https://greek-conversion.humanites.fr/, a domain of
+  its own (the address the playground had on GitHub Pages redirects to it),
+  built with Starlight (`web/docs/`): a guide and recipes taken from the
   README, the reference generated from `docs/` at each build, and the API
-  reference generated from the TSDoc of both entry points, with search. It
-  uses the playground's design (`web/shared/`) and follows the system's light
-  or dark appearance. The playground moves to `/playground/`; a link shared
-  before, to the site's root with its state in the fragment, opens the
-  playground. The site is laid out for translations, English being the
-  source; none is published yet. Code, in the site and the playground, is
-  set in Noto Sans Mono, served with the site, which covers polytonic Greek
-  and stacks diacritics on every system, with Fira Mono for the symbol forms
-  and lunate sigmas it does not tell apart.
+  reference generated from the TSDoc of both entry points, with search. It uses
+  the playground's design (`web/shared/`) and follows the system's light or dark
+  appearance. The playground moves to `/playground/`; a link shared before, to
+  the site's root with its state in the fragment, opens the playground. The site
+  is laid out for translations, English being the source; none is published yet.
+  Code, in the site and the playground, is set in Noto Sans Mono, served with
+  the site, which covers polytonic Greek and stacks diacritics on every system,
+  with Fira Mono for the symbol forms and lunate sigmas it does not tell apart.
 - The guide answers a reader who comes with a Greek. Pages on Ancient Greek
   and on Byzantine and Medieval Greek join the one on Modern Greek, each
   with the conventions that apply, what converts back, the tasks proper to
@@ -184,6 +89,112 @@ change.
   `CITATION.cff` Byzantine and Medieval Greek. The keywords `beta-code` and
   `iso-843` become `betacode` and `iso843`, the spellings that the
   repository's topics and other Greek packages on npm use.
+
+### Changed
+
+- Greek output that carries no polytonic mark writes its acutes with tonos
+  (`ά`, U+03AC), the form monotonic text is typed in and the one NFC gives,
+  instead of oxia (`ά`, U+1F71). Monotonic Greek now converts back to itself
+  scalar for scalar: `reencode("Αθήνα", "greek")` returns its input, as does
+  a round trip through Beta Code or `iso-843-type-1`. Output that carries a
+  breathing, a grave, a circumflex, an iota subscript, a coronis, or a
+  quantity mark still writes every acute with oxia. This is what
+  `greek.acute: "system"`, the default, now means; `"oxia"` and `"tonos"`
+  still decide alone. The choice is made for the whole output of one
+  conversion, so a polytonic text converted word by word needs
+  `greek.acute: "oxia"` to write every acute alike (`λόγος` alone gives
+  U+03CC; in `ὁ λόγος`, U+1F79). The two forms are canonically equivalent,
+  and no loss is reported either way.
+- The names of the ISO 843 presets say what each type does, as the standard
+  does: "ISO 843:1997 — Type 1 (transliteration)" and "ISO 843:1997 — Type 2
+  (transcription)". Their ids are unchanged.
+- The playground has a new design, in the project's identity (tessera
+  symbol, Bricolage Grotesque, Papier and Nuit themes). Source and target are
+  chosen from two segmented groups; the source is detected from the text by
+  default, plain Latin letters reading as transliteration. The standards
+  offered are those of the formats in use. Conversion options are pills after
+  the standard, added from a searchable list of the options that change the
+  result of the conversion in use (measured by `npm run site:options`),
+  instead of a JSON field; the sentence says "Restyle" when both sides share
+  a format. A transliteration converted to transliteration or Beta Code says
+  what it is written in ("written in", the `source` option): read as the
+  output writes it, the default, it is normalized ("Normalize"); written in
+  another style, it is restyled; towards Greek, the style becomes the
+  standard. Losses name the letter form they are about (`glyphVariant`), one
+  card per form, and the forms and marks the target adds are listed apart.
+  Examples, in a menu of the source field, now go with the selected
+  standard, each with a note on the rule it shows, and are checked against
+  the library by `tests/playground_examples_test.ts`. Letters whose
+  distinctions the target loses are underlined in the source; letters of
+  another script, copied as is but read back as Greek
+  (`unrepresented-literal`), are dotted, listed under their own heading, and
+  not counted as lost distinctions.
+  Marks the reader keeps but Greek does not allow (`validateDocument()`) are
+  dashed and listed too, with an example per format in the menu. The
+  character inventory is edited as pills too, in place of a JSON field:
+  characters left out or kept alone, spellings added to letters, and new
+  characters, each added from a searchable list or a short form. It sits in
+  a tab beside the generated code and the canonical document, both
+  highlighted. Texts in all three formats are set in Literata Light, served
+  by the playground with the letters it lacked (`web/shared/fonts/README.md`);
+  its icons are Lucide's, shared with the documentation site
+  (`npm run site:icons`). Reset, beside Share, brings the page back to its
+  opening state, and offers to undo it for a few seconds. On a touch screen,
+  Share opens the system's share sheet; elsewhere, it copies the link. By
+  touch, the pickers of options and characters show their lists without a
+  search field, whose keyboard would hide them. The result reads on the
+  ground of the code blocks, says where it will appear while empty, and,
+  typed in, where to write instead.
+- The contract is stated in `docs/` and the API documentation alone: the
+  stability policy no longer counts the `README`, which will become a short
+  entry point to a documentation site, among the documents that define
+  behavior. What only the `README` stated has moved: the guarantees and limits
+  to the new `docs/guarantees.md` (the stability policy linked to a heading
+  that no longer existed); to the API documentation of their options, the
+  capitals of `letterCase: "preserve"` and `"title"`, the trimming of
+  `whitespace: "collapse"`, the spelling of eta and omega when diacritics are
+  removed, and what a restyle with `source` cannot restore; and the Beta Code
+  apostrophe and font shifts to `docs/information-loss.md`. The English text
+  prevails over the `README`, guides, and translations. No behavior changes.
+- One sentence describes the project: "Convert Ancient and Modern Greek
+  between Greek script, Beta Code, and Latin script, with standards-based
+  presets and information-loss diagnostics." It is the package's
+  `description`, the README's tagline, and the documentation of the main
+  module; the text of the site's home page, the description of the site, and
+  the abstract of `CITATION.cff` give it after "A TypeScript library that
+  converts". `npm run check` keeps the copies identical. The playground's
+  description follows it. The social card, which must hold its text on three
+  lines, gives a shorter form: "Convert Ancient and Modern Greek to and from
+  Beta Code or Latin script, with standards-based presets and
+  information-loss diagnostics."; its foot reads "TypeScript library on npm
+  and JSR", and its text alternative follows the card.
+- Greek output no longer aspirates an elided consonant before a rough
+  breathing unless asked: `ἀπ’ οὗ`, `κατ’ ἑωυτούς`, and `μετ’ ἡμέρην`, as
+  Herodotus and other Ionic prose are edited, stay as written, where every
+  Greek output rewrote them (`ἀφ’ οὗ`, `καθ’ ἑωυτούς`, `μεθ’ ἡμέρην`) and
+  reported a loss. This follows the letter forms, kept as the source writes
+  them since rc.9. `greek: { elidedStop: "aspirate" }` gives the earlier
+  output; transliteration `ap’ hēmō̃n` now reads as `ἀπ’ ἡμῶν` without it.
+- The reference (`docs/`) says more: `validation.md` lists the codes of
+  `validateDocument()` and how to locate one in the input;
+  `ala-lc-conformance-corpus.md` no longer counts the missing `h` of
+  monotonic text among the open rules, since the ALA-LC table supplies none
+  there (`Ελληνική` → `Ellēnikē`, now a case of the corpus).
+- The examples of the README and of the guide are checked code point for
+  code point, no longer after NFC normalization: a result is written as it is
+  returned, oxia or tonos.
+- The examples of the reference (`docs/`) are checked like those of the
+  guide. Each of its twenty-three examples is now a module with its imports
+  and its results, type-checked and run by `npm run check`, which also checks
+  the links between its documents and their headings. A result given inside
+  a block, such as a `catch`, is checked too: three of the guide were read as
+  plain comments.
+- The conversions the documentation cites in its prose (`Ἅιδῃ → Háidȩ̄`,
+  "`ἐϛὶ` gives `ec̄ì`") are checked by `npm run check`: each must be what the
+  library returns between the formats it is written in, under the defaults,
+  a preset its page names, or the options named around it. One citation of
+  `docs/information-loss.md` lacked the apostrophe of its smooth breathing
+  (`εὖ` → `’ẽf` under ISO 843 Type 1).
 
 ### Fixed
 
@@ -1329,7 +1340,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.9...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.10...HEAD
+[1.0.0-rc.10]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.9...v1.0.0-rc.10
 [1.0.0-rc.9]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.8...v1.0.0-rc.9
 [1.0.0-rc.8]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.7...v1.0.0-rc.8
 [1.0.0-rc.7]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.6...v1.0.0-rc.7
