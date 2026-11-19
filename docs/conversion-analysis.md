@@ -1,4 +1,4 @@
-# Conversion-loss analysis
+# Conversion-analysis contract
 
 `convertDetailed()` returns the converted text together with an analysis of the
 information retained by the target representation:
