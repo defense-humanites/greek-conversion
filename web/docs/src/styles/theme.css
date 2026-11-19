@@ -6,6 +6,12 @@
  * switch, so Starlight's `data-theme` follows the system's appearance, as the
  * tokens do, and one mapping serves both.
  */
+/* Safari on iPhone greys what is tapped (a link, the menu button, the
+   logo): the pressed states of the buttons are the only feedback, as with
+   a mouse. */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
 :root,
 ::backdrop,
 :root[data-theme="light"],
@@ -91,22 +97,19 @@
 }
 
 /* The icons Starlight draws itself (search, the carets of the sidebar and
-   of "On this page", the phone menu's open and close) are redrawn with the
-   same icons: each SVG keeps its box, its own drawing is hidden, and a mask
+   of "On this page") are redrawn with the same icons: each SVG keeps its box, its own drawing is hidden, and a mask
    of the Lucide icon (`web/shared/icons.css`) is painted in the text's
    colour. */
 site-search button[data-open-modal] > svg,
 .sidebar-content svg.caret,
-mobile-starlight-toc svg.caret,
-button.sl-menu-button svg {
+mobile-starlight-toc svg.caret {
   background: currentColor;
   mask: var(--icon) center / contain no-repeat;
 }
 :is(
     site-search button[data-open-modal] > svg,
     .sidebar-content svg.caret,
-    mobile-starlight-toc svg.caret,
-    button.sl-menu-button svg
+    mobile-starlight-toc svg.caret
   )
   > * {
   display: none;
@@ -117,12 +120,6 @@ site-search button[data-open-modal] > svg {
 .sidebar-content svg.caret,
 mobile-starlight-toc svg.caret {
   --icon: var(--icon-chevron-right);
-}
-button.sl-menu-button svg.open-menu {
-  --icon: var(--icon-menu);
-}
-button.sl-menu-button svg.close-menu {
-  --icon: var(--icon-x);
 }
 
 /* Links that open in a new tab, as in the playground: a mark kept on the
@@ -256,15 +253,26 @@ h1#_top {
   background: var(--raised);
 }
 
-/* Tables: a raised panel with rounded corners, headed by small capitals. */
-.sl-markdown-content table {
-  display: block;
+/* Tables: a raised panel with rounded corners, headed by small capitals.
+   The panel is the table's frame (`frameTables`, in astro.config.mjs),
+   which scrolls where the table is wider than the column; the table takes
+   the column's whole width, so that its rows' lines reach the panel's
+   edge. */
+.sl-markdown-content .table-frame {
   overflow-x: auto;
   border: 1px solid var(--line);
-  border-collapse: separate;
-  border-spacing: 0;
   border-radius: var(--radius);
   background: var(--raised);
+}
+.sl-markdown-content table {
+  display: table;
+  width: 100%;
+  margin: 0;
+  overflow: visible;
+  border: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: transparent;
 }
 .sl-markdown-content :is(th, td) {
   padding: 0.6rem 0.9rem;
@@ -280,6 +288,25 @@ h1#_top {
   text-transform: uppercase;
   color: var(--muted);
   background: var(--raised);
+}
+/* An example of a conversion, as the playground shows one: the texts in
+   their face, a step above the text around them, the arrow muted; Beta
+   Code stays in code. */
+.sl-markdown-content .conversion {
+  font-family: var(--face-text);
+  font-size: 1.0625em;
+}
+.sl-markdown-content .conversion .to {
+  color: var(--muted);
+}
+.sl-markdown-content .conversion code {
+  font-size: 0.875em;
+}
+/* An empty cell (no example, no preset) shows a muted dash rather than a
+   gap, read as "none". */
+.sl-markdown-content td:empty::before {
+  content: "—" / "none";
+  color: var(--muted);
 }
 /* Capitals would change Greek in a heading's code. */
 .sl-markdown-content th code {
@@ -514,6 +541,15 @@ site-search button[data-open-modal] > kbd kbd {
 site-search dialog {
   border-radius: var(--radius);
 }
+/* On a phone, where it covers the screen, the dialog keeps a margin on its
+   four sides, as the header keeps its text from the edges. */
+@media (max-width: 49.99rem) {
+  site-search dialog {
+    width: calc(100% - 2 * var(--sl-nav-pad-x));
+    height: calc(100% - 2 * var(--sl-nav-pad-x));
+    margin: var(--sl-nav-pad-x);
+  }
+}
 
 /*
  * The search dialog, in the same states as the rest of the site: fields and
@@ -552,6 +588,21 @@ site-search dialog {
 }
 #starlight__search .pagefind-ui__result-link:focus-visible {
   outline: none;
+}
+/* The sections of a page are parted by a 1px line, the dialog's colour
+   between Starlight's results; the line of their tree goes on across it,
+   as one stroke (1/16 of the tree's width, at 8/16 of it). */
+#starlight__search .pagefind-ui__result-nested + .pagefind-ui__result-nested::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  inset-inline-start: calc(
+    var(--sl-search-tree-diagram-inline-start) +
+      var(--sl-search-tree-diagram-size) * 7.5 / 16
+  );
+  width: calc(var(--sl-search-tree-diagram-size) / 16);
+  height: 1px;
+  background: var(--sl-color-gray-4);
 }
 
 /*
@@ -697,16 +748,37 @@ mobile-starlight-toc details[open] .toggle {
   border-color: var(--muted);
   color: var(--ink);
 }
-@media (hover: hover) {
-  mobile-starlight-toc details .toggle:hover {
-    border-color: var(--muted);
-    color: var(--ink);
-  }
-}
 
 mobile-starlight-toc .display-current {
   color: var(--muted);
   font-size: 0.875rem;
+  transition: color 0.15s ease;
+}
+/*
+ * The whole bar opens the list, the current section's name too: hovered or
+ * pressed anywhere, it answers as one button. Its toggle's line darkens and
+ * the name takes the ink, as when the list is open; pressed, the toggle
+ * also takes the tint of a pressed secondary button (--press, on its raised
+ * background) and shrinks (below).
+ */
+mobile-starlight-toc details[open] .display-current {
+  color: var(--ink);
+}
+@media (hover: hover) {
+  mobile-starlight-toc summary:hover .toggle {
+    border-color: var(--muted);
+    color: var(--ink);
+  }
+  mobile-starlight-toc summary:hover .display-current {
+    color: var(--ink);
+  }
+}
+mobile-starlight-toc summary:active .toggle {
+  border-color: var(--muted);
+  background: color-mix(in oklab, var(--ink) 8%, var(--raised));
+}
+mobile-starlight-toc summary:active .display-current {
+  color: var(--ink);
 }
 
 /* A taller bar (60px rather than 48px), so that the panel, 6px below the
@@ -813,7 +885,7 @@ mobile-starlight-toc .toggle,
 }
 @media (prefers-reduced-motion: no-preference) {
   .sl-link-button:active,
-  mobile-starlight-toc .toggle:active,
+  mobile-starlight-toc summary:active .toggle,
   .expressive-code .copy button:active {
     scale: var(--squish);
     transition:
@@ -986,8 +1058,9 @@ mobile-starlight-toc .toggle,
 
 /* Moving between pages. The browser itself cross-fades the content while the
    header and the sidebar stay put (cross-document view transitions: Chrome,
-   Edge, Safari; other browsers load the page as before). Nothing moves for
-   those who ask for less motion. */
+   Edge; Safari skips them, its tab bar flashing during one, see
+   `NO_SAFARI_FADE` in astro.config.mjs; other browsers load the page as
+   before). Nothing moves for those who ask for less motion. */
 @media (prefers-reduced-motion: no-preference) {
   @view-transition {
     navigation: auto;
@@ -1121,6 +1194,15 @@ mobile-starlight-toc nav {
 .expressive-code .copy .feedback {
   border-radius: var(--radius);
   font-weight: 600;
+}
+/* Expressive Code puts the "Copied!" tooltip in a live region beside the
+   button and centres it as if it were the button's sibling: it sat at the
+   region's top, above the button's middle by a font-dependent amount. The
+   region now spans the button's height and centres the tooltip. */
+.expressive-code .copy [aria-live] {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
 }
 
 /* The terminal frame's three dots in the colours of a window's buttons

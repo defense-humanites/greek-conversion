@@ -46,7 +46,7 @@ await writeFile(new URL("styles.css", SITE), styles.join("\n"));
 for (
   const name of [
     "bricolage-grotesque.woff2",
-    "literata-gc-light.woff2",
+    "literata-gc.woff2",
     "noto-serif-greek-symbols.woff2",
     "noto-sans-mono.woff2",
     "fira-mono-greek-symbols.woff2",
