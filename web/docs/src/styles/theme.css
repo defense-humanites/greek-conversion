@@ -6,6 +6,12 @@
  * switch, so Starlight's `data-theme` follows the system's appearance, as the
  * tokens do, and one mapping serves both.
  */
+/* Safari on iPhone greys what is tapped (a link, the menu button, the
+   logo): the pressed states of the buttons are the only feedback, as with
+   a mouse. */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
 :root,
 ::backdrop,
 :root[data-theme="light"],

@@ -8,6 +8,9 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Nor does it grey what is tapped: the pressed states of the buttons are
+     the only feedback, as with a mouse. */
+  -webkit-tap-highlight-color: transparent;
 }
 /* Below 360px, where the viewport could not be widened to 360px (a narrow
    desktop window, a simulator; on a phone, the head's script lays the page
