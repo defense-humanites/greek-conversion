@@ -254,19 +254,25 @@ h1#_top {
 }
 
 /* Tables: a raised panel with rounded corners, headed by small capitals.
-   The panel fits its table, up to the column's width (where the table
-   scrolls): a short table would otherwise leave its rows' lines stopping
-   short of the panel's edge. */
-.sl-markdown-content table {
-  display: block;
-  width: fit-content;
-  max-width: 100%;
+   The panel is the table's frame (`frameTables`, in astro.config.mjs),
+   which scrolls where the table is wider than the column; the table takes
+   the column's whole width, so that its rows' lines reach the panel's
+   edge. */
+.sl-markdown-content .table-frame {
   overflow-x: auto;
   border: 1px solid var(--line);
-  border-collapse: separate;
-  border-spacing: 0;
   border-radius: var(--radius);
   background: var(--raised);
+}
+.sl-markdown-content table {
+  display: table;
+  width: 100%;
+  margin: 0;
+  overflow: visible;
+  border: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: transparent;
 }
 .sl-markdown-content :is(th, td) {
   padding: 0.6rem 0.9rem;

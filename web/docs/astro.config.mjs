@@ -102,6 +102,31 @@ function markGreek() {
 }
 
 /**
+ * Each table in a box of its own (`.table-frame`), which scrolls when the
+ * table is wider than the column and draws the panel: the table itself
+ * then takes the column's whole width, its rows' lines with it.
+ */
+function frameTables() {
+  /** @param {any} node */
+  const visit = (node) => {
+    if (node.type !== "element" && node.type !== "root") return;
+    node.children = (node.children ?? []).map((/** @type {any} */ child) => {
+      if (child.type === "element" && child.tagName === "table") {
+        return {
+          type: "element",
+          tagName: "div",
+          properties: { className: ["table-frame"] },
+          children: [child],
+        };
+      }
+      visit(child);
+      return child;
+    });
+  };
+  return () => (/** @type {any} */ tree) => visit(tree);
+}
+
+/**
  * Inline code in a table breaks only between its words: each run of
  * non-space characters, such as a key (`iotaSubscript:`) or a value
  * (`"capital-adscript"`), stays on one line (`.code-word`), so that a long
@@ -279,6 +304,7 @@ export default defineConfig({
         markExternal(),
         markGreek(),
         breakTableCode(),
+        frameTables(),
       ],
     }),
   },
