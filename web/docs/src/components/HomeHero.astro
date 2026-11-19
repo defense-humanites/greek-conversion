@@ -28,9 +28,14 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
       </picture>
     </h1>
     <p class="description">
-      A TypeScript library that converts Ancient and Modern&nbsp;Greek between
-      Greek&nbsp;script, Beta&nbsp;Code, and Latin&nbsp;script, with
-      standards‑based presets and information‑loss&nbsp;diagnostics.
+      <span class="line"
+        >A TypeScript library that converts Ancient and Modern&nbsp;Greek</span
+      >{" "}
+      <span class="line"
+        >between Greek&nbsp;script, Beta&nbsp;Code, and Latin&nbsp;script, with
+        standards‑based&nbsp;presets</span
+      >{" "}
+      <span class="line">and information‑loss&nbsp;diagnostics.</span>
     </p>
     <div class="actions">
       <LinkButton href={`${base}guide/getting-started/`} icon="right-arrow">
@@ -79,14 +84,22 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
     width: clamp(15.75rem, 70vw, 19rem);
     height: auto;
   }
-  /* As wide as the example: two lines on a wide screen. */
+  /* Balanced lines on a narrow screen. Where the page is wider than its
+     720px column, three lines broken where the sentence turns, the middle
+     one the widest: a little wider than the example, which keeps its
+     width. */
   .description {
-    max-width: 46rem;
+    max-width: 48rem;
     margin: 0;
     font-size: 1.25rem;
     line-height: 1.5;
     color: var(--muted);
     text-wrap: balance;
+  }
+  @media (min-width: 68.75rem) {
+    .description .line {
+      display: block;
+    }
   }
   .actions {
     display: flex;

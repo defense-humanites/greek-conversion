@@ -51,10 +51,13 @@ expect("the JSR entry points", jsr.exports, {
   "./document": "./src/document.ts",
 });
 
-/** Text as read: markup, non-breaking spaces and hyphens, line breaks. */
+/**
+ * Text as read: tags and Astro's explicit spaces (`{" "}`), non-breaking
+ * spaces and hyphens, line breaks.
+ */
 const plain = (text: string | undefined) =>
-  text?.replace(/&nbsp;|\u00a0/g, " ").replace(/\u2011/g, "-")
-    .replace(/\s+/g, " ").trim();
+  text?.replace(/<[^>]*>|\{" "\}/g, " ").replace(/&nbsp;|\u00a0/g, " ")
+    .replace(/\u2011/g, "-").replace(/\s+/g, " ").trim();
 const sentence: string = npm.description;
 const library = sentence.replace(
   /^Convert /,
@@ -72,7 +75,7 @@ expect(
 );
 expect(
   "the description of the home page",
-  plain(hero.match(/<p class="description">([^<]*)<\/p>/)?.[1]),
+  plain(hero.match(/<p class="description">([\s\S]*?)<\/p>/)?.[1]),
   library,
 );
 expect(
