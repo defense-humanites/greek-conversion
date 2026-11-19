@@ -304,6 +304,19 @@ export default defineConfig({
       head: [
         { tag: "script", content: PLAYGROUND_REDIRECT },
         { tag: "script", content: MIN_WIDTH },
+        // Where the menu stays beside the page (from 1100px), the new page is
+        // not drawn before its menu is whole: from one page to the next, the
+        // menu stays put (theme.css), and Safari would otherwise show it cut
+        // after its first groups for a frame or two, the rest still to parse.
+        {
+          tag: "link",
+          attrs: {
+            rel: "expect",
+            href: "#sidebar-content",
+            blocking: "render",
+            media: "(min-width: 68.75rem)",
+          },
+        },
         // The sharing image: the design system's social card, which
         // Starlight's `summary_large_image` card announces.
         ...SHARING_IMAGE,
