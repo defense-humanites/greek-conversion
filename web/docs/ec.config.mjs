@@ -142,6 +142,9 @@ export default defineEcConfig({
     codeFontFamily: "var(--face-code)",
     uiFontFamily: "var(--face-ui)",
     codeFontSize: "0.875rem",
+    // Medium (500), as the inline code: the text stands out a little more
+    // without weighing on it; keywords and functions stay bold (700).
+    codeFontWeight: "500",
     codeLineHeight: "1.65",
     codePaddingBlock: "1rem",
     codePaddingInline: "1.25rem",
