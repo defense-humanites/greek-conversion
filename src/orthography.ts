@@ -10,10 +10,12 @@ import {
   isWordLetter,
 } from "./context.ts";
 import {
+  diacriticBit,
   GLYPH_VARIANTS,
   literal,
   ORDER,
   sharedDiacritics,
+  sharedMask,
   withDiacritic as addDiacritic,
   withoutDiacritic,
 } from "./model.ts";
@@ -274,7 +276,9 @@ export function applyNumeralOrthography(
 ): Document {
   const spaced = applyWhitespaceOrthography(document, options, targets);
   const cased = applyLetterCaseOrthography(spaced, options);
-  if (options.text?.numerals !== "decimal") return cased;
+  if (options.text?.numerals !== "decimal" || !cased.some(isKeraia)) {
+    return cased;
+  }
 
   const reading = writtenReading(options, format);
   const output: Token[] = [];
@@ -311,8 +315,9 @@ export function decimalNumeralTokens(
   options: ConversionOptions,
   format: Format,
 ): Uint8Array {
-  const reading = writtenReading(options, format);
   const marks = new Uint8Array(document.length);
+  if (!document.some(isKeraia)) return marks;
+  const reading = writtenReading(options, format);
   for (let index = 0; index < document.length;) {
     const numeral = readNumeral(document, index, reading);
     if (numeral === undefined) {
@@ -509,8 +514,15 @@ function writtenReading(
   );
   const finalSigma = format !== "transliteration" &&
     (options.greek?.finalSigma ?? "preserve") === "preserve";
+  if (removed.size === 0) return { bare: AS_READ.bare, finalSigma };
+  let removedMask = 0;
+  for (const mark of removed) removedMask |= diacriticBit(mark);
   return {
-    bare: removed.size === 0 ? AS_READ.bare : (token) => {
+    bare: (token) => {
+      if (token.diacritics.size === 0) return true;
+      // Marks read from text share a set that carries their mask.
+      const mask = sharedMask(token.diacritics);
+      if (mask !== undefined) return (mask & ~removedMask) === 0;
       for (const mark of token.diacritics) {
         if (!removed.has(mark)) return false;
       }
@@ -577,6 +589,12 @@ function readNumeral(
     return { value, end: index };
   }
   return undefined;
+}
+
+/** Whether a token is a keraia, which every numeral has. */
+function isKeraia(token: Token): boolean {
+  return token.kind === "literal" &&
+    (token.value === DEXIA_KERAIA || token.value === ARISTERI_KERAIA);
 }
 
 function isLetter(

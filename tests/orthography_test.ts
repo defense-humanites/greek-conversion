@@ -1004,6 +1004,17 @@ test("reads a numeral on its letters as the output writes them", () => {
 
   // A converter writes a letter it keeps in such a numeral as the number,
   // read for the format it writes.
+  // A thousands sign alone makes a numeral, without a right keraia.
+  assertNfcEquals(convert("͵αωκα", "greek", "greek", decimal), "1821");
+  assertNfcEquals(
+    createConverter({ exclude: ["stigma"] }).convert(
+      "͵ϛ",
+      "greek",
+      "greek",
+      decimal,
+    ),
+    "6000",
+  );
   const noAlpha = createConverter({ exclude: ["alpha"] });
   assertNfcEquals(noAlpha.convert("ᾱʹ", "greek", "transliteration", omit), "1");
   assertNfcEquals(noAlpha.convert("ᾱʹ", "greek", "greek", omit), "ᾱʹ");
