@@ -1,5 +1,5 @@
 ---
-title: "Converters, options and errors"
+title: "Converters, options, and errors"
 description: "Bind a configuration in a converter, add or restrict characters, and handle the errors of invalid options."
 ---
 

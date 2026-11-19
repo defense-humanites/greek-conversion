@@ -1,4 +1,4 @@
-# Conversion presets
+# Preset reference
 
 A preset is a named, coherent set of ordinary `ConversionOptions`. Presets do
 not introduce a separate conversion path: they are resolved before parsing and

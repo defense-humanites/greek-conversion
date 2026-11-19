@@ -4,11 +4,11 @@ This is a targeted audit of diacritics, punctuation, and numerals beyond the
 [character repertoire audit](preset-repertoire-audit.md). The cited examples
 check specific rules; passing them is not a certification of a complete
 standard. The precise current options and limitations are listed in the
-[generated preset reference](presets.md).
-The [source-traceable BnF, ISO, and BGN/PCGN corpus](preset-conformance-corpus.md) records
-executable examples and rules that remain open.
-The [ALA-LC corpus](ala-lc-conformance-corpus.md) does the same for the ancient
-and modern Greek tables.
+[preset reference](presets.md). The
+[source-traceable BnF, ISO, and BGN/PCGN corpus](preset-conformance-corpus.md)
+records executable examples and rules that remain open. The
+[ALA-LC corpus](ala-lc-conformance-corpus.md) does the same for the ancient and
+modern Greek tables.
 
 | Preset | Rules checked in the test suite | Remaining boundary |
 | --- | --- | --- |

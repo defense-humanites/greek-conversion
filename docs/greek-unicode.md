@@ -1,4 +1,4 @@
-# Greek accentuation and Unicode output
+# Greek output
 
 Greek accentuation and Unicode representation are independent stages. The
 accentuation system changes the canonical document; Unicode options select how
@@ -31,14 +31,14 @@ The monotonic transform:
   `ἦ` or `ἥ`), and interrogative `πού` and `πώς` from `ποῦ` and `πῶς` (not the
   relative or indefinite `ποὺ`, `που`, `πὼς`, `πως`).
 
-Syllables are counted on the written vowels: a diphthong is one syllable,
-and a diaeresis or an accent on the first of two vowels marks two. An acute
-on `πού` or `πώς` is kept, because that is how monotonic text writes the
-interrogative, so these words are already canonical in monotonic input. Two
-cases need knowledge of the word and are left as written: a monosyllable by synizesis
-(`γιὰ`, `μιὰ`, `δυὸ`, `πιὰ` keep their accent, since `Διός` and `κιών`, with
-the same vowels, are disyllables), and the optional accent that monotonic
-authors put on a weak pronoun to avoid ambiguity (`μού`), which is removed.
+Syllables are counted on the written vowels: a diphthong is one syllable, and a
+diaeresis or an accent on the first of two vowels marks two. An acute on `πού`
+or `πώς` is kept, because that is how monotonic text writes the interrogative,
+so these words are already canonical in monotonic input. Two cases need
+knowledge of the word and are left as written: a monosyllable by synizesis
+(`γιὰ`, `μιὰ`, `δυὸ`, `πιὰ` keep their accent, since `Διός` and `κιών`, with the
+same vowels, are disyllables), and the optional accent that monotonic authors
+put on a weak pronoun to avoid ambiguity (`μού`), which is removed.
 
 The count takes as a word what stands between spaces and punctuation. On text
 that is already monotonic, it therefore removes an accent that usage keeps on

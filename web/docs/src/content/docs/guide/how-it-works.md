@@ -30,7 +30,6 @@ and copied through unchanged.
 
 ## Option groups
 
-
 Options come in five groups, named after what they describe. That is why a name
 such as `coronis` can appear in two of them: `diacritics.coronis` asks whether
 the coronis is kept, `transliteration.coronis` how it is written in Latin.
@@ -49,13 +48,13 @@ its default, an example, and the presets that select it.
 
 ## Which function to use
 
-| You want to…                                                             | Use                                                                   |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| Convert a string                                                         | `convert(input, from, to, options?)`                                  |
-| Normalize or restyle a string without changing its format                | `reencode(input, format, options?)`                                   |
-| Know whether the conversion loses information, and where each token went | `convertDetailed(input, from, to, options?)`                          |
-| Bind a preset, add characters, or restrict the repertoire                | `createConverter(configuration)`                                      |
-| [Inspect or edit the parsed text itself](/guide/document/)              | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
+| You want to…                                                                               | Use                                                                   |
+| ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| Convert a string                                                                           | `convert(input, from, to, options?)`                                  |
+| Normalize or restyle a string without changing its format                                  | `reencode(input, format, options?)`                                   |
+| [Know whether the conversion loses information, and where each token went](/guide/losses/) | `convertDetailed(input, from, to, options?)`                          |
+| [Bind a preset, add characters, or restrict the repertoire](/guide/converters/)            | `createConverter(configuration)`                                      |
+| [Inspect or edit the parsed text itself](/guide/document/)                                 | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
 
 ```ts
 import { convert, reencode } from "@humanities/greek-conversion";
@@ -67,6 +66,8 @@ reencode("λόγος", "greek", { greek: { finalSigma: "medial" } }); // → λ�
 
 All of these share the same parser, document, options, and encoders, so they
 always agree with one another. The recipes show the option forms of the common
-tasks, such as [removing diacritics](/guide/recipes/diacritics-and-unicode/#remove-all-or-some-diacritics),
-[folding letter variants](/guide/recipes/letters-and-text/#keep-or-fold-letter-variants), or
+tasks, such as
+[removing diacritics](/guide/recipes/diacritics-and-unicode/#remove-all-or-some-diacritics),
+[folding letter forms](/guide/recipes/letters-and-text/#keep-or-fold-letter-forms),
+or
 [choosing a Unicode form](/guide/recipes/diacritics-and-unicode/#control-greek-unicode-output).

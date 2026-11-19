@@ -51,7 +51,7 @@ The status terms mean:
 
 These statuses do not measure complete preset conformance. Contextual rules,
 diacritics, punctuation, numeral treatment, and other limitations remain
-described in [Preset reference and coverage](presets.md).
+described in [Preset reference](presets.md).
 
 ## Findings by authority
 

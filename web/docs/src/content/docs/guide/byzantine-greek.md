@@ -69,10 +69,11 @@ convert(date, "greek", "transliteration", { preset: "ala-lc-ancient" });
 
 ## Uncial-style output
 
-Capitals, the lunate sigma, the iota written on the line, and no other mark
-give Greek in the style of the uncial manuscripts. The shapes of the letters
-are a matter of font, and removing the spaces between words is left to the
-caller:
+Capitals, the lunate sigma, the iota written on the line (see
+[Write the iota on the line](/guide/recipes/letters-and-text/#write-the-iota-on-the-line)),
+and no other mark give Greek in the style of the uncial manuscripts. The
+shapes of the letters are a matter of font, and removing the spaces between
+words is left to the caller:
 
 ```ts
 import { reencode } from "@humanities/greek-conversion";

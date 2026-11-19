@@ -1,4 +1,4 @@
-# Conversion-loss analysis
+# Conversion-analysis contract
 
 `convertDetailed()` returns the converted text together with an analysis of the
 information retained by the target representation:
@@ -49,9 +49,10 @@ Consequently:
 - NFC/NFD and tonos/oxia changes are not losses;
 - selected Greek punctuation glyphs are not losses;
 - a letter form (`glyphVariant`) is lost when the source format, under the
-  options of the conversion, writes the letter differently from the source
-  and from the reparsed target: a form the options fold, or write again from its position, is not a
-  loss (see [Letter forms](information-loss.md#letter-forms));
+  options of the conversion, writes the letter differently from the source and
+  from the reparsed target: a form the options fold, or write again from its
+  position, is not a loss (see
+  [Letter forms](information-loss.md#letter-forms));
 - deterministic marks added by an output policy are not losses;
 - removed diacritics, monotonic simplification, numeral conversion, dental
   assimilation, consonant changes, and unrepresented source tokens are losses
@@ -60,7 +61,7 @@ Consequently:
 `lossy` is equivalent to `losses.length > 0` and is included as a convenience
 for callers that only need to display a warning.
 
-## Diagnostics
+## Loss codes
 
 `ConversionLoss.index` is the token index in the parsed source `Document`.
 `offset` and `length` locate that token in the input string, in UTF-16 code

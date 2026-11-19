@@ -193,10 +193,10 @@ on any later version of the same major.
 
 ## Presets
 
-A preset identifier is stable. Its `coverage` may move between `partial`,
-`adapted`, and `complete` as implementation progresses; such a move is
-descriptive and accompanies the underlying change, which is classified by the
-rules above. A preset is never removed in a minor release; one that becomes
+A preset identifier is stable. Its `coverage` may move between `planned`,
+`partial`, `adapted`, and `complete` as implementation progresses; such a move
+is descriptive and accompanies the underlying change, which is classified by
+the rules above. A preset is never removed in a minor release; one that becomes
 obsolete is deprecated first.
 
 ## Deprecation

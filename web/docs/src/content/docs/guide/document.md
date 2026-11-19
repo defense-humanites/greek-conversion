@@ -83,5 +83,5 @@ validateDocument([beta]).map((diagnostic) => diagnostic.code);
 Validation checks the document, not the original spelling: a malformed source
 sequence can survive as a literal. The
 [validation contract](/reference/validation/) lists the codes, and the
-[document contract](/reference/document-api/) describes the ownership and
+[document API contract](/reference/document-api/) describes the ownership and
 editing rules of tokens.

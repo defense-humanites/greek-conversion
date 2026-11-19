@@ -6,7 +6,7 @@ context. This contract explains why validation is a step of its own rather than
 an option of conversion, what it checks, and at which stage of a pipeline it
 applies.
 
-## Decision
+## Why validation is a separate step
 
 `validateDocument()` remains explicitly separate from `parse()`, `encode()`,
 and `convert()`. Validation is not an `encode` or `convert` option.

@@ -27,10 +27,11 @@ convert("Ελευθέριος Βενιζέλος", "greek", "transliteration", {
 // → Elefthérios Venizélos
 ```
 
-[What each preset loses](/guide/presets/#what-each-preset-loses) compares
-them, with the other presets, on a monotonic text. Without a preset, the
-transliteration is the SBL academic style, made for Ancient Greek: it writes `Eleuthérios Benizélos`, with `b` for beta, and reads
-a word-initial vowel back with a breathing (`Ἐλευθέριος`).
+[What each preset loses](/guide/presets/#what-each-preset-loses) compares them,
+with the other presets, on a monotonic text. Without a preset, the
+transliteration is the SBL academic style, made for Ancient Greek: it writes
+`Eleuthérios Benizélos`, with `b` for beta, and reads a word-initial vowel back
+with a breathing (`Ἐλευθέριος`).
 
 ## Names, passports, and maps
 
@@ -180,9 +181,11 @@ convert(monotonic, "greek", "transliteration", options);
 
 ## Search keys and URL slugs
 
-Removing every mark and setting the case gives a key that matches a name
-whatever its accents and case. Through Type 2, the same options write the name
-in plain Latin letters, as a URL can carry it:
+A search key matches a name whatever its accents, its case, and the forms of
+its letters, as
+[Build a search key](/guide/recipes/letters-and-text/#build-a-search-key)
+explains. Through Type 2, the same options write the name in plain Latin
+letters, as a URL can carry it:
 
 ```ts
 import { convert, reencode } from "@humanities/greek-conversion";
@@ -190,6 +193,12 @@ import { convert, reencode } from "@humanities/greek-conversion";
 const key = {
   diacritics: { all: "remove" },
   text: { letterCase: "lowercase" },
+  greek: {
+    sigma: "standard",
+    finalSigma: "medial",
+    medialBeta: "standard",
+    symbolForms: "standard",
+  },
 } as const;
 
 reencode("ΘΕΣΣΑΛΟΝΙΚΗ", "greek", key); // → θεσσαλονικη

@@ -80,9 +80,9 @@ before a digit in Beta Code (see
   [preset behavior audit](preset-behavior-audit.md) lists, for each standard,
   the rules that depend on such knowledge.
 - **It does not claim complete conformance to a standard.** Each preset states
-  its references, its coverage (`partial`, `adapted`, or `complete`), and what
-  it does not implement, in the [preset reference](presets.md) and at run time
-  (`getPresetMetadata()`).
+  its references, its coverage (`complete`, `partial`, `adapted`, or
+  `planned`), and what it does not implement, in the
+  [preset reference](presets.md) and at run time (`getPresetMetadata()`).
 - **It does not separate languages**, as described above.
 - **It does not lay out text.** Letter shapes, uncial ones included, are a
   matter of font, and removing the spaces between words is left to the
@@ -103,7 +103,7 @@ forms), archaic letters, Greek punctuation, and marked alphabetic numerals.
 | Presets and their exact options                    | [Presets](presets.md)                                                                                 |
 | Loss by format pair and option                     | [Information loss](information-loss.md)                                                               |
 | Detailed results, positions, and spans             | [Conversion analysis](conversion-analysis.md)                                                         |
-| Accentuation, letter forms, and Unicode output     | [Greek Unicode](greek-unicode.md)                                                                     |
+| Accentuation, letter forms, and Unicode output     | [Greek output](greek-unicode.md)                                                                      |
 | Punctuation and alphabetic numerals                | [Punctuation and numerals](punctuation-and-numerals.md)                                               |
 | Custom characters and repertoires                  | [Character extensions](character-extensions.md)                                                       |
 | The canonical document and its validation          | [Document API](document-api.md) and [Validation](validation.md)                                       |

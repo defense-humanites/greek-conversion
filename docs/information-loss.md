@@ -36,9 +36,10 @@ the row format to the column format and parsing the result again.
 ### Canonical spelling and Unicode
 
 All recognized output has a selected spelling. Transliteration is NFC. Greek is
-composed by default. Output that carries a polytonic mark writes its acutes
-with oxia and is therefore not necessarily NFC; output that carries none is
-NFC (see [Tonos and oxia](greek-unicode.md#tonos-and-oxia)). Accepted aliases do not round-trip byte for byte:
+composed by default. Output that carries a polytonic mark writes its acutes with
+oxia and is therefore not necessarily NFC; output that carries none is NFC (see
+[Tonos and oxia](greek-unicode.md#tonos-and-oxia)). Accepted aliases do not
+round-trip byte for byte:
 
 - letter forms follow the Greek options, which keep those of the source by
   default, and are lost where the target cannot write them (see
@@ -313,7 +314,7 @@ class in every format, as a mark in Greek and Beta Code and as the letter `h`
 marks used to distinguish letters remain: `ē/ō`, `c̄/s̄`, and `ḳ` are not
 removable diacritics.
 
-## Stability guarantee
+## Idempotence
 
 For canonical output and one fixed, resolved option set without `source`,
 every format is idempotent:
@@ -345,12 +346,12 @@ isStable("Ἡ τοῦ Ὁμήρου Ἰλιάς", "greek", "transliteration", {
 
 The first conversion may canonicalize aliases, mark order, punctuation, case,
 spacing, or a deliberately lossy option. Reapplying the same options to that
-canonical target does not change it again. Options that give a `source`
-describe another input: the output is converted again without it. This
-fixed-point guarantee is not a reverse-round-trip guarantee and does not imply
-that the original source can be reconstructed. The differential corpus and explicit loss cases live in
-`tests/fixtures.ts`; pairwise stability and isolated non-default option values
-are exercised by `tests/stability_test.ts`.
+canonical target does not change it again. Options that give a `source` describe
+another input: the output is converted again without it. This fixed-point
+guarantee is not a reverse-round-trip guarantee and does not imply that the
+original source can be reconstructed. The differential corpus and explicit loss
+cases live in `tests/fixtures.ts`; pairwise stability and isolated non-default
+option values are exercised by `tests/stability_test.ts`.
 
 Three properties are checked for every preset and every format pair over a
 deterministic corpus of difficult forms in `tests/invariants_corpus_test.ts`:

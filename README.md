@@ -72,7 +72,7 @@ convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliter
 The [documentation](https://greek-conversion.humanites.fr/) has the guide, the recipes, the
 [presets](https://greek-conversion.humanites.fr/guide/presets/), a page on
 [Modern Greek](https://greek-conversion.humanites.fr/guide/modern-greek/), the reference, and the
-[API](https://greek-conversion.humanites.fr/api/). What every conversion guarantees is stated in
+[API](https://greek-conversion.humanites.fr/api/readme/). What every conversion guarantees is stated in
 [Guarantees and limits](https://github.com/defense-humanites/greek-conversion/blob/main/docs/guarantees.md);
 to contribute, see
 [CONTRIBUTING.md](https://github.com/defense-humanites/greek-conversion/blob/main/CONTRIBUTING.md).
