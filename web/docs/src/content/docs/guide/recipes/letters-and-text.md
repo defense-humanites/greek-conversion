@@ -7,7 +7,10 @@ sidebar:
 
 Some choices concern the letters themselves and the text around them: which
 form of a letter Greek output writes, where it writes an iota subscript, and
-how a conversion treats letter case and whitespace, in every format.
+how a conversion treats letter case and whitespace, in every format. These
+choices are options of two groups, each listed with its values in the option
+reference: [`greek`](/reference/options/#greek) and
+[`text`](/reference/options/#text).
 
 ## Keep or fold letter variants
 

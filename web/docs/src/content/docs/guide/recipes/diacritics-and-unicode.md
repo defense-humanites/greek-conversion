@@ -8,7 +8,10 @@ sidebar:
 Three groups of options shape the marks of a text. `diacritics` keeps or
 removes each class of mark, in every format; `greek.accentuation` turns
 polytonic Greek into monotonic; and the rest of `greek` chooses how Greek
-output is encoded in Unicode, without changing what it says.
+output is encoded in Unicode, without changing what it says. Every option of
+both groups, with its values, is in the option reference:
+[`diacritics`](/reference/options/#diacritics) and
+[`greek`](/reference/options/#greek).
 
 ## Remove all or some diacritics
 

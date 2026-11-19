@@ -328,9 +328,9 @@ export default defineConfig({
       ],
       // The reader comes with a Greek (ancient, Byzantine, or modern), looks
       // for the convention that applies to it, and asks what a conversion
-      // loses: the first three groups answer in that order. A reference page
-      // takes its title from `docs/`; its label here tells it from the guide
-      // page on the same subject.
+      // loses: the first three groups answer in that order. A page is listed
+      // under its own title, so that the menu and the page agree: to rename
+      // an entry, rename the page.
       sidebar: [
         {
           label: "Start here",
@@ -353,7 +353,7 @@ export default defineConfig({
           label: "Standards and presets",
           items: [
             "guide/presets",
-            { label: "Preset reference", slug: "reference/presets" },
+            "reference/presets",
             {
               label: "Conformance",
               collapsed: true,
@@ -368,10 +368,7 @@ export default defineConfig({
         },
         {
           label: "Recipes",
-          items: [
-            { autogenerate: { directory: "guide/recipes" } },
-            { label: "Option reference", slug: "reference/options" },
-          ],
+          items: [{ autogenerate: { directory: "guide/recipes" } }],
         },
         {
           label: "Going further",
@@ -383,17 +380,15 @@ export default defineConfig({
         {
           label: "Reference",
           items: [
+            "reference/options",
             "reference/guarantees",
             "reference/stability",
-            {
-              label: "Loss by format and option",
-              slug: "reference/information-loss",
-            },
-            { label: "Loss report", slug: "reference/conversion-analysis" },
+            "reference/information-loss",
+            "reference/conversion-analysis",
             "reference/greek-unicode",
             "reference/punctuation-and-numerals",
             "reference/character-extensions",
-            { label: "Document contract", slug: "reference/document-api" },
+            "reference/document-api",
             "reference/validation",
           ],
         },
