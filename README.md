@@ -45,7 +45,7 @@ example of the BGN/PCGN table. When a conversion cannot be reversed, the
 library says what was lost instead of quietly guessing. It has no
 dependencies and uses no runtime-specific API.
 
-**No code needed:** the
+**Not a developer?** The
 [playground](https://greek-conversion.humanites.fr/playground/)
 converts in the browser, with every preset and option, and shows what each
 conversion loses.
