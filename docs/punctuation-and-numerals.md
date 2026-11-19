@@ -145,5 +145,5 @@ convert("αιʹ ἀʹ ιβ΄", "greek", "transliteration", decimal);
 // → aiʹ aʹ ib΄
 ```
 
-A final sigma written for the stigma, as some editions print it, is read as a
-sigma: `ςʹ` is 200, and `ιςʹ` is not read as 16.
+A final sigma that is not the units before the keraia is a sigma: `ςαʹ` is
+201, and `αςʹ`, whose values do not go down, is not a numeral.
