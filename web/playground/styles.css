@@ -1007,7 +1007,7 @@ h1 span {
   overflow: hidden;
   font-family: var(--face-text);
   font-size: 16px;
-  font-weight: 300;
+  font-weight: 400;
   color: var(--muted);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1063,7 +1063,7 @@ h1 span {
 .face-transliteration,
 .face-beta-code {
   font-family: var(--face-text);
-  font-weight: 300;
+  font-weight: 400;
 }
 
 /* The two fields: the source in cobalt, the target in orange */
@@ -1649,7 +1649,7 @@ pre.code code {
   min-width: 0;
   color: var(--ink);
   font-family: var(--face-text);
-  font-weight: 300;
+  font-weight: 400;
 }
 .picker-grid {
   display: grid;
