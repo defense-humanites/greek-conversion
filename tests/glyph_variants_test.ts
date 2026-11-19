@@ -428,6 +428,8 @@ test("a final sigma as the units of a numeral is a stigma", () => {
     "6 16 126 1006 200",
   );
   assertNfcEquals(convert("s2# is2#", "beta-code", "greek", decimal), "6 16");
+  // The Greek numeral sign is the keraia, after NFC.
+  assertNfcEquals(convert("ις\u0374", "greek", "greek", decimal), "16");
   assertEquals(
     parse("ιςʹ", "greek").map((token) =>
       token.kind === "grapheme" ? [token.letter, token.glyphVariant] : []
