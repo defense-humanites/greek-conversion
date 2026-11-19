@@ -86,7 +86,8 @@ export function applyOrthography(
  * collapses acute/grave/circumflex to one acute, removes breathings, coronis,
  * iota subscript, and explicit quantity, and leaves monosyllables unaccented
  * except for the three the monotonic system distinguishes (see
- * {@link keepsMonosyllableAccent}). It does not use lexical or morphological
+ * {@link keepsMonosyllableAccent}) and those that abbreviate a longer word
+ * (`ό,τι`, `κ.ά.`, `20ός`). It does not use lexical or morphological
  * knowledge.
  */
 export function applyGreekOrthography(
@@ -148,8 +149,13 @@ function unaccentMonosyllables(
       const token = monotonic[end];
       if (token.kind === "grapheme") word.push(end);
       else if (isWordLetter(token)) kept = true;
+      // A comma does not end the count: before a letter, it is the
+      // hypodiastole of `ό,τι`, inside its word, and before anything else,
+      // what follows it ends the word.
+      else if (isLiteral(token, ",")) continue;
       else if (!isBoundaryTransparent(token)) break;
     }
+    const first = start;
     start = end - 1;
 
     const accented = word.filter((index) =>
@@ -158,6 +164,7 @@ function unaccentMonosyllables(
     if (
       kept || accented.length === 0 ||
       isGreekNumeralContext(monotonic, word[0]) ||
+      isAbbreviation(monotonic, first, end) ||
       syllableCount(monotonic, word) !== 1 ||
       keepsMonosyllableAccent(source, word)
     ) continue;
@@ -172,6 +179,26 @@ function unaccentMonosyllables(
     changed = true;
   }
   return changed;
+}
+
+/**
+ * Whether the word from `start` to `end` (excluded) abbreviates a longer one,
+ * whose accent it keeps: the ending of an ordinal written with digits
+ * (`20ός`), or a word that a period joins to a letter (`κ.ά.`, for `και
+ * άλλα`).
+ */
+function isAbbreviation(
+  document: Document,
+  start: number,
+  end: number,
+): boolean {
+  const before = document[start - 1];
+  if (before?.kind === "literal") {
+    const unit = before.value.charCodeAt(before.value.length - 1);
+    if (unit >= 0x30 && unit <= 0x39) return true;
+  }
+  return isLiteral(before, ".") && isWordLetter(document[start - 2]) ||
+    isLiteral(document[end], ".") && isWordLetter(document[end + 1]);
 }
 
 function syllableCount(document: Document, word: readonly number[]): number {

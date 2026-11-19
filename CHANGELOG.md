@@ -220,6 +220,13 @@ change.
   `final-sigma-stigma`. A final sigma that is not the units of a numeral
   stays a sigma, which Greek output and Beta Code now keep before a keraia
   (`αςʹ`, `as2#`), where rc.9 wrote `ασʹ` and `as#`.
+- Monotonic accentuation (`greek.accentuation: "monotonic"`) keeps the
+  accent of a word that abbreviates a longer one, as usage does: `ὅ,τι`
+  gives `ό,τι`, whose comma (the hypodiastole) is inside its word, `κ.ἄ.`
+  gives `κ.ά.`, a word joined by a period to a letter belonging to an
+  abbreviation, and the ending of an ordinal written with digits keeps its
+  accent (`20ός`). rc.9 counted each as a monosyllable and wrote `ο,τι`,
+  `κ.α.`, and `20ος`, which the documentation listed as limits of the count.
 
 ## [1.0.0-rc.9] - 2026-11-15
 

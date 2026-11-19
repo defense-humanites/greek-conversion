@@ -42,6 +42,10 @@ A final sigma before the keraia, as the units of a numeral, is a stigma:
 `ισʹ`). Code that reads `glyphVariant` gets a new value,
 `final-sigma-stigma`. To write 200, write `σʹ`.
 
+Under `greek: { accentuation: "monotonic" }`, `ό,τι`, an abbreviation such as
+`κ.ά.`, and the ending of an ordinal such as `20ός` keep their accent (rc.9:
+`ο,τι`, `κ.α.`, `20ος`).
+
 `createConverter()` rejects an unknown key of its configuration with an
 `OptionError`, as conversion options do; rc.9 ignored it, so that a
 misspelled `exclude` excluded nothing. An invalid `outOfScopeBehavior`, or an
