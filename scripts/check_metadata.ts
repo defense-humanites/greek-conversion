@@ -4,13 +4,14 @@
  * version in `CITATION.cff`, and the entry points that JSR publishes.
  *
  * It also checks that the project is described by one sentence, the
- * `description` of `package.json`: the README's tagline, the home page of the
- * site, and the documentation of the main module repeat it; the description
- * of the site and the abstract of `CITATION.cff`, read without context,
- * repeat it after "A TypeScript library that converts". The social card,
- * which must hold its text on three lines, gives a shorter form of it, and
- * its text alternative, in the site and the playground, gives that form
- * after "greek conversion: ". The card itself, an image, is checked by eye.
+ * `description` of `package.json`: the README's tagline and the
+ * documentation of the main module repeat it; the home page of the site, its
+ * description, and the abstract of `CITATION.cff`, which may be read first or
+ * alone, repeat it after "A TypeScript library that converts". The social
+ * card, which must hold its text on three lines, gives a shorter form of it
+ * and says in its foot that the package is a TypeScript library; its text
+ * alternative, in the site and the playground, reads the card in order. The
+ * card itself, an image, is checked by eye.
  *
  * It checks, last, that the site has one address, the `homepage` of
  * `package.json`: the one it is built for, and the one every file that
@@ -50,10 +51,13 @@ expect("the JSR entry points", jsr.exports, {
   "./document": "./src/document.ts",
 });
 
-/** Text as read: markup, non-breaking spaces and hyphens, line breaks. */
+/**
+ * Text as read: tags and Astro's explicit spaces (`{" "}`), non-breaking
+ * spaces and hyphens, line breaks.
+ */
 const plain = (text: string | undefined) =>
-  text?.replace(/&nbsp;|\u00a0/g, " ").replace(/\u2011/g, "-")
-    .replace(/\s+/g, " ").trim();
+  text?.replace(/<[^>]*>|\{" "\}/g, " ").replace(/&nbsp;|\u00a0/g, " ")
+    .replace(/\u2011/g, "-").replace(/\s+/g, " ").trim();
 const sentence: string = npm.description;
 const library = sentence.replace(
   /^Convert /,
@@ -71,8 +75,8 @@ expect(
 );
 expect(
   "the description of the home page",
-  plain(hero.match(/<p class="description">([^<]*)<\/p>/)?.[1]),
-  sentence,
+  plain(hero.match(/<p class="description">([\s\S]*?)<\/p>/)?.[1]),
+  library,
 );
 expect(
   "the documentation of src/mod.ts",
@@ -92,7 +96,10 @@ expect(
 /** The text of `docs/assets/greek-conversion-social-clair.png`. */
 const CARD =
   "Convert Ancient and Modern Greek to and from Beta Code or Latin script, with standards-based presets and information-loss diagnostics.";
-const card = "greek conversion: " + CARD[0].toLowerCase() + CARD.slice(1);
+/** Its foot: the package, and what and where it is. */
+const FOOT = "@humanities/greek-conversion, TypeScript library on npm and JSR.";
+const card = "greek conversion: " + CARD[0].toLowerCase() + CARD.slice(1) +
+  " " + FOOT;
 const playground = await read("web/playground/index.html");
 expect(
   "the text alternative of the site's social card",
