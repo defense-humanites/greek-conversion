@@ -105,6 +105,14 @@ left out: bare, the TLG uses these signs for mark-up (a font, quotation
 marks, an overline), which the reader keeps as text, and the writer writes
 them bare, so that Beta Code converted to itself keeps its mark-up.
 
+So are the TLG's quotation marks. Bare, `"` is `“` or `”` in the TLG, after
+its place, and `"1` to `"8` write the other marks (`"3` is `‘` or `’`, `"6`
+`«` or `»`). Reading them so would make the straight quotation marks of a
+typed Greek text curly ones, and an opening mark would need a closing one to
+read back as itself. The library therefore keeps a bare `"` as itself and
+the codes as text, and writes every quotation mark as itself, except `’`,
+which is also the apostrophe, `'`: `«λόγος»` gives `«lo/gos»`.
+
 ```ts
 import { convert } from "@humanities/greek-conversion";
 
