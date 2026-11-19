@@ -45,14 +45,20 @@ The package is ESM-only and ships its own type declarations.
 
 ## Example
 
-Ancient Greek to the SBL academic transliteration, TLG Beta Code to Greek, and
-Modern Greek to the ISO 843 transcription of passports and maps:
-
 ```ts
 import { convert } from "@humanities/greek-conversion";
 
-convert("Ἕλλησιν ἐγένετο", "greek", "transliteration"); // → Héllēsin egéneto
-convert("*(/ELLHSIN E)GE/NETO", "beta-code", "greek"); // → Ἕλλησιν ἐγένετο
+// Ancient Greek, in the SBL academic style
+convert("Ἕλλησιν ἐγένετο", "greek", "transliteration", {
+  preset: "sbl-academic",
+});
+// → Héllēsin egéneto
+
+// Beta Code, as the TLG writes it
+convert("*(/ELLHSIN E)GE/NETO", "beta-code", "greek");
+// → Ἕλλησιν ἐγένετο
+
+// Modern Greek, as passports and maps write it
 convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliteration", {
   preset: "iso-843-type-2",
 });
