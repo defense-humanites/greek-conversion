@@ -305,9 +305,9 @@ export default defineConfig({
         { tag: "script", content: PLAYGROUND_REDIRECT },
         { tag: "script", content: MIN_WIDTH },
         // Where the menu stays beside the page (from 1100px), the new page is
-        // not drawn before its menu is whole: Safari would otherwise show it
-        // cut after its first groups for a frame or two, the rest still to
-        // parse.
+        // not drawn before its menu is whole: from one page to the next, the
+        // menu stays put (theme.css), and Safari would otherwise show it cut
+        // after its first groups for a frame or two, the rest still to parse.
         {
           tag: "link",
           attrs: {
