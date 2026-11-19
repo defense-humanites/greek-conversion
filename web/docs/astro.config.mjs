@@ -289,6 +289,7 @@ export default defineConfig({
       components: {
         EditLink: "./src/components/EditLink.astro",
         Pagination: "./src/components/Pagination.astro",
+        MobileMenuToggle: "./src/components/MobileMenuToggle.astro",
         PageFrame: "./src/components/PageFrame.astro",
         PageSidebar: "./src/components/PageSidebar.astro",
         Search: "./src/components/Search.astro",

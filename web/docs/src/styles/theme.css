@@ -97,22 +97,19 @@ html {
 }
 
 /* The icons Starlight draws itself (search, the carets of the sidebar and
-   of "On this page", the phone menu's open and close) are redrawn with the
-   same icons: each SVG keeps its box, its own drawing is hidden, and a mask
+   of "On this page") are redrawn with the same icons: each SVG keeps its box, its own drawing is hidden, and a mask
    of the Lucide icon (`web/shared/icons.css`) is painted in the text's
    colour. */
 site-search button[data-open-modal] > svg,
 .sidebar-content svg.caret,
-mobile-starlight-toc svg.caret,
-button.sl-menu-button svg {
+mobile-starlight-toc svg.caret {
   background: currentColor;
   mask: var(--icon) center / contain no-repeat;
 }
 :is(
     site-search button[data-open-modal] > svg,
     .sidebar-content svg.caret,
-    mobile-starlight-toc svg.caret,
-    button.sl-menu-button svg
+    mobile-starlight-toc svg.caret
   )
   > * {
   display: none;
@@ -123,12 +120,6 @@ site-search button[data-open-modal] > svg {
 .sidebar-content svg.caret,
 mobile-starlight-toc svg.caret {
   --icon: var(--icon-chevron-right);
-}
-button.sl-menu-button svg.open-menu {
-  --icon: var(--icon-menu);
-}
-button.sl-menu-button svg.close-menu {
-  --icon: var(--icon-x);
 }
 
 /* Links that open in a new tab, as in the playground: a mark kept on the
@@ -727,16 +718,37 @@ mobile-starlight-toc details[open] .toggle {
   border-color: var(--muted);
   color: var(--ink);
 }
-@media (hover: hover) {
-  mobile-starlight-toc details .toggle:hover {
-    border-color: var(--muted);
-    color: var(--ink);
-  }
-}
 
 mobile-starlight-toc .display-current {
   color: var(--muted);
   font-size: 0.875rem;
+  transition: color 0.15s ease;
+}
+/*
+ * The whole bar opens the list, the current section's name too: hovered or
+ * pressed anywhere, it answers as one button. Its toggle's line darkens and
+ * the name takes the ink, as when the list is open; pressed, the toggle
+ * also takes the tint of a pressed secondary button (--press, on its raised
+ * background) and shrinks (below).
+ */
+mobile-starlight-toc details[open] .display-current {
+  color: var(--ink);
+}
+@media (hover: hover) {
+  mobile-starlight-toc summary:hover .toggle {
+    border-color: var(--muted);
+    color: var(--ink);
+  }
+  mobile-starlight-toc summary:hover .display-current {
+    color: var(--ink);
+  }
+}
+mobile-starlight-toc summary:active .toggle {
+  border-color: var(--muted);
+  background: color-mix(in oklab, var(--ink) 8%, var(--raised));
+}
+mobile-starlight-toc summary:active .display-current {
+  color: var(--ink);
 }
 
 /* A taller bar (60px rather than 48px), so that the panel, 6px below the
@@ -843,7 +855,7 @@ mobile-starlight-toc .toggle,
 }
 @media (prefers-reduced-motion: no-preference) {
   .sl-link-button:active,
-  mobile-starlight-toc .toggle:active,
+  mobile-starlight-toc summary:active .toggle,
   .expressive-code .copy button:active {
     scale: var(--squish);
     transition:
