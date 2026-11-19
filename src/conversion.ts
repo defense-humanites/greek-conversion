@@ -19,6 +19,7 @@ import {
   readFinalSigmaStigmas,
 } from "./orthography.ts";
 import { parseBetaCode } from "./parsers/beta_code.ts";
+import { readStigmaLigatures } from "./ligatures.ts";
 import { parseGreek } from "./parsers/greek.ts";
 import {
   outputSpans,
@@ -143,14 +144,14 @@ export function parseResolved(
   share = false,
   read?: ReadPositions,
 ): Document {
-  switch (format) {
-    case "greek":
-      return readStigmas(input, parseGreek(input, share, read));
-    case "beta-code":
-      return readStigmas(input, parseBetaCode(input, share, read));
-    case "transliteration":
-      return parseTransliteration(input, options, read);
-  }
+  const document = format === "greek"
+    ? readStigmas(input, parseGreek(input, share, read))
+    : format === "beta-code"
+    ? readStigmas(input, parseBetaCode(input, share, read))
+    : parseTransliteration(input, options, read);
+  return options.greek.stigma === "ligature"
+    ? readStigmaLigatures(document, read?.starts)
+    : document;
 }
 
 /**

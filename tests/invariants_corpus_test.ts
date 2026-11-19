@@ -26,8 +26,8 @@ import { parse, validateDocument } from "../src/document.ts";
  * and medial variants, monotonic and uncial text, Greek punctuation, rough
  * breathings inside a word, where the h meets a consonant, spacing
  * breathings before a capital and after a letter, archaic letters that a
- * digit extends into another TLG code in Beta Code, and signs that Beta
- * Code writes with a TLG code.
+ * digit extends into another TLG code in Beta Code, signs that Beta Code
+ * writes with a TLG code, and signs that stand for several letters.
  */
 const WORDS = [
   "ἄνθρωπος",
@@ -147,6 +147,10 @@ const WORDS = [
   "*α",
   "50%",
   "λόγος/ψυχή",
+  "ϗ",
+  "Ϗ",
+  "ἀκȣ́ων",
+  "Ȣ̓τος",
 ] as const;
 
 const SEPARATORS = [" ", " ", ", ", "\n", " · "] as const;

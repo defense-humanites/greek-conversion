@@ -1,13 +1,13 @@
 ---
 title: "Byzantine and Medieval Greek"
-description: "Convert Byzantine texts: the convention that covers the period, breathings written before a capital, the lunate sigma, numerals, uncial-style output, and what is not read yet."
+description: "Convert Byzantine texts: the convention that covers the period, breathings written before a capital, the lunate sigma, numerals, uncial-style output, signs for several letters, and what is not read yet."
 ---
 
 Byzantine texts are written in polytonic Greek, and convert as Ancient Greek
 does: the same reading, the same presets. This page says which convention
 covers the period, shows what matters most for it (breathings written
-before a capital, the lunate sigma, numerals, and uncial-style output), and
-states what the library does not read yet.
+before a capital, the lunate sigma, numerals, uncial-style output, and signs
+for several letters), and states what the library does not read yet.
 
 ## Choose a convention
 
@@ -96,22 +96,46 @@ reencode("ἐν ἀρχῇ ἦν ὁ λόγος", "greek", {
 // → ΕΝ ΑΡΧΗΙ ΗΝ Ο ΛΟΓΟϹ
 ```
 
+## Signs for several letters
+
+Manuscripts and older printing write some words and pairs of letters with one
+sign. The library reads them as the letters they stand for, and Greek output
+writes the sign again:
+
+- the καί symbol `ϗ`, read `και`: `ϗ σύ` gives `kai sý`;
+- the ου ligature `ȣ`, a Latin letter that editions use for it, read `ου`:
+  `ȣ̓κ` gives `ouk`;
+- under `greek.stigma: "ligature"`, a stigma between two letters, read `στ`:
+  `ἐϛὶ` gives `estì`, where it is otherwise the letter stigma, the numeral
+  six (`ec̄ì`).
+
+`greek.ligatures: "standard"` writes the letters in Greek. Beta Code writes the
+TLG's codes for `ϗ`, `Ϗ`, and `Ȣ` (`#1532`, `#1531`, `#1521`), and the
+letters for the others. No accent is supplied: `ϗ` is `και`.
+
+```ts
+import { convert, reencode } from "@humanities/greek-conversion";
+
+convert("ϗ ȣ̓κ", "greek", "beta-code"); // → #1532 ou)k
+reencode("ϗ ȣ̓κ", "greek", { greek: { ligatures: "standard" } });
+// → και οὐκ
+convert("ἐϛὶ", "greek", "greek", {
+  greek: { stigma: "ligature", ligatures: "standard" },
+});
+// → ἐστὶ
+```
+
 ## What is not read yet
 
 Some signs of Byzantine manuscripts and of their digitizations are kept but
 not interpreted. None is ever dropped: each is copied to the output as it
 is, in every format, Beta Code included.
 
-| In the text                              | Today                                                                           |
-| ---------------------------------------- | ------------------------------------------------------------------------------- |
-| `ϗ`, the abbreviation of καί             | Copied as it is, not read as the word                                           |
-| `ȣ`, the ligature of ου                  | Copied as it is                                                                 |
-| `ϛ` inside a word, as the ligature of στ | Read as the letter stigma: `ἐϛὶ` gives `ec̄ì`                                    |
+| In the text | Today |
+| --- | --- |
 | The overline of nomina sacra, as in `θ̅ς̅` | Copied on the letters as an unknown mark: `th̅s̅`; abbreviations are not expanded |
 
-Beta Code input keeps the TLG codes of these signs as text: `#1532`, the καί
-symbol, gives `#1532`. Byzantine punctuation, such as the hypodiastole `⸒`
-and the four dots `⁘`, is copied in Greek and transliteration, and Beta Code
-writes it with the TLG's codes, `#532` and `#544`, which it reads back.
-Musical notation and the conventions of diplomatic editions are outside the
-scope of the library.
+Byzantine punctuation, such as the hypodiastole `⸒` and the four dots `⁘`, is
+copied in Greek and transliteration, and Beta Code writes it with the TLG's
+codes, `#532` and `#544`, which it reads back. Musical notation and the
+conventions of diplomatic editions are outside the scope of the library.

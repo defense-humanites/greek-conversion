@@ -32,7 +32,7 @@ Beta Code writes many signs with the TLG's codes, which it reads back:
 punctuation for the others). Text that rc.10 wrote reads as it did, except
 where it has `%` or `_`, which are now the dagger and the dash.
 
-Three kinds of input read differently:
+Four kinds of input read differently:
 
 - In Beta Code, every digit after `#` is the number of one TLG code, as
   after `%`: `#12` is kept as text (rc.10: koppa followed by `2`). The codes
@@ -41,6 +41,9 @@ Three kinds of input read differently:
 - In Beta Code, `*` before anything but a letter is an asterisk, and what
   follows it is read without it: `*(` is an asterisk and a parenthesis
   (rc.10: one piece of text).
+- `ϗ` and `ȣ`, which rc.10 copied, are read as `και` and `ου`, and Beta Code
+  `#1532`, `#1531`, and `#1521` as `ϗ`, `Ϗ`, and `Ȣ`. Greek output writes the
+  signs again; `greek.ligatures: "standard"` writes the letters.
 - In every format, a spacing breathing at the start of a word, before a
   capital vowel or rho, is the capital's (`῾Ρωμαῖοι` gives `Ῥωμαῖοι`), and a
   psili after a letter is an apostrophe (`τ᾿` gives `τ’`); rc.10 kept both

@@ -152,9 +152,11 @@ under `lunateSigma: "c"`. The TLG defines no code for a capital sigma, so a
 capital sigma before `3` is written `*s3` and reads back as a lunate sigma
 (`Σ3` → `*s3` → `Ϲ`), which `convertDetailed()` reports as
 `added-glyph-variant`. The
-options `greek.sigma`, `greek.finalSigma`, `greek.medialBeta`, and
-`greek.symbolForms` decide how Greek output writes them; by default, it keeps
-the forms the source writes.
+options `greek.sigma`, `greek.finalSigma`, `greek.medialBeta`,
+`greek.symbolForms`, and `greek.ligatures` decide how Greek output writes them;
+by default, it keeps the forms the source writes. The signs that stand for
+several letters (`ϗ`, `ȣ`) are noted on the first of them (see
+[Signs for several letters](greek-unicode.md#signs-for-several-letters)).
 
 A form is lost when the source format, under the options of the conversion
 (or of its `source` profile), writes the letter differently from the source
@@ -277,6 +279,9 @@ source can be reconstructed from the output: yes, no, or partly.
 | `medialBeta: "symbol"` | Writes `ϐ` inside a word and `β` at its start, whatever the source has | Yes from every format, since the position decides the form |
 | `symbolForms: "preserve"` (default) | Writes the symbol forms `ϑ ϴ ϕ ϖ ϰ ϱ ϵ ϒ` the source notes | Partly: yes in Greek; no in Beta Code and transliteration, which report `removed-glyph-variant` |
 | `symbolForms: "standard"` | Writes the ordinary letters | No, but the canonical text has no symbol form, so the change is not reported |
+| `ligatures: "preserve"` (default) | Writes `ϗ`, `ȣ`, and the `ϛ` that `stigma: "ligature"` reads where the source has them | Partly: yes in Greek, and in Beta Code for `ϗ`, `Ϗ`, and `Ȣ`; otherwise the target writes the letters and reports `removed-glyph-variant` |
+| `ligatures: "standard"` | Writes the letters `και`, `ου`, `στ` | No, but the canonical text has no sign, so the change is not reported |
+| `stigma: "ligature"` | Reads a stigma between two letters as `στ`, in every format | Reading only; a stigma letter between two letters is read as the ligature |
 | `iotaSubscript: "capital-adscript"` or `"adscript"` | Writes a kept iota subscript on the line, after a capital or after every vowel | No: the iota reads back as a letter, and the subscript is reported as removed (`removed-diacritic`) |
 | `dentalSigma: "assimilate"` | Deletes `τ`, `δ`, or `θ` before sigma in Greek output | No |
 | `elidedStop: "aspirate"` | Writes an elided final `π`, `τ`, or `κ` as `φ`, `θ`, or `χ` before a rough breathing in Greek output | No: the aspirate reads back as itself |

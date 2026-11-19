@@ -90,8 +90,10 @@ or conformity to a preset.
 tokens; some transliteration spellings depend on the selected options. The
 options are validated for every format, but only the `transliteration` group,
 `greek.accentuation`, and the disposition of the smooth breathing
-(`diacritics.smoothBreathing`, or `diacritics.all`) change how text is read:
-reading Greek or Beta Code depends on no option. When the options give a
+(`diacritics.smoothBreathing`, or `diacritics.all`) change how
+transliteration is read, and `greek.stigma`, which reads a stigma between two
+letters as `σ` and `τ`, how every format is: reading Greek or Beta Code
+depends on no other option. When the options give a
 `source`, `parse()` reads with it, as a conversion does. It does not perform
 the target's orthographic transformations. Use the same preset and parsing
 options when encoding the result, unless a deliberate change of policy is

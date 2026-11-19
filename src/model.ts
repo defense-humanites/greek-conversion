@@ -99,6 +99,14 @@ export type Diacritic =
  * the units of a numeral (`ιςʹ`, 16); it is a small letter, and Greek output
  * writes it `ς` only there, where it reads back as a stigma.
  *
+ * Three variants note a sign that stands for several letters, on the first
+ * of them: `kai-symbol` on the `κ` of `και` read from `ϗ` (GREEK KAI
+ * SYMBOL), `ou-ligature` on the `ο` of `ου` read from `ȣ` (LATIN SMALL
+ * LETTER OU, which editions use for the Greek ligature), and
+ * `stigma-ligature` on the `σ` of `στ` read from `ϛ` under `greek.stigma:
+ * "ligature"`. Greek output writes the sign under `greek.ligatures:
+ * "preserve"` when the letters that follow are those it stands for.
+ *
  * A name is the Unicode name of the form without `GREEK`, and without
  * `SYMBOL` where a qualifier already tells the form from the letter:
  * `lunate-sigma` (GREEK LUNATE SIGMA SYMBOL), `lunate-epsilon`,
@@ -118,7 +126,10 @@ export type GlyphVariant =
   | "rho-symbol"
   | "lunate-epsilon"
   | "upsilon-hook"
-  | "final-sigma-stigma";
+  | "final-sigma-stigma"
+  | "kai-symbol"
+  | "ou-ligature"
+  | "stigma-ligature";
 
 /**
  * The letter each glyph variant belongs to, its case when it has only one,
@@ -149,6 +160,11 @@ export const GLYPH_VARIANTS: Readonly<
   // The units of a numeral written with the final sigma it resembles (`ιςʹ`
   // for `ιϛʹ`, 16), since keyboards lack the stigma.
   "final-sigma-stigma": { letter: "stigma", uppercase: false, symbol: "ς" },
+  // Signs that stand for several letters, noted on the first of them: `ϗ`
+  // for `και`, `ȣ` for `ου`, `ϛ` for `στ` (see `ligatures.ts`).
+  "kai-symbol": { letter: "kappa" },
+  "ou-ligature": { letter: "omicron" },
+  "stigma-ligature": { letter: "sigma" },
 });
 
 /** One canonical Greek letter with mutable case and semantic diacritics. */

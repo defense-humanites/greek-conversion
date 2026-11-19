@@ -14,6 +14,7 @@ import {
   ownedGrapheme,
   type Token,
 } from "../model.ts";
+import { BETA_LIGATURES, ligatureLetters } from "../ligatures.ts";
 import { parsePunctuation, TLG_SIGNS } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
 import type { ReadPositions } from "./positions.ts";
@@ -148,8 +149,7 @@ export function parseBetaCode(
       ? undefined
       : HASH_LETTERS.get(text.slice(i + 1, hash));
     if (
-      upper && !(hashLetter !== undefined && marks === 0) &&
-      signAt(text, i) !== undefined
+      upper && hashLetter === undefined && signAt(text, i) !== undefined
     ) {
       // Before anything but a letter, `*` is an asterisk, and what follows
       // it is read as if it were not there.
@@ -190,12 +190,30 @@ export function parseBetaCode(
       continue;
     }
 
-    if (hashLetter !== undefined && marks === 0) {
-      // Marks follow the code, as they follow a letter.
-      [i, marks] = consumeMarks(text, hash);
+    if (hashLetter !== undefined) {
+      // Marks follow the code, as they follow a letter, or come between `*`
+      // and the code of a capital.
+      [i, marks] = consumeMarks(text, hash, marks);
       out.push(
         ownedGrapheme(hashLetter, upper, diacriticsFromMask(marks)),
       );
+      continue;
+    }
+
+    const ligature = hash === NO_CODE || upper
+      ? undefined
+      : BETA_LIGATURES.get(text.slice(i + 1, hash));
+    if (ligature !== undefined) {
+      // Marks follow the code, and belong to its last letter.
+      [i, marks] = consumeMarks(text, hash);
+      const letters = ligatureLetters(
+        ligature,
+        diacriticsFromMask(marks),
+        text.charCodeAt(i) === ASTERISK,
+      );
+      out.push(...letters);
+      // The letters share the code's span.
+      for (let k = 1; k < letters.length; k++) starts?.push(start);
       continue;
     }
 
@@ -287,11 +305,12 @@ export const isMarkCode = (code: string): boolean =>
 
 /**
  * Whether the reader keeps `code`, a `%` or `#` and its digits, as text: no
- * letter, keraia, or sign of the TLG that the library knows.
+ * letter, keraia, sign, or ligature of the TLG that the library knows.
  */
 export function isUnreadCode(code: string): boolean {
   return code !== "#" && code !== "#22" && !TLG_SIGNS.has(code) &&
-    !(code[0] === "#" && HASH_LETTERS.has(code.slice(1)));
+    !(code[0] === "#" &&
+      (HASH_LETTERS.has(code.slice(1)) || BETA_LIGATURES.has(code.slice(1))));
 }
 
 /**

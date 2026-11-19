@@ -42,7 +42,6 @@ test("reads * before anything but a letter as an asterisk", () => {
     const [input, written] of [
       ["*(", "%2[1"],
       ["*(?", "%2[1?"],
-      ["*(#1", "%2[1#1"],
       ["*#22", "%2#22"],
       ["*%26", "%2%26"],
     ]
@@ -53,7 +52,9 @@ test("reads * before anything but a letter as an asterisk", () => {
       convert(input, "beta-code", "greek"),
     );
   }
-  assertNfcEquals(convert("*(#1", "beta-code", "greek"), "*(ϟ");
+  // Marks may come between * and the code of a capital, as before a letter.
+  assertNfcEquals(convert("*(#1", "beta-code", "greek"), "Ϟ\u0314");
+  assertNfcEquals(reencode("*(#1", "beta-code"), "*(#1");
   assertNfcEquals(convert("*#1", "beta-code", "greek"), "Ϟ");
   assertNfcEquals(convert("*(/A", "beta-code", "greek"), "Ἅ");
 });
@@ -153,10 +154,10 @@ test("reads a bracket code after an asterisk, and reports a digit after a bracke
 
 test("reads a TLG # code to its last digit", () => {
   // As for % and the brackets, the number is every digit after #: #10 is
-  // the reversed lunate sigma, #12 the obelus, #1532 the καί symbol, none a
-  // letter followed by digits. A code the library does not read is kept as
+  // the reversed lunate sigma and #12 the obelus, neither koppa followed by
+  // digits. A code the library does not read is kept as
   // text, whole.
-  for (const code of ["#7", "#10", "#12", "#300", "#1532"]) {
+  for (const code of ["#7", "#10", "#12", "#300", "#1600"]) {
     const result = convertDetailed(`a)lla/ ${code} kai/`, "beta-code", "greek");
     assertNfcEquals(result.output, `ἀλλά ${code} καί`);
     assertEquals(result.lossy, false, code);

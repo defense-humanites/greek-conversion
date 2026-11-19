@@ -207,6 +207,43 @@ reencode("βίος ἅβα", "greek", {
 // → βίος ἅϐα
 ```
 
+### Signs for several letters
+
+Some signs stand for several letters. The readers read them as those letters,
+and remember the sign as the `glyphVariant` of the first one: the καί symbol
+`ϗ` (`Ϗ`, Beta Code `#1532` and `#1531`) as `και` (`kai-symbol`), and the
+ligature `ȣ` (`Ȣ`, Beta Code `#1521`) as `ου` (`ou-ligature`). The ligature is
+a Latin letter, OU, which editions use for the Greek one; only the Greek
+reader takes it for `ου`. Marks written after a sign belong to its last
+letter (`ϗ́` is `καί`, `ȣ̓` is `οὐ`); a capital sign begins a word, or is set
+in capitals before a capital (`ȢΤΟΣ`). No accent is supplied: `ϗ` is `και`.
+
+`greek.stigma: "ligature"` reads a stigma between two letters as `σ` and `τ`
+(`stigma-ligature`), which older printing joined in that sign: `ἐϛὶ` is
+`ἐστὶ`. A stigma after a letter but before none, or before a keraia, stays
+the numeral (`ιϛ`, `ιϛʹ`). The option bears on reading, in every format,
+since a stigma between two letters cannot otherwise be told from the
+ligature.
+
+By default, Greek output writes the sign again where the letters it stands
+for follow its first one unchanged, and `greek.ligatures: "standard"` writes
+the letters. Beta Code writes the TLG codes of `ϗ`, `Ϗ`, and `Ȣ`, the only
+ones the TLG has; transliteration writes the letters. No option writes a sign
+where the source has the letters.
+
+```ts
+import { convert, reencode } from "@humanities/greek-conversion";
+
+convert("ἐγὼ ϗ σύ", "greek", "beta-code"); // → e)gw\ #1532 su/
+convert("ἐγὼ ϗ σύ", "greek", "transliteration"); // → egṑ kai sý
+reencode("ϗ ȣ̓κ", "greek", { greek: { ligatures: "standard" } });
+// → και οὐκ
+const stigma = { greek: { stigma: "ligature" } } as const;
+convert("ἐϛὶ", "greek", "transliteration", stigma); // → estì
+```
+
+### Case of the forms
+
 A form belongs to one case, except the lunate sigma, which has a capital and a
 small form. Changing the case of `ϑ` or `ϐ` writes `Θ` or `Β`, as
 `toUpperCase()` does, and that of `ϴ` or `ϒ` writes `θ` or `υ`.

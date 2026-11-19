@@ -332,6 +332,28 @@ Selects the symbol forms of letters in Greek output: `ϑ`, `ϴ`, `ϕ`, `ϖ`, `ϰ
 | `"preserve"`, the default |  |  |
 | `"standard"` | Greek to Greek: `ϑεός` gives `θεός` instead of `ϑεός` |  |
 
+### `greek.ligatures`
+
+Signs that stand for several letters, such as `ϗ` for `και`. Defaults to `"preserve"`.
+
+Selects how Greek output writes the signs that stand for several letters, which reading the source gives as those letters: the καί symbol `ϗ` (`και`), the ου ligature `ȣ` (`ου`), and the στ ligature `ϛ` that `stigma: "ligature"` reads. `"preserve"` writes the signs the source has, and `"standard"` the letters. No value writes a sign where the source has the letters. Beta Code writes the TLG codes of `ϗ` and `Ϗ` (`#1532`, `#1531`) and of the capital `Ȣ` (`#1521`) under `"preserve"`, and transliteration always writes the letters.
+
+| Value | Example | Presets |
+| --- | --- | --- |
+| `"preserve"`, the default |  |  |
+| `"standard"` | Greek to Greek: `ϗ` gives `και` instead of `ϗ` |  |
+
+### `greek.stigma`
+
+How Greek text reads a stigma between two letters. Defaults to `"letter"`; `"ligature"` reads `σ` and `τ`.
+
+Selects how Greek text reads a stigma between two letters. `"letter"` reads it as the letter stigma, the numeral six (`ἐϛὶ` gives `ec̄ì`); `"ligature"` as `σ` and `τ`, which older printing joined in that sign (`ἐϛὶ` gives `estì`). A stigma after a letter but before none (`ιϛ`), or before a keraia, is read as the letter either way. This option bears on reading only: Greek output writes `ϛ` for `στ` only where the source has it, under `ligatures: "preserve"`.
+
+| Value | Example | Presets |
+| --- | --- | --- |
+| `"letter"`, the default |  |  |
+| `"ligature"` | Greek to Beta Code: `ἐϛὶ` gives `e)sti\` instead of `e)#2i\` |  |
+
 ### `greek.iotaSubscript`
 
 Where a kept iota subscript is written. Defaults to `"subscript"`; whether it is kept is `diacritics.iotaSubscript`.

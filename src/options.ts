@@ -21,6 +21,29 @@ export type MedialBetaOrthography = "preserve" | "standard" | "symbol";
 export type SymbolFormOrthography = "preserve" | "standard";
 
 /**
+ * Selects how Greek output writes the signs that stand for several letters,
+ * which reading the source gives as those letters: the καί symbol `ϗ`
+ * (`και`), the ου ligature `ȣ` (`ου`), and the στ ligature `ϛ` that
+ * `stigma: "ligature"` reads. `"preserve"` writes the signs the source has,
+ * and `"standard"` the letters. No value writes a sign where the source has
+ * the letters. Beta Code writes the TLG codes of `ϗ` and `Ϗ` (`#1532`,
+ * `#1531`) and of the capital `Ȣ` (`#1521`) under `"preserve"`, and
+ * transliteration always writes the letters.
+ */
+export type LigatureOrthography = "preserve" | "standard";
+
+/**
+ * Selects how Greek text reads a stigma between two letters. `"letter"`
+ * reads it as the letter stigma, the numeral six (`ἐϛὶ` gives `ec̄ì`);
+ * `"ligature"` as `σ` and `τ`, which older printing joined in that sign
+ * (`ἐϛὶ` gives `estì`). A stigma after a letter but before none (`ιϛ`), or
+ * before a keraia, is read as the letter either way. This option bears on
+ * reading only: Greek output writes `ϛ` for `στ` only where the source has
+ * it, under `ligatures: "preserve"`.
+ */
+export type StigmaReading = "letter" | "ligature";
+
+/**
  * Selects where Greek output writes a kept iota subscript.
  *
  * `"subscript"` writes it below the line, and after a capital as the
@@ -379,6 +402,10 @@ export interface GreekOptions {
   medialBeta?: MedialBetaOrthography;
   /** Symbol forms of letters, such as `ϑ`. Defaults to `"preserve"`. */
   symbolForms?: SymbolFormOrthography;
+  /** Signs that stand for several letters, such as `ϗ` for `και`. Defaults to `"preserve"`. */
+  ligatures?: LigatureOrthography;
+  /** How Greek text reads a stigma between two letters. Defaults to `"letter"`; `"ligature"` reads `σ` and `τ`. */
+  stigma?: StigmaReading;
   /** Where a kept iota subscript is written. Defaults to `"subscript"`; whether it is kept is `diacritics.iotaSubscript`. */
   iotaSubscript?: IotaSubscriptOrthography;
   /** Double-rho marks in Greek output. Defaults to `"unmarked"`. */
@@ -456,10 +483,12 @@ export interface ConversionOptions {
    * source style does not note: the default style writes no coronis, so a
    * text in that style has none to give.
    *
-   * Reading Greek and Beta Code depends on no option. Reading transliteration
-   * depends on the `transliteration` group, `greek.accentuation`, and the
-   * smooth breathing class of `diacritics`, so that restyling a
-   * transliteration needs the style it is written in:
+   * Reading Greek and Beta Code depends on one option, `greek.stigma`, which
+   * reads a stigma between two letters as the ligature of `σ` and `τ`, in
+   * every format. Reading transliteration also depends on the
+   * `transliteration` group, `greek.accentuation`, and the smooth breathing
+   * class of `diacritics`, so that restyling a transliteration needs the
+   * style it is written in:
    *
    * @example
    * ```ts
@@ -533,6 +562,8 @@ export interface DefaultConversionOptions {
     readonly finalSigma: "preserve";
     readonly medialBeta: "preserve";
     readonly symbolForms: "preserve";
+    readonly ligatures: "preserve";
+    readonly stigma: "letter";
     readonly iotaSubscript: "subscript";
     readonly doubleRho: "unmarked";
     readonly dentalSigma: "preserve";
@@ -688,6 +719,8 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
     finalSigma: ["preserve", "contextual", "medial"],
     medialBeta: ["preserve", "standard", "symbol"],
     symbolForms: ["preserve", "standard"],
+    ligatures: ["preserve", "standard"],
+    stigma: ["letter", "ligature"],
     iotaSubscript: ["subscript", "capital-adscript", "adscript"],
     doubleRho: ["unmarked", "smooth-rough"],
     dentalSigma: ["preserve", "assimilate"],
@@ -757,6 +790,8 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         finalSigma: "preserve",
         medialBeta: "preserve",
         symbolForms: "preserve",
+        ligatures: "preserve",
+        stigma: "letter",
         iotaSubscript: "subscript",
         doubleRho: "unmarked",
         dentalSigma: "preserve",

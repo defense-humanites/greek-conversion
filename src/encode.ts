@@ -58,6 +58,7 @@ import type {
 } from "./options.ts";
 import { greekUpper } from "./case.ts";
 import { applyGreekOrthography, isNumeralUnits } from "./orthography.ts";
+import { betaLigature, writtenLigature } from "./ligatures.ts";
 import { isMarkCode, isUnreadCode } from "./parsers/beta_code.ts";
 import { joinPieces, type WrittenPositions } from "./parsers/positions.ts";
 import { encodePunctuation, TLG_CODE_OF } from "./punctuation.ts";
@@ -153,6 +154,22 @@ export function encodeGreek(
       continue;
     }
 
+    const ligature = writtenLigature(doc, i, options);
+    if (ligature !== undefined) {
+      // One sign for its letters, with the marks of the last one (`ϗ́`).
+      const last = i + ligature.letters.length - 1;
+      out += (token.uppercase ? greekUpper(ligature.greek) : ligature.greek) +
+        greekMarks(rendered[last] as Grapheme);
+      if (starts !== undefined && ends !== undefined) {
+        for (let k = i; k <= last; k++) {
+          starts[k] = start;
+          ends[k] = out.length;
+        }
+      }
+      i = last;
+      continue;
+    }
+
     const assimilated = options.greek?.dentalSigma === "assimilate"
       ? assimilatedDental(doc, i)
       : undefined;
@@ -224,6 +241,8 @@ export function greekGlyph(
   quotations: QuotationContext,
 ): string {
   const ordinary = ALPHABET[token.letter].greek;
+  const ligature = writtenLigature(document, index, options, token);
+  if (ligature !== undefined) return ligature.greek;
   if (token.letter === "sigma") {
     if (writesLunateSigma(document, index, token, options)) return "ϲ";
     // In a numeral, a sigma is 200, written `σ`; a final sigma the source
@@ -292,9 +311,10 @@ export function glyphForm(
     case "greek":
       return greekGlyph(document, index, token, options, quotations);
     case "beta-code":
-      return token.letter === "sigma"
-        ? betaSigma(document, index, token, options, quotations)
-        : "";
+      return betaLigature(document, index, options, token)?.code ??
+        (token.letter === "sigma"
+          ? betaSigma(document, index, token, options, quotations)
+          : "");
     default:
       return token.letter === "sigma" && rendersLunateC(token, options)
         ? "c"
@@ -447,8 +467,11 @@ export function encodeBetaCode(
   const rendered = prepareDiacriticsForRendering(doc, options, "beta-code");
   const betaMarks = byMarks((token) => marks(token, options, "beta-code"));
   const quotations: QuotationContext = {};
+  // The letters after the first of a ligature, which its code writes.
+  let ligatureEnd = 0;
 
   const pieces = rendered.map((token, index) => {
+    if (index < ligatureEnd) return "";
     if (token.kind === "literal") {
       if (isKeptLetter(token)) return token.value;
       const code = BETA_SIGN_CODES.get(token.value);
@@ -464,6 +487,14 @@ export function encodeBetaCode(
           readsBackAsItself(token.value, rendered[index - 1], digits)
         ? token.value
         : code;
+    }
+    const ligature = betaLigature(doc, index, options);
+    if (ligature !== undefined) {
+      // The code for the letters, with the marks of the last one.
+      ligatureEnd = index + ligature.length;
+      const last = rendered[ligatureEnd - 1] as Grapheme;
+      return ligature.code +
+        betaMarks(last).map((mark) => BETA_FOR[mark]).join("");
     }
     let base = token.letter === "sigma"
       ? betaSigma(doc, index, token, options, quotations)
@@ -487,7 +518,10 @@ export function encodeBetaCode(
       .map((mark) => BETA_FOR[mark])
       .join("");
     const afterLetter = renderedMarks.includes("iota-subscript") ? "|" : "";
-    return `*${beforeLetter}${base}${afterLetter}`;
+    // A capital whose code a digit extends reads back as an asterisk before
+    // another code: it is written so, as it reads back.
+    const capital = extendedByDigit(doc, index, options) ? "%2" : "*";
+    return `${capital}${beforeLetter}${base}${afterLetter}`;
   });
   return written === undefined ? pieces.join("") : joinPieces(pieces, written);
 }

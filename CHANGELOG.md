@@ -18,6 +18,25 @@ change.
   library's own: the letters of the Handbook, with the accents, iota
   subscript, diaeresis, and quantity marks that the Handbook leaves out.
 
+### Added
+
+- Signs that stand for several letters are read as those letters, and noted
+  as the glyph variant of the first: the καί symbol `ϗ` (`Ϗ`, Beta Code
+  `#1532` and `#1531`) as `και` (`kai-symbol`), and the ligature `ȣ` (`Ȣ`,
+  Beta Code `#1521`), a Latin letter that editions use for the Greek one, as
+  `ου` (`ou-ligature`); rc.10 copied them as they were. No accent is
+  supplied; marks after a sign belong to its last letter (`ϗ́` is `καί`).
+  Greek output writes the sign again, Beta Code its TLG code where the TLG
+  has one, and transliteration the letters, with a reported loss.
+  `greek.ligatures: "standard"` (type `LigatureOrthography`) writes the
+  letters in Greek and Beta Code too.
+- `greek.stigma: "ligature"` (type `StigmaReading`) reads a stigma between two
+  letters as `σ` and `τ`, which older printing joined in that sign (`ἐϛὶ`
+  gives `estì`), in every format; a stigma at the end of a word or before a
+  keraia stays the numeral. Greek output writes `ϛ` again where the source
+  has it (`stigma-ligature`), never for `στ` the source writes as letters.
+  The default, `"letter"`, reads the stigma as before.
+
 ### Changed
 
 - `sbl-general` writes no diaeresis, which the SBL Handbook does not provide
