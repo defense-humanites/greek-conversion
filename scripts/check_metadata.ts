@@ -4,8 +4,8 @@
  * version in `CITATION.cff`, and the entry points that JSR publishes.
  *
  * It also checks that the project is described by one sentence, the
- * `description` of `package.json`: the README's tagline and the
- * documentation of the main module repeat it; the home page of the site, its
+ * `description` of `package.json`: the documentation of the main module
+ * repeats it; the README's tagline, the home page of the site, its
  * description, and the abstract of `CITATION.cff`, which may be read first or
  * alone, repeat it after "A TypeScript library that converts". The social
  * card, which must hold its text on three lines, gives a shorter form of it
@@ -72,7 +72,7 @@ const home = await read("web/docs/src/content/docs/index.mdx");
 expect(
   "the README's tagline",
   plain(readme.match(/<b>([^<]*)<\/b>/)?.[1]),
-  sentence,
+  library,
 );
 expect(
   "the description of the home page",
