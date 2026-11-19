@@ -225,12 +225,6 @@ button.sl-menu-button svg.close-menu {
   }
 }
 
-/* Text drawn as the browser draws it, as in the playground: Starlight
-   asks for "antialiased", which on macOS draws every stroke thinner. */
-body {
-  -webkit-font-smoothing: auto;
-}
-
 /* Text: headings in Bricolage at display size, as the playground's name. */
 .sl-markdown-content :is(h1, h2, h3, h4, h5, h6),
 h1#_top {

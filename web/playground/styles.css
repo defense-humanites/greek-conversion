@@ -34,9 +34,12 @@ html {
 * {
   box-sizing: border-box;
 }
+/* Text drawn "antialiased", as the documentation (Starlight) draws it:
+   finer on macOS than the browser's default, and the same on both. */
 body {
   margin: 0;
   background: var(--surface);
+  -webkit-font-smoothing: antialiased;
 }
 button,
 select,
@@ -1464,6 +1467,9 @@ pre.code {
   font-family: var(--face-code);
   font-size: 14px;
   line-height: 23px;
+  /* Medium (500), as the documentation's code; keywords and functions
+     bold (700). */
+  font-weight: 500;
 }
 pre.code code {
   font-size: inherit;
