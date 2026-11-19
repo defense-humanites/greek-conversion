@@ -514,6 +514,15 @@ site-search button[data-open-modal] > kbd kbd {
 site-search dialog {
   border-radius: var(--radius);
 }
+/* On a phone, where it covers the screen, the dialog keeps a margin on its
+   four sides, as the header keeps its text from the edges. */
+@media (max-width: 49.99rem) {
+  site-search dialog {
+    width: calc(100% - 2 * var(--sl-nav-pad-x));
+    height: calc(100% - 2 * var(--sl-nav-pad-x));
+    margin: var(--sl-nav-pad-x);
+  }
+}
 
 /*
  * The search dialog, in the same states as the rest of the site: fields and
@@ -552,6 +561,21 @@ site-search dialog {
 }
 #starlight__search .pagefind-ui__result-link:focus-visible {
   outline: none;
+}
+/* The sections of a page are parted by a 1px line, the dialog's colour
+   between Starlight's results; the line of their tree goes on across it,
+   as one stroke (1/16 of the tree's width, at 8/16 of it). */
+#starlight__search .pagefind-ui__result-nested + .pagefind-ui__result-nested::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  inset-inline-start: calc(
+    var(--sl-search-tree-diagram-inline-start) +
+      var(--sl-search-tree-diagram-size) * 7.5 / 16
+  );
+  width: calc(var(--sl-search-tree-diagram-size) / 16);
+  height: 1px;
+  background: var(--sl-color-gray-4);
 }
 
 /*
