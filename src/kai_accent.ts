@@ -42,48 +42,41 @@ const PAUSES: ReadonlySet<string> = new Set([
 
 /**
  * The enclitics, as written without accent after an oxytone (Smyth §181,
- * §181 D): the personal pronouns, with their poetic and dialect forms; the
- * indefinite pronoun and adverbs, with the Ionic forms in `κ`; the present of
- * `εἰμί` and `φημί` but for the second person singular; and the particles.
- * `οἱ`, which is also the article, is left out: the grave is right before
- * the article, far more frequent in prose. The list is read on first use.
+ * §181 D): the personal pronouns, with their poetic and dialect forms (`μοι`,
+ * `οὑ`, `σφισι`, `μιν`, `σφε`); the indefinite pronoun and adverbs, with the
+ * Ionic forms in `κ` (`τις`, `πῃ`, `κως`); the present of `εἰμί` and `φημί`
+ * but for the second person singular; and the particles (`γε`, `τε`, `κε`,
+ * `ῥα`). `οἱ`, which is also the article, is left out: the grave is right
+ * before the article, far more frequent in prose.
+ *
+ * The forms are written in Beta Code without accents, as {@link formOf}
+ * spells a word: Greek text in a string costs six bytes a letter in a bundle
+ * that a minifier writes in ASCII, esbuild's default. The list is turned
+ * into a set on first use.
  */
-const ENCLITIC_FORMS = "μου μοι με σου σοι σε οὑ ἑ σφισι σφισιν μευ σευ " +
-  "σεο ἑο εὑ ἑθεν μιν νιν σφι σφιν σφε σφεα σφεας σφεων σφωε σφωι σφωιν σφωϊ " +
-  "σφωϊν τις τι τινος τινι τινα τινες τινων τισι τισιν τινας τινε τινοιν " +
-  "του τῳ τεο τευ τεῳ που πη πῃ ποι ποθεν ποθι ποτε πω πως κου κῃ κη " +
-  "κοθεν κοτε κως εἰμι ἐστι ἐστιν ἐσμεν ἐστε εἰσι εἰσιν ἐστον ἐσσι εἰμεν " +
-  "φημι φησι φησιν φαμεν φατε φασι φασιν φατον γε τε τοι περ νυ νυν κε κεν " +
-  "κα θην ῥα";
+const ENCLITIC_FORMS = "mou moi me sou soi se ou( e( sfisi sfisin meu seu " +
+  "seo e(o eu( e(qen min nin sfi sfin sfe sfea sfeas sfewn sfwe sfwi sfwin " +
+  "sfwi+ sfwi+n tis ti tinos tini tina tines tinwn tisi tisin tinas tine " +
+  "tinoin tou tw| teo teu tew| pou ph ph| poi poqen poqi pote pw pws kou " +
+  "kh| kh koqen kote kws ei)mi e)sti e)stin e)smen e)ste ei)si ei)sin " +
+  "e)ston e)ssi ei)men fhmi fhsi fhsin famen fate fasi fasin faton ge te " +
+  "toi per nu nun ke ken ka qhn r(a";
 
 /**
- * The elided enclitics: `με` or `μοι`, `σε`, `τε` (`θ’` before a rough
- * breathing), `γε`, `ῥα`, `κε` (`χ’`), `σφε`, `ποτε`, `κοτε`. `σ’` may also
- * be the emphatic `σέ`, which is rarer; `τιν’`, as often interrogative as
- * not, keeps the grave.
+ * The elided enclitics, in Beta Code: `με` or `μοι`, `σε`, `τε` (`θ’` before
+ * a rough breathing), `γε`, `ῥα`, `κε` (`χ’`), `σφε`, `ποτε`, `κοτε`. `σ’`
+ * may also be the emphatic `σέ`, which is rarer; `τιν’`, as often
+ * interrogative as not, keeps the grave.
  */
-const ELIDED_ENCLITICS: ReadonlySet<string> = new Set([
-  "μ",
-  "σ",
-  "τ",
-  "θ",
-  "γ",
-  "ῥ",
-  "κ",
-  "χ",
-  "σφ",
-  "ποτ",
-  "ποθ",
-  "κοτ",
-]);
+const ELIDED_ENCLITICS: ReadonlySet<string> = new Set(
+  "m s t q g r( k x sf pot poq kot".split(" "),
+);
 
 let enclitics: ReadonlySet<string> | undefined;
 
 /** The enclitics, by {@link formOf}. */
 function encliticForms(): ReadonlySet<string> {
-  return enclitics ??= new Set(
-    ENCLITIC_FORMS.replaceAll("ς", "σ").normalize("NFC").split(" "),
-  );
+  return enclitics ??= new Set(ENCLITIC_FORMS.split(" "));
 }
 
 /**
@@ -170,9 +163,9 @@ function isSpace(token: Token | undefined): boolean {
 }
 
 /**
- * The small letters of a word with their breathings, diaeresis, and iota
- * subscript, in NFC, and with `σ` for every sigma: the key of
- * {@link encliticForms} and {@link ELIDED_ENCLITICS}.
+ * A word as {@link encliticForms} and {@link ELIDED_ENCLITICS} have it: its
+ * letters in small Beta Code, each with its breathing, diaeresis, and iota
+ * subscript, and without accents (`οὑ` is `ou(`, `πῃ` is `ph|`).
  */
 function formOf(document: Document, start: number, end: number): string {
   let form = "";
@@ -180,11 +173,11 @@ function formOf(document: Document, start: number, end: number): string {
     const token = document[index];
     if (token.kind !== "grapheme") continue;
     const marks = token.diacritics;
-    form += ALPHABET[token.letter].greek;
-    if (marks.has("smooth")) form += "̓";
-    else if (marks.has("rough")) form += "̔";
-    if (marks.has("diaeresis")) form += "̈";
-    if (marks.has("iota-subscript")) form += "ͅ";
+    form += ALPHABET[token.letter].beta;
+    if (marks.has("smooth")) form += ")";
+    else if (marks.has("rough")) form += "(";
+    if (marks.has("diaeresis")) form += "+";
+    if (marks.has("iota-subscript")) form += "|";
   }
-  return form.normalize("NFC");
+  return form;
 }
