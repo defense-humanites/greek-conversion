@@ -1,7 +1,7 @@
 /**
  * Writes the reference of the conversion options (`docs/options.md`): for
  * each option, what its documentation says, its values, the default, an
- * example of what each value writes, and the presets that write it.
+ * example of what each value writes, and the presets that select it.
  *
  * Nothing is written by hand below the page's introduction. The texts are
  * the TSDoc of `src/options.ts`, the values and defaults those of the
@@ -166,7 +166,7 @@ function renderOption(
       : "";
     lines.push(
       `| \`"${value}"\`${isDefault ? " (default)" : ""} | ${shown} | ${
-        presetsWith(group, key, value, isDefault).map(code).join(", ")
+        presetsWith(group, key, value).map(code).join(", ")
       } |`,
     );
   }
@@ -175,23 +175,17 @@ function renderOption(
 }
 
 /**
- * The presets that write `value`: those that select it, and, for the
- * default, those that set other options of the group but leave this one as
- * it is. A preset that sets nothing in the group does not speak of it.
+ * The presets that select `value`. A preset that leaves the option at its
+ * default is not listed: the default may concern what its standard does not
+ * cover, as the archaic koppa, which ISO 843 does not map.
  */
-function presetsWith(
-  group: string,
-  key: string,
-  value: string,
-  isDefault: boolean,
-): string[] {
+function presetsWith(group: string, key: string, value: string): string[] {
   return listPresetMetadata().map(({ id }) => id).filter((id) => {
     const options = (getPresetOptions(id) as Record<
       string,
       Record<string, string> | undefined
     >)[group];
-    if (options === undefined) return false;
-    return options[key] === value || (isDefault && options[key] === undefined);
+    return options?.[key] === value;
   });
 }
 
