@@ -3,6 +3,8 @@ import { ligatureLength } from "../ligatures.ts";
 import { isVowel } from "../context.ts";
 import {
   type Diacritic,
+  type Grapheme,
+  type Letter,
   literal,
   type Token,
   withDiacritic,
@@ -27,6 +29,15 @@ const SPACING_SIGN =
  */
 export const mayHaveSpacingSigns = (text: string): boolean =>
   SPACING_SIGN.test(text);
+
+/** The vowels that may be long, which alone take a circumflex. */
+const LONG_VOWELS: ReadonlySet<Letter> = new Set([
+  "alpha",
+  "eta",
+  "iota",
+  "upsilon",
+  "omega",
+]);
 
 const ACCENTS: ReadonlySet<Diacritic> = new Set([
   "acute",
@@ -84,24 +95,37 @@ function breathingMarks(value: string): Diacritic[] | undefined {
  *
  * - a spacing sign and the combining accents after it are one literal, the
  *   sign that Unicode composes (`᾿` and an acute, `῎`);
- * - at the start of a word (not after a letter or a digit), spacing breathings, with
- *   their accents, before a capital vowel, or before a capital rho if no
- *   accent came, are the capital's: older typesetting, and the digitizations
- *   of it, writes `῾Ρωμαῖοι` for `Ῥωμαῖοι`;
+ * - at the start of a word (not after a letter or a digit), spacing
+ *   breathings, with their accents, before a capital vowel or rho are the
+ *   capital's: older typesetting, and the digitizations of it, writes
+ *   `῾Ρωμαῖοι` for `Ῥωμαῖοι`;
  * - after a letter, a psili is the apostrophe of elision that it looks like
  *   (`τ᾿ ἐστί`).
  *
- * Elsewhere, the signs stay as they are. `starts`, when given, loses the
- * starts of the tokens joined to the one before them. A reader calls it only
- * on a text that may have a spacing sign ({@link mayHaveSpacingSigns}).
+ * A capital takes the signs nearest to it that it can carry: no second
+ * breathing or accent, no accent on a rho, no circumflex on a short vowel,
+ * no breathing with a diaeresis. The signs before them stay as they are, as
+ * do the signs everywhere else (`῾Ἀ` keeps its `῾`). `starts`, when given,
+ * loses the starts of the tokens joined to the one after them. A reader
+ * calls it only on a text that may have a spacing sign
+ * ({@link mayHaveSpacingSigns}). Each pass copies the tokens once, so that
+ * the time is linear in the length of the text.
  */
 export function readSpacingMarks(tokens: Token[], starts?: number[]): void {
-  for (let i = 0; i < tokens.length; i++) {
+  // The signs with the combining accents after them, as one literal each.
+  const signs: Token[] = [];
+  const signStarts: number[] | undefined = starts && [];
+  for (let i = 0; i < tokens.length;) {
     const token = tokens[i];
+    signStarts?.push(starts![i]);
     if (
       token.kind !== "literal" ||
       !SPACING_BASES.has(token.value.charCodeAt(0))
-    ) continue;
+    ) {
+      signs.push(token);
+      i++;
+      continue;
+    }
     let value = token.value;
     let end = i + 1;
     for (; end < tokens.length; end++) {
@@ -111,56 +135,109 @@ export function readSpacingMarks(tokens: Token[], starts?: number[]): void {
       if (composed.length !== 1) break;
       value = composed;
     }
-    if (end > i + 1) join(tokens, starts, i, end, literal(value));
+    signs.push(end > i + 1 ? literal(value) : token);
+    i = end;
   }
 
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
-    if (token.kind !== "literal") continue;
-    let marks = breathingMarks(token.value);
-    if (marks === undefined) continue;
-    const previous = tokens[i - 1];
-    if (endsWithLetter(previous, true)) {
-      if (token.value === PSILI && endsWithLetter(previous)) {
-        tokens[i] = literal(APOSTROPHE);
-      }
+  const out: Token[] = [];
+  const outStarts: number[] | undefined = starts && [];
+  const keep = (index: number, token: Token = signs[index]) => {
+    out.push(token);
+    outStarts?.push(signStarts![index]);
+  };
+  for (let i = 0; i < signs.length;) {
+    const token = signs[i];
+    if (token.kind !== "literal" || breathingMarks(token.value) === undefined) {
+      keep(i++);
       continue;
     }
-    let capital = i + 1;
-    for (; capital < tokens.length; capital++) {
-      const next = tokens[capital];
-      const more = next.kind === "literal"
-        ? breathingMarks(next.value)
-        : undefined;
-      if (more === undefined) break;
-      marks = [...marks, ...more];
+    const previous = out.at(-1);
+    if (endsWithLetter(previous, true)) {
+      keep(
+        i,
+        token.value === PSILI && endsWithLetter(previous)
+          ? literal(APOSTROPHE)
+          : token,
+      );
+      i++;
+      continue;
     }
-    const letter = tokens[capital];
-    if (
-      letter?.kind !== "grapheme" || !letter.uppercase ||
-      !(letter.letter === "rho" || isVowel(letter.letter)) ||
-      letter.letter === "rho" && marks.some((mark) => ACCENTS.has(mark))
-    ) continue;
-    // The marks of a sign that stands for several letters are its last
-    // letter's (`᾿Ȣ` is `Οὐ`, as `Ȣ̓` is).
+    // The run of signs, and the letter after it.
+    let capital = i + 1;
+    while (
+      capital < signs.length && signs[capital].kind === "literal" &&
+      breathingMarks((signs[capital] as { value: string }).value) !== undefined
+    ) capital++;
+    const from = joinedFrom(signs, i, capital);
+    for (let k = i; k < from; k++) keep(k);
+    if (from === capital) {
+      i = capital;
+      continue;
+    }
+    const letter = signs[capital] as Grapheme;
     const last = capital + ligatureLength(letter.glyphVariant) - 1;
-    const bearer = tokens[last];
-    if (bearer?.kind !== "grapheme") continue;
+    const bearer = signs[last] as Grapheme;
     let diacritics = bearer.diacritics;
-    for (const mark of marks) diacritics = withDiacritic(diacritics, mark);
-    tokens[last] = { ...bearer, diacritics };
-    join(tokens, starts, i, capital + 1, tokens[capital]);
+    for (let k = from; k < capital; k++) {
+      const value = (signs[k] as { value: string }).value;
+      for (const mark of breathingMarks(value)!) {
+        diacritics = withDiacritic(diacritics, mark);
+      }
+    }
+    signs[last] = { ...bearer, diacritics };
+    // The capital starts where the first sign it takes does.
+    keep(from, signs[capital]);
+    i = capital + 1;
+  }
+  if (starts !== undefined) outStarts!.push(signStarts![signs.length]);
+
+  tokens.length = 0;
+  for (const token of out) tokens.push(token);
+  if (starts !== undefined) {
+    starts.length = 0;
+    for (const start of outStarts!) starts.push(start);
   }
 }
 
-/** Replaces the tokens from `start` to `end` with `token`. */
-function join(
-  tokens: Token[],
-  starts: number[] | undefined,
-  start: number,
-  end: number,
-  token: Token,
-): void {
-  tokens.splice(start, end - start, token);
-  starts?.splice(start + 1, end - start - 1);
+/**
+ * The first of the signs from `start` to `capital` that the token at
+ * `capital` takes, or `capital` if it takes none: the signs nearest to it,
+ * as many as its letter can carry with the marks it has. The marks of a sign
+ * that stands for several letters are its last letter's (`᾿Ȣ` is `Οὐ`, as
+ * `Ȣ̓` is).
+ */
+function joinedFrom(signs: Token[], start: number, capital: number): number {
+  const letter = signs[capital];
+  if (
+    letter?.kind !== "grapheme" || !letter.uppercase ||
+    !(letter.letter === "rho" || isVowel(letter.letter))
+  ) return capital;
+  const bearer = signs[capital + ligatureLength(letter.glyphVariant) - 1];
+  if (bearer?.kind !== "grapheme") return capital;
+  const marks = new Set(bearer.diacritics);
+  let from = capital;
+  for (let k = capital - 1; k >= start; k--) {
+    for (const mark of breathingMarks((signs[k] as { value: string }).value)!) {
+      marks.add(mark);
+    }
+    if (!carries(bearer.letter, marks)) break;
+    from = k;
+  }
+  return from;
+}
+
+/**
+ * Whether a letter can carry `marks`, by the rules of `validateDocument()`
+ * that a breathing or an accent can break: one breathing and one accent at
+ * most, an accent on a vowel only (not on a rho), a circumflex on a vowel
+ * that may be long, and no breathing with a diaeresis or a coronis.
+ */
+function carries(letter: Letter, marks: ReadonlySet<Diacritic>): boolean {
+  const breathing = marks.has("smooth") || marks.has("rough");
+  const accents = (marks.has("acute") ? 1 : 0) +
+    (marks.has("grave") ? 1 : 0) + (marks.has("circumflex") ? 1 : 0);
+  return !(marks.has("smooth") && marks.has("rough")) && accents <= 1 &&
+    (accents === 0 || isVowel(letter)) &&
+    (!marks.has("circumflex") || LONG_VOWELS.has(letter)) &&
+    !(breathing && (marks.has("diaeresis") || marks.has("coronis")));
 }

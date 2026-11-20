@@ -156,23 +156,44 @@ export function readStigmaLigatures(
   document: Document,
   starts?: number[],
 ): Document {
-  let out: Token[] | undefined;
-  for (let i = document.length - 2; i > 0; i--) {
+  const isLigature = (i: number): boolean => {
     const token = document[i];
-    const next = document[i + 1];
-    if (
-      token.kind !== "grapheme" || token.letter !== "stigma" ||
-      token.glyphVariant !== undefined ||
-      document[i - 1].kind !== "grapheme" || next.kind !== "grapheme"
-    ) continue;
-    out ??= [...document];
+    return i > 0 && i < document.length - 1 &&
+      token.kind === "grapheme" && token.letter === "stigma" &&
+      token.glyphVariant === undefined &&
+      document[i - 1].kind === "grapheme" &&
+      document[i + 1].kind === "grapheme";
+  };
+  let first = 1;
+  while (first < document.length - 1 && !isLigature(first)) first++;
+  if (first >= document.length - 1) return document;
+
+  // One copy of the tokens, and of their starts, from the first stigma on.
+  const out = document.slice(0, first);
+  const read = starts?.slice(0, first);
+  for (let i = first; i < document.length; i++) {
+    if (!isLigature(i)) {
+      out.push(document[i]);
+      read?.push(starts![i]);
+      continue;
+    }
+    const token = document[i] as Grapheme;
     const [sigma, tau] = ligatureLetters(
       { variant: "stigma-ligature", uppercase: token.uppercase },
       token.diacritics,
     );
-    tau.uppercase = token.uppercase && next.uppercase;
-    out.splice(i, 1, sigma, tau);
-    starts?.splice(i + 1, 0, starts[i]);
+    tau.uppercase = token.uppercase &&
+      (document[i + 1] as Grapheme).uppercase;
+    out.push(sigma, tau);
+    // The `τ` starts where the stigma does.
+    read?.push(starts![i], starts![i]);
   }
-  return out ?? document;
+  if (starts !== undefined) {
+    for (let i = document.length; i < starts.length; i++) {
+      read!.push(starts[i]);
+    }
+    starts.length = 0;
+    for (const start of read!) starts.push(start);
+  }
+  return out;
 }

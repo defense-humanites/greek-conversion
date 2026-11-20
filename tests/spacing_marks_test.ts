@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import { convert, convertDetailed } from "../src/mod.ts";
+import { parse, validateDocument } from "../src/document.ts";
 
 // Older typesetting writes the breathing of a capital before it, and its
 // digitizations keep it there as a spacing sign: psili U+1FBF, dasia U+1FFE,
@@ -90,4 +91,32 @@ test("every format reads spacing breathings alike", () => {
   );
   const spans = convertDetailed("῾*rw", "beta-code", "greek").spans;
   assertEquals([spans[0].inputStart, spans[0].inputEnd], [0, 3]);
+});
+
+test("a capital takes only the spacing signs it can carry", () => {
+  // A second breathing or accent, an accent on a rho, a circumflex on a short
+  // vowel, or a breathing with a diaeresis: the sign stays as it is.
+  for (const text of ["῾Ἀ", "῾Ὠ", "᾿Ῥ", "῏Ε", "῾Ϊ", "῎Ὰ", "῎Ρ"]) {
+    assertNfcEquals(convert(text, "greek", "greek"), text);
+    assertEquals(validateDocument(parse(text, "greek")), [], text);
+    const once = convert(text, "greek", "transliteration", {
+      preset: "iso-843-type-1",
+    });
+    assertEquals(
+      convert(once, "transliteration", "transliteration", {
+        preset: "iso-843-type-1",
+      }),
+      once,
+      text,
+    );
+  }
+  // It takes the signs nearest to it that it can: the rough breathing that
+  // comes before a smooth one stays.
+  assertNfcEquals(convert("῾᾿Α", "greek", "greek"), "῾Ἀ");
+  assertNfcEquals(convert("῎῾Ρ", "greek", "greek"), "῎Ῥ");
+  const spans = convertDetailed("῾᾿Α", "greek", "transliteration").spans;
+  assertEquals(
+    spans.map(({ inputStart, inputEnd }) => [inputStart, inputEnd]),
+    [[0, 1], [1, 3]],
+  );
 });

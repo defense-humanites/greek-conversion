@@ -80,15 +80,17 @@ presets.
   Latin format is named `"transliteration"`: the broad sense that software
   gives the word after Unicode CLDR, which holds transcriptions as well.
 - Every reader takes a spacing breathing before a capital for the capital's,
-  as older editions and their digitizations write it: at the start of a
-  word, before a capital vowel or rho, psili U+1FBF and dasia U+1FFE, and
-  their compounds with an accent, join the capital (`῾Ρωμαῖοι` gives
-  `Rhōmaĩoi`, rc.10: `῾Rōmaĩoi`, and Greek output writes `Ῥωμαῖοι`). A psili
-  after a letter is the apostrophe of an elision (`τ᾿ ἐστί` gives `t’ estí`),
-  so that a sigma before it stays medial (`ὅσ᾿ ἂν` gives `o(/s' a)\n` in Beta
-  Code, rc.10: `o(/s1᾿ a)\n`). Elsewhere, the signs are kept as before. Text
-  that rc.10 wrote from such a source reads back: `῾*rwmai=oi` and
-  `῾Rōmaĩoi` give `Ῥωμαῖοι`.
+  as older editions and their digitizations write it: at the start of a word,
+  before a capital vowel or rho, psili U+1FBF and dasia U+1FFE, and their
+  compounds with an accent, join the capital (`῾Ρωμαῖοι` gives `Rhōmaĩoi`,
+  rc.10: `῾Rōmaĩoi`, and Greek output writes `Ῥωμαῖοι`), as many of them, the
+  nearest, as it can carry: no second breathing or accent, no accent on a rho,
+  no circumflex on a short vowel, no breathing with a diaeresis (`῾Ἀ` stays as
+  it is). A psili after a letter is the apostrophe of an elision (`τ᾿ ἐστί`
+  gives `t’ estí`), so that a sigma before it stays medial (`ὅσ᾿ ἂν` gives
+  `o(/s' a)\n` in Beta Code, rc.10: `o(/s1᾿ a)\n`). Elsewhere, the signs are
+  kept as before. Text that rc.10 wrote from such a source reads back:
+  `῾*rwmai=oi` and `῾Rōmaĩoi` give `Ῥωμαῖοι`.
 - Beta Code reads and writes signs with the TLG's codes (*Beta Code Manual*,
   §3), listed in the reference on punctuation: the ASCII signs that Beta
   Code would read as something else (`/` is `%3`, `*` `%2`, `:` `%10`, `%`

@@ -52,6 +52,23 @@ const IOTA_PASSAGE =
 const ELISION_PASSAGE =
   "‘Ναι’ είπε ἀγγέλλουσ’ — θεοῖσ’; ‘λόγος’ est, ‘ναί.’ ἐλθοῦσ’, ἤν ";
 
+/**
+ * Older editions, and their digitizations, print the breathing of a capital
+ * before it (`src/parsers/spacing_marks.ts`). Until 1.0.0-rc.11 was
+ * published, each one joined to its capital moved the rest of the document:
+ * the ratio was about 64.
+ */
+const EDITION_PASSAGE = "῾Ο δὲ λόγος ἐστὶν ἀληθὴς καὶ καλός, ᾿Αθηναῖοι. ";
+
+/**
+ * Spacing signs in a row, which join no capital: each one looked at all the
+ * others, and the ratio was in the hundreds.
+ */
+const SPACING_RUN = "῾᾿῎῾᾿";
+
+/** Stigmas read as `στ` under `greek.stigma: "ligature"` (`ἐϛὶ`). */
+const STIGMA_PASSAGE = "ἐϛὶν ἄϛυ ";
+
 function fastest(run: () => unknown): number {
   run();
   let best = Infinity;
@@ -96,6 +113,34 @@ const CASES: readonly {
     options: {},
     passage: ELISION_PASSAGE,
     name: "elision passage",
+  },
+  {
+    format: "greek",
+    target: "transliteration",
+    options: {},
+    passage: EDITION_PASSAGE,
+    name: "breathings before capitals",
+  },
+  {
+    format: "greek",
+    target: "transliteration",
+    options: {},
+    passage: SPACING_RUN,
+    name: "spacing signs in a row",
+  },
+  {
+    format: "beta-code",
+    target: "greek",
+    options: {},
+    passage: SPACING_RUN,
+    name: "spacing signs in a row",
+  },
+  {
+    format: "greek",
+    target: "transliteration",
+    options: { greek: { stigma: "ligature" } },
+    passage: STIGMA_PASSAGE,
+    name: "stigma ligatures",
   },
 ];
 
