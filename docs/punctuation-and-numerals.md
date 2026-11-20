@@ -98,7 +98,7 @@ The TLG writes the spacing breathings of a lacuna `%30` and `%31` as U+02BC
 and U+02BD, which every reader takes for an apostrophe; the library reads
 them as the Greek psili and dasia. As in the TLG, the number of a code is
 every digit after it; a code the library does not know is kept as text,
-`#1532` or `%40`, and so are `#12` and `#17`, obeli that the TLG gives as a
+`#1522` or `%40`, and so are `#12` and `#17`, obeli that the TLG gives as a
 dash and a solidus. Before anything but a letter, `*` is an asterisk.
 
 Bare, `<` and `>` write an overline over the letters between them (`<qs>`,

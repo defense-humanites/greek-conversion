@@ -104,8 +104,9 @@ presets.
   they now give `lo/gos%3yuxh/` and `%2a`. Before a digit, which would
   extend a code, a sign is written as itself where it reads back as itself:
   `(1)` gives `(1]1`, which reads back (rc.10: `[11]1`, which did not). The
-  codes of `&`, `"`, `<`, and `>` are left out, since the TLG uses these
-  signs, bare, for mark-up, which Beta Code converted to itself keeps. Every
+  codes of `&` and `"` are left out, since the TLG uses these signs, bare,
+  for mark-up, which Beta Code converted to itself keeps; `<` and `>`, which
+  write an overline, take theirs (see Added). Every
   reader takes `〈` (U+2329 or U+3008) for `⟨`, and the right bracket
   likewise. Before anything but a letter, `*` is an asterisk, and what
   follows it is read as if it were not there: `*(` was one piece of text,
@@ -127,9 +128,11 @@ presets.
   `greek.ligatures: "standard"`.
 - The metadata of the presets (names, authorities, scopes, references,
   limitations) is kept apart from their options, so that a bundle that
-  converts, without `listPresetMetadata()` or `getPresetMetadata()`, no
-  longer carries it: about 10 KB less minified, 3 KB with gzip, for
-  `convert()` or `parse()`. The API is unchanged.
+  converts, without `listPresetMetadata()` or `getPresetMetadata()`, no longer
+  carries it, which saves about 10 KB minified and 3 KB with gzip: the bundle
+  of `convert()` keeps the size it had in rc.10 (66 KB minified, 21 KB with
+  gzip), though this release adds the code of its features, and that of
+  `parse()` goes from 42 KB to 38 KB. The API is unchanged.
 
 ### Removed
 

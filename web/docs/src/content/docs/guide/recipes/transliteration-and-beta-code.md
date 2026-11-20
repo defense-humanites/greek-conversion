@@ -102,7 +102,7 @@ else (`/` is `%3`, `*` `%2`, `:` `%10`), and editorial and Byzantine signs
 (`†` is `%`, `⟨` `[2`, `⸒` `#532`); the
 [reference](/reference/punctuation-and-numerals/#signs-with-a-tlg-code) lists
 them. A `#` or `%` code runs to its last digit, so `#12` is not koppa
-followed by `2`; a code the library does not read, such as `#1532`, is kept
+followed by `2`; a code the library does not read, such as `#1522`, is kept
 as text.
 
 ```ts

@@ -31,9 +31,12 @@ and is no longer a `Preset`.
 Beta Code writes many signs with the TLG's codes, which it reads back:
 `/` is `%3`, `*` `%2`, `:` `%10`, `†` `%`, `⟨` `[2` (see the reference on
 punctuation for the others). Text that rc.10 wrote reads as it did, except
-where it has `%` or `_`, which are now the dagger and the dash.
+where it has `%` or `_`, which are now the dagger and the dash, or one of
+the inputs below that read differently: a `#` code followed by a digit,
+`<` and `>` around letters, a TLG bracket code such as `[2`, or a spacing
+breathing.
 
-Five kinds of input read differently:
+Six kinds of input read differently:
 
 - In Beta Code, every digit after `#` is the number of one TLG code, as
   after `%`: `#12` is kept as text (rc.10: koppa followed by `2`). The codes
@@ -46,15 +49,26 @@ Five kinds of input read differently:
   `#1532`, `#1531`, and `#1521` as `ϗ`, `Ϗ`, and `Ȣ`. Greek output writes the
   signs again; `greek.ligatures: "standard"` writes the letters. Code that
   reads `glyphVariant` gets their values, `kai-symbol` and `ou-ligature`, and
-  `stigma-ligature` under `greek.stigma: "ligature"`.
+  `stigma-ligature` under `greek.stigma: "ligature"`: a `switch` over
+  `GlyphVariant` needs a case for them, or a default.
 - The overline U+0305 is a mark, `overline`: Beta Code reads `<` and `>`
   around letters as one (`<qs>`), and writes `<` and `>` signs `#18` and
   `#15`. A `switch` over `Diacritic` needs a case for it, or a default, and
-  `diacritics.overline: "remove"` removes it.
+  `diacritics.overline: "remove"` removes it. The presets that remove every
+  mark remove it too: `getPresetOptions()` gives `overline: "remove"` for
+  `ala-lc-ancient`, `ala-lc-modern`, and `sbl-general`.
 - In every format, a spacing breathing at the start of a word, before a
-  capital vowel or rho, is the capital's (`῾Ρωμαῖοι` gives `Ῥωμαῖοι`), and a
-  psili after a letter is an apostrophe (`τ᾿` gives `τ’`); rc.10 kept both
-  as signs of their own.
+  capital vowel or rho, is the capital's (`῾Ρωμαῖοι` gives `Ῥωμαῖοι`), as
+  far as the capital can carry it (`῾Ἀ` stays as it is), and a psili after a
+  letter is an apostrophe (`τ᾿` gives `τ’`); rc.10 kept both as signs of
+  their own.
+- Every reader takes `〈` and `〉` (U+2329 and U+232A, U+3008 and U+3009) for
+  `⟨` and `⟩`: Greek output writes `⟨α⟩` for `〈α〉`.
+
+`createConverter()` throws a `TypeError` for an alias or a custom character
+spelled as something that now has a meaning, unless it sets
+`override: true`: in Greek, `ϗ`, `Ϗ`, `ȣ`, `Ȣ`, `〈`, or `〉`; in Beta Code, a
+code or a sign that is now read, such as `%`, `_`, `%3`, `[2`, or `#532`.
 
 ## Updating from `1.0.0-rc.9`
 

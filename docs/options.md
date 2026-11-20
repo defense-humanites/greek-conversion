@@ -349,9 +349,9 @@ Selects how Greek output writes the signs that stand for several letters, which 
 
 ### `greek.stigma`
 
-How Greek text reads a stigma between two letters. Defaults to `"letter"`; `"ligature"` reads `σ` and `τ`.
+How a stigma between two letters is read, in every format. Defaults to `"letter"`; `"ligature"` reads `σ` and `τ`.
 
-Selects how Greek text reads a stigma between two letters. `"letter"` reads it as the letter stigma, the numeral six (`ἐϛὶ` gives `ec̄ì`); `"ligature"` as `σ` and `τ`, which older printing joined in that sign (`ἐϛὶ` gives `estì`). A stigma after a letter but before none (`ιϛ`), or before a keraia, is read as the letter either way. This option bears on reading only: Greek output writes `ϛ` for `στ` only where the source has it, under `ligatures: "preserve"`.
+Selects how a stigma between two letters is read, in every format (`ϛ`, Beta Code `#2`, transliteration `c̄`). `"letter"` reads it as the letter stigma, the numeral six (`ἐϛὶ` gives `ec̄ì`); `"ligature"` as `σ` and `τ`, which older printing joined in that sign (`ἐϛὶ` gives `estì`). A stigma after a letter but before none (`ιϛ`), or before a keraia, is read as the letter either way. This option bears on reading only: Greek output writes `ϛ` for `στ` only where the source has it, under `ligatures: "preserve"`.
 
 | Value | Greek → Beta Code | Presets |
 | --- | --- | --- |

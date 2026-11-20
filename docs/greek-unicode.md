@@ -281,7 +281,7 @@ transliteration and in Greek and Beta Code under `greek.ligatures:
   without accent (`καί τινες`, `καί ἐστι`) or elided (`καί μ’`, `καί σ’`,
   `καί ῥ’`). It writes the grave before any other word or sign: a word with
   an accent (`καὶ ἔστι`, `καὶ τίς`), a proclitic (`καὶ ὁ`), a bracket, a
-  dash, a line break.
+  dash. A line break is no pause: the word after it decides.
 
 The enclitics are those of Smyth §181, with their poetic and dialect forms
 (`μιν`, `σφε`, `κως`, `κε`, `ῥα`). Where the form alone does not decide,
