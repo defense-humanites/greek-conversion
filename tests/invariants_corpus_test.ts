@@ -29,6 +29,10 @@ import { parse, validateDocument } from "../src/document.ts";
  * digit extends into another TLG code in Beta Code, signs that Beta Code
  * writes with a TLG code, signs that stand for several letters, and the
  * overline, with the signs that write it in Beta Code.
+ *
+ * Besides the defaults and the presets, the configurations try the options
+ * that change how these forms are read or written: `greek.ligatures`,
+ * `greek.stigma`, `greek.kaiAccent`, and `diacritics.overline`.
  */
 const WORDS = [
   "ἄνθρωπος",
@@ -156,6 +160,10 @@ const WORDS = [
   "Χ̅Σ̅",
   "ϗ̅",
   "α<β>γ",
+  "ἐϛὶν",
+  "ϗ ὁ",
+  "῾Ἀ",
+  "῎῾Ρ",
 ] as const;
 
 const SEPARATORS = [" ", " ", ", ", "\n", " · "] as const;
@@ -206,6 +214,20 @@ const CONFIGURATIONS: readonly { label: string; options: ConversionOptions }[] =
       label: id,
       options: { preset: id } as ConversionOptions,
     })),
+    {
+      label: "letters for signs",
+      options: { greek: { ligatures: "standard" } },
+    },
+    { label: "stigma ligature", options: { greek: { stigma: "ligature" } } },
+    {
+      label: "modern accent of καί",
+      options: { greek: { kaiAccent: "modern", ligatures: "standard" } },
+    },
+    {
+      label: "Byzantine accent of καί",
+      options: { greek: { kaiAccent: "byzantine" } },
+    },
+    { label: "no overline", options: { diacritics: { overline: "remove" } } },
   ];
 
 test("every word of the corpus is a valid Greek document", () => {
@@ -300,6 +322,45 @@ test("a conversion reported as lossless converts back to the same canonical sour
             `${label}: ${from} → ${to} → ${from} of ${JSON.stringify(source)}`,
           );
         }
+      }
+    }
+  }
+});
+
+/**
+ * Sources as people write them, not as the library writes them: Beta Code
+ * and transliteration with the codes, signs, and spacing breathings that the
+ * readers take for something else.
+ */
+const RAW_SOURCES: readonly { format: Format; text: string }[] = [
+  { format: "beta-code", text: "#1532 tou= *#1531 #1521)tos" },
+  { format: "beta-code", text: "tou= <ku> <iu> <xu> kai\\ to\\ <pna>" },
+  { format: "beta-code", text: "%31*rwmai=oi kai\\ %30*aqhnai=oi" },
+  { format: "beta-code", text: "e)#2i\\ #2# i#2#" },
+  { format: "beta-code", text: "lo/gos%3yuxh/ %2a [2lo/g]2os % #532 #6" },
+  { format: "beta-code", text: "a#18b#15g #12 #25 (1]1" },
+  { format: "transliteration", text: "῾Rōmaĩoi t᾿ estí ῎Anthrōpos" },
+  { format: "transliteration", text: "th̅s̅ kaì toũ i̅b̅" },
+  { format: "transliteration", text: "ec̄ì ec̄ʹ" },
+];
+
+test("raw Beta Code and transliteration convert idempotently, and back when lossless", () => {
+  for (const { label, options } of CONFIGURATIONS) {
+    for (const { format: from, text } of RAW_SOURCES) {
+      const canonical = convert(text, from, from, options);
+      for (const to of FORMATS) {
+        const result = convertDetailed(text, from, to, options);
+        assertEquals(
+          convert(result.output, to, to, options),
+          result.output,
+          `${label}: ${from} → ${to} of ${JSON.stringify(text)}`,
+        );
+        if (result.lossy) continue;
+        assertNfcEquals(
+          convert(result.output, to, from, options),
+          canonical,
+          `${label}: ${from} → ${to} → ${from} of ${JSON.stringify(text)}`,
+        );
       }
     }
   }

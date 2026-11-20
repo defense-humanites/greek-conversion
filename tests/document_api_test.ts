@@ -155,3 +155,31 @@ test("preset Greek views remain valid across source formats", () => {
     }
   }
 });
+
+test("signs for several letters and the overline make valid documents", () => {
+  for (
+    const [text, format] of [
+      ["ϗ ȣ̓κ θ̅ς̅", "greek"],
+      ["#1532 #1521)tos <qs>", "beta-code"],
+      ["kai th̅s̅", "transliteration"],
+    ] as const
+  ) {
+    const document = parse(text, format, { greek: { stigma: "ligature" } });
+    assertEquals(validateDocument(document), [], text);
+  }
+  // A sign is written only where its letters follow it unchanged.
+  const kai = parse("ϗ", "greek");
+  assertNfcEquals(encode(kai, "greek"), "ϗ");
+  assertNfcEquals(encode(kai.slice(0, 2), "greek"), "κα");
+  const variants = parse("ἐϛὶ", "greek", { greek: { stigma: "ligature" } })
+    .flatMap((token) =>
+      token.kind === "grapheme" && token.glyphVariant !== undefined
+        ? [token.glyphVariant]
+        : []
+    );
+  assertEquals(variants, ["stigma-ligature"]);
+  assertNfcEquals(
+    encode(parse("θ̅ς̅", "greek"), "beta-code"),
+    "<qs>",
+  );
+});
