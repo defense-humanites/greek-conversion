@@ -81,3 +81,28 @@ test("keeps or removes the overline as diacritics.overline says", () => {
     "ths",
   );
 });
+
+test("an overline after a transliterated digraph is its last letter's", () => {
+  // `b` and `d̲`, read as two letters, take the overline on the second, as a
+  // sign for several letters does: the overline is a mark, and Greek output
+  // that removes it reads back alike.
+  const modern = { preset: "ala-lc-modern" } as const;
+  for (const text of ["i̅b̅", "B̅", "d̲̅a"]) {
+    const greek = convert(text, "transliteration", "greek", modern);
+    assertEquals(convert(greek, "greek", "greek", modern), greek, text);
+  }
+  const transcription = { preset: "iso-843-type-2" } as const;
+  assertNfcEquals(
+    convert("b̅a", "transliteration", "greek", transcription),
+    "μπ̅α",
+  );
+  // Written back, the overline keeps the letters apart.
+  assertNfcEquals(
+    convert("μπ̅α", "greek", "transliteration", transcription),
+    "mp̅a",
+  );
+  assertNfcEquals(
+    convert("mp̅a", "transliteration", "greek", transcription),
+    "μπ̅α",
+  );
+});

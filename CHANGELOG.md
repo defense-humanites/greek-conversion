@@ -42,16 +42,18 @@ presets.
   keraia stays the numeral. Greek output writes `ϛ` again where the source
   has it (`stigma-ligature`), never for `στ` the source writes as letters.
   The default, `"letter"`, reads the stigma as before.
-- The overline of abbreviations and numerals, U+0305, as over the nomina
-  sacra (`θ̅ς̅`), is a mark, `overline`, a new member of `Diacritic`, which
-  rc.10 kept as an unknown combining mark. Greek and transliteration write it
-  after its letter (`th̅s̅`), and Beta Code over a run of letters, between `<`
-  and `>`, as the TLG does (`<qs>`), which the reader reads; `<` and `>` are
-  then written `#18` and `#15`, their TLG codes, and kept as text where no
-  letter stands between them or a digit follows one. Monotonic accentuation
-  keeps it, and `diacritics.overline: "remove"` removes it, as
-  `diacritics.all: "remove"` does, so the presets that remove every mark
-  remove it with a reported loss. Abbreviations are not expanded.
+- The overline of abbreviations and numerals, U+0305, as over the nomina sacra
+  (`θ̅ς̅`), is a mark, `overline`, a new member of `Diacritic`, which rc.10
+  kept as an unknown combining mark. Greek and transliteration write it after
+  its letter (`th̅s̅`), and Beta Code over a run of letters, between `<` and
+  `>`, as the TLG does (`<qs>`), which the reader reads; `<` and `>` are then
+  written `#18` and `#15`, their TLG codes, and kept as text where no letter
+  stands between them or a digit follows one. Monotonic accentuation keeps it,
+  and `diacritics.overline: "remove"` removes it, as `diacritics.all:
+  "remove"` does, so the presets that remove every mark remove it with a
+  reported loss. In transliteration, an overline after `b` or `d̲`, which
+  ALA-LC and ISO 843 Type 2 read as two letters, is the second one's (`b̅` is
+  `μπ̅`). Abbreviations are not expanded.
 - `greek.kaiAccent` (type `KaiAccent`) writes the accent of `καί` where the
   output writes `ϗ`, which marks none, as letters: in transliteration, and in
   Greek and Beta Code under `greek.ligatures: "standard"`. `"byzantine"`
