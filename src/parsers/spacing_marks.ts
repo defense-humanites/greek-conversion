@@ -20,6 +20,22 @@ import { APOSTROPHE } from "../punctuation.ts";
 const PSILI = "\u1FBF";
 const DASIA = "\u1FFE";
 const SPACING_BASES = new Set([0x1fbf, 0x1ffe, 0x00a8]);
+/** The first units of the spacing signs, composed or not. */
+const SPACING_SIGNS: ReadonlySet<number> = new Set([
+  0x00a8,
+  0x0385,
+  0x1fbf,
+  0x1fc1,
+  0x1fcd,
+  0x1fce,
+  0x1fcf,
+  0x1fdd,
+  0x1fde,
+  0x1fdf,
+  0x1fed,
+  0x1fee,
+  0x1ffe,
+]);
 /** The spacing signs, decomposed or not. */
 const SPACING_SIGN =
   /[\u00A8\u0385\u1FBF\u1FC1\u1FCD-\u1FCF\u1FDD-\u1FDF\u1FED\u1FEE\u1FFE]/;
@@ -106,8 +122,10 @@ export function standsApart(document: Document, index: number): boolean {
   const token = document[index];
   const next = document[index + 1];
   if (
-    token?.kind !== "literal" || next?.kind !== "grapheme" ||
-    !next.uppercase || !(next.letter === "rho" || isVowel(next.letter)) ||
+    token?.kind !== "literal" ||
+    !SPACING_SIGNS.has(token.value.charCodeAt(0)) ||
+    next?.kind !== "grapheme" || !next.uppercase ||
+    !(next.letter === "rho" || isVowel(next.letter)) ||
     endsWithLetter(document[index - 1], true)
   ) return false;
   const marks = breathingMarks(token.value);
