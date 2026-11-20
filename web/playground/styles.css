@@ -1567,6 +1567,92 @@ pre.code code {
   font-style: italic;
   color: var(--code-muted);
 }
+/* The document's views: the segments of the formats, in the source's colour,
+   since the document is the input as read. */
+.views {
+  --accent: var(--from);
+}
+/*
+ * The canonical document as a table: in a frame of the code's ground, as
+ * the JSON, which scrolls both ways with its head kept in view. The text
+ * read is in the face of the texts (Beta Code in the code's), the values
+ * in code, as the JSON writes them; an empty cell shows a muted dash, read
+ * "none"; a token that validation flags is marked in the target's colour.
+ */
+.document-table {
+  max-height: 480px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--code-bg);
+}
+.document-table[hidden] {
+  display: none;
+}
+.document-table table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: var(--face-code);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+.document-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--code-bg);
+  font-family: var(--face-ui);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.12em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.document-table td {
+  padding: 6px 14px;
+  border-top: 1px solid var(--line);
+  vertical-align: baseline;
+  line-height: 24px;
+  white-space: nowrap;
+}
+/* Each column fits its content; the last takes the width left. */
+.document-table :is(th, td):not(:last-child) {
+  width: 1%;
+}
+.document-table tbody tr:first-child td {
+  border-top: 0;
+}
+.document-table td:empty::before {
+  content: "—" / "none";
+  color: var(--muted);
+}
+.document-table .index,
+.document-table .kind,
+.document-table .read.blank {
+  color: var(--muted);
+}
+.document-table .read.text {
+  font-family: var(--face-text);
+  font-size: 18px;
+  font-weight: 400;
+}
+.document-table .validation {
+  min-width: 18em;
+  white-space: normal;
+  font-family: var(--face-ui);
+  font-weight: 400;
+}
+.document-table tr.invalid .index {
+  font-weight: 700;
+  color: var(--to-strong);
+}
 .document-limit {
   display: flex;
   flex-wrap: wrap;

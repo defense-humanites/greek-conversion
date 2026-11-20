@@ -15,8 +15,9 @@ import type {
   CustomCharacterDefinition,
   Format,
   Preset,
+  Token,
 } from "../../src/mod.ts";
-import { parse, parseDetailed, validateDocument } from "../../src/document.ts";
+import { parseDetailed, validateDocument } from "../../src/document.ts";
 import { icon } from "../shared/icons.ts";
 import { detectFormat } from "./detect_format.ts";
 import { changedSpans, firstChange, PROBE_GREEK } from "./option_probe.ts";
@@ -98,6 +99,7 @@ const status = element<HTMLParagraphElement>("status");
 const verdict = status.parentElement as HTMLDivElement;
 const diagnostics = element<HTMLElement>("diagnostics");
 const documentPreview = element<HTMLPreElement>("document-preview");
+const documentTable = element<HTMLDivElement>("document-table");
 const documentLimit = element<HTMLDivElement>("document-limit");
 const documentLimitText = element<HTMLParagraphElement>("document-limit-text");
 const documentShowAll = element<HTMLButtonElement>("document-show-all");
@@ -1020,27 +1022,47 @@ for (const tab of tabs) {
 const PREVIEW_TOKENS = 300;
 let showAllTokens = false;
 
+/** The document as a table, or as the JSON the library would give. */
+function documentView(): "table" | "json" {
+  return document.querySelector<HTMLInputElement>(
+      'input[name="document-view"]:checked',
+    )?.value === "json"
+    ? "json"
+    : "table";
+}
+
 function inspectDocument(options: ConversionOptions, from: Format): void {
   if (selectedTab() !== "tab-document") return;
-  const parsed = parse(source.value, from, options);
+  const read = parseDetailed(source.value, from, options);
+  const parsed = read.document;
   const shown = showAllTokens ? parsed : parsed.slice(0, PREVIEW_TOKENS);
-  showHighlighted(
-    documentPreview,
-    JSON_TOKENS,
-    JSON.stringify(
-      {
-        tokens: shown.map((token) =>
-          token.kind === "grapheme"
-            ? { ...token, diacritics: [...token.diacritics] }
-            : token
-        ),
-        // Always the whole document, whatever the preview shows.
-        validation: validateDocument(parsed),
-      },
-      null,
-      2,
-    ),
-  );
+  // Always the whole document, whatever the preview shows.
+  const validation = validateDocument(parsed);
+  const asTable = documentView() === "table";
+  documentTable.hidden = !asTable;
+  documentPreview.hidden = asTable;
+  if (asTable) {
+    documentPreview.textContent = "";
+    showDocumentTable(shown, read.spans, validation, from);
+  } else {
+    documentTable.replaceChildren();
+    showHighlighted(
+      documentPreview,
+      JSON_TOKENS,
+      JSON.stringify(
+        {
+          tokens: shown.map((token) =>
+            token.kind === "grapheme"
+              ? { ...token, diacritics: [...token.diacritics] }
+              : token
+          ),
+          validation,
+        },
+        null,
+        2,
+      ),
+    );
+  }
   const truncated = shown.length < parsed.length;
   documentLimit.hidden = !truncated;
   if (truncated) {
@@ -1048,6 +1070,107 @@ function inspectDocument(options: ConversionOptions, from: Format): void {
       shown.length - 1
     } of ${parsed.length}; validation covers them all.`;
   }
+}
+
+/** Names for the characters a cell would show as nothing. */
+const BLANKS: Record<string, string> = {
+  " ": "space",
+  "\n": "line break",
+  "\r\n": "line break",
+  "\t": "tab",
+  "\u00a0": "no-break space",
+};
+
+/**
+ * The canonical document as a table, one row a token: its number, the
+ * characters it was read from, its letter, case, marks and glyph variant
+ * (a column only when a token has one), and what validation says of it (a
+ * column only when it says something). A literal fills the letter's cell
+ * with "literal" and leaves the others empty.
+ */
+function showDocumentTable(
+  tokens: readonly Token[],
+  spans: readonly { start: number; end: number }[],
+  validation: readonly { index: number; message: string }[],
+  from: Format,
+): void {
+  const notes = new Map<number, string[]>();
+  for (const { index, message } of validation) {
+    if (index < tokens.length) {
+      notes.set(index, [...(notes.get(index) ?? []), message]);
+    }
+  }
+  const variants = tokens.some((token) =>
+    token.kind === "grapheme" && token.glyphVariant !== undefined
+  );
+  const cell = (tag: "td" | "th", text: string, className = "") => {
+    const element = document.createElement(tag);
+    element.textContent = text;
+    if (className) element.className = className;
+    return element;
+  };
+  const head = document.createElement("tr");
+  for (
+    const name of [
+      "Token",
+      "Read from",
+      "Letter",
+      "Uppercase",
+      "Diacritics",
+      ...(variants ? ["Variant"] : []),
+      ...(notes.size ? ["Validation"] : []),
+    ]
+  ) {
+    const th = cell("th", name);
+    th.scope = "col";
+    head.append(th);
+  }
+  const body = document.createElement("tbody");
+  tokens.forEach((token, index) => {
+    const span = spans[index];
+    const text = span === undefined
+      ? ""
+      : source.value.slice(span.start, span.end);
+    const row = document.createElement("tr");
+    const blank = BLANKS[text] ??
+      (/^\s+$/u.test(text)
+        ? [...text].map((char) =>
+          `U+${
+            char.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")
+          }`
+        ).join(" ")
+        : undefined);
+    const read = blank === undefined
+      ? cell("td", text, `read ${from === "beta-code" ? "beta-code" : "text"}`)
+      : cell("td", blank, "read blank");
+    if (from === "greek" && blank === undefined) read.lang = "grc";
+    row.append(cell("td", String(index), "index"), read);
+    if (token.kind === "grapheme") {
+      row.append(
+        cell("td", token.letter),
+        cell("td", String(token.uppercase)),
+        cell("td", [...token.diacritics].join(", ")),
+      );
+      if (variants) row.append(cell("td", token.glyphVariant ?? ""));
+    } else {
+      row.append(
+        cell("td", "literal", "kind"),
+        cell("td", ""),
+        cell("td", ""),
+      );
+      if (variants) row.append(cell("td", ""));
+    }
+    if (notes.size) {
+      row.append(cell("td", (notes.get(index) ?? []).join(" "), "validation"));
+      if (notes.has(index)) row.classList.add("invalid");
+    }
+    body.append(row);
+  });
+  const thead = document.createElement("thead");
+  thead.append(head);
+  const table = document.createElement("table");
+  table.append(thead, body);
+  documentTable.replaceChildren(table);
 }
 
 /* The same conversion as code, highlighted */
@@ -2321,6 +2444,7 @@ function characterCount(text: string): string {
 
 function update(): void {
   documentPreview.textContent = "";
+  documentTable.replaceChildren();
   showDetection();
   const from = sourceFormat();
   const to = targetFormat();
@@ -2656,6 +2780,13 @@ output.addEventListener("scroll", () => {
   outputMarks.scrollTop = output.scrollTop;
 });
 strict.addEventListener("change", updateInPlace);
+for (
+  const input of document.querySelectorAll<HTMLInputElement>(
+    'input[name="document-view"]',
+  )
+) {
+  input.addEventListener("change", update);
+}
 documentShowAll.addEventListener("click", () => {
   showAllTokens = true;
   update();
