@@ -102,6 +102,31 @@ function markGreek() {
 }
 
 /**
+ * Each table in a box of its own (`.table-frame`), which scrolls when the
+ * table is wider than the column and draws the panel: the table itself
+ * then takes the column's whole width, its rows' lines with it.
+ */
+function frameTables() {
+  /** @param {any} node */
+  const visit = (node) => {
+    if (node.type !== "element" && node.type !== "root") return;
+    node.children = (node.children ?? []).map((/** @type {any} */ child) => {
+      if (child.type === "element" && child.tagName === "table") {
+        return {
+          type: "element",
+          tagName: "div",
+          properties: { className: ["table-frame"] },
+          children: [child],
+        };
+      }
+      visit(child);
+      return child;
+    });
+  };
+  return () => (/** @type {any} */ tree) => visit(tree);
+}
+
+/**
  * Inline code in a table breaks only between its words: each run of
  * non-space characters, such as a key (`iotaSubscript:`) or a value
  * (`"capital-adscript"`), stays on one line (`.code-word`), so that a long
@@ -231,6 +256,23 @@ const MIN_WIDTH = `
 })();`;
 
 /**
+ * No cross-fade between pages in Safari (WebKit, on macOS and iOS, where
+ * every browser is WebKit): Safari tints its tab bar from the page, and
+ * while a view transition shows snapshots of the two pages rather than the
+ * page, its tab bar flashes to its own colour, whatever the transition
+ * names. The old page skips it as it is left, before any snapshot, and the
+ * new one as it is revealed; Chrome and Edge keep it (theme.css).
+ */
+const NO_SAFARI_FADE = `
+(() => {
+  const ua = navigator.userAgent;
+  if (!ua.includes("AppleWebKit") || ua.includes("Chrome/") || ua.includes("Chromium/")) return;
+  const skip = (event) => event.viewTransition?.skipTransition();
+  addEventListener("pageswap", skip);
+  addEventListener("pagereveal", skip);
+})();`;
+
+/**
  * A sidebar link that leaves the documentation: it opens in a new tab, and
  * says so to screen readers; theme.css draws the mark.
  * @param {string} label @param {string} link
@@ -262,6 +304,7 @@ export default defineConfig({
         markExternal(),
         markGreek(),
         breakTableCode(),
+        frameTables(),
       ],
     }),
   },
@@ -289,8 +332,10 @@ export default defineConfig({
       components: {
         EditLink: "./src/components/EditLink.astro",
         Pagination: "./src/components/Pagination.astro",
+        MobileMenuToggle: "./src/components/MobileMenuToggle.astro",
         PageFrame: "./src/components/PageFrame.astro",
         PageSidebar: "./src/components/PageSidebar.astro",
+        Search: "./src/components/Search.astro",
         TwoColumnContent: "./src/components/TwoColumnContent.astro",
         Footer: "./src/components/Footer.astro",
         Hero: "./src/components/Hero.astro",
@@ -302,6 +347,20 @@ export default defineConfig({
       head: [
         { tag: "script", content: PLAYGROUND_REDIRECT },
         { tag: "script", content: MIN_WIDTH },
+        { tag: "script", content: NO_SAFARI_FADE },
+        // Where the menu stays beside the page (from 1100px), the new page is
+        // not drawn before its menu is whole: from one page to the next, the
+        // menu stays put (theme.css), and Safari would otherwise show it cut
+        // after its first groups for a frame or two, the rest still to parse.
+        {
+          tag: "link",
+          attrs: {
+            rel: "expect",
+            href: "#sidebar-content",
+            blocking: "render",
+            media: "(min-width: 68.75rem)",
+          },
+        },
         // The sharing image: the design system's social card, which
         // Starlight's `summary_large_image` card announces.
         ...SHARING_IMAGE,
