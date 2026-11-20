@@ -108,6 +108,14 @@ change.
   no `odb` preset is added. The guide also shows how to expand the nomina
   sacra with a table of one's own through the document API, since the library
   does not expand abbreviations.
+- The playground's examples show Byzantine Greek: the καί symbol written out
+  with its accent, or with its TLG code; `ϗ`, `ȣ`, and the stigma of `στ`
+  written as letters (Mark 12.32); the nomina sacra in Beta Code; a date of
+  the world era and an indiction as numbers; a breathing printed before a
+  capital; strict names as the _Oxford Dictionary of Byzantium_ writes them;
+  the lunate sigma under `bnf-core`. The playground no longer shows
+  `greek.stigma` as idle on a conversion to Greek, where it acts with
+  `greek.ligatures: "standard"`.
 - The metadata of the presets (names, authorities, scopes, references,
   limitations) is kept apart from their options, so that a bundle that
   converts, without `listPresetMetadata()` or `getPresetMetadata()`, no

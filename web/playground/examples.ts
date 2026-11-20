@@ -60,6 +60,10 @@ export function exampleOptions(
 const THUCYDIDES =
   "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων, ὡς δὲ εἰπεῖν καὶ ἐπὶ πλεῖστον ἀνθρώπων.";
 
+const DOXOLOGY = "ϗ νῦν ϗ ἀεὶ ϗ εἰς τοὺς αἰῶνας τῶν αἰώνων";
+const NOMINA_SACRA = "ἐν τῷ ὀνόματι τοῦ κ̅υ̅ ι̅υ̅ χ̅υ̅";
+const BYZANTINE_DATE = "ἔτους ͵ϛφιϛʹ, ἰνδικτιῶνος ιεʹ";
+
 const greek = (
   title: string,
   note: string,
@@ -140,6 +144,52 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       output: "ΤΩΙ ΛΟΓΩΙ ΕϹΤΙΝ ΑΓΑΘΟϹ",
     },
     {
+      title: "Doxology",
+      note: "The καί symbol ϗ written out, with the grave of the manuscripts",
+      text: DOXOLOGY,
+      from: "greek",
+      to: "transliteration",
+      options: { greek: { kaiAccent: "byzantine" } },
+      output: "kaì nỹn kaì aeì kaì eis toùs aiō̃nas tō̃n aiṓnōn",
+    },
+    {
+      title: "Mark 12.32",
+      note: "ϗ, ȣ, and the stigma of στ written as letters",
+      text: "ϗ ȣ̓κ ἔϛιν ἄλλος πλὴν αὐτȣ͂",
+      from: "greek",
+      to: "greek",
+      options: {
+        greek: {
+          ligatures: "standard",
+          stigma: "ligature",
+          kaiAccent: "byzantine",
+        },
+      },
+      output: "καὶ οὐκ ἔστιν ἄλλος πλὴν αὐτοῦ",
+    },
+    greek(
+      "Nomina sacra",
+      "Overlined contractions, as the TLG writes them",
+      NOMINA_SACRA,
+      "e)n tw=| o)no/mati tou= <ku> <iu> <xu>",
+      "beta-code",
+    ),
+    {
+      title: "Byzantine date",
+      note: "Year of the world and indiction, as numbers",
+      text: BYZANTINE_DATE,
+      from: "greek",
+      to: "transliteration",
+      options: { text: { numerals: "decimal" } },
+      output: "étous 6516, indiktiō̃nos 15",
+    },
+    greek(
+      "Imperial title",
+      "A breathing printed before the capital, as older editions do",
+      "βασιλεὺς ῾Ρωμαίων",
+      "basileùs Rhōmaíōn",
+    ),
+    {
       title: "Elision",
       note: "Before the apostrophe, σ stays medial",
       text: "e)/xous' e)gw/",
@@ -191,6 +241,21 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       "Homēros",
     ),
     greek("Archaic letter", "Digamma is romanized w", "ϝάναξ", "wanax"),
+    greek(
+      "Byzantine date",
+      "Numerals romanized as numbers",
+      BYZANTINE_DATE,
+      "etous 6516, indiktiōnos 15",
+    ),
+    {
+      title: "Byzantine names",
+      note: "Length marks left out, as the Oxford Dictionary of Byzantium does",
+      text: "Ἀλέξιος Κομνηνός, Νικήτας Χωνιάτης",
+      from: "greek",
+      to: "transliteration",
+      options: { transliteration: { longVowels: "omit" } },
+      output: "Alexios Komnenos, Niketas Choniates",
+    },
   ],
   "ala-lc-modern": [
     greek(
@@ -246,6 +311,12 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       "ψ becomes ps, η becomes ē",
       "ψυχή",
       "psychḗ",
+    ),
+    greek(
+      "Name with lunate sigmas",
+      "The lunate sigma written c, which reads back",
+      "Χριϲτόϲ",
+      "Chrictóc",
     ),
   ],
   "iso-843-type-1": [
@@ -350,6 +421,20 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       "The shape kept with the TLG code s1",
       "λόγοσ",
       "LO/GOS1",
+      "beta-code",
+    ),
+    greek(
+      "Nomina sacra",
+      "The overline written between < and >",
+      NOMINA_SACRA,
+      "E)N TW=| O)NO/MATI TOU= <KU> <IU> <XU>",
+      "beta-code",
+    ),
+    greek(
+      "Doxology",
+      "The καί symbol ϗ written with its TLG code",
+      DOXOLOGY,
+      "#1532 NU=N #1532 A)EI\\ #1532 EI)S TOU\\S AI)W=NAS TW=N AI)W/NWN",
       "beta-code",
     ),
   ],
