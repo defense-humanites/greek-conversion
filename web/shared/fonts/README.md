@@ -9,8 +9,8 @@ Reserved Font Name.
 | File | Source | Used for |
 | --- | --- | --- |
 | `bricolage-grotesque.woff2` | [Bricolage Grotesque](https://github.com/ateliertriay/bricolage), variable (`opsz` 12–96, `wght` 400–800) | The interface |
-| `literata-gc-light.woff2` | [Literata](https://github.com/googlefonts/literata), static Light (`wght` 300) at `opsz` 24, renamed Literata GC | The texts in all three formats: the fields, examples, and loss reports |
-| `noto-serif-greek-symbols.woff2` | [Noto Serif](https://github.com/notofonts/latin-greek-cyrillic), static Light, sixteen letters | The Greek letters Literata lacks, in the same family (`unicode-range`) |
+| `literata-gc.woff2` | [Literata](https://github.com/googlefonts/literata), static Regular (`wght` 400) at `opsz` 24, renamed Literata GC | The texts in all three formats: the fields, examples, and loss reports |
+| `noto-serif-greek-symbols.woff2` | [Noto Serif](https://github.com/notofonts/latin-greek-cyrillic), static Regular, sixteen letters | The Greek letters Literata lacks, in the same family (`unicode-range`) |
 | `noto-sans-mono.woff2` | [Noto Sans Mono](https://github.com/notofonts/latin-greek-cyrillic), variable (`wght` 400–700) | The code, in all three formats |
 | `fira-mono-greek-symbols.woff2` | [Fira Mono](https://github.com/mozilla/Fira), Regular, nineteen letters | The Greek letter forms Noto Sans Mono draws as the ordinary letters, in the same family (`unicode-range`) |
 
@@ -36,8 +36,9 @@ every name, the licence's included, and the layout features the texts need
 - **Bricolage Grotesque**: the `wdth` axis fixed at 100 and `wght` limited to
   400–800, then subset to Basic Latin, Latin-1, Latin Extended-A, the
   combining acute and macron, and general punctuation.
-- **Literata GC**: instantiated at `opsz` 24 and `wght` 300, one step
-  lighter than Regular, then subset to
+- **Literata GC**: instantiated at `opsz` 24 and `wght` 400, the Regular,
+  whose strokes match Bricolage Grotesque's in running text (the Light it
+  was first drawn in looked thin beside it), then subset to
   Latin (with Latin Extended-B and Extended Additional), spacing modifiers,
   combining diacritics, Greek and Coptic, Greek Extended, and general
   punctuation. Both subsets also keep the euro, the trade mark, the arrows ←
@@ -52,7 +53,7 @@ every name, the licence's included, and the layout features the texts need
 Literata also lacks the symbol forms of Greek letters (`ϐ ϑ ϒ ϓ ϔ ϕ ϖ ϰ ϱ
 ϵ`) and the reversed and dotted lunate sigmas (U+037B–037D, U+03FD–03FF).
 `noto-serif-greek-symbols.woff2` holds only these sixteen letters, from
-Noto Serif instantiated at `wght` 300 and `wdth` 100; the style sheet loads
+Noto Serif instantiated at `wght` 400 and `wdth` 100; the style sheet loads
 it under the same family name for those code points, at 95 % so that its
 x-height matches Literata's.
 
