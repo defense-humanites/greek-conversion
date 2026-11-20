@@ -105,7 +105,9 @@ change.
   Dictionary of Byzantium_ does: `ala-lc-ancient` with `longVowels: "omit"`
   gives `Alexios Komnenos`. The dictionary publishes no table, and keeps a
   traditional form for many names (John, Nicaea), which no option supplies;
-  no `odb` preset is added.
+  no `odb` preset is added. The guide also shows how to expand the nomina
+  sacra with a table of one's own through the document API, since the library
+  does not expand abbreviations.
 - The metadata of the presets (names, authorities, scopes, references,
   limitations) is kept apart from their options, so that a bundle that
   converts, without `listPresetMetadata()` or `getPresetMetadata()`, no

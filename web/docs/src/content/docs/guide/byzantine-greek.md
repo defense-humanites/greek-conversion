@@ -1,6 +1,6 @@
 ---
 title: "Byzantine and Medieval Greek"
-description: "Convert Byzantine texts: the conventions that cover the period, breathings written before a capital, the lunate sigma, numerals, uncial-style output, signs for several letters, the overline, and punctuation."
+description: "Convert Byzantine texts: the conventions that cover the period, breathings written before a capital, the lunate sigma, numerals, uncial-style output, signs for several letters, the overline and the expansion of abbreviations, and punctuation."
 ---
 
 Byzantine texts are written in polytonic Greek, and convert as Ancient Greek
@@ -173,8 +173,9 @@ convert("ϗ τινες ϗ τοῦ", "greek", "transliteration", {
 
 The line drawn over abbreviations and numerals, as over the nomina sacra, is a
 mark of its letters, which every format keeps: `θ̅ς̅` gives `th̅s̅`, and Beta
-Code writes it as the TLG does, `<qs>`. Abbreviations are not expanded, and an
-overlined numeral is read as its letters. `diacritics.overline: "remove"`
+Code writes it as the TLG does, `<qs>`. Abbreviations are not expanded (see
+[Expanding abbreviations](#expanding-abbreviations)), and an overlined
+numeral is read as its letters. `diacritics.overline: "remove"`
 removes the line.
 
 ```ts
@@ -184,6 +185,69 @@ convert("θ̅ς̅ κ̅ς̅", "greek", "beta-code"); // → <qs> <ks>
 convert("θ̅ς̅", "greek", "greek", { diacritics: { overline: "remove" } });
 // → θς
 ```
+
+### Expanding abbreviations
+
+Expanding a nomen sacrum is an editor's choice rather than a conversion. The
+contracted forms are declined (`θ̅ς̅`, `θ̅υ̅`, `θ̅ν̅`) and vary from one
+manuscript to another (`ι̅ς̅` or `ι̅η̅ς̅`, `χ̅ς̅` or `χ̅ρ̅ς̅`). Whether the word
+takes a capital (`Θεός` or `θεός`) is a choice of the edition. A critical
+edition marks the letters it supplies, `θ(εό)ς`, where a normalized text does
+not. Some forms are also numerals: `π̅ν̅α̅` is `πνεῦμα`, and the numeral 131.
+
+The [document API](/guide/document/) lets a text be expanded with a table of
+the forms it uses. Read the text, replace each overlined run that the table
+has with the word, and write the result in any format. A run that the table
+does not have, such as the numeral `ι̅β̅`, is kept as it is:
+
+```ts
+import {
+  type Document,
+  encode,
+  parse,
+  type Token,
+} from "@humanities/greek-conversion/document";
+
+// The contracted forms to expand, as the edition writes them in full.
+const NOMINA_SACRA = new Map([
+  ["θυ", "θεοῦ"],
+  ["κυ", "κυρίου"],
+  ["ιυ", "Ἰησοῦ"],
+  ["χυ", "Χριστοῦ"],
+  ["πνα", "πνεῦμα"],
+]);
+
+const overlined = (token: Token | undefined) =>
+  token?.kind === "grapheme" && token.diacritics.has("overline");
+
+function expand(document: Document): Token[] {
+  const expanded: Token[] = [];
+  for (let index = 0; index < document.length;) {
+    let end = index;
+    while (overlined(document[end])) end++;
+    if (end === index) {
+      expanded.push(document[index++]);
+      continue;
+    }
+    const run = document.slice(index, end);
+    const letters = encode(run, "greek", {
+      diacritics: { overline: "remove" },
+    });
+    const word = NOMINA_SACRA.get(letters);
+    expanded.push(...(word === undefined ? run : parse(word, "greek")));
+    index = end;
+  }
+  return expanded;
+}
+
+const text = "τοῦ κ̅υ̅ ι̅υ̅ χ̅υ̅ καὶ τὸ π̅ν̅α̅ ι̅β̅";
+encode(expand(parse(text, "greek")), "transliteration");
+// → toũ kyríou Iēsoũ Christoũ kaì tò pneũma i̅b̅
+```
+
+A form with an acute on its last syllable, such as `θεός`, takes the grave
+before another word, which a table of forms cannot know: write it as the
+edition does in running text, or leave the accent to be checked.
 
 ## Punctuation and what is outside the library
 
