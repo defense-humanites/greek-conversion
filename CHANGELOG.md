@@ -55,12 +55,13 @@ presets.
 - `greek.kaiAccent` (type `KaiAccent`) writes the accent of `καί` where the
   output writes `ϗ`, which marks none, as letters: in transliteration, and in
   Greek and Beta Code under `greek.ligatures: "standard"`. `"byzantine"`
-  writes the grave, as the manuscripts do even before punctuation;
-  `"modern"` follows modern editions, with the acute before punctuation, at
-  the end of the text, and before an enclitic (`καί τινες`, `καὶ τοῦ`). No
-  accent is written on a sign that has one, on capitals, or in a text with
-  no grave and no circumflex. `convertDetailed()` reports each accent written
-  as `added-diacritic`. The default, `"none"`, writes no accent, as before.
+  writes the grave, as the manuscripts do even before punctuation; `"modern"`
+  follows modern editions, with the acute before punctuation, at the end of
+  the text, and before an enclitic (`καί τινες`, `καὶ τοῦ`). No accent is
+  written on a sign that has one, in capitals, or in a text with no polytonic
+  mark (a breathing, a grave, a circumflex, an iota subscript, a coronis, or a
+  quantity mark). `convertDetailed()` reports each accent written as
+  `added-diacritic`. The default, `"none"`, writes no accent, as before.
 
 ### Changed
 

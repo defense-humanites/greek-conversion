@@ -53,9 +53,10 @@ export type StigmaReading = "letter" | "ligature";
  * `καί μ’`), and the grave elsewhere (`καὶ ὁ`, `καὶ ἔστι`, `καὶ τίς`). Where
  * the form alone does not decide, it writes the grave before `οἱ` and before
  * an accented enclitic, and the acute before a comma and `σ’`. No accent is
- * written on a sign that has one, in capitals, or in a text with no grave
- * and no circumflex, which may be monotonic or unaccented. Each accent
- * written is reported as an added diacritic.
+ * written on a sign that has one, in capitals, or in a text with no
+ * polytonic mark (a breathing, a grave, a circumflex, an iota subscript, a
+ * coronis, or a quantity mark), which may be monotonic or unaccented. Each
+ * accent written is reported as an added diacritic.
  */
 export type KaiAccent = "none" | "byzantine" | "modern";
 

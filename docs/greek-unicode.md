@@ -291,12 +291,13 @@ enclitic that has an accent, which is then more often an interrogative or
 emphatic word than an enclitic accented by the next (`καὶ τί ποτε`); the
 grave before `τιν’`, and the acute before a comma and before `σ’`.
 
-No accent is written on a sign that has one (`ϗ́`), on capitals, or in a text
-with no grave and no circumflex, which may be monotonic or unaccented.
-Monotonic output writes no accent on `και` in any case. The document keeps
-the sign unaccented, so that Greek and Beta Code still write `ϗ` and `#1532`
-where they write the sign; `convertDetailed()` reports each accent written as
-`added-diacritic`.
+No accent is written on a sign that has one (`ϗ́`), in capitals, or in a text
+with no polytonic mark (a breathing, a grave, a circumflex, an iota subscript,
+a coronis, or a quantity mark), which may be monotonic or unaccented:
+`ϗ ὁ λόγος` takes the accent, `ϗ λόγος` does not. Monotonic output writes no
+accent on `και` in any case. The document keeps the sign unaccented, so that Greek
+and Beta Code still write `ϗ` and `#1532` where they write the sign;
+`convertDetailed()` reports each accent written as `added-diacritic`.
 
 ```ts
 import { convert, reencode } from "@humanities/greek-conversion";

@@ -72,6 +72,23 @@ const ELIDED_ENCLITICS: ReadonlySet<string> = new Set(
   "m s t q g r( k x sf pot poq kot".split(" "),
 );
 
+/**
+ * The marks that only polytonic Greek writes, as `greek.acute: "system"`
+ * counts them: a breathing, a grave, a circumflex, an iota subscript, a
+ * coronis, or a quantity mark. A text with none may be monotonic or
+ * unaccented, and no accent of `καί` is written in it.
+ */
+const POLYTONIC_MARKS: readonly Diacritic[] = [
+  "smooth",
+  "rough",
+  "grave",
+  "circumflex",
+  "iota-subscript",
+  "coronis",
+  "macron",
+  "breve",
+];
+
 let enclitics: ReadonlySet<string> | undefined;
 
 /** The enclitics, by {@link formOf}. */
@@ -83,7 +100,8 @@ function encliticForms(): ReadonlySet<string> {
  * Writes the accent of `καί` for each `ϗ` that the output writes as letters,
  * as `options.greek.kaiAccent` says: in transliteration, and where Greek and
  * Beta Code write no sign. A sign that has an accent keeps it; a sign among
- * capitals, or in a text with no grave and no circumflex, gets none.
+ * capitals, or in a text with no polytonic mark ({@link POLYTONIC_MARKS}),
+ * gets none.
  */
 export function supplyKaiAccents(
   document: Document,
@@ -110,7 +128,7 @@ export function supplyKaiAccents(
     ) continue;
     polytonic ??= document.some((token) =>
       token.kind === "grapheme" &&
-      (token.diacritics.has("grave") || token.diacritics.has("circumflex"))
+      POLYTONIC_MARKS.some((mark) => token.diacritics.has(mark))
     );
     if (!polytonic) return document;
     const accent = convention === "byzantine"
