@@ -1574,10 +1574,11 @@ pre.code code {
 }
 /*
  * The canonical document as a table: in a frame of the code's ground, as
- * the JSON, which scrolls both ways with its head kept in view. The text
- * read is in the face of the texts (Beta Code in the code's), the values
- * in code, as the JSON writes them; an empty cell shows a muted dash, read
- * "none"; a token that validation flags is marked in the target's colour.
+ * the JSON, which scrolls both ways with its head kept in view. Every cell
+ * is in code, the text read as the values, which are written as the JSON
+ * writes them; only validation's messages, which are sentences, are in the
+ * face of the interface. An empty cell shows a muted dash, read "none"; a
+ * token that validation rejects has its number in red (--error).
  */
 .document-table {
   max-height: 480px;
@@ -1638,11 +1639,6 @@ pre.code code {
 .document-table .read.blank {
   color: var(--muted);
 }
-.document-table .read.text {
-  font-family: var(--face-text);
-  font-size: 18px;
-  font-weight: 400;
-}
 .document-table .validation {
   min-width: 18em;
   white-space: normal;
@@ -1651,7 +1647,7 @@ pre.code code {
 }
 .document-table tr.invalid .index {
   font-weight: 700;
-  color: var(--to-strong);
+  color: var(--error);
 }
 .document-limit {
   display: flex;

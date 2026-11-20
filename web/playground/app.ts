@@ -1141,7 +1141,7 @@ function showDocumentTable(
         ).join(" ")
         : undefined);
     const read = blank === undefined
-      ? cell("td", text, `read ${from === "beta-code" ? "beta-code" : "text"}`)
+      ? cell("td", text, "read")
       : cell("td", blank, "read blank");
     if (from === "greek" && blank === undefined) read.lang = "grc";
     row.append(cell("td", String(index), "index"), read);
