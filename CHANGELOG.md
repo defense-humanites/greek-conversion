@@ -86,12 +86,15 @@ presets.
   compounds with an accent, join the capital (`῾Ρωμαῖοι` gives `Rhōmaĩoi`,
   rc.10: `῾Rōmaĩoi`, and Greek output writes `Ῥωμαῖοι`), as many of them, the
   nearest, as it can carry: no second breathing or accent, no accent on a rho,
-  no circumflex on a short vowel, no breathing with a diaeresis (`῾Ἀ` stays as
-  it is). A psili after a letter is the apostrophe of an elision (`τ᾿ ἐστί`
-  gives `t’ estí`), so that a sigma before it stays medial (`ὅσ᾿ ἂν` gives
-  `o(/s' a)\n` in Beta Code, rc.10: `o(/s1᾿ a)\n`). Elsewhere, the signs are
-  kept as before. Text that rc.10 wrote from such a source reads back:
-  `῾*rwmai=oi` and `῾Rōmaĩoi` give `Ῥωμαῖοι`.
+  no circumflex on a short vowel, no breathing with a diaeresis (`῾Ἀ` keeps
+  its sign). Where the capital alone could take a sign it kept apart, output
+  writes a zero-width non-joiner (U+200C) after the sign, so that the text
+  reads back alike once the capital loses its own mark (in transliteration,
+  `῾Ἀ` gives `῾`, U+200C, and `A`). A psili after a letter is the apostrophe
+  of an elision (`τ᾿ ἐστί` gives `t’ estí`), so that a sigma before it stays
+  medial (`ὅσ᾿ ἂν` gives `o(/s' a)\n` in Beta Code, rc.10: `o(/s1᾿ a)\n`).
+  Elsewhere, the signs are kept as before. Text that rc.10 wrote from such a
+  source reads back: `῾*rwmai=oi` and `῾Rōmaĩoi` give `Ῥωμαῖοι`.
 - Beta Code reads and writes signs with the TLG's codes (*Beta Code Manual*,
   §3), listed in the reference on punctuation: the ASCII signs that Beta
   Code would read as something else (`/` is `%3`, `*` `%2`, `:` `%10`, `%`

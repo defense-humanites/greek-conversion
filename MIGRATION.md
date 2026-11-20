@@ -58,10 +58,10 @@ Six kinds of input read differently:
   mark remove it too: `getPresetOptions()` gives `overline: "remove"` for
   `ala-lc-ancient`, `ala-lc-modern`, and `sbl-general`.
 - In every format, a spacing breathing at the start of a word, before a
-  capital vowel or rho, is the capital's (`῾Ρωμαῖοι` gives `Ῥωμαῖοι`), as
-  far as the capital can carry it (`῾Ἀ` stays as it is), and a psili after a
-  letter is an apostrophe (`τ᾿` gives `τ’`); rc.10 kept both as signs of
-  their own.
+  capital vowel or rho, is the capital's (`῾Ρωμαῖοι` gives `Ῥωμαῖοι`), as far
+  as the capital can carry it (`῾Ἀ` keeps its sign, and output writes a
+  zero-width non-joiner after the sign), and a psili after a letter is an
+  apostrophe (`τ᾿` gives `τ’`); rc.10 kept both as signs of their own.
 - Every reader takes `〈` and `〉` (U+2329 and U+232A, U+3008 and U+3009) for
   `⟨` and `⟩`: Greek output writes `⟨α⟩` for `〈α〉`.
 

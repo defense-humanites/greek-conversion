@@ -3,6 +3,7 @@ import { ligatureLength } from "../ligatures.ts";
 import { isVowel } from "../context.ts";
 import {
   type Diacritic,
+  type Document,
   type Grapheme,
   type Letter,
   literal,
@@ -87,6 +88,34 @@ function breathingMarks(value: string): Diacritic[] | undefined {
     all.push(accent);
   }
   return all;
+}
+
+/** The zero-width non-joiner, which writers put between a sign and a capital. */
+export const ZWNJ = "\u200C";
+
+/**
+ * Whether the literal at `index` is a spacing breathing that a reader would
+ * join to the capital after it, had the capital been able to carry it: the
+ * sign of `῾Ἀ`, which {@link readSpacingMarks} keeps apart. A capital
+ * written without the mark that kept them apart (`῾A` in transliteration,
+ * `῾Α` in monotonic Greek) would take it when read again, so writers put a
+ * zero-width non-joiner after such a sign, which keeps it apart in every
+ * format.
+ */
+export function standsApart(document: Document, index: number): boolean {
+  const token = document[index];
+  const next = document[index + 1];
+  if (
+    token?.kind !== "literal" || next?.kind !== "grapheme" ||
+    !next.uppercase || !(next.letter === "rho" || isVowel(next.letter)) ||
+    endsWithLetter(document[index - 1], true)
+  ) return false;
+  const marks = breathingMarks(token.value);
+  const bearer = document[index + ligatureLength(next.glyphVariant)];
+  // A sign that the letter could not carry even alone (an accent on a rho)
+  // never joins it.
+  return marks !== undefined && bearer?.kind === "grapheme" &&
+    carries(bearer.letter, new Set(marks));
 }
 
 /**
