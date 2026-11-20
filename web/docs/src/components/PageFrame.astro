@@ -57,11 +57,15 @@ const { hasSidebar } = Astro.locals.starlightRoute;
                   event.preventDefault();
                   if (closing) return;
                   closing = true;
+                  // The icon turns back into its strokes as the drawer leaves.
+                  const button = event.currentTarget as HTMLElement;
+                  button.toggleAttribute("data-closing", true);
                   this.animate([{ translate: "none" }, {
                     translate: "-100% 0",
                   }], { duration: 200, easing: "cubic-bezier(0.4, 0, 1, 1)" })
                     .finished.then(() => {
                       closing = false;
+                      button.removeAttribute("data-closing");
                       if (this.matches(":popover-open")) this.hidePopover();
                     });
                 });
@@ -88,7 +92,7 @@ const { hasSidebar } = Astro.locals.starlightRoute;
           id="starlight__sidebar"
           class="sidebar-pane"
         >
-          <div class="sidebar-content sl-flex">
+          <div id="sidebar-content" class="sidebar-content sl-flex">
             <slot name="sidebar" />
           </div>
         </sl-sidebar-pane>
