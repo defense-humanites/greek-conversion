@@ -70,6 +70,14 @@ const versions = released === null || other === null ? [] : [
     gap: 10px;
     min-width: 0;
     text-decoration: none;
+    transition: scale 0.32s var(--ease-bounce);
+  }
+  /* Pressed, the logo shrinks and springs back, as the action buttons. */
+  @media (prefers-reduced-motion: no-preference) {
+    .identity:active {
+      scale: var(--squish);
+      transition: scale 0.06s ease-in;
+    }
   }
   img {
     display: block;
