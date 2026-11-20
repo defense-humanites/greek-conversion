@@ -1,14 +1,15 @@
 /**
  * Writes the reference of the conversion options (`docs/options.md`): for
  * each option, what its documentation says, its values, the default, an
- * example of what each other value changes, and the presets that select it.
+ * example of what each value writes, and the presets that write it.
  *
  * Nothing is written by hand below the page's introduction. The texts are
  * the TSDoc of `src/options.ts`, the values and defaults those of the
  * library, the presets those of its registry, and each example is computed:
  * the first word of the probe text (`web/playground/option_probe.ts`) that
  * the value writes otherwise than the default does, shown whole, since in
- * Beta Code the signs before a letter are part of the word.
+ * Beta Code the signs before a letter are part of the word, in one
+ * conversion for the whole table; the default writes the same words.
  *
  * Run with `npm run docs:options`; `--check` fails when the page is out of
  * date, as `npm run check` does.
@@ -126,54 +127,143 @@ function renderOption(
     lines.push(type, "");
   }
   const fallback = defaults[group][key];
-  lines.push("| Value | Example | Presets |", "| --- | --- | --- |");
+  const others = choices.filter((value) => value !== fallback);
+  // One conversion for the whole table, named in its head: the first, in
+  // the group's order, that shows the most values.
+  const [from, to, changes] = PAIRS_BY_GROUP[group].map((index) => {
+    const [from, to] = PAIRS[index];
+    const changes = new Map(others.flatMap((value) => {
+      const change = example(group, key, value, from, to);
+      return change === undefined ? [] : [[value, change] as const];
+    }));
+    return [from, to, changes] as const;
+  }).reduce((best, next) => next[2].size > best[2].size ? next : best);
+  // The default writes each word the other values change, once.
+  const words = new Map<string, Change>();
+  for (const change of changes.values()) {
+    if (!words.has(change.word)) words.set(change.word, change);
+  }
+  lines.push(
+    `| Value | ${capitalize(FORMAT_NAMES[from])} → ${
+      FORMAT_NAMES[to]
+    } | Presets |`,
+    "| --- | --- | --- |",
+  );
   for (const value of choices) {
-    const presets = listPresetMetadata().map(({ id }) => id).filter((id) =>
-      (getPresetOptions(id) as Record<
-        string,
-        Record<string, string> | undefined
-      >)[group]?.[key] === value
-    ).map((id) => `\`${id}\``).join(", ");
+    const isDefault = value === fallback;
+    const shown = isDefault
+      ? [...words.values()].map((change) =>
+        conversion(change.word, change.before, from, to, change.was)
+      ).join("<br>")
+      : changes.has(value)
+      ? conversion(
+        changes.get(value)!.word,
+        changes.get(value)!.after,
+        from,
+        to,
+        changes.get(value)!.is,
+      )
+      : "";
     lines.push(
-      `| \`"${value}"\`${value === fallback ? ", the default" : ""} | ${
-        value === fallback ? "" : example(group, key, value)
-      } | ${presets} |`,
+      `| \`"${value}"\`${isDefault ? " (default)" : ""} | ${shown} | ${
+        presetsWith(group, key, value, isDefault).map(code).join(", ")
+      } |`,
     );
   }
   lines.push("");
   return lines;
 }
 
-/** What `value` changes: the first word it writes otherwise. */
-function example(group: string, key: string, value: string): string {
+/**
+ * The presets that write `value`: those that select it, and, for the
+ * default, those that set other options of the group but leave this one as
+ * it is. A preset that sets nothing in the group does not speak of it.
+ */
+function presetsWith(
+  group: string,
+  key: string,
+  value: string,
+  isDefault: boolean,
+): string[] {
+  return listPresetMetadata().map(({ id }) => id).filter((id) => {
+    const options = (getPresetOptions(id) as Record<
+      string,
+      Record<string, string> | undefined
+    >)[group];
+    if (options === undefined) return false;
+    return options[key] === value || (isDefault && options[key] === undefined);
+  });
+}
+
+/**
+ * A word and its writing, as the playground shows an example: `σφίγξ →
+ * sphínks`, in the face of the texts (`conversion`, in theme.css), Beta
+ * Code in code; then, if need be, the scalars that tell it apart. The
+ * arrow does not break the line.
+ */
+function conversion(
+  word: string,
+  written: string,
+  from: Format,
+  to: Format,
+  scalar?: string,
+): string {
+  const form = (text: string, format: Format) =>
+    format === "beta-code"
+      ? `<code>${html(text)}</code>`
+      : format === "greek"
+      ? `<span lang="el">${html(text)}</span>`
+      : html(text);
+  return `<span class="conversion">${
+    form(word, from)
+  }\u00a0<span class="to">→</span>\u00a0${form(written, to)}</span>${
+    scalar === undefined ? "" : ` (${scalars(scalar)})`
+  }`;
+}
+
+/** Text in HTML, in a table cell: its pipes would end the cell. */
+function html(text: string): string {
+  return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;").replaceAll("|", "\\|");
+}
+
+interface Change {
+  word: string;
+  before: string;
+  after: string;
+  /** Where the two writings look alike, the characters that differ. */
+  was?: string;
+  is?: string;
+}
+
+/** What `value` changes in one conversion: the first word it writes otherwise. */
+function example(
+  group: string,
+  key: string,
+  value: string,
+  from: Format,
+  to: Format,
+): Change | undefined {
   const options = { [group]: { [key]: value } } as ConversionOptions;
-  for (const index of PAIRS_BY_GROUP[group]) {
-    const [from, to] = PAIRS[index];
-    // One line at a time: the lines of the probe are separate texts.
-    for (const greek of PROBE_GREEK.split("\n")) {
-      const source = from === "greek" ? greek : attempt(greek, "greek", from);
-      if (source === undefined) continue;
-      const before = attempt(source, from, to);
-      const after = attempt(source, from, to, options);
-      if (before === undefined || after === undefined || before === after) {
-        continue;
-      }
-      const change = firstChangedWord(source, before, after);
-      if (change === undefined) continue;
-      const pair = `${capitalize(FORMAT_NAMES[from])} to ${FORMAT_NAMES[to]}`;
-      // Two writings the eye cannot tell apart are told by their scalars.
-      if (change.before.normalize("NFC") === change.after.normalize("NFC")) {
-        const [was, is] = firstDifference(change.before, change.after);
-        return `${pair}: ${scalars(is)} instead of ${scalars(was)} in ${
-          code(change.word)
-        }`;
-      }
-      return `${pair}: ${code(change.word)} gives ${
-        code(change.after)
-      } instead of ${code(change.before)}`;
+  // One line at a time: the lines of the probe are separate texts.
+  for (const greek of PROBE_GREEK.split("\n")) {
+    const source = from === "greek" ? greek : attempt(greek, "greek", from);
+    if (source === undefined) continue;
+    const before = attempt(source, from, to);
+    const after = attempt(source, from, to, options);
+    if (before === undefined || after === undefined || before === after) {
+      continue;
     }
+    const change = firstChangedWord(source, before, after);
+    if (change === undefined) continue;
+    // Two writings the eye cannot tell apart are told by their scalars.
+    if (change.before.normalize("NFC") === change.after.normalize("NFC")) {
+      const [was, is] = firstDifference(change.before, change.after);
+      return { ...change, was, is };
+    }
+    return change;
   }
-  return "";
+  return undefined;
 }
 
 /**

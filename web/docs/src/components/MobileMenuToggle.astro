@@ -1,0 +1,82 @@
+---
+/*
+ * Starlight's menu button, with one icon of three strokes rather than two
+ * icons swapped: opening the menu turns the strokes into a cross (the
+ * outer two turn about the centre, the middle one fades), closing it turns
+ * them back, with the buttons' spring (--ease-bounce). The strokes are
+ * Lucide's `menu`; the cross they make is Lucide's `x`.
+ */
+---
+
+<button
+  popovertarget="starlight__sidebar"
+  class="sl-menu-button sl-flex md:sl-hidden print:hidden"
+>
+  <svg
+    class="menu-icon"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    aria-hidden="true"
+  >
+    <path class="top" d="M4 5h16" />
+    <path class="middle" d="M4 12h16" />
+    <path class="bottom" d="M4 19h16" />
+  </svg>
+  <span class="sr-only">{Astro.locals.t("menuButton.accessibleLabel")}</span>
+</button>
+
+<style>
+  @layer starlight.core {
+    button {
+      position: fixed;
+      top: calc((var(--sl-nav-height) - var(--sl-menu-button-size)) / 2);
+      inset-inline-end: var(--sl-nav-pad-x);
+      z-index: var(--sl-z-index-navbar);
+      width: var(--sl-menu-button-size);
+      height: var(--sl-menu-button-size);
+      padding: 0.5rem;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+    }
+  }
+
+  path {
+    transform-box: view-box;
+    transform-origin: 12px 12px;
+    transition:
+      transform 0.32s var(--ease-bounce),
+      opacity 0.15s ease;
+  }
+  /* Open, unless the drawer is sliding back out (`PageFrame`): the strokes
+     turn back as it leaves. The outer strokes, 7 units from the centre,
+     move onto it and turn by 45 degrees, lengthened to the cross's
+     diagonals (12√2 rather than 16). */
+  button:has(~ :popover-open):not([data-closing]) .top {
+    transform: rotate(45deg) translateY(7px) scaleX(1.0607);
+  }
+  button:has(~ :popover-open):not([data-closing]) .middle {
+    opacity: 0;
+    transform: scaleX(0.25);
+  }
+  button:has(~ :popover-open):not([data-closing]) .bottom {
+    transform: rotate(-45deg) translateY(-7px) scaleX(1.0607);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    path {
+      transition: none;
+    }
+  }
+</style>
+
+<style is:global>
+  @layer starlight.core {
+    body:has(#starlight__sidebar:popover-open) {
+      overflow: hidden;
+    }
+  }
+</style>
