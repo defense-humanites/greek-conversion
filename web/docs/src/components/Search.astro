@@ -1,0 +1,52 @@
+---
+/*
+ * Starlight's search, with the page held in place while it is open. On
+ * iOS, Safari ignores the `overflow: hidden` Starlight puts on the body:
+ * when the field takes the focus and the keyboard comes up on a page
+ * scrolled down, Safari scrolls the page rather than the dialog, which
+ * leaves the screen blank until the keyboard is closed. Fixing the body
+ * where it was leaves Safari nothing to scroll; closing the dialog puts
+ * the page back where it was.
+ */
+import Default from "@astrojs/starlight/components/Search.astro";
+---
+
+<Default><slot /></Default>
+
+<script>
+  const body = document.body;
+  let held: number | null = null;
+
+  function hold(): void {
+    if (held !== null) return;
+    held = window.scrollY;
+    body.style.position = "fixed";
+    body.style.insetInline = "0";
+    body.style.top = `-${held}px`;
+  }
+
+  function release(): void {
+    if (held === null) return;
+    const top = held;
+    held = null;
+    body.style.position = "";
+    body.style.insetInline = "";
+    body.style.top = "";
+    window.scrollTo({ top, behavior: "instant" });
+  }
+
+  // Before Starlight's own listener focuses the field, so that the page is
+  // fixed before the keyboard comes up.
+  document.addEventListener(
+    "click",
+    (event) => {
+      const target = event.target as Element | null;
+      if (target?.closest?.("site-search button[data-open-modal]")) hold();
+    },
+    { capture: true },
+  );
+  // Starlight marks the body while the dialog is open, whatever opened it
+  // (the field, Ctrl K), and unmarks it when it closes.
+  new MutationObserver(() => body.hasAttribute("data-search-modal-open") ? hold() : release())
+    .observe(body, { attributes: true, attributeFilter: ["data-search-modal-open"] });
+</script>

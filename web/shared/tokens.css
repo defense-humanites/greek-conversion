@@ -17,8 +17,8 @@
 }
 @font-face {
   font-family: "Literata GC";
-  src: url("./fonts/literata-gc-light.woff2") format("woff2");
-  font-weight: 300;
+  src: url("./fonts/literata-gc.woff2") format("woff2");
+  font-weight: 400;
   font-display: swap;
 }
 /*
@@ -29,7 +29,7 @@
 @font-face {
   font-family: "Literata GC";
   src: url("./fonts/noto-serif-greek-symbols.woff2") format("woff2");
-  font-weight: 300;
+  font-weight: 400;
   font-display: swap;
   size-adjust: 95%;
   unicode-range: U+037B-037D, U+03D0-03D6, U+03F0-03F1, U+03F5, U+03FD-03FF;

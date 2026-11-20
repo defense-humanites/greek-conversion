@@ -152,10 +152,10 @@ MONO_UNICODES = [
 # Reserved Font Name (OFL 1.1).
 LITERATA_NAMES = {
     1: "Literata GC",
-    2: "Light",
-    3: "3.103;TT;LiterataGC-Light",
-    4: "Literata GC Light",
-    6: "LiterataGC-Light",
+    2: "Regular",
+    3: "3.103;TT;LiterataGC-Regular",
+    4: "Literata GC Regular",
+    6: "LiterataGC-Regular",
 }
 
 # The layout features the texts need: composition, local forms, marks,
@@ -304,10 +304,10 @@ def add_composite(
 
 def literata(path: Path, output: Path) -> None:
     """
-    A static Light at optical size 24, with the four letters it lacks made
+    A static Regular at optical size 24, with the four letters it lacks made
     of its own glyphs, renamed Literata GC because it is modified.
     """
-    font, modified = instance(path, {"opsz": 24, "wght": 300})
+    font, modified = instance(path, {"opsz": 24, "wght": 400})
     cmap = font.getBestCmap()
     k, capital_k, dot = cmap[ord("k")], cmap[ord("K")], cmap[0x0323]
     # The lunate sigma: the Latin c and C.
@@ -333,12 +333,12 @@ def literata(path: Path, output: Path) -> None:
                 record.platEncID,
                 record.langID,
             )
-    save_woff2(font, output / "literata-gc-light.woff2", modified)
+    save_woff2(font, output / "literata-gc.woff2", modified)
 
 
 def noto(path: Path, output: Path) -> None:
-    """The sixteen letters, from a static Light at width 100."""
-    font, modified = instance(path, {"wght": 300, "wdth": 100})
+    """The sixteen letters, from a static Regular at width 100."""
+    font, modified = instance(path, {"wght": 400, "wdth": 100})
     # Literata's .notdef shows a missing glyph: the fallback needs none.
     subset_font(font, NOTO_UNICODES, notdef_outline=False)
     save_woff2(font, output / "noto-serif-greek-symbols.woff2", modified)
