@@ -36,9 +36,9 @@ and the anglicized form of first names common in English (John, Nicholas,
 Peter). The strict forms that the dictionary is cited for (Alexios
 Komnenos, Niketas Choniates) are those of the ALA-LC table without its
 length marks, which `longVowels: "omit"` leaves out. The traditional forms
-are a matter of usage, which no option supplies: the options write `Ioannes` and `Theodoros`
-where the dictionary has John and Theodore. No preset gives the Latinized
-forms of the _Oxford Classical Dictionary_.
+are a matter of usage, which no option supplies: the options write
+`Ioannes` and `Theodoros` where the dictionary has John and Theodore. No
+preset gives the Latinized forms of the _Oxford Classical Dictionary_.
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
