@@ -1044,7 +1044,7 @@ mobile-starlight-toc .toggle,
    Starlight caps it at 45rem, which left a strip on its right between 752
    and 800px. The home page centres its column instead. */
 @media (max-width: 49.99rem) {
-  :root:not(:has(.home-hero)) main .sl-container {
+  :root:not([data-has-hero]) main .sl-container {
     max-width: none;
   }
 }
@@ -1053,20 +1053,25 @@ mobile-starlight-toc .toggle,
    content column only on wide screens: between 752 and 800px, where the
    window outgrows the column (45rem and its margins), the home page sat
    to the left. */
-:root:has(.home-hero) .sl-container {
+:root[data-has-hero] .sl-container {
   margin-inline: auto;
 }
 
 /*
  * The home page keeps the sidebar for the menu below 1100px (`routeData.ts`);
  * from there it is a splash page, without the sidebar, at full width.
+ * The home page is told by the mark Starlight sets on the root for a page
+ * with a hero (`data-has-hero`), there from the first paint: told by its
+ * hero (`:has(.home-hero)`), it was known only once the hero was parsed,
+ * and the sidebar showed for a frame before it, the page being drawn as
+ * soon as its menu is (`rel="expect"`, astro.config.mjs).
  */
 @media (min-width: 68.75rem) {
-  :root[data-has-sidebar]:has(.home-hero) {
+  :root[data-has-sidebar][data-has-hero] {
     --sl-content-inline-start: 0rem;
     --sl-content-width: 67.5rem;
   }
-  :root:has(.home-hero) .sidebar-pane {
+  :root[data-has-hero] .sidebar-pane {
     display: none;
   }
 }
