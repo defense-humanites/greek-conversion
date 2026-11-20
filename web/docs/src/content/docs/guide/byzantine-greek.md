@@ -37,8 +37,10 @@ Peter). The strict forms that the dictionary is cited for (Alexios
 Komnenos, Niketas Choniates) are those of the ALA-LC table without its
 length marks, which `longVowels: "omit"` leaves out. The traditional forms
 are a matter of usage, which no option supplies: the options write
-`Ioannes` and `Theodoros` where the dictionary has John and Theodore. No
-preset gives the Latinized forms of the _Oxford Classical Dictionary_.
+`Ioannes` and `Theodoros` where the dictionary has John and Theodore. The
+_Oxford Classical Dictionary_ does not set out its transliteration either:
+its Latinized forms are the traditional English spellings of Greek names
+(Aeschylus, Thucydides), and no preset gives them.
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
