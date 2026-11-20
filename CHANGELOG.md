@@ -7,6 +7,130 @@ change.
 
 ## [Unreleased]
 
+### Removed
+
+- The `sbl-academic` preset. The SBL Handbook of Style gives Greek a single
+  transliteration, for general readers (§5.3), and asks for Greek characters
+  for academic readers: it defines no academic style, which the preset's name
+  claimed. The defaults write what the preset wrote, so leaving it out
+  changes nothing; `preset: "sbl-academic"` now throws an `OptionError` that
+  says so. The documentation describes the default transliteration as the
+  library's own: the letters of the Handbook, with the accents, iota
+  subscript, diaeresis, and quantity marks that the Handbook leaves out.
+
+### Added
+
+- Signs that stand for several letters are read as those letters, and noted
+  as the glyph variant of the first: the καί symbol `ϗ` (`Ϗ`, Beta Code
+  `#1532` and `#1531`) as `και` (`kai-symbol`), and the ligature `ȣ` (`Ȣ`,
+  Beta Code `#1521`), a Latin letter that editions use for the Greek one, as
+  `ου` (`ou-ligature`); rc.10 copied them as they were. No accent is
+  supplied; marks after a sign belong to its last letter (`ϗ́` is `καί`).
+  Greek output writes the sign again, Beta Code its TLG code where the TLG
+  has one, and transliteration the letters, with a reported loss.
+  `greek.ligatures: "standard"` (type `LigatureOrthography`) writes the
+  letters in Greek and Beta Code too.
+- `greek.stigma: "ligature"` (type `StigmaReading`) reads a stigma between two
+  letters as `σ` and `τ`, which older printing joined in that sign (`ἐϛὶ`
+  gives `estì`), in every format; a stigma at the end of a word or before a
+  keraia stays the numeral. Greek output writes `ϛ` again where the source
+  has it (`stigma-ligature`), never for `στ` the source writes as letters.
+  The default, `"letter"`, reads the stigma as before.
+- The overline of abbreviations and numerals, U+0305, as over the nomina
+  sacra (`θ̅ς̅`), is a mark, `overline`, a new member of `Diacritic`, which
+  rc.10 kept as an unknown combining mark. Greek and transliteration write it
+  after its letter (`th̅s̅`), and Beta Code over a run of letters, between `<`
+  and `>`, as the TLG does (`<qs>`), which the reader reads; `<` and `>` are
+  then written `#18` and `#15`, their TLG codes, and kept as text where no
+  letter stands between them or a digit follows one. Monotonic accentuation
+  keeps it, and `diacritics.overline: "remove"` removes it, as
+  `diacritics.all: "remove"` does, so the presets that remove every mark
+  remove it with a reported loss. Abbreviations are not expanded.
+- `greek.kaiAccent` (type `KaiAccent`) writes the accent of `καί` where the
+  output writes `ϗ`, which marks none, as letters: in transliteration, and in
+  Greek and Beta Code under `greek.ligatures: "standard"`. `"byzantine"`
+  writes the grave, as the manuscripts do even before punctuation;
+  `"modern"` follows modern editions, with the acute before punctuation, at
+  the end of the text, and before an enclitic (`καί τινες`, `καὶ τοῦ`). No
+  accent is written on a sign that has one, on capitals, or in a text with
+  no grave and no circumflex. `convertDetailed()` reports each accent written
+  as `added-diacritic`. The default, `"none"`, writes no accent, as before.
+
+### Changed
+
+- `sbl-general` writes no diaeresis, which the SBL Handbook does not provide
+  for: `ἀΐδιος` gives `aidios` (rc.10: `aïdios`). An upsilon written `y`
+  still says that it is not in a diphthong (`Θύιλλος` gives `Thyillos`). The
+  preset cites §5.3 of the Handbook, and its coverage becomes `complete`.
+- The README presents the library by task, for Ancient and Byzantine Greek
+  and for Modern Greek, says what the presets are tested against, and shows
+  what a conversion loses. Its example is that of the site's home page, which
+  `npm run check` keeps identical, and converts Ancient Greek without a
+  preset, "with every accent and breathing". The tables of the presets guide
+  give the default in a row of its own, and the playground describes it as
+  the letters of the SBL Handbook with the marks that the Handbook leaves
+  out; a link shared with `sbl-academic` opens the defaults.
+- The API documentation of `Format` and the glossary say in which sense the
+  Latin format is named `"transliteration"`: the broad sense that software
+  gives the word after Unicode CLDR, which holds transcriptions as well.
+- Every reader takes a spacing breathing before a capital for the capital's,
+  as older editions and their digitizations write it: at the start of a
+  word, before a capital vowel or rho, psili U+1FBF and dasia U+1FFE, and
+  their compounds with an accent, join the capital (`῾Ρωμαῖοι` gives
+  `Rhōmaĩoi`, rc.10: `῾Rōmaĩoi`, and Greek output writes `Ῥωμαῖοι`). A psili
+  after a letter is the apostrophe of an elision (`τ᾿ ἐστί` gives `t’ estí`),
+  so that a sigma before it stays medial (`ὅσ᾿ ἂν` gives `o(/s' a)\n` in Beta
+  Code, rc.10: `o(/s1᾿ a)\n`). Elsewhere, the signs are kept as before. Text
+  that rc.10 wrote from such a source reads back: `῾*rwmai=oi` and
+  `῾Rōmaĩoi` give `Ῥωμαῖοι`.
+- Beta Code reads and writes signs with the TLG's codes (*Beta Code Manual*,
+  §3), listed in the reference on punctuation: the ASCII signs that Beta
+  Code would read as something else (`/` is `%3`, `*` `%2`, `:` `%10`, `%`
+  `%8`, `#` `%101`), the dagger (`%`), the dash (`_`), the angle brackets,
+  braces, and double square brackets (`[2`, `[3`, `[4`), editorial signs (the
+  paragraphos `#6`), Byzantine punctuation (`⸒` `#532`, `⁘` `#544`), and the
+  spacing accents and breathings of a lacuna (`%30` to `%39`, `%132` to
+  `%134`). rc.10 wrote them as themselves: `λόγος/ψυχή` gave `lo/gos/yuxh/`,
+  which read back with an acute on the sigma, and `*α` gave `*a`, a capital;
+  they now give `lo/gos%3yuxh/` and `%2a`. Before a digit, which would
+  extend a code, a sign is written as itself where it reads back as itself:
+  `(1)` gives `(1]1`, which reads back (rc.10: `[11]1`, which did not). The
+  codes of `&`, `"`, `<`, and `>` are left out, since the TLG uses these
+  signs, bare, for mark-up, which Beta Code converted to itself keeps. Every
+  reader takes `〈` (U+2329 or U+3008) for `⟨`, and the right bracket
+  likewise. Before anything but a letter, `*` is an asterisk, and what
+  follows it is read as if it were not there: `*(` was one piece of text,
+  and is now an asterisk and a parenthesis.
+- The Byzantine guide shows how to transliterate strictly, as the _Oxford
+  Dictionary of Byzantium_ does: `ala-lc-ancient` with `longVowels: "omit"`
+  gives `Alexios Komnenos`. The dictionary publishes no table, and keeps a
+  traditional form for many names (John, Nicaea), which no option supplies;
+  no `odb` preset is added. The guide also shows how to expand the nomina
+  sacra with a table of one's own through the document API, since the library
+  does not expand abbreviations.
+- The metadata of the presets (names, authorities, scopes, references,
+  limitations) is kept apart from their options, so that a bundle that
+  converts, without `listPresetMetadata()` or `getPresetMetadata()`, no
+  longer carries it: about 10 KB less minified, 3 KB with gzip, for
+  `convert()` or `parse()`. The API is unchanged.
+
+### Fixed
+
+- The Beta Code reader takes every digit after `#` as the number of one TLG
+  code, as it did for `%` and the brackets: `#12`, the obelus, was read as
+  koppa followed by `2`, `#532`, the hypodiastole, as sampi followed by `32`,
+  and `#6`, the paragraphos, as a keraia followed by `6`. The letters and
+  the keraiai read as before (`#`, `#1`, `#2`, `#3`, `#5`, `#22`, `#401`),
+  the signs as above, and any other code is kept as text, whole. A letter
+  written as a code before a digit
+  (`ϛ5`, which gives `#25`) therefore no longer reads back, like a
+  parenthesis before a digit, and `convertDetailed()` reports the loss; a
+  sigma before it is written as one that ends its word, so that the output
+  stays idempotent.
+- The Beta Code reader reads the marks after a letter written as a `#` code,
+  as after any letter: `#1/`, which Beta Code output gives for a koppa with
+  an acute, was read as a koppa followed by `/`.
+
 ## [1.0.0-rc.10] - 2026-11-19
 
 Tenth release candidate for `1.0.0`. Greek output writes the acutes of

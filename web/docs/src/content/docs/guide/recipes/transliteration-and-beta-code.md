@@ -66,7 +66,7 @@ import { reencode } from "@humanities/greek-conversion";
 
 reencode("tōn barbarōn", "transliteration", {
   preset: "ala-lc-modern",
-  source: { preset: "sbl-academic" },
+  source: { preset: "sbl-general" },
 });
 // → tōn varvarōn
 
@@ -95,8 +95,15 @@ capital. Output follows the
 accent, then iota subscript, with the asterisk and marks before an uppercase
 letter. Vowel quantity takes the TLG percent codes, `%26` for the macron and
 `%27` for the breve, after the accent. As in the TLG, `'` is the apostrophe,
-`[1` and `]1` are the parentheses (`(` and `)` being the breathings), and `&`, a
-shift to the Latin font, is kept as text.
+`[1` and `]1` are the parentheses (`(` and `)` being the breathings), `_` is
+the dash, and `&`, a shift to the Latin font, is kept as text. Other signs
+take their TLG codes as well: those that Beta Code would read as something
+else (`/` is `%3`, `*` `%2`, `:` `%10`), and editorial and Byzantine signs
+(`†` is `%`, `⟨` `[2`, `⸒` `#532`); the
+[reference](/reference/punctuation-and-numerals/#signs-with-a-tlg-code) lists
+them. A `#` or `%` code runs to its last digit, so `#12` is not koppa
+followed by `2`; a code the library does not read, such as `#1532`, is kept
+as text.
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
@@ -106,6 +113,7 @@ convert("*)/ANQRWPOS", "beta-code", "greek"); // → Ἄνθρωπος
 convert("ᾯ", "greek", "beta-code"); // → *(=w|
 convert("ᾱ ᾰ", "greek", "beta-code"); // → a%26 a%27
 convert("δῆσε(ν)", "greek", "beta-code"); // → dh=se[1n]1
+convert("†λόγος/ψυχή⸒", "greek", "beta-code"); // → %lo/gos%3yuxh/#532
 convert("ἄνθρωπος", "greek", "beta-code", { preset: "tlg-core" });
 // → A)/NQRWPOS
 ```

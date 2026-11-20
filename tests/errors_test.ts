@@ -102,7 +102,31 @@ test("option errors are OptionErrors that locate the option", () => {
   );
   assertEquals(badPreset.path, "preset");
   assertEquals(badPreset.received, "nope");
-  assertEquals(badPreset.accepted.includes("sbl-academic"), true);
+  assertEquals(badPreset.accepted.includes("sbl-general"), true);
+  // A preset removed before 1.0.0 says what to do instead; nothing replaces
+  // it, since the defaults write what it wrote.
+  const removed = assertThrows(
+    () =>
+      convert(
+        "α",
+        "greek",
+        "transliteration",
+        { preset: "sbl-academic" } as never,
+      ),
+    OptionError,
+  );
+  assertEquals(removed.path, "preset");
+  assertEquals(removed.replacement, undefined);
+  assertEquals(
+    removed.message.startsWith(
+      "Unknown conversion preset: sbl-academic (removed: the SBL Handbook defines no academic style for Greek",
+    ),
+    true,
+  );
+  assertEquals(
+    convert("α", "greek", "transliteration", { preset: "sbl-general" }),
+    "a",
+  );
 
   const incompatible = assertThrows(
     () =>
@@ -186,7 +210,7 @@ test("the options of source are checked, with paths that start with source.", ()
     ).message,
     "Unknown conversion preset for source.preset: nope",
   );
-  for (const source of ["sbl-academic", null, []]) {
+  for (const source of ["sbl-general", null, []]) {
     assertThrows(
       () => resolveConversionOptions({ source } as never),
       TypeError,

@@ -31,6 +31,7 @@ import { parsePunctuation } from "../punctuation.ts";
 import { Trie } from "../trie.ts";
 import { codeUnitTable } from "./code_units.ts";
 import type { ReadPositions } from "./positions.ts";
+import { mayHaveSpacingSigns, readSpacingMarks } from "./spacing_marks.ts";
 
 const CANONICAL_ENTRIES = [
   ...Object.entries(ALPHABET)
@@ -351,8 +352,9 @@ export function parseTransliteration(
     // Under ISO 843 Type 2, omega is written `o`, and `ωυ`, which Table 2
     // does not list, letter by letter (note 8): `oy`. `ου` is written `ou`,
     // or `oy` with an accent on the `o` or a diaeresis on the `y` (note 9),
-    // so an `o` without marks, or with a coronis only (crasis, `τὠυ`), before
-    // a `y` without diaeresis is that omega.
+    // so an `o` without marks, or with a coronis or an overline only
+    // (crasis, `τὠυ`; an abbreviation), before a `y` without diaeresis is
+    // that omega.
     if (
       letter === "upsilon" && omegaAsO && sourceLower === "y" &&
       (marks & DIAERESIS) === 0
@@ -360,8 +362,9 @@ export function parseTransliteration(
       const previous = out.at(-1);
       if (
         previous?.kind === "grapheme" && previous.letter === "omicron" &&
-        (previous.diacritics.size === 0 ||
-          previous.diacritics.size === 1 && previous.diacritics.has("coronis"))
+        [...previous.diacritics].every((mark) =>
+          mark === "coronis" || mark === "overline"
+        )
       ) {
         previous.letter = "omega";
         omegaBeforeY.push(out.length - 1);
@@ -450,6 +453,7 @@ export function parseTransliteration(
     for (let k = 0; k < starts.length; k++) starts[k] = offsets[starts[k]];
   }
 
+  if (mayHaveSpacingSigns(text)) readSpacingMarks(out, starts);
   if (nasalGamma !== "literal") {
     inferNasalGammas(out, nasalGamma === "nasal-except-kappa");
   }

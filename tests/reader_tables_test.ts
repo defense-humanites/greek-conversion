@@ -3,6 +3,7 @@ import { assertEquals } from "./assertions.ts";
 import { BY_BETA, BY_GREEK } from "../src/alphabet.ts";
 import { greekLower } from "../src/case.ts";
 import { parse } from "../src/document.ts";
+import { GREEK_LIGATURES } from "../src/ligatures.ts";
 
 /**
  * The Greek and Beta Code readers keep letters in small tables (U+0370–U+03FF
@@ -35,6 +36,9 @@ test("the Greek reader classifies every BMP code unit as greekLower does", () =>
     // Only units that NFD leaves alone can reach the reader as themselves;
     // the others reach it as their decomposition, checked on its own units.
     if (char.normalize("NFD") !== char) continue;
+    // The signs that stand for several letters are read as those letters
+    // (tests/ligatures_test.ts).
+    if (GREEK_LIGATURES.has(unit)) continue;
 
     const lower = greekLower(char);
     const expected = BY_GREEK.get(lower === "ς" ? "σ" : lower);

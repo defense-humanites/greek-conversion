@@ -82,8 +82,7 @@ metadata or options.
 | `iso-843-type-1` | Type 1 transliteration of Greek characters into Latin characters, also that of ELOT 743, the Greek national standard, since its 2001 edition. | Ancient Greek; Modern Greek | partial |
 | `iso-843-type-2` | Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility: the transcription of ELOT 743, the Greek national standard, for identity documents, road signs, and maps, which the United Nations and BGN/PCGN adopted for geographical names. | Modern Greek; Ancient Greek | partial |
 | `perseus` | Lowercase-ASCII subset of TLG Beta Code used by the Perseus Digital Library project. | Polytonic Greek; Perseus and Morpheus interchange | complete |
-| `sbl-academic` | Academic transliteration retaining the engine's scientific diacritics. | Ancient Greek; Biblical studies | adapted |
-| `sbl-general` | Readable transliteration omitting most scholarly diacritics while retaining rough breathing and diaeresis. | Ancient Greek; Biblical studies; General readers | adapted |
+| `sbl-general` | The Greek transliteration of the SBL Handbook: η and ω with a macron, h for the rough breathing, and no accent, iota subscript, or diaeresis. | Ancient Greek; Biblical studies; General readers | complete |
 | `tlg-core` | Canonical Beta Code together with the TLG characters implemented by the engine. | Polytonic Greek; Beta Code interchange | partial |
 
 ### `ala-lc-ancient` — ALA-LC — Ancient and Medieval Greek
@@ -116,7 +115,8 @@ Romanization profile for Ancient and Medieval Greek before 1454.
     "coronis": "remove",
     "diaeresis": "remove",
     "iotaSubscript": "remove",
-    "quantity": "remove"
+    "quantity": "remove",
+    "overline": "remove"
   }
 }
 ```
@@ -163,7 +163,8 @@ Romanization profile for Modern Greek after 1453.
     "coronis": "remove",
     "diaeresis": "remove",
     "iotaSubscript": "remove",
-    "quantity": "remove"
+    "quantity": "remove",
+    "overline": "remove"
   }
 }
 ```
@@ -334,46 +335,18 @@ Lowercase-ASCII subset of TLG Beta Code used by the Perseus Digital Library proj
 - The Perseus subset covers letters, accents, breathings, diaeresis, and iota subscript; TLG markup escapes are outside its scope.
 - The cited Perseids mapping contains the standard alphabet and lunate sigma, but none of the engine's six additional letter entries (digamma, yot, stigma, either koppa, or sampi).
 
-### `sbl-academic` — SBL — Academic style
-
-- **Authority:** Society of Biblical Literature
-- **Scope:** Ancient Greek; Biblical studies
-- **Coverage:** `adapted`
-- **Out-of-scope behavior:** `engine-default`
-
-Academic transliteration retaining the engine's scientific diacritics.
-
-**References:**
-
-- [The SBL Handbook of Style, second edition](https://archive.org/details/sblhandbookofsty0000unse_g7i4/)
-
-**Contributed options:**
-
-```json
-{
-  "transliteration": {
-    "upsilon": "y-with-diphthong-u"
-  }
-}
-```
-
-**Known limitations:**
-
-- The SBL handbook defines one general-purpose Greek transliteration style; this academic profile is an engine adaptation and not a separate official SBL table.
-- The cited Greek table does not provide conversions for the engine's additional archaic letters.
-
 ### `sbl-general` — SBL — General-purpose style
 
 - **Authority:** Society of Biblical Literature
 - **Scope:** Ancient Greek; Biblical studies; General readers
-- **Coverage:** `adapted`
+- **Coverage:** `complete`
 - **Out-of-scope behavior:** `engine-default`
 
-Readable transliteration omitting most scholarly diacritics while retaining rough breathing and diaeresis.
+The Greek transliteration of the SBL Handbook: η and ω with a macron, h for the rough breathing, and no accent, iota subscript, or diaeresis.
 
 **References:**
 
-- [The SBL Handbook of Style, second edition](https://archive.org/details/sblhandbookofsty0000unse_g7i4/)
+- [The SBL Handbook of Style, second edition, §5.3 (Greek)](https://archive.org/details/sblhandbookofsty0000unse_g7i4/)
 
 **Contributed options:**
 
@@ -387,17 +360,18 @@ Readable transliteration omitting most scholarly diacritics while retaining roug
     "smoothBreathing": "remove",
     "roughBreathing": "preserve",
     "coronis": "remove",
-    "diaeresis": "preserve",
+    "diaeresis": "remove",
     "iotaSubscript": "remove",
-    "quantity": "remove"
+    "quantity": "remove",
+    "overline": "remove"
   }
 }
 ```
 
 **Known limitations:**
 
-- The SBL handbook defines one general-purpose Greek transliteration style; the academic/general preset pair should not be read as two official SBL tables.
-- The cited Greek table does not provide conversions for the engine's additional archaic letters.
+- The Handbook gives one style for Greek, the general-purpose one: for academic readers, it asks for Greek characters.
+- The Handbook makes no provision for the digamma or the other archaic letters, and asks for Greek characters where they matter: a converter bound to the preset keeps them in Greek, while convert() writes the engine's spellings.
 
 ### `tlg-core` — TLG Beta Code — Core subset
 
@@ -443,7 +417,7 @@ import {
   resolveConversionOptions,
 } from "@humanities/greek-conversion";
 
-listPresetMetadata().length; // → 9
+listPresetMetadata().length; // → 8
 getPresetMetadata("ala-lc-modern").coverage; // → partial
 
 DEFAULT_CONVERSION_OPTIONS.transliteration.beta; // → b

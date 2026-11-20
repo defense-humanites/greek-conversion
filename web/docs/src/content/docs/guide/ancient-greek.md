@@ -28,8 +28,8 @@ convert("ϝάναξ ϙόρινθος", "greek", "transliteration"); // → wána
 
 | To write                                                 | Preset                      | `εὐχῇ`     |
 | -------------------------------------------------------- | --------------------------- | ---------- |
-| A scholarly transliteration, with accents and length     | `sbl-academic`, the default | `euchȩ̄̃`    |
-| A transliteration for general readers, without accents   | `sbl-general`               | `euchē`    |
+| A scholarly transliteration, with accents and length     | No preset (the default)     | `euchȩ̄̃`    |
+| The SBL Handbook's transliteration, without accents      | `sbl-general`               | `euchē`    |
 | Library catalogue records, after the Library of Congress | `ala-lc-ancient`            | `euchē`    |
 | Catalogue records of French libraries, after the BnF     | `bnf-core`                  | `eu̓chȩ̄̂`    |
 | The international transliteration, ISO 843               | `iso-843-type-1`            | `’euchī̧̂`   |
@@ -60,7 +60,7 @@ not implement in the [preset reference](/reference/presets/).
 Beta Code notes every mark of polytonic Greek: its output converts back to
 the same text, the symbol forms apart. The transliterations differ:
 
-- the default, `sbl-academic`, writes no smooth breathing and reads one back
+- the default writes no smooth breathing and reads one back
   on an initial vowel, so that it converts back but for the coronis and the
   few spellings listed under [Limits](#limits);
 - `bnf-core` writes the smooth breathing and the coronis as marks of their

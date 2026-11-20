@@ -8,9 +8,9 @@
 </p>
 
 <p align="center">
-  <b>Convert Ancient and Modern Greek between Greek script, Beta Code, and
-  Latin script, with standards-based presets and information-loss
-  diagnostics.</b>
+  <b>A TypeScript library that converts Ancient and Modern Greek between
+  Greek script, Beta Code, and Latin script, with standards-based presets
+  and information-loss diagnostics.</b>
 </p>
 
 <p align="center">
@@ -27,12 +27,28 @@
 
 <br>
 
-`greek-conversion` is a TypeScript library for classicists, librarians,
-digital-humanities developers, and anyone who writes Greek names in Latin
-script. It handles polytonic and monotonic Greek, implements published
-conventions (ALA-LC, BnF, ISO 843 and ELOT 743, SBL, TLG, Perseus) as
-ready-made presets, and tells you when a conversion loses information instead of
-quietly guessing. It has no dependencies and uses no runtime-specific API.
+`greek-conversion` is a TypeScript library for everyone who moves Greek
+between scripts:
+
+- **Ancient and Byzantine Greek**: transliterate an edition after SBL, the
+  BnF, or ALA-LC; read and write the Beta Code of the TLG and Perseus; keep
+  the accents, breathings, and letter forms of polytonic text.
+- **Modern Greek**: romanize names and texts after ELOT 743 and ISO 843,
+  whose transcription Greek passports, road signs, and the United Nations
+  use; write library records after ALA-LC; turn polytonic text into
+  monotonic; build search keys and URL slugs.
+
+Each convention is a preset that states its references and how far it
+follows them. The ALA-LC, BnF, and ISO 843 presets are tested against
+examples from their published tables, and `iso-843-type-2` against every
+example of the BGN/PCGN table. When a conversion cannot be reversed, the
+library says what was lost instead of quietly guessing. It has no
+dependencies and uses no runtime-specific API.
+
+**Not a developer?** The
+[playground](https://greek-conversion.humanites.fr/playground/)
+converts in the browser, with every preset and option, and shows what each
+conversion loses.
 
 ## Installation
 
@@ -45,18 +61,36 @@ The package is ESM-only and ships its own type declarations.
 
 ## Example
 
-Ancient Greek to the SBL academic transliteration, TLG Beta Code to Greek, and
-Modern Greek to the ISO 843 transcription of passports and maps:
-
 ```ts
 import { convert } from "@humanities/greek-conversion";
 
-convert("Ἕλλησιν ἐγένετο", "greek", "transliteration"); // → Héllēsin egéneto
-convert("*(/ELLHSIN E)GE/NETO", "beta-code", "greek"); // → Ἕλλησιν ἐγένετο
+// Ancient Greek, with every accent and breathing
+convert("Ἕλλησιν ἐγένετο", "greek", "transliteration");
+// → Héllēsin egéneto
+
+// Beta Code, as the TLG writes it
+convert("*(/ELLHSIN E)GE/NETO", "beta-code", "greek");
+// → Ἕλλησιν ἐγένετο
+
+// Modern Greek, as passports and maps write it
 convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliteration", {
   preset: "iso-843-type-2",
 });
 // → I Athína eínai i protévousa
+```
+
+`convertDetailed()` says what a conversion cannot carry back:
+
+```ts
+import { convertDetailed } from "@humanities/greek-conversion";
+
+const city = convertDetailed("Θεσσαλονίκη", "greek", "transliteration", {
+  preset: "iso-843-type-2",
+});
+
+city.output; // → Thessaloníki
+city.lossy; // → true
+city.losses[0].message; // → The target representation does not retain eta.
 ```
 
 ## Main functions
@@ -69,13 +103,21 @@ convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliter
 | Bind a preset, add characters, or restrict the repertoire                | `createConverter(configuration)`                                      |
 | Inspect or edit the parsed text itself                                   | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
 
-The [documentation](https://greek-conversion.humanites.fr/) has the guide, the recipes, the
-[presets](https://greek-conversion.humanites.fr/guide/presets/), a page on
-[Modern Greek](https://greek-conversion.humanites.fr/guide/modern-greek/), the reference, and the
-[API](https://greek-conversion.humanites.fr/api/readme/). What every conversion guarantees is stated in
-[Guarantees and limits](https://github.com/defense-humanites/greek-conversion/blob/main/docs/guarantees.md);
-to contribute, see
-[CONTRIBUTING.md](https://github.com/defense-humanites/greek-conversion/blob/main/CONTRIBUTING.md).
+## Documentation
+
+- [Getting started](https://greek-conversion.humanites.fr/guide/getting-started/),
+  then the pages on
+  [Ancient](https://greek-conversion.humanites.fr/guide/ancient-greek/),
+  [Byzantine and Medieval](https://greek-conversion.humanites.fr/guide/byzantine-greek/),
+  and [Modern Greek](https://greek-conversion.humanites.fr/guide/modern-greek/).
+- [Choosing a preset](https://greek-conversion.humanites.fr/guide/presets/):
+  what each convention writes, and what it loses.
+- [Guarantees and limits](https://greek-conversion.humanites.fr/reference/guarantees/),
+  then the rest of the reference: the
+  [options](https://greek-conversion.humanites.fr/reference/options/),
+  [information loss](https://greek-conversion.humanites.fr/reference/information-loss/),
+  and the [API](https://greek-conversion.humanites.fr/api/readme/).
+- [Contributing](https://github.com/defense-humanites/greek-conversion/blob/main/CONTRIBUTING.md).
 
 ## Citing and license
 
@@ -86,12 +128,11 @@ cite it; GitHub's “Cite this repository” button uses the metadata in
 Copyright (C) 2021–2026 Antoine Boquet. Released under the
 [MIT License](https://github.com/defense-humanites/greek-conversion/blob/main/LICENSE)
 since `1.0.0-beta.7`; earlier versions remain under AGPL-3.0-or-later. The
-benchmark input,
+benchmark text,
 [`bench/thucydides.ts`](https://github.com/defense-humanites/greek-conversion/blob/main/bench/thucydides.ts)
 (Thucydides 1.1–1.10, from the Perseus Digital Library), is under
-[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) and is not part
-of the published packages.
-
-The greek-conversion logos under `docs/assets/` are not covered by these
-licenses: all rights are reserved, as recorded in
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) and is not
+part of the published packages. The greek-conversion logos under
+`docs/assets/` are not covered by these licenses: all rights are reserved, as
+recorded in
 [`LicenseRef-greek-conversion-marks`](https://github.com/defense-humanites/greek-conversion/blob/main/LICENSES/LicenseRef-greek-conversion-marks.txt).

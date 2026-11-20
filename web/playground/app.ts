@@ -429,22 +429,22 @@ function choosePreset(preset: Preset | ""): void {
 }
 
 /**
- * What the library's defaults write: the spelling of SBL Academic in
- * transliteration and of Perseus in Beta Code, whose options they share,
- * but for every character the library knows, where a standard keeps to its
- * repertoire.
+ * What the library's defaults write: in transliteration, the letters of the
+ * SBL Handbook with the marks it leaves out; in Beta Code, the spelling of
+ * Perseus, whose options they share. Both for every character the library
+ * knows, where a standard keeps to its repertoire.
  */
 function defaultsText(): string {
   const formats = new Set([sourceFormat(), targetFormat()]);
-  const like = [
-    formats.has("transliteration") ? "SBL Academic" : "",
-    formats.has("beta-code") ? "Perseus" : "",
-  ].filter(Boolean);
-  if (!like.length) return "";
-  const spelling = like.length === 2
-    ? "SBL Academic in transliteration and Perseus in Beta Code"
-    : like[0];
-  return `Same spelling as ${spelling}, for every character the library knows.`;
+  const transliteration = formats.has("transliteration")
+    ? "the letters of the SBL Handbook, with the accents, iota subscript, diaeresis, and quantity marks it leaves out"
+    : "";
+  const betaCode = formats.has("beta-code") ? "the spelling of Perseus" : "";
+  const spelling = transliteration && betaCode
+    ? `In transliteration, ${transliteration}; in Beta Code, ${betaCode}`
+    : (transliteration || betaCode).replace(/^t/, "T");
+  return spelling &&
+    `${spelling}. Every character the library knows is converted.`;
 }
 
 function showPreset(): void {
@@ -1188,11 +1188,13 @@ function restoreState(): void {
   setSourceChoice(known(from) ? from : "auto");
   if (known(to)) setTarget(to);
   if (state.has("text")) source.value = state.get("text") ?? "";
+  // A preset the library no longer has falls back to the defaults, which
+  // write what `sbl-academic` wrote before 1.0.0.
   const preset = presets.find(({ id }) => id === state.get("preset"))?.id;
   choosePreset(preset ?? "");
   const written = state.get("written");
-  sourceStyle = written === "defaults"
-    ? written
+  sourceStyle = written === "defaults" || written === "sbl-academic"
+    ? "defaults"
     : presets.find(({ id }) =>
       id === written && presetFormat(id) ===
         "transliteration"

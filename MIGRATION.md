@@ -16,6 +16,43 @@ npx jsr add @humanities/greek-conversion@1.0.0-rc.10
 
 The package is ESM-only.
 
+## Updating from `1.0.0-rc.10`
+
+The `sbl-academic` preset is removed: the SBL Handbook of Style defines no
+academic transliteration of Greek. The defaults write what it wrote, so
+remove `preset: "sbl-academic"`, and write `source: {}` for
+`source: { preset: "sbl-academic" }`; the old name throws an `OptionError`.
+
+`sbl-general` writes no diaeresis, as the Handbook provides for none:
+`ἀΐδιος` gives `aidios` (rc.10: `aïdios`). Add
+`diacritics: { diaeresis: "preserve" }` to keep it.
+
+Beta Code writes many signs with the TLG's codes, which it reads back:
+`/` is `%3`, `*` `%2`, `:` `%10`, `†` `%`, `⟨` `[2` (see the reference on
+punctuation for the others). Text that rc.10 wrote reads as it did, except
+where it has `%` or `_`, which are now the dagger and the dash.
+
+Five kinds of input read differently:
+
+- In Beta Code, every digit after `#` is the number of one TLG code, as
+  after `%`: `#12` is kept as text (rc.10: koppa followed by `2`). The codes
+  `#`, `#1`, `#2`, `#3`, `#5`, `#22`, and `#401` read as before; the codes
+  of signs give the signs (`#532` gives `⸒`, `%` `†`, `_` `—`).
+- In Beta Code, `*` before anything but a letter is an asterisk, and what
+  follows it is read without it: `*(` is an asterisk and a parenthesis
+  (rc.10: one piece of text).
+- `ϗ` and `ȣ`, which rc.10 copied, are read as `και` and `ου`, and Beta Code
+  `#1532`, `#1531`, and `#1521` as `ϗ`, `Ϗ`, and `Ȣ`. Greek output writes the
+  signs again; `greek.ligatures: "standard"` writes the letters.
+- The overline U+0305 is a mark, `overline`: Beta Code reads `<` and `>`
+  around letters as one (`<qs>`), and writes `<` and `>` signs `#18` and
+  `#15`. A `switch` over `Diacritic` needs a case for it, or a default, and
+  `diacritics.overline: "remove"` removes it.
+- In every format, a spacing breathing at the start of a word, before a
+  capital vowel or rho, is the capital's (`῾Ρωμαῖοι` gives `Ῥωμαῖοι`), and a
+  psili after a letter is an apostrophe (`τ᾿` gives `τ’`); rc.10 kept both
+  as signs of their own.
+
 ## Updating from `1.0.0-rc.9`
 
 Six kinds of input convert differently. The first two concern every

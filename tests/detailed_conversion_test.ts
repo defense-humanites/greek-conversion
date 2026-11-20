@@ -94,7 +94,7 @@ test("reports a replaced letter at its own token", () => {
 });
 
 test("pairs source and target tokens by their place in the output", () => {
-  const located = (input: string, preset: Preset) =>
+  const located = (input: string, preset?: Preset) =>
     convertDetailed(input, "greek", "transliteration", { preset }).losses.map((
       { code, offset, length, diacritic },
     ) => [code, input.slice(offset, offset + length), diacritic ?? ""]);
@@ -110,7 +110,7 @@ test("pairs source and target tokens by their place in the output", () => {
     ["unrepresented-grapheme", "ν", ""],
     ["removed-diacritic", "ὺ", "grave"],
   ]);
-  assertEquals(located("θρασυσπλάνχνως", "sbl-academic"), [
+  assertEquals(located("θρασυσπλάνχνως"), [
     ["unrepresented-grapheme", "ν", ""],
   ]);
   // The same losses at the same places, alone or within a text.

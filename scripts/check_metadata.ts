@@ -4,14 +4,15 @@
  * version in `CITATION.cff`, and the entry points that JSR publishes.
  *
  * It also checks that the project is described by one sentence, the
- * `description` of `package.json`: the README's tagline and the
- * documentation of the main module repeat it; the home page of the site, its
+ * `description` of `package.json`: the documentation of the main module
+ * repeats it; the README's tagline, the home page of the site, its
  * description, and the abstract of `CITATION.cff`, which may be read first or
  * alone, repeat it after "A TypeScript library that converts". The social
  * card, which must hold its text on three lines, gives a shorter form of it
  * and says in its foot that the package is a TypeScript library; its text
  * alternative, in the site and the playground, reads the card in order. The
- * card itself, an image, is checked by eye.
+ * card itself, an image, is checked by eye. The README's example is the code
+ * of the home page, so that the two first examples a reader meets agree.
  *
  * It checks, last, that the site has one address, the `homepage` of
  * `package.json`: the one it is built for, and the one every file that
@@ -71,7 +72,7 @@ const home = await read("web/docs/src/content/docs/index.mdx");
 expect(
   "the README's tagline",
   plain(readme.match(/<b>([^<]*)<\/b>/)?.[1]),
-  sentence,
+  library,
 );
 expect(
   "the description of the home page",
@@ -92,6 +93,13 @@ expect(
   "the description of the site's home page",
   plain(home.match(/^description: (.*)$/m)?.[1]),
   library,
+);
+/** The first TypeScript block of a Markdown text. */
+const firstExample = (text: string) => text.match(/```ts\n[\s\S]*?\n```/)?.[0];
+expect(
+  "the README's example",
+  firstExample(readme),
+  firstExample(home),
 );
 /** The text of `docs/assets/greek-conversion-social-clair.png`. */
 const CARD =

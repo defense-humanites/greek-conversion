@@ -154,6 +154,28 @@ export const OPTION_RELEVANCE: Readonly<Record<string, readonly string[]>> = {
   "greek.symbolForms": [
     "greek>greek",
   ],
+  "greek.ligatures": [
+    "greek>greek",
+    "greek>beta-code",
+    "beta-code>greek",
+    "beta-code>beta-code",
+  ],
+  "greek.stigma": [
+    "greek>beta-code",
+    "greek>transliteration",
+    "beta-code>beta-code",
+    "beta-code>transliteration",
+    "transliteration>beta-code",
+    "transliteration>transliteration",
+  ],
+  "greek.kaiAccent": [
+    "greek>greek",
+    "greek>beta-code",
+    "greek>transliteration",
+    "beta-code>greek",
+    "beta-code>beta-code",
+    "beta-code>transliteration",
+  ],
   "greek.iotaSubscript": [
     "greek>greek",
     "beta-code>greek",
@@ -320,6 +342,17 @@ export const OPTION_RELEVANCE: Readonly<Record<string, readonly string[]>> = {
     "transliteration>transliteration",
   ],
   "diacritics.quantity": [
+    "greek>greek",
+    "greek>beta-code",
+    "greek>transliteration",
+    "beta-code>greek",
+    "beta-code>beta-code",
+    "beta-code>transliteration",
+    "transliteration>greek",
+    "transliteration>beta-code",
+    "transliteration>transliteration",
+  ],
+  "diacritics.overline": [
     "greek>greek",
     "greek>beta-code",
     "greek>transliteration",

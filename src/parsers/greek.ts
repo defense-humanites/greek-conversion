@@ -10,9 +10,11 @@ import {
   ownedGrapheme,
   type Token,
 } from "../model.ts";
+import { GREEK_LIGATURES, ligatureLetters } from "../ligatures.ts";
 import { parsePunctuation } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
 import type { ReadPositions } from "./positions.ts";
+import { mayHaveSpacingSigns, readSpacingMarks } from "./spacing_marks.ts";
 import {
   LETTERS,
   sharedGrapheme,
@@ -127,6 +129,27 @@ export function parseGreek(
     if (starts !== undefined) starts.push(i);
 
     if (letter === NOT_A_LETTER) {
+      const ligature = GREEK_LIGATURES.get(unit);
+      if (ligature !== undefined) {
+        // The marks written after the sign belong to its last letter.
+        let marks = 0;
+        for (i++; i < text.length; i++) {
+          const bit = markBit(text.charCodeAt(i));
+          if (bit === 0) break;
+          marks |= bit;
+        }
+        const next = letterOf(text.charCodeAt(i));
+        const letters = ligatureLetters(
+          ligature,
+          diacriticsFromMask(marks),
+          next !== NOT_A_LETTER &&
+            (FLAGS_OF[text.charCodeAt(i) - LETTERS_START] & 1) === 1,
+        );
+        out.push(...letters);
+        // The letters share the sign's span.
+        for (let k = 1; k < letters.length; k++) starts?.push(starts.at(-1)!);
+        continue;
+      }
       const source = codePointAt(text, i);
       const value = parsePunctuation(source, "greek") ?? source;
       out.push(share ? sharedLiteral(value) : literal(value));
@@ -158,6 +181,7 @@ export function parseGreek(
 
   if (starts !== undefined) starts.push(text.length);
 
+  if (mayHaveSpacingSigns(text)) readSpacingMarks(out, starts);
   classifyCoronides(out);
 
   return out;

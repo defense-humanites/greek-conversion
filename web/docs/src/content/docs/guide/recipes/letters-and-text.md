@@ -27,6 +27,7 @@ a sigma whose shape contradicts its place, as in an abbreviation or a stem
 | `finalSigma`  | `ς` and `σ`       | `"contextual"` writes `ς` at the end of a word and `σ` elsewhere; `"medial"` writes `σ`                      |
 | `medialBeta`  | `ϐ`               | `"standard"` writes `β`; `"symbol"` writes `ϐ` inside a word and `β` at its start, as French typography does |
 | `symbolForms` | `ϑ ϴ ϕ ϖ ϰ ϱ ϵ ϒ` | `"standard"` writes the ordinary letters                                                                     |
+| `ligatures`   | `ϗ ȣ`             | `"standard"` writes the letters they stand for, `και` and `ου`                                               |
 
 Beta Code writes the lunate sigma `s3`, and a sigma whose shape contradicts its
 place `s1` (`σ`) or `s2` (`ς`). Transliteration writes the lunate sigma `c`

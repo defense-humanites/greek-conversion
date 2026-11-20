@@ -58,8 +58,10 @@ import type {
 } from "./options.ts";
 import { greekUpper } from "./case.ts";
 import { applyGreekOrthography, isNumeralUnits } from "./orthography.ts";
+import { betaLigature, writtenLigature } from "./ligatures.ts";
+import { isMarkCode, isUnreadCode } from "./parsers/beta_code.ts";
 import { joinPieces, type WrittenPositions } from "./parsers/positions.ts";
-import { encodePunctuation } from "./punctuation.ts";
+import { encodePunctuation, TLG_CODE_OF } from "./punctuation.ts";
 import {
   applyGreekUnicode,
   normalizeGreek,
@@ -83,6 +85,7 @@ const LATIN_ORDER: readonly Diacritic[] = [
   "grave",
   "circumflex",
   "iota-subscript",
+  "overline",
 ];
 
 const marks = (token: Grapheme, options: ConversionOptions, format: Format) =>
@@ -149,6 +152,22 @@ export function encodeGreek(
         ? token.value
         : encodePunctuation(token.value, "greek") ?? token.value;
       if (ends !== undefined) ends[i] = out.length;
+      continue;
+    }
+
+    const ligature = writtenLigature(doc, i, options);
+    if (ligature !== undefined) {
+      // One sign for its letters, with the marks of the last one (`ϗ́`).
+      const last = i + ligature.letters.length - 1;
+      out += (token.uppercase ? greekUpper(ligature.greek) : ligature.greek) +
+        greekMarks(rendered[last] as Grapheme);
+      if (starts !== undefined && ends !== undefined) {
+        for (let k = i; k <= last; k++) {
+          starts[k] = start;
+          ends[k] = out.length;
+        }
+      }
+      i = last;
       continue;
     }
 
@@ -289,16 +308,46 @@ export function glyphForm(
 ): string {
   switch (format) {
     case "greek":
-      return greekGlyph(document, index, token, options, quotations);
+      return writtenLigature(document, index, options, token)?.greek ??
+        greekGlyph(document, index, token, options, quotations);
     case "beta-code":
-      return token.letter === "sigma"
-        ? betaSigma(document, index, token, options, quotations)
-        : "";
+      return betaLigature(document, index, options, token)?.code ??
+        (token.letter === "sigma"
+          ? betaSigma(document, index, token, options, quotations)
+          : "");
     default:
       return token.letter === "sigma" && rendersLunateC(token, options)
         ? "c"
         : "";
   }
+}
+
+/** The letters that Beta Code writes as a TLG `#` code (`#2`, stigma). */
+const HASH_CODE_LETTERS: ReadonlySet<Letter> = new Set(
+  (Object.keys(ALPHABET) as Letter[]).filter((letter) =>
+    ALPHABET[letter].beta.startsWith("#")
+  ),
+);
+
+/**
+ * Whether the token at `index` is a letter written as a `#` code that the
+ * digit after it extends into another code (`ϛ5` gives `#25`): read back, it
+ * is text, and a sigma before it ends its word.
+ */
+function extendedByDigit(
+  document: Document,
+  index: number,
+  options: ConversionOptions,
+): boolean {
+  const token = document[index];
+  if (token?.kind !== "grapheme" || token.diacritics.size !== 0) return false;
+  if (
+    !HASH_CODE_LETTERS.has(token.letter) &&
+    !(token.letter === "yot" && options.betaCode?.yot === "#401")
+  ) return false;
+  const next = document[index + 1];
+  const unit = next?.kind === "literal" ? next.value.charCodeAt(0) : 0;
+  return unit >= 0x30 && unit <= 0x39;
 }
 
 /**
@@ -331,7 +380,9 @@ export function betaSigma(
     (token.glyphVariant === "final-sigma" ||
       !numeral && token.glyphVariant === "medial-sigma");
   if (!noted && !beforeDigit) return "s";
-  const ends = !numeral && sigmaEndsWord(document, index, quotations);
+  const ends = !numeral &&
+    (sigmaEndsWord(document, index, quotations) ||
+      extendedByDigit(document, index + 1, options));
   const final = noted
     ? token.glyphVariant === "final-sigma"
     : policy !== "medial" && ends;
@@ -356,6 +407,95 @@ function writesIotaAdscript(
     (policy === "adscript" || token.uppercase);
 }
 
+/** The Beta Code of the signs that it writes with a code. */
+const BETA_SIGN_CODES: ReadonlyMap<string, string> = new Map([
+  ...TLG_CODE_OF,
+  [DEXIA_KERAIA, "#"],
+  [ARISTERI_KERAIA, "#22"],
+]);
+
+/** A code that a digit after it would extend: `%`, `#`, or one with digits. */
+const EXTENDED_CODE = /[%#\d]$/;
+
+/** Signs that the Beta Code reader reads as marks after a letter. */
+const MARK_SIGNS = new Set(["(", ")", "/", "\\", "=", "+", "|"]);
+
+/**
+ * Whether Beta Code reads `sign`, written as itself after `previous` and
+ * before `digits`, back as itself: a sign outside ASCII; `#` or `%` when it
+ * makes with the digits a code read as text (`#25`), and no mark after a
+ * letter (`%26`); `:` never, the ano teleia; and the other signs, except
+ * those that are marks after a letter when they follow one.
+ */
+function readsBackAsItself(
+  sign: string,
+  previous: Token | undefined,
+  digits: string,
+): boolean {
+  if (sign.charCodeAt(0) >= 0x80) return true;
+  if (sign === ":") return false;
+  if (sign === "#" || sign === "%") {
+    const code = sign + digits;
+    return isUnreadCode(code) &&
+      !(previous?.kind === "grapheme" && isMarkCode(code));
+  }
+  return !MARK_SIGNS.has(sign) || previous?.kind !== "grapheme";
+}
+
+/** The digits that the literals from `start` begin with. */
+function digitsFrom(document: Document, start: number): string {
+  let digits = "";
+  for (let index = start; index < document.length; index++) {
+    const token = document[index];
+    if (token.kind !== "literal") break;
+    const match = /^\d*/.exec(token.value)![0];
+    digits += match;
+    if (match.length < token.value.length) break;
+  }
+  return digits;
+}
+
+/**
+ * Puts `<` and `>` around each run of letters under an overline, as the TLG
+ * writes it. The letters a ligature's code writes are one unit, under the
+ * overline when its last one is, which bears its marks. Before a digit, `>`
+ * would be another code: the overline is not written there.
+ */
+function writeOverlines(
+  pieces: string[],
+  rendered: Document,
+  doc: Document,
+  options: ConversionOptions,
+  betaMarks: (token: Grapheme) => readonly Diacritic[],
+): void {
+  const overline = rendered.map((token) =>
+    token.kind === "grapheme" && betaMarks(token).includes("overline")
+  );
+  // The last letter of the unit that each ligature begins.
+  const lasts: number[] = [];
+  for (let index = 0; index < rendered.length; index++) {
+    const ligature = betaLigature(doc, index, options);
+    if (ligature === undefined) continue;
+    const last = index + ligature.length - 1;
+    overline.fill(overline[last], index, last);
+    lasts[index] = last;
+    index = last;
+  }
+  const overlined = (index: number): boolean => overline[index] === true;
+  for (let index = 0; index < rendered.length; index++) {
+    const last = lasts[index] ?? index;
+    if (overlined(last) && pieces[index] !== "") {
+      let end = last + 1;
+      while (overlined(end)) end++;
+      if (digitsFrom(rendered, end) === "") {
+        pieces[index] = (overlined(index - 1) ? "" : "<") + pieces[index] +
+          (end === last + 1 ? ">" : "");
+      }
+    }
+    index = last;
+  }
+}
+
 /**
  * Writes Beta Code. With `written`, records the range of each token's output
  * (see `parsers/positions.ts`).
@@ -366,21 +506,42 @@ export function encodeBetaCode(
   written?: WrittenPositions,
 ) {
   const rendered = prepareDiacriticsForRendering(doc, options, "beta-code");
-  const betaMarks = byMarks((token) => marks(token, options, "beta-code"));
+  // Whether a letter keeps the overline, noted once for each set of marks.
+  let overline = false;
+  const betaMarks = byMarks((token) => {
+    const kept = marks(token, options, "beta-code");
+    if (kept.includes("overline")) overline = true;
+    return kept;
+  });
   const quotations: QuotationContext = {};
+  // The letters after the first of a ligature, which its code writes.
+  let ligatureEnd = 0;
 
   const pieces = rendered.map((token, index) => {
+    if (index < ligatureEnd) return "";
     if (token.kind === "literal") {
       if (isKeptLetter(token)) return token.value;
-      if (token.value === DEXIA_KERAIA) {
-        // `#` and a digit are a TLG character code (`#1` is koppa): before a
-        // digit, the keraia is written as itself, which reads back as one.
-        const next = rendered[index + 1];
-        const unit = next?.kind === "literal" ? next.value.charCodeAt(0) : 0;
-        return unit >= 0x30 && unit <= 0x39 ? DEXIA_KERAIA : "#";
+      const code = BETA_SIGN_CODES.get(token.value);
+      if (code === undefined) {
+        return encodePunctuation(token.value, "beta-code") ?? token.value;
       }
-      if (token.value === ARISTERI_KERAIA) return "#22";
-      return encodePunctuation(token.value, "beta-code") ?? token.value;
+      // A digit after a code would extend it into another (`#1` is koppa,
+      // `#12` the obelus): before one, a sign is written as itself where it
+      // reads back as itself.
+      if (!EXTENDED_CODE.test(code)) return code;
+      const digits = digitsFrom(rendered, index + 1);
+      return digits !== "" &&
+          readsBackAsItself(token.value, rendered[index - 1], digits)
+        ? token.value
+        : code;
+    }
+    const ligature = betaLigature(doc, index, options);
+    if (ligature !== undefined) {
+      // The code for the letters, with the marks of the last one.
+      ligatureEnd = index + ligature.length;
+      const last = rendered[ligatureEnd - 1] as Grapheme;
+      return ligature.code +
+        betaMarks(last).map((mark) => BETA_FOR[mark]).join("");
     }
     let base = token.letter === "sigma"
       ? betaSigma(doc, index, token, options, quotations)
@@ -404,8 +565,14 @@ export function encodeBetaCode(
       .map((mark) => BETA_FOR[mark])
       .join("");
     const afterLetter = renderedMarks.includes("iota-subscript") ? "|" : "";
-    return `*${beforeLetter}${base}${afterLetter}`;
+    // A capital whose code a digit extends reads back as an asterisk before
+    // another code: it is written so, as it reads back.
+    const capital = extendedByDigit(doc, index, options) ? "%2" : "*";
+    return `${capital}${beforeLetter}${base}${afterLetter}`;
   });
+  // Every letter's marks are read above: the code of a ligature writes
+  // those of its last one, and the others have none.
+  if (overline) writeOverlines(pieces, rendered, doc, options, betaMarks);
   return written === undefined ? pieces.join("") : joinPieces(pieces, written);
 }
 
@@ -1082,6 +1249,8 @@ function trMark(mark: Diacritic, options: ConversionOptions) {
       return "\u0304";
     case "breve":
       return "\u0306";
+    case "overline":
+      return "\u0305";
     case "coronis":
       switch (options.transliteration?.coronis) {
         case "apostrophe":

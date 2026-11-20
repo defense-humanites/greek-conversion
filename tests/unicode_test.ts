@@ -29,7 +29,7 @@ test("canonicalizes adversarial combining-mark order and duplicates", () => {
 });
 
 test("preserves non-BMP and unrecognized Unicode literals", () => {
-  const literals = "😀 𝄞 𐀀 \u2066§\u2069";
+  const literals = "😀 𝄞 𐀀 \u2066¶\u2069";
 
   for (const source of FORMATS) {
     for (const target of FORMATS) {

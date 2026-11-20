@@ -86,8 +86,10 @@ export type {
   GreekQuestionMarkForm,
   HyphenTransliteration,
   IotaSubscriptOrthography,
+  KaiAccent,
   KeraiaTransliteration,
   LetterCaseOrthography,
+  LigatureOrthography,
   LongVowelTransliteration,
   LunateSigmaTransliteration,
   MedialBetaOrthography,
@@ -104,6 +106,7 @@ export type {
   SigmaOrthography,
   SmoothBreathingTransliteration,
   SourceOptions,
+  StigmaReading,
   SymbolFormOrthography,
   TextOptions,
   TransliterationOptions,
@@ -117,19 +120,15 @@ export {
   DEFAULT_CONVERSION_OPTIONS,
   OptionError,
 } from "./options.ts";
-export {
-  getPresetMetadata,
-  getPresetOptions,
-  listPresetMetadata,
-  resolveConversionOptions,
-} from "./presets.ts";
+export { getPresetMetadata, listPresetMetadata } from "./preset_metadata.ts";
 export type {
   PresetCoverage,
   PresetMetadata,
-  PresetOptions,
   PresetOutOfScopeBehavior,
   PresetReference,
-} from "./presets.ts";
+} from "./preset_metadata.ts";
+export { getPresetOptions, resolveConversionOptions } from "./presets.ts";
+export type { PresetOptions } from "./presets.ts";
 
 /**
  * Converts text between Greek, Beta Code, and scientific transliteration.
@@ -139,8 +138,9 @@ export type {
  * conversion is not necessarily lossless; use {@link convertDetailed} when
  * that distinction matters.
  *
- * Without a preset, transliteration follows the SBL academic style, which the
- * `sbl-academic` preset names.
+ * Without a preset, transliteration is the library's own: the letters of the
+ * SBL Handbook of Style, with the accents, iota subscript, diaeresis, and
+ * quantity marks that the Handbook leaves out.
  *
  * @throws {TypeError} If `input` is not a string.
  * @throws {RangeError} If a format is unknown; an {@link OptionError} (a

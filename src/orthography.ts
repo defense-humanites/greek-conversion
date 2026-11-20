@@ -94,8 +94,9 @@ export function applyOrthography(
 /**
  * Applies Greek-output orthography to a canonical document without mutation.
  *
- * The monotonic policy is mechanical and lossy: it preserves diaeresis,
- * collapses acute/grave/circumflex to one acute, removes breathings, coronis,
+ * The monotonic policy is mechanical and lossy: it preserves diaeresis and
+ * overline, collapses acute/grave/circumflex to one acute, removes
+ * breathings, coronis,
  * iota subscript, and explicit quantity, and leaves monosyllables unaccented
  * except for the three the monotonic system distinguishes (see
  * {@link keepsMonosyllableAccent}) and those that abbreviate a longer word
@@ -117,6 +118,8 @@ export function applyGreekOrthography(
 
     const diacritics = new Set<Diacritic>();
     if (token.diacritics.has("diaeresis")) diacritics.add("diaeresis");
+    // The overline of an abbreviation or a numeral is no accent.
+    if (token.diacritics.has("overline")) diacritics.add("overline");
     if (
       token.diacritics.has("acute") ||
       token.diacritics.has("grave") ||

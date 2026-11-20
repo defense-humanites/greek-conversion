@@ -1,13 +1,13 @@
 ---
 title: "Byzantine and Medieval Greek"
-description: "Convert Byzantine texts: the convention that covers the period, the lunate sigma, numerals, uncial-style output, and what is not read yet."
+description: "Convert Byzantine texts: the conventions that cover the period, breathings written before a capital, the lunate sigma, numerals, uncial-style output, signs for several letters, the overline and the expansion of abbreviations, and punctuation."
 ---
 
 Byzantine texts are written in polytonic Greek, and convert as Ancient Greek
-does: the same reading, the same presets. This page says which convention
-covers the period, shows what matters most for it (the lunate sigma,
-numerals, and uncial-style output), and states what the library does not
-read yet.
+does: the same reading, the same presets. This page says which conventions
+cover the period, and shows what matters most for it: breathings written
+before a capital, the lunate sigma, numerals, uncial-style output, signs for
+several letters, the overline, and punctuation.
 
 ## Choose a convention
 
@@ -26,8 +26,50 @@ convert(title, "greek", "transliteration", { preset: "ala-lc-ancient" });
 // → Iōannēs ho Chrysostomos, Peri hierōsynēs
 ```
 
+Byzantinists write names and terms either strictly, as the _Oxford
+Dictionary of Byzantium_ (1991) does, or in a Latinized form, as the _Oxford
+Classical Dictionary_ does, and the Dumbarton Oaks style guide asks for one
+or the other, not a mix. The dictionary publishes no table: its preface says
+that Greek terms and most names are strictly transliterated, but keeps a
+traditional Latinized or anglicized form for many (Homer, Thebes, Nicaea),
+and the anglicized form of first names common in English (John, Nicholas,
+Peter). The strict forms that the dictionary is cited for (Alexios
+Komnenos, Niketas Choniates) are those of the ALA-LC table without its
+length marks, which `longVowels: "omit"` leaves out. The traditional forms
+are a matter of usage, which no option supplies: the options write
+`Ioannes` and `Theodoros` where the dictionary has John and Theodore. The
+_Oxford Classical Dictionary_ does not set out its transliteration either:
+its Latinized forms are the traditional English spellings of Greek names
+(Aeschylus, Thucydides), and no preset gives them.
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+const strict = {
+  preset: "ala-lc-ancient",
+  transliteration: { longVowels: "omit" },
+} as const;
+
+const names = "Ἀλέξιος Κομνηνός, Νικήτας Χωνιάτης";
+
+convert(names, "greek", "transliteration", strict);
+// → Alexios Komnenos, Niketas Choniates
+convert("λογοθέτης τοῦ δρόμου", "greek", "transliteration", strict);
+// → logothetes tou dromou
+```
+
 A diaeresis on an initial vowel, as manuscripts and their editions write it,
 is kept in every format: `ϊδεῖν` gives `ïdeĩn`, and reads back.
+
+## Breathings before a capital
+
+Older printed editions, and their digitizations, write the breathing of a
+capital before it, as a sign of its own (U+1FBF, U+1FFE, or one of their
+compounds with an accent). At the start of a word, before a capital vowel or
+rho, the library reads such a breathing, and its accent, as the capital's:
+`῾Ρωμαῖοι` gives `Rhōmaĩoi`, and Greek output writes `Ῥωμαῖοι`. Elsewhere the
+sign is kept as it is, except a psili after a letter, which is the apostrophe
+of an elision: `τ᾿ ἐστί` gives `t’ estí`.
 
 ## The lunate sigma
 
@@ -86,21 +128,130 @@ reencode("ἐν ἀρχῇ ἦν ὁ λόγος", "greek", {
 // → ΕΝ ΑΡΧΗΙ ΗΝ Ο ΛΟΓΟϹ
 ```
 
-## What is not read yet
+## Signs for several letters
 
-Some signs of Byzantine manuscripts and of their digitizations are kept but
-not interpreted. None is ever dropped: each is copied to the output as it
-is, in every format, Beta Code included.
+Manuscripts and older printing write some words and pairs of letters with one
+sign. The library reads them as the letters they stand for, and Greek output
+writes the sign again:
 
-| In the text                                            | Today                                                                                |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| `ϗ`, the abbreviation of καί                           | Copied as it is, not read as the word                                                |
-| `ȣ`, the ligature of ου                                | Copied as it is                                                                      |
-| `ϛ` inside a word, as the ligature of στ               | Read as the letter stigma: `ἐϛὶ` gives `ec̄ì`                                         |
-| A spacing breathing before a capital, as in `῾Ρωμαῖοι` | Copied as a sign of its own; the capital is read without it: `῾Rōmaĩoi`, with no `h` |
-| The overline of nomina sacra, as in `θ̅ς̅`               | Copied on the letters as an unknown mark: `th̅s̅`; abbreviations are not expanded      |
-| Byzantine punctuation, such as `⸒` and `⁘`             | Copied as it is                                                                      |
+- the καί symbol `ϗ`, read `και`: `ϗ σύ` gives `kai sý`;
+- the ου ligature `ȣ`, a Latin letter that editions use for it, read `ου`:
+  `ȣ̓κ` gives `ouk`;
+- under `greek.stigma: "ligature"`, a stigma between two letters, read `στ`:
+  `ἐϛὶ` gives `estì`, where it is otherwise the letter stigma, the numeral
+  six (`ec̄ì`).
 
-A text that writes the breathing before its capital converts as intended
-once the two are joined (`Ῥωμαῖοι` gives `Rhōmaĩoi`). Musical notation and
-the conventions of diplomatic editions are outside the scope of the library.
+`greek.ligatures: "standard"` writes the letters in Greek. Beta Code writes the
+TLG's codes for `ϗ`, `Ϗ`, and `Ȣ` (`#1532`, `#1531`, `#1521`), and the
+letters for the others.
+
+`ϗ` marks no accent, so `και` has none by default. Where the output writes
+the letters, `greek.kaiAccent` writes the accent of `καί`: `"byzantine"` the
+grave everywhere, as the manuscripts do even before punctuation, and
+`"modern"` the acute before punctuation and before an enclitic, as modern
+editions do (`καί τινες`, `καὶ τοῦ`). The rules and the cases they leave open
+are set out under
+[The accent of `καί`](/reference/greek-unicode/#the-accent-of-καί).
+
+```ts
+import { convert, reencode } from "@humanities/greek-conversion";
+
+convert("ϗ ȣ̓κ", "greek", "beta-code"); // → #1532 ou)k
+reencode("ϗ ȣ̓κ", "greek", { greek: { ligatures: "standard" } });
+// → και οὐκ
+convert("ἐϛὶ", "greek", "greek", {
+  greek: { stigma: "ligature", ligatures: "standard" },
+});
+// → ἐστὶ
+convert("ϗ τινες ϗ τοῦ", "greek", "transliteration", {
+  greek: { kaiAccent: "modern" },
+});
+// → kaí tines kaì toũ
+```
+
+## The overline
+
+The line drawn over abbreviations and numerals, as over the nomina sacra, is a
+mark of its letters, which every format keeps: `θ̅ς̅` gives `th̅s̅`, and Beta
+Code writes it as the TLG does, `<qs>`. Abbreviations are not expanded (see
+[Expanding abbreviations](#expanding-abbreviations)), and an overlined
+numeral is read as its letters. `diacritics.overline: "remove"`
+removes the line.
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("θ̅ς̅ κ̅ς̅", "greek", "beta-code"); // → <qs> <ks>
+convert("θ̅ς̅", "greek", "greek", { diacritics: { overline: "remove" } });
+// → θς
+```
+
+### Expanding abbreviations
+
+Expanding a nomen sacrum is an editor's choice rather than a conversion. The
+contracted forms are declined (`θ̅ς̅`, `θ̅υ̅`, `θ̅ν̅`) and vary from one
+manuscript to another (`ι̅ς̅` or `ι̅η̅ς̅`, `χ̅ς̅` or `χ̅ρ̅ς̅`). Whether the word
+takes a capital (`Θεός` or `θεός`) is a choice of the edition. A critical
+edition marks the letters it supplies, `θ(εό)ς`, where a normalized text does
+not. Some forms are also numerals: `π̅ν̅α̅` is `πνεῦμα`, and the numeral 131.
+
+The [document API](/guide/document/) lets a text be expanded with a table of
+the forms it uses. Read the text, replace each overlined run that the table
+has with the word, and write the result in any format. A run that the table
+does not have, such as the numeral `ι̅β̅`, is kept as it is:
+
+```ts
+import {
+  type Document,
+  encode,
+  parse,
+  type Token,
+} from "@humanities/greek-conversion/document";
+
+// The contracted forms to expand, as the edition writes them in full.
+const NOMINA_SACRA = new Map([
+  ["θυ", "θεοῦ"],
+  ["κυ", "κυρίου"],
+  ["ιυ", "Ἰησοῦ"],
+  ["χυ", "Χριστοῦ"],
+  ["πνα", "πνεῦμα"],
+]);
+
+const overlined = (token: Token | undefined) =>
+  token?.kind === "grapheme" && token.diacritics.has("overline");
+
+function expand(document: Document): Token[] {
+  const expanded: Token[] = [];
+  for (let index = 0; index < document.length;) {
+    let end = index;
+    while (overlined(document[end])) end++;
+    if (end === index) {
+      expanded.push(document[index++]);
+      continue;
+    }
+    const run = document.slice(index, end);
+    const letters = encode(run, "greek", {
+      diacritics: { overline: "remove" },
+    });
+    const word = NOMINA_SACRA.get(letters);
+    expanded.push(...(word === undefined ? run : parse(word, "greek")));
+    index = end;
+  }
+  return expanded;
+}
+
+const text = "τοῦ κ̅υ̅ ι̅υ̅ χ̅υ̅ καὶ τὸ π̅ν̅α̅ ι̅β̅";
+encode(expand(parse(text, "greek")), "transliteration");
+// → toũ kyríou Iēsoũ Christoũ kaì tò pneũma i̅b̅
+```
+
+A form with an acute on its last syllable, such as `θεός`, takes the grave
+before another word, which a table of forms cannot know: write it as the
+edition does in running text, or leave the accent to be checked.
+
+## Punctuation and what is outside the library
+
+Byzantine punctuation, such as the hypodiastole `⸒` and the four dots `⁘`, is
+copied in Greek and transliteration, and Beta Code writes it with the TLG's
+codes, `#532` and `#544`, which it reads back. Musical notation and the
+conventions of diplomatic editions are outside the scope of the library.

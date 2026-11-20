@@ -172,8 +172,9 @@ key at `path` or the current spelling of the value received there.
 `ConversionOptions` is the input type: every field optional, unknown keys and
 values rejected at runtime. Adding a key or a value is a minor change; the
 default behavior of an existing call never changes in a minor release. The
-default transliteration is the SBL academic style: `sbl-academic` and the
-defaults write the same text, and both move together.
+default transliteration is the library's own: the letters of the SBL Handbook
+of Style, which `sbl-general` writes, with the marks that the Handbook leaves
+out.
 
 `ResolvedConversionOptions` is an **output** type describing the effective
 configuration returned by `resolveConversionOptions()`. New fields appear in

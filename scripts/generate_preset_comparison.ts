@@ -14,7 +14,6 @@ import {
   getPresetOptions,
   listPresetMetadata,
   type Preset,
-  resolveConversionOptions,
 } from "../src/mod.ts";
 
 const START = "<!-- BEGIN GENERATED PRESET COMPARISON -->";
@@ -36,6 +35,9 @@ const TABLES: readonly (readonly [string, readonly string[]])[] = [
   ]],
   ["Breathings, iota subscript, and accents", ["ἁ", "ἀ", "ᾳ", "ά", "ῶ"]],
 ];
+
+/** The row of a conversion without a preset. */
+const DEFAULTS = "No preset (the default)";
 
 const page = await readFile(PAGE, "utf8");
 const expected = replaceGeneratedSection(page, render());
@@ -66,10 +68,9 @@ function render(): string {
       "",
       `| Preset | ${samples.map(code).join(" | ")} |`,
       `| --- | ${samples.map(() => "---").join(" | ")} |`,
-      ...presets.map((preset) =>
-        `| ${
-          isDefault(preset) ? `${code(preset)}, the default` : code(preset)
-        } | ${
+      // The defaults first: no preset names them.
+      ...[undefined, ...presets].map((preset) =>
+        `| ${preset === undefined ? DEFAULTS : code(preset)} | ${
           samples.map((sample) =>
             code(convert(sample, "greek", "transliteration", { preset }))
           ).join(" | ")
@@ -86,12 +87,6 @@ function render(): string {
 function writesTransliteration(preset: Preset): boolean {
   const groups = Object.keys(getPresetOptions(preset));
   return groups.length === 0 || groups.some((group) => group !== "betaCode");
-}
-
-/** Whether a preset resolves to the options of a conversion without one. */
-function isDefault(preset: Preset): boolean {
-  return JSON.stringify(resolveConversionOptions({ preset })) ===
-    JSON.stringify(resolveConversionOptions());
 }
 
 function code(text: string): string {

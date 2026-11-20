@@ -1,5 +1,6 @@
 import { isVowel, type QuotationContext } from "./context.ts";
 import { glyphForm } from "./encode.ts";
+import { ACCENTS } from "./kai_accent.ts";
 import { sharedMask } from "./model.ts";
 import type {
   Diacritic,
@@ -42,6 +43,9 @@ export interface ConversionLoss {
   /**
    * The affected semantic mark when {@link code} is `"removed-diacritic"`,
    * `"added-diacritic"`, `"displaced-diacritic"`, or `"inferred-breathing"`.
+   * An added diacritic is the diaeresis that transliteration writes on a
+   * contextual `y`, or the accent of `καί` that `greek.kaiAccent` writes for
+   * `ϗ`.
    */
   diacritic?: Diacritic;
   /**
@@ -108,6 +112,7 @@ const DIACRITIC_NAMES: Readonly<Record<Diacritic, string>> = {
   "iota-subscript": "iota subscript",
   macron: "macron",
   breve: "breve",
+  overline: "overline",
 };
 
 /** Where the output was written and read again, in output code units. */
@@ -165,9 +170,42 @@ export function findConversionLosses(
     } else {
       addTokenLoss(losses, source, target, index, counterpart, sameGlyph);
     }
+    if (counterpart !== undefined) {
+      addKaiAccent(losses, source, target, index, counterpart);
+    }
   }
 
   return losses.all;
+}
+
+/**
+ * Reports the accent that the target writes on the `ι` of `καί` where the
+ * source has the καί symbol `ϗ`, which marks none (`greek.kaiAccent`).
+ */
+function addKaiAccent(
+  losses: Losses,
+  sourceDocument: Document,
+  targetDocument: Document,
+  index: number,
+  targetIndex: number,
+): void {
+  const source = sourceDocument[index];
+  const target = targetDocument[targetIndex];
+  const kappa = sourceDocument[index - 2];
+  if (
+    source.kind !== "grapheme" || source.letter !== "iota" ||
+    target?.kind !== "grapheme" || target.letter !== "iota" ||
+    kappa?.kind !== "grapheme" || kappa.glyphVariant !== "kai-symbol" ||
+    ACCENTS.some((mark) => source.diacritics.has(mark))
+  ) return;
+  const accent = ACCENTS.find((mark) => target.diacritics.has(mark));
+  if (accent === undefined) return;
+  losses.add(
+    "added-diacritic",
+    index,
+    "The target representation writes an accent that the source does not have: the accent of καί, which greek.kaiAccent writes where ϗ is written as letters.",
+    accent,
+  );
 }
 
 /**

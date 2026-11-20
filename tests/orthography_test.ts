@@ -225,7 +225,7 @@ test("applies the beta symbol only to medial lowercase beta", () => {
 test("applies the requested upsilon transliteration", () => {
   const greek = "υ αυ ευ ηυ ου υι ωυ αϋ";
 
-  // The default is the SBL academic spelling, `y-with-diphthong-u`.
+  // The default is the spelling of the SBL Handbook, `y-with-diphthong-u`.
   assertNfcEquals(
     convert(greek, "greek", "transliteration"),
     "y au eu ēu ou ui ōu aÿ",
@@ -285,15 +285,21 @@ test("applies the requested upsilon transliteration", () => {
     convert("kay", "transliteration", "transliteration", threePairs),
     "kaÿ",
   );
+  const unaccented = {
+    diacritics: { accents: "remove", smoothBreathing: "remove" },
+  } as const;
   assertNfcEquals(
-    convert("ἄυλος", "greek", "transliteration", { preset: "sbl-general" }),
+    convert("ἄυλος", "greek", "transliteration", unaccented),
     "aÿlos",
   );
   assertNfcEquals(
-    convert("aylos", "transliteration", "transliteration", {
-      preset: "sbl-general",
-    }),
+    convert("aylos", "transliteration", "transliteration", unaccented),
     "aÿlos",
+  );
+  // The SBL Handbook does not provide for the diaeresis: y alone says it.
+  assertNfcEquals(
+    convert("ἄυλος", "greek", "transliteration", { preset: "sbl-general" }),
+    "aylos",
   );
   assertNfcEquals(
     convert("Υ ΑΥ ΑΫ", "greek", "transliteration", {
@@ -1111,7 +1117,7 @@ test("writes the iota on the line in Greek output only", () => {
   for (const iotaSubscript of ["capital-adscript", "adscript"] as const) {
     // Beta Code and transliteration ignore the option, under every preset.
     for (
-      const preset of [undefined, "ala-lc-ancient", "sbl-academic"] as const
+      const preset of [undefined, "ala-lc-ancient", "sbl-general"] as const
     ) {
       const base = preset === undefined ? {} : { preset };
       for (const to of ["beta-code", "transliteration"] as const) {

@@ -24,9 +24,11 @@ protects these behaviors.
 - **Unknown characters are preserved.** A character the library does not
   recognize, an unrecognized combining mark included, is copied through as a
   literal, never dropped.
-- **The default transliteration is the SBL academic style.** The
-  `sbl-academic` preset and the defaults write the same text, and change
-  together.
+- **The default transliteration is the library's own.** It uses the letters
+  of the SBL Handbook of Style (§5.3), which the `sbl-general` preset writes,
+  and keeps the accents, iota subscript, diaeresis, and quantity marks that
+  the Handbook leaves out. No preset names it, since no published convention
+  defines it.
 - **Options are checked.** A misspelled option never falls back to a default.
   An unknown option key, value, or preset, or two values that cannot be
   combined, throws an `OptionError`. It is a `RangeError` that names the option

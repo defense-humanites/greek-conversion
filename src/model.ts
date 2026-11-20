@@ -1,4 +1,12 @@
-/** Text representations understood by the conversion engine. */
+/**
+ * Text representations understood by the conversion engine: Greek script
+ * (`"greek"`), Beta Code (`"beta-code"`), and Greek in Latin script
+ * (`"transliteration"`). The last is named in the broad sense that software
+ * gives the word after Unicode CLDR, for which a transliteration may convert
+ * back or not: it holds every convention, a transliteration in the strict
+ * sense, such as ISO 843 Type 1, as well as a transcription, such as ISO 843
+ * Type 2.
+ */
 export type Format = "greek" | "beta-code" | "transliteration";
 
 /** Every supported format identifier, in documentation order. */
@@ -78,7 +86,8 @@ export type Diacritic =
   | "diaeresis"
   | "iota-subscript"
   | "macron"
-  | "breve";
+  | "breve"
+  | "overline";
 
 /**
  * Source glyph distinctions retained independently from the Greek letter:
@@ -90,6 +99,14 @@ export type Diacritic =
  * `final-sigma-stigma` is a stigma written `ς`, the sign it resembles, as
  * the units of a numeral (`ιςʹ`, 16); it is a small letter, and Greek output
  * writes it `ς` only there, where it reads back as a stigma.
+ *
+ * Three variants note a sign that stands for several letters, on the first
+ * of them: `kai-symbol` on the `κ` of `και` read from `ϗ` (GREEK KAI
+ * SYMBOL), `ou-ligature` on the `ο` of `ου` read from `ȣ` (LATIN SMALL
+ * LETTER OU, which editions use for the Greek ligature), and
+ * `stigma-ligature` on the `σ` of `στ` read from `ϛ` under `greek.stigma:
+ * "ligature"`. Greek output writes the sign under `greek.ligatures:
+ * "preserve"` when the letters that follow are those it stands for.
  *
  * A name is the Unicode name of the form without `GREEK`, and without
  * `SYMBOL` where a qualifier already tells the form from the letter:
@@ -110,7 +127,10 @@ export type GlyphVariant =
   | "rho-symbol"
   | "lunate-epsilon"
   | "upsilon-hook"
-  | "final-sigma-stigma";
+  | "final-sigma-stigma"
+  | "kai-symbol"
+  | "ou-ligature"
+  | "stigma-ligature";
 
 /**
  * The letter each glyph variant belongs to, its case when it has only one,
@@ -141,6 +161,11 @@ export const GLYPH_VARIANTS: Readonly<
   // The units of a numeral written with the final sigma it resembles (`ιςʹ`
   // for `ιϛʹ`, 16), since keyboards lack the stigma.
   "final-sigma-stigma": { letter: "stigma", uppercase: false, symbol: "ς" },
+  // Signs that stand for several letters, noted on the first of them: `ϗ`
+  // for `και`, `ȣ` for `ου`, `ϛ` for `στ` (see `ligatures.ts`).
+  "kai-symbol": { letter: "kappa" },
+  "ou-ligature": { letter: "omicron" },
+  "stigma-ligature": { letter: "sigma" },
 });
 
 /** One canonical Greek letter with mutable case and semantic diacritics. */
@@ -198,6 +223,7 @@ export const ORDER: readonly Diacritic[] = [
   "macron",
   "breve",
   "iota-subscript",
+  "overline",
 ];
 
 const BITS = new Map<unknown, number>(
@@ -210,7 +236,7 @@ const READ_ONLY_MESSAGE =
 /**
  * Diacritic sets shared by every grapheme that carries the same marks.
  *
- * There are at most 2^10 distinct sets, so one instance per combination
+ * There are at most 2^11 distinct sets, so one instance per combination
  * replaces one allocation per grapheme. They stay plain `Set` objects, so
  * structural equality with a caller's `new Set(...)` still holds; their
  * mutating methods are shadowed by non-enumerable throwing ones, since a

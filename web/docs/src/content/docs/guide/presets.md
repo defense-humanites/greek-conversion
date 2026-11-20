@@ -5,25 +5,30 @@ description: "The presets that implement published conventions, what each one lo
 
 A preset bundles the options that implement one published convention, so that a
 single name selects a romanization standard or a Beta Code dialect. This page
-lists the nine presets, compares how each one writes Greek and what it loses,
+lists the eight presets, compares how each one writes Greek and what it loses,
 and shows how your own options refine one; each preset states its references and
 what it leaves out.
 
 ## The presets
 
-Nine presets cover the common library, scholarly, and interchange conventions:
+Eight presets cover the common library, scholarly, and interchange conventions:
 
-| Preset           | Target          | Greek           | For                                                                         |
-| ---------------- | --------------- | --------------- | --------------------------------------------------------------------------- |
-| `ala-lc-ancient` | transliteration | Ancient         | Library romanization, Medieval Greek included (before 1454)                 |
-| `ala-lc-modern`  | transliteration | Modern          | Library romanization after 1453, with its contextual digraphs               |
-| `bnf-core`       | transliteration | Ancient         | BnF/ISO-based romanization for cataloguing                                  |
-| `iso-843-type-1` | transliteration | Ancient, Modern | Strict transliteration, reversible for monotonic text; also ELOT 743        |
-| `iso-843-type-2` | transliteration | Modern          | Transcription by pronunciation, as ELOT 743: passports, road signs, maps    |
-| `sbl-academic`   | transliteration | Ancient         | Biblical studies, keeping scholarly diacritics; the default transliteration |
-| `sbl-general`    | transliteration | Ancient         | Biblical studies for general readers, without most diacritics               |
-| `tlg-core`       | Beta Code       | Ancient         | Uppercase-ASCII TLG Beta Code for polytonic interchange                     |
-| `perseus`        | Beta Code       | Ancient         | Lowercase-ASCII Beta Code for Perseus and Morpheus                          |
+| Preset           | Target          | Greek           | For                                                                      |
+| ---------------- | --------------- | --------------- | ------------------------------------------------------------------------ |
+| `ala-lc-ancient` | transliteration | Ancient         | Library romanization, Medieval Greek included (before 1454)              |
+| `ala-lc-modern`  | transliteration | Modern          | Library romanization after 1453, with its contextual digraphs            |
+| `bnf-core`       | transliteration | Ancient         | BnF/ISO-based romanization for cataloguing                               |
+| `iso-843-type-1` | transliteration | Ancient, Modern | Strict transliteration, reversible for monotonic text; also ELOT 743     |
+| `iso-843-type-2` | transliteration | Modern          | Transcription by pronunciation, as ELOT 743: passports, road signs, maps |
+| `sbl-general`    | transliteration | Ancient         | Biblical studies, as the SBL Handbook writes Greek: no accent            |
+| `tlg-core`       | Beta Code       | Ancient         | Uppercase-ASCII TLG Beta Code for polytonic interchange                  |
+| `perseus`        | Beta Code       | Ancient         | Lowercase-ASCII Beta Code for Perseus and Morpheus                       |
+
+Without a preset, the transliteration is the library's own: the letters of the
+SBL Handbook, with the accents, iota subscript, diaeresis, and quantity marks
+that the Handbook leaves out. The Handbook gives Greek a single style, for
+general readers, which `sbl-general` writes; for academic readers, it asks for
+Greek characters.
 
 Select one with `preset`:
 
@@ -69,48 +74,48 @@ same codes, `tlg-core` in capitals and `perseus` in lowercase, but for yot
 
 | Preset | `β` | `η` | `υ` | `φ` | `χ` | `ω` |
 | --- | --- | --- | --- | --- | --- | --- |
+| No preset (the default) | `b` | `ē` | `y` | `ph` | `ch` | `ō` |
 | `ala-lc-ancient` | `b` | `ē` | `y` | `ph` | `ch` | `ō` |
 | `ala-lc-modern` | `v` | `ē` | `y` | `ph` | `ch` | `ō` |
 | `bnf-core` | `b` | `ē` | `y` | `ph` | `ch` | `ō` |
 | `iso-843-type-1` | `v` | `ī` | `y` | `f` | `ch` | `ō` |
 | `iso-843-type-2` | `v` | `i` | `y` | `f` | `ch` | `o` |
-| `sbl-academic`, the default | `b` | `ē` | `y` | `ph` | `ch` | `ō` |
 | `sbl-general` | `b` | `ē` | `y` | `ph` | `ch` | `ō` |
 
 **Vowel pairs with upsilon**
 
 | Preset | `αυτός` | `ευχή` | `ούτε` |
 | --- | --- | --- | --- |
+| No preset (the default) | `autós` | `euchḗ` | `oúte` |
 | `ala-lc-ancient` | `autos` | `euchē` | `oute` |
 | `ala-lc-modern` | `autos` | `euchē` | `oute` |
 | `bnf-core` | `autós` | `euchḗ` | `oúte` |
 | `iso-843-type-1` | `autós` | `euchī́` | `oúte` |
 | `iso-843-type-2` | `aftós` | `efchí` | `oúte` |
-| `sbl-academic`, the default | `autós` | `euchḗ` | `oúte` |
 | `sbl-general` | `autos` | `euchē` | `oute` |
 
 **Gamma before a velar, and the digraphs of Modern Greek**
 
 | Preset | `άγγελος` | `αγκαλιά` | `μπαμπάς` | `ντομάτα` |
 | --- | --- | --- | --- | --- |
+| No preset (the default) | `ángelos` | `ankaliá` | `mpampás` | `ntomáta` |
 | `ala-lc-ancient` | `angelos` | `ankalia` | `mpampas` | `ntomata` |
 | `ala-lc-modern` | `angelos` | `ankalia` | `bampas` | `d̲omata` |
 | `bnf-core` | `ángelos` | `ankaliá` | `mpampás` | `ntomáta` |
 | `iso-843-type-1` | `ággelos` | `agkaliá` | `mpampás` | `ntomáta` |
 | `iso-843-type-2` | `ángelos` | `agkaliá` | `bampás` | `ntomáta` |
-| `sbl-academic`, the default | `ángelos` | `ankaliá` | `mpampás` | `ntomáta` |
 | `sbl-general` | `angelos` | `ankalia` | `mpampas` | `ntomata` |
 
 **Breathings, iota subscript, and accents**
 
 | Preset | `ἁ` | `ἀ` | `ᾳ` | `ά` | `ῶ` |
 | --- | --- | --- | --- | --- | --- |
+| No preset (the default) | `ha` | `a` | `a̧` | `á` | `ō̃` |
 | `ala-lc-ancient` | `ha` | `a` | `a` | `a` | `ō` |
 | `ala-lc-modern` | `ha` | `a` | `a` | `a` | `ō` |
 | `bnf-core` | `ha` | `a̓` | `a̧` | `á` | `ō̂` |
 | `iso-843-type-1` | `ha` | `’a` | `a̧` | `á` | `ō̂` |
 | `iso-843-type-2` | `ha` | `’a` | `a̧` | `á` | `ô` |
-| `sbl-academic`, the default | `ha` | `a` | `a̧` | `á` | `ō̃` |
 | `sbl-general` | `ha` | `a` | `a` | `a` | `ō` |
 
 <!-- END GENERATED PRESET COMPARISON -->
@@ -135,14 +140,14 @@ own (see [Knowing what a conversion loses](/guide/losses/)).
 
 | Preset | Lost from the monotonic text | Lost from the polytonic text |
 | --- | --- | --- |
+| No preset (the default) | The absence of a breathing | Coronis |
 | `ala-lc-ancient` | Accents; diaeresis | Accents; smooth breathing; iota subscript; coronis |
 | `ala-lc-modern` | Accents; diaeresis | Accents; smooth breathing; iota subscript; coronis |
 | `bnf-core` | Nothing | Nothing |
 | `iso-843-type-1` | Nothing | Smooth breathing; coronis |
 | `iso-843-type-2` | The letters eta, omega, upsilon | The letters eta, omega; smooth breathing; coronis |
 | `perseus` | Nothing | Nothing |
-| `sbl-academic`, the default | The absence of a breathing | Coronis |
-| `sbl-general` | Accents | Accents; smooth breathing; iota subscript; coronis |
+| `sbl-general` | Accents; diaeresis | Accents; smooth breathing; iota subscript; coronis |
 | `tlg-core` | Nothing | Nothing |
 
 <!-- END GENERATED LOSS PROFILE -->

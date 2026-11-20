@@ -64,16 +64,39 @@ accentuation.
 ## Order of marks
 
 Greek output writes the marks of one vowel in the order quantity, breathing,
-diaeresis, accent, iota subscript. Marks of the same combining class stack
-outward from the letter in that order, so the macron or breve sits on the
-vowel with the breathing and accent above it, as Greek is typeset. Composed
-output therefore keeps the precomposed long or short vowel and adds the
-other marks: `ᾱ́` is U+1FB1 U+0301, and `ᾱ̓́` is U+1FB1 U+0313 U+0301. Input
-in another order is accepted and converges to this one. Beta Code writes the
-breathing, diaeresis, and accent first and the iota subscript last, as the TLG
-does, with the quantity between them as a TLG percent code, `%26` for the
-macron and `%27` for the breve (`a)/%26`); transliteration uses the same
-quantity-first order as Greek (`ā́`).
+diaeresis, accent, overline, iota subscript. Marks of the same combining
+class stack outward from the letter in that order, so the macron or breve
+sits on the vowel with the breathing and accent above it, as Greek is
+typeset. Composed output therefore keeps the precomposed long or short
+vowel and adds the other marks: `ᾱ́` is U+1FB1 U+0301, and `ᾱ̓́` is U+1FB1
+U+0313 U+0301. Input in another order is accepted and converges to this one.
+Beta Code writes the breathing, diaeresis, and accent first and the iota
+subscript last, as the TLG does, with the quantity between them as a TLG
+percent code, `%26` for the macron and `%27` for the breve (`a)/%26`);
+transliteration uses the same quantity-first order as Greek (`ā́`).
+
+### Overline
+
+Manuscripts and editions draw a line over abbreviations and numerals, the
+nomina sacra among them (`θ̅ς̅` for θεός). The overline U+0305 is a mark of
+its letter, on a consonant as on a vowel, and every format keeps it: Greek
+and transliteration write it after the letter (`θ̅ς̅`, `th̅s̅`), and Beta Code
+over a run of letters, between `<` and `>`, as the TLG does (`<qs>`).
+`diacritics.overline: "remove"` removes it, as `diacritics.all: "remove"`
+does, and monotonic accentuation keeps it. The library does not expand an
+abbreviation, nor read an overlined numeral as one: `ι̅β̅` is the letters ι
+and β.
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("θ̅ς̅ Χ̅Σ̅", "greek", "beta-code"); // → <qs> <*x*s>
+convert("<qs>", "beta-code", "transliteration"); // → th̅s̅
+```
+
+Before a digit, `>` would begin another TLG code, so a run of overlined
+letters followed by one is written without its overline, and
+`convertDetailed()` reports it.
 
 ## Composed and decomposed output
 
@@ -206,6 +229,88 @@ reencode("βίος ἅβα", "greek", {
 });
 // → βίος ἅϐα
 ```
+
+### Signs for several letters
+
+Some signs stand for several letters. The readers read them as those letters,
+and remember the sign as the `glyphVariant` of the first one: the καί symbol
+`ϗ` (`Ϗ`, Beta Code `#1532` and `#1531`) as `και` (`kai-symbol`), and the
+ligature `ȣ` (`Ȣ`, Beta Code `#1521`) as `ου` (`ou-ligature`). The ligature is
+a Latin letter, OU, which editions use for the Greek one; only the Greek
+reader takes it for `ου`. Marks written after a sign belong to its last
+letter (`ϗ́` is `καί`, `ȣ̓` is `οὐ`); a capital sign begins a word, or is set
+in capitals before a capital (`ȢΤΟΣ`). No accent is read: `ϗ` is `και`.
+
+`greek.stigma: "ligature"` reads a stigma between two letters as `σ` and `τ`
+(`stigma-ligature`), which older printing joined in that sign: `ἐϛὶ` is
+`ἐστὶ`. A stigma after a letter but before none, or before a keraia, stays
+the numeral (`ιϛ`, `ιϛʹ`). The option bears on reading, in every format,
+since a stigma between two letters cannot otherwise be told from the
+ligature.
+
+By default, Greek output writes the sign again where the letters it stands
+for follow its first one unchanged, and `greek.ligatures: "standard"` writes
+the letters. Beta Code writes the TLG codes of `ϗ`, `Ϗ`, and `Ȣ`, the only
+ones the TLG has; transliteration writes the letters. No option writes a sign
+where the source has the letters.
+
+```ts
+import { convert, reencode } from "@humanities/greek-conversion";
+
+convert("ἐγὼ ϗ σύ", "greek", "beta-code"); // → e)gw\ #1532 su/
+convert("ἐγὼ ϗ σύ", "greek", "transliteration"); // → egṑ kai sý
+reencode("ϗ ȣ̓κ", "greek", { greek: { ligatures: "standard" } });
+// → και οὐκ
+const stigma = { greek: { stigma: "ligature" } } as const;
+convert("ἐϛὶ", "greek", "transliteration", stigma); // → estì
+```
+
+#### The accent of `καί`
+
+`ϗ` marks no accent, and the `και` it stands for has none unless one is
+written after the sign. Where the output writes the letters, in
+transliteration and in Greek and Beta Code under `greek.ligatures:
+"standard"`, `greek.kaiAccent` writes the accent the context gives:
+
+- `"none"`, the default, writes none: `kai`.
+- `"byzantine"` writes the grave, as Byzantine manuscripts do, even before
+  punctuation: `καὶ`.
+- `"modern"` follows modern editions (Smyth §§154, 183, 187). It writes the
+  acute before a comma, a period, a raised dot, a question mark, a colon, or
+  an exclamation mark, at the end of the text, and before an enclitic
+  without accent (`καί τινες`, `καί ἐστι`) or elided (`καί μ’`, `καί σ’`,
+  `καί ῥ’`). It writes the grave before any other word or sign: a word with
+  an accent (`καὶ ἔστι`, `καὶ τίς`), a proclitic (`καὶ ὁ`), a bracket, a
+  dash, a line break.
+
+The enclitics are those of Smyth §181, with their poetic and dialect forms
+(`μιν`, `σφε`, `κως`, `κε`, `ῥα`). Where the form alone does not decide,
+`"modern"` writes what modern editions most often have: the grave before
+`οἱ`, which is the article more often than the pronoun; the grave before an
+enclitic that has an accent, which is then more often an interrogative or
+emphatic word than an enclitic accented by the next (`καὶ τί ποτε`); the
+grave before `τιν’`, and the acute before a comma and before `σ’`.
+
+No accent is written on a sign that has one (`ϗ́`), on capitals, or in a text
+with no grave and no circumflex, which may be monotonic or unaccented.
+Monotonic output writes no accent on `και` in any case. The document keeps
+the sign unaccented, so that Greek and Beta Code still write `ϗ` and `#1532`
+where they write the sign; `convertDetailed()` reports each accent written as
+`added-diacritic`.
+
+```ts
+import { convert, reencode } from "@humanities/greek-conversion";
+
+const modern = { greek: { kaiAccent: "modern" } } as const;
+convert("ϗ τινες ϗ τοῦ ϗ", "greek", "transliteration", modern);
+// → kaí tines kaì toũ kaí
+reencode("ϗ τοῦ", "greek", {
+  greek: { kaiAccent: "byzantine", ligatures: "standard" },
+});
+// → καὶ τοῦ
+```
+
+### Case of the forms
 
 A form belongs to one case, except the lunate sigma, which has a capital and a
 small form. Changing the case of `ϑ` or `ϐ` writes `Θ` or `Β`, as

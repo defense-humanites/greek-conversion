@@ -21,6 +21,45 @@ export type MedialBetaOrthography = "preserve" | "standard" | "symbol";
 export type SymbolFormOrthography = "preserve" | "standard";
 
 /**
+ * Selects how Greek output writes the signs that stand for several letters,
+ * which reading the source gives as those letters: the καί symbol `ϗ`
+ * (`και`), the ου ligature `ȣ` (`ου`), and the στ ligature `ϛ` that
+ * `stigma: "ligature"` reads. `"preserve"` writes the signs the source has,
+ * and `"standard"` the letters. No value writes a sign where the source has
+ * the letters. Beta Code writes the TLG codes of `ϗ` and `Ϗ` (`#1532`,
+ * `#1531`) and of the capital `Ȣ` (`#1521`) under `"preserve"`, and
+ * transliteration always writes the letters.
+ */
+export type LigatureOrthography = "preserve" | "standard";
+
+/**
+ * Selects how Greek text reads a stigma between two letters. `"letter"`
+ * reads it as the letter stigma, the numeral six (`ἐϛὶ` gives `ec̄ì`);
+ * `"ligature"` as `σ` and `τ`, which older printing joined in that sign
+ * (`ἐϛὶ` gives `estì`). A stigma after a letter but before none (`ιϛ`), or
+ * before a keraia, is read as the letter either way. This option bears on
+ * reading only: Greek output writes `ϛ` for `στ` only where the source has
+ * it, under `ligatures: "preserve"`.
+ */
+export type StigmaReading = "letter" | "ligature";
+
+/**
+ * Selects the accent written on `καί` where the καί symbol `ϗ`, which marks
+ * none, is written as letters: in transliteration, and in Greek and Beta Code
+ * under `ligatures: "standard"`. `"none"` writes no accent (`και`, `kai`).
+ * `"byzantine"` writes the grave, as Byzantine manuscripts do even before
+ * punctuation (`καὶ`). `"modern"` follows modern editions: the acute before
+ * punctuation, at the end of the text, and before an enclitic (`καί τινες`,
+ * `καί μ’`), and the grave elsewhere (`καὶ ὁ`, `καὶ ἔστι`, `καὶ τίς`). Where
+ * the form alone does not decide, it writes the grave before `οἱ` and before
+ * an accented enclitic, and the acute before a comma and `σ’`. No accent is
+ * written on a sign that has one, in capitals, or in a text with no grave
+ * and no circumflex, which may be monotonic or unaccented. Each accent
+ * written is reported as an added diacritic.
+ */
+export type KaiAccent = "none" | "byzantine" | "modern";
+
+/**
  * Selects where Greek output writes a kept iota subscript.
  *
  * `"subscript"` writes it below the line, and after a capital as the
@@ -276,7 +315,6 @@ export type Preset =
   | "iso-843-type-1"
   | "iso-843-type-2"
   | "perseus"
-  | "sbl-academic"
   | "sbl-general"
   | "tlg-core";
 
@@ -296,6 +334,11 @@ export interface DiacriticClassOptions {
   iotaSubscript?: DiacriticDisposition;
   /** Explicit macron and breve quantity marks. Defaults to `"preserve"`. */
   quantity?: DiacriticDisposition;
+  /**
+   * The overline of abbreviations and numerals, such as the nomina sacra
+   * (`θ̅ς̅`). Defaults to `"preserve"`.
+   */
+  overline?: DiacriticDisposition;
 }
 
 /**
@@ -332,7 +375,7 @@ export interface TransliterationOptions {
   phi?: PhiTransliteration;
   /** Chi transliteration. Defaults to `"ch"`. */
   chi?: ChiTransliteration;
-  /** Upsilon transliteration. Defaults to `"y-with-diphthong-u"`, the SBL academic spelling; `"y-with-au-eu-ou"` uses `u` only in the three cited pairs. */
+  /** Upsilon transliteration. Defaults to `"y-with-diphthong-u"`, the spelling of the SBL Handbook; `"y-with-au-eu-ou"` uses `u` only in the three cited pairs. */
   upsilon?: UpsilonTransliteration;
   /** Transliteration of `μπ`. Defaults to `"mp"`. */
   muPi?: MuPiTransliteration;
@@ -380,6 +423,12 @@ export interface GreekOptions {
   medialBeta?: MedialBetaOrthography;
   /** Symbol forms of letters, such as `ϑ`. Defaults to `"preserve"`. */
   symbolForms?: SymbolFormOrthography;
+  /** Signs that stand for several letters, such as `ϗ` for `και`. Defaults to `"preserve"`. */
+  ligatures?: LigatureOrthography;
+  /** How Greek text reads a stigma between two letters. Defaults to `"letter"`; `"ligature"` reads `σ` and `τ`. */
+  stigma?: StigmaReading;
+  /** The accent of `καί` written for `ϗ` as letters. Defaults to `"none"`; `"byzantine"` writes the grave, `"modern"` follows modern editions. */
+  kaiAccent?: KaiAccent;
   /** Where a kept iota subscript is written. Defaults to `"subscript"`; whether it is kept is `diacritics.iotaSubscript`. */
   iotaSubscript?: IotaSubscriptOrthography;
   /** Double-rho marks in Greek output. Defaults to `"unmarked"`. */
@@ -457,16 +506,18 @@ export interface ConversionOptions {
    * source style does not note: the default style writes no coronis, so a
    * text in that style has none to give.
    *
-   * Reading Greek and Beta Code depends on no option. Reading transliteration
-   * depends on the `transliteration` group, `greek.accentuation`, and the
-   * smooth breathing class of `diacritics`, so that restyling a
-   * transliteration needs the style it is written in:
+   * Reading Greek and Beta Code depends on one option, `greek.stigma`, which
+   * reads a stigma between two letters as the ligature of `σ` and `τ`, in
+   * every format. Reading transliteration also depends on the
+   * `transliteration` group, `greek.accentuation`, and the smooth breathing
+   * class of `diacritics`, so that restyling a transliteration needs the
+   * style it is written in:
    *
    * @example
    * ```ts
    * reencode("tōn barbarōn", "transliteration", {
    *   preset: "ala-lc-modern",
-   *   source: { preset: "sbl-academic" },
+   *   source: { preset: "sbl-general" },
    * }); // "tōn varvarōn"
    * ```
    */
@@ -502,7 +553,10 @@ export interface ResolvedConversionOptions {
 
 /** Read-only view exposed by {@link DEFAULT_CONVERSION_OPTIONS}. */
 export interface DefaultConversionOptions {
-  /** Literal default transliteration spellings: SBL academic style. */
+  /**
+   * Literal default transliteration spellings: the letters of the SBL
+   * Handbook, with the marks it leaves out.
+   */
   readonly transliteration: {
     readonly beta: "b";
     readonly eta: "e";
@@ -531,6 +585,9 @@ export interface DefaultConversionOptions {
     readonly finalSigma: "preserve";
     readonly medialBeta: "preserve";
     readonly symbolForms: "preserve";
+    readonly ligatures: "preserve";
+    readonly stigma: "letter";
+    readonly kaiAccent: "none";
     readonly iotaSubscript: "subscript";
     readonly doubleRho: "unmarked";
     readonly dentalSigma: "preserve";
@@ -561,6 +618,7 @@ export interface DefaultConversionOptions {
     readonly diaeresis: "preserve";
     readonly iotaSubscript: "preserve";
     readonly quantity: "preserve";
+    readonly overline: "preserve";
   };
 }
 
@@ -686,6 +744,9 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
     finalSigma: ["preserve", "contextual", "medial"],
     medialBeta: ["preserve", "standard", "symbol"],
     symbolForms: ["preserve", "standard"],
+    ligatures: ["preserve", "standard"],
+    stigma: ["letter", "ligature"],
+    kaiAccent: ["none", "byzantine", "modern"],
     iotaSubscript: ["subscript", "capital-adscript", "adscript"],
     doubleRho: ["unmarked", "smooth-rough"],
     dentalSigma: ["preserve", "assimilate"],
@@ -714,14 +775,17 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
     diaeresis: ["preserve", "remove"],
     iotaSubscript: ["preserve", "remove"],
     quantity: ["preserve", "remove"],
+    overline: ["preserve", "remove"],
   }),
 });
 
 /**
  * Complete, immutable defaults used when no preset or custom option overrides
  * them. Inspect this value in an IDE to discover the engine's effective
- * baseline configuration. The default transliteration is the SBL academic
- * style: without a preset, `convert()` writes what `sbl-academic` writes.
+ * baseline configuration. The default transliteration is the library's own:
+ * the letters of the SBL Handbook of Style (§5.3), which `sbl-general`
+ * writes, with the accents, iota subscript, diaeresis, and quantity marks
+ * that the Handbook leaves out.
  */
 export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
   .freeze(
@@ -753,6 +817,9 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         finalSigma: "preserve",
         medialBeta: "preserve",
         symbolForms: "preserve",
+        ligatures: "preserve",
+        stigma: "letter",
+        kaiAccent: "none",
         iotaSubscript: "subscript",
         doubleRho: "unmarked",
         dentalSigma: "preserve",
@@ -780,6 +847,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         diaeresis: "preserve",
         iotaSubscript: "preserve",
         quantity: "preserve",
+        overline: "preserve",
       }),
     } as const satisfies ResolvedConversionOptions,
   );

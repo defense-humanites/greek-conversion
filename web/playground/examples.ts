@@ -157,6 +157,18 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       sourceStyle: "defaults",
       output: "fílos",
     },
+    greek(
+      "Word with a diphthong",
+      "A breathing on a diphthong comes first: hui",
+      "υἱός",
+      "huiós",
+    ),
+    greek(
+      "Proper name",
+      "The circumflex written as a tilde",
+      "Ἰησοῦς",
+      "Iēsoũs",
+    ),
   ],
   "ala-lc-ancient": [
     greek(
@@ -206,12 +218,12 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       "Rhodos",
     ),
     {
-      title: "Restyle from SBL Academic",
-      note: "Read as SBL Academic writes it, b becomes v",
+      title: "Restyle from the default style",
+      note: "Read as the library writes it by default, b becomes v",
       text: "tōn barbarōn",
       from: "transliteration",
       to: "transliteration",
-      sourceStyle: "sbl-academic",
+      sourceStyle: "defaults",
       output: "tōn varvarōn",
     },
   ],
@@ -289,30 +301,10 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       "beta-code",
     ),
   ],
-  "sbl-academic": [
-    greek(
-      "Word with initial rho",
-      "Accents kept; η and ω take a macron",
-      "ῥήτωρ",
-      "rhḗtōr",
-    ),
-    greek(
-      "Word with a diphthong",
-      "A breathing on a diphthong comes first: hui",
-      "υἱός",
-      "huiós",
-    ),
-    greek(
-      "Proper name",
-      "The circumflex written as a tilde",
-      "Ἰησοῦς",
-      "Iēsoũs",
-    ),
-  ],
   "sbl-general": [
     greek(
       "Word with initial rho",
-      "No accents; long vowels keep their macron",
+      "No accent; η and ω keep their macron",
       "ῥήτωρ",
       "rhētōr",
     ),

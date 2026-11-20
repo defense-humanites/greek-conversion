@@ -29,7 +29,7 @@ convert("Ελευθέριος Βενιζέλος", "greek", "transliteration", {
 
 [What each preset loses](/guide/presets/#what-each-preset-loses) compares them,
 with the other presets, on a monotonic text. Without a preset, the
-transliteration is the SBL academic style, made for Ancient Greek: it writes
+transliteration is the library's own, made for Ancient Greek: it writes
 `Eleuthérios Benizélos`, with `b` for beta, and reads a word-initial vowel back
 with a breathing (`Ἐλευθέριος`).
 

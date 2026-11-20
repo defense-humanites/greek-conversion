@@ -34,8 +34,9 @@ symbols.losses.map((loss) => loss.glyphVariant);
 
 ## In Latin script
 
-A transliteration writes Greek with fewer signs than Greek has. Under the
-default, the SBL academic style, it does not keep:
+A transliteration writes Greek with fewer signs than Greek has. The default
+transliteration keeps the accents, breathings, iota subscript, diaeresis, and
+quantity marks, but not:
 
 - the coronis of a crasis (`κἀγώ` gives `kagṓ`), unless
   `transliteration.coronis: "greek"`;
@@ -130,6 +131,6 @@ typed.lossy; // → false
 
 A preset combines options, and loses what they lose.
 [What each preset loses](/guide/presets/#what-each-preset-loses) compares the
-nine presets on a monotonic and a polytonic text: the two Beta Code presets
+eight presets, and the default, on a monotonic and a polytonic text: the two Beta Code presets
 and `bnf-core` keep both texts, `iso-843-type-1` keeps the monotonic one, and
 `sbl-general` and the ALA-LC presets drop the accents.

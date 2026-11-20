@@ -44,6 +44,8 @@ export function diacriticDisposition(
     case "macron":
     case "breve":
       return policy?.quantity ?? all;
+    case "overline":
+      return policy?.overline ?? all;
   }
 }
 
