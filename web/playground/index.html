@@ -46,7 +46,7 @@
       href="./assets/greek-conversion-favicon.svg">
     <link rel="preload" href="./fonts/bricolage-grotesque.woff2" as="font"
       type="font/woff2" crossorigin>
-    <link rel="preload" href="./fonts/literata-gc-light.woff2" as="font"
+    <link rel="preload" href="./fonts/literata-gc.woff2" as="font"
       type="font/woff2" crossorigin>
     <link rel="stylesheet" href="./styles.css">
     <script type="module" src="./app.js"></script>
@@ -87,7 +87,7 @@
             <svg data-icon="check" class="share-done" hidden></svg>
             <span class="button-label">Share</span>
           </button>
-          <p id="share-help" class="share-note" role="status"
+          <p id="share-help" class="share-note note" role="status"
             aria-live="polite">Copy a link that opens this text with the
             same settings.</p>
         </div>
@@ -224,10 +224,14 @@
                   <svg data-icon="arrow-right-left"></svg>
                   Swap
                 </button>
-                <button id="copy" class="button small target" type="button">
-                  <svg data-icon="copy"></svg>
-                  <span class="button-label">Copy</span>
-                </button>
+                <div class="copy-action">
+                  <button id="copy" class="button small target" type="button">
+                    <svg data-icon="copy" class="copy-icon"></svg>
+                    <svg data-icon="check" class="copy-done" hidden></svg>
+                    <span class="button-label">Copy</span>
+                  </button>
+                  <p class="copy-note note" role="status" aria-live="polite"></p>
+                </div>
               </div>
             </div>
             <div class="editor">
@@ -271,10 +275,14 @@
             <div class="panel-head">
               <p
                 class="hint">The same call with the library, input text included. The comment shows what it returns.</p>
-              <button id="copy-code" class="button" type="button">
-                <svg data-icon="copy"></svg>
-                <span class="button-label">Copy code</span>
-              </button>
+              <div class="copy-action">
+                <button id="copy-code" class="button" type="button">
+                  <svg data-icon="copy" class="copy-icon"></svg>
+                  <svg data-icon="check" class="copy-done" hidden></svg>
+                  <span class="button-label">Copy code</span>
+                </button>
+                <p class="copy-note note" role="status" aria-live="polite"></p>
+              </div>
             </div>
             <pre class="code"><code id="code"></code></pre>
           </div>
