@@ -67,7 +67,11 @@ Older printed editions, and their digitizations, write the breathing of a
 capital before it, as a sign of its own (U+1FBF, U+1FFE, or one of their
 compounds with an accent). At the start of a word, before a capital vowel or
 rho, the library reads such a breathing, and its accent, as the capital's:
-`῾Ρωμαῖοι` gives `Rhōmaĩoi`, and Greek output writes `Ῥωμαῖοι`. Elsewhere the
+`῾Ρωμαῖοι` gives `Rhōmaĩoi`, and Greek output writes `Ῥωμαῖοι`. A capital
+takes only the marks it can carry: a second breathing or accent, an accent
+on a rho, or a circumflex on a short vowel stays a sign (`῾Ἀ`), which output
+writes with a zero-width non-joiner (U+200C) after it, so that it stays
+apart where the capital loses its own mark. Elsewhere the
 sign is kept as it is, except a psili after a letter, which is the apostrophe
 of an elision: `τ᾿ ἐστί` gives `t’ estí`.
 

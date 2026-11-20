@@ -60,6 +60,7 @@ import { greekUpper } from "./case.ts";
 import { applyGreekOrthography, isNumeralUnits } from "./orthography.ts";
 import { betaLigature, writtenLigature } from "./ligatures.ts";
 import { isMarkCode, isUnreadCode } from "./parsers/beta_code.ts";
+import { standsApart, ZWNJ } from "./parsers/spacing_marks.ts";
 import { joinPieces, type WrittenPositions } from "./parsers/positions.ts";
 import { encodePunctuation, TLG_CODE_OF } from "./punctuation.ts";
 import {
@@ -151,6 +152,7 @@ export function encodeGreek(
       out += isKeptLetter(token)
         ? token.value
         : encodePunctuation(token.value, "greek") ?? token.value;
+      if (standsApart(rendered, i)) out += ZWNJ;
       if (ends !== undefined) ends[i] = out.length;
       continue;
     }
@@ -522,9 +524,13 @@ export function encodeBetaCode(
     if (token.kind === "literal") {
       if (isKeptLetter(token)) return token.value;
       const code = BETA_SIGN_CODES.get(token.value);
+      // A spacing breathing kept apart from a capital stays apart.
+      const apart = standsApart(rendered, index) ? ZWNJ : "";
       if (code === undefined) {
-        return encodePunctuation(token.value, "beta-code") ?? token.value;
+        return (encodePunctuation(token.value, "beta-code") ?? token.value) +
+          apart;
       }
+      if (apart !== "") return code + apart;
       // A digit after a code would extend it into another (`#1` is koppa,
       // `#12` the obelus): before one, a sign is written as itself where it
       // reads back as itself.
@@ -716,8 +722,8 @@ export function encodeTransliteration(
         if (token.value === DEXIA_KERAIA) return bnfRightKeraia(options);
         if (token.value === ARISTERI_KERAIA) return ",";
       }
-      return encodePunctuation(token.value, "transliteration", options) ??
-        token.value;
+      return (encodePunctuation(token.value, "transliteration", options) ??
+        token.value) + (standsApart(rendered, index) ? ZWNJ : "");
     }
 
     if (!afterLetter) wordStart = index;

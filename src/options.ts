@@ -33,7 +33,8 @@ export type SymbolFormOrthography = "preserve" | "standard";
 export type LigatureOrthography = "preserve" | "standard";
 
 /**
- * Selects how Greek text reads a stigma between two letters. `"letter"`
+ * Selects how a stigma between two letters is read, in every format (`ϛ`,
+ * Beta Code `#2`, transliteration `c̄`). `"letter"`
  * reads it as the letter stigma, the numeral six (`ἐϛὶ` gives `ec̄ì`);
  * `"ligature"` as `σ` and `τ`, which older printing joined in that sign
  * (`ἐϛὶ` gives `estì`). A stigma after a letter but before none (`ιϛ`), or
@@ -53,9 +54,10 @@ export type StigmaReading = "letter" | "ligature";
  * `καί μ’`), and the grave elsewhere (`καὶ ὁ`, `καὶ ἔστι`, `καὶ τίς`). Where
  * the form alone does not decide, it writes the grave before `οἱ` and before
  * an accented enclitic, and the acute before a comma and `σ’`. No accent is
- * written on a sign that has one, in capitals, or in a text with no grave
- * and no circumflex, which may be monotonic or unaccented. Each accent
- * written is reported as an added diacritic.
+ * written on a sign that has one, in capitals, or in a text with no
+ * polytonic mark (a breathing, a grave, a circumflex, an iota subscript, a
+ * coronis, or a quantity mark), which may be monotonic or unaccented. Each
+ * accent written is reported as an added diacritic.
  */
 export type KaiAccent = "none" | "byzantine" | "modern";
 
@@ -425,7 +427,7 @@ export interface GreekOptions {
   symbolForms?: SymbolFormOrthography;
   /** Signs that stand for several letters, such as `ϗ` for `και`. Defaults to `"preserve"`. */
   ligatures?: LigatureOrthography;
-  /** How Greek text reads a stigma between two letters. Defaults to `"letter"`; `"ligature"` reads `σ` and `τ`. */
+  /** How a stigma between two letters is read, in every format. Defaults to `"letter"`; `"ligature"` reads `σ` and `τ`. */
   stigma?: StigmaReading;
   /** The accent of `καί` written for `ϗ` as letters. Defaults to `"none"`; `"byzantine"` writes the grave, `"modern"` follows modern editions. */
   kaiAccent?: KaiAccent;

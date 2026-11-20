@@ -33,6 +33,16 @@ import { codeUnitTable } from "./code_units.ts";
 import type { ReadPositions } from "./positions.ts";
 import { mayHaveSpacingSigns, readSpacingMarks } from "./spacing_marks.ts";
 
+/** The overline alone, on the last letter of a digraph. */
+const OVERLINE = diacriticsFromMask(diacriticBit("overline"));
+
+/** The index after the overlines (U+0305) from `start`. */
+function afterOverlines(chars: readonly string[], start: number): number {
+  let end = start;
+  while (chars[end] === "\u0305") end++;
+  return end;
+}
+
 const CANONICAL_ENTRIES = [
   ...Object.entries(ALPHABET)
     .filter(([letter]) =>
@@ -166,25 +176,37 @@ export function parseTransliteration(
 
     if (digraphB && lowered[i] === "b") {
       const uppercase = chars[i] !== lowered[i];
+      // An overline after the digraph is its last letter's, as a mark after
+      // a sign for several letters is (`b̅` is `μπ̅`).
+      const end = afterOverlines(chars, i + 1);
       out.push(
         grapheme("mu", uppercase),
-        grapheme("pi", uppercase && capitalFollows(chars, lowered, i + 1)),
+        grapheme(
+          "pi",
+          uppercase && capitalFollows(chars, lowered, end),
+          end > i + 1 ? OVERLINE : undefined,
+        ),
       );
       // Two letters from one character: the same start, so that they share
       // its span.
       if (starts !== undefined) starts.push(i);
-      i++;
+      i = end;
       continue;
     }
 
     if (digraphD && lowered[i] === "d" && chars[i + 1] === "\u0332") {
       const uppercase = chars[i] !== lowered[i];
+      const end = afterOverlines(chars, i + 2);
       out.push(
         grapheme("nu", uppercase),
-        grapheme("tau", uppercase && capitalFollows(chars, lowered, i + 2)),
+        grapheme(
+          "tau",
+          uppercase && capitalFollows(chars, lowered, end),
+          end > i + 2 ? OVERLINE : undefined,
+        ),
       );
       if (starts !== undefined) starts.push(i);
-      i += 2;
+      i = end;
       continue;
     }
 

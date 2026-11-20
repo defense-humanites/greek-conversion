@@ -143,7 +143,10 @@ kept as the source writes it in its word:
   every mark and shape the source can note: a final sigma stays final, a
   lunate sigma stays lunate, and Beta Code is written in lowercase, with `*`
   for a capital and `j` for yot, whatever the conversion's `betaCode`
-  options, which only shape the converted text;
+  options, which only shape the converted text. A letter of a sign for
+  several letters is written alone (`ϗ`, with iota out of scope, gives
+  `kaι`), and a letter overlined in Beta Code in an overline of its own
+  (`<i#2>`, with stigma out of scope, gives `i̅<#2>`);
 - from transliteration, copied from the source as it was read (with
   `source`, when the options give one), since a transliteration's spelling
   depends on options that can leave marks out: the `n` of `ng` stays `n`, and

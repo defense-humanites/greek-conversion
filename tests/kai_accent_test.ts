@@ -137,3 +137,20 @@ test("reports each accent written as an added diacritic", () => {
     "kaì toũ",
   );
 });
+
+test("takes any polytonic mark for the sign that a text is polytonic", () => {
+  // A breathing, an iota subscript, or a coronis is enough, which monotonic
+  // Greek has not.
+  for (
+    const [text, expected] of [
+      ["ϗ ὁ λόγος", "καὶ ὁ λόγος"],
+      ["ϗ τῷ", "καὶ τῷ"],
+      ["ϗ ἐστι", "καί ἐστι"],
+    ]
+  ) {
+    assertNfcEquals(letters(text, "modern"), expected, text);
+  }
+  assertNfcEquals(latin("ϗ ὁ λόγος", "modern"), "kaì ho lógos");
+  // An acute alone does not tell.
+  assertNfcEquals(letters("ϗ λόγος", "modern"), "και λόγος");
+});

@@ -65,13 +65,13 @@ it would read as something else and many that are not ASCII (see
 As in the TLG, the number of a bracket, `#`, or `%` code is every digit after
 it: `[10` is another bracket code, `#12` is not koppa followed by `2`, and
 `%265` is no macron. The reader keeps a code it does not know as text, a `#`
-or `%` code whole: `#1532`, the καί symbol, gives `#1532`. Since a digit
-after a code would extend it, a sign before a digit is written as itself
-where it reads back as itself: a sign outside ASCII (`αʹ1` gives `aʹ1`), or a
-parenthesis or a solidus that no letter precedes (`(1)` gives `(1]1`).
-Otherwise it does not read back: `α(1)` is written `a[11]1`, which reads as
-`α[11)`, `[1]` reads as `(]`, `ϟ2` is written `#12`, and `ᾱ5` `a%265`.
-`convertDetailed()` reports the loss.
+or `%` code whole: `#1522` gives `#1522`. Since a digit after a code would
+extend it, a sign before a digit is written as itself where it reads back as
+itself: a sign outside ASCII (`αʹ1` gives `aʹ1`), or a parenthesis or a
+solidus that no letter precedes (`(1)` gives `(1]1`). Otherwise it does not
+read back: `α(1)` is written `a[11]1`, which reads as `α[11)`, `[1]` reads as
+`(]`, `ϟ2` is written `#12`, and `ᾱ5` `a%265`. `convertDetailed()` reports
+the loss.
 
 As in the TLG, `'` is the apostrophe (U+2019): `ἀλλ’` gives `a)ll'`. The font
 shifts `&` (Latin) and `$` (Greek) are not interpreted: they are kept as text,

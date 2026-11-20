@@ -304,3 +304,25 @@ test("a converter reads the input as source describes it", () => {
     [["unrepresented-literal", 0], ["unrepresented-grapheme", 1]],
   );
 });
+
+test("source.greek.stigma decides how the input reads a stigma", () => {
+  // The stigma is read as the source describes it, and written as the
+  // options say: `ἐϛὶ` read as `στ` is written with the letters.
+  const ligature = { greek: { stigma: "ligature" } } as const;
+  assertNfcEquals(
+    convert("ἐϛὶ", "greek", "transliteration", { source: ligature }),
+    "estì",
+  );
+  assertNfcEquals(
+    convert("e)#2i\\", "beta-code", "greek", {
+      greek: { ligatures: "standard" },
+      source: ligature,
+    }),
+    "ἐστὶ",
+  );
+  // Read as the letter, it stays the letter, whatever the output's options.
+  assertNfcEquals(
+    convert("ἐϛὶ", "greek", "transliteration", { ...ligature, source: {} }),
+    "ec̄ì",
+  );
+});

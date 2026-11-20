@@ -349,9 +349,9 @@ Selects how Greek output writes the signs that stand for several letters, which 
 
 ### `greek.stigma`
 
-How Greek text reads a stigma between two letters. Defaults to `"letter"`; `"ligature"` reads `σ` and `τ`.
+How a stigma between two letters is read, in every format. Defaults to `"letter"`; `"ligature"` reads `σ` and `τ`.
 
-Selects how Greek text reads a stigma between two letters. `"letter"` reads it as the letter stigma, the numeral six (`ἐϛὶ` gives `ec̄ì`); `"ligature"` as `σ` and `τ`, which older printing joined in that sign (`ἐϛὶ` gives `estì`). A stigma after a letter but before none (`ιϛ`), or before a keraia, is read as the letter either way. This option bears on reading only: Greek output writes `ϛ` for `στ` only where the source has it, under `ligatures: "preserve"`.
+Selects how a stigma between two letters is read, in every format (`ϛ`, Beta Code `#2`, transliteration `c̄`). `"letter"` reads it as the letter stigma, the numeral six (`ἐϛὶ` gives `ec̄ì`); `"ligature"` as `σ` and `τ`, which older printing joined in that sign (`ἐϛὶ` gives `estì`). A stigma after a letter but before none (`ιϛ`), or before a keraia, is read as the letter either way. This option bears on reading only: Greek output writes `ϛ` for `στ` only where the source has it, under `ligatures: "preserve"`.
 
 | Value | Greek → Beta Code | Presets |
 | --- | --- | --- |
@@ -362,7 +362,7 @@ Selects how Greek text reads a stigma between two letters. `"letter"` reads it a
 
 The accent of `καί` written for `ϗ` as letters. Defaults to `"none"`; `"byzantine"` writes the grave, `"modern"` follows modern editions.
 
-Selects the accent written on `καί` where the καί symbol `ϗ`, which marks none, is written as letters: in transliteration, and in Greek and Beta Code under `ligatures: "standard"`. `"none"` writes no accent (`και`, `kai`). `"byzantine"` writes the grave, as Byzantine manuscripts do even before punctuation (`καὶ`). `"modern"` follows modern editions: the acute before punctuation, at the end of the text, and before an enclitic (`καί τινες`, `καί μ’`), and the grave elsewhere (`καὶ ὁ`, `καὶ ἔστι`, `καὶ τίς`). Where the form alone does not decide, it writes the grave before `οἱ` and before an accented enclitic, and the acute before a comma and `σ’`. No accent is written on a sign that has one, in capitals, or in a text with no grave and no circumflex, which may be monotonic or unaccented. Each accent written is reported as an added diacritic.
+Selects the accent written on `καί` where the καί symbol `ϗ`, which marks none, is written as letters: in transliteration, and in Greek and Beta Code under `ligatures: "standard"`. `"none"` writes no accent (`και`, `kai`). `"byzantine"` writes the grave, as Byzantine manuscripts do even before punctuation (`καὶ`). `"modern"` follows modern editions: the acute before punctuation, at the end of the text, and before an enclitic (`καί τινες`, `καί μ’`), and the grave elsewhere (`καὶ ὁ`, `καὶ ἔστι`, `καὶ τίς`). Where the form alone does not decide, it writes the grave before `οἱ` and before an accented enclitic, and the acute before a comma and `σ’`. No accent is written on a sign that has one, in capitals, or in a text with no polytonic mark (a breathing, a grave, a circumflex, an iota subscript, a coronis, or a quantity mark), which may be monotonic or unaccented. Each accent written is reported as an added diacritic.
 
 | Value | Greek → transliteration | Presets |
 | --- | --- | --- |

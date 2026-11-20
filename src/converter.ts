@@ -1350,17 +1350,21 @@ function writtenSpelling(kept: KeptLetters, index: number): string {
     word = kept.word = writtenWord(kept, index, options);
   }
   const position = index - word.start;
-  const spelling = word.output.slice(
+  let spelling = word.output.slice(
     word.spans.starts[position],
     word.spans.ends[position],
   );
+  const token = kept.parsed[index] as Grapheme;
+  if (kept.format !== "beta-code") return spelling;
+  // Beta Code writes an overline around a run of letters, whose first and
+  // last spans take its `<` and `>`: a letter kept alone is a run of its own.
+  const overlined = token.diacritics.has("overline");
+  if (overlined) spelling = spelling.replace(/^</, "").replace(/>$/, "");
   // Whether a small sigma takes its Beta Code (`s1`, `s2`) depends on its
   // place, which a quotation opened before its word or the word after an
   // apostrophe decide: it is decided on the whole source.
-  const token = kept.parsed[index];
-  return kept.format === "beta-code" && token.kind === "grapheme" &&
-      token.letter === "sigma" && SMALL_SIGMA_CODE.test(spelling)
-    ? spelling.replace(
+  if (token.letter === "sigma" && SMALL_SIGMA_CODE.test(spelling)) {
+    spelling = spelling.replace(
       SMALL_SIGMA_CODE,
       betaSigma(
         kept.parsed,
@@ -1369,8 +1373,9 @@ function writtenSpelling(kept: KeptLetters, index: number): string {
         options,
         kept.quotations ??= {},
       ),
-    )
-    : spelling;
+    );
+  }
+  return overlined ? `<${spelling}>` : spelling;
 }
 
 /** A small sigma at the start of its Beta Code, with its code. */
@@ -1426,7 +1431,9 @@ function writtenWord(
  * options the conversion has, since no reader needs them), the sigma shapes
  * of the source (`greek.sigma` and `greek.finalSigma` set to `"preserve"`),
  * and, of the conversion's options, only the letter case, which `text`
- * applies to the whole text.
+ * applies to the whole text. A sign that stands for several letters (`ϗ`) is
+ * written as its letters, each in a span of its own, so that a letter kept
+ * from it is written alone.
  */
 function keptOptions(
   letterCase: ResolvedConversionOptions["text"]["letterCase"],
@@ -1434,7 +1441,12 @@ function keptOptions(
   const defaults = DEFAULT_CONVERSION_OPTIONS;
   return {
     transliteration: { ...defaults.transliteration },
-    greek: { ...defaults.greek, sigma: "preserve", finalSigma: "preserve" },
+    greek: {
+      ...defaults.greek,
+      sigma: "preserve",
+      finalSigma: "preserve",
+      ligatures: "standard",
+    },
     betaCode: { ...defaults.betaCode },
     text: { ...defaults.text, letterCase },
     diacritics: { ...defaults.diacritics },

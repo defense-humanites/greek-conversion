@@ -1163,3 +1163,73 @@ test("converter configuration is copied before use", () => {
 
   assertEquals(converter.convert("ϻ", "greek", "transliteration"), "š");
 });
+
+test("a letter kept from a sign for several letters is written alone", () => {
+  // Each letter of `ϗ`, `ȣ`, or a stigma read as `στ` is written alone, not
+  // as the whole sign.
+  assertNfcEquals(
+    createConverter({ exclude: ["kappa"] }).convert(
+      "ϗ τοῦ",
+      "greek",
+      "beta-code",
+    ),
+    "κai tou=",
+  );
+  assertNfcEquals(
+    createConverter({ exclude: ["iota"] }).convert(
+      "ϗ́ τοῦ",
+      "greek",
+      "transliteration",
+    ),
+    "kaί toũ",
+  );
+  assertNfcEquals(
+    createConverter({ exclude: ["iota"] }).convert(
+      "#1532/",
+      "beta-code",
+      "transliteration",
+    ),
+    "kai/",
+  );
+  assertNfcEquals(
+    createConverter({ exclude: ["upsilon"] }).convert(
+      "ȣ̓κ",
+      "greek",
+      "transliteration",
+    ),
+    "oὐk",
+  );
+  assertNfcEquals(
+    createConverter({ exclude: ["tau"] }).convert(
+      "ἐϛὶ",
+      "greek",
+      "transliteration",
+      { greek: { stigma: "ligature" } },
+    ),
+    "esτì",
+  );
+});
+
+test("a letter kept from an overlined run of Beta Code keeps its overline", () => {
+  // The `<` and `>` of the run belong to its first and last letters: a
+  // letter kept alone is written in a run of its own.
+  const iso = createConverter({ preset: "iso-843-type-1" });
+  assertNfcEquals(
+    iso.convert("<i#2>", "beta-code", "transliteration"),
+    "i̅<#2>",
+  );
+  assertNfcEquals(
+    iso.convert("<#2i>", "beta-code", "transliteration"),
+    "<#2>i̅",
+  );
+  const stigma = createConverter({ exclude: ["stigma"] });
+  assertEquals(
+    stigma.convert("<a#2b>", "beta-code", "beta-code"),
+    "<a><#2><b>",
+  );
+  // What it writes reads as the source does.
+  assertEquals(
+    stigma.convert("<a><#2><b>", "beta-code", "greek"),
+    stigma.convert("<a#2b>", "beta-code", "greek"),
+  );
+});

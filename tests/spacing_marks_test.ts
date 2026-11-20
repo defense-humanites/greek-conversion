@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import { assertEquals, assertNfcEquals } from "./assertions.ts";
 import { convert, convertDetailed } from "../src/mod.ts";
+import { parse, validateDocument } from "../src/document.ts";
 
 // Older typesetting writes the breathing of a capital before it, and its
 // digitizations keep it there as a spacing sign: psili U+1FBF, dasia U+1FFE,
@@ -90,4 +91,57 @@ test("every format reads spacing breathings alike", () => {
   );
   const spans = convertDetailed("῾*rw", "beta-code", "greek").spans;
   assertEquals([spans[0].inputStart, spans[0].inputEnd], [0, 3]);
+});
+
+test("a capital takes only the spacing signs it can carry", () => {
+  // A second breathing or accent, an accent on a rho, a circumflex on a short
+  // vowel, or a breathing with a diaeresis: the sign stays as it is. Where
+  // the capital alone could take it, a zero-width non-joiner after it keeps
+  // it apart once the capital loses the mark that kept them apart (`῾A` in
+  // transliteration, `῾Α` in monotonic Greek), so that the output converts
+  // to itself.
+  const zwnj = "\u200C";
+  for (
+    const [text, written] of [
+      ["῾Ἀ", `῾${zwnj}Ἀ`],
+      ["῾Ὠ", `῾${zwnj}Ὠ`],
+      ["᾿Ῥ", `᾿${zwnj}Ῥ`],
+      ["῎Ὰ", `῎${zwnj}Ὰ`],
+      ["῾Ϊ", `῾${zwnj}Ϊ`],
+      ["῏Ε", "῏Ε"],
+      ["῎Ρ", "῎Ρ"],
+    ]
+  ) {
+    assertNfcEquals(convert(text, "greek", "greek"), written, text);
+    assertEquals(validateDocument(parse(text, "greek")), [], text);
+    for (
+      const options of [
+        {},
+        { preset: "iso-843-type-1" },
+        { greek: { accentuation: "monotonic" } },
+        { diacritics: { all: "remove" } },
+      ] as const
+    ) {
+      for (const to of ["greek", "beta-code", "transliteration"] as const) {
+        const once = convert(text, "greek", to, options);
+        assertEquals(
+          convert(once, to, to, options),
+          once,
+          `${text} → ${to} ${JSON.stringify(options)}`,
+        );
+      }
+    }
+  }
+  assertEquals(convert("῾Ἀ", "greek", "transliteration"), `῾${zwnj}A`);
+  assertEquals(convert("῾Ἀ", "greek", "beta-code"), `%31${zwnj}*)a`);
+  assertEquals(convertDetailed("῾Ἀ", "greek", "greek").lossy, false);
+  // It takes the signs nearest to it that it can: the rough breathing that
+  // comes before a smooth one stays.
+  assertNfcEquals(convert("῾᾿Α", "greek", "greek"), `῾${zwnj}Ἀ`);
+  assertNfcEquals(convert("῎῾Ρ", "greek", "greek"), "῎Ῥ");
+  const spans = convertDetailed("῾᾿Α", "greek", "transliteration").spans;
+  assertEquals(
+    spans.map(({ inputStart, inputEnd }) => [inputStart, inputEnd]),
+    [[0, 1], [1, 3]],
+  );
 });
