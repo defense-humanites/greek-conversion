@@ -161,10 +161,13 @@ export const OPTION_RELEVANCE: Readonly<Record<string, readonly string[]>> = {
     "beta-code>beta-code",
   ],
   "greek.stigma": [
+    "greek>greek",
     "greek>beta-code",
     "greek>transliteration",
+    "beta-code>greek",
     "beta-code>beta-code",
     "beta-code>transliteration",
+    "transliteration>greek",
     "transliteration>beta-code",
     "transliteration>transliteration",
   ],

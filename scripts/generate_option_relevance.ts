@@ -56,11 +56,13 @@ function single(
 /**
  * Options that act only with another value set, with that value: they also
  * act on the conversions where they change the result with it.
- * `greek.kaiAccent` accents the `και` written for `ϗ`, which Greek and Beta
- * Code write as letters only under `greek.ligatures: "standard"`.
+ * `greek.kaiAccent` accents the `και` written for `ϗ`, and `greek.stigma`
+ * reads `στ` for a stigma between two letters, which Greek writes as letters
+ * only under `greek.ligatures: "standard"`, and as the sign otherwise.
  */
 const COMPANIONS: Readonly<Record<string, ConversionOptions>> = {
   "greek.kaiAccent": { greek: { ligatures: "standard" } },
+  "greek.stigma": { greek: { ligatures: "standard" } },
 };
 
 /** The probe text of a format: the Greek, written under every option. */
