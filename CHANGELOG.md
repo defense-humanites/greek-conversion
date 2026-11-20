@@ -7,29 +7,35 @@ change.
 
 ## [Unreleased]
 
-### Removed
+## [1.0.0-rc.11] - 2026-11-20
 
-- The `sbl-academic` preset. The SBL Handbook of Style gives Greek a single
-  transliteration, for general readers (§5.3), and asks for Greek characters
-  for academic readers: it defines no academic style, which the preset's name
-  claimed. The defaults write what the preset wrote, so leaving it out
-  changes nothing; `preset: "sbl-academic"` now throws an `OptionError` that
-  says so. The documentation describes the default transliteration as the
-  library's own: the letters of the Handbook, with the accents, iota
-  subscript, diaeresis, and quantity marks that the Handbook leaves out.
+Eleventh release candidate for `1.0.0`, which reads Byzantine texts more
+fully. The readers take the signs of manuscripts and older printing for what
+they stand for: the καί symbol `ϗ` and the ligature `ȣ` as their letters, a
+stigma between two letters as `στ` under `greek.stigma: "ligature"`, a
+breathing printed before a capital as the capital's, and the overline of the
+nomina sacra and of numerals as a mark, which Beta Code writes between `<` and
+`>`, as the TLG does. `greek.kaiAccent` writes the accent of `καί` where `ϗ`
+is written as letters, as the manuscripts or as modern editions do. Beta Code
+reads and writes the TLG's codes for signs, so that a `/` or a `*` in a text
+no longer reads back as a mark. The `sbl-academic` preset is removed, since
+the SBL Handbook defines no academic style, and `sbl-general` writes no
+diaeresis. A bundle that only converts no longer carries the metadata of the
+presets.
 
 ### Added
 
-- Signs that stand for several letters are read as those letters, and noted
-  as the glyph variant of the first: the καί symbol `ϗ` (`Ϗ`, Beta Code
-  `#1532` and `#1531`) as `και` (`kai-symbol`), and the ligature `ȣ` (`Ȣ`,
-  Beta Code `#1521`), a Latin letter that editions use for the Greek one, as
-  `ου` (`ou-ligature`); rc.10 copied them as they were. No accent is
-  supplied; marks after a sign belong to its last letter (`ϗ́` is `καί`).
-  Greek output writes the sign again, Beta Code its TLG code where the TLG
-  has one, and transliteration the letters, with a reported loss.
-  `greek.ligatures: "standard"` (type `LigatureOrthography`) writes the
-  letters in Greek and Beta Code too.
+- Signs that stand for several letters are read as those letters, and noted as
+  the glyph variant of the first: the καί symbol `ϗ` (`Ϗ`, Beta Code `#1532`
+  and `#1531`) as `και` (`kai-symbol`), and the ligature `ȣ` (`Ȣ`, Beta Code
+  `#1521`), a Latin letter that editions use for the Greek one, as `ου`
+  (`ou-ligature`); rc.10 copied them as they were. Marks after a sign belong
+  to its last letter (`ϗ́` is `καί`), and no other is supplied unless
+  `greek.kaiAccent` asks for the accent of `καί` (below). Greek output writes
+  the sign again, Beta Code its TLG code where the TLG has one, and
+  transliteration the letters, with a reported loss. `greek.ligatures:
+  "standard"` (type `LigatureOrthography`) writes the letters in Greek and
+  Beta Code too.
 - `greek.stigma: "ligature"` (type `StigmaReading`) reads a stigma between two
   letters as `σ` and `τ`, which older printing joined in that sign (`ἐϛὶ`
   gives `estì`), in every format; a stigma at the end of a word or before a
@@ -122,19 +128,29 @@ change.
   longer carries it: about 10 KB less minified, 3 KB with gzip, for
   `convert()` or `parse()`. The API is unchanged.
 
+### Removed
+
+- The `sbl-academic` preset. The SBL Handbook of Style gives Greek a single
+  transliteration, for general readers (§5.3), and asks for Greek characters
+  for academic readers: it defines no academic style, which the preset's name
+  claimed. The defaults write what the preset wrote, so leaving it out
+  changes nothing; `preset: "sbl-academic"` now throws an `OptionError` that
+  says so. The documentation describes the default transliteration as the
+  library's own: the letters of the Handbook, with the accents, iota
+  subscript, diaeresis, and quantity marks that the Handbook leaves out.
+
 ### Fixed
 
 - The Beta Code reader takes every digit after `#` as the number of one TLG
   code, as it did for `%` and the brackets: `#12`, the obelus, was read as
   koppa followed by `2`, `#532`, the hypodiastole, as sampi followed by `32`,
-  and `#6`, the paragraphos, as a keraia followed by `6`. The letters and
-  the keraiai read as before (`#`, `#1`, `#2`, `#3`, `#5`, `#22`, `#401`),
-  the signs as above, and any other code is kept as text, whole. A letter
-  written as a code before a digit
-  (`ϛ5`, which gives `#25`) therefore no longer reads back, like a
-  parenthesis before a digit, and `convertDetailed()` reports the loss; a
-  sigma before it is written as one that ends its word, so that the output
-  stays idempotent.
+  and `#6`, the paragraphos, as a keraia followed by `6`. The letters and the
+  keraiai read as before (`#`, `#1`, `#2`, `#3`, `#5`, `#22`, `#401`), the
+  signs as above, and any other code is kept as text, whole. A letter written
+  as a code before a digit (`ϛ5`, which gives `#25`) therefore no longer reads
+  back, like a parenthesis before a digit, and `convertDetailed()` reports the
+  loss; a sigma before it is written as one that ends its word, so that the
+  output stays idempotent.
 - The Beta Code reader reads the marks after a letter written as a `#` code,
   as after any letter: `#1/`, which Beta Code output gives for a koppa with
   an acute, was read as a koppa followed by `/`.
@@ -1472,7 +1488,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.10...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.11...HEAD
+[1.0.0-rc.11]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.10...v1.0.0-rc.11
 [1.0.0-rc.10]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.9...v1.0.0-rc.10
 [1.0.0-rc.9]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.8...v1.0.0-rc.9
 [1.0.0-rc.8]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.7...v1.0.0-rc.8

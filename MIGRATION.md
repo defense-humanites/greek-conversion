@@ -5,13 +5,13 @@ the `0.14.x` API.
 
 ## Installation
 
-The release candidate `1.0.0-rc.10` is published on JSR, and on npm under the
+The release candidate `1.0.0-rc.11` is published on JSR, and on npm under the
 `next` distribution tag; the stable `1.0.0` will follow with the same content
 unless a problem is found:
 
 ```sh
 npm install @humanities/greek-conversion@next
-npx jsr add @humanities/greek-conversion@1.0.0-rc.10
+npx jsr add @humanities/greek-conversion@1.0.0-rc.11
 ```
 
 The package is ESM-only.
@@ -21,7 +21,8 @@ The package is ESM-only.
 The `sbl-academic` preset is removed: the SBL Handbook of Style defines no
 academic transliteration of Greek. The defaults write what it wrote, so
 remove `preset: "sbl-academic"`, and write `source: {}` for
-`source: { preset: "sbl-academic" }`; the old name throws an `OptionError`.
+`source: { preset: "sbl-academic" }`; the old name throws an `OptionError`,
+and is no longer a `Preset`.
 
 `sbl-general` writes no diaeresis, as the Handbook provides for none:
 `ἀΐδιος` gives `aidios` (rc.10: `aïdios`). Add
@@ -43,7 +44,9 @@ Five kinds of input read differently:
   (rc.10: one piece of text).
 - `ϗ` and `ȣ`, which rc.10 copied, are read as `και` and `ου`, and Beta Code
   `#1532`, `#1531`, and `#1521` as `ϗ`, `Ϗ`, and `Ȣ`. Greek output writes the
-  signs again; `greek.ligatures: "standard"` writes the letters.
+  signs again; `greek.ligatures: "standard"` writes the letters. Code that
+  reads `glyphVariant` gets their values, `kai-symbol` and `ou-ligature`, and
+  `stigma-ligature` under `greek.stigma: "ligature"`.
 - The overline U+0305 is a mark, `overline`: Beta Code reads `<` and `>`
   around letters as one (`<qs>`), and writes `<` and `>` signs `#18` and
   `#15`. A `switch` over `Diacritic` needs a case for it, or a default, and
