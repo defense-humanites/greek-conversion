@@ -120,19 +120,15 @@ export {
   DEFAULT_CONVERSION_OPTIONS,
   OptionError,
 } from "./options.ts";
-export {
-  getPresetMetadata,
-  getPresetOptions,
-  listPresetMetadata,
-  resolveConversionOptions,
-} from "./presets.ts";
+export { getPresetMetadata, listPresetMetadata } from "./preset_metadata.ts";
 export type {
   PresetCoverage,
   PresetMetadata,
-  PresetOptions,
   PresetOutOfScopeBehavior,
   PresetReference,
-} from "./presets.ts";
+} from "./preset_metadata.ts";
+export { getPresetOptions, resolveConversionOptions } from "./presets.ts";
+export type { PresetOptions } from "./presets.ts";
 
 /**
  * Converts text between Greek, Beta Code, and scientific transliteration.

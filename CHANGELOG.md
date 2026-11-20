@@ -101,6 +101,11 @@ change.
   likewise. Before anything but a letter, `*` is an asterisk, and what
   follows it is read as if it were not there: `*(` was one piece of text,
   and is now an asterisk and a parenthesis.
+- The metadata of the presets (names, authorities, scopes, references,
+  limitations) is kept apart from their options, so that a bundle that
+  converts, without `listPresetMetadata()` or `getPresetMetadata()`, no
+  longer carries it: about 10 KB less minified, 3 KB with gzip, for
+  `convert()` or `parse()`. The API is unchanged.
 
 ### Fixed
 
