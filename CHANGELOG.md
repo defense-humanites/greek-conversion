@@ -101,6 +101,11 @@ change.
   likewise. Before anything but a letter, `*` is an asterisk, and what
   follows it is read as if it were not there: `*(` was one piece of text,
   and is now an asterisk and a parenthesis.
+- The Byzantine guide shows how to transliterate strictly, as the _Oxford
+  Dictionary of Byzantium_ does: `ala-lc-ancient` with `longVowels: "omit"`
+  gives `Alexios Komnenos`. The dictionary publishes no table, and keeps a
+  traditional form for many names (John, Nicaea), which no option supplies;
+  no `odb` preset is added.
 - The metadata of the presets (names, authorities, scopes, references,
   limitations) is kept apart from their options, so that a bundle that
   converts, without `listPresetMetadata()` or `getPresetMetadata()`, no

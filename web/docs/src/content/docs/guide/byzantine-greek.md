@@ -1,11 +1,11 @@
 ---
 title: "Byzantine and Medieval Greek"
-description: "Convert Byzantine texts: the convention that covers the period, breathings written before a capital, the lunate sigma, numerals, uncial-style output, signs for several letters, the overline, and punctuation."
+description: "Convert Byzantine texts: the conventions that cover the period, breathings written before a capital, the lunate sigma, numerals, uncial-style output, signs for several letters, the overline, and punctuation."
 ---
 
 Byzantine texts are written in polytonic Greek, and convert as Ancient Greek
-does: the same reading, the same presets. This page says which convention
-covers the period, and shows what matters most for it: breathings written
+does: the same reading, the same presets. This page says which conventions
+cover the period, and shows what matters most for it: breathings written
 before a capital, the lunate sigma, numerals, uncial-style output, signs for
 several letters, the overline, and punctuation.
 
@@ -24,6 +24,36 @@ const title = "Ἰωάννης ὁ Χρυσόστομος, Περὶ ἱερωσ
 
 convert(title, "greek", "transliteration", { preset: "ala-lc-ancient" });
 // → Iōannēs ho Chrysostomos, Peri hierōsynēs
+```
+
+Byzantinists write names and terms either strictly, as the _Oxford
+Dictionary of Byzantium_ (1991) does, or in a Latinized form, as the _Oxford
+Classical Dictionary_ does, and the Dumbarton Oaks style guide asks for one
+or the other, not a mix. The dictionary publishes no table: its preface says
+that Greek terms and most names are strictly transliterated, but keeps a
+traditional Latinized or anglicized form for many (Homer, Thebes, Nicaea),
+and the anglicized form of first names common in English (John, Nicholas,
+Peter). The strict forms that the dictionary is cited for (Alexios
+Komnenos, Niketas Choniates) are those of the ALA-LC table without its
+length marks, which `longVowels: "omit"` leaves out. The traditional forms
+are a matter of usage, which no option supplies: the options write `Ioannes` and `Theodoros`
+where the dictionary has John and Theodore. No preset gives the Latinized
+forms of the _Oxford Classical Dictionary_.
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+const strict = {
+  preset: "ala-lc-ancient",
+  transliteration: { longVowels: "omit" },
+} as const;
+
+const names = "Ἀλέξιος Κομνηνός, Νικήτας Χωνιάτης";
+
+convert(names, "greek", "transliteration", strict);
+// → Alexios Komnenos, Niketas Choniates
+convert("λογοθέτης τοῦ δρόμου", "greek", "transliteration", strict);
+// → logothetes tou dromou
 ```
 
 A diaeresis on an initial vowel, as manuscripts and their editions write it,
