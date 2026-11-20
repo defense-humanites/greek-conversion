@@ -613,9 +613,9 @@ Explicit macron and breve quantity marks. Defaults to `"preserve"`.
 
 The overline of abbreviations and numerals, such as the nomina sacra (`θ̅ς̅`). Defaults to `"preserve"`.
 
-| Value | Example | Presets |
+| Value | Greek → Greek | Presets |
 | --- | --- | --- |
-| `"preserve"`, the default |  |  |
-| `"remove"` | Greek to Greek: `θ̅ς̅` gives `θς` instead of `θ̅ς̅` | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
+| `"preserve"` (default) | <span class="conversion"><span lang="el">θ̅ς̅</span> <span class="to">→</span> <span lang="el">θ̅ς̅</span></span> |  |
+| `"remove"` | <span class="conversion"><span lang="el">θ̅ς̅</span> <span class="to">→</span> <span lang="el">θς</span></span> | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
 
 <!-- END GENERATED OPTION REFERENCE -->
