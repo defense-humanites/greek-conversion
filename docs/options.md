@@ -354,6 +354,18 @@ Selects how Greek text reads a stigma between two letters. `"letter"` reads it a
 | `"letter"`, the default |  |  |
 | `"ligature"` | Greek to Beta Code: `ἐϛὶ` gives `e)sti\` instead of `e)#2i\` |  |
 
+### `greek.kaiAccent`
+
+The accent of `καί` written for `ϗ` as letters. Defaults to `"none"`; `"byzantine"` writes the grave, `"modern"` follows modern editions.
+
+Selects the accent written on `καί` where the καί symbol `ϗ`, which marks none, is written as letters: in transliteration, and in Greek and Beta Code under `ligatures: "standard"`. `"none"` writes no accent (`και`, `kai`). `"byzantine"` writes the grave, as Byzantine manuscripts do even before punctuation (`καὶ`). `"modern"` follows modern editions: the acute before punctuation, at the end of the text, and before an enclitic (`καί τινες`, `καί μ’`), and the grave elsewhere (`καὶ ὁ`, `καὶ ἔστι`, `καὶ τίς`). Where the form alone does not decide, it writes the grave before `οἱ` and before an accented enclitic, and the acute before a comma and `σ’`. No accent is written on a sign that has one, in capitals, or in a text with no grave and no circumflex, which may be monotonic or unaccented. Each accent written is reported as an added diacritic.
+
+| Value | Example | Presets |
+| --- | --- | --- |
+| `"none"`, the default |  |  |
+| `"byzantine"` | Greek to transliteration: `ϗ` gives `kaì` instead of `kai` |  |
+| `"modern"` | Greek to transliteration: `ϗ` gives `kaì` instead of `kai` |  |
+
 ### `greek.iotaSubscript`
 
 Where a kept iota subscript is written. Defaults to `"subscript"`; whether it is kept is `diacritics.iotaSubscript`.

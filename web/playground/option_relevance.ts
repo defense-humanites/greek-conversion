@@ -168,6 +168,14 @@ export const OPTION_RELEVANCE: Readonly<Record<string, readonly string[]>> = {
     "transliteration>beta-code",
     "transliteration>transliteration",
   ],
+  "greek.kaiAccent": [
+    "greek>greek",
+    "greek>beta-code",
+    "greek>transliteration",
+    "beta-code>greek",
+    "beta-code>beta-code",
+    "beta-code>transliteration",
+  ],
   "greek.iotaSubscript": [
     "greek>greek",
     "beta-code>greek",

@@ -19,6 +19,7 @@ import {
   readFinalSigmaStigmas,
 } from "./orthography.ts";
 import { parseBetaCode } from "./parsers/beta_code.ts";
+import { supplyKaiAccents } from "./kai_accent.ts";
 import { readStigmaLigatures } from "./ligatures.ts";
 import { parseGreek } from "./parsers/greek.ts";
 import {
@@ -199,9 +200,10 @@ export function encodeResolved(
   format: Format,
   options: ResolvedConversionOptions,
 ): string {
+  const accented = supplyKaiAccents(document, format, options);
   const prepared = format === "transliteration"
-    ? applyNumeralOrthography(document, options, undefined, format)
-    : applyOrthography(document, options, undefined, format);
+    ? applyNumeralOrthography(accented, options, undefined, format)
+    : applyOrthography(accented, options, undefined, format);
 
   switch (format) {
     case "greek":
@@ -229,9 +231,10 @@ export function encodeTracked(
   options: ResolvedConversionOptions,
 ): { output: string; spans: SpanTable } {
   const targets: TokenTargets = {};
+  const accented = supplyKaiAccents(document, format, options);
   const prepared = format === "transliteration"
-    ? applyNumeralOrthography(document, options, targets, format)
-    : applyOrthography(document, options, targets, format);
+    ? applyNumeralOrthography(accented, options, targets, format)
+    : applyOrthography(accented, options, targets, format);
   const written: WrittenPositions = {
     text: "",
     starts: new Array<number>(prepared.length).fill(0),

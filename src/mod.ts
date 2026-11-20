@@ -86,6 +86,7 @@ export type {
   GreekQuestionMarkForm,
   HyphenTransliteration,
   IotaSubscriptOrthography,
+  KaiAccent,
   KeraiaTransliteration,
   LetterCaseOrthography,
   LigatureOrthography,

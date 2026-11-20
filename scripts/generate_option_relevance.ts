@@ -43,9 +43,25 @@ function attempt(
   }
 }
 
-function single(group: string, key: string, value: string): ConversionOptions {
-  return { [group]: { [key]: value } } as ConversionOptions;
+function single(
+  group: string,
+  key: string,
+  value: string,
+  base: ConversionOptions = {},
+): ConversionOptions {
+  const options = base as Record<string, Record<string, string> | undefined>;
+  return { ...base, [group]: { ...options[group], [key]: value } };
 }
+
+/**
+ * Options that act only with another value set, with that value: they also
+ * act on the conversions where they change the result with it.
+ * `greek.kaiAccent` accents the `και` written for `ϗ`, which Greek and Beta
+ * Code write as letters only under `greek.ligatures: "standard"`.
+ */
+const COMPANIONS: Readonly<Record<string, ConversionOptions>> = {
+  "greek.kaiAccent": { greek: { ligatures: "standard" } },
+};
 
 /** The probe text of a format: the Greek, written under every option. */
 function probe(format: Format): string {
@@ -73,15 +89,18 @@ function computeOptionRelevance(): Record<string, string[]> {
       const pairs: string[] = [];
       for (const from of FORMATS) {
         for (const to of FORMATS) {
-          const plain = attempt(texts[from], from, to, {});
-          const acts = choices.some((value) => {
-            const result = attempt(
-              texts[from],
-              from,
-              to,
-              single(group, key, value),
-            );
-            return result !== undefined && result !== plain;
+          const acts = [{}, COMPANIONS[`${group}.${key}`]].some((base) => {
+            if (base === undefined) return false;
+            const plain = attempt(texts[from], from, to, base);
+            return choices.some((value) => {
+              const result = attempt(
+                texts[from],
+                from,
+                to,
+                single(group, key, value, base),
+              );
+              return result !== undefined && result !== plain;
+            });
           });
           if (acts) pairs.push(`${from}>${to}`);
         }

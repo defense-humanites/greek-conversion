@@ -111,7 +111,15 @@ writes the sign again:
 
 `greek.ligatures: "standard"` writes the letters in Greek. Beta Code writes the
 TLG's codes for `ϗ`, `Ϗ`, and `Ȣ` (`#1532`, `#1531`, `#1521`), and the
-letters for the others. No accent is supplied: `ϗ` is `και`.
+letters for the others.
+
+`ϗ` marks no accent, so `και` has none by default. Where the output writes
+the letters, `greek.kaiAccent` writes the accent of `καί`: `"byzantine"` the
+grave everywhere, as the manuscripts do even before punctuation, and
+`"modern"` the acute before punctuation and before an enclitic, as modern
+editions do (`καί τινες`, `καὶ τοῦ`). The rules and the cases they leave open
+are set out under
+[The accent of `καί`](/reference/greek-unicode/#the-accent-of-καί).
 
 ```ts
 import { convert, reencode } from "@humanities/greek-conversion";
@@ -123,6 +131,10 @@ convert("ἐϛὶ", "greek", "greek", {
   greek: { stigma: "ligature", ligatures: "standard" },
 });
 // → ἐστὶ
+convert("ϗ τινες ϗ τοῦ", "greek", "transliteration", {
+  greek: { kaiAccent: "modern" },
+});
+// → kaí tines kaì toũ
 ```
 
 ## The overline

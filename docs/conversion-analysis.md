@@ -75,7 +75,7 @@ the text the loss is about.
 | `added-glyph-variant` | The target writes a letter form the source did not have, which reads back as another spelling (a lunate sigma written `c` under `lunateSigma: "c"`); `glyphVariant` identifies the form written |
 | `removed-diacritic` | A source diacritic is absent from the reparsed target; `diacritic` identifies it |
 | `displaced-diacritic` | A source breathing is absent from its vowel but reappears on the following vowel of the reparsed target: a hiatus marked only by that breathing is read as a diphthong; `diacritic` identifies it |
-| `added-diacritic` | The target writes a diacritic the source token did not have, which reads back: the diaeresis on a contextual `y` that keeps a hiatus the reader would otherwise lose (`ἀἑυ` → `aheÿ` → `ἀἑϋ`); `diacritic` is `"diaeresis"` |
+| `added-diacritic` | The target writes a diacritic the source token did not have, which reads back: the diaeresis on a contextual `y` that keeps a hiatus the reader would otherwise lose (`ἀἑυ` → `aheÿ` → `ἀἑϋ`), or the accent of `καί` that `greek.kaiAccent` writes where `ϗ` is written as letters; `diacritic` is `"diaeresis"`, `"acute"`, or `"grave"` |
 | `inferred-breathing` | The target does not distinguish an unmarked initial vowel from one with a smooth breathing, so the reparsed target carries a smooth breathing the source did not have; `index` is the vowel that acquires it (the second element of an initial diphthong), and `diacritic` is `"smooth"` |
 | `unrepresented-grapheme` | A source letter or its position cannot be recovered from the target document |
 | `unrepresented-literal` | A source literal token cannot be recovered from the target document |

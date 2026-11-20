@@ -44,6 +44,22 @@ export type LigatureOrthography = "preserve" | "standard";
 export type StigmaReading = "letter" | "ligature";
 
 /**
+ * Selects the accent written on `καί` where the καί symbol `ϗ`, which marks
+ * none, is written as letters: in transliteration, and in Greek and Beta Code
+ * under `ligatures: "standard"`. `"none"` writes no accent (`και`, `kai`).
+ * `"byzantine"` writes the grave, as Byzantine manuscripts do even before
+ * punctuation (`καὶ`). `"modern"` follows modern editions: the acute before
+ * punctuation, at the end of the text, and before an enclitic (`καί τινες`,
+ * `καί μ’`), and the grave elsewhere (`καὶ ὁ`, `καὶ ἔστι`, `καὶ τίς`). Where
+ * the form alone does not decide, it writes the grave before `οἱ` and before
+ * an accented enclitic, and the acute before a comma and `σ’`. No accent is
+ * written on a sign that has one, in capitals, or in a text with no grave
+ * and no circumflex, which may be monotonic or unaccented. Each accent
+ * written is reported as an added diacritic.
+ */
+export type KaiAccent = "none" | "byzantine" | "modern";
+
+/**
  * Selects where Greek output writes a kept iota subscript.
  *
  * `"subscript"` writes it below the line, and after a capital as the
@@ -411,6 +427,8 @@ export interface GreekOptions {
   ligatures?: LigatureOrthography;
   /** How Greek text reads a stigma between two letters. Defaults to `"letter"`; `"ligature"` reads `σ` and `τ`. */
   stigma?: StigmaReading;
+  /** The accent of `καί` written for `ϗ` as letters. Defaults to `"none"`; `"byzantine"` writes the grave, `"modern"` follows modern editions. */
+  kaiAccent?: KaiAccent;
   /** Where a kept iota subscript is written. Defaults to `"subscript"`; whether it is kept is `diacritics.iotaSubscript`. */
   iotaSubscript?: IotaSubscriptOrthography;
   /** Double-rho marks in Greek output. Defaults to `"unmarked"`. */
@@ -569,6 +587,7 @@ export interface DefaultConversionOptions {
     readonly symbolForms: "preserve";
     readonly ligatures: "preserve";
     readonly stigma: "letter";
+    readonly kaiAccent: "none";
     readonly iotaSubscript: "subscript";
     readonly doubleRho: "unmarked";
     readonly dentalSigma: "preserve";
@@ -727,6 +746,7 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
     symbolForms: ["preserve", "standard"],
     ligatures: ["preserve", "standard"],
     stigma: ["letter", "ligature"],
+    kaiAccent: ["none", "byzantine", "modern"],
     iotaSubscript: ["subscript", "capital-adscript", "adscript"],
     doubleRho: ["unmarked", "smooth-rough"],
     dentalSigma: ["preserve", "assimilate"],
@@ -799,6 +819,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         symbolForms: "preserve",
         ligatures: "preserve",
         stigma: "letter",
+        kaiAccent: "none",
         iotaSubscript: "subscript",
         doubleRho: "unmarked",
         dentalSigma: "preserve",
