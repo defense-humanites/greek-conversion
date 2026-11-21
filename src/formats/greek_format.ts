@@ -19,7 +19,8 @@ import { greekWriter } from "./greek_writer.ts";
  * import { reencode } from "@humanities/greek-conversion/core";
  * import { greekFormat } from "@humanities/greek-conversion/greek";
  *
- * reencode("λο\u0301γος", greekFormat); // "λόγος", composed
+ * // The accent is composed with its letter.
+ * reencode("λο\u0301γος", greekFormat); // → λόγος
  * ```
  */
 export const greekFormat: ReaderWriter = /* @__PURE__ */ joinCodecs(

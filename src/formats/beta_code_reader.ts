@@ -25,7 +25,7 @@ export const BETA_CODE_READING: ReaderHooks & {
  * import { betaCodeReader } from "@humanities/greek-conversion/beta-code";
  * import { greekWriter } from "@humanities/greek-conversion/greek";
  *
- * convert("lo/gos", betaCodeReader, greekWriter); // "λόγος"
+ * convert("lo/gos", betaCodeReader, greekWriter); // → λόγος
  * ```
  */
 export const betaCodeReader: Reader = /* @__PURE__ */ makeReader(

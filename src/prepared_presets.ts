@@ -15,7 +15,7 @@
  * import { sblGeneral } from "@humanities/greek-conversion/presets";
  * import { transliterationWriter } from "@humanities/greek-conversion/transliteration";
  *
- * convert("λόγος", greekReader, transliterationWriter, sblGeneral); // "logos"
+ * convert("λόγος", greekReader, transliterationWriter, sblGeneral); // → logos
  * ```
  *
  * @module

@@ -35,7 +35,7 @@ export const TRANSLITERATION_WRITING: WriterHooks & {
  * import { greekReader } from "@humanities/greek-conversion/greek";
  * import { transliterationWriter } from "@humanities/greek-conversion/transliteration";
  *
- * convert("λόγος", greekReader, transliterationWriter); // "lógos"
+ * convert("λόγος", greekReader, transliterationWriter); // → lógos
  * ```
  */
 export const transliterationWriter: Writer = /* @__PURE__ */ makeWriter(

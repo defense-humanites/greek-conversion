@@ -33,7 +33,7 @@ import { resolveConversionProfiles } from "./presets.ts";
  *   preset: "sbl-general",
  *   transliteration: { chi: "kh" },
  * });
- * convert("χάος", greekReader, transliterationWriter, options); // "khaos"
+ * convert("χάος", greekReader, transliterationWriter, options); // → khaos
  * ```
  *
  * @throws {OptionError} If a preset, an option key, or an option value is

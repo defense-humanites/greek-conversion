@@ -519,10 +519,13 @@ export interface ConversionOptions {
    *
    * @example
    * ```ts
+   * import { reencode } from "@humanities/greek-conversion";
+   *
    * reencode("tōn barbarōn", "transliteration", {
    *   preset: "ala-lc-modern",
    *   source: { preset: "sbl-general" },
-   * }); // "tōn varvarōn"
+   * });
+   * // → tōn varvarōn
    * ```
    */
   source?: SourceOptions;

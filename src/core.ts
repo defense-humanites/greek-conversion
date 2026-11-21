@@ -21,7 +21,7 @@
  * import { transliterationWriter } from "@humanities/greek-conversion/transliteration";
  *
  * convert("Θεσσαλονίκη", greekReader, transliterationWriter, iso843Type2);
- * // "Thessaloníki"
+ * // → Thessaloníki
  * ```
  *
  * @module
@@ -83,7 +83,7 @@ export type { PreparedOptions } from "./prepared.ts";
  * import { betaCodeReader } from "@humanities/greek-conversion/beta-code";
  * import { greekWriter } from "@humanities/greek-conversion/greek";
  *
- * convert("*)odusseu/s", betaCodeReader, greekWriter); // "Ὀδυσσεύς"
+ * convert("*)odusseu/s", betaCodeReader, greekWriter); // → Ὀδυσσεύς
  * ```
  *
  * @param from The reader of the input's format.
@@ -124,7 +124,7 @@ export function convert(
  *   transliteration: { phi: "f" },
  *   source: {},
  * });
- * reencode("phílos", transliterationFormat, fromDefaults); // "fílos"
+ * reencode("phílos", transliterationFormat, fromDefaults); // → fílos
  * ```
  *
  * @param format The reader and writer of the format, as `greekFormat`.
@@ -159,7 +159,7 @@ export function reencode(
  * import { greekFormat } from "@humanities/greek-conversion/greek";
  * import { transliterationFormat } from "@humanities/greek-conversion/transliteration";
  *
- * convertDetailed("ϐ", greekFormat, transliterationFormat).lossy; // true
+ * convertDetailed("ϐ", greekFormat, transliterationFormat).lossy; // → true
  * ```
  *
  * @param from The reader and writer of the input's format.

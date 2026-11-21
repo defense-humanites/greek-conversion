@@ -19,7 +19,8 @@ import { transliterationWriter } from "./transliteration_writer.ts";
  * import { reencode } from "@humanities/greek-conversion/core";
  * import { transliterationFormat } from "@humanities/greek-conversion/transliteration";
  *
- * reencode("lo\u0301gos", transliterationFormat); // "lógos", composed
+ * // The accent is composed with its letter.
+ * reencode("lo\u0301gos", transliterationFormat); // → lógos
  * ```
  */
 export const transliterationFormat: ReaderWriter = /* @__PURE__ */ joinCodecs(

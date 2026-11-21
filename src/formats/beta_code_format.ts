@@ -19,7 +19,7 @@ import { betaCodeWriter } from "./beta_code_writer.ts";
  * import { reencode } from "@humanities/greek-conversion/core";
  * import { betaCodeFormat } from "@humanities/greek-conversion/beta-code";
  *
- * reencode("LO/GOS", betaCodeFormat); // "lo/gos"
+ * reencode("LO/GOS", betaCodeFormat); // → lo/gos
  * ```
  */
 export const betaCodeFormat: ReaderWriter = /* @__PURE__ */ joinCodecs(

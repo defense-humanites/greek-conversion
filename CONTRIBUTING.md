@@ -19,8 +19,9 @@ npm run bench        # throughput baseline
 ```
 
 `npm run check` type-checks and runs every TypeScript example of the README,
-of the reference (`docs/`), and of the guide pages of the documentation site,
-and compares its output with the `// →` comment, code point for code point.
+of the reference (`docs/`), of the guide pages of the documentation site, and
+of the TSDoc of `src/`, and compares its output with the `// →` comment, code
+point for code point.
 Write an example as a module, with its imports; a ```ts block that is not
 one fails the check. A conversion cited in prose (`ἀπ’ οὗ` → `ἀφ’ οὗ`) is
 checked too: it must be what the library returns under the defaults, a

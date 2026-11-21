@@ -26,7 +26,7 @@ export const TRANSLITERATION_READING: ReaderHooks & {
  * import { greekWriter } from "@humanities/greek-conversion/greek";
  * import { transliterationReader } from "@humanities/greek-conversion/transliteration";
  *
- * convert("lógos", transliterationReader, greekWriter); // "λόγος"
+ * convert("lógos", transliterationReader, greekWriter); // → λόγος
  * ```
  */
 export const transliterationReader: Reader = /* @__PURE__ */ makeReader(

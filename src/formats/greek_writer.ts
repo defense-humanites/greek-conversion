@@ -32,7 +32,7 @@ export const GREEK_WRITING: WriterHooks & { readonly format: "greek" } = {
  * import { betaCodeReader } from "@humanities/greek-conversion/beta-code";
  * import { greekWriter } from "@humanities/greek-conversion/greek";
  *
- * convert("lo/gos", betaCodeReader, greekWriter); // "λόγος"
+ * convert("lo/gos", betaCodeReader, greekWriter); // → λόγος
  * ```
  */
 export const greekWriter: Writer = /* @__PURE__ */ makeWriter(

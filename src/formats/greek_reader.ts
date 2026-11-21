@@ -23,7 +23,7 @@ export const GREEK_READING: ReaderHooks & { readonly format: "greek" } = {
  * import { greekReader } from "@humanities/greek-conversion/greek";
  * import { transliterationWriter } from "@humanities/greek-conversion/transliteration";
  *
- * convert("λόγος", greekReader, transliterationWriter); // "lógos"
+ * convert("λόγος", greekReader, transliterationWriter); // → lógos
  * ```
  */
 export const greekReader: Reader = /* @__PURE__ */ makeReader(

@@ -1,11 +1,12 @@
 /**
  * Checks the TypeScript examples of README.md, of the reference (`docs/`),
- * and of the guide pages of the documentation site
+ * of the guide pages of the documentation site
  * (`web/docs/src/content/docs/`, except the reference pages generated from
- * `docs/` and the API pages), so that they cannot drift from the code: each
- * ```ts block is type-checked as a module of its own, then executed, and its
- * results are compared with the documented ones. A translated page keeps its
- * examples, so they are checked in every language.
+ * `docs/` and the API pages), and of the TSDoc of `src/`, which JSR and the
+ * API pages show, so that they cannot drift from the code: each ```ts block
+ * is type-checked as a module of its own, then executed, and its results are
+ * compared with the documented ones. A translated page keeps its examples,
+ * so they are checked in every language.
  *
  * Inside a ```ts block, an expected result is written as a comment that
  * starts with an arrow, either after a one-line statement or on the line
@@ -49,6 +50,7 @@ const ROOT = new URL("../", import.meta.url);
 const README = new URL("README.md", ROOT);
 const DOCS = new URL("docs/", ROOT);
 const PAGES = new URL("web/docs/src/content/docs/", ROOT);
+const SOURCES = new URL("src/", ROOT);
 /** The address of the site, which the README links to in full. */
 const SITE: string =
   JSON.parse(await readFile(new URL("package.json", ROOT), "utf8")).homepage;
@@ -172,7 +174,22 @@ const MIGRATION: Source = {
   name: "MIGRATION.md",
   lines: (await readFile(new URL("MIGRATION.md", ROOT), "utf8")).split("\n"),
 };
-const blocks = sources.flatMap((source) =>
+// The TSDoc of the code: its comments, without the asterisks that start
+// their lines, keep the line numbers of the file. Their links are the API's,
+// which TypeDoc resolves, and are not checked here.
+const documented: Source[] = [];
+for (
+  const file of (await readdir(SOURCES, { recursive: true }))
+    .filter((file) => file.endsWith(".ts")).sort()
+) {
+  const text = await readFile(new URL(file, SOURCES), "utf8");
+  if (!text.includes("@example")) continue;
+  documented.push({
+    name: `src/${file.replaceAll("\\", "/")}`,
+    lines: text.split("\n").map((line) => line.replace(/^\s*\* ?/, "")),
+  });
+}
+const blocks = [...sources, ...documented].flatMap((source) =>
   [...codeBlocks(source.lines)].map((block) => ({ ...block, source }))
 );
 const failures: string[] = [];
@@ -286,7 +303,7 @@ if (failures.length > 0) {
 console.log(
   `${checked} results and links check out in the README, ${references.length} reference documents, ${
     sources.length - 1 - references.length
-  } guide pages, and the migration guide.`,
+  } guide pages, the migration guide, and the TSDoc of ${documented.length} modules.`,
 );
 
 /** The guide pages under `folder`, as paths relative to it. */

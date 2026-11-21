@@ -34,7 +34,7 @@ export const BETA_CODE_WRITING: WriterHooks & {
  * import { betaCodeWriter } from "@humanities/greek-conversion/beta-code";
  * import { greekReader } from "@humanities/greek-conversion/greek";
  *
- * convert("λόγος", greekReader, betaCodeWriter); // "lo/gos"
+ * convert("λόγος", greekReader, betaCodeWriter); // → lo/gos
  * ```
  */
 export const betaCodeWriter: Writer = /* @__PURE__ */ makeWriter(

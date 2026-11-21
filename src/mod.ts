@@ -172,14 +172,18 @@ export function convert(
  *
  * @example
  * ```ts
+ * import { reencode } from "@humanities/greek-conversion";
+ *
  * reencode("λόγος", "greek", {
  *   greek: { finalSigma: "medial" },
- * }); // "λόγοσ"
+ * });
+ * // → λόγοσ
  *
  * reencode("phílos", "transliteration", {
  *   transliteration: { phi: "f" },
  *   source: {},
- * }); // "fílos"
+ * });
+ * // → fílos
  * ```
  */
 export function reencode(
