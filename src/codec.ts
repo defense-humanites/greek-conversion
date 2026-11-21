@@ -124,49 +124,69 @@ export declare class Writer<F extends Format = Format> {
  */
 export type ReaderWriter<F extends Format = Format> = Reader<F> & Writer<F>;
 
+/** What the library passes to make a handle: `new` from outside throws. */
+const MADE = Symbol();
+
+/** The hooks of a reader, or `undefined` for any other value. */
+export let readerHooks: (value: unknown) => ReaderHooks | undefined;
+
+/** The hooks of a writer, or `undefined` for any other value. */
+export let writerHooks: (value: unknown) => WriterHooks | undefined;
+
 /**
  * The runtime class of readers and writers, which the types above, declared
- * only, describe from outside. Its fields are private: a handle shows no
- * property, and an object built by hand is not one.
+ * only, describe from outside. Nothing reaches the hooks but this module: a
+ * handle shows no property; the functions that read its private fields are
+ * not members of the class, which an instance leads to by its
+ * `constructor`, but are assigned from inside it to the variables above;
+ * `new` from outside throws; and the hooks, the handles, the class, and its
+ * prototype are frozen.
  */
 class Codec {
   readonly #reader: ReaderHooks | undefined;
   readonly #writer: WriterHooks | undefined;
 
   constructor(
+    made: symbol,
     reader: ReaderHooks | undefined,
     writer: WriterHooks | undefined,
   ) {
-    this.#reader = reader;
-    this.#writer = writer;
+    if (made !== MADE) {
+      throw new TypeError(
+        "Readers and writers are imported from the entry points of formats.",
+      );
+    }
+    this.#reader = reader && Object.freeze(reader);
+    this.#writer = writer && Object.freeze(writer);
     Object.freeze(this);
   }
 
-  static readerOf(value: unknown): ReaderHooks | undefined {
-    return typeof value === "object" && value !== null && #reader in value
-      ? value.#reader
-      : undefined;
-  }
-
-  static writerOf(value: unknown): WriterHooks | undefined {
-    return typeof value === "object" && value !== null && #writer in value
-      ? value.#writer
-      : undefined;
+  static {
+    readerHooks = (value) =>
+      typeof value === "object" && value !== null && #reader in value
+        ? value.#reader
+        : undefined;
+    writerHooks = (value) =>
+      typeof value === "object" && value !== null && #writer in value
+        ? value.#writer
+        : undefined;
   }
 }
+Object.freeze(Codec.prototype);
+Object.freeze(Codec);
 
 /** A reader of the format that `hooks` read. */
 export function makeReader<F extends Format>(
   hooks: ReaderHooks & { readonly format: F },
 ): Reader<F> {
-  return new Codec(hooks, undefined) as unknown as Reader<F>;
+  return new Codec(MADE, hooks, undefined) as unknown as Reader<F>;
 }
 
 /** A writer of the format that `hooks` write. */
 export function makeWriter<F extends Format>(
   hooks: WriterHooks & { readonly format: F },
 ): Writer<F> {
-  return new Codec(undefined, hooks) as unknown as Writer<F>;
+  return new Codec(MADE, undefined, hooks) as unknown as Writer<F>;
 }
 
 /** The reader and the writer of one format, as one value. */
@@ -175,23 +195,8 @@ export function joinCodecs<F extends Format>(
   writer: Writer<F>,
 ): ReaderWriter<F> {
   return new Codec(
-    Codec.readerOf(reader),
-    Codec.writerOf(writer),
+    MADE,
+    readerHooks(reader),
+    writerHooks(writer),
   ) as unknown as ReaderWriter<F>;
-}
-
-/** The hooks of a reader, or `undefined` for any other value. */
-export function readerHooks(value: unknown): ReaderHooks | undefined {
-  return Codec.readerOf(value);
-}
-
-/** The hooks of a writer, or `undefined` for any other value. */
-export function writerHooks(value: unknown): WriterHooks | undefined {
-  return Codec.writerOf(value);
-}
-
-/** Whether a value is a reader or a writer, of this copy of the library. */
-export function isCodec(value: unknown): boolean {
-  return Codec.readerOf(value) !== undefined ||
-    Codec.writerOf(value) !== undefined;
 }

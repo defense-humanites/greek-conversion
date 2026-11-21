@@ -28,39 +28,59 @@ export interface Profiles {
   readonly writing: ResolvedConversionOptions;
 }
 
+/** What the library passes to prepare options: `new` from outside throws. */
+const MADE = Symbol();
+
+/** The profiles of prepared options, or `undefined` for any other value. */
+export let preparedProfiles: (value: unknown) => Profiles | undefined;
+
 /**
  * The runtime class of prepared options, which the type above, declared
- * only, describes from outside. Its fields are private: the options cannot
- * be read or changed once prepared, and an object built by hand is not
- * prepared.
+ * only, describes from outside. Nothing reaches the profiles but this
+ * module, as for readers and writers (see `codec.ts`): the options cannot be
+ * read or changed once prepared, and an object built by hand is not
+ * prepared. Frozen, prepared options are also kept as they are by the state
+ * of reactive frameworks, which wrap other objects in a `Proxy` that has no
+ * private field.
  */
 class Prepared {
   readonly #profiles: Profiles;
 
-  constructor(profiles: Profiles) {
+  constructor(made: symbol, profiles: Profiles) {
+    if (made !== MADE) {
+      throw new TypeError(
+        'Prepared options are imported from "./presets" or prepared.',
+      );
+    }
     this.#profiles = profiles;
+    Object.freeze(this);
   }
 
-  static profilesOf(value: unknown): Profiles | undefined {
-    return typeof value === "object" && value !== null && #profiles in value
-      ? value.#profiles
-      : undefined;
+  static {
+    preparedProfiles = (value) =>
+      typeof value === "object" && value !== null && #profiles in value
+        ? value.#profiles
+        : undefined;
   }
 }
+Object.freeze(Prepared.prototype);
+Object.freeze(Prepared);
 
 /**
  * Prepared options that write with `writing` and read with `reading`, by
- * default the same options. The objects are kept as they are: the caller
+ * default the same options. The objects are frozen, not copied: the caller
  * passes objects that nothing else holds.
  */
 export function makePrepared(
   writing: ResolvedConversionOptions,
   reading: ResolvedConversionOptions = writing,
 ): PreparedOptions {
-  return new Prepared({ reading, writing }) as unknown as PreparedOptions;
-}
-
-/** The profiles of prepared options, or `undefined` for any other value. */
-export function preparedProfiles(value: unknown): Profiles | undefined {
-  return Prepared.profilesOf(value);
+  for (const profile of [writing, reading]) {
+    for (const group of Object.values(profile)) Object.freeze(group);
+    Object.freeze(profile);
+  }
+  return new Prepared(
+    MADE,
+    Object.freeze({ reading, writing }),
+  ) as unknown as PreparedOptions;
 }

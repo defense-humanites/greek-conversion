@@ -156,9 +156,52 @@ test("readers, writers and prepared options show nothing", () => {
     assertEquals(Reflect.ownKeys(value as object), []);
     assertEquals(JSON.stringify(value), "{}");
   }
-  for (const value of Object.values(FORMAT_VALUES)) {
+  for (const value of values) {
+    // Frozen, a value is not wrapped in a Proxy by reactive state (Vue).
     assert(Object.isFrozen(value));
   }
+});
+
+test("readers, writers and prepared options lead to nothing by their constructor", () => {
+  const values: unknown[] = [
+    greek.greekReader,
+    greek.greekWriter,
+    greek.greekFormat,
+    presets.iso843Type2,
+    core.prepareOptions({ preset: "perseus" }),
+  ];
+  for (const value of values) {
+    const constructor = (value as object).constructor as unknown as {
+      new (...values: unknown[]): unknown;
+    };
+    // No static member reads the private fields, and none can be added.
+    assertEquals(Object.getOwnPropertyNames(constructor).sort(), [
+      "length",
+      "name",
+      "prototype",
+    ]);
+    assert(Object.isFrozen(constructor));
+    assert(Object.isFrozen(constructor.prototype));
+    // A value is not made from outside, even with the hooks of another.
+    for (
+      const values of [
+        [],
+        [Symbol(), { format: "greek", read: () => [] }, undefined],
+        [Symbol(), { reading: {}, writing: {} }],
+      ]
+    ) {
+      assertThrows(() => new constructor(...values), TypeError);
+    }
+  }
+  assertEquals(
+    core.convert(
+      "Βάσος",
+      READERS.greek,
+      WRITERS.transliteration,
+      presets.iso843Type2,
+    ),
+    "Vásos",
+  );
 });
 
 test("prepared options are those prepared, whatever happens to the object", () => {
@@ -223,6 +266,12 @@ test("the core functions name what to import for a value they do not take", () =
     () => core.convertDetailed(text, greek.greekReader, FORMAT_VALUES.greek),
     TypeError,
     "Expected the reader and writer of a format as `from`",
+  );
+  assertThrows(
+    // @ts-expect-error: convertDetailed() reads back what it writes.
+    () => core.convertDetailed(text, FORMAT_VALUES.greek, writer),
+    TypeError,
+    "Expected the reader and writer of a format as `to`",
   );
   assertThrows(
     // @ts-expect-error: reencode() reads and writes one format.
