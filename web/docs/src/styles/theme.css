@@ -12,6 +12,15 @@
 html {
   -webkit-tap-highlight-color: transparent;
 }
+/* A link to a place in the page ("On this page", a heading's anchor, the
+   skip link) scrolls there rather than jumping, for those who do not ask
+   for less motion. A page opened at an anchor still opens there at once;
+   the search puts the page back where it was at once (`Search.astro`). */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
 :root,
 ::backdrop,
 :root[data-theme="light"],
