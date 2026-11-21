@@ -53,6 +53,31 @@ const output: string = encode(view, "greek", options);
 const converter = createConverter({ preset: "ala-lc-modern" });
 converter.convert(output, "greek", "transliteration");
 void codes;
+
+import {
+  convert,
+  convertDetailed,
+  prepareOptions,
+  type PreparedOptions,
+  type Reader,
+  type ReaderWriter,
+} from "@humanities/greek-conversion/core";
+import { greekFormat, greekReader } from "@humanities/greek-conversion/greek";
+import { betaCodeWriter } from "@humanities/greek-conversion/beta-code";
+import { transliterationFormat } from "@humanities/greek-conversion/transliteration";
+import { alaLcModern } from "@humanities/greek-conversion/presets";
+
+const reader: Reader<"greek"> = greekReader;
+const both: ReaderWriter = transliterationFormat;
+const prepared: PreparedOptions = prepareOptions({ preset: "ala-lc-modern" });
+const beta: string = convert("ἄ", reader, betaCodeWriter, alaLcModern);
+convertDetailed(beta, greekFormat, both, prepared);
+// @ts-expect-error: the core functions take prepared options only.
+convert("ἄ", reader, betaCodeWriter, { preset: "ala-lc-modern" });
+// @ts-expect-error: a reader is not a writer.
+convert("ἄ", reader, greekReader);
+// @ts-expect-error: convertDetailed() takes whole formats.
+convertDetailed("ἄ", greekReader, both);
 `,
   );
   await writeFile(

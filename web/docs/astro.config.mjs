@@ -373,7 +373,15 @@ export default defineConfig({
       routeMiddleware: "./src/routeData.ts",
       plugins: [
         starlightTypeDoc({
-          entryPoints: ["../../src/mod.ts", "../../src/document.ts"],
+          entryPoints: [
+            "../../src/mod.ts",
+            "../../src/document.ts",
+            "../../src/core.ts",
+            "../../src/formats/greek.ts",
+            "../../src/formats/beta_code.ts",
+            "../../src/formats/transliteration.ts",
+            "../../src/prepared_presets.ts",
+          ],
           tsconfig: "../../tsconfig.build.json",
           output: "api",
           sidebar: { label: "API", collapsed: true },
@@ -439,6 +447,7 @@ export default defineConfig({
           items: [
             "guide/converters",
             "guide/document",
+            "guide/smaller-bundles",
           ],
         },
         {

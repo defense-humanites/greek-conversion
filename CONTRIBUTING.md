@@ -28,7 +28,8 @@ preset the page names, or the options named around it
 (`scripts/check_cited_conversions.ts`, whose `--list` says which). It also fails when a change to
 the options leaves `web/playground/option_relevance.ts` out of date
 (`npm run site:options` updates it), or `docs/presets.md`, generated from the
-presets (`npm run docs:presets`), or one of the generated parts of the
+presets (`npm run docs:presets`), or `src/prepared_presets.ts`, the presets as
+prepared options (`npm run presets:generate`), or one of the generated parts of the
 documentation: the option reference `docs/options.md`
 (`npm run docs:options`), and, in the guide's page on presets, the tables of
 how each preset writes Greek (`npm run docs:comparison`) and of what it loses
@@ -53,7 +54,7 @@ documentation site at the root, the playground under `/playground/`.
 
 The site's guide pages are in `web/docs/src/content/docs/guide/`. Its
 reference pages are generated from `docs/` at each build, and its API pages
-from the TSDoc of the two entry points: edit `docs/` and the code, not the
+from the TSDoc of the entry points: edit `docs/` and the code, not the
 generated pages. Pages link to one another by their path from the site's root
 (`/reference/presets/`).
 
