@@ -1652,8 +1652,18 @@ pre.code code {
   font-family: var(--face-ui);
   font-weight: 400;
 }
-/* The row hovered, or tapped (`active`, one at a time), takes a tint of the
-   source's colour, the document being the input as read. */
+/* The row hovered, or tapped (`active`, one at a time), takes a tint: in
+   the light theme the page's beige, as the pickers' items take it; in the
+   dark, a tint of the source's colour, the document being the input as
+   read. */
+.document-table {
+  --row-active: var(--surface);
+}
+@media (prefers-color-scheme: dark) {
+  .document-table {
+    --row-active: color-mix(in oklab, var(--from) 10%, var(--code-bg));
+  }
+}
 .document-table tbody tr {
   cursor: default;
 }
@@ -1662,11 +1672,11 @@ pre.code code {
 }
 @media (hover: hover) {
   .document-table tbody tr:hover td {
-    background: color-mix(in oklab, var(--from) 10%, var(--code-bg));
+    background: var(--row-active);
   }
 }
 .document-table tbody tr.active td {
-  background: color-mix(in oklab, var(--from) 10%, var(--code-bg));
+  background: var(--row-active);
 }
 .document-table tr.invalid .index {
   font-weight: 700;
