@@ -50,6 +50,11 @@ expect("the CITATION.cff version", citedVersion, npm.version);
 expect("the JSR entry points", jsr.exports, {
   ".": "./src/mod.ts",
   "./document": "./src/document.ts",
+  "./core": "./src/core.ts",
+  "./greek": "./src/formats/greek.ts",
+  "./beta-code": "./src/formats/beta_code.ts",
+  "./transliteration": "./src/formats/transliteration.ts",
+  "./presets": "./src/prepared_presets.ts",
 });
 
 /**

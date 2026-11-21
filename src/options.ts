@@ -1,3 +1,5 @@
+import { DEFAULT_CONVERSION_OPTIONS } from "./option_defaults.ts";
+
 /** Controls marks added to a pair of consecutive rho in Greek output. */
 export type DoubleRhoOrthography = "unmarked" | "smooth-rough";
 
@@ -699,6 +701,9 @@ const freezeTable = <T>(table: OptionValueTable<T>): OptionValueTable<T> =>
     ) as OptionValueTable<T>,
   );
 
+// The table is built when the module is evaluated: the annotations let a
+// bundle that does not use it, one that converts with prepared options, leave
+// it out.
 /**
  * Complete, immutable inventory of option keys and their accepted values.
  *
@@ -707,149 +712,79 @@ const freezeTable = <T>(table: OptionValueTable<T>): OptionValueTable<T> =>
  * also rejects one combination of accepted values: `longVowels: "circumflex"`
  * with `circumflexAccent: "circumflex"`.
  */
-export const CONVERSION_OPTION_VALUES: ConversionOptionValues = Object.freeze({
-  transliteration: freezeTable<TransliterationOptions>({
-    beta: ["b", "v"],
-    eta: ["e", "i"],
-    xi: ["x", "ks"],
-    phi: ["ph", "f"],
-    chi: ["ch", "kh"],
-    upsilon: [
-      "u",
-      "y",
-      "y-with-diphthong-u",
-      "y-with-au-eu-ou",
-      "y-with-ou-v-f",
-    ],
-    muPi: ["mp", "b-initial", "b-initial-final"],
-    nuTau: ["nt", "d-initial", "d-underline-initial"],
-    rho: ["contextual", "systematic"],
-    nasalGamma: [
-      "nasal",
-      "nasal-except-kappa",
-      "nasal-medial-kappa",
-      "literal",
-    ],
-    longVowels: ["macron", "circumflex", "omit"],
-    circumflexAccent: ["tilde", "circumflex"],
-    quantity: ["preserve", "omit"],
-    smoothBreathing: ["omit", "greek", "apostrophe"],
-    coronis: ["omit", "apostrophe", "greek"],
-    hyphen: ["ascii", "typographic"],
-    keraia: ["greek", "bnf"],
-    enotikon: ["preserve", "hyphen"],
-    lunateSigma: ["s", "c"],
-    archaicKoppa: ["k-dot-below", "q"],
-  }),
-  greek: freezeTable<GreekOptions>({
-    sigma: ["preserve", "standard", "lunate"],
-    finalSigma: ["preserve", "contextual", "medial"],
-    medialBeta: ["preserve", "standard", "symbol"],
-    symbolForms: ["preserve", "standard"],
-    ligatures: ["preserve", "standard"],
-    stigma: ["letter", "ligature"],
-    kaiAccent: ["none", "byzantine", "modern"],
-    iotaSubscript: ["subscript", "capital-adscript", "adscript"],
-    doubleRho: ["unmarked", "smooth-rough"],
-    dentalSigma: ["preserve", "assimilate"],
-    elidedStop: ["preserve", "aspirate"],
-    accentuation: ["polytonic", "monotonic"],
-    composition: ["composed", "decomposed"],
-    acute: ["system", "tonos", "oxia"],
-    questionMark: ["canonical", "semicolon", "greek"],
-    anoTeleia: ["canonical", "middle-dot", "greek"],
-  }),
-  betaCode: freezeTable<BetaCodeOptions>({
-    case: ["lowercase", "uppercase"],
-    yot: ["j", "#401"],
-  }),
-  text: freezeTable<TextOptions>({
-    letterCase: ["preserve", "lowercase", "uppercase", "title"],
-    whitespace: ["preserve", "collapse"],
-    numerals: ["alphabetic", "decimal"],
-  }),
-  diacritics: freezeTable<DiacriticOptions>({
-    all: ["preserve", "remove"],
-    accents: ["preserve", "remove"],
-    smoothBreathing: ["preserve", "remove"],
-    roughBreathing: ["preserve", "remove"],
-    coronis: ["preserve", "remove"],
-    diaeresis: ["preserve", "remove"],
-    iotaSubscript: ["preserve", "remove"],
-    quantity: ["preserve", "remove"],
-    overline: ["preserve", "remove"],
-  }),
-});
+export const CONVERSION_OPTION_VALUES: ConversionOptionValues =
+  /* @__PURE__ */ Object.freeze({
+    transliteration: /* @__PURE__ */ freezeTable<TransliterationOptions>({
+      beta: ["b", "v"],
+      eta: ["e", "i"],
+      xi: ["x", "ks"],
+      phi: ["ph", "f"],
+      chi: ["ch", "kh"],
+      upsilon: [
+        "u",
+        "y",
+        "y-with-diphthong-u",
+        "y-with-au-eu-ou",
+        "y-with-ou-v-f",
+      ],
+      muPi: ["mp", "b-initial", "b-initial-final"],
+      nuTau: ["nt", "d-initial", "d-underline-initial"],
+      rho: ["contextual", "systematic"],
+      nasalGamma: [
+        "nasal",
+        "nasal-except-kappa",
+        "nasal-medial-kappa",
+        "literal",
+      ],
+      longVowels: ["macron", "circumflex", "omit"],
+      circumflexAccent: ["tilde", "circumflex"],
+      quantity: ["preserve", "omit"],
+      smoothBreathing: ["omit", "greek", "apostrophe"],
+      coronis: ["omit", "apostrophe", "greek"],
+      hyphen: ["ascii", "typographic"],
+      keraia: ["greek", "bnf"],
+      enotikon: ["preserve", "hyphen"],
+      lunateSigma: ["s", "c"],
+      archaicKoppa: ["k-dot-below", "q"],
+    }),
+    greek: /* @__PURE__ */ freezeTable<GreekOptions>({
+      sigma: ["preserve", "standard", "lunate"],
+      finalSigma: ["preserve", "contextual", "medial"],
+      medialBeta: ["preserve", "standard", "symbol"],
+      symbolForms: ["preserve", "standard"],
+      ligatures: ["preserve", "standard"],
+      stigma: ["letter", "ligature"],
+      kaiAccent: ["none", "byzantine", "modern"],
+      iotaSubscript: ["subscript", "capital-adscript", "adscript"],
+      doubleRho: ["unmarked", "smooth-rough"],
+      dentalSigma: ["preserve", "assimilate"],
+      elidedStop: ["preserve", "aspirate"],
+      accentuation: ["polytonic", "monotonic"],
+      composition: ["composed", "decomposed"],
+      acute: ["system", "tonos", "oxia"],
+      questionMark: ["canonical", "semicolon", "greek"],
+      anoTeleia: ["canonical", "middle-dot", "greek"],
+    }),
+    betaCode: /* @__PURE__ */ freezeTable<BetaCodeOptions>({
+      case: ["lowercase", "uppercase"],
+      yot: ["j", "#401"],
+    }),
+    text: /* @__PURE__ */ freezeTable<TextOptions>({
+      letterCase: ["preserve", "lowercase", "uppercase", "title"],
+      whitespace: ["preserve", "collapse"],
+      numerals: ["alphabetic", "decimal"],
+    }),
+    diacritics: /* @__PURE__ */ freezeTable<DiacriticOptions>({
+      all: ["preserve", "remove"],
+      accents: ["preserve", "remove"],
+      smoothBreathing: ["preserve", "remove"],
+      roughBreathing: ["preserve", "remove"],
+      coronis: ["preserve", "remove"],
+      diaeresis: ["preserve", "remove"],
+      iotaSubscript: ["preserve", "remove"],
+      quantity: ["preserve", "remove"],
+      overline: ["preserve", "remove"],
+    }),
+  });
 
-/**
- * Complete, immutable defaults used when no preset or custom option overrides
- * them. Inspect this value in an IDE to discover the engine's effective
- * baseline configuration. The default transliteration is the library's own:
- * the letters of the SBL Handbook of Style (§5.3), which `sbl-general`
- * writes, with the accents, iota subscript, diaeresis, and quantity marks
- * that the Handbook leaves out.
- */
-export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
-  .freeze(
-    {
-      transliteration: Object.freeze({
-        beta: "b",
-        eta: "e",
-        xi: "x",
-        phi: "ph",
-        chi: "ch",
-        upsilon: "y-with-diphthong-u",
-        muPi: "mp",
-        nuTau: "nt",
-        rho: "contextual",
-        nasalGamma: "nasal",
-        longVowels: "macron",
-        circumflexAccent: "tilde",
-        quantity: "preserve",
-        smoothBreathing: "omit",
-        coronis: "omit",
-        hyphen: "ascii",
-        keraia: "greek",
-        enotikon: "preserve",
-        lunateSigma: "s",
-        archaicKoppa: "k-dot-below",
-      }),
-      greek: Object.freeze({
-        sigma: "preserve",
-        finalSigma: "preserve",
-        medialBeta: "preserve",
-        symbolForms: "preserve",
-        ligatures: "preserve",
-        stigma: "letter",
-        kaiAccent: "none",
-        iotaSubscript: "subscript",
-        doubleRho: "unmarked",
-        dentalSigma: "preserve",
-        elidedStop: "preserve",
-        accentuation: "polytonic",
-        composition: "composed",
-        acute: "system",
-        questionMark: "canonical",
-        anoTeleia: "canonical",
-      }),
-      betaCode: Object.freeze({
-        case: "lowercase",
-        yot: "j",
-      }),
-      text: Object.freeze({
-        letterCase: "preserve",
-        whitespace: "preserve",
-        numerals: "alphabetic",
-      }),
-      diacritics: Object.freeze({
-        accents: "preserve",
-        smoothBreathing: "preserve",
-        roughBreathing: "preserve",
-        coronis: "preserve",
-        diaeresis: "preserve",
-        iotaSubscript: "preserve",
-        quantity: "preserve",
-        overline: "preserve",
-      }),
-    } as const satisfies ResolvedConversionOptions,
-  );
+export { DEFAULT_CONVERSION_OPTIONS };

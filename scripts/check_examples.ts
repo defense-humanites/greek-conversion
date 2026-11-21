@@ -55,7 +55,15 @@ const SITE: string =
 /** Folders of the site that are generated, from `docs/` and from the API. */
 const GENERATED = new Set(["reference", "api"]);
 const MAIN = new URL("../src/mod.ts", import.meta.url);
-const DOCUMENT = new URL("../src/document.ts", import.meta.url);
+/** The other entry points, by subpath, as `jsr.json` maps them. */
+const SUBPATHS: Record<string, URL> = Object.fromEntries(
+  Object.entries(
+    JSON.parse(await readFile(new URL("jsr.json", ROOT), "utf8"))
+      .exports as Record<string, string>,
+  )
+    .filter(([subpath]) => subpath !== ".")
+    .map(([subpath, file]) => [subpath.slice(2), new URL(file, ROOT)]),
+);
 const TSC = fileURLToPath(
   new URL("../node_modules/typescript/bin/tsc", import.meta.url),
 );
@@ -439,9 +447,12 @@ function rewriteImports(
   specifier: (url: URL) => string,
 ): string {
   return program
-    .replaceAll(
-      '"@humanities/greek-conversion/document"',
-      JSON.stringify(specifier(DOCUMENT)),
+    .replace(
+      /"@humanities\/greek-conversion\/([a-z-]+)"/g,
+      (whole, subpath: string) =>
+        Object.hasOwn(SUBPATHS, subpath)
+          ? JSON.stringify(specifier(SUBPATHS[subpath]))
+          : whole,
     )
     .replaceAll(
       '"@humanities/greek-conversion"',

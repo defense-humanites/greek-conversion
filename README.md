@@ -102,6 +102,7 @@ city.losses[0].message; // → The target representation does not retain eta.
 | Know whether the conversion loses information, and where each token went | `convertDetailed(input, from, to, options?)`                          |
 | Bind a preset, add characters, or restrict the repertoire                | `createConverter(configuration)`                                      |
 | Inspect or edit the parsed text itself                                   | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
+| Bundle only the formats and presets a web page uses                      | `convert()` from `@humanities/greek-conversion/core`                  |
 
 ## Documentation
 
@@ -112,6 +113,8 @@ city.losses[0].message; // → The target representation does not retain eta.
   and [Modern Greek](https://greek-conversion.humanites.fr/guide/modern-greek/).
 - [Choosing a preset](https://greek-conversion.humanites.fr/guide/presets/):
   what each convention writes, and what it loses.
+- [Smaller bundles](https://greek-conversion.humanites.fr/guide/smaller-bundles/),
+  for a web application that uses a few formats and presets.
 - [Guarantees and limits](https://greek-conversion.humanites.fr/reference/guarantees/),
   then the rest of the reference: the
   [options](https://greek-conversion.humanites.fr/reference/options/),

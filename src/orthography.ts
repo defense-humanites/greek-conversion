@@ -410,6 +410,21 @@ function applyWhitespaceOrthography(
 }
 
 /**
+ * The right keraia as Greek and Beta Code write it: `ʹ`, the Greek numeral
+ * sign that NFC turns into it, and Beta Code `#`.
+ */
+const KERAIA = /[#\u0374\u02B9]/;
+
+/**
+ * {@link readFinalSigmaStigmas} for the Greek and Beta Code readers, which
+ * note the final sigma that writes a stigma before a right keraia. An input
+ * without one, most text, is not searched for them.
+ */
+export function readStigmas(input: string, document: Document): Document {
+  return KERAIA.test(input) ? readFinalSigmaStigmas(document) : document;
+}
+
+/**
  * Reads a final sigma that is the units of a numeral as a stigma written
  * with the sign it resembles (`ςʹ` 6, `ιςʹ` 16, `͵αςʹ` 1006): keyboards
  * lack the stigma, and `ς` is no numeral sign of its own, 200 being `σʹ`.

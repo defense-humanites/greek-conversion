@@ -10,6 +10,7 @@ import {
 } from "./options.ts";
 import { isGreekNumeralContext } from "./context.ts";
 import type { Document, Format, Letter } from "./model.ts";
+import { preparedProfiles } from "./prepared.ts";
 
 /** Partial option fields contributed by one registered preset. */
 export type PresetOptions = Omit<ConversionOptions, "preset" | "source">;
@@ -361,6 +362,15 @@ function validateConversionOptions(options: unknown, prefix: string): void {
       `Expected ${
         prefix === "" ? "conversion" : prefix.slice(0, -1)
       } options to be an object, received ${typeName(options)}.`,
+    );
+  }
+  // Prepared options hold no key: they would read as no option at all.
+  if (preparedProfiles(options) !== undefined) {
+    throw new TypeError(
+      `Expected ${
+        prefix === "" ? "conversion" : prefix.slice(0, -1)
+      } options, received prepared options, which go to ` +
+        '"@humanities/greek-conversion/core".',
     );
   }
   const keys = prefix === "" ? TOP_LEVEL_KEYS : PROFILE_KEYS;

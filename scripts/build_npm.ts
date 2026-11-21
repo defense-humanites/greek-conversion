@@ -110,10 +110,41 @@ const published = {
         default: "./esm/document.js",
       },
     },
+    "./core": {
+      import: {
+        types: "./types/core.d.ts",
+        default: "./esm/core.js",
+      },
+    },
+    "./greek": {
+      import: {
+        types: "./types/formats/greek.d.ts",
+        default: "./esm/formats/greek.js",
+      },
+    },
+    "./beta-code": {
+      import: {
+        types: "./types/formats/beta_code.d.ts",
+        default: "./esm/formats/beta_code.js",
+      },
+    },
+    "./transliteration": {
+      import: {
+        types: "./types/formats/transliteration.d.ts",
+        default: "./esm/formats/transliteration.js",
+      },
+    },
+    "./presets": {
+      import: {
+        types: "./types/prepared_presets.d.ts",
+        default: "./esm/prepared_presets.js",
+      },
+    },
   },
   engines: repository.engines,
   // The package has no import-time side effects; bundlers may drop unused
-  // exports.
+  // exports, and the modules of the formats and presets a bundle does not
+  // import (see the guide on smaller bundles).
   sideEffects: false,
 };
 

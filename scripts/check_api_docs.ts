@@ -1,6 +1,6 @@
 /**
  * Lints the documentation of the public API, as `deno doc --lint` did until
- * 1.0.0-rc.7: every export of the two entry points, and every member of an
+ * 1.0.0-rc.7: every export of the entry points, and every member of an
  * exported class or interface, has a JSDoc comment; no export refers to a type
  * that is not exported; every `{@link}` resolves.
  *
@@ -20,7 +20,15 @@ import {
 } from "typedoc";
 
 const app = await Application.bootstrapWithPlugins({
-  entryPoints: ["src/mod.ts", "src/document.ts"],
+  entryPoints: [
+    "src/mod.ts",
+    "src/document.ts",
+    "src/core.ts",
+    "src/formats/greek.ts",
+    "src/formats/beta_code.ts",
+    "src/formats/transliteration.ts",
+    "src/prepared_presets.ts",
+  ],
   tsconfig: "tsconfig.build.json",
   logLevel: "Warn",
   validation: {
