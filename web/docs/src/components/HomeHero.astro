@@ -4,29 +4,39 @@
  * page's heading, the project's description and the two ways in, then the
  * example given in the page's body. The playground opens in a new tab, as
  * from the header.
- * The logo follows the system's appearance, as the whole site does.
+ * The logo follows the system's appearance, as the whole site does; its
+ * tessera's halves part and join once the page has loaded.
  */
 import { LinkButton } from "@astrojs/starlight/components";
+import logoSource from "../../public/logo-light.svg?raw";
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+
+/*
+ * The logo, drawn in the page rather than as an image, so that the two
+ * halves of the tessera can move: the light file's four colours become
+ * classes (each half of the symbol, each word of the name), coloured below
+ * for both appearances, and each half gets a group of its own inside the
+ * one that places it, for the animation to move it from its place.
+ */
+let colour = 0;
+const PARTS = ["grec", "latin", "word-greek", "word-conversion"];
+const logo = logoSource
+  .replace(/ width="\d+" height="\d+"/, ' width="308" height="168"')
+  .replace(/ fill="#[0-9A-F]{6}"/g, () => ` class="${PARTS[colour++]}"`)
+  .replace(
+    /(<g transform="[^"]*">)(<path class="(grec|latin)")/g,
+    '$1<g class="half $3">$2',
+  )
+  .replace(/(<path class="(?:grec|latin)"[^>]*\/>)<\/g>/g, "$1</g></g>");
+if (colour !== PARTS.length || !logo.includes('class="half latin"')) {
+  throw new Error("The logo no longer has the parts the home page moves.");
+}
 ---
 
 <section class="home-hero not-content">
   <div class="intro">
-    <h1 id="_top">
-      <picture>
-        <source
-          media="(prefers-color-scheme: dark)"
-          srcset={`${base}logo-dark.svg`}
-        />
-        <img
-          src={`${base}logo-light.svg`}
-          alt="greek conversion"
-          width="308"
-          height="168"
-        />
-      </picture>
-    </h1>
+    <h1 id="_top" class="logo" set:html={logo} />
     <p class="description">
       <span class="line"
         >A TypeScript library that converts Ancient and Modern&nbsp;Greek</span
@@ -80,9 +90,78 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
   }
   /* 70% of the screen, between that of a 360px screen, the page's
      narrowest (`theme.css`), and 19rem. */
-  img {
+  .logo :global(svg) {
     width: clamp(15.75rem, 70vw, 19rem);
     height: auto;
+  }
+  /* The colours of the two logo files, by appearance. */
+  .logo :global(.grec),
+  .logo :global(.word-greek) {
+    fill: #2f4fa8;
+  }
+  .logo :global(.latin) {
+    fill: #dd6a33;
+  }
+  .logo :global(.word-conversion) {
+    fill: #c85a26;
+  }
+  @media (prefers-color-scheme: dark) {
+    .logo :global(.grec),
+    .logo :global(.word-greek) {
+      fill: #c9d3ec;
+    }
+    .logo :global(.latin),
+    .logo :global(.word-conversion) {
+      fill: #e08a5e;
+    }
+  }
+  /*
+   * Once the page has loaded, the tessera's halves part and join again, as
+   * a conversion that loses nothing: they draw apart along the break (the
+   * line of their offsets, 8 by 3), the right one straightening out of its
+   * 2°, then come back to their places with a soft spring, which never
+   * closes the break. Once, for those who do not ask for less motion.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    .logo :global(.half) {
+      transform-box: view-box;
+      transform-origin: 84px 60px;
+      animation-duration: 0.75s;
+      animation-delay: 0.25s;
+      animation-fill-mode: both;
+    }
+    .logo :global(.half.grec) {
+      animation-name: tessera-grec;
+    }
+    .logo :global(.half.latin) {
+      animation-name: tessera-latin;
+    }
+  }
+  @keyframes tessera-grec {
+    0% {
+      transform: none;
+      animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+    }
+    40% {
+      transform: translate(-6px, -2.25px);
+      animation-timing-function: cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+    100% {
+      transform: none;
+    }
+  }
+  @keyframes tessera-latin {
+    0% {
+      transform: none;
+      animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+    }
+    40% {
+      transform: translate(6px, 2.25px) rotate(-2deg);
+      animation-timing-function: cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+    100% {
+      transform: none;
+    }
   }
   /* Balanced lines on a narrow screen. Where the page is wider than its
      720px column, three lines broken where the sentence turns, the middle
