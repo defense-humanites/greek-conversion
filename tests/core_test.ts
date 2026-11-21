@@ -144,19 +144,35 @@ test("each preset is exported as its options, prepared", () => {
   assertEquals(Object.keys(presets).sort(), names.sort());
 });
 
+/** The key of the one property of prepared options (`prepared_mark.ts`). */
+const PREPARED = Symbol.for("@humanities/greek-conversion/prepared");
+
 test("readers, writers and prepared options show nothing", () => {
-  const values: unknown[] = [
+  const handles: unknown[] = [
     ...Object.values(READERS),
     ...Object.values(WRITERS),
     ...Object.values(FORMAT_VALUES),
+  ];
+  const prepared: unknown[] = [
     ...Object.values(presets),
     core.prepareOptions({ preset: "perseus" }),
   ];
-  for (const value of values) {
+  for (const value of handles) {
     assertEquals(Reflect.ownKeys(value as object), []);
-    assertEquals(JSON.stringify(value), "{}");
   }
-  for (const value of values) {
+  // Prepared options show the preset they are, as a mark that spreading
+  // copies; their options are private.
+  for (const [index, value] of prepared.entries()) {
+    assertEquals(Reflect.ownKeys(value as object), [PREPARED]);
+    assertEquals(
+      (value as Record<symbol, unknown>)[PREPARED],
+      index < listPresetMetadata().length
+        ? listPresetMetadata()[index].id
+        : null,
+    );
+  }
+  for (const value of [...handles, ...prepared]) {
+    assertEquals(JSON.stringify(value), "{}");
     // Frozen, a value is not wrapped in a Proxy by reactive state (Vue).
     assert(Object.isFrozen(value));
   }
@@ -247,7 +263,7 @@ test("the core functions name what to import for a value they do not take", () =
     // @ts-expect-error: a writer is not a reader.
     () => core.convert(text, greek.greekWriter, writer),
     TypeError,
-    "Expected a reader as `from`, received an object",
+    "Expected a reader as `from`, received a writer",
   );
   assertThrows(
     // @ts-expect-error: an object of the same shape is not a reader.
@@ -265,7 +281,7 @@ test("the core functions name what to import for a value they do not take", () =
     // @ts-expect-error: convertDetailed() reads back what it writes.
     () => core.convertDetailed(text, greek.greekReader, FORMAT_VALUES.greek),
     TypeError,
-    "Expected the reader and writer of a format as `from`",
+    "Expected the reader and writer of a format as `from`, received a reader",
   );
   assertThrows(
     // @ts-expect-error: convertDetailed() reads back what it writes.
@@ -308,7 +324,7 @@ test("the main entry point refuses readers, writers and prepared options", () =>
     assertThrows(
       () => main.convert("λόγος", "greek", "transliteration", options),
       TypeError,
-      'options, received prepared options, which go to "@humanities/greek-conversion/core".',
+      'options, received prepared options, which only the functions of "@humanities/greek-conversion/core" take: name the preset instead, as in { preset: "sbl-general" }.',
     );
     assertThrows(
       () => parse("λόγος", "greek", options),
@@ -321,6 +337,80 @@ test("the main entry point refuses readers, writers and prepared options", () =>
       "received prepared options",
     );
   }
+});
+
+test("prepared options spread into options are refused, with what to write", () => {
+  const spread = {
+    ...presets.sblGeneral,
+    transliteration: { chi: "kh" },
+  } as ConversionOptions;
+  for (
+    const prepare of [
+      (options: ConversionOptions) => core.prepareOptions(options),
+      (options: ConversionOptions) =>
+        main.convert("χάος", "greek", "transliteration", options),
+    ]
+  ) {
+    assertThrows(
+      () => prepare(spread),
+      TypeError,
+      'Expected conversion options, received a copy of prepared options, which holds none of them: name the preset instead, as in { preset: "sbl-general" }.',
+    );
+    assertThrows(
+      () =>
+        prepare({ source: { ...presets.iso843Type2 } } as ConversionOptions),
+      TypeError,
+      'Expected source options, received a copy of prepared options, which holds none of them: name the preset instead, as in { preset: "iso-843-type-2" }.',
+    );
+    assertThrows(
+      () =>
+        prepare(
+          { ...core.prepareOptions({ greek: {} }) } as ConversionOptions,
+        ),
+      TypeError,
+      "received a copy of prepared options, which holds none of them: give the options that were prepared instead.",
+    );
+    assertThrows(
+      () =>
+        prepare(
+          {
+            source: { transliteration: presets.iso843Type2 },
+          } as unknown as ConversionOptions,
+        ),
+      TypeError,
+      'Expected source.transliteration options, received prepared options, which only the functions of "@humanities/greek-conversion/core" take: name the preset instead, as in { preset: "iso-843-type-2" }.',
+    );
+  }
+  assertThrows(
+    () => core.prepareOptions(presets.iso843Type2 as ConversionOptions),
+    TypeError,
+    'Expected conversion options, received prepared options, which only the functions of "@humanities/greek-conversion/core" take: name the preset instead, as in { preset: "iso-843-type-2" }.',
+  );
+  // What the error says to write converts with the preset and the change.
+  assertEquals(
+    core.convert(
+      "χάος",
+      READERS.greek,
+      WRITERS.transliteration,
+      core.prepareOptions({
+        preset: "sbl-general",
+        transliteration: { chi: "kh" },
+      }),
+    ),
+    "khaos",
+  );
+  assertThrows(
+    () =>
+      core.convert(
+        "χάος",
+        READERS.greek,
+        WRITERS.transliteration,
+        // @ts-expect-error: a copy is not prepared options.
+        { ...presets.sblGeneral },
+      ),
+    TypeError,
+    "Expected prepared options, received a copy of prepared options, which holds none of them:",
+  );
 });
 
 test("a format's reader, writer and both are distinct values", () => {

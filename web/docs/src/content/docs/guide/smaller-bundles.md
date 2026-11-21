@@ -93,6 +93,23 @@ changed; prepare them once, outside a loop, and use them for every call. The
 functions of `core` take no other options: an object of options, which they
 would have to validate, throws a `TypeError`.
 
+A preset is changed by its name, as above. Spreading prepared options copies
+none of them: `{ ...sblGeneral, transliteration: { chi: "kh" } }` holds the
+change alone, and would convert with the defaults. `prepareOptions()` and the
+main entry point refuse it with a `TypeError` that says what to write instead:
+
+```ts
+import { prepareOptions } from "@humanities/greek-conversion/core";
+import { sblGeneral } from "@humanities/greek-conversion/presets";
+
+try {
+  prepareOptions({ ...sblGeneral, transliteration: { chi: "kh" } });
+} catch (error) {
+  (error as TypeError).message.endsWith('as in { preset: "sbl-general" }.');
+  // → true
+}
+```
+
 ## What a bundle weighs
 
 Bundles of the conversions below, made with esbuild for this release,

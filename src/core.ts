@@ -50,6 +50,7 @@ import {
   preparedProfiles,
   type Profiles,
 } from "./prepared.ts";
+import { hasPreparedMark } from "./prepared_mark.ts";
 
 export type { Reader, ReaderWriter, Writer } from "./codec.ts";
 export type {
@@ -273,7 +274,15 @@ function kind(value: unknown): string {
     ? JSON.stringify(value)
     : value === null
     ? "null"
-    : typeof value === "object"
-    ? "an object"
-    : typeof value;
+    : typeof value !== "object"
+    ? typeof value
+    : readerHooks(value)
+    ? writerHooks(value) ? "a reader and writer" : "a reader"
+    : writerHooks(value)
+    ? "a writer"
+    : hasPreparedMark(value)
+    ? Object.getPrototypeOf(value) === Object.prototype
+      ? "a copy of prepared options, which holds none of them"
+      : "prepared options"
+    : "an object";
 }

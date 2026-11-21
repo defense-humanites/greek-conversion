@@ -195,17 +195,22 @@ objects; their shape follows the rules above.
 `PreparedOptions`, which `prepareOptions()` returns and the presets entry point
 exports, are resolved options with no public member: what they hold may change
 in any release, and only the functions of the core entry point read them. They
-are what the options they were prepared from are, and a preset's what
-`{ preset }` is, under the rules above. The main entry point does not take them.
+convert as the options they were prepared from, and a preset object as
+`{ preset }`, under the rules above. The object is frozen, and its one property,
+under a symbol, holds the identifier of the preset it is, or `null`: spreading
+prepared options copies that property and none of the options, and the
+functions that take options, as `prepareOptions()` and the main entry point,
+refuse prepared options or a copy of them with a `TypeError`, wherever they are
+given, rather than read them as no option at all.
 
 ## Readers and writers
 
 A reader (`Reader`), a writer (`Writer`), or both of one format
-(`ReaderWriter`) is an opaque value: its type and the object have no public
-member, so that how they read and write may change in any release. What is
-covered is their identity, the format each reads or writes, and the conversions
-of the core entry point that take them, which convert as the functions of the
-main entry point do with the names of the formats.
+(`ReaderWriter`) is an opaque value: its type and the object, which is frozen,
+have no public member, so that how they read and write may change in any
+release. What is covered is their identity, the format each reads or writes,
+and the conversions of the core entry point that take them, which convert as
+the functions of the main entry point do with the names of the formats.
 
 The values of the core entry point belong to the copy of the library that made
 them: a function of another copy, such as a second version installed beside

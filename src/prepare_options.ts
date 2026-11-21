@@ -46,5 +46,5 @@ export function prepareOptions(
   options: ConversionOptions = {},
 ): PreparedOptions {
   const { reading, writing } = resolveConversionProfiles(options);
-  return makePrepared(writing, reading);
+  return makePrepared(writing, reading, null);
 }

@@ -6,6 +6,7 @@
  * presets made with it.
  */
 import type { ResolvedConversionOptions } from "./options.ts";
+import { PREPARED } from "./prepared_mark.ts";
 
 /**
  * Conversion options already checked and resolved, for the functions of the
@@ -45,14 +46,21 @@ export let preparedProfiles: (value: unknown) => Profiles | undefined;
  */
 class Prepared {
   readonly #profiles: Profiles;
+  /**
+   * The preset prepared, or `null`: the mark that a copy made by spreading
+   * keeps, which the validation of options refuses (see
+   * `prepared_mark.ts`).
+   */
+  readonly [PREPARED]: string | null;
 
-  constructor(made: symbol, profiles: Profiles) {
+  constructor(made: symbol, profiles: Profiles, preset: string | null) {
     if (made !== MADE) {
       throw new TypeError(
         'Prepared options are imported from "./presets" or prepared.',
       );
     }
     this.#profiles = profiles;
+    this[PREPARED] = preset;
     Object.freeze(this);
   }
 
@@ -67,13 +75,14 @@ Object.freeze(Prepared.prototype);
 Object.freeze(Prepared);
 
 /**
- * Prepared options that write with `writing` and read with `reading`, by
- * default the same options. The objects are frozen, not copied: the caller
- * passes objects that nothing else holds.
+ * Prepared options that write with `writing` and read with `reading`: the
+ * options of the preset `preset`, or of other options (`null`). The objects
+ * are frozen, not copied: the caller passes objects that nothing else holds.
  */
 export function makePrepared(
   writing: ResolvedConversionOptions,
-  reading: ResolvedConversionOptions = writing,
+  reading: ResolvedConversionOptions,
+  preset: string | null,
 ): PreparedOptions {
   for (const profile of [writing, reading]) {
     for (const group of Object.values(profile)) Object.freeze(group);
@@ -82,5 +91,6 @@ export function makePrepared(
   return new Prepared(
     MADE,
     Object.freeze({ reading, writing }),
+    preset,
   ) as unknown as PreparedOptions;
 }

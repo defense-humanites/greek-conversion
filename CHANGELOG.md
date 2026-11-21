@@ -29,7 +29,10 @@ change.
 - The main entry point refuses readers and writers with a `RangeError`, as an
   unknown format, and prepared options with a `TypeError`, each naming the
   `core` entry point: given prepared options, which hold no option key, it
-  would have converted with the defaults.
+  would have converted with the defaults. It refuses as well, as
+  `prepareOptions()` does, the copy that spreading makes of prepared options,
+  as in `{ ...sblGeneral, transliteration: { chi: "kh" } }`, which holds the
+  change alone; the error names the preset to write instead.
 - **Bundle size.** The main entry point converts through the readers and
   writers that the `core` entry point takes, so that both convert alike: a
   bundle that imports `convert()` grows by 1.2 kB minified, 0.4 kB with gzip.
