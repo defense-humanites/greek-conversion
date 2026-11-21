@@ -1530,6 +1530,13 @@ textarea.text::placeholder {
   justify-content: space-between;
   gap: 12px;
 }
+/* The text of a panel's head wraps beside its controls, which keep the
+   top right of the panel, rather than pushing them to a line of their
+   own; on a phone they go under it. */
+.panel-head > .hint {
+  flex: 1 1 20rem;
+  max-width: 680px;
+}
 pre.code {
   max-height: 480px;
   margin: 0;
@@ -1566,6 +1573,114 @@ pre.code code {
 .tok-comment {
   font-style: italic;
   color: var(--code-muted);
+}
+/* The document's views: the segments of the formats, in the source's colour,
+   since the document is the input as read. */
+.views {
+  --accent: var(--from);
+}
+/*
+ * The canonical document as a table: in a frame of the code's ground, as
+ * the JSON, which scrolls both ways with its head kept in view. Every cell
+ * is in code, the text read as the values, which are written as the JSON
+ * writes them; only validation's messages, which are sentences, are in the
+ * face of the interface. An empty cell shows a muted dash, read "none"; a
+ * token that validation rejects has its number in red (--error).
+ */
+.document-table {
+  max-height: 480px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--code-bg);
+}
+.document-table[hidden] {
+  display: none;
+}
+.document-table table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: var(--face-code);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+.document-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--code-bg);
+  font-family: var(--face-ui);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.12em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.document-table td {
+  padding: 6px 14px;
+  border-top: 1px solid var(--line);
+  vertical-align: baseline;
+  line-height: 24px;
+  white-space: nowrap;
+}
+/* Each column fits its content; the last takes the width left. */
+.document-table :is(th, td):not(:last-child) {
+  width: 1%;
+}
+.document-table tbody tr:first-child td {
+  border-top: 0;
+}
+.document-table td:empty::before {
+  content: "—" / "none";
+  color: var(--muted);
+}
+.document-table .index,
+.document-table .kind,
+.document-table .read.blank {
+  color: var(--muted);
+}
+.document-table .validation {
+  min-width: 18em;
+  white-space: normal;
+  font-family: var(--face-ui);
+  font-weight: 400;
+}
+/* The row hovered, or tapped (`active`, one at a time), takes a tint: in
+   the light theme the page's beige, as the pickers' items take it; in the
+   dark, a tint of the source's colour, the document being the input as
+   read. */
+.document-table {
+  --row-active: var(--surface);
+}
+@media (prefers-color-scheme: dark) {
+  .document-table {
+    --row-active: color-mix(in oklab, var(--from) 10%, var(--code-bg));
+  }
+}
+.document-table tbody tr {
+  cursor: default;
+}
+.document-table tbody td {
+  transition: background-color 0.15s;
+}
+@media (hover: hover) {
+  .document-table tbody tr:hover td {
+    background: var(--row-active);
+  }
+}
+.document-table tbody tr.active td {
+  background: var(--row-active);
+}
+.document-table tr.invalid .index {
+  font-weight: 700;
+  color: var(--error);
 }
 .document-limit {
   display: flex;

@@ -74,6 +74,10 @@
   --to-fill: #dd6a33;
   --link: #2f4fa8;
   --code-bg: #fbf8f2;
+  /* --error: a plain red for what fails, such as a token that validation
+     rejects; the brand's orange marks the target, not a fault. 5.6:1 on
+     code-bg, 5.9:1 on raised. */
+  --error: #c0262d;
   --code-keyword: #2f4fa8;
   --code-string: #a9461c;
   --code-function: #1f2a44;
@@ -122,6 +126,8 @@
        as text a shade lighter rather than as blue. */
     --link: #8daffe;
     --code-bg: #191f31;
+    /* 6.5:1 on code-bg, 6:1 on raised. */
+    --error: #ff7a70;
     --code-keyword: #c9d3ec;
     --code-string: #e08a5e;
     --code-function: #f4ecdd;

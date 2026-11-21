@@ -289,9 +289,21 @@
 
           <div id="panel-document" class="panel" role="tabpanel"
             aria-labelledby="tab-document" tabindex="0" hidden>
-            <p
-              class="hint">How the library reads the input with its built-in alphabet: letters, case, and diacritics, independent of spelling. Diagnostic token numbers refer to this list.</p>
-            <pre id="document-preview" class="code"></pre>
+            <div class="panel-head">
+              <p
+                class="hint">How the library reads the input with its built-in alphabet: letters, case, and diacritics, independent of spelling. Diagnostic token numbers refer to this list.</p>
+              <div class="segments views" role="radiogroup"
+                aria-label="Show the document as">
+                <label data-label="Table"><input type="radio"
+                    name="document-view" value="table" checked>
+                  <span>Table</span></label>
+                <label data-label="JSON"><input type="radio"
+                    name="document-view" value="json"> <span>JSON</span></label>
+              </div>
+            </div>
+            <div id="document-table" class="document-table" tabindex="0"
+              role="region" aria-label="Canonical document"></div>
+            <pre id="document-preview" class="code" hidden></pre>
             <div id="document-limit" class="document-limit" hidden>
               <p id="document-limit-text" class="hint"></p>
               <button id="document-show-all" class="button" type="button">Show
