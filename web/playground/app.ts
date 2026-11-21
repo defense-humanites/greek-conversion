@@ -1072,6 +1072,9 @@ function inspectDocument(options: ConversionOptions, from: Format): void {
   }
 }
 
+/** The token whose row was tapped, kept from one drawing of the table to the next. */
+let activeToken: number | undefined;
+
 /** Names for the characters a cell would show as nothing. */
 const BLANKS: Record<string, string> = {
   " ": "space",
@@ -1132,6 +1135,8 @@ function showDocumentTable(
       ? ""
       : source.value.slice(span.start, span.end);
     const row = document.createElement("tr");
+    row.dataset.token = String(index);
+    if (index === activeToken) row.classList.add("active");
     const blank = BLANKS[text] ??
       (/^\s+$/u.test(text)
         ? [...text].map((char) =>
@@ -2780,6 +2785,19 @@ output.addEventListener("scroll", () => {
   outputMarks.scrollTop = output.scrollTop;
 });
 strict.addEventListener("change", updateInPlace);
+// A tap on a row makes it the active one; a tap on it again, none.
+documentTable.addEventListener("click", (event) => {
+  const row = (event.target as Element).closest<HTMLTableRowElement>(
+    "tbody tr",
+  );
+  if (row === null) return;
+  const token = Number(row.dataset.token);
+  activeToken = token === activeToken ? undefined : token;
+  for (const other of documentTable.querySelectorAll("tr.active")) {
+    other.classList.remove("active");
+  }
+  if (activeToken !== undefined) row.classList.add("active");
+});
 for (
   const input of document.querySelectorAll<HTMLInputElement>(
     'input[name="document-view"]',

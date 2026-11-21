@@ -1530,6 +1530,13 @@ textarea.text::placeholder {
   justify-content: space-between;
   gap: 12px;
 }
+/* The text of a panel's head wraps beside its controls, which keep the
+   top right of the panel, rather than pushing them to a line of their
+   own; on a phone they go under it. */
+.panel-head > .hint {
+  flex: 1 1 20rem;
+  max-width: 680px;
+}
 pre.code {
   max-height: 480px;
   margin: 0;
@@ -1644,6 +1651,22 @@ pre.code code {
   white-space: normal;
   font-family: var(--face-ui);
   font-weight: 400;
+}
+/* The row hovered, or tapped (`active`, one at a time), takes a tint of the
+   source's colour, the document being the input as read. */
+.document-table tbody tr {
+  cursor: default;
+}
+.document-table tbody td {
+  transition: background-color 0.15s;
+}
+@media (hover: hover) {
+  .document-table tbody tr:hover td {
+    background: color-mix(in oklab, var(--from) 10%, var(--code-bg));
+  }
+}
+.document-table tbody tr.active td {
+  background: color-mix(in oklab, var(--from) 10%, var(--code-bg));
 }
 .document-table tr.invalid .index {
   font-weight: 700;
