@@ -7,10 +7,17 @@
  * - A conversion with the `./core` entry point keeps no module of a format,
  *   a preset, or a function it does not import: no other reader or writer,
  *   no validation of options without `prepareOptions()`, no metadata of the
- *   presets, no loss analysis without `convertDetailed()`.
- * - The sizes that the guide gives are those of the bundles, within 3 % (a
- *   change that moves one further has the page updated), and so are its
- *   percentages, within 2 points.
+ *   presets, no loss analysis without `convertDetailed()`. A reader imported
+ *   alone keeps no writer.
+ * - Inside a module that a bundle keeps, what it does not import is left out
+ *   too, which modules alone do not show: a bundle that imports every preset
+ *   weighs what the guide says more than one that imports one, and
+ *   `OptionError` alone weighs less than 1 kB, without the table of option
+ *   values beside it in `options.js`.
+ * - The sizes that the guide gives are those of the bundles, within 3 %, or
+ *   0.05 kB for the smallest, and so are its percentages, within 2 points. A
+ *   size that moves further is a module kept by mistake, more often than a
+ *   change to write in the guide.
  *
  * Run with `node scripts/check_bundles.ts` after `npm run npm:build`;
  * `npm run npm:check` does both.
@@ -51,6 +58,8 @@ const NEVER = [
 ];
 /** Modules that only `prepareOptions()` brings. */
 const VALIDATION = ["prepare_options.js", "presets.js", "options.js"];
+/** The most that `OptionError` imported alone may weigh, minified. */
+const OPTION_ERROR_BYTES = 1000;
 
 const SCENARIOS: Scenario[] = [
   {
@@ -183,22 +192,38 @@ async function bundle(
   };
 }
 
-/** The sizes of a row of the guide's table: in kB, and percentages. */
-function documented(guide: string, row: string): number[] {
+/** A cell of the guide's table, as `38.8 kB, 12.8 kB gzip (−41 %)`. */
+const CELL = /^(\d+\.\d) kB, (\d+\.\d) kB gzip \(([−+])(\d+) %\)$/;
+
+/**
+ * The sizes of a row of the guide's table, for a preset and for
+ * `prepareOptions()`: in kB, minified and with gzip, and the percentage.
+ */
+function documented(guide: string, row: string): number[][] {
   const line = guide.split("\n").find((text) => text.startsWith(`| ${row} `));
   if (line === undefined) {
     failures.push(`The guide has no row "${row}".`);
     return [];
   }
-  return [...line.matchAll(/(\d+\.\d) kB|\(([−+])(\d+) %\)/g)].map((match) =>
-    match[1] !== undefined
-      ? Number(match[1])
-      : (match[2] === "−" ? -1 : 1) * Number(match[3])
-  );
+  return line.split("|").slice(2, 4).map((cell) => {
+    const match = CELL.exec(cell.trim());
+    if (match === null) {
+      failures.push(
+        `The guide's row "${row}" has a cell that does not read ` +
+          `"38.8 kB, 12.8 kB gzip (−41 %)", with a minus sign: ${cell.trim()}`,
+      );
+      return [];
+    }
+    return [
+      Number(match[1]),
+      Number(match[2]),
+      (match[3] === "−" ? -1 : 1) * Number(match[4]),
+    ];
+  });
 }
 
 function compare(label: string, measured: number, written: number): void {
-  if (Math.abs(measured / written - 1) > 0.03) {
+  if (Math.abs(measured - written) > Math.max(0.03 * written, 0.05)) {
     failures.push(
       `${label}: the guide gives ${written} kB, the bundle is ${measured} kB.`,
     );
@@ -249,6 +274,78 @@ try {
     );
   }
 
+  const kept = async (label: string, code: string[], absent: string[]) => {
+    const result = await bundle(code.join("\n"));
+    for (const module of absent) {
+      if (result.modules.includes(module)) {
+        failures.push(`${label}: the bundle keeps ${module}.`);
+      }
+    }
+    return result;
+  };
+
+  await kept("A reader alone", [
+    `import { greekReader } from "${P}/greek";`,
+    "console.log(greekReader);",
+  ], [
+    ...NEVER,
+    ...VALIDATION,
+    "core.js",
+    "encode.js",
+    "prepared.js",
+    "formats/greek_writer.js",
+  ]);
+
+  const optionError = await kept(
+    "OptionError alone",
+    [`import { OptionError } from "${P}/core";`, "console.log(OptionError);"],
+    [...NEVER, "presets.js", "prepare_options.js", "prepared.js"],
+  );
+  if (optionError.size > OPTION_ERROR_BYTES) {
+    failures.push(
+      `OptionError alone: the bundle is ${optionError.size} bytes, more ` +
+        `than ${OPTION_ERROR_BYTES}: it keeps the table of option values.`,
+    );
+  }
+
+  // Every preset against one, for an application whose users choose.
+  const presetCode = (presets: string, options: string) => [
+    `import { convert } from "${P}/core";`,
+    `import ${presets} from "${P}/presets";`,
+    `import { greekReader } from "${P}/greek";`,
+    `import { transliterationWriter } from "${P}/transliteration";`,
+    `console.log(convert("λόγος", greekReader, transliterationWriter, ${options}));`,
+  ];
+  const onePreset = await kept(
+    "One preset",
+    presetCode("{ iso843Type2 }", "iso843Type2"),
+    [...NEVER, ...VALIDATION],
+  );
+  const everyPreset = await kept(
+    "Every preset",
+    presetCode("* as presets", "Object.values(presets)[Date.now() % 8]"),
+    [...NEVER, ...VALIDATION],
+  );
+  const every = guide.match(
+    /imports\s+them\s+all,\s+which\s+adds\s+(\d+\.\d) kB\s+\((\d+\.\d) kB\s+with\s+gzip\)/,
+  );
+  if (every === null) {
+    failures.push(
+      "The guide no longer gives what every preset adds to one.",
+    );
+  } else {
+    compare(
+      "Every preset against one",
+      kB(everyPreset.size - onePreset.size),
+      Number(every[1]),
+    );
+    compare(
+      "Every preset against one, gzip",
+      kB(everyPreset.gzip - onePreset.gzip),
+      Number(every[2]),
+    );
+  }
+
   for (const scenario of SCENARIOS) {
     const reference = references[scenario.function];
     const written = documented(guide, scenario.row);
@@ -276,17 +373,9 @@ try {
     ];
     for (const [index, variant] of variants.entries()) {
       const label = `${scenario.row}, with ${variant.name}`;
-      const result = await bundle(variant.code.join("\n"));
-      for (const module of variant.absent) {
-        if (result.modules.includes(module)) {
-          failures.push(`${label}: the bundle keeps ${module}.`);
-        }
-      }
-      const [size, gzip, percent] = written.slice(index * 3, index * 3 + 3);
-      if (percent === undefined) {
-        failures.push(`${label}: the guide's row has no sizes.`);
-        continue;
-      }
+      const result = await kept(label, variant.code, variant.absent);
+      const [size, gzip, percent] = written[index] ?? [];
+      if (percent === undefined) continue;
       compare(label, kB(result.size), size);
       compare(`${label}, gzip`, kB(result.gzip), gzip);
       const measured = Math.round((result.gzip / reference.gzip - 1) * 100);
@@ -304,12 +393,13 @@ try {
 if (failures.length > 0) {
   for (const failure of failures) console.error(failure);
   console.error(
-    "\nUpdate the guide on smaller bundles, or keep the modules out.",
+    "\nKeep out of these bundles what they do not import; update the guide " +
+      "on smaller bundles only for a change of size that is meant.",
   );
   process.exit(1);
 }
 console.log(
   `${
-    SCENARIOS.length * 2
+    SCENARIOS.length * 2 + 4
   } bundles keep only what they import, at the sizes the guide gives.`,
 );

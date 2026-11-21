@@ -6,9 +6,11 @@ description: "Bundle only the formats and presets a web application uses, with t
 The functions of the main entry point take the names of formats and options
 as values, which they read when they are called. A bundler cannot tell which
 of them an application will use: a bundle that imports `convert()` keeps
-every format, every preset, and the validation of options, about 67 kB
+every format, every preset, and the validation of options, about 68 kB
 minified (22 kB with gzip). On a server, this costs nothing that matters,
-and the main entry point is the one to use.
+and the main entry point is the one to use. The functions of `core`, which
+check no options when they are called, convert a single word up to a fifth
+faster, a difference that fades on longer texts.
 
 For a web page, the `core` entry point converts with the same functions,
 given readers, writers, and options that the application imports. A bundle
@@ -115,23 +117,48 @@ try {
 Bundles of the conversions below, made with esbuild for this release,
 minified, then with gzip. The percentage compares the size with gzip to that
 of the same conversion imported from the main entry point: `convert()`
-(67.4 kB, 21.7 kB with gzip), or `convertDetailed()` (75.8 kB, 24.5 kB).
+(67.7 kB, 21.8 kB with gzip), or `convertDetailed()` (76.2 kB, 24.6 kB).
 
 | Conversions                                   | With a preset or the defaults | With `prepareOptions()`       |
 | --------------------------------------------- | ----------------------------- | ----------------------------- |
-| Greek to Beta Code                            | 31.3 kB, 11.0 kB gzip (−49 %) | 39.2 kB, 13.3 kB gzip (−39 %) |
-| Beta Code to Greek                            | 35.1 kB, 12.1 kB gzip (−44 %) | 43.0 kB, 14.4 kB gzip (−34 %) |
-| Greek to transliteration                      | 38.8 kB, 12.8 kB gzip (−41 %) | 46.8 kB, 15.1 kB gzip (−30 %) |
-| Greek and transliteration both ways           | 54.2 kB, 17.5 kB gzip (−19 %) | 62.2 kB, 19.8 kB gzip (−9 %)  |
-| Every format both ways                        | 60.5 kB, 19.6 kB gzip (−10 %) | 68.5 kB, 22.0 kB gzip (+1 %)  |
-| `convertDetailed()`, Greek to transliteration | 62.9 kB, 20.3 kB gzip (−17 %) | 70.8 kB, 22.7 kB gzip (−7 %)  |
+| Greek to Beta Code                            | 31.9 kB, 11.2 kB gzip (−49 %) | 40.1 kB, 13.6 kB gzip (−38 %) |
+| Beta Code to Greek                            | 35.6 kB, 12.2 kB gzip (−44 %) | 43.9 kB, 14.7 kB gzip (−33 %) |
+| Greek to transliteration                      | 39.4 kB, 13.0 kB gzip (−41 %) | 47.7 kB, 15.4 kB gzip (−29 %) |
+| Greek and transliteration both ways           | 54.8 kB, 17.7 kB gzip (−19 %) | 63.1 kB, 20.1 kB gzip (−8 %)  |
+| Every format both ways                        | 61.1 kB, 19.8 kB gzip (−9 %)  | 69.4 kB, 22.3 kB gzip (+2 %)  |
+| `convertDetailed()`, Greek to transliteration | 63.4 kB, 20.5 kB gzip (−17 %) | 71.7 kB, 23.0 kB gzip (−6 %)  |
 
 The `core` entry point is worth it with a preset or the defaults, unless the
 application reads and writes every format. With `prepareOptions()`, it is
 worth it when transliteration is written or read, not both. An application
-whose users choose the formats needs them all, and gains little; one whose
-users choose among the presets imports them all, for 3.4 kB (1.2 kB with
-gzip).
+whose users choose the formats needs them all, and gains little.
+
+An application whose users choose among the presets imports those it
+offers. If it imports them all, which adds 1.5 kB (0.4 kB with gzip) to a
+bundle with one preset, it still gains nearly as much. A record of its own
+gives them the identifiers of the main entry point:
+
+```ts
+import { convert } from "@humanities/greek-conversion/core";
+import { greekReader } from "@humanities/greek-conversion/greek";
+import * as presets from "@humanities/greek-conversion/presets";
+import {
+  transliterationWriter,
+} from "@humanities/greek-conversion/transliteration";
+
+// The presets offered, by the identifiers of the main entry point.
+const offered = {
+  "iso-843-type-2": presets.iso843Type2,
+  "sbl-general": presets.sblGeneral,
+};
+const chosen: keyof typeof offered = "sbl-general";
+convert("Θεσσαλονίκη", greekReader, transliterationWriter, offered[chosen]);
+// → Thessalonikē
+```
+
+A bundler keeps only the presets that the record reads. The application
+writes the names that it shows: `listPresetMetadata()`, from the main entry
+point, would bring the metadata of every preset, about 10 kB.
 
 ## Keeping the gain
 
@@ -147,6 +174,10 @@ gzip).
   that declare no side effects, as this one does: esbuild, Rollup, Vite, and
   webpack in production mode. esbuild's `--metafile` and its analyzer, or a
   bundle visualizer, show which modules a bundle holds.
+- **Keep the values as they are.** Readers, writers, and prepared options
+  are frozen, so that the reactive state of a framework, such as Vue's
+  `reactive()` or `ref()`, keeps them without wrapping them in a `Proxy`. A
+  copy or a wrapper of one is not one.
 - **One copy of the library.** Readers, writers, and prepared options belong
   to the copy of the library that made them: a function of another copy,
   such as a second version installed beside it, does not take them. A worker

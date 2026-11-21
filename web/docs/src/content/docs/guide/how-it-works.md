@@ -55,6 +55,7 @@ its default, an example, and the presets that select it.
 | [Know whether the conversion loses information, and where each token went](/guide/losses/) | `convertDetailed(input, from, to, options?)`                          |
 | [Bind a preset, add characters, or restrict the repertoire](/guide/converters/)            | `createConverter(configuration)`                                      |
 | [Inspect or edit the parsed text itself](/guide/document/)                                 | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
+| [Bundle only the formats and presets a web page uses](/guide/smaller-bundles/)             | `convert()` from `@humanities/greek-conversion/core`                  |
 
 ```ts
 import { convert, reencode } from "@humanities/greek-conversion";

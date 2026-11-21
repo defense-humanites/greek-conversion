@@ -18,8 +18,8 @@ change.
   (`iso843Type2` for `iso-843-type-2`, and so on), and other options are
   prepared once by `prepareOptions()`, which takes what the main entry point
   takes. A bundle keeps only what it imports: Greek to transliteration with a
-  preset weighs 38.8 kB minified, 12.8 kB with gzip, where `convert()` from
-  the main entry point weighs 67.4 kB, 21.7 kB with gzip. The results are
+  preset weighs 39.4 kB minified, 13.0 kB with gzip, where `convert()` from
+  the main entry point weighs 67.7 kB, 21.8 kB with gzip. The results are
   those of the main entry point. The guide on smaller bundles compares the
   cases; an application that reads and writes every format, or a server,
   gains little or nothing.
@@ -35,7 +35,7 @@ change.
   change alone; the error names the preset to write instead.
 - **Bundle size.** The main entry point converts through the readers and
   writers that the `core` entry point takes, so that both convert alike: a
-  bundle that imports `convert()` grows by 1.2 kB minified, 0.4 kB with gzip.
+  bundle that imports `convert()` grows by 1.5 kB minified, 0.5 kB with gzip.
 
 ## [1.0.0-rc.11] - 2026-11-20
 

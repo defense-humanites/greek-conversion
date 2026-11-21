@@ -55,9 +55,7 @@ class Prepared {
 
   constructor(made: symbol, profiles: Profiles, preset: string | null) {
     if (made !== MADE) {
-      throw new TypeError(
-        'Prepared options are imported from "./presets" or prepared.',
-      );
+      throw new TypeError("Illegal constructor");
     }
     this.#profiles = profiles;
     this[PREPARED] = preset;

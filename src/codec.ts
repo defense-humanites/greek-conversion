@@ -152,9 +152,7 @@ class Codec {
     writer: WriterHooks | undefined,
   ) {
     if (made !== MADE) {
-      throw new TypeError(
-        "Readers and writers are imported from the entry points of formats.",
-      );
+      throw new TypeError("Illegal constructor");
     }
     this.#reader = reader && Object.freeze(reader);
     this.#writer = writer && Object.freeze(writer);

@@ -1,5 +1,4 @@
-The package has two entry points that most programs need, and only the
-first in most cases:
+Most programs need only the first of the package's two main entry points:
 
 - `@humanities/greek-conversion`: the conversion functions, converters,
   options, presets, and their types;

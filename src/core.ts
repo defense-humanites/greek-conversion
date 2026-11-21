@@ -8,7 +8,7 @@
  * `./presets`, as prepared options. Other options are prepared once with
  * {@link prepareOptions}, which brings their validation into the bundle. A
  * bundle that converts Greek into transliteration with a preset is then
- * about half the size of one that imports `convert()` from the main entry
+ * about 40 % smaller than one that imports `convert()` from the main entry
  * point. The guide on smaller bundles compares the cases: an application
  * that reads and writes every format, or lets its users choose them, gains
  * little, and a server none.
@@ -282,7 +282,7 @@ function kind(value: unknown): string {
     ? "a writer"
     : hasPreparedMark(value)
     ? Object.getPrototypeOf(value) === Object.prototype
-      ? "a copy of prepared options, which holds none of them"
+      ? "a copy of prepared options"
       : "prepared options"
     : "an object";
 }

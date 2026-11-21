@@ -409,7 +409,7 @@ test("prepared options spread into options are refused, with what to write", () 
         { ...presets.sblGeneral },
       ),
     TypeError,
-    "Expected prepared options, received a copy of prepared options, which holds none of them:",
+    "Expected prepared options, received a copy of prepared options:",
   );
 });
 

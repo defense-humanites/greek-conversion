@@ -337,7 +337,7 @@ export function transliterationGlyphForm(
 }
 
 /** The letters that Beta Code writes as a TLG `#` code (`#2`, stigma). */
-const HASH_CODE_LETTERS: ReadonlySet<Letter> = new Set(
+const HASH_CODE_LETTERS: ReadonlySet<Letter> = /* @__PURE__ */ new Set(
   (Object.keys(ALPHABET) as Letter[]).filter((letter) =>
     ALPHABET[letter].beta.startsWith("#")
   ),
