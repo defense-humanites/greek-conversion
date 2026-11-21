@@ -82,18 +82,22 @@ export interface WriterHooks {
   ): string;
 }
 
+// The types do not say which format a reader or a writer is of: the
+// declarations that npm consumers read replace private fields with
+// `#private`, which would drop a type parameter carried by one. A parameter,
+// with a default, can be added in a minor release, on a member that the
+// declarations keep.
+
 /**
  * A reader: what reads one format, for the functions of the `./core` entry
  * point. Readers are imported from the entry point of their format
  * (`greekReader` from `./greek`, for instance); the type has no member to
  * use, and an object of another shape is not one.
- *
- * @typeParam F The format read.
  */
-export declare class Reader<F extends Format = Format> {
+export declare class Reader {
   // The brand that makes the type nominal, declared only.
   // oxlint-disable-next-line no-unused-private-class-members
-  #reader: F;
+  #reader: true;
   /** Readers are imported from the entry points of formats, not made. */
   private constructor();
 }
@@ -103,13 +107,11 @@ export declare class Reader<F extends Format = Format> {
  * point. Writers are imported from the entry point of their format
  * (`greekWriter` from `./greek`, for instance); the type has no member to
  * use, and an object of another shape is not one.
- *
- * @typeParam F The format written.
  */
-export declare class Writer<F extends Format = Format> {
+export declare class Writer {
   // The brand that makes the type nominal, declared only.
   // oxlint-disable-next-line no-unused-private-class-members
-  #writer: F;
+  #writer: true;
   /** Writers are imported from the entry points of formats, not made. */
   private constructor();
 }
@@ -119,10 +121,8 @@ export declare class Writer<F extends Format = Format> {
  * what `convertDetailed()` and `reencode()` of the `./core` entry point take,
  * since they read what they write, or compare letter forms in the source
  * format.
- *
- * @typeParam F The format read and written.
  */
-export type ReaderWriter<F extends Format = Format> = Reader<F> & Writer<F>;
+export type ReaderWriter = Reader & Writer;
 
 /** What the library passes to make a handle: `new` from outside throws. */
 const MADE = Symbol();
@@ -176,27 +176,20 @@ Object.freeze(Codec.prototype);
 Object.freeze(Codec);
 
 /** A reader of the format that `hooks` read. */
-export function makeReader<F extends Format>(
-  hooks: ReaderHooks & { readonly format: F },
-): Reader<F> {
-  return new Codec(MADE, hooks, undefined) as unknown as Reader<F>;
+export function makeReader(hooks: ReaderHooks): Reader {
+  return new Codec(MADE, hooks, undefined) as unknown as Reader;
 }
 
 /** A writer of the format that `hooks` write. */
-export function makeWriter<F extends Format>(
-  hooks: WriterHooks & { readonly format: F },
-): Writer<F> {
-  return new Codec(MADE, undefined, hooks) as unknown as Writer<F>;
+export function makeWriter(hooks: WriterHooks): Writer {
+  return new Codec(MADE, undefined, hooks) as unknown as Writer;
 }
 
 /** The reader and the writer of one format, as one value. */
-export function joinCodecs<F extends Format>(
-  reader: Reader<F>,
-  writer: Writer<F>,
-): ReaderWriter<F> {
+export function joinCodecs(reader: Reader, writer: Writer): ReaderWriter {
   return new Codec(
     MADE,
     readerHooks(reader),
     writerHooks(writer),
-  ) as unknown as ReaderWriter<F>;
+  ) as unknown as ReaderWriter;
 }

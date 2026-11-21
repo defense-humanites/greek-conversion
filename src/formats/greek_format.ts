@@ -22,7 +22,7 @@ import { greekWriter } from "./greek_writer.ts";
  * reencode("λο\u0301γος", greekFormat); // "λόγος", composed
  * ```
  */
-export const greekFormat: ReaderWriter<"greek"> = /* @__PURE__ */ joinCodecs(
+export const greekFormat: ReaderWriter = /* @__PURE__ */ joinCodecs(
   greekReader,
   greekWriter,
 );

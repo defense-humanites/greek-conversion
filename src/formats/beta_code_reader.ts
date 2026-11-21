@@ -28,6 +28,6 @@ export const BETA_CODE_READING: ReaderHooks & {
  * convert("lo/gos", betaCodeReader, greekWriter); // "λόγος"
  * ```
  */
-export const betaCodeReader: Reader<"beta-code"> = /* @__PURE__ */ makeReader(
+export const betaCodeReader: Reader = /* @__PURE__ */ makeReader(
   BETA_CODE_READING,
 );

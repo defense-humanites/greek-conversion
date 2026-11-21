@@ -22,5 +22,7 @@ import { betaCodeWriter } from "./beta_code_writer.ts";
  * reencode("LO/GOS", betaCodeFormat); // "lo/gos"
  * ```
  */
-export const betaCodeFormat: ReaderWriter<"beta-code"> =
-  /* @__PURE__ */ joinCodecs(betaCodeReader, betaCodeWriter);
+export const betaCodeFormat: ReaderWriter = /* @__PURE__ */ joinCodecs(
+  betaCodeReader,
+  betaCodeWriter,
+);

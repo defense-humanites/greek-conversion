@@ -26,6 +26,6 @@ export const GREEK_READING: ReaderHooks & { readonly format: "greek" } = {
  * convert("λόγος", greekReader, transliterationWriter); // "lógos"
  * ```
  */
-export const greekReader: Reader<"greek"> = /* @__PURE__ */ makeReader(
+export const greekReader: Reader = /* @__PURE__ */ makeReader(
   GREEK_READING,
 );

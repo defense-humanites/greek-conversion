@@ -67,8 +67,13 @@ import { betaCodeWriter } from "@humanities/greek-conversion/beta-code";
 import { transliterationFormat } from "@humanities/greek-conversion/transliteration";
 import { alaLcModern } from "@humanities/greek-conversion/presets";
 
-const reader: Reader<"greek"> = greekReader;
+const reader: Reader = greekReader;
 const both: ReaderWriter = transliterationFormat;
+// @ts-expect-error: the types are nominal, and an object is not a reader.
+const forged: Reader = {};
+void forged;
+// @ts-expect-error: prepared options are not a reader.
+convert("ἄ", alaLcModern, betaCodeWriter);
 const prepared: PreparedOptions = prepareOptions({ preset: "ala-lc-modern" });
 const beta: string = convert("ἄ", reader, betaCodeWriter, alaLcModern);
 convertDetailed(beta, greekFormat, both, prepared);

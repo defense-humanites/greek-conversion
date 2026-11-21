@@ -35,6 +35,6 @@ export const GREEK_WRITING: WriterHooks & { readonly format: "greek" } = {
  * convert("lo/gos", betaCodeReader, greekWriter); // "λόγος"
  * ```
  */
-export const greekWriter: Writer<"greek"> = /* @__PURE__ */ makeWriter(
+export const greekWriter: Writer = /* @__PURE__ */ makeWriter(
   GREEK_WRITING,
 );

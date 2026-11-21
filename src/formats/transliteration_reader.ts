@@ -29,5 +29,6 @@ export const TRANSLITERATION_READING: ReaderHooks & {
  * convert("lógos", transliterationReader, greekWriter); // "λόγος"
  * ```
  */
-export const transliterationReader: Reader<"transliteration"> =
-  /* @__PURE__ */ makeReader(TRANSLITERATION_READING);
+export const transliterationReader: Reader = /* @__PURE__ */ makeReader(
+  TRANSLITERATION_READING,
+);

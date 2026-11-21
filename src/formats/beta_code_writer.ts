@@ -37,6 +37,6 @@ export const BETA_CODE_WRITING: WriterHooks & {
  * convert("λόγος", greekReader, betaCodeWriter); // "lo/gos"
  * ```
  */
-export const betaCodeWriter: Writer<"beta-code"> = /* @__PURE__ */ makeWriter(
+export const betaCodeWriter: Writer = /* @__PURE__ */ makeWriter(
   BETA_CODE_WRITING,
 );

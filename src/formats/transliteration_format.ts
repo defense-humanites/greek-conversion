@@ -22,5 +22,7 @@ import { transliterationWriter } from "./transliteration_writer.ts";
  * reencode("lo\u0301gos", transliterationFormat); // "lógos", composed
  * ```
  */
-export const transliterationFormat: ReaderWriter<"transliteration"> =
-  /* @__PURE__ */ joinCodecs(transliterationReader, transliterationWriter);
+export const transliterationFormat: ReaderWriter = /* @__PURE__ */ joinCodecs(
+  transliterationReader,
+  transliterationWriter,
+);
