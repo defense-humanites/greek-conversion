@@ -1,8 +1,10 @@
-import {
-  encodeBetaCode,
-  encodeGreek,
-  encodeTransliteration,
-} from "./encode.ts";
+import type { ReaderHooks, WriterHooks } from "./codec.ts";
+import { BETA_CODE_READING } from "./formats/beta_code_reader.ts";
+import { BETA_CODE_WRITING } from "./formats/beta_code_writer.ts";
+import { GREEK_READING } from "./formats/greek_reader.ts";
+import { GREEK_WRITING } from "./formats/greek_writer.ts";
+import { TRANSLITERATION_READING } from "./formats/transliteration_reader.ts";
+import { TRANSLITERATION_WRITING } from "./formats/transliteration_writer.ts";
 import {
   assertFormat,
   assertTextInput,
@@ -14,28 +16,39 @@ import type {
   ResolvedConversionOptions,
 } from "./options.ts";
 import {
-  applyNumeralOrthography,
-  applyOrthography,
-  readFinalSigmaStigmas,
-} from "./orthography.ts";
-import { parseBetaCode } from "./parsers/beta_code.ts";
-import { supplyKaiAccents } from "./kai_accent.ts";
-import { readStigmaLigatures } from "./ligatures.ts";
-import { parseGreek } from "./parsers/greek.ts";
-import {
-  outputSpans,
   type ReadPositions,
   readSpans,
   type SpanTable,
-  type TokenTargets,
-  type WrittenPositions,
-  writtenSpans,
 } from "./parsers/positions.ts";
-import { parseTransliteration } from "./parsers/transliteration.ts";
+import { readWith, writeTracked, writeWith } from "./pipeline.ts";
 import {
   resolveConversionOptions,
   resolveConversionProfiles,
 } from "./presets.ts";
+
+/** How each format is read: the hooks of its reader (see `codec.ts`). */
+const READERS: Readonly<Record<Format, ReaderHooks>> = {
+  greek: GREEK_READING,
+  "beta-code": BETA_CODE_READING,
+  transliteration: TRANSLITERATION_READING,
+};
+
+/** How each format is written: the hooks of its writer (see `codec.ts`). */
+const WRITERS: Readonly<Record<Format, WriterHooks>> = {
+  greek: GREEK_WRITING,
+  "beta-code": BETA_CODE_WRITING,
+  transliteration: TRANSLITERATION_WRITING,
+};
+
+/**
+ * The hooks of the writer of a format: those of the handle that the
+ * `./core` entry point would be given.
+ *
+ * Internal: not exported by the package entry points.
+ */
+export function writerFor(format: Format): WriterHooks {
+  return WRITERS[format];
+}
 
 /** Where a token was read: a range of UTF-16 code units in the input. */
 export interface TokenSpan {
@@ -145,29 +158,7 @@ export function parseResolved(
   share = false,
   read?: ReadPositions,
 ): Document {
-  const document = format === "greek"
-    ? readStigmas(input, parseGreek(input, share, read))
-    : format === "beta-code"
-    ? readStigmas(input, parseBetaCode(input, share, read))
-    : parseTransliteration(input, options, read);
-  return options.greek.stigma === "ligature"
-    ? readStigmaLigatures(document, read?.starts)
-    : document;
-}
-
-/**
- * The right keraia as Greek and Beta Code write it: `ʹ`, the Greek numeral
- * sign that NFC turns into it, and Beta Code `#`.
- */
-const KERAIA = /[#\u0374\u02B9]/;
-
-/**
- * Greek and Beta Code note the final sigma, which writes a stigma as the
- * units of a numeral, before a right keraia. An input without one, most
- * text, is not searched for them.
- */
-function readStigmas(input: string, document: Document): Document {
-  return KERAIA.test(input) ? readFinalSigmaStigmas(document) : document;
+  return readWith(READERS[format], input, options, share, read);
 }
 
 /**
@@ -200,19 +191,7 @@ export function encodeResolved(
   format: Format,
   options: ResolvedConversionOptions,
 ): string {
-  const accented = supplyKaiAccents(document, format, options);
-  const prepared = format === "transliteration"
-    ? applyNumeralOrthography(accented, options, undefined, format)
-    : applyOrthography(accented, options, undefined, format);
-
-  switch (format) {
-    case "greek":
-      return encodeGreek(prepared, options);
-    case "beta-code":
-      return encodeBetaCode(prepared, options);
-    case "transliteration":
-      return encodeTransliteration(prepared, options);
-  }
+  return writeWith(WRITERS[format], document, options);
 }
 
 /**
@@ -230,32 +209,5 @@ export function encodeTracked(
   format: Format,
   options: ResolvedConversionOptions,
 ): { output: string; spans: SpanTable } {
-  const targets: TokenTargets = {};
-  const accented = supplyKaiAccents(document, format, options);
-  const prepared = format === "transliteration"
-    ? applyNumeralOrthography(accented, options, targets, format)
-    : applyOrthography(accented, options, targets, format);
-  const written: WrittenPositions = {
-    text: "",
-    starts: new Array<number>(prepared.length).fill(0),
-    ends: new Array<number>(prepared.length).fill(0),
-  };
-
-  let output: string;
-  let form: "NFC" | "NFD" = "NFC";
-  switch (format) {
-    case "greek":
-      output = encodeGreek(prepared, options, written);
-      if (options.greek.composition === "decomposed") form = "NFD";
-      break;
-    case "beta-code":
-      output = encodeBetaCode(prepared, options, written);
-      break;
-    case "transliteration":
-      output = encodeTransliteration(prepared, options, written);
-      break;
-  }
-
-  const rendered = writtenSpans(output, written, form);
-  return { output, spans: outputSpans(targets.map, rendered, output.length) };
+  return writeTracked(WRITERS[format], document, options);
 }

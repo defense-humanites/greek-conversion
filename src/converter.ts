@@ -4,6 +4,7 @@ import {
   encodeTracked,
   parse,
   parseResolved,
+  writerFor,
 } from "./conversion.ts";
 import {
   type ConversionLoss,
@@ -408,7 +409,7 @@ export class Converter {
           "spans",
         ).spans!,
       }),
-      { format: from, options: reading },
+      { glyphForm: writerFor(from).glyphForm, options: reading },
     );
     const spans: ConversionSpan[] = new Array(prepared.document.length);
     for (let index = 0; index < spans.length; index++) {

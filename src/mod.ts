@@ -9,7 +9,12 @@
  * @module
  */
 
-import { encodeResolved, encodeTracked, parseResolved } from "./conversion.ts";
+import {
+  encodeResolved,
+  encodeTracked,
+  parseResolved,
+  writerFor,
+} from "./conversion.ts";
 export { CharacterScopeError, createConverter } from "./converter.ts";
 export type {
   CharacterAliasDefinition,
@@ -230,7 +235,7 @@ export function convertDetailed(
       parseResolved(output, to, resolved, true, reread);
       return { written: outputSpans, read: readSpans(output, reread) };
     },
-    { format: from, options: reading },
+    { glyphForm: writerFor(from).glyphForm, options: reading },
   );
 
   const spans: ConversionSpan[] = new Array(source.length);

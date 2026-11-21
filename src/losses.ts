@@ -1,11 +1,10 @@
+import type { WriterHooks } from "./codec.ts";
 import { isVowel, type QuotationContext } from "./context.ts";
-import { glyphForm } from "./encode.ts";
 import { ACCENTS } from "./kai_accent.ts";
 import { sharedMask } from "./model.ts";
 import type {
   Diacritic,
   Document,
-  Format,
   GlyphVariant,
   Grapheme,
   Token,
@@ -209,11 +208,12 @@ function addKaiAccent(
 }
 
 /**
- * The format the source was read from and the options that write it: those
- * of the conversion, or its `source` profile.
+ * How the format the source was read from writes letter forms (the
+ * `glyphForm` hook of its writer), and the options that write it: those of
+ * the conversion, or its `source` profile.
  */
 export interface SourceGlyphs {
-  readonly format: Format;
+  readonly glyphForm: WriterHooks["glyphForm"];
   readonly options: ConversionOptions;
 }
 
@@ -233,7 +233,7 @@ type GlyphComparison = (
 
 function glyphComparison(
   document: Document,
-  { format, options }: SourceGlyphs,
+  { glyphForm, options }: SourceGlyphs,
 ): GlyphComparison {
   const quotations: QuotationContext = {};
   // The target is compared in the source's case: `changed-case` reports the
@@ -241,14 +241,13 @@ function glyphComparison(
   // (`ϑ` → `Θ`) and the options do not write it again.
   return (index, source, target) =>
     source.glyphVariant === target.glyphVariant ||
-    glyphForm(document, index, source, format, options, quotations) ===
+    glyphForm(document, index, source, options, quotations) ===
       glyphForm(
         document,
         index,
         target.uppercase === source.uppercase
           ? target
           : { ...target, uppercase: source.uppercase },
-        format,
         options,
         quotations,
       );
