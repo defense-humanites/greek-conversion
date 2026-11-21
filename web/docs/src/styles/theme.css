@@ -557,6 +557,12 @@ site-search button[data-open-modal] > kbd kbd {
 site-search dialog {
   border-radius: var(--radius);
 }
+/* Behind the search dialog, the page's own colour rather than Starlight's
+   grey veil: the page shows through, blurred, tone on tone, and the
+   browser's bars, tinted from the page, match it. */
+site-search dialog::backdrop {
+  background-color: color-mix(in oklab, var(--surface) 82%, transparent);
+}
 /* On a phone, where it covers the screen, the dialog keeps a margin on its
    four sides, as the header keeps its text from the edges. */
 @media (max-width: 49.99rem) {
