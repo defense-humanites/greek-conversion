@@ -53,17 +53,31 @@ export interface Difference {
 }
 
 /**
- * Changes of output that are meant: the label of the options, the call, and
- * the input, as a difference reports them, with the reason. Empty while the
- * reference is the release before the one in preparation and no output is
- * meant to change.
+ * A change of output that is meant: the input, and, where it changes under
+ * some options or calls only, their label and the call, as a difference
+ * reports them, with the reason.
  */
-export const MEANT: readonly {
-  label: string;
-  call: string;
+export interface MeantChange {
   input: string;
+  label?: string;
+  call?: string;
   reason: string;
-}[] = [];
+}
+
+/**
+ * The changes of output that are meant, until the reference moves to the
+ * release that makes them. `scripts/differential_changes.ts` lists the
+ * inputs that change.
+ */
+export const MEANT: readonly MeantChange[] = [];
+
+/** Whether `MEANT` lists a difference. */
+function isMeant(label: string, call: string, input: string): boolean {
+  return MEANT.some((meant) =>
+    meant.input === input && (meant.label ?? label) === label &&
+    (meant.call ?? call) === call
+  );
+}
 
 /**
  * The options compared by default: the defaults, every preset, the options
@@ -191,9 +205,7 @@ export function compareConversions(
     const actual = outcome(run);
     if (
       expected !== actual && differences.length < limit &&
-      !MEANT.some((meant) =>
-        meant.label === label && meant.call === call && meant.input === input
-      )
+      !isMeant(label, call, input)
     ) {
       differences.push({
         label,
@@ -278,10 +290,7 @@ export function compareConverters(
           const call = `createConverter().${method}(${from} → ${to})`;
           if (
             expected !== actual && differences.length < limit &&
-            !MEANT.some((meant) =>
-              meant.label === label && meant.call === call &&
-              meant.input === input
-            )
+            !isMeant(label, call, input)
           ) {
             differences.push({
               label,
