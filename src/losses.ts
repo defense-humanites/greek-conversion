@@ -153,6 +153,10 @@ export function findConversionLosses(
     ? undefined
     : pairByPosition(source, target, positions(), sameGlyph);
   const counterparts = paired?.counterparts;
+  // The accent of καί is looked for only where the source has a καί symbol.
+  const kaiSymbols = source.some((token) =>
+    token.kind === "grapheme" && token.glyphVariant === "kai-symbol"
+  );
 
   for (let index = 0; index < source.length; index++) {
     if (paired?.spelled[index] === 1) continue;
@@ -169,7 +173,7 @@ export function findConversionLosses(
     } else {
       addTokenLoss(losses, source, target, index, counterpart, sameGlyph);
     }
-    if (counterpart !== undefined) {
+    if (kaiSymbols && counterpart !== undefined) {
       addKaiAccent(losses, source, target, index, counterpart);
     }
   }

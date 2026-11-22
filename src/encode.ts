@@ -772,6 +772,12 @@ export function encodeTransliteration(
 
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
+      // A space, the most frequent literal, ends a word and is written as
+      // itself.
+      if (token.value === " ") {
+        afterLetter = false;
+        return " ";
+      }
       if (isKeptLetter(token)) {
         if (!afterLetter) wordStart = -1;
         afterLetter = true;
