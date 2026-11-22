@@ -157,10 +157,11 @@ const wordmark = drawing("name", name);
    * width, 1.25% of its height), the right one straightening out of its 2°
    * about the point it turns on (59.7%, 29.1% of the frame), then come back
    * to their places without overshooting, which would close the break. As
-   * they arrive, the whole tessera gives the bounce of the site's buttons,
-   * from its centre (50.2%, 27.6%): it shrinks to 96% in 60ms, then springs
-   * back in 320ms with their overshoot (--squish, --ease-bounce). Once a
-   * session (`played`), for those who do not ask for less motion.
+   * they arrive, the whole tessera bounces, from its centre (50.2%, 27.6%),
+   * as the site's buttons do but more markedly, the closing beat: it
+   * shrinks to 90% in 70ms, springs past its size to 106%, then settles
+   * with a last small give (98.5%), 0.6s in all. Once a session (`played`),
+   * for those who do not ask for less motion.
    */
   @media (prefers-reduced-motion: no-preference) {
     .logo:not(.played) :global(.half) {
@@ -178,7 +179,7 @@ const wordmark = drawing("name", name);
     .logo:not(.played) .tessera {
       transform-origin: 50.2% 27.6%;
       animation-name: tessera-bounce;
-      animation-duration: 0.38s;
+      animation-duration: 0.6s;
       animation-delay: 0.85s;
       animation-fill-mode: both;
     }
@@ -188,9 +189,17 @@ const wordmark = drawing("name", name);
       scale: 1;
       animation-timing-function: ease-in;
     }
-    16% {
-      scale: var(--squish);
-      animation-timing-function: var(--ease-bounce);
+    12% {
+      scale: 0.9;
+      animation-timing-function: cubic-bezier(0.2, 0, 0.3, 1);
+    }
+    42% {
+      scale: 1.06;
+      animation-timing-function: ease-in-out;
+    }
+    68% {
+      scale: 0.985;
+      animation-timing-function: ease-in-out;
     }
     100% {
       scale: 1;
