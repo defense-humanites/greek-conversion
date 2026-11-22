@@ -59,6 +59,13 @@ change.
     which no Greek has, as a tilde where the circumflex is U+0302 (ISO 843,
     BnF): `ŝ` and `ĉ` read back as sampi and stigma, and `c̄̂` as a stigma
     without it.
+- A middle dot in transliteration or Beta Code, which the readers keep as a
+  literal, is reported lost in Greek output, which reads it as the ano
+  teleia: `lógos· ésti` gave `λόγος· ἔστι` without a loss. The Beta Code
+  reader keeps the Greek ano teleia U+0387 as the middle dot that
+  normalization makes of it, as the transliteration reader does: it read it
+  as the ano teleia, and wrote it `:`. No option reads the middle dot as the
+  ano teleia: one could be added for texts that need it.
 
 ## [1.0.0-rc.12] - 2026-11-22
 

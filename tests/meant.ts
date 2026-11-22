@@ -27,6 +27,9 @@ const CAPITAL_SIGNS =
   "A capital sign alone between words in capitals is read in capitals; the losses of an output in capitals change.";
 const BNF_KERAIA =
   "BnF writes a keraia as ʹ after anything but a letter without an accent, where an acute would not read back as one.";
+const MIDDLE_DOT =
+  "A middle dot, a literal in transliteration and Beta Code, is reported lost in Greek output, which reads it as the ano teleia.";
+const DETAILED_TO_GREEK = "convertDetailed(transliteration → greek)";
 
 /** The changes of output that are meant. */
 export const MEANT: readonly MeantChange[] = [
@@ -255,4 +258,20 @@ export const MEANT: readonly MeantChange[] = [
   { input: "#1532) tou= #1532)gw/", reason: CAPITAL_SIGNS },
   { input: "#1532 tou= *#1531 #1521)tos", reason: CAPITAL_SIGNS },
   { input: "#1532) a)nh/r", reason: CAPITAL_SIGNS },
+  { input: "\u0300 '1·ē", call: DETAILED_TO_GREEK, reason: MIDDLE_DOT },
+  { input: "nP Xm·;Ō;Xī\u0300)", call: DETAILED_TO_GREEK, reason: MIDDLE_DOT },
+  { input: "GK;T\u0308·ĒùGyúâD", call: DETAILED_TO_GREEK, reason: MIDDLE_DOT },
+  { input: "·3", call: DETAILED_TO_GREEK, reason: MIDDLE_DOT },
+  {
+    input: "\u0313éz·BúG\u0300\u0300Tàu'a",
+    call: DETAILED_TO_GREEK,
+    reason: MIDDLE_DOT,
+  },
+  { input: "· )NT", call: DETAILED_TO_GREEK, reason: MIDDLE_DOT },
+  { input: "gY·M\u0313\u03426pn", call: DETAILED_TO_GREEK, reason: MIDDLE_DOT },
+  {
+    input: "0ca3ī·ô\u0300xă\u0342",
+    call: DETAILED_TO_GREEK,
+    reason: MIDDLE_DOT,
+  },
 ];

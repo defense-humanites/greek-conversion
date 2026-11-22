@@ -93,7 +93,8 @@ characters in Beta Code or transliteration, and in Beta Code the Unicode
 combining marks, which are not Beta Code. A writer copies those literals,
 and a reader of the target format may then read them: `ϗ` in a Beta Code
 source is a literal, which Greek output copies, and which Greek reads as
-`και`. Converting such output again may change it, and `convertDetailed()`
+`και`, as it reads a middle dot as the ano teleia (see
+[Punctuation and numerals](punctuation-and-numerals.md#consequences)). Converting such output again may change it, and `convertDetailed()`
 reports the loss of the literal (`unrepresented-literal`). Type `#1532` in
 Beta Code, and `kai` in transliteration, or the accent's own code (`a/`)
 rather than U+0301. The breathings and accents that older editions print
