@@ -38,11 +38,9 @@ change.
 - **Speed.** Conversions are as fast as in rc.10 or faster, where rc.11 had
   made them 3 to 12 % slower. On Thucydides 1.1–10, Greek into Beta Code is
   26 % faster than in rc.10, Beta Code into Greek 16 %, Greek into Greek
-  12 %, and Greek into transliteration 4 %; a word converts 8 to 24 %
+  12 %, and Greek into transliteration 7 %; a word converts 8 to 24 %
   faster, the options that conversions take most often being resolved once.
-  `convertDetailed()` from Greek into transliteration remains 3 to 5 %
-  slower than in rc.10, against 6 to 11 % in rc.11. No output changes: a
-  test compares the library with the previous release.
+  No output changes: a test compares the library with the previous release.
 - **Bundle size.** The main entry point converts through the readers and
   writers that the `core` entry point takes, so that both convert alike, and
   keeps what makes it faster: a bundle that imports `convert()` grows by
