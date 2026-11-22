@@ -31,22 +31,31 @@ const { values, positionals } = parseArgs({
     sets: { type: "string", default: "all" },
   },
 });
+/** Stops with a message, as for a wrong command. */
+function refuse(message: string): never {
+  console.error(message);
+  process.exit(2);
+}
+
 if (positionals.length !== 1) {
-  console.error(
+  refuse(
     "Usage: node scripts/differential_corpus.ts corpus.txt [--from greek] [--every n] [--sets presets|all]",
   );
-  process.exit(2);
 }
 const from = values.from as Format;
-if (!DIFFERENTIAL_FORMATS.includes(from)) {
-  console.error(`Unknown format: ${from}`);
-  process.exit(2);
+if (!DIFFERENTIAL_FORMATS.includes(from)) refuse(`Unknown format: ${from}`);
+if (!/^[1-9][0-9]*$/.test(values.every)) {
+  refuse(`--every takes a positive whole number, not ${values.every}`);
 }
-const every = Math.max(1, Number(values.every));
+const every = Number(values.every);
+if (values.sets !== "presets" && values.sets !== "all") {
+  refuse(`--sets takes presets or all, not ${values.sets}`);
+}
 const lines = readFileSync(positionals[0], "utf8").split("\n").filter((
   line,
   index,
 ) => line !== "" && index % every === 0);
+if (lines.length === 0) refuse(`No line to compare in ${positionals[0]}`);
 const sets = values.sets === "presets"
   ? optionSets(0).filter(({ label }) =>
     label === "defaults" ||

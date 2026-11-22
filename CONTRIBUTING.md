@@ -48,9 +48,10 @@ and installed as the development dependency `greek-conversion-previous`
 (`tests/differential_test.ts`), which [RELEASING.md](RELEASING.md) moves to
 each new release: a long text, the difficult forms of the
 property tests, the equivalences, the playground's examples, and strings
-drawn at random from the signs of each format, converted into every format
-in detail and re-encoded under the defaults, every preset, and some thirty
-other sets of options, must give the same output, losses, and positions. A
+drawn at random from the signs of each format, converted into every format,
+plainly, with `core`, and in detail, and re-encoded, under 29 sets of
+options (the defaults, every preset, and others), must give the same
+output, losses, and positions. A
 change of output that is meant goes in `MEANT` (`tests/differential.ts`),
 with its reason, until the reference moves to the release that makes it.
 `node scripts/differential_corpus.ts corpus.txt` makes the same comparison
@@ -69,8 +70,10 @@ npm run bench:ab -- --mode word --from beta-code --to greek v1.0.0-rc.11 .
 ```
 
 The modes are `long` (Thucydides 1.1–10), `short` (its first clause),
-`word`, `detailed` (`convertDetailed()` of the long text) and `parse`; a
-difference under 2 % is the noise of the measure.
+`word`, `detailed` (`convertDetailed()` of the long text) and `parse`. The
+noise of the measure, which `--aa` shows, is about 2 % on the long text and
+up to 5 % on a word or a clause: repeat a measure before trusting a smaller
+difference.
 
 ## The documentation site and the playground
 

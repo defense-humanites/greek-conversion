@@ -228,6 +228,9 @@ export function parseBetaCode(
       // Marks follow the code, as they follow a letter, or come between `*`
       // and the code of a capital.
       [i, marks] = consumeMarks(text, hash, marks);
+      // None of these letters is a vowel, which alone a coronis can be, but
+      // every letter with a smooth breathing is noted: the classification
+      // must not depend on the list.
       if ((marks & SMOOTH_BIT) !== 0) smooth.push(out.length);
       out.push(
         ownedGrapheme(hashLetter, upper, diacriticsFromMask(marks)),

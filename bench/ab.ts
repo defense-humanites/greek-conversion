@@ -18,7 +18,8 @@
  * For instance, `npm run bench:ab -- --aa v1.0.0-rc.11 .` compares the
  * working tree with rc.11, Greek into transliteration, on Thucydides 1.1–10.
  * The first version is the reference of the percentages; the A/A copy shows
- * the noise of the run.
+ * the noise of the run. The worktrees are removed at the end, after an error,
+ * and after a Ctrl-C, which stops the run at the end of a round.
  *
  * @module
  */
@@ -54,6 +55,13 @@ const ROOT = resolve(import.meta.dirname, "..");
 const work = mkdtempSync(join(tmpdir(), "greek-conversion-ab-"));
 const worktrees: string[] = [];
 
+let interrupted = false;
+process.on("SIGINT", () => {
+  interrupted = true;
+});
+/** Lets a Ctrl-C through between measures. */
+const pause = () => new Promise((resolve) => setImmediate(resolve));
+
 /** The directory that holds the `src/` of a version. */
 function checkout(version: string): string {
   const directory = resolve(version);
@@ -72,20 +80,20 @@ interface Version {
   directory: string;
 }
 
-const versions: Version[] = positionals.map((name) => ({
-  name,
-  directory: checkout(name),
-}));
-if (values.aa) {
-  // A copy of the sources, so that its modules are loaded anew.
-  const copy = join(work, "aa");
-  cpSync(join(versions[0].directory, "src"), join(copy, "src"), {
-    recursive: true,
-  });
-  versions.push({ name: `${versions[0].name} (A/A)`, directory: copy });
-}
-
+const versions: Version[] = [];
 try {
+  for (const name of positionals) {
+    versions.push({ name, directory: checkout(name) });
+  }
+  if (values.aa) {
+    // A copy of the sources, so that its modules are loaded anew.
+    const copy = join(work, "aa");
+    cpSync(join(versions[0].directory, "src"), join(copy, "src"), {
+      recursive: true,
+    });
+    versions.push({ name: `${versions[0].name} (A/A)`, directory: copy });
+  }
+
   const libraries = await Promise.all(versions.map(async ({ directory }) => ({
     main: await import(pathToFileURL(join(directory, "src", "mod.ts")).href),
     document: await import(
@@ -121,9 +129,12 @@ try {
   const rounds = Number(values.rounds ?? (long ? 200 : 300));
 
   let sink = 0;
-  for (const run of runs) for (let i = 0; i < batch * 20; i++) sink += run();
+  for (const run of runs) {
+    for (let i = 0; i < batch * 20; i++) sink += run();
+    await pause();
+  }
   const times: number[][] = runs.map(() => []);
-  for (let round = 0; round < rounds; round++) {
+  for (let round = 0; round < rounds && !interrupted; round++) {
     for (let k = 0; k < runs.length; k++) {
       // Each round starts with another version, so that none is always first.
       const index = (k + round) % runs.length;
@@ -131,30 +142,34 @@ try {
       for (let i = 0; i < batch; i++) sink += runs[index]();
       times[index].push(Number(process.hrtime.bigint() - start) / batch);
     }
+    await pause();
   }
-
-  const median = (list: number[]) => {
-    const sorted = [...list].sort((a, b) => a - b);
-    return sorted[Math.floor(sorted.length / 2)];
-  };
-  const per = times.map((list) => median(list) / 1000);
-  const width = Math.max(...versions.map(({ name }) => name.length));
-  // Reading the sum keeps the engine from dropping the calls as dead code.
-  if (Number.isNaN(sink)) throw new Error("The calls returned no length.");
-  console.log(
-    `${from} → ${to}, ${mode}, ${
-      values.preset ?? "defaults"
-    }: median of ${rounds} rounds`,
-  );
-  for (const [index, { name }] of versions.entries()) {
-    const change = (per[index] / per[0] - 1) * 100;
+  if (interrupted) {
+    console.error("Interrupted.");
+  } else {
+    const median = (list: number[]) => {
+      const sorted = [...list].sort((a, b) => a - b);
+      return sorted[Math.floor(sorted.length / 2)];
+    };
+    const per = times.map((list) => median(list) / 1000);
+    const width = Math.max(...versions.map(({ name }) => name.length));
+    // Reading the sum keeps the engine from dropping the calls as dead code.
+    if (Number.isNaN(sink)) throw new Error("The calls returned no length.");
     console.log(
-      `  ${name.padEnd(width)}  ${per[index].toFixed(2).padStart(9)} µs${
-        index === 0
-          ? ""
-          : `  ${change >= 0 ? "+" : "−"}${Math.abs(change).toFixed(1)} %`
-      }`,
+      `${from} → ${to}, ${mode}, ${
+        values.preset ?? "defaults"
+      }: median of ${rounds} rounds`,
     );
+    for (const [index, { name }] of versions.entries()) {
+      const change = (per[index] / per[0] - 1) * 100;
+      console.log(
+        `  ${name.padEnd(width)}  ${per[index].toFixed(2).padStart(9)} µs${
+          index === 0
+            ? ""
+            : `  ${change >= 0 ? "+" : "−"}${Math.abs(change).toFixed(1)} %`
+        }`,
+      );
+    }
   }
 } finally {
   for (const worktree of worktrees) {
@@ -164,4 +179,5 @@ try {
     });
   }
   rmSync(work, { recursive: true, force: true });
+  if (interrupted) process.exitCode = 130;
 }
