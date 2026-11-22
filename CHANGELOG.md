@@ -24,6 +24,11 @@ change.
   goes to. The υ of `ου` passed it on to an `ι` after it, as if `υι` were
   the diphthong, so that `houi`, which ALA-LC and SBL write for `οὑϊ`
   without its diaeresis, read as `ουἱ` and converted to itself as `ouhi`.
+- A capital sign for several letters that stands alone between words in
+  capitals is read in capitals: `ΛΟΓΟΣ Ϗ ΤΟΥ` gave `LOGOS Kai TOU` in
+  transliteration; it gives `LOGOS KAI TOU`. The nearest word on each side
+  decides, a word of one capital letter deciding nothing. Before, only a
+  capital right after the sign did (`ȢΤΟΣ`).
 - Output that converted otherwise again:
   - BnF writes a keraia as `ʹ`, which its reader reads as one, after anything
     but a letter without an accent, where the acute it writes elsewhere

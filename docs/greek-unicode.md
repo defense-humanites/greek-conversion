@@ -253,7 +253,12 @@ ligature `ȣ` (`Ȣ`, Beta Code `#1521`) as `ου` (`ou-ligature`). The ligature 
 a Latin letter, OU, which editions use for the Greek one; only the Greek
 reader takes it for `ου`. Marks written after a sign belong to its last
 letter (`ϗ́` is `καί`, `ȣ̓` is `οὐ`); a capital sign begins a word, or is set
-in capitals before a capital (`ȢΤΟΣ`). No accent is read: `ϗ` is `και`.
+in capitals before a capital (`ȢΤΟΣ`), and so is a sign that stands alone
+between words in capitals: the nearest word on each side, across spaces and
+punctuation, has its two letters nearest the sign in capitals, on one side at
+least, and no small letter on the other (`ΛΟΓΟΣ Ϗ ΤΟΥ` is `ΛΟΓΟΣ ΚΑΙ ΤΟΥ`;
+a word of one capital letter decides nothing). No accent is read: `ϗ` is
+`και`.
 
 `greek.stigma: "ligature"` reads a stigma between two letters as `σ` and `τ`
 (`stigma-ligature`), which older printing joined in that sign: `ἐϛὶ` is

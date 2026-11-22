@@ -23,6 +23,8 @@ const LATIN_LETTERS =
   "A Latin letter is written in Beta Code in the case of its letters, as it reads back.";
 const SIGMA_CIRCUMFLEX =
   "A circumflex on a sigma, stigma, or sampi is written as a tilde where the circumflex is U+0302, as it reads back.";
+const CAPITAL_SIGNS =
+  "A capital sign alone between words in capitals is read in capitals; the losses of an output in capitals change.";
 const BNF_KERAIA =
   "BnF writes a keraia as ʹ after anything but a letter without an accent, where an acute would not read back as one.";
 
@@ -229,4 +231,28 @@ export const MEANT: readonly MeantChange[] = [
     reason: SIGMA_CIRCUMFLEX,
   },
   { input: "(12xs=@,'v", reason: SIGMA_CIRCUMFLEX },
+  { input: "ὅ⸒τι\u2009ϗ ὁ", reason: CAPITAL_SIGNS },
+  { input: "σϟ2, ϗ\u0305", reason: CAPITAL_SIGNS },
+  {
+    input:
+      "ϗ νῦν ϗ ἀεὶ ϗ εἰς τοὺς αἰῶνας τῶν αἰώνων· ἐν τῷ ὀνόματι τοῦ κ\u0305υ\u0305 ι\u0305υ\u0305 χ\u0305υ\u0305",
+    reason: CAPITAL_SIGNS,
+  },
+  { input: "ϗ\u0313 τοῦ ϗ\u0313γώ", reason: CAPITAL_SIGNS },
+  { input: "ϗ νῦν ϗ ἀεὶ ϗ εἰς τοὺς αἰῶνας τῶν αἰώνων", reason: CAPITAL_SIGNS },
+  { input: "ϗ ȣ\u0313κ ἔϛιν ἄλλος πλὴν αὐτȣ\u0342", reason: CAPITAL_SIGNS },
+  { input: "ϊσϞ\u20092͵ϟόȣ\u00A0\u0342\nἙϘ", reason: CAPITAL_SIGNS },
+  { input: "ȣ9ΝϜϐΥα6\u0306Λ ᾿", reason: CAPITAL_SIGNS },
+  { input: "δῤΧϗ", reason: CAPITAL_SIGNS },
+  { input: "όὅΗ;Ϛτϗ\u00A0 Ὑ", reason: CAPITAL_SIGNS },
+  { input: "ϲΞȣ1\u20DDς\u0307\u0304ϐ", reason: CAPITAL_SIGNS },
+  { input: "o(/#532ti\u2009#1532 o(", reason: CAPITAL_SIGNS },
+  {
+    input:
+      "#1532 nu=n #1532 a)ei\\ #1532 ei)s tou\\s ai)w=nas tw=n ai)w/nwn: e)n tw=| o)no/mati tou= <ku> <iu> <xu>",
+    reason: CAPITAL_SIGNS,
+  },
+  { input: "#1532) tou= #1532)gw/", reason: CAPITAL_SIGNS },
+  { input: "#1532 tou= *#1531 #1521)tos", reason: CAPITAL_SIGNS },
+  { input: "#1532) a)nh/r", reason: CAPITAL_SIGNS },
 ];

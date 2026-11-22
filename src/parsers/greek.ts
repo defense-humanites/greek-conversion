@@ -10,7 +10,11 @@ import {
   ownedGrapheme,
   type Token,
 } from "../model.ts";
-import { GREEK_LIGATURES, ligatureLetters } from "../ligatures.ts";
+import {
+  capitalizeLoneSigns,
+  GREEK_LIGATURES,
+  ligatureLetters,
+} from "../ligatures.ts";
 import { parsePunctuation } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
 import {
@@ -175,8 +179,10 @@ function readGreek(
   // read rather than searched for afterwards.
   const smooth: number[] = [];
   let spacing = false;
-  // Whether a letter has marks the reader knows after one it does not.
+  // Whether a letter has marks the reader knows after one it does not, and
+  // whether a sign for several letters was read.
   let misordered = false;
+  let signs = false;
 
   for (let i = 0; i < text.length;) {
     const unit = text.charCodeAt(i);
@@ -188,6 +194,7 @@ function readGreek(
       if (ligature !== undefined) {
         i = readLigature(text, i, ligature, out, starts, smooth, ordered);
         if (i < 0) return undefined;
+        signs = true;
         continue;
       }
       if (isSpacingSign(unit)) spacing = true;
@@ -227,6 +234,7 @@ function readGreek(
 
   if (misordered) return undefined;
   if (starts !== undefined) starts.push(text.length);
+  if (signs) capitalizeLoneSigns(out);
 
   if (spacing) {
     // Joining the spacing signs to the letters moves the letters noted.
