@@ -266,6 +266,22 @@ test("writes an internal rough breathing before its diphthong", () => {
       "χοὑτος",
     );
   }
+  // The breathing goes to the first diphthong only: the υ of ου does not
+  // pass it on to an ι after it, which ALA-LC and SBL write without the
+  // diaeresis of οὑϊ.
+  for (const preset of ["ala-lc-ancient", "sbl-general"] as const) {
+    for (const greek of ["Οὑϊ", "χοὑϊ"]) {
+      const latin = convert(greek, "greek", "transliteration", { preset });
+      assertNfcEquals(
+        convert(latin, "transliteration", "greek", { preset }),
+        greek.replace("ϊ", "ι"),
+      );
+      assertNfcEquals(
+        convert(latin, "transliteration", "transliteration", { preset }),
+        latin,
+      );
+    }
+  }
   // A marked hiatus is not a diphthong: the h stays before the second vowel.
   assertNfcEquals(convert("χάἱ", "greek", "transliteration"), "cháhi");
   assertNfcEquals(convert("cháhi", "transliteration", "greek"), "χάἱ");
