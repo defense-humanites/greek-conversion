@@ -57,6 +57,7 @@ import type {
   NuTauTransliteration,
 } from "./options.ts";
 import { greekUpper } from "./case.ts";
+import { perProfile } from "./profile_cache.ts";
 import { applyMonotonicOrthography, isNumeralUnits } from "./orthography.ts";
 import { betaLigature, writtenLigature } from "./ligatures.ts";
 import { isMarkCode, isUnreadCode } from "./parsers/beta_code.ts";
@@ -103,9 +104,10 @@ const marks = (token: Grapheme, options: ConversionOptions, format: Format) =>
     );
 
 /**
- * Memoizes, for one encoding call, a value derived only from a grapheme's
- * marks. Shared diacritic sets are keyed by their mask; a caller's own set
- * is computed each time.
+ * Memoizes a value derived only from a grapheme's marks and the options, for
+ * one encoding call, or across calls in `cache`, one of the caches that
+ * {@link marksCache} gives for a profile. Shared diacritic sets are keyed by
+ * their mask; a caller's own set is computed each time.
  *
  * A cached value is shared by every token with the same marks, so it is
  * frozen: copy it before adding to it (`[...marks, "diaeresis"]`), or the
@@ -114,14 +116,42 @@ const marks = (token: Grapheme, options: ConversionOptions, format: Format) =>
  */
 function byMarks<T>(
   compute: (token: Grapheme) => T,
+  cache: (Readonly<T> | undefined)[] = [],
 ): (token: Grapheme) => Readonly<T> {
-  const cache: (Readonly<T> | undefined)[] = [];
   return (token) => {
     const mask = sharedMask(token.diacritics);
     if (mask === undefined) return Object.freeze(compute(token));
     return cache[mask] ??= Object.freeze(compute(token));
   };
 }
+
+/**
+ * A cache for {@link byMarks}, kept across calls with a sealed profile (see
+ * `profile_cache.ts`), and new at each call with other options. What is
+ * cached in it must derive from the marks and the profile only.
+ */
+function marksCache<T>(): (options: ConversionOptions) => T[] {
+  return perProfile((): T[] => []);
+}
+
+/** The marks that each format writes, by set of marks and profile. */
+const GREEK_MARKS = marksCache<string>();
+const LATIN_MARKS = marksCache<readonly Diacritic[]>();
+const BETA_MARKS = marksCache<readonly Diacritic[]>();
+
+/**
+ * The Beta Code of a set of marks after a small letter, and whether the set
+ * keeps the overline, which `<` and `>` write around the letters (see
+ * {@link writeOverlines}).
+ */
+interface BetaMarkCodes {
+  readonly codes: string;
+  readonly overline: boolean;
+}
+
+/** The Beta Code of a set of marks before a capital, and after it. */
+const BETA_CAPITAL_CODES = marksCache<readonly [string, string]>();
+const BETA_MARK_CODES = marksCache<BetaMarkCodes>();
 
 /**
  * The letters of the Greek and Coptic block, U+0370–U+03FF, composed with
@@ -185,8 +215,10 @@ export function encodeGreek(
   written?: WrittenPositions,
 ) {
   let out = "";
-  const greekMarks = byMarks((token) =>
-    marks(token, options, "greek").map((mark) => GREEK_FOR[mark]).join("")
+  const greekMarks = byMarks(
+    (token) =>
+      marks(token, options, "greek").map((mark) => GREEK_FOR[mark]).join(""),
+    GREEK_MARKS(options),
   );
   const rendered = prepareDiacriticsForRendering(
     applyMonotonicOrthography(doc, options),
@@ -589,26 +621,36 @@ export function encodeBetaCode(
   written?: WrittenPositions,
 ) {
   const rendered = prepareDiacriticsForRendering(doc, options, "beta-code");
-  // Whether a letter keeps the overline, noted once for each set of marks.
-  let overline = false;
-  const betaMarks = byMarks((token) => {
-    const kept = marks(token, options, "beta-code");
-    if (kept.includes("overline")) overline = true;
-    return kept;
-  });
-  // The codes of the marks, once for each set of marks too: after a small
-  // letter; before a capital, all but the iota subscript, then after it.
-  const markCodes = byMarks((token) =>
-    betaMarks(token).map((mark) => BETA_FOR[mark]).join("")
+  const betaMarks = byMarks(
+    (token) => marks(token, options, "beta-code"),
+    BETA_MARKS(options),
   );
-  const capitalMarkCodes = byMarks((token): [string, string] => {
-    const kept = betaMarks(token);
-    return [
-      kept.filter((mark) => mark !== "iota-subscript")
-        .map((mark) => BETA_FOR[mark]).join(""),
-      kept.includes("iota-subscript") ? "|" : "",
-    ];
-  });
+  // The codes of the marks, once for each set of marks: after a small
+  // letter; before a capital, all but the iota subscript, then after it.
+  const markCodes = byMarks(
+    (token): BetaMarkCodes => {
+      const kept = betaMarks(token);
+      return {
+        codes: kept.map((mark) => BETA_FOR[mark]).join(""),
+        overline: kept.includes("overline"),
+      };
+    },
+    BETA_MARK_CODES(options),
+  );
+  const capitalMarkCodes = byMarks(
+    (token): readonly [string, string] => {
+      const kept = betaMarks(token);
+      return [
+        kept.filter((mark) => mark !== "iota-subscript")
+          .map((mark) => BETA_FOR[mark]).join(""),
+        kept.includes("iota-subscript") ? "|" : "",
+      ];
+    },
+    BETA_CAPITAL_CODES(options),
+  );
+  // Whether a letter keeps the overline, noted as the codes of its marks
+  // are read.
+  let overline = false;
   const uppercaseCodes = options.betaCode?.case === "uppercase";
   const yotCode = options.betaCode?.yot === "#401";
   const quotations: QuotationContext = {};
@@ -645,7 +687,9 @@ export function encodeBetaCode(
     if (ligature !== undefined) {
       // The code for the letters, with the marks of the last one.
       ligatureEnd = index + ligature.length;
-      return ligature.code + markCodes(rendered[ligatureEnd - 1] as Grapheme);
+      const codes = markCodes(rendered[ligatureEnd - 1] as Grapheme);
+      if (codes.overline) overline = true;
+      return ligature.code + codes.codes;
     }
     // The codes of the alphabet are small letters.
     const code = token.letter === "sigma"
@@ -655,7 +699,9 @@ export function encodeBetaCode(
       : ALPHABET[token.letter].beta;
     const base = uppercaseCodes ? code.toUpperCase() : code;
 
-    if (!token.uppercase) return base + markCodes(token);
+    const codes = markCodes(token);
+    if (codes.overline) overline = true;
+    if (!token.uppercase) return base + codes.codes;
     const [beforeLetter, afterLetter] = capitalMarkCodes(token);
     // A capital whose code a digit extends reads back as an asterisk before
     // another code: it is written so, as it reads back.
@@ -684,8 +730,9 @@ export function encodeTransliteration(
     options,
     "transliteration",
   );
-  const latinMarks = byMarks((token) =>
-    marks(token, options, "transliteration")
+  const latinMarks = byMarks(
+    (token) => marks(token, options, "transliteration"),
+    LATIN_MARKS(options),
   );
   const preservesDiaeresis = preservesDiacritic(
     "diaeresis",

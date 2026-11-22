@@ -7,6 +7,7 @@
  */
 import type { ResolvedConversionOptions } from "./options.ts";
 import { PREPARED } from "./prepared_mark.ts";
+import { sealProfile } from "./profile_cache.ts";
 
 /**
  * Conversion options already checked and resolved, for the functions of the
@@ -78,20 +79,20 @@ Object.freeze(Prepared);
 /**
  * Prepared options that write with `writing` and read with `reading`: the
  * options of the preset `preset`, or of other options (`null`). The objects
- * are frozen, not copied: the caller passes objects that nothing else holds.
+ * are frozen and sealed (`profile_cache.ts`), not copied: the caller passes
+ * objects that nothing else holds.
  */
 export function makePrepared(
   writing: ResolvedConversionOptions,
   reading: ResolvedConversionOptions,
   preset: string | null,
 ): PreparedOptions {
-  for (const profile of [writing, reading]) {
-    for (const group of Object.values(profile)) Object.freeze(group);
-    Object.freeze(profile);
-  }
   return new Prepared(
     MADE,
-    Object.freeze({ reading, writing }),
+    Object.freeze({
+      reading: sealProfile(reading),
+      writing: sealProfile(writing),
+    }),
     preset,
   ) as unknown as PreparedOptions;
 }

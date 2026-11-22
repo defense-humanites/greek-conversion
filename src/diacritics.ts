@@ -7,6 +7,7 @@ import {
 } from "./model.ts";
 import type { Diacritic, Document, Format, Token } from "./model.ts";
 import type { ConversionOptions, DiacriticDisposition } from "./options.ts";
+import { perProfile } from "./profile_cache.ts";
 
 /**
  * Whether a mark is written in the given format. The disposition of its
@@ -74,6 +75,26 @@ export function preservesDiacritic(
 }
 
 /**
+ * The marks that a format removes under the options, as a mask: derived once
+ * for a sealed profile, when a conversion first writes the format.
+ */
+const removedMarks = (format: Format) =>
+  perProfile((options) =>
+    ORDER.reduce(
+      (mask, mark) =>
+        preservesDiacritic(mark, options, format)
+          ? mask
+          : mask | diacriticBit(mark),
+      0,
+    )
+  );
+const REMOVED_MARKS = {
+  "greek": removedMarks("greek"),
+  "beta-code": removedMarks("beta-code"),
+  "transliteration": removedMarks("transliteration"),
+} as const;
+
+/**
  * Builds the diacritic view used for rendering without changing the semantic
  * document used by contextual orthography. Marks on the first vowel of a
  * pair keep signalling hiatus on the detached view, so removing a diaeresis
@@ -87,13 +108,7 @@ export function prepareDiacriticsForRendering(
   // The marks this format and these options remove, as a mask: a shared set
   // is tested and filtered with one operation. A caller's own set has no
   // mask and is checked mark by mark, as before.
-  const removed = ORDER.reduce(
-    (mask, mark) =>
-      preservesDiacritic(mark, options, format)
-        ? mask
-        : mask | diacriticBit(mark),
-    0,
-  );
+  const removed = REMOVED_MARKS[format](options);
 
   const removesAnyMark = document.some((token) => {
     if (token.kind !== "grapheme") return false;
