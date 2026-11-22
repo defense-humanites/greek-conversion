@@ -3,7 +3,7 @@ title: "Getting started"
 description: "Install greek-conversion and convert a first text."
 ---
 
-greek-conversion converts Ancient and Modern Greek between Greek script, Beta
+The library converts Ancient and Modern Greek between Greek script, Beta
 Code, and Latin script, in any direction, and implements published
 conventions as presets. This page installs the package and converts a first
 text.
