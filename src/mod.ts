@@ -44,7 +44,7 @@ import type {
   ResolvedConversionOptions,
 } from "./options.ts";
 import { type ReadPositions, readSpans } from "./parsers/positions.ts";
-import { resolveConversionProfiles } from "./presets.ts";
+import { conversionProfiles } from "./presets.ts";
 
 export { FORMATS } from "./model.ts";
 export type {
@@ -222,7 +222,7 @@ export function convertDetailed(
   assertTextInput(input);
   assertFormat(from);
   assertFormat(to);
-  const { reading, writing: resolved } = resolveConversionProfiles(options);
+  const { reading, writing: resolved } = conversionProfiles(options);
   const read: ReadPositions = { text: "", starts: [] };
   const source = parseResolved(input, from, reading, true, read);
   const inputSpans = readSpans(input, read);
@@ -264,7 +264,7 @@ function runConversion(
   assertTextInput(input);
   assertFormat(from);
   assertFormat(to);
-  const { reading, writing: resolved } = resolveConversionProfiles(options);
+  const { reading, writing: resolved } = conversionProfiles(options);
   const source = parseResolved(input, from, reading, true);
   return { source, output: encodeResolved(source, to, resolved), resolved };
 }

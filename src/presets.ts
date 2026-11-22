@@ -191,6 +191,90 @@ export function resolveConversionProfiles(
   return { reading, writing };
 }
 
+/** The two profiles of a conversion. */
+type Profiles = ReturnType<typeof resolveConversionProfiles>;
+
+/**
+ * The profiles of the options that conversions take most often, resolved
+ * once: none, `{}`, `{ preset }`, and either with `source: {}` or
+ * `source: { preset }`, by the key that `simpleOptionsKey()` gives. At most
+ * one entry for each preset or none, read and written: options that fail
+ * are never kept.
+ */
+const SIMPLE_PROFILES = new Map<string, Profiles>();
+
+/**
+ * The profiles of a conversion, as {@link resolveConversionProfiles}, for
+ * the conversions of the library. The options of the forms that
+ * `SIMPLE_PROFILES` holds are resolved once and shared, frozen; any other
+ * is resolved at each call. `resolveConversionOptions()` and
+ * `prepareOptions()` do not use it: the options they return are their own.
+ *
+ * Internal: not exported by an entry point.
+ */
+export function conversionProfiles(
+  options: ConversionOptions = {},
+): Profiles {
+  const key = simpleOptionsKey(options);
+  if (key === undefined) return resolveConversionProfiles(options);
+  let profiles = SIMPLE_PROFILES.get(key);
+  if (profiles === undefined) {
+    const { reading, writing } = resolveConversionProfiles(options);
+    for (const profile of [reading, writing]) {
+      for (const group of Object.values(profile)) Object.freeze(group);
+      Object.freeze(profile);
+    }
+    profiles = Object.freeze({ reading, writing });
+    SIMPLE_PROFILES.set(key, profiles);
+  }
+  return profiles;
+}
+
+/**
+ * A key for options that are a plain object with no key but a preset, and
+ * `source`, a plain object with no key but a preset, each a string; or
+ * `undefined` for any other options, which are resolved at each call. An
+ * object with a symbol key is never one: the copy of prepared options that
+ * spreading makes holds the symbol of their mark, which validation refuses.
+ */
+function simpleOptionsKey(options: unknown): string | undefined {
+  const preset = simplePreset(options, true);
+  if (preset === undefined) return undefined;
+  const { source } = options as ConversionOptions;
+  if (source === undefined) {
+    return Object.hasOwn(options as object, "source") ? undefined : preset;
+  }
+  const sourcePreset = simplePreset(source, false);
+  return sourcePreset === undefined ? undefined : `${preset} ${sourcePreset}`;
+}
+
+/**
+ * The preset of options that are a plain object with no key but `preset`,
+ * and `source` where `withSource` allows it, as part of a key: `""` without
+ * a preset, `=` and its name with one, so that no name, the empty one
+ * included, stands for its absence; `undefined` for options of another
+ * form.
+ */
+function simplePreset(
+  options: unknown,
+  withSource: boolean,
+): string | undefined {
+  if (typeof options !== "object" || options === null) return undefined;
+  const prototype = Object.getPrototypeOf(options);
+  if (
+    prototype !== Object.prototype && prototype !== null ||
+    Object.getOwnPropertySymbols(options).length > 0
+  ) return undefined;
+  let preset = "";
+  for (const key of Object.keys(options)) {
+    if (key === "source" && withSource) continue;
+    const value = (options as Record<string, unknown>)[key];
+    if (key !== "preset" || typeof value !== "string") return undefined;
+    preset = `=${value}`;
+  }
+  return preset;
+}
+
 /** Resolves validated options, whose errors name their paths after `prefix`. */
 function resolveProfile(
   options: ConversionOptions,

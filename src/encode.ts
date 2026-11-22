@@ -976,8 +976,24 @@ function findRoughDiphthongs(
  */
 const LATIN_MARK_STRINGS = new Map<string, (string | undefined)[]>();
 
+/**
+ * The same strings, by the group of options itself when it is frozen, as
+ * the options that conversions share (`conversionProfiles()` in
+ * `presets.ts`) and prepared options are: the key need not be built again.
+ */
+const LATIN_MARK_STRINGS_OF_GROUP = new WeakMap<
+  object,
+  (string | undefined)[]
+>();
+
 function latinMarkStrings(options: ConversionOptions): (string | undefined)[] {
   const transliteration = options.transliteration;
+  const frozen = transliteration !== undefined &&
+    Object.isFrozen(transliteration);
+  if (frozen) {
+    const strings = LATIN_MARK_STRINGS_OF_GROUP.get(transliteration);
+    if (strings !== undefined) return strings;
+  }
   const key = transliteration?.circumflexAccent + " " +
     transliteration?.smoothBreathing + " " + transliteration?.coronis +
     (transliteration?.longVowels === "omit" ? " omit" : "");
@@ -986,6 +1002,7 @@ function latinMarkStrings(options: ConversionOptions): (string | undefined)[] {
     strings = [];
     LATIN_MARK_STRINGS.set(key, strings);
   }
+  if (frozen) LATIN_MARK_STRINGS_OF_GROUP.set(transliteration, strings);
   return strings;
 }
 
