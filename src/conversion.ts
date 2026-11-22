@@ -21,10 +21,7 @@ import {
   type SpanTable,
 } from "./parsers/positions.ts";
 import { readWith, writeTracked, writeWith } from "./pipeline.ts";
-import {
-  resolveConversionOptions,
-  resolveConversionProfiles,
-} from "./presets.ts";
+import { conversionProfiles } from "./presets.ts";
 
 /** How each format is read: the hooks of its reader (see `codec.ts`). */
 const READERS: Readonly<Record<Format, ReaderHooks>> = {
@@ -99,7 +96,7 @@ export function parse(
   return parseResolved(
     input,
     format,
-    resolveConversionProfiles(options).reading,
+    conversionProfiles(options).reading,
   );
 }
 
@@ -125,7 +122,7 @@ export function parseDetailed(
   const document = parseResolved(
     input,
     format,
-    resolveConversionProfiles(options).reading,
+    conversionProfiles(options).reading,
     false,
     read,
   );
@@ -176,7 +173,7 @@ export function encode(
   options: ConversionOptions = {},
 ): string {
   assertFormat(format);
-  return encodeResolved(document, format, resolveConversionOptions(options));
+  return encodeResolved(document, format, conversionProfiles(options).writing);
 }
 
 /**

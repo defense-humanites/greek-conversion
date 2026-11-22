@@ -6,16 +6,18 @@ description: "Bundle only the formats and presets a web application uses, with t
 The functions of the main entry point take the names of formats and options
 as values, which they read when they are called. A bundler cannot tell which
 of them an application will use: a bundle that imports `convert()` keeps
-every format, every preset, and the validation of options, about 68 kB
-minified (22 kB with gzip). On a server, this costs nothing that matters,
+every format, every preset, and the validation of options, about 70 kB
+minified (23 kB with gzip). On a server, this costs nothing that matters,
 and the main entry point is the one to use. The functions of `core`, which
-check no options when they are called, convert a single word up to a fifth
-faster, a difference that fades on longer texts.
+check no options when they are called, convert a single word about 5 %
+faster with the defaults or a preset, and up to 30 % faster with other
+options, which the main entry point checks at each call; the difference
+fades on longer texts.
 
 For a web page, the `core` entry point converts with the same functions,
 given readers, writers, and options that the application imports. A bundle
 then keeps only those: a page that writes Greek in transliteration with one
-preset weighs 39 kB (13 kB with gzip).
+preset weighs 40 kB (13 kB with gzip).
 
 ## Readers and writers
 
@@ -89,7 +91,7 @@ convert("χάος", greekReader, transliterationWriter, options); // → khaos
 ```
 
 `prepareOptions()` brings the validation of options and the table of the
-presets into the bundle, about 8 kB (2.3 kB with gzip): an application that
+presets into the bundle, about 8.5 kB (2.6 kB with gzip): an application that
 uses one preset as it is should import it instead. Prepared options cannot be
 changed; prepare them once, outside a loop, and use them for every call. The
 functions of `core` take no other options: an object of options, which they
@@ -117,16 +119,16 @@ try {
 Bundles of the conversions below, made with esbuild for this release,
 minified, then with gzip. The percentage compares the size with gzip to that
 of the same conversion imported from the main entry point: `convert()`
-(67.9 kB, 21.9 kB with gzip), or `convertDetailed()` (76.4 kB, 24.7 kB).
+(70.0 kB, 22.6 kB with gzip), or `convertDetailed()` (78.4 kB, 25.3 kB).
 
 | Conversions                                   | With a preset or the defaults | With `prepareOptions()`       |
 | --------------------------------------------- | ----------------------------- | ----------------------------- |
-| Greek to Beta Code                            | 31.9 kB, 11.2 kB gzip (−49 %) | 40.4 kB, 13.7 kB gzip (−37 %) |
-| Beta Code to Greek                            | 35.6 kB, 12.2 kB gzip (−44 %) | 44.1 kB, 14.7 kB gzip (−33 %) |
-| Greek to transliteration                      | 39.4 kB, 12.9 kB gzip (−41 %) | 47.9 kB, 15.4 kB gzip (−29 %) |
-| Greek and transliteration both ways           | 54.8 kB, 17.6 kB gzip (−19 %) | 63.3 kB, 20.1 kB gzip (−8 %)  |
-| Every format both ways                        | 61.2 kB, 19.8 kB gzip (−9 %)  | 69.7 kB, 22.4 kB gzip (+2 %)  |
-| `convertDetailed()`, Greek to transliteration | 63.4 kB, 20.5 kB gzip (−17 %) | 71.9 kB, 23.1 kB gzip (−6 %)  |
+| Greek to Beta Code                            | 32.3 kB, 11.3 kB gzip (−50 %) | 40.7 kB, 13.8 kB gzip (−39 %) |
+| Beta Code to Greek                            | 36.4 kB, 12.5 kB gzip (−45 %) | 44.9 kB, 15.0 kB gzip (−33 %) |
+| Greek to transliteration                      | 39.7 kB, 13.1 kB gzip (−42 %) | 48.2 kB, 15.6 kB gzip (−31 %) |
+| Greek and transliteration both ways           | 55.8 kB, 18.0 kB gzip (−20 %) | 64.3 kB, 20.5 kB gzip (−9 %)  |
+| Every format both ways                        | 62.4 kB, 20.3 kB gzip (−10 %) | 70.9 kB, 22.9 kB gzip (+1 %)  |
+| `convertDetailed()`, Greek to transliteration | 64.3 kB, 20.8 kB gzip (−18 %) | 72.8 kB, 23.4 kB gzip (−7 %)  |
 
 The `core` entry point is worth it with a preset or the defaults, unless the
 application reads and writes every format. With `prepareOptions()`, it is

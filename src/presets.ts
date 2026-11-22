@@ -191,6 +191,108 @@ export function resolveConversionProfiles(
   return { reading, writing };
 }
 
+/** The two profiles of a conversion. */
+type Profiles = ReturnType<typeof resolveConversionProfiles>;
+
+/**
+ * The profiles of the options that conversions take most often, resolved
+ * once: none, `{}`, `{ preset }`, and either with `source: {}` or
+ * `source: { preset }`, by the key that `simpleOptionsKey()` gives. At most
+ * one entry for each registered preset or none, read and written: options
+ * that fail are never kept.
+ */
+const SIMPLE_PROFILES = new Map<string, Profiles>();
+
+/**
+ * The profiles of a conversion, as {@link resolveConversionProfiles}, for
+ * the conversions of the library. The options of the forms that
+ * `SIMPLE_PROFILES` holds are resolved once and shared, frozen; any other
+ * is resolved at each call. `resolveConversionOptions()` and
+ * `prepareOptions()` do not use it: the options they return are their own.
+ *
+ * Internal: not exported by an entry point.
+ */
+export function conversionProfiles(
+  options: ConversionOptions = {},
+): Profiles {
+  const key = simpleOptionsKey(options, true);
+  if (key === undefined) return resolveConversionProfiles(options);
+  let profiles = SIMPLE_PROFILES.get(key);
+  if (profiles === undefined) {
+    // Resolved from the key, not from the caller's object, which could
+    // answer otherwise when read again: what is kept is what the key says.
+    const { reading, writing } = resolveConversionProfiles(optionsOfKey(key));
+    for (const profile of [reading, writing]) {
+      for (const group of Object.values(profile)) Object.freeze(group);
+      Object.freeze(profile);
+    }
+    profiles = Object.freeze({ reading, writing });
+    SIMPLE_PROFILES.set(key, profiles);
+  }
+  return profiles;
+}
+
+/**
+ * A key for options of the forms that `SIMPLE_PROFILES` holds: a plain
+ * object whose own properties are enumerable, with string keys, `preset`, a
+ * registered name, and, where `withSource` allows it, `source`, an object of
+ * the same form without a `source`. The key is the name, or `""` without a
+ * preset, followed, with a `source`, by a space and the key of the source.
+ * Registered names hold no space, and the empty name is none of them, so
+ * that a key stands for one form of options only ({@link optionsOfKey}).
+ * Each property is read once: an accessor, or a proxy, that answers
+ * otherwise the next time has no effect on the key, and the profiles are
+ * resolved from the key. `undefined` for options of any other form, which
+ * are resolved at each call: a property that is not enumerable, which
+ * `Object.keys()` would not list, a name that is not registered, a symbol
+ * key (the copy of prepared options that spreading makes holds the symbol of
+ * their mark, which validation refuses).
+ */
+function simpleOptionsKey(
+  options: unknown,
+  withSource: boolean,
+): string | undefined {
+  if (typeof options !== "object" || options === null) return undefined;
+  const prototype = Object.getPrototypeOf(options);
+  if (
+    prototype !== Object.prototype && prototype !== null ||
+    Object.getOwnPropertySymbols(options).length > 0
+  ) return undefined;
+  let preset = "";
+  let source: string | undefined;
+  for (const key of Object.getOwnPropertyNames(options)) {
+    if (!Object.prototype.propertyIsEnumerable.call(options, key)) {
+      return undefined;
+    }
+    const value: unknown = (options as Record<string, unknown>)[key];
+    if (
+      key === "preset" && typeof value === "string" &&
+      Object.hasOwn(PRESET_OPTIONS, value)
+    ) {
+      preset = value;
+    } else if (key === "source" && withSource) {
+      source = simpleOptionsKey(value, false);
+      if (source === undefined) return undefined;
+    } else {
+      return undefined;
+    }
+  }
+  return source === undefined ? preset : `${preset} ${source}`;
+}
+
+/** The options that a key of {@link simpleOptionsKey} stands for. */
+function optionsOfKey(key: string): ConversionOptions {
+  const [preset, source] = key.split(" ");
+  const options: ConversionOptions = preset === ""
+    ? {}
+    : { preset: preset as Preset };
+  if (source === undefined) return options;
+  return {
+    ...options,
+    source: source === "" ? {} : { preset: source as Preset },
+  };
+}
+
 /** Resolves validated options, whose errors name their paths after `prefix`. */
 function resolveProfile(
   options: ConversionOptions,

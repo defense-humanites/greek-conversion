@@ -57,11 +57,15 @@ import type {
   NuTauTransliteration,
 } from "./options.ts";
 import { greekUpper } from "./case.ts";
-import { applyGreekOrthography, isNumeralUnits } from "./orthography.ts";
+import { applyMonotonicOrthography, isNumeralUnits } from "./orthography.ts";
 import { betaLigature, writtenLigature } from "./ligatures.ts";
 import { isMarkCode, isUnreadCode } from "./parsers/beta_code.ts";
 import { standsApart, ZWNJ } from "./parsers/spacing_marks.ts";
-import { joinPieces, type WrittenPositions } from "./parsers/positions.ts";
+import {
+  continuesSegment,
+  joinPieces,
+  type WrittenPositions,
+} from "./parsers/positions.ts";
 import { encodePunctuation, TLG_CODE_OF } from "./punctuation.ts";
 import {
   applyGreekUnicode,
@@ -120,9 +124,60 @@ function byMarks<T>(
 }
 
 /**
- * Writes Greek. With `written`, records the range of each token's output in
- * the text assembled before Unicode normalization (see
- * `parsers/positions.ts`).
+ * The letters of the Greek and Coptic block, U+0370–U+03FF, composed with
+ * marks, by the string of the marks and the letter's offset in the block.
+ * Kept across calls: a few hundred strings of marks in practice, and at most
+ * one for each set of the eleven marks of `GREEK_ORDER`, 2,048, of up to 144
+ * letters each.
+ */
+const COMPOSED_LETTERS = new Map<string, string[]>();
+const GREEK_BLOCK = 0x370;
+const GREEK_BLOCK_SIZE = 0x90;
+
+/**
+ * A letter followed by its marks, composed (NFC) when the letter is one of
+ * the Greek block: Greek output is normalized as a whole afterwards, and a
+ * text whose letters are already composed is checked quickly, where one
+ * written as letters and combining marks is composed anew. The output is
+ * the same, since a text and its parts composed are canonically equivalent.
+ * Positions are not always: see {@link continuesLetter}.
+ */
+function composedLetter(letter: string, marks: string): string {
+  if (marks === "") return letter;
+  const offset = letter.charCodeAt(0) - GREEK_BLOCK;
+  if (letter.length !== 1 || offset < 0 || offset >= GREEK_BLOCK_SIZE) {
+    return letter + marks;
+  }
+  let letters = COMPOSED_LETTERS.get(marks);
+  if (letters === undefined) {
+    letters = [];
+    COMPOSED_LETTERS.set(marks, letters);
+  }
+  return letters[offset] ??= (letter + marks).normalize("NFC");
+}
+
+/**
+ * Whether the output of `token`, the token after a letter, continues the
+ * letter's segment (`parsers/positions.ts`): a literal that starts with a
+ * combining mark the readers do not know (`ạ̓n`). With positions, the letter
+ * is then written with its marks apart. Normalization composes the segment,
+ * which each of its tokens then spans whole; composed, the letter would leave
+ * the segment unchanged, and the segment would be split between its tokens.
+ * A literal is written as its value, or as a sign that starts a segment as
+ * its value does (`encodePunctuation()`), so its value tells.
+ */
+function continuesLetter(token: Token | undefined): boolean {
+  if (token?.kind !== "literal") return false;
+  const first = token.value.codePointAt(0);
+  // No code point below U+0300, the first combining mark, continues one.
+  return first !== undefined && first >= 0x300 && continuesSegment(first);
+}
+
+/**
+ * Writes Greek, from a document that the Greek writer has prepared: its
+ * numerals and double rho already written (`applyOrthography()`). With
+ * `written`, records the range of each token's output in the text assembled
+ * before Unicode normalization (see `parsers/positions.ts`).
  */
 export function encodeGreek(
   doc: Document,
@@ -134,7 +189,7 @@ export function encodeGreek(
     marks(token, options, "greek").map((mark) => GREEK_FOR[mark]).join("")
   );
   const rendered = prepareDiacriticsForRendering(
-    applyGreekOrthography(doc, options),
+    applyMonotonicOrthography(doc, options),
     options,
     "greek",
   );
@@ -142,6 +197,8 @@ export function encodeGreek(
   const ends = written?.ends;
   const quotations: QuotationContext = {};
   const uppercaseOutput = options.text?.letterCase === "uppercase";
+  // Decomposed output is written as letters and marks, as it ends.
+  const composes = options.greek?.composition !== "decomposed";
 
   for (let i = 0; i < doc.length; i++) {
     const token = rendered[i];
@@ -208,14 +265,18 @@ export function encodeGreek(
     // greekUpper() leaves as it is (ϴ, ϒ).
     if (token.uppercase) base = greekUpper(base);
 
-    out += base +
-      (writesIotaAdscript(token, options)
-        ? greekMarks(token).replace("\u0345", "") +
-          (token.uppercase &&
-              (uppercaseOutput || isAmongCapitals(rendered, i))
-            ? "Ι"
-            : "ι")
-        : greekMarks(token));
+    if (writesIotaAdscript(token, options)) {
+      out += base + greekMarks(token).replace("\u0345", "") +
+        (token.uppercase && (uppercaseOutput || isAmongCapitals(rendered, i))
+          ? "Ι"
+          : "ι");
+    } else if (
+      composes && !(written !== undefined && continuesLetter(rendered[i + 1]))
+    ) {
+      out += composedLetter(base, greekMarks(token));
+    } else {
+      out += base + greekMarks(token);
+    }
     if (ends !== undefined) ends[i] = out.length;
   }
 
@@ -535,6 +596,21 @@ export function encodeBetaCode(
     if (kept.includes("overline")) overline = true;
     return kept;
   });
+  // The codes of the marks, once for each set of marks too: after a small
+  // letter; before a capital, all but the iota subscript, then after it.
+  const markCodes = byMarks((token) =>
+    betaMarks(token).map((mark) => BETA_FOR[mark]).join("")
+  );
+  const capitalMarkCodes = byMarks((token): [string, string] => {
+    const kept = betaMarks(token);
+    return [
+      kept.filter((mark) => mark !== "iota-subscript")
+        .map((mark) => BETA_FOR[mark]).join(""),
+      kept.includes("iota-subscript") ? "|" : "",
+    ];
+  });
+  const uppercaseCodes = options.betaCode?.case === "uppercase";
+  const yotCode = options.betaCode?.yot === "#401";
   const quotations: QuotationContext = {};
   // The letters after the first of a ligature, which its code writes.
   let ligatureEnd = 0;
@@ -542,6 +618,8 @@ export function encodeBetaCode(
   const pieces = rendered.map((token, index) => {
     if (index < ligatureEnd) return "";
     if (token.kind === "literal") {
+      // A space, the most frequent literal, is written as itself.
+      if (token.value === " ") return " ";
       if (isKeptLetter(token)) return token.value;
       const code = BETA_SIGN_CODES.get(token.value);
       // A spacing breathing kept apart from a capital stays apart.
@@ -561,36 +639,24 @@ export function encodeBetaCode(
         ? token.value
         : code;
     }
-    const ligature = betaLigature(doc, index, options);
+    const ligature = token.glyphVariant === undefined
+      ? undefined
+      : betaLigature(doc, index, options);
     if (ligature !== undefined) {
       // The code for the letters, with the marks of the last one.
       ligatureEnd = index + ligature.length;
-      const last = rendered[ligatureEnd - 1] as Grapheme;
-      return ligature.code +
-        betaMarks(last).map((mark) => BETA_FOR[mark]).join("");
+      return ligature.code + markCodes(rendered[ligatureEnd - 1] as Grapheme);
     }
-    let base = token.letter === "sigma"
+    // The codes of the alphabet are small letters.
+    const code = token.letter === "sigma"
       ? betaSigma(doc, index, token, options, quotations)
-      : token.letter === "yot" && options.betaCode?.yot === "#401"
+      : token.letter === "yot" && yotCode
       ? "#401"
       : ALPHABET[token.letter].beta;
+    const base = uppercaseCodes ? code.toUpperCase() : code;
 
-    if (options.betaCode?.case === "uppercase") {
-      base = base.toUpperCase();
-    } else {
-      base = base.toLowerCase();
-    }
-
-    const renderedMarks = betaMarks(token);
-    if (!token.uppercase) {
-      return base + renderedMarks.map((mark) => BETA_FOR[mark]).join("");
-    }
-
-    const beforeLetter = renderedMarks
-      .filter((mark) => mark !== "iota-subscript")
-      .map((mark) => BETA_FOR[mark])
-      .join("");
-    const afterLetter = renderedMarks.includes("iota-subscript") ? "|" : "";
+    if (!token.uppercase) return base + markCodes(token);
+    const [beforeLetter, afterLetter] = capitalMarkCodes(token);
     // A capital whose code a digit extends reads back as an asterisk before
     // another code: it is written so, as it reads back.
     const capital = extendedByDigit(doc, index, options) ? "%2" : "*";
@@ -732,6 +798,12 @@ export function encodeTransliteration(
 
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
+      // A space, the most frequent literal, ends a word and is written as
+      // itself.
+      if (token.value === " ") {
+        afterLetter = false;
+        return " ";
+      }
       if (isKeptLetter(token)) {
         if (!afterLetter) wordStart = -1;
         afterLetter = true;
@@ -971,8 +1043,24 @@ function findRoughDiphthongs(
  */
 const LATIN_MARK_STRINGS = new Map<string, (string | undefined)[]>();
 
+/**
+ * The same strings, by the group of options itself when it is frozen, as
+ * the options that conversions share (`conversionProfiles()` in
+ * `presets.ts`) and prepared options are: the key need not be built again.
+ */
+const LATIN_MARK_STRINGS_OF_GROUP = new WeakMap<
+  object,
+  (string | undefined)[]
+>();
+
 function latinMarkStrings(options: ConversionOptions): (string | undefined)[] {
   const transliteration = options.transliteration;
+  const frozen = transliteration !== undefined &&
+    Object.isFrozen(transliteration);
+  if (frozen) {
+    const strings = LATIN_MARK_STRINGS_OF_GROUP.get(transliteration);
+    if (strings !== undefined) return strings;
+  }
   const key = transliteration?.circumflexAccent + " " +
     transliteration?.smoothBreathing + " " + transliteration?.coronis +
     (transliteration?.longVowels === "omit" ? " omit" : "");
@@ -981,6 +1069,7 @@ function latinMarkStrings(options: ConversionOptions): (string | undefined)[] {
     strings = [];
     LATIN_MARK_STRINGS.set(key, strings);
   }
+  if (frozen) LATIN_MARK_STRINGS_OF_GROUP.set(transliteration, strings);
   return strings;
 }
 

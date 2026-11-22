@@ -387,6 +387,30 @@ test("a character that normalization leaves unchanged keeps its own span", () =>
   );
 });
 
+test("a mark the reader does not know shares the span of the letter before", () => {
+  // Normalization composes a letter, its marks and the mark after them, a
+  // segment that each of their tokens spans whole, in the input as in the
+  // output; the letter is then not written composed, which would leave the
+  // segment unchanged and split it.
+  assertEquals(pieces(detailed("ἀ\u{307}ν", "greek", "greek")), [
+    ["ἀ\u{307}", "ἀ\u{307}"],
+    ["ἀ\u{307}", "ἀ\u{307}"],
+    ["ν", "ν"],
+  ]);
+  // Losses pair the source and the output by these spans: the dot below of
+  // Leiden is kept, and is not reported lost.
+  const leiden = detailed("a\u{323}n", "transliteration", "greek");
+  assertEquals(leiden.output, "ἀ\u{323}ν");
+  assertEquals(pieces(leiden), [
+    ["a", "ἀ\u{323}"],
+    ["\u{323}", "ἀ\u{323}"],
+    ["n", "ν"],
+  ]);
+  assert(
+    !leiden.losses.some((loss) => loss.code === "unrepresented-literal"),
+  );
+});
+
 test("a character split between two tokens is inside the first one's span", () => {
   // The h of ph and the dot below of a precomposed ḥ, kept as a literal.
   assertEquals(parseDetailed("p\u{1E25}", "transliteration").spans, [

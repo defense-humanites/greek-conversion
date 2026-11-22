@@ -38,11 +38,11 @@ import {
 import { betaSigma } from "./encode.ts";
 import { decimalNumeralTokens } from "./orthography.ts";
 import {
+  conversionProfiles,
   isCharacterInPresetScope,
   preparedOptionsError,
   presetMappingIssue,
   resolveConversionOptions,
-  resolveConversionProfiles,
 } from "./presets.ts";
 import { hasPreparedMark } from "./prepared_mark.ts";
 import {
@@ -783,7 +783,7 @@ export class Converter {
     ) {
       throw preparedOptionsError(options, "conversion options");
     }
-    return resolveConversionProfiles(
+    return conversionProfiles(
       this.#preset === undefined
         ? options
         : { ...options, preset: this.#preset },

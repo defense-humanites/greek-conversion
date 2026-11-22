@@ -26,3 +26,8 @@ updates:
       # The Node.js types follow the oldest version of the engines field.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # The previous release, which the differential test compares with,
+      # under its alias and its name: moved by hand at each release, with
+      # MEANT emptied (RELEASING.md).
+      - dependency-name: greek-conversion-previous
+      - dependency-name: "@humanities/greek-conversion"

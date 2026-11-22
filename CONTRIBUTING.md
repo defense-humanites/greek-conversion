@@ -41,6 +41,40 @@ and in the API documentation; the [stability policy](docs/stability.md) says
 how each kind of change is released. [RELEASING.md](RELEASING.md) describes a
 release.
 
+### Changes that keep the output
+
+`npm test` compares the library with the previous release, published on npm
+and installed as the development dependency `greek-conversion-previous`
+(`tests/differential_test.ts`), which [RELEASING.md](RELEASING.md) moves to
+each new release: a long text, the difficult forms of the
+property tests, the equivalences, the playground's examples, and strings
+drawn at random from the signs of each format, converted into every format,
+plainly, with `core`, and in detail, and re-encoded, under 29 sets of
+options (the defaults, every preset, and others), must give the same
+output, losses, and positions. A
+change of output that is meant goes in `MEANT` (`tests/differential.ts`),
+with its reason, until the reference moves to the release that makes it.
+`node scripts/differential_corpus.ts corpus.txt` makes the same comparison
+over a local corpus, one input per line, such as one whose license forbids
+publishing it here.
+
+The speed of a change is measured with `npm run bench:ab`, which runs
+versions in turn in one process, so that the noise of the machine falls on
+them alike: the working tree (`.`), a directory, or a git ref, checked out in
+a temporary worktree. `--aa` measures a copy of the first version as a
+control:
+
+```sh
+npm run bench:ab -- --aa v1.0.0-rc.11 .
+npm run bench:ab -- --mode word --from beta-code --to greek v1.0.0-rc.11 .
+```
+
+The modes are `long` (Thucydides 1.1–10), `short` (its first clause),
+`word`, `detailed` (`convertDetailed()` of the long text) and `parse`. The
+noise of the measure, which `--aa` shows, is about 2 % on the long text and
+up to 5 % on a word or a clause: repeat a measure before trusting a smaller
+difference.
+
 ## The documentation site and the playground
 
 Both are under `web/` and are published together on GitHub Pages: the

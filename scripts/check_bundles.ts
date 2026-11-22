@@ -194,7 +194,7 @@ async function bundle(
   };
 }
 
-/** A cell of the guide's table, as `39.4 kB, 12.9 kB gzip (−41 %)`. */
+/** A cell of the guide's table, as `39.7 kB, 13.0 kB gzip (−42 %)`. */
 const CELL = /^(\d+\.\d) kB, (\d+\.\d) kB gzip \(([−+])(\d+) %\)$/;
 
 /**
@@ -212,7 +212,7 @@ function documented(guide: string, row: string): number[][] {
     if (match === null) {
       failures.push(
         `The guide's row "${row}" has a cell that does not read ` +
-          `"39.4 kB, 12.9 kB gzip (−41 %)", with a minus sign: ${cell.trim()}`,
+          `"39.7 kB, 13.0 kB gzip (−42 %)", with a minus sign: ${cell.trim()}`,
       );
       return [];
     }

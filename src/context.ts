@@ -477,26 +477,41 @@ export function initialBreathingStart(
   return undefined;
 }
 
-/** Classifies the shared smooth mark as a coronis on an internal vowel. */
-export function classifyCoronides(tokens: Token[]): void {
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
-
-    if (
-      token.kind === "grapheme" &&
-      isVowel(token.letter) &&
-      token.diacritics.has("smooth") &&
-      initialBreathingStart(tokens, i) === undefined
-    ) {
-      // Replaced, not modified: the token may be shared by other occurrences.
-      tokens[i] = {
-        ...token,
-        diacritics: withDiacritic(
-          withoutDiacritic(token.diacritics, "smooth"),
-          "coronis",
-        ),
-      };
+/**
+ * Classifies the shared smooth mark as a coronis on an internal vowel. A
+ * reader that notes the indices of the letters it reads with a smooth
+ * breathing passes them as `candidates`, in order, so that only those are
+ * visited; any other token is left as it is anyway.
+ */
+export function classifyCoronides(
+  tokens: Token[],
+  candidates?: readonly number[],
+): void {
+  if (candidates === undefined) {
+    for (let i = 0; i < tokens.length; i++) classifyCoronis(tokens, i);
+  } else {
+    for (let k = 0; k < candidates.length; k++) {
+      classifyCoronis(tokens, candidates[k]);
     }
+  }
+}
+
+function classifyCoronis(tokens: Token[], i: number): void {
+  const token = tokens[i];
+  if (
+    token.kind === "grapheme" &&
+    token.diacritics.has("smooth") &&
+    isVowel(token.letter) &&
+    initialBreathingStart(tokens, i) === undefined
+  ) {
+    // Replaced, not modified: the token may be shared by other occurrences.
+    tokens[i] = {
+      ...token,
+      diacritics: withDiacritic(
+        withoutDiacritic(token.diacritics, "smooth"),
+        "coronis",
+      ),
+    };
   }
 }
 
