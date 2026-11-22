@@ -18,8 +18,8 @@ change.
   (`iso843Type2` for `iso-843-type-2`, and so on), and other options are
   prepared once by `prepareOptions()`, which takes what the main entry point
   takes. A bundle keeps only what it imports: Greek to transliteration with a
-  preset weighs 39.4 kB minified, 12.9 kB with gzip, where `convert()` from
-  the main entry point weighs 67.9 kB, 21.9 kB with gzip. The results are
+  preset weighs 39.7 kB minified, 13.0 kB with gzip, where `convert()` from
+  the main entry point weighs 69.6 kB, 22.4 kB with gzip. The results are
   those of the main entry point. The guide on smaller bundles compares the
   cases; an application that reads and writes every format, or a server,
   gains little or nothing.
@@ -35,9 +35,18 @@ change.
   which holds the change alone; the error names the preset to write instead.
   A preset object given for its name, as in `{ preset: sblGeneral }`, throws
   an `OptionError` that names it.
+- **Speed.** Conversions are as fast as in rc.10 or faster, where rc.11 had
+  made them 3 to 12 % slower. On Thucydides 1.1–10, Greek into Beta Code is
+  26 % faster than in rc.10, Beta Code into Greek 16 %, Greek into Greek
+  12 %, and Greek into transliteration 4 %; a word converts 8 to 24 %
+  faster, the options that conversions take most often being resolved once.
+  `convertDetailed()` from Greek into transliteration remains 3 to 5 %
+  slower than in rc.10, against 6 to 11 % in rc.11. No output changes: a
+  test compares the library with the previous release.
 - **Bundle size.** The main entry point converts through the readers and
-  writers that the `core` entry point takes, so that both convert alike: a
-  bundle that imports `convert()` grows by 1.7 kB minified, 0.6 kB with gzip.
+  writers that the `core` entry point takes, so that both convert alike, and
+  keeps what makes it faster: a bundle that imports `convert()` grows by
+  3.4 kB minified, 1.2 kB with gzip.
 
 ## [1.0.0-rc.11] - 2026-11-20
 
