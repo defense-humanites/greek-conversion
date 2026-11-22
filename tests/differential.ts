@@ -12,6 +12,7 @@
  */
 import * as reference from "greek-conversion-previous";
 import * as current from "../src/mod.ts";
+import { MEANT } from "./meant.ts";
 import type { ConversionOptions, Format } from "../src/mod.ts";
 import * as core from "../src/core.ts";
 import { betaCodeReader, betaCodeWriter } from "../src/formats/beta_code.ts";
@@ -51,54 +52,6 @@ export interface Difference {
   reference: string;
   current: string;
 }
-
-/**
- * A change of output that is meant: the input, and, where it changes under
- * some options or calls only, their label and the call, as a difference
- * reports them, with the reason.
- */
-export interface MeantChange {
-  input: string;
-  label?: string;
-  call?: string;
-  reason: string;
-}
-
-const MARKS_AFTER_UNKNOWN =
-  "A mark the readers do not know no longer keeps from their letter the marks that canonical order put after it.";
-
-/**
- * The changes of output that are meant, until the reference moves to the
- * release that makes them. `scripts/differential_changes.ts` lists the
- * inputs that change.
- */
-export const MEANT: readonly MeantChange[] = [
-  {
-    input: "ἀ\u0323ν ἀ\u0307ν ὑ\u20DD ἄ\u0350 ạ\u0313n",
-    reason: MARKS_AFTER_UNKNOWN,
-  },
-  { input: "ϙἙ;Ω\u0323\u0305 ϟΨ  \u20DD", reason: MARKS_AFTER_UNKNOWN },
-  { input: "κ[ Βϡ\u0323\u0306ϕὙμ\u0308Τa", reason: MARKS_AFTER_UNKNOWN },
-  { input: "ΠΩ\u0323\u0307[ȣ\u0305Νϳ μ", reason: MARKS_AFTER_UNKNOWN },
-  { input: "ἄ\u0313ΦΟ\u0313]ὅϜρ\u0323\u03049", reason: MARKS_AFTER_UNKNOWN },
-  { input: "\u0307ΜϘ1;ὅ\u0323[\u0307Π", reason: MARKS_AFTER_UNKNOWN },
-  {
-    input: "\u200Cξ\u0308\u0313\u0307\u0323χʹΓ\u20DDΝʹ",
-    reason: MARKS_AFTER_UNKNOWN,
-  },
-  {
-    input: "\u0300ϐχ\u0323\u0306ʹΔ\u0342\u03061\u03052Ϛ",
-    reason: MARKS_AFTER_UNKNOWN,
-  },
-  {
-    input: "a\u0323\u0313n a)\u0307n u(\u20DD a)/\u0350 a\u0323\u0313n",
-    reason: MARKS_AFTER_UNKNOWN,
-  },
-  {
-    input: "ạ\u0313n ȧn hy\u20DD á\u0350 ạ\u0313n",
-    reason: MARKS_AFTER_UNKNOWN,
-  },
-];
 
 /** Whether `MEANT` lists a difference. */
 function isMeant(label: string, call: string, input: string): boolean {

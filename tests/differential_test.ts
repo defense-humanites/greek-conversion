@@ -23,7 +23,7 @@ function report(differences: Difference[]): string {
   return [
     `${differences.length} differences with the previous release:`,
     ...differences.slice(0, 10).map(describeDifference),
-    "A change that is meant goes in MEANT (tests/differential.ts).",
+    "A change that is meant goes in MEANT (tests/meant.ts).",
   ].join("\n");
 }
 

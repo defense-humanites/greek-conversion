@@ -59,7 +59,8 @@ The library converts the whole string it is given. In a text that mixes Greek
 with another language, the punctuation shared by both is converted as Greek
 (`;` becomes `?` in transliteration). The letters of the other language are
 kept as they are, but reported as `unrepresented-literal` losses when the
-target format would read them as Greek:
+target format would read them as Greek, and Beta Code, whose letters are
+Latin, writes them in the case of its own letters, as they read back:
 
 ```ts
 import { convertDetailed } from "@humanities/greek-conversion";

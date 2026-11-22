@@ -24,6 +24,24 @@ change.
   goes to. The υ of `ου` passed it on to an `ι` after it, as if `υι` were
   the diphthong, so that `houi`, which ALA-LC and SBL write for `οὑϊ`
   without its diaeresis, read as `ουἱ` and converted to itself as `ouhi`.
+- Output that converted otherwise again:
+  - BnF writes a keraia as `ʹ`, which its reader reads as one, after anything
+    but a letter without an accent, where the acute it writes elsewhere
+    would be a second accent or stand on no letter: `ίʹ` gave `í́`, which
+    reads back as `ί`; it gives `íʹ`.
+  - Beta Code writes a Latin letter, which it reads back as the Greek letter
+    it spells, in the case of its own letters: `H`, kept from a
+    transliteration, gave `H`, which converts to `h`; under
+    `betaCode.case: "uppercase"` (`tlg-core`), `h` gave `h`.
+  - Beta Code writes a code kept as text that would read as a mark right
+    after a letter with the code of `%`: `<qs>%26` without its overline gave
+    `qs%26`, which reads as a sigma with a macron. Conversely, after the
+    `>` of an overline, `%` before digits is written as itself:
+    `θ̅ς̅%26` gave `<qs>%826`, which reads as `θ̅ς̅%826`.
+  - Transliteration writes a circumflex on a sigma, a stigma, or a sampi,
+    which no Greek has, as a tilde where the circumflex is U+0302 (ISO 843,
+    BnF): `ŝ` and `ĉ` read back as sampi and stigma, and `c̄̂` as a stigma
+    without it.
 
 ## [1.0.0-rc.12] - 2026-11-22
 
