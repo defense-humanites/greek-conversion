@@ -30,6 +30,11 @@ const BYZANTINE = [
   "ϗ νῦν ϗ ἀεὶ ϗ εἰς τοὺς αἰῶνας τῶν αἰώνων· ἐν τῷ ὀνόματι τοῦ κ̅υ̅ ι̅υ̅ χ̅υ̅",
   "ἔτους ͵ϛφιϛʹ, ἰνδικτιῶνος ιεʹ· ἐϛὶ ϲοφὸϲ ϐίϐλοϲ ϑεός Θεσσαλονίκη ῥῆτορ",
   "῾Ρωμαῖοι, «ΟΥ̓ΚΟΥ͂Ν» — ἀΐδιος; 1 ξʹ ʹ ἄ́ abc 漢字 ‌",
+  // Marks the readers do not know, after a letter with marks: Leiden's dot
+  // below, a dot above, an enclosing circle.
+  "ἀ̣ν ἀ̇ν ὑ⃝ ἄ\u0350 ạ̓n",
+  // The ligature of καί with a breathing: a coronis to check for the readers.
+  "ϗ̓ τοῦ ϗ̓γώ",
 ];
 
 /** The signs that random strings are drawn from, by format. */
@@ -42,6 +47,8 @@ const SIGNS: Readonly<Record<Format, readonly (readonly string[])[]>> = {
     [..."ἄὅᾶῷΐϊἙὙῤῥάέήίόύώ᾽᾿῾΅῍῎"],
     [..."  ,.;·;·;«»—'’ʹ͵ʼʹ͵()[]"],
     [..."0123456789a漢‌\n"],
+    // Spaces that are not U+0020, and marks the readers do not know.
+    ["\u00A0", "\u2009", "\u0307", "\u0323", "\u20DD"],
   ],
   "beta-code": [
     [..."abgdezhqiklmncoprstufxywvj"],
@@ -73,7 +80,7 @@ function randomStrings(format: Format, count: number, seed: number): string[] {
 /** Phrases of difficult words, joined as text joins them. */
 function phrases(count: number): string[] {
   const draw = seeded(2026);
-  const separators = [" ", " ", ", ", "\n", " · "];
+  const separators = [" ", " ", ", ", "\n", " · ", "\u00A0", "\u2009"];
   return Array.from(
     { length: count },
     () =>

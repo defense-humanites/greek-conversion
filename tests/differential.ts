@@ -13,6 +13,22 @@
 import * as reference from "greek-conversion-previous";
 import * as current from "../src/mod.ts";
 import type { ConversionOptions, Format } from "../src/mod.ts";
+import * as core from "../src/core.ts";
+import { betaCodeReader, betaCodeWriter } from "../src/formats/beta_code.ts";
+import { greekReader, greekWriter } from "../src/formats/greek.ts";
+import {
+  transliterationReader,
+  transliterationWriter,
+} from "../src/formats/transliteration.ts";
+
+/** The readers and writers of `./core`, by format. */
+const CORE_CODECS: Readonly<
+  Record<Format, readonly [core.Reader, core.Writer]>
+> = {
+  greek: [greekReader, greekWriter],
+  "beta-code": [betaCodeReader, betaCodeWriter],
+  transliteration: [transliterationReader, transliterationWriter],
+};
 
 /** The formats, in the order of the main entry point. */
 export const DIFFERENTIAL_FORMATS: readonly Format[] = [
@@ -151,8 +167,10 @@ function outcome(call: () => unknown): string {
 
 /**
  * Compares the conversions of `inputs`, written in `from`, into every
- * format, in detail, and their re-encoding, under each set of options.
- * Returns the differences that `MEANT` does not list, at most `limit`.
+ * format, plain and in detail, and their re-encoding, under each set of
+ * options; the plain conversion also with `./core`, from the options
+ * prepared once. Returns the differences that `MEANT` does not list, at most
+ * `limit`.
  */
 export function compareConversions(
   inputs: readonly string[],
@@ -166,11 +184,11 @@ export function compareConversions(
     label: string,
     call: string,
     input: string,
-    run: (library: typeof current) => unknown,
+    expected: string,
+    run: () => unknown,
   ) => {
     compared++;
-    const expected = outcome(() => run(reference as unknown as typeof current));
-    const actual = outcome(() => run(current));
+    const actual = outcome(run);
     if (
       expected !== actual && differences.length < limit &&
       !MEANT.some((meant) =>
@@ -187,20 +205,44 @@ export function compareConversions(
     }
   };
   for (const { label, options } of sets) {
+    let prepared: core.PreparedOptions | undefined;
+    let refused: unknown;
+    try {
+      prepared = core.prepareOptions(options);
+    } catch (error) {
+      refused = error;
+    }
+    const [reader] = CORE_CODECS[from];
     for (const input of inputs) {
       for (const to of DIFFERENTIAL_FORMATS) {
+        const plain = outcome(() =>
+          reference.convert(input, from, to, options)
+        );
+        record(
+          label,
+          `convert(${from} → ${to})`,
+          input,
+          plain,
+          () => current.convert(input, from, to, options),
+        );
+        record(label, `core convert(${from} → ${to})`, input, plain, () => {
+          if (prepared === undefined) throw refused;
+          return core.convert(input, reader, CORE_CODECS[to][1], prepared);
+        });
         record(
           label,
           `convertDetailed(${from} → ${to})`,
           input,
-          (library) => library.convertDetailed(input, from, to, options),
+          outcome(() => reference.convertDetailed(input, from, to, options)),
+          () => current.convertDetailed(input, from, to, options),
         );
       }
       record(
         label,
         `reencode(${from})`,
         input,
-        (library) => library.reencode(input, from, options),
+        outcome(() => reference.reencode(input, from, options)),
+        () => current.reencode(input, from, options),
       );
     }
   }
@@ -208,8 +250,8 @@ export function compareConversions(
 }
 
 /**
- * Compares the detailed conversions of converters made with the same
- * configuration by both releases.
+ * Compares the conversions, plain and in detail, of converters made with the
+ * same configuration by both releases.
  */
 export function compareConverters(
   inputs: readonly string[],
@@ -222,30 +264,33 @@ export function compareConverters(
   for (const { label, configuration } of configurations) {
     const made = [reference, current].map((library) =>
       (library.createConverter as (configuration: object) => {
+        convert(input: string, from: Format, to: Format): unknown;
         convertDetailed(input: string, from: Format, to: Format): unknown;
       })(configuration)
     );
     for (const input of inputs) {
       for (const to of DIFFERENTIAL_FORMATS) {
-        compared++;
-        const [expected, actual] = made.map((converter) =>
-          outcome(() => converter.convertDetailed(input, from, to))
-        );
-        const call = `createConverter().convertDetailed(${from} → ${to})`;
-        if (
-          expected !== actual && differences.length < limit &&
-          !MEANT.some((meant) =>
-            meant.label === label && meant.call === call &&
-            meant.input === input
-          )
-        ) {
-          differences.push({
-            label,
-            call,
-            input,
-            reference: expected,
-            current: actual,
-          });
+        for (const method of ["convert", "convertDetailed"] as const) {
+          compared++;
+          const [expected, actual] = made.map((converter) =>
+            outcome(() => converter[method](input, from, to))
+          );
+          const call = `createConverter().${method}(${from} → ${to})`;
+          if (
+            expected !== actual && differences.length < limit &&
+            !MEANT.some((meant) =>
+              meant.label === label && meant.call === call &&
+              meant.input === input
+            )
+          ) {
+            differences.push({
+              label,
+              call,
+              input,
+              reference: expected,
+              current: actual,
+            });
+          }
         }
       }
     }

@@ -157,6 +157,9 @@ export const RAW_SOURCES: readonly { format: Format; text: string }[] = [
   { format: "beta-code", text: "e)#2i\\ #2# i#2#" },
   { format: "beta-code", text: "lo/gos%3yuxh/ %2a [2lo/g]2os % #532 #6" },
   { format: "beta-code", text: "a#18b#15g #12 #25 (1]1" },
+  // A coronis to check after a spacing breathing, and on a ligature.
+  { format: "beta-code", text: "%30*a ka)/n" },
+  { format: "beta-code", text: "#1532) a)nh/r" },
   { format: "transliteration", text: "῾Rōmaĩoi t᾿ estí ῎Anthrōpos" },
   { format: "transliteration", text: "th̅s̅ kaì toũ i̅b̅" },
   { format: "transliteration", text: "ec̄ì ec̄ʹ" },
