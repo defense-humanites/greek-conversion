@@ -168,19 +168,19 @@ const wordmark = drawing("name", name);
    * line of their offsets, 8 by 3, 7 units each: 2.12% of the frame's
    * width, 1.46% of its height), the right one straightening out of its 2°
    * about the point it turns on (59.7%, 29.1% of the frame), quickly, as if
-   * sprung (175ms); they pause there (120ms), then fall back to their
-   * places, faster and faster (260ms), without overshooting, which would
+   * sprung (175ms); they pause there (40ms), then fall back to their
+   * places, faster and faster (220ms), without overshooting, which would
    * close the break. As
    * they arrive, the whole tessera bounces, from its centre (50.2%, 27.6%),
    * as the site's buttons do but more markedly, the closing beat: it
-   * shrinks to 90% in 70ms, springs past its size to 106%, then settles
-   * with a last small give (98.5%), 0.6s in all. Once the page has loaded,
+   * shrinks to 90% in 60ms, springs past its size to 106%, then settles
+   * with a last small give (98.5%), 0.5s in all. Once the page has loaded,
    * once a session (`play`, set by the script above),
    * for those who do not ask for less motion.
    */
   @media (prefers-reduced-motion: no-preference) {
     .logo.play :global(.half) {
-      animation-duration: 0.555s;
+      animation-duration: 0.435s;
       animation-delay: 0.1s;
       animation-fill-mode: both;
     }
@@ -194,8 +194,8 @@ const wordmark = drawing("name", name);
     .logo.play .tessera {
       transform-origin: 50.2% 27.6%;
       animation-name: tessera-bounce;
-      animation-duration: 0.6s;
-      animation-delay: 0.635s;
+      animation-duration: 0.5s;
+      animation-delay: 0.515s;
       animation-fill-mode: both;
     }
   }
@@ -212,7 +212,7 @@ const wordmark = drawing("name", name);
       scale: 1.06;
       animation-timing-function: ease-in-out;
     }
-    68% {
+    72% {
       scale: 0.985;
       animation-timing-function: ease-in-out;
     }
@@ -225,10 +225,10 @@ const wordmark = drawing("name", name);
       transform: none;
       animation-timing-function: cubic-bezier(0.3, 0.8, 0.3, 1);
     }
-    31.5%,
-    53.2% {
+    40.2%,
+    49.4% {
       transform: translate(-2.12%, -1.46%);
-      animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.4);
+      animation-timing-function: cubic-bezier(0.45, 0, 0.85, 0.45);
     }
     100% {
       transform: none;
@@ -239,10 +239,10 @@ const wordmark = drawing("name", name);
       transform: none;
       animation-timing-function: cubic-bezier(0.3, 0.8, 0.3, 1);
     }
-    31.5%,
-    53.2% {
+    40.2%,
+    49.4% {
       transform: translate(2.12%, 1.46%) rotate(-2deg);
-      animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.4);
+      animation-timing-function: cubic-bezier(0.45, 0, 0.85, 0.45);
     }
     100% {
       transform: none;
