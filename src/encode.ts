@@ -535,6 +535,21 @@ export function encodeBetaCode(
     if (kept.includes("overline")) overline = true;
     return kept;
   });
+  // The codes of the marks, once for each set of marks too: after a small
+  // letter; before a capital, all but the iota subscript, then after it.
+  const markCodes = byMarks((token) =>
+    betaMarks(token).map((mark) => BETA_FOR[mark]).join("")
+  );
+  const capitalMarkCodes = byMarks((token): [string, string] => {
+    const kept = betaMarks(token);
+    return [
+      kept.filter((mark) => mark !== "iota-subscript")
+        .map((mark) => BETA_FOR[mark]).join(""),
+      kept.includes("iota-subscript") ? "|" : "",
+    ];
+  });
+  const uppercaseCodes = options.betaCode?.case === "uppercase";
+  const yotCode = options.betaCode?.yot === "#401";
   const quotations: QuotationContext = {};
   // The letters after the first of a ligature, which its code writes.
   let ligatureEnd = 0;
@@ -542,6 +557,8 @@ export function encodeBetaCode(
   const pieces = rendered.map((token, index) => {
     if (index < ligatureEnd) return "";
     if (token.kind === "literal") {
+      // A space, the most frequent literal, is written as itself.
+      if (token.value === " ") return " ";
       if (isKeptLetter(token)) return token.value;
       const code = BETA_SIGN_CODES.get(token.value);
       // A spacing breathing kept apart from a capital stays apart.
@@ -561,36 +578,24 @@ export function encodeBetaCode(
         ? token.value
         : code;
     }
-    const ligature = betaLigature(doc, index, options);
+    const ligature = token.glyphVariant === undefined
+      ? undefined
+      : betaLigature(doc, index, options);
     if (ligature !== undefined) {
       // The code for the letters, with the marks of the last one.
       ligatureEnd = index + ligature.length;
-      const last = rendered[ligatureEnd - 1] as Grapheme;
-      return ligature.code +
-        betaMarks(last).map((mark) => BETA_FOR[mark]).join("");
+      return ligature.code + markCodes(rendered[ligatureEnd - 1] as Grapheme);
     }
-    let base = token.letter === "sigma"
+    // The codes of the alphabet are small letters.
+    const code = token.letter === "sigma"
       ? betaSigma(doc, index, token, options, quotations)
-      : token.letter === "yot" && options.betaCode?.yot === "#401"
+      : token.letter === "yot" && yotCode
       ? "#401"
       : ALPHABET[token.letter].beta;
+    const base = uppercaseCodes ? code.toUpperCase() : code;
 
-    if (options.betaCode?.case === "uppercase") {
-      base = base.toUpperCase();
-    } else {
-      base = base.toLowerCase();
-    }
-
-    const renderedMarks = betaMarks(token);
-    if (!token.uppercase) {
-      return base + renderedMarks.map((mark) => BETA_FOR[mark]).join("");
-    }
-
-    const beforeLetter = renderedMarks
-      .filter((mark) => mark !== "iota-subscript")
-      .map((mark) => BETA_FOR[mark])
-      .join("");
-    const afterLetter = renderedMarks.includes("iota-subscript") ? "|" : "";
+    if (!token.uppercase) return base + markCodes(token);
+    const [beforeLetter, afterLetter] = capitalMarkCodes(token);
     // A capital whose code a digit extends reads back as an asterisk before
     // another code: it is written so, as it reads back.
     const capital = extendedByDigit(doc, index, options) ? "%2" : "*";
