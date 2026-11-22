@@ -140,6 +140,9 @@ export function parseBetaCode(
   if (positions !== undefined) positions.text = text;
   // The first token under an overline that `<` opened, or NO_CODE.
   let overline = NO_CODE;
+  // The first `>` after the last `<` read, for `opensOverline()`: searched
+  // again only past it, so that a text of many `<` is read in linear time.
+  let close = NO_CODE - 1;
   // The letters read with a smooth breathing, which alone may bear a
   // coronis (see `classifyCoronides`).
   const smooth: number[] = [];
@@ -154,9 +157,12 @@ export function parseBetaCode(
     }
     const start = i;
     if (starts !== undefined) starts.push(start);
-    if (overline === NO_CODE && opensOverline(text, i)) {
-      overline = out.length;
-      i++;
+    if (overline === NO_CODE && text.charCodeAt(i) === LESS) {
+      if (close !== NO_CODE && close < i) close = text.indexOf(">", i + 1);
+      if (opensOverline(text, i, close)) {
+        overline = out.length;
+        i++;
+      }
     }
     let upper = false;
 
@@ -205,7 +211,11 @@ export function parseBetaCode(
       continue;
     }
 
-    const punctuation = !upper && i < text.length
+    // No letter is a sign (tests/reader_tables_test.ts): a letter, the most
+    // frequent unit, is not looked up.
+    const first = text.charCodeAt(i);
+    const punctuation = !upper && i < text.length &&
+        !(first < 0x80 && ASCII_LETTER_OF[first] !== NOT_A_LETTER)
       ? parsePunctuation(codePointAt(text, i), "beta-code")
       : undefined;
     if (punctuation) {
@@ -335,14 +345,12 @@ function digitsEnd(text: string, start: number): number {
  * Whether the `<` at `start` opens an overline, which the TLG writes over the
  * letters between `<` and `>` (`<QS>`, θ̅ς̅): no digit follows it or its `>`,
  * which would make them codes of another mark-up, and a letter, but no
- * whitespace, stands between them.
+ * whitespace, stands between them. `end` is the first `>` after it, or
+ * NO_CODE.
  */
-function opensOverline(text: string, start: number): boolean {
-  if (text.charCodeAt(start) !== LESS || isDigitAt(text, start + 1)) {
-    return false;
-  }
-  const end = text.indexOf(">", start + 1);
-  if (end === -1 || isDigitAt(text, end + 1)) return false;
+function opensOverline(text: string, start: number, end: number): boolean {
+  if (isDigitAt(text, start + 1)) return false;
+  if (end === NO_CODE || isDigitAt(text, end + 1)) return false;
   const between = text.slice(start + 1, end);
   return !/[\s<]/.test(between) && /[a-z]|#\d/i.test(between);
 }

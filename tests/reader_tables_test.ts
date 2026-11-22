@@ -4,6 +4,7 @@ import { BY_BETA, BY_GREEK } from "../src/alphabet.ts";
 import { greekLower } from "../src/case.ts";
 import { parse } from "../src/document.ts";
 import { GREEK_LIGATURES } from "../src/ligatures.ts";
+import { parsePunctuation } from "../src/punctuation.ts";
 
 /**
  * The Greek and Beta Code readers keep letters in small tables (U+0370–U+03FF
@@ -85,4 +86,17 @@ test("the Beta Code reader classifies every BMP code unit as toLowerCase does", 
     }
   }
   assertEquals(mismatches, []);
+});
+
+test("no ASCII letter of Beta Code is a sign of punctuation", () => {
+  // The Beta Code reader does not look its letters up as punctuation.
+  for (let unit = 0; unit < 0x80; unit++) {
+    const character = String.fromCharCode(unit);
+    if (!BY_BETA.has(character.toLowerCase())) continue;
+    assertEquals(
+      parsePunctuation(character, "beta-code"),
+      undefined,
+      character,
+    );
+  }
 });
