@@ -111,6 +111,7 @@ const HASH_LETTERS: ReadonlyMap<string, Letter> = new Map([
 ]);
 /** Where a `#` code ends, when none starts at the current unit. */
 const NO_CODE = -1;
+const SMOOTH_BIT = diacriticBit("smooth");
 
 const ASTERISK = 0x2a;
 const LESS = 0x3c;
@@ -139,6 +140,9 @@ export function parseBetaCode(
   if (positions !== undefined) positions.text = text;
   // The first token under an overline that `<` opened, or NO_CODE.
   let overline = NO_CODE;
+  // The letters read with a smooth breathing, which alone may bear a
+  // coronis (see `classifyCoronides`).
+  const smooth: number[] = [];
 
   for (let i = 0; i < text.length;) {
     if (overline !== NO_CODE && text.charCodeAt(i) === GREATER) {
@@ -214,6 +218,7 @@ export function parseBetaCode(
       // Marks follow the code, as they follow a letter, or come between `*`
       // and the code of a capital.
       [i, marks] = consumeMarks(text, hash, marks);
+      if ((marks & SMOOTH_BIT) !== 0) smooth.push(out.length);
       out.push(
         ownedGrapheme(hashLetter, upper, diacriticsFromMask(marks)),
       );
@@ -231,6 +236,9 @@ export function parseBetaCode(
         diacriticsFromMask(marks),
         text.charCodeAt(i) === ASTERISK,
       );
+      if ((marks & SMOOTH_BIT) !== 0) {
+        for (let k = 0; k < letters.length; k++) smooth.push(out.length + k);
+      }
       out.push(...letters);
       // The letters share the code's span.
       for (let k = 1; k < letters.length; k++) starts?.push(start);
@@ -268,6 +276,7 @@ export function parseBetaCode(
     i++;
     [i, marks] = consumeMarks(text, i, marks);
 
+    if ((marks & SMOOTH_BIT) !== 0) smooth.push(out.length);
     out.push(
       share
         ? sharedGrapheme(letter, upper ? 1 : 0, marks)
@@ -278,9 +287,12 @@ export function parseBetaCode(
   if (starts !== undefined) starts.push(text.length);
 
   if (mayHaveSpacingSigns(text) || text.includes("%")) {
+    // Joining the spacing signs to the letters moves the letters noted.
     readSpacingMarks(out, starts);
+    classifyCoronides(out);
+  } else {
+    classifyCoronides(out, smooth);
   }
-  classifyCoronides(out);
 
   return out;
 }

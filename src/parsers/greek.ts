@@ -14,7 +14,7 @@ import { GREEK_LIGATURES, ligatureLetters } from "../ligatures.ts";
 import { parsePunctuation } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
 import type { ReadPositions } from "./positions.ts";
-import { mayHaveSpacingSigns, readSpacingMarks } from "./spacing_marks.ts";
+import { readSpacingMarks } from "./spacing_marks.ts";
 import {
   LETTERS,
   sharedGrapheme,
@@ -107,6 +107,16 @@ const markBit = (unit: number): number =>
     ? MARK_BIT[unit - MARKS_START]
     : 0;
 
+const SMOOTH_BIT = diacriticBit("smooth");
+
+/**
+ * Whether a unit of decomposed text is a spacing sign (see
+ * `spacing_marks.ts`): psili, dasia, or the spacing diaeresis, which the
+ * compounds of each with an accent decompose to.
+ */
+const isSpacingSign = (unit: number): boolean =>
+  unit === 0x1fbf || unit === 0x1ffe || unit === 0x00a8;
+
 /**
  * Reads Greek. With `share`, equal tokens are one shared object (see
  * `shared_tokens.ts`): only for documents that never reach the caller. With
@@ -122,6 +132,11 @@ export function parseGreek(
   const out: Token[] = [];
   const starts = positions?.starts;
   if (positions !== undefined) positions.text = text;
+  // The letters read with a smooth breathing, which alone may bear a
+  // coronis, and whether the text has a spacing sign, noted as each unit is
+  // read rather than searched for afterwards.
+  const smooth: number[] = [];
+  let spacing = false;
 
   for (let i = 0; i < text.length;) {
     const unit = text.charCodeAt(i);
@@ -131,25 +146,10 @@ export function parseGreek(
     if (letter === NOT_A_LETTER) {
       const ligature = GREEK_LIGATURES.get(unit);
       if (ligature !== undefined) {
-        // The marks written after the sign belong to its last letter.
-        let marks = 0;
-        for (i++; i < text.length; i++) {
-          const bit = markBit(text.charCodeAt(i));
-          if (bit === 0) break;
-          marks |= bit;
-        }
-        const next = letterOf(text.charCodeAt(i));
-        const letters = ligatureLetters(
-          ligature,
-          diacriticsFromMask(marks),
-          next !== NOT_A_LETTER &&
-            (FLAGS_OF[text.charCodeAt(i) - LETTERS_START] & 1) === 1,
-        );
-        out.push(...letters);
-        // The letters share the sign's span.
-        for (let k = 1; k < letters.length; k++) starts?.push(starts.at(-1)!);
+        i = readLigature(text, i, ligature, out, starts, smooth);
         continue;
       }
+      if (isSpacingSign(unit)) spacing = true;
       const source = codePointAt(text, i);
       const value = parsePunctuation(source, "greek") ?? source;
       out.push(share ? sharedLiteral(value) : literal(value));
@@ -169,6 +169,7 @@ export function parseGreek(
     }
 
     const flags = FLAGS_OF[unit - LETTERS_START];
+    if ((marks & SMOOTH_BIT) !== 0) smooth.push(out.length);
     out.push(
       share ? sharedGrapheme(letter, flags, marks) : ownedGrapheme(
         LETTERS[letter],
@@ -181,8 +182,49 @@ export function parseGreek(
 
   if (starts !== undefined) starts.push(text.length);
 
-  if (mayHaveSpacingSigns(text)) readSpacingMarks(out, starts);
-  classifyCoronides(out);
+  if (spacing) {
+    // Joining the spacing signs to the letters moves the letters noted.
+    readSpacingMarks(out, starts);
+    classifyCoronides(out);
+  } else {
+    classifyCoronides(out, smooth);
+  }
 
   return out;
+}
+
+/**
+ * Reads the sign for several letters at `i` (`ϗ`, `ȣ`), with the marks
+ * written after it, which belong to its last letter; returns where reading
+ * goes on. Out of the loop of `parseGreek`, which this rare case would
+ * otherwise make longer.
+ */
+function readLigature(
+  text: string,
+  i: number,
+  ligature: Parameters<typeof ligatureLetters>[0],
+  out: Token[],
+  starts: number[] | undefined,
+  smooth: number[],
+): number {
+  let marks = 0;
+  for (i++; i < text.length; i++) {
+    const bit = markBit(text.charCodeAt(i));
+    if (bit === 0) break;
+    marks |= bit;
+  }
+  const next = letterOf(text.charCodeAt(i));
+  const letters = ligatureLetters(
+    ligature,
+    diacriticsFromMask(marks),
+    next !== NOT_A_LETTER &&
+      (FLAGS_OF[text.charCodeAt(i) - LETTERS_START] & 1) === 1,
+  );
+  if ((marks & SMOOTH_BIT) !== 0) {
+    for (let k = 0; k < letters.length; k++) smooth.push(out.length + k);
+  }
+  out.push(...letters);
+  // The letters share the sign's span.
+  for (let k = 1; k < letters.length; k++) starts?.push(starts.at(-1)!);
+  return i;
 }
