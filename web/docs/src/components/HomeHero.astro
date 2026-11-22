@@ -56,7 +56,9 @@ const wordmark = drawing("name", name);
         if (sessionStorage.getItem("gc-tessera")) {
           document.querySelector(".logo").classList.add("played");
         } else sessionStorage.setItem("gc-tessera", "1");
-      } catch {}
+      } catch {
+        // Storage refused: the animation plays at every visit.
+      }
     </script>
     <p class="description">
       <span class="line"
