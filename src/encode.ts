@@ -120,6 +120,36 @@ function byMarks<T>(
 }
 
 /**
+ * The letters of the Greek and Coptic block, U+0370–U+03FF, composed with
+ * marks, by the string of the marks and the letter's offset in the block.
+ * Kept across calls: there are a few hundred strings of marks at most.
+ */
+const COMPOSED_LETTERS = new Map<string, string[]>();
+const GREEK_BLOCK = 0x370;
+const GREEK_BLOCK_SIZE = 0x90;
+
+/**
+ * A letter followed by its marks, composed (NFC) when the letter is one of
+ * the Greek block: Greek output is normalized as a whole afterwards, and a
+ * text whose letters are already composed is checked quickly, where one
+ * written as letters and combining marks is composed anew. The result is
+ * the same, since a text and its parts composed are canonically equivalent.
+ */
+function composedLetter(letter: string, marks: string): string {
+  if (marks === "") return letter;
+  const offset = letter.charCodeAt(0) - GREEK_BLOCK;
+  if (letter.length !== 1 || offset < 0 || offset >= GREEK_BLOCK_SIZE) {
+    return letter + marks;
+  }
+  let letters = COMPOSED_LETTERS.get(marks);
+  if (letters === undefined) {
+    letters = [];
+    COMPOSED_LETTERS.set(marks, letters);
+  }
+  return letters[offset] ??= (letter + marks).normalize("NFC");
+}
+
+/**
  * Writes Greek, from a document that the Greek writer has prepared: its
  * numerals and double rho already written (`applyOrthography()`). With
  * `written`, records the range of each token's output in the text assembled
@@ -143,6 +173,8 @@ export function encodeGreek(
   const ends = written?.ends;
   const quotations: QuotationContext = {};
   const uppercaseOutput = options.text?.letterCase === "uppercase";
+  // Decomposed output is written as letters and marks, as it ends.
+  const composes = options.greek?.composition !== "decomposed";
 
   for (let i = 0; i < doc.length; i++) {
     const token = rendered[i];
@@ -209,14 +241,16 @@ export function encodeGreek(
     // greekUpper() leaves as it is (ϴ, ϒ).
     if (token.uppercase) base = greekUpper(base);
 
-    out += base +
-      (writesIotaAdscript(token, options)
-        ? greekMarks(token).replace("\u0345", "") +
-          (token.uppercase &&
-              (uppercaseOutput || isAmongCapitals(rendered, i))
-            ? "Ι"
-            : "ι")
-        : greekMarks(token));
+    if (writesIotaAdscript(token, options)) {
+      out += base + greekMarks(token).replace("\u0345", "") +
+        (token.uppercase && (uppercaseOutput || isAmongCapitals(rendered, i))
+          ? "Ι"
+          : "ι");
+    } else {
+      out += composes
+        ? composedLetter(base, greekMarks(token))
+        : base + greekMarks(token);
+    }
     if (ends !== undefined) ends[i] = out.length;
   }
 
