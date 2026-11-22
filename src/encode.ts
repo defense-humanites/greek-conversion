@@ -231,6 +231,12 @@ export function encodeGreek(
   const uppercaseOutput = options.text?.letterCase === "uppercase";
   // Decomposed output is written as letters and marks, as it ends.
   const composes = options.greek?.composition !== "decomposed";
+  // The tests of options that every letter would make otherwise, made once
+  // for the whole call.
+  const assimilates = options.greek?.dentalSigma === "assimilate";
+  const aspirates = options.greek?.elidedStop === "aspirate";
+  const adscript = options.greek?.iotaSubscript;
+  const writesAdscript = adscript !== undefined && adscript !== "subscript";
 
   for (let i = 0; i < doc.length; i++) {
     const token = rendered[i];
@@ -246,7 +252,9 @@ export function encodeGreek(
       continue;
     }
 
-    const ligature = writtenLigature(doc, i, options);
+    const ligature = token.glyphVariant === undefined
+      ? undefined
+      : writtenLigature(doc, i, options);
     if (ligature !== undefined) {
       // One sign for its letters, with the marks of the last one (`ϗ́`).
       const last = i + ligature.letters.length - 1;
@@ -262,9 +270,7 @@ export function encodeGreek(
       continue;
     }
 
-    const assimilated = options.greek?.dentalSigma === "assimilate"
-      ? assimilatedDental(doc, i)
-      : undefined;
+    const assimilated = assimilates ? assimilatedDental(doc, i) : undefined;
 
     if (assimilated !== undefined) {
       let base = ALPHABET.sigma.greek;
@@ -287,7 +293,7 @@ export function encodeGreek(
       continue;
     }
 
-    const outputLetter = options.greek?.elidedStop === "aspirate"
+    const outputLetter = aspirates
       ? elidedAspirate(doc, i) ?? token.letter
       : token.letter;
     let base = outputLetter === token.letter
@@ -297,7 +303,7 @@ export function encodeGreek(
     // greekUpper() leaves as it is (ϴ, ϒ).
     if (token.uppercase) base = greekUpper(base);
 
-    if (writesIotaAdscript(token, options)) {
+    if (writesAdscript && writesIotaAdscript(token, options)) {
       out += base + greekMarks(token).replace("\u0345", "") +
         (token.uppercase && (uppercaseOutput || isAmongCapitals(rendered, i))
           ? "Ι"
@@ -831,6 +837,23 @@ export function encodeTransliteration(
   // The group that starts a word is read back by initialBreathingTarget(),
   // the rest of the document only for the rough diphthongs.
   const vowelUpsilonVF = options.transliteration?.upsilon === "y-with-ou-v-f";
+  // The tests of options that every letter would make otherwise, made once
+  // for the whole call.
+  const upsilonRule = options.transliteration?.upsilon;
+  const separatesVowels = upsilonRule === "y-with-au-eu-ou" ||
+    upsilonRule === "y-with-diphthong-u" || vowelUpsilonVF;
+  const bnfKeraia = options.transliteration?.keraia === "bnf";
+  const lunateC = options.transliteration?.lunateSigma === "c";
+  const systematicRho = options.transliteration?.rho === "systematic";
+  const smoothApostrophe =
+    options.transliteration?.smoothBreathing === "apostrophe";
+  const nasalGamma = options.transliteration?.nasalGamma;
+  const writesNasalGamma = nasalGamma !== "literal";
+  const nasalExceptKappa = nasalGamma === "nasal-except-kappa";
+  const nasalMedialKappa = nasalGamma === "nasal-medial-kappa";
+  // The Latin letter of each Greek one but upsilon, which depends on its
+  // neighbors: from the options alone.
+  const bases = LATIN_BASES(options);
   // The rough diphthongs inside a word, found once and only when a vowel
   // meets an iota or upsilon with a rough breathing: they are rare.
   let roughDiphthongs: Uint8Array | undefined;
@@ -857,7 +880,7 @@ export function encodeTransliteration(
         return token.value;
       }
       if (!isBoundaryTransparent(token)) afterLetter = false;
-      if (options.transliteration?.keraia === "bnf") {
+      if (bnfKeraia) {
         if (token.value === DEXIA_KERAIA) return bnfRightKeraia(options);
         if (token.value === ARISTERI_KERAIA) return ",";
       }
@@ -880,7 +903,7 @@ export function encodeTransliteration(
     if (
       token.letter === "sigma" &&
       token.glyphVariant === "lunate-sigma" &&
-      options.transliteration?.lunateSigma === "c"
+      lunateC
     ) {
       return token.uppercase ? "C" : "c";
     }
@@ -961,13 +984,14 @@ export function encodeTransliteration(
           (isAmongCapitals(doc, index) ||
             !titleCase && standsAlone(doc, index)));
     const h = capitals ? "H" : "h";
-    const nasalGamma = options.transliteration?.nasalGamma;
-    let base = nasalGamma !== "literal" &&
-        isNasalGamma(doc, index, nasalGamma === "nasal-except-kappa") &&
-        !(nasalGamma === "nasal-medial-kappa" && isEdgeGammaKappa(doc, index))
+    let base = token.letter === "upsilon"
+      ? transliterationBase(doc, index, token.letter, options)
+      : token.letter === "gamma" && writesNasalGamma &&
+          isNasalGamma(doc, index, nasalExceptKappa) &&
+          !(nasalMedialKappa && isEdgeGammaKappa(doc, index))
       ? "n"
-      : transliterationBase(doc, index, token.letter, options);
-    const bnfLowercaseNumeral = options.transliteration?.keraia === "bnf" &&
+      : latinBase(bases, token.letter, options);
+    const bnfLowercaseNumeral = bnfKeraia &&
       token.uppercase &&
       (token.letter === "stigma" || token.letter === "sampi") &&
       bnfNumeralReadsBack(doc, index, options);
@@ -980,8 +1004,7 @@ export function encodeTransliteration(
         : base[0].toUpperCase() + base.slice(1);
     }
     if (
-      initialSmooth && index === breathingStart &&
-      options.transliteration?.smoothBreathing === "apostrophe"
+      initialSmooth && index === breathingStart && smoothApostrophe
     ) base = "\u2019" + base;
     // Whether an `h` stands right before this vowel, which then reads back
     // with a rough breathing.
@@ -990,10 +1013,7 @@ export function encodeTransliteration(
       base = (groupUppercase ? "H" : "h") +
         (capitals ? base.toUpperCase() : base.toLowerCase());
       hBefore = true;
-    } else if (
-      token.letter === "rho" &&
-      options.transliteration?.rho === "systematic"
-    ) {
+    } else if (token.letter === "rho" && systematicRho) {
       if (next?.kind !== "grapheme" || next.letter !== "rho") base += h;
     } else if (
       preservesRough &&
@@ -1016,13 +1036,18 @@ export function encodeTransliteration(
     }
     // A diaeresis and a breathing never share a vowel: none is written where
     // the vowel reads back with one (ὑἱός: `hyhiós`).
-    const separation = writesSeparationDiaeresis(doc, index, options) &&
+    // Only an iota or an upsilon takes one, under a contextual rule for
+    // upsilon: tested here, the call is made for few letters.
+    const separation = separatesVowels &&
+      (token.letter === "iota" || token.letter === "upsilon") &&
+      writesSeparationDiaeresis(doc, index, options) &&
       preservesDiaeresis && !hBefore &&
       !(smoothInPlace && token.diacritics.has("smooth"));
 
     return base +
       markString(
-        transferredAccents(rendered, index, options) ?? token,
+        (vowelUpsilonVF && transferredAccents(rendered, index, options)) ||
+          token,
         separation,
         vowelUpsilonVF && token.letter === "upsilon" &&
           isVowelUpsilonAt(doc, index - 1),
@@ -1216,6 +1241,30 @@ function caseDigraph(
     return value.toUpperCase();
   }
   return value[0].toUpperCase() + value.slice(1);
+}
+
+/**
+ * The Latin letter of each Greek letter but upsilon under the options, which
+ * transliterationBase() writes from the options alone: filled as the letters
+ * come, and kept across calls for a sealed profile.
+ */
+const LATIN_BASES = perProfile(() => new Map<Grapheme["letter"], string>());
+
+/**
+ * transliterationBase() for a letter but upsilon, kept in `bases`. The empty
+ * document stands for one that only upsilon reads.
+ */
+function latinBase(
+  bases: Map<Grapheme["letter"], string>,
+  letter: Grapheme["letter"],
+  options: ConversionOptions,
+): string {
+  let base = bases.get(letter);
+  if (base === undefined) {
+    base = transliterationBase([], 0, letter, options);
+    bases.set(letter, base);
+  }
+  return base;
 }
 
 function transliterationBase(

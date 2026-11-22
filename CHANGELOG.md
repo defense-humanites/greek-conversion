@@ -16,6 +16,12 @@ change.
   22 %. Long texts, transliteration output, and options of other forms
   convert as fast as before. No output changes. A bundle that imports
   `convert()` grows by 0.5 kB minified, 0.2 kB with gzip.
+- **Speed of transliteration.** Writing transliteration tests the options
+  once for each conversion, where it tested them for each letter, and keeps
+  the Latin letter of each Greek one for the options that conversions share.
+  Greek and Beta Code convert into transliteration 14 to 20 % faster, long
+  texts included, and `convertDetailed()` 6 %. No output changes. A bundle
+  that imports `convert()` grows by 0.4 kB minified, 0.2 kB with gzip.
 
 ## [1.0.0-rc.12] - 2026-11-22
 
