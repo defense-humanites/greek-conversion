@@ -54,20 +54,31 @@ const wordmark = drawing("name", name);
       // The tessera moves once the page has loaded and drawn a frame or two:
       // started while the browser still lays the page out and loads its
       // fonts, it lost its first frames (Safari jumped to the halves at
-      // their widest). Once a session: a later visit finds the logo still.
+      // their widest). Not when the page took over 2.5s to load, or has
+      // already been scrolled: the reader is reading, and the jolt would
+      // pass for the layout moving. Once a session: a later visit finds the
+      // logo still; a visit where it did not play does not count.
       (() => {
+        const KEY = "gc-tessera";
         try {
-          if (sessionStorage.getItem("gc-tessera")) return;
-          sessionStorage.setItem("gc-tessera", "1");
+          if (sessionStorage.getItem(KEY)) return;
         } catch {
           // Storage refused: the animation plays at every visit.
         }
-        const play = () =>
+        const play = () => {
+          if (performance.now() > 2500) return;
           requestAnimationFrame(() =>
-            requestAnimationFrame(() =>
-              document.querySelector(".logo")?.classList.add("play")
-            )
+            requestAnimationFrame(() => {
+              if (scrollY > 0) return;
+              document.querySelector(".logo")?.classList.add("play");
+              try {
+                sessionStorage.setItem(KEY, "1");
+              } catch {
+                // As above.
+              }
+            })
           );
+        };
         if (document.readyState === "complete") play();
         else addEventListener("load", play, { once: true });
       })();
