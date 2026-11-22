@@ -61,7 +61,11 @@ import { applyMonotonicOrthography, isNumeralUnits } from "./orthography.ts";
 import { betaLigature, writtenLigature } from "./ligatures.ts";
 import { isMarkCode, isUnreadCode } from "./parsers/beta_code.ts";
 import { standsApart, ZWNJ } from "./parsers/spacing_marks.ts";
-import { joinPieces, type WrittenPositions } from "./parsers/positions.ts";
+import {
+  continuesSegment,
+  joinPieces,
+  type WrittenPositions,
+} from "./parsers/positions.ts";
 import { encodePunctuation, TLG_CODE_OF } from "./punctuation.ts";
 import {
   applyGreekUnicode,
@@ -122,7 +126,9 @@ function byMarks<T>(
 /**
  * The letters of the Greek and Coptic block, U+0370–U+03FF, composed with
  * marks, by the string of the marks and the letter's offset in the block.
- * Kept across calls: there are a few hundred strings of marks at most.
+ * Kept across calls: a few hundred strings of marks in practice, and at most
+ * one for each set of the eleven marks of `GREEK_ORDER`, 2,048, of up to 144
+ * letters each.
  */
 const COMPOSED_LETTERS = new Map<string, string[]>();
 const GREEK_BLOCK = 0x370;
@@ -132,8 +138,9 @@ const GREEK_BLOCK_SIZE = 0x90;
  * A letter followed by its marks, composed (NFC) when the letter is one of
  * the Greek block: Greek output is normalized as a whole afterwards, and a
  * text whose letters are already composed is checked quickly, where one
- * written as letters and combining marks is composed anew. The result is
+ * written as letters and combining marks is composed anew. The output is
  * the same, since a text and its parts composed are canonically equivalent.
+ * Positions are not always: see {@link continuesLetter}.
  */
 function composedLetter(letter: string, marks: string): string {
   if (marks === "") return letter;
@@ -147,6 +154,23 @@ function composedLetter(letter: string, marks: string): string {
     COMPOSED_LETTERS.set(marks, letters);
   }
   return letters[offset] ??= (letter + marks).normalize("NFC");
+}
+
+/**
+ * Whether the output of `token`, the token after a letter, continues the
+ * letter's segment (`parsers/positions.ts`): a literal that starts with a
+ * combining mark the readers do not know (`ạ̓n`). With positions, the letter
+ * is then written with its marks apart. Normalization composes the segment,
+ * which each of its tokens then spans whole; composed, the letter would leave
+ * the segment unchanged, and the segment would be split between its tokens.
+ * A literal is written as its value, or as a sign that starts a segment as
+ * its value does (`encodePunctuation()`), so its value tells.
+ */
+function continuesLetter(token: Token | undefined): boolean {
+  if (token?.kind !== "literal") return false;
+  const first = token.value.codePointAt(0);
+  // No code point below U+0300, the first combining mark, continues one.
+  return first !== undefined && first >= 0x300 && continuesSegment(first);
 }
 
 /**
@@ -246,10 +270,12 @@ export function encodeGreek(
         (token.uppercase && (uppercaseOutput || isAmongCapitals(rendered, i))
           ? "Ι"
           : "ι");
+    } else if (
+      composes && !(written !== undefined && continuesLetter(rendered[i + 1]))
+    ) {
+      out += composedLetter(base, greekMarks(token));
     } else {
-      out += composes
-        ? composedLetter(base, greekMarks(token))
-        : base + greekMarks(token);
+      out += base + greekMarks(token);
     }
     if (ends !== undefined) ends[i] = out.length;
   }
