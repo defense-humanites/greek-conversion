@@ -51,14 +51,26 @@ const wordmark = drawing("name", name);
       </span>
     </h1>
     <script is:inline>
-      // Once a session: a later visit to the home page finds the logo still.
-      try {
-        if (sessionStorage.getItem("gc-tessera")) {
-          document.querySelector(".logo").classList.add("played");
-        } else sessionStorage.setItem("gc-tessera", "1");
-      } catch {
-        // Storage refused: the animation plays at every visit.
-      }
+      // The tessera moves once the page has loaded and drawn a frame or two:
+      // started while the browser still lays the page out and loads its
+      // fonts, it lost its first frames (Safari jumped to the halves at
+      // their widest). Once a session: a later visit finds the logo still.
+      (() => {
+        try {
+          if (sessionStorage.getItem("gc-tessera")) return;
+          sessionStorage.setItem("gc-tessera", "1");
+        } catch {
+          // Storage refused: the animation plays at every visit.
+        }
+        const play = () =>
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() =>
+              document.querySelector(".logo")?.classList.add("play")
+            )
+          );
+        if (document.readyState === "complete") play();
+        else addEventListener("load", play, { once: true });
+      })();
     </script>
     <p class="description">
       <span class="line"
@@ -162,27 +174,28 @@ const wordmark = drawing("name", name);
    * they arrive, the whole tessera bounces, from its centre (50.2%, 27.6%),
    * as the site's buttons do but more markedly, the closing beat: it
    * shrinks to 90% in 70ms, springs past its size to 106%, then settles
-   * with a last small give (98.5%), 0.6s in all. Once a session (`played`),
+   * with a last small give (98.5%), 0.6s in all. Once the page has loaded,
+   * once a session (`play`, set by the script above),
    * for those who do not ask for less motion.
    */
   @media (prefers-reduced-motion: no-preference) {
-    .logo:not(.played) :global(.half) {
+    .logo.play :global(.half) {
       animation-duration: 0.5s;
-      animation-delay: 0.25s;
+      animation-delay: 0.1s;
       animation-fill-mode: both;
     }
-    .logo:not(.played) :global(.half.grec) {
+    .logo.play :global(.half.grec) {
       animation-name: tessera-grec;
     }
-    .logo:not(.played) :global(.half.latin) {
+    .logo.play :global(.half.latin) {
       transform-origin: 59.7% 29.1%;
       animation-name: tessera-latin;
     }
-    .logo:not(.played) .tessera {
+    .logo.play .tessera {
       transform-origin: 50.2% 27.6%;
       animation-name: tessera-bounce;
       animation-duration: 0.6s;
-      animation-delay: 0.73s;
+      animation-delay: 0.58s;
       animation-fill-mode: both;
     }
   }
@@ -210,7 +223,7 @@ const wordmark = drawing("name", name);
   @keyframes tessera-grec {
     0% {
       transform: none;
-      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+      animation-timing-function: cubic-bezier(0.3, 0.8, 0.3, 1);
     }
     35%,
     48% {
@@ -224,7 +237,7 @@ const wordmark = drawing("name", name);
   @keyframes tessera-latin {
     0% {
       transform: none;
-      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+      animation-timing-function: cubic-bezier(0.3, 0.8, 0.3, 1);
     }
     35%,
     48% {
