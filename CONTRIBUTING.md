@@ -53,7 +53,9 @@ plainly, with `core`, and in detail, and re-encoded, under 29 sets of
 options (the defaults, every preset, and others), must give the same
 output, losses, and positions. A
 change of output that is meant goes in `MEANT` (`tests/differential.ts`),
-with its reason, until the reference moves to the release that makes it.
+with its reason, until the reference moves to the release that makes it:
+`node scripts/differential_changes.ts` lists the inputs whose conversions
+changed, with an example of each.
 `node scripts/differential_corpus.ts corpus.txt` makes the same comparison
 over a local corpus, one input per line, such as one whose license forbids
 publishing it here.
