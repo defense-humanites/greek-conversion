@@ -166,11 +166,11 @@ const wordmark = drawing("name", name);
    * Once the page has loaded, the tessera's halves part and join again, as
    * a conversion that loses nothing: they draw apart along the break (the
    * line of their offsets, 8 by 3, 7 units each: 2.12% of the frame's
-   * width, 1.46% of its height), the right one straightening out of its 2°
-   * about the point it turns on (59.7%, 29.1% of the frame), quickly, as if
-   * sprung (175ms); they pause there (40ms), then fall back to their
-   * places, faster and faster (220ms), without overshooting, which would
-   * close the break. As
+   * width, 1.46% of its height), the right one leaning further, to 4°,
+   * about the point it turns on (59.7%, 29.1% of the frame), quickly, as
+   * if sprung (175ms); they pause there (40ms), then fall back to their
+   * places, faster and faster (220ms), the right one settling back to its
+   * 2° as it lands, without overshooting, which would close the break. As
    * they arrive, the whole tessera bounces, from its centre (50.2%, 27.6%),
    * as the site's buttons do but more markedly, the closing beat: it
    * shrinks to 90% in 60ms, springs past its size to 106%, then settles
@@ -241,7 +241,7 @@ const wordmark = drawing("name", name);
     }
     40.2%,
     49.4% {
-      transform: translate(2.12%, 1.46%) rotate(-2deg);
+      transform: translate(2.12%, 1.46%) rotate(2deg);
       animation-timing-function: cubic-bezier(0.45, 0, 0.85, 0.45);
     }
     100% {
