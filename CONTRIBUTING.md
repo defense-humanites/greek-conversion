@@ -19,8 +19,9 @@ npm run bench        # throughput baseline
 ```
 
 `npm run check` type-checks and runs every TypeScript example of the README,
-of the reference (`docs/`), and of the guide pages of the documentation site,
-and compares its output with the `// →` comment, code point for code point.
+of the reference (`docs/`), of the guide pages of the documentation site, and
+of the TSDoc of `src/`, and compares its output with the `// →` comment, code
+point for code point.
 Write an example as a module, with its imports; a ```ts block that is not
 one fails the check. A conversion cited in prose (`ἀπ’ οὗ` → `ἀφ’ οὗ`) is
 checked too: it must be what the library returns under the defaults, a
@@ -28,7 +29,8 @@ preset the page names, or the options named around it
 (`scripts/check_cited_conversions.ts`, whose `--list` says which). It also fails when a change to
 the options leaves `web/playground/option_relevance.ts` out of date
 (`npm run site:options` updates it), or `docs/presets.md`, generated from the
-presets (`npm run docs:presets`), or one of the generated parts of the
+presets (`npm run docs:presets`), or `src/prepared_presets.ts`, the presets as
+prepared options (`npm run presets:generate`), or one of the generated parts of the
 documentation: the option reference `docs/options.md`
 (`npm run docs:options`), and, in the guide's page on presets, the tables of
 how each preset writes Greek (`npm run docs:comparison`) and of what it loses
@@ -53,7 +55,7 @@ documentation site at the root, the playground under `/playground/`.
 
 The site's guide pages are in `web/docs/src/content/docs/guide/`. Its
 reference pages are generated from `docs/` at each build, and its API pages
-from the TSDoc of the two entry points: edit `docs/` and the code, not the
+from the TSDoc of the entry points: edit `docs/` and the code, not the
 generated pages. Pages link to one another by their path from the site's root
 (`/reference/presets/`).
 

@@ -23,7 +23,14 @@ export const FORMATS: readonly Format[] = Object.freeze([
  */
 export function assertFormat(format: unknown): asserts format is Format {
   if (!FORMATS.includes(format as Format)) {
-    throw new RangeError(`Unknown format: ${String(format)}`);
+    // A reader or a writer is an object: one is given to the functions of
+    // the `./core` entry point, here by mistake.
+    throw new RangeError(
+      `Unknown format: ${String(format)}` +
+        (typeof format === "object" && format !== null
+          ? '; readers and writers go to "@humanities/greek-conversion/core"'
+          : ""),
+    );
   }
 }
 

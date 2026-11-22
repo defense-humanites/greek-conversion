@@ -1,11 +1,12 @@
 /**
  * Checks the TypeScript examples of README.md, of the reference (`docs/`),
- * and of the guide pages of the documentation site
+ * of the guide pages of the documentation site
  * (`web/docs/src/content/docs/`, except the reference pages generated from
- * `docs/` and the API pages), so that they cannot drift from the code: each
- * ```ts block is type-checked as a module of its own, then executed, and its
- * results are compared with the documented ones. A translated page keeps its
- * examples, so they are checked in every language.
+ * `docs/` and the API pages), and of the TSDoc of `src/`, which JSR and the
+ * API pages show, so that they cannot drift from the code: each ```ts block
+ * is type-checked as a module of its own, then executed, and its results are
+ * compared with the documented ones. A translated page keeps its examples,
+ * so they are checked in every language.
  *
  * Inside a ```ts block, an expected result is written as a comment that
  * starts with an arrow, either after a one-line statement or on the line
@@ -49,13 +50,22 @@ const ROOT = new URL("../", import.meta.url);
 const README = new URL("README.md", ROOT);
 const DOCS = new URL("docs/", ROOT);
 const PAGES = new URL("web/docs/src/content/docs/", ROOT);
+const SOURCES = new URL("src/", ROOT);
 /** The address of the site, which the README links to in full. */
 const SITE: string =
   JSON.parse(await readFile(new URL("package.json", ROOT), "utf8")).homepage;
 /** Folders of the site that are generated, from `docs/` and from the API. */
 const GENERATED = new Set(["reference", "api"]);
 const MAIN = new URL("../src/mod.ts", import.meta.url);
-const DOCUMENT = new URL("../src/document.ts", import.meta.url);
+/** The other entry points, by subpath, as `jsr.json` maps them. */
+const SUBPATHS: Record<string, URL> = Object.fromEntries(
+  Object.entries(
+    JSON.parse(await readFile(new URL("jsr.json", ROOT), "utf8"))
+      .exports as Record<string, string>,
+  )
+    .filter(([subpath]) => subpath !== ".")
+    .map(([subpath, file]) => [subpath.slice(2), new URL(file, ROOT)]),
+);
 const TSC = fileURLToPath(
   new URL("../node_modules/typescript/bin/tsc", import.meta.url),
 );
@@ -164,11 +174,40 @@ const MIGRATION: Source = {
   name: "MIGRATION.md",
   lines: (await readFile(new URL("MIGRATION.md", ROOT), "utf8")).split("\n"),
 };
-const blocks = sources.flatMap((source) =>
+// The TSDoc of the code: its comments, without the asterisks that start
+// their lines, keep the line numbers of the file. Their links are the API's,
+// which TypeDoc resolves, and are not checked here.
+const documented: Source[] = [];
+for (
+  const file of (await readdir(SOURCES, { recursive: true }))
+    .filter((file) => file.endsWith(".ts")).sort()
+) {
+  const text = await readFile(new URL(file, SOURCES), "utf8");
+  if (!text.includes("@example")) continue;
+  documented.push({
+    name: `src/${file.replaceAll("\\", "/")}`,
+    lines: text.split("\n").map((line) => line.replace(/^\s*\* ?/, "")),
+  });
+}
+const blocks = [...sources, ...documented].flatMap((source) =>
   [...codeBlocks(source.lines)].map((block) => ({ ...block, source }))
 );
 const failures: string[] = [];
 let checked = 0;
+
+// Only the blocks opened by "```ts" alone run: another opening of a
+// TypeScript block would be skipped without a word.
+for (const source of [...sources, ...documented]) {
+  for (const [index, line] of source.lines.entries()) {
+    const fence = line.trim();
+    if (/^```(?:ts|typescript)\b/.test(fence) && fence !== "```ts") {
+      failures.push(
+        `${source.name}:${index + 1}: open the block with "\`\`\`ts" alone, ` +
+          `which this check runs: ${fence}`,
+      );
+    }
+  }
+}
 
 const directory = await mkdtemp(join(tmpdir(), "greek-conversion-readme-"));
 try {
@@ -191,11 +230,18 @@ try {
       );
       continue;
     }
-    results.forEach((result, index) => {
+    // A result that the example never reaches, as one in a `catch` when
+    // nothing is thrown, fails too.
+    expectations.forEach((expectation, index) => {
       checked++;
-      if (!result.ok) {
+      const result = results[index];
+      if (result === undefined) {
         failures.push(
-          `${block.source.name}:${expectations[index].line}: ${result.detail}`,
+          `${block.source.name}:${expectation.line}: the example never reaches this result.`,
+        );
+      } else if (!result.ok) {
+        failures.push(
+          `${block.source.name}:${expectation.line}: ${result.detail}`,
         );
       }
     });
@@ -278,7 +324,7 @@ if (failures.length > 0) {
 console.log(
   `${checked} results and links check out in the README, ${references.length} reference documents, ${
     sources.length - 1 - references.length
-  } guide pages, and the migration guide.`,
+  } guide pages, the migration guide, and the TSDoc of ${documented.length} modules.`,
 );
 
 /** The guide pages under `folder`, as paths relative to it. */
@@ -439,9 +485,12 @@ function rewriteImports(
   specifier: (url: URL) => string,
 ): string {
   return program
-    .replaceAll(
-      '"@humanities/greek-conversion/document"',
-      JSON.stringify(specifier(DOCUMENT)),
+    .replace(
+      /"@humanities\/greek-conversion\/([a-z-]+)"/g,
+      (whole, subpath: string) =>
+        Object.hasOwn(SUBPATHS, subpath)
+          ? JSON.stringify(specifier(SUBPATHS[subpath]))
+          : whole,
     )
     .replaceAll(
       '"@humanities/greek-conversion"',

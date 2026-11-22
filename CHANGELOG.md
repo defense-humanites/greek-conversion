@@ -7,6 +7,38 @@ change.
 
 ## [Unreleased]
 
+### Added
+
+- **Entry points for smaller bundles.** `@humanities/greek-conversion/core`
+  exports `convert()`, `convertDetailed()` and `reencode()`, which take a
+  reader and a writer where the main entry point takes the names of formats,
+  and prepared options. The reader and the writer of each format come from
+  `/greek`, `/beta-code` and `/transliteration` (`greekReader`, `greekWriter`,
+  and `greekFormat` for both), the presets as prepared options from `/presets`
+  (`iso843Type2` for `iso-843-type-2`, and so on), and other options are
+  prepared once by `prepareOptions()`, which takes what the main entry point
+  takes. A bundle keeps only what it imports: Greek to transliteration with a
+  preset weighs 39.4 kB minified, 12.9 kB with gzip, where `convert()` from
+  the main entry point weighs 67.9 kB, 21.9 kB with gzip. The results are
+  those of the main entry point. The guide on smaller bundles compares the
+  cases; an application that reads and writes every format, or a server,
+  gains little or nothing.
+
+### Changed
+
+- The main entry point refuses readers and writers with a `RangeError`, as an
+  unknown format, and prepared options with a `TypeError`, each naming the
+  `core` entry point: given prepared options, which hold no option key, it
+  would have converted with the defaults. It refuses as well, as
+  `prepareOptions()` and `createConverter()` do, the copy that spreading makes
+  of prepared options, as in `{ ...sblGeneral, transliteration: { chi: "kh" } }`,
+  which holds the change alone; the error names the preset to write instead.
+  A preset object given for its name, as in `{ preset: sblGeneral }`, throws
+  an `OptionError` that names it.
+- **Bundle size.** The main entry point converts through the readers and
+  writers that the `core` entry point takes, so that both convert alike: a
+  bundle that imports `convert()` grows by 1.7 kB minified, 0.6 kB with gzip.
+
 ## [1.0.0-rc.11] - 2026-11-20
 
 Eleventh release candidate for `1.0.0`, which reads Byzantine texts more

@@ -9,7 +9,12 @@
  * @module
  */
 
-import { encodeResolved, encodeTracked, parseResolved } from "./conversion.ts";
+import {
+  encodeResolved,
+  encodeTracked,
+  parseResolved,
+  writerFor,
+} from "./conversion.ts";
 export { CharacterScopeError, createConverter } from "./converter.ts";
 export type {
   CharacterAliasDefinition,
@@ -167,14 +172,18 @@ export function convert(
  *
  * @example
  * ```ts
+ * import { reencode } from "@humanities/greek-conversion";
+ *
  * reencode("λόγος", "greek", {
  *   greek: { finalSigma: "medial" },
- * }); // "λόγοσ"
+ * });
+ * // → λόγοσ
  *
  * reencode("phílos", "transliteration", {
  *   transliteration: { phi: "f" },
  *   source: {},
- * }); // "fílos"
+ * });
+ * // → fílos
  * ```
  */
 export function reencode(
@@ -230,7 +239,7 @@ export function convertDetailed(
       parseResolved(output, to, resolved, true, reread);
       return { written: outputSpans, read: readSpans(output, reread) };
     },
-    { format: from, options: reading },
+    { glyphForm: writerFor(from).glyphForm, options: reading },
   );
 
   const spans: ConversionSpan[] = new Array(source.length);

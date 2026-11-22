@@ -234,7 +234,7 @@ export function encodeGreek(
  * its case and marks: the shape of a sigma (`ϲ`, `ς`, `σ`), the beta (`ϐ`,
  * `β`), a symbol form the source notes (`ϑ`, `ϴ`…), or the ordinary letter.
  * A symbol form is returned in its own case. The loss detector compares
- * these glyphs (`glyphForm()`).
+ * these glyphs (`greekGlyphForm()`).
  */
 export function greekGlyph(
   document: Document,
@@ -294,42 +294,60 @@ export function greekGlyph(
 }
 
 /**
- * The glyph that `format` writes for the letter of `token` at `index` under
- * these options, as far as it depends on the token's glyph variant: what the
- * loss detector compares, so that a variant is lost only when the options do
- * not write it again from the text read back (`docs/information-loss.md`).
- * Case is left out, which `changed-case` reports.
+ * The glyph that Greek output writes for the letter of `token` at `index`
+ * under these options, as far as it depends on the token's glyph variant:
+ * what the loss detector compares, so that a variant is lost only when the
+ * options do not write it again from the text read back
+ * (`docs/information-loss.md`). Case is left out, which `changed-case`
+ * reports. The writers' `glyphForm` hook (see `codec.ts`).
  */
-export function glyphForm(
+export function greekGlyphForm(
   document: Document,
   index: number,
   token: Grapheme,
-  format: Format,
   options: ConversionOptions,
   quotations: QuotationContext,
 ): string {
-  switch (format) {
-    case "greek":
-      return writtenLigature(document, index, options, token)?.greek ??
-        greekGlyph(document, index, token, options, quotations);
-    case "beta-code":
-      return betaLigature(document, index, options, token)?.code ??
-        (token.letter === "sigma"
-          ? betaSigma(document, index, token, options, quotations)
-          : "");
-    default:
-      return token.letter === "sigma" && rendersLunateC(token, options)
-        ? "c"
-        : "";
-  }
+  return writtenLigature(document, index, options, token)?.greek ??
+    greekGlyph(document, index, token, options, quotations);
 }
 
-/** The letters that Beta Code writes as a TLG `#` code (`#2`, stigma). */
-const HASH_CODE_LETTERS: ReadonlySet<Letter> = new Set(
-  (Object.keys(ALPHABET) as Letter[]).filter((letter) =>
-    ALPHABET[letter].beta.startsWith("#")
-  ),
-);
+/** {@link greekGlyphForm} for Beta Code output. */
+export function betaCodeGlyphForm(
+  document: Document,
+  index: number,
+  token: Grapheme,
+  options: ConversionOptions,
+  quotations: QuotationContext,
+): string {
+  return betaLigature(document, index, options, token)?.code ??
+    (token.letter === "sigma"
+      ? betaSigma(document, index, token, options, quotations)
+      : "");
+}
+
+/** {@link greekGlyphForm} for transliteration output. */
+export function transliterationGlyphForm(
+  _document: Document,
+  _index: number,
+  token: Grapheme,
+  options: ConversionOptions,
+): string {
+  return token.letter === "sigma" && rendersLunateC(token, options) ? "c" : "";
+}
+
+/**
+ * The letters that Beta Code writes as a TLG `#` code (`#2`, stigma). Built
+ * in an annotated function, as `BETA_SIGN_CODES` below: esbuild keeps a
+ * `new Set()` whose argument calls functions, even annotated, in bundles
+ * that write no Beta Code.
+ */
+const HASH_CODE_LETTERS: ReadonlySet<Letter> = /* @__PURE__ */ (() =>
+  new Set(
+    (Object.keys(ALPHABET) as Letter[]).filter((letter) =>
+      ALPHABET[letter].beta.startsWith("#")
+    ),
+  ))();
 
 /**
  * Whether the token at `index` is a letter written as a `#` code that the
@@ -410,11 +428,13 @@ function writesIotaAdscript(
 }
 
 /** The Beta Code of the signs that it writes with a code. */
-const BETA_SIGN_CODES: ReadonlyMap<string, string> = new Map([
-  ...TLG_CODE_OF,
-  [DEXIA_KERAIA, "#"],
-  [ARISTERI_KERAIA, "#22"],
-]);
+const BETA_SIGN_CODES: ReadonlyMap<string, string> =
+  /* @__PURE__ */ (() =>
+    new Map([
+      ...TLG_CODE_OF,
+      [DEXIA_KERAIA, "#"],
+      [ARISTERI_KERAIA, "#22"],
+    ]))();
 
 /** A code that a digit after it would extend: `%`, `#`, or one with digits. */
 const EXTENDED_CODE = /[%#\d]$/;

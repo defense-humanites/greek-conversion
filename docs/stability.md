@@ -12,10 +12,15 @@ break, depending on whether existing documented behavior survives.
 
 ## What the version number covers
 
-The public API is everything exported from the two entry points:
+The public API is everything exported from the entry points:
 
 - `@humanities/greek-conversion` (the main module);
-- `@humanities/greek-conversion/document` (the advanced canonical-document API).
+- `@humanities/greek-conversion/document` (the advanced canonical-document API);
+- `@humanities/greek-conversion/core` (the conversions that take readers,
+  writers, and prepared options), with `@humanities/greek-conversion/greek`,
+  `/beta-code`, and `/transliteration` (the reader and the writer of each
+  format) and `@humanities/greek-conversion/presets` (the presets as prepared
+  options).
 
 This includes runtime values, classes and their public members, types, option
 keys and values, preset identifiers, diagnostic codes, the error classes thrown
@@ -36,7 +41,10 @@ Not covered, and free to change in any release:
 - the English text of diagnostic and error messages (see below);
 - the exact `limitations`, `description`, and `coverage` texts of preset
   metadata, which are descriptive;
-- the `npm` package layout beyond its declared `exports`.
+- the `npm` package layout beyond its declared `exports`;
+- which modules a bundle keeps from an entry point, and its size: the guide
+  on smaller bundles gives the sizes of a release, which its checks keep up to
+  date, not a promise.
 
 ## Change classes
 
@@ -183,6 +191,33 @@ minor releases. Constructing one by hand is unsupported; pass partial
 
 `DEFAULT_CONVERSION_OPTIONS` and `CONVERSION_OPTION_VALUES` are frozen reference
 objects; their shape follows the rules above.
+
+`PreparedOptions`, which `prepareOptions()` returns and the presets entry point
+exports, are resolved options that only the functions of the core entry point
+read: what they hold may change in any release. They convert as the options
+they were prepared from, and a preset object as `{ preset }`, under the rules
+above. The object is frozen, and has one property, under a symbol, which marks
+it: its presence is covered, not its key or its value. Spreading prepared
+options, or `Object.assign()`, copies that property and none of the options;
+the functions that validate options, such as `prepareOptions()`, the main entry
+point, and `createConverter()`, refuse an object that has it, given as options,
+as `source`, as a group, or as the configuration of a converter, with a
+`TypeError`, rather than read it as no option at all. A copy that loses it,
+such as one made by `structuredClone()`, by JSON, or by a message to a worker,
+is an object without options.
+
+## Readers and writers
+
+A reader (`Reader`), a writer (`Writer`), or both of one format
+(`ReaderWriter`) is an opaque value: its type and the object, which is frozen,
+have no public member, so that how they read and write may change in any
+release. What is covered is their identity, the format each reads or writes,
+and the conversions of the core entry point that take them, which convert as
+the functions of the main entry point do with the names of the formats.
+
+The values of the core entry point belong to the copy of the library that made
+them: a function of another copy, such as a second version installed beside
+it, or a copy loaded in a worker, does not take them.
 
 ## Canonical document
 
