@@ -57,7 +57,7 @@ import type {
   NuTauTransliteration,
 } from "./options.ts";
 import { greekUpper } from "./case.ts";
-import { applyGreekOrthography, isNumeralUnits } from "./orthography.ts";
+import { applyMonotonicOrthography, isNumeralUnits } from "./orthography.ts";
 import { betaLigature, writtenLigature } from "./ligatures.ts";
 import { isMarkCode, isUnreadCode } from "./parsers/beta_code.ts";
 import { standsApart, ZWNJ } from "./parsers/spacing_marks.ts";
@@ -120,9 +120,10 @@ function byMarks<T>(
 }
 
 /**
- * Writes Greek. With `written`, records the range of each token's output in
- * the text assembled before Unicode normalization (see
- * `parsers/positions.ts`).
+ * Writes Greek, from a document that the Greek writer has prepared: its
+ * numerals and double rho already written (`applyOrthography()`). With
+ * `written`, records the range of each token's output in the text assembled
+ * before Unicode normalization (see `parsers/positions.ts`).
  */
 export function encodeGreek(
   doc: Document,
@@ -134,7 +135,7 @@ export function encodeGreek(
     marks(token, options, "greek").map((mark) => GREEK_FOR[mark]).join("")
   );
   const rendered = prepareDiacriticsForRendering(
-    applyGreekOrthography(doc, options),
+    applyMonotonicOrthography(doc, options),
     options,
     "greek",
   );

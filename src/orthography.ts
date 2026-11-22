@@ -107,7 +107,22 @@ export function applyGreekOrthography(
   document: Document,
   options: ConversionOptions = {},
 ): Document {
-  const orthographic = applyOrthography(document, options);
+  return applyMonotonicOrthography(
+    applyOrthography(document, options),
+    options,
+  );
+}
+
+/**
+ * The monotonic part of {@link applyGreekOrthography}, for a document to
+ * which {@link applyOrthography} has already been applied: the Greek
+ * writer's, which its `prepare` hook gives it so (see
+ * `formats/greek_writer.ts`).
+ */
+export function applyMonotonicOrthography(
+  orthographic: Document,
+  options: ConversionOptions = {},
+): Document {
   if (options.greek?.accentuation !== "monotonic") {
     return orthographic;
   }
