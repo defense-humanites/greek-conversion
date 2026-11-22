@@ -30,6 +30,7 @@ import type { ConversionOptions } from "../options.ts";
 import { parsePunctuation } from "../punctuation.ts";
 import { Trie } from "../trie.ts";
 import { codeUnitTable } from "./code_units.ts";
+import { knownMarkAfterIn, knownMarksFirst } from "./mark_order.ts";
 import type { ReadPositions } from "./positions.ts";
 import { mayHaveSpacingSigns, readSpacingMarks } from "./spacing_marks.ts";
 
@@ -82,16 +83,14 @@ function lowercase(char: string): string {
 
 /**
  * Bit of each combining mark the reader accepts, by code unit. They all lie
- * in U+0300–U+036F: the Greek marks, plus the tilde as a circumflex and the
- * cedilla as an iota subscript.
+ * in U+0300–U+036F: the Greek marks, the tilde among them, plus the cedilla
+ * as an iota subscript.
  */
 const MARKS_START = 0x0300;
 const MARK_BIT = codeUnitTable(MARKS_START, 0x70, [
   ...[...GREEK_MARKS].map(([mark, diacritic]) =>
     [mark, diacriticBit(diacritic)] as const
   ),
-  ["\u0303", diacriticBit("circumflex")],
-  ["\u0342", diacriticBit("circumflex")],
   ["\u0327", diacriticBit("iota-subscript")],
 ]);
 
@@ -121,12 +120,53 @@ export function parseTransliteration(
   positions?: ReadPositions,
 ): Document {
   const text = input.normalize("NFD");
+  return readTransliteration(text, options, positions, false) ??
+    readTransliteration(
+      knownMarksFirst(text, isTransliterationMark),
+      options,
+      positions,
+      true,
+    )!;
+}
+
+/** Whether the reader reads a mark (`mark_order.ts`). */
+const isTransliterationMark = (mark: string): boolean => markBit(mark) !== 0;
+
+/**
+ * Whether the mark at `chars[i]`, which the reader reads, follows marks of a
+ * letter that it does not, and only canonical order put it after them.
+ */
+function misplacedMark(chars: readonly string[], i: number): boolean {
+  const unknown = (char: string) =>
+    !isTransliterationMark(char) && /^\p{M}$/u.test(char);
+  let start = i;
+  while (start > 0 && i - start < 32 && unknown(chars[start - 1])) start--;
+  if (start === i || start === 0) return false;
+  const before = chars[start - 1];
+  return (isTransliterationMark(before) || /^\p{L}$/u.test(before)) &&
+    knownMarkAfterIn(chars, start, isTransliterationMark);
+}
+
+/**
+ * Reads decomposed transliteration; `undefined` when a letter has marks the
+ * reader knows after one it does not, unless `ordered`: the text is then
+ * read again with its marks in the reader's order (`mark_order.ts`).
+ */
+function readTransliteration(
+  text: string,
+  options: ConversionOptions,
+  positions: ReadPositions | undefined,
+  ordered: boolean,
+): Document | undefined {
   const chars = prioritizeEtaMark(Array.from(text), options);
   // Starts are recorded as indices in `chars` and converted to code units at
   // the end. prioritizeEtaMark() only reorders the marks of a letter, which
   // are one unit each, so the offset of a character in `text` is its offset
   // in `chars` joined.
   const starts = positions?.starts;
+  if (starts !== undefined) starts.length = 0;
+  // Whether a letter has marks the reader knows after one it does not.
+  let misordered = false;
   // Lowercased once, after prioritizeEtaMark() has reordered the marks.
   // Built with a loop rather than `chars.map()`: once this function is
   // optimized, V8's inlined `map` returns arrays of a different elements kind
@@ -268,6 +308,10 @@ export function parseTransliteration(
         }
       }
 
+      // A mark the reader knows, read here only after one it does not.
+      if (
+        !ordered && markBit(chars[i]) !== 0 && misplacedMark(chars, i)
+      ) misordered = true;
       if (rough) {
         out.push(literal(roughUppercase ? "H" : "h"));
         if (starts !== undefined) starts.push(i);
@@ -461,6 +505,7 @@ export function parseTransliteration(
     }
   }
 
+  if (misordered) return undefined;
   if (positions !== undefined && starts !== undefined) {
     positions.text = text;
     starts.push(chars.length);

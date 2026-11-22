@@ -7,6 +7,20 @@ change.
 
 ## [Unreleased]
 
+### Fixed
+
+- The Greek and transliteration readers read the marks of a letter that
+  follow a mark they do not read, when only the Unicode canonical order put
+  them after it. The dot below of the Leiden conventions (combining class
+  220) comes before the accents and breathings (230) once decomposed, so
+  `ἄ̣νθρωπος` gave `ạ̓́nthrōpos` in transliteration, its breathing and
+  accent kept as literals, and `lọ́gos` in Beta Code for `λό̣γος`; they give
+  `ạ́nthrōpos` and `lo/̣gos`.
+- The Greek reader reads the Latin tilde U+0303 as the circumflex, on any
+  letter, as the transliteration reader does and as it read the Latin
+  circumflex U+0302: `ȣ̃`, which Byzantine text has for `ȣ͂`, kept the tilde
+  as a literal, which transliteration then read as a circumflex.
+
 ## [1.0.0-rc.12] - 2026-11-22
 
 Twelfth release candidate for `1.0.0`, which converts faster and lets a web

@@ -13,6 +13,12 @@ import {
 import { GREEK_LIGATURES, ligatureLetters } from "../ligatures.ts";
 import { parsePunctuation } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
+import {
+  knownMarkAfter,
+  knownMarksFirst,
+  mayBeMark,
+  unknownMarksBefore,
+} from "./mark_order.ts";
 import type { ReadPositions } from "./positions.ts";
 import { readSpacingMarks } from "./spacing_marks.ts";
 import {
@@ -109,6 +115,22 @@ const markBit = (unit: number): number =>
 
 const SMOOTH_BIT = diacriticBit("smooth");
 
+/** Whether the reader reads a mark (`mark_order.ts`). */
+const isGreekMark = (mark: string): boolean =>
+  mark.length === 1 && markBit(mark.charCodeAt(0)) !== 0;
+
+/**
+ * Whether the mark at `i`, which the reader reads, follows marks of a letter
+ * that it does not, and only canonical order put it after them.
+ */
+function misplacedMark(text: string, i: number): boolean {
+  const start = unknownMarksBefore(text, i, isGreekMark);
+  if (start === i || start === 0) return false;
+  const before = text.charCodeAt(start - 1);
+  return (letterOf(before) !== NOT_A_LETTER || markBit(before) !== 0 ||
+    GREEK_LIGATURES.has(before)) && knownMarkAfter(text, start, isGreekMark);
+}
+
 /**
  * Whether a unit of decomposed text is a spacing sign (see
  * `spacing_marks.ts`): psili, dasia, or the spacing diaeresis, which the
@@ -129,14 +151,32 @@ export function parseGreek(
   positions?: ReadPositions,
 ): Document {
   const text = input.normalize("NFD");
+  return readGreek(text, share, positions, false) ??
+    readGreek(knownMarksFirst(text, isGreekMark), share, positions, true)!;
+}
+
+/**
+ * Reads decomposed Greek; `undefined` when a letter has marks the reader
+ * knows after one it does not, unless `ordered`: the text is then read again
+ * with its marks in the reader's order (`mark_order.ts`).
+ */
+function readGreek(
+  text: string,
+  share: boolean,
+  positions: ReadPositions | undefined,
+  ordered: boolean,
+): Document | undefined {
   const out: Token[] = [];
   const starts = positions?.starts;
+  if (starts !== undefined) starts.length = 0;
   if (positions !== undefined) positions.text = text;
   // The letters read with a smooth breathing, which alone may bear a
   // coronis, and whether the text has a spacing sign, noted as each unit is
   // read rather than searched for afterwards.
   const smooth: number[] = [];
   let spacing = false;
+  // Whether a letter has marks the reader knows after one it does not.
+  let misordered = false;
 
   for (let i = 0; i < text.length;) {
     const unit = text.charCodeAt(i);
@@ -146,10 +186,15 @@ export function parseGreek(
     if (letter === NOT_A_LETTER) {
       const ligature = GREEK_LIGATURES.get(unit);
       if (ligature !== undefined) {
-        i = readLigature(text, i, ligature, out, starts, smooth);
+        i = readLigature(text, i, ligature, out, starts, smooth, ordered);
+        if (i < 0) return undefined;
         continue;
       }
       if (isSpacingSign(unit)) spacing = true;
+      // A mark the reader knows, read here only after one it does not.
+      if (!ordered && markBit(unit) !== 0 && misplacedMark(text, i)) {
+        misordered = true;
+      }
       const source = codePointAt(text, i);
       const value = parsePunctuation(source, "greek") ?? source;
       out.push(share ? sharedLiteral(value) : literal(value));
@@ -180,6 +225,7 @@ export function parseGreek(
     );
   }
 
+  if (misordered) return undefined;
   if (starts !== undefined) starts.push(text.length);
 
   if (spacing) {
@@ -196,8 +242,9 @@ export function parseGreek(
 /**
  * Reads the sign for several letters at `i` (`ϗ`, `ȣ`), with the marks
  * written after it, which belong to its last letter; returns where reading
- * goes on. Out of the loop of `parseGreek`, which this rare case would
- * otherwise make longer.
+ * goes on, or -1 where the text is to be read again, as by `readGreek`. Out
+ * of the loop of `readGreek`, which this rare case would otherwise make
+ * longer.
  */
 function readLigature(
   text: string,
@@ -206,6 +253,7 @@ function readLigature(
   out: Token[],
   starts: number[] | undefined,
   smooth: number[],
+  ordered: boolean,
 ): number {
   let marks = 0;
   for (i++; i < text.length; i++) {
@@ -213,6 +261,10 @@ function readLigature(
     if (bit === 0) break;
     marks |= bit;
   }
+  if (
+    !ordered && i < text.length && mayBeMark(text.charCodeAt(i)) &&
+    knownMarkAfter(text, i, isGreekMark)
+  ) return -1;
   const next = letterOf(text.charCodeAt(i));
   const letters = ligatureLetters(
     ligature,
