@@ -336,12 +336,18 @@ export function transliterationGlyphForm(
   return token.letter === "sigma" && rendersLunateC(token, options) ? "c" : "";
 }
 
-/** The letters that Beta Code writes as a TLG `#` code (`#2`, stigma). */
-const HASH_CODE_LETTERS: ReadonlySet<Letter> = /* @__PURE__ */ new Set(
-  (Object.keys(ALPHABET) as Letter[]).filter((letter) =>
-    ALPHABET[letter].beta.startsWith("#")
-  ),
-);
+/**
+ * The letters that Beta Code writes as a TLG `#` code (`#2`, stigma). Built
+ * in an annotated function, as `BETA_SIGN_CODES` below: esbuild keeps a
+ * `new Set()` whose argument calls functions, even annotated, in bundles
+ * that write no Beta Code.
+ */
+const HASH_CODE_LETTERS: ReadonlySet<Letter> = /* @__PURE__ */ (() =>
+  new Set(
+    (Object.keys(ALPHABET) as Letter[]).filter((letter) =>
+      ALPHABET[letter].beta.startsWith("#")
+    ),
+  ))();
 
 /**
  * Whether the token at `index` is a letter written as a `#` code that the
@@ -422,11 +428,13 @@ function writesIotaAdscript(
 }
 
 /** The Beta Code of the signs that it writes with a code. */
-const BETA_SIGN_CODES: ReadonlyMap<string, string> = new Map([
-  ...TLG_CODE_OF,
-  [DEXIA_KERAIA, "#"],
-  [ARISTERI_KERAIA, "#22"],
-]);
+const BETA_SIGN_CODES: ReadonlyMap<string, string> =
+  /* @__PURE__ */ (() =>
+    new Map([
+      ...TLG_CODE_OF,
+      [DEXIA_KERAIA, "#"],
+      [ARISTERI_KERAIA, "#22"],
+    ]))();
 
 /** A code that a digit after it would extend: `%`, `#`, or one with digits. */
 const EXTENDED_CODE = /[%#\d]$/;

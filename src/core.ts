@@ -283,6 +283,8 @@ function kind(value: unknown): string {
     : hasPreparedMark(value)
     ? Object.getPrototypeOf(value) === Object.prototype
       ? "a copy of prepared options"
-      : "prepared options"
+      : preparedProfiles(value)
+      ? "prepared options"
+      : "prepared options of another copy of the library, or a wrapper of them"
     : "an object";
 }

@@ -195,6 +195,20 @@ const blocks = [...sources, ...documented].flatMap((source) =>
 const failures: string[] = [];
 let checked = 0;
 
+// Only the blocks opened by "```ts" alone run: another opening of a
+// TypeScript block would be skipped without a word.
+for (const source of [...sources, ...documented]) {
+  for (const [index, line] of source.lines.entries()) {
+    const fence = line.trim();
+    if (/^```(?:ts|typescript)\b/.test(fence) && fence !== "```ts") {
+      failures.push(
+        `${source.name}:${index + 1}: open the block with "\`\`\`ts" alone, ` +
+          `which this check runs: ${fence}`,
+      );
+    }
+  }
+}
+
 const directory = await mkdtemp(join(tmpdir(), "greek-conversion-readme-"));
 try {
   failures.push(...await typeCheck(blocks, directory));
@@ -216,11 +230,18 @@ try {
       );
       continue;
     }
-    results.forEach((result, index) => {
+    // A result that the example never reaches, as one in a `catch` when
+    // nothing is thrown, fails too.
+    expectations.forEach((expectation, index) => {
       checked++;
-      if (!result.ok) {
+      const result = results[index];
+      if (result === undefined) {
         failures.push(
-          `${block.source.name}:${expectations[index].line}: ${result.detail}`,
+          `${block.source.name}:${expectation.line}: the example never reaches this result.`,
+        );
+      } else if (!result.ok) {
+        failures.push(
+          `${block.source.name}:${expectation.line}: ${result.detail}`,
         );
       }
     });

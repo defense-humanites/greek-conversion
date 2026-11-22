@@ -39,10 +39,12 @@ import { betaSigma } from "./encode.ts";
 import { decimalNumeralTokens } from "./orthography.ts";
 import {
   isCharacterInPresetScope,
+  preparedOptionsError,
   presetMappingIssue,
   resolveConversionOptions,
   resolveConversionProfiles,
 } from "./presets.ts";
+import { hasPreparedMark } from "./prepared_mark.ts";
 import {
   type ReadPositions,
   readSpans,
@@ -774,6 +776,13 @@ export class Converter {
         `Converter is bound to preset ${this.#preset}; received ${options.preset}.`,
       );
     }
+    // Checked before the spread below, which would make a copy of them.
+    if (
+      typeof options === "object" && options !== null &&
+      hasPreparedMark(options)
+    ) {
+      throw preparedOptionsError(options, "conversion options");
+    }
     return resolveConversionProfiles(
       this.#preset === undefined
         ? options
@@ -843,6 +852,14 @@ const FORM_KEYS = ["lowercase", "uppercase"];
  * values are checked where they are read.
  */
 function assertConfiguration(configuration: unknown): void {
+  // Prepared options, and their copies, have no key: they would read as an
+  // empty configuration (see `prepared_mark.ts`).
+  if (
+    typeof configuration === "object" && configuration !== null &&
+    hasPreparedMark(configuration)
+  ) {
+    throw preparedOptionsError(configuration, "the converter configuration");
+  }
   assertKeys(configuration, CONFIGURATION_KEYS, "");
   const { aliases, characters, repertoire, exclude } = configuration as Record<
     string,

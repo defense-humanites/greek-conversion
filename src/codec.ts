@@ -137,7 +137,7 @@ export let writerHooks: (value: unknown) => WriterHooks | undefined;
  * The runtime class of readers and writers, which the types above, declared
  * only, describe from outside. Nothing reaches the hooks but this module: a
  * handle shows no property; the functions that read its private fields are
- * not members of the class, which an instance leads to by its
+ * not public members of the class, which an instance leads to by its
  * `constructor`, but are assigned from inside it to the variables above;
  * `new` from outside throws; and the hooks, the handles, the class, and its
  * prototype are frozen.
@@ -159,7 +159,11 @@ class Codec {
     Object.freeze(this);
   }
 
-  static {
+  // Assigns the functions that read the private fields, from inside the
+  // class: a static field rather than a static block, which Safari supports
+  // only from 16.4.
+  // oxlint-disable-next-line no-unused-private-class-members
+  static #accessors = (() => {
     readerHooks = (value) =>
       typeof value === "object" && value !== null && #reader in value
         ? value.#reader
@@ -168,7 +172,7 @@ class Codec {
       typeof value === "object" && value !== null && #writer in value
         ? value.#writer
         : undefined;
-  }
+  })();
 }
 Object.freeze(Codec.prototype);
 Object.freeze(Codec);

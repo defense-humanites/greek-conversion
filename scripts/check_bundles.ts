@@ -188,11 +188,13 @@ async function bundle(
     gzip: gzipSync(output, { level: 9 }).length,
     modules: Object.entries(meta.inputs)
       .filter(([, input]) => input.bytesInOutput > 0)
-      .map(([path]) => path.replace(/^.*\/npm\/esm\//, "")),
+      // esbuild gives the paths from the working directory: `npm/esm/…`
+      // from the root of the repository.
+      .map(([path]) => path.replace(/^(?:.*\/)?npm\/esm\//, "")),
   };
 }
 
-/** A cell of the guide's table, as `38.8 kB, 12.8 kB gzip (−41 %)`. */
+/** A cell of the guide's table, as `39.4 kB, 12.9 kB gzip (−41 %)`. */
 const CELL = /^(\d+\.\d) kB, (\d+\.\d) kB gzip \(([−+])(\d+) %\)$/;
 
 /**
@@ -210,7 +212,7 @@ function documented(guide: string, row: string): number[][] {
     if (match === null) {
       failures.push(
         `The guide's row "${row}" has a cell that does not read ` +
-          `"38.8 kB, 12.8 kB gzip (−41 %)", with a minus sign: ${cell.trim()}`,
+          `"39.4 kB, 12.9 kB gzip (−41 %)", with a minus sign: ${cell.trim()}`,
       );
       return [];
     }
@@ -251,6 +253,18 @@ try {
         `console.log(convertDetailed("λόγος", "greek", "transliteration", { preset: "iso-843-type-2" }));`,
     ),
   };
+  // The checks of modules compare names read from the paths that esbuild
+  // gives: the bundle of the main entry point keeps its own modules, or the
+  // names are not read, and no check of a module could fail.
+  for (const module of ["mod.js", "conversion.js"]) {
+    if (!references.convert.modules.includes(module)) {
+      failures.push(
+        `The bundle of convert() has no module ${module} among ` +
+          `${references.convert.modules.slice(0, 3).join(", ")}…: ` +
+          "the names of the modules are not read from their paths.",
+      );
+    }
+  }
   const kB = (bytes: number) => Math.round(bytes / 100) / 10;
   const intro = guide.match(
     /`convert\(\)`\s+\((\d+\.\d) kB, (\d+\.\d) kB with gzip\), or\s+`convertDetailed\(\)` \((\d+\.\d) kB, (\d+\.\d) kB\)/,

@@ -117,16 +117,16 @@ try {
 Bundles of the conversions below, made with esbuild for this release,
 minified, then with gzip. The percentage compares the size with gzip to that
 of the same conversion imported from the main entry point: `convert()`
-(67.7 kB, 21.8 kB with gzip), or `convertDetailed()` (76.2 kB, 24.6 kB).
+(67.9 kB, 21.9 kB with gzip), or `convertDetailed()` (76.4 kB, 24.7 kB).
 
 | Conversions                                   | With a preset or the defaults | With `prepareOptions()`       |
 | --------------------------------------------- | ----------------------------- | ----------------------------- |
-| Greek to Beta Code                            | 31.9 kB, 11.2 kB gzip (−49 %) | 40.1 kB, 13.6 kB gzip (−38 %) |
-| Beta Code to Greek                            | 35.6 kB, 12.2 kB gzip (−44 %) | 43.9 kB, 14.7 kB gzip (−33 %) |
-| Greek to transliteration                      | 39.4 kB, 13.0 kB gzip (−41 %) | 47.7 kB, 15.4 kB gzip (−29 %) |
-| Greek and transliteration both ways           | 54.8 kB, 17.7 kB gzip (−19 %) | 63.1 kB, 20.1 kB gzip (−8 %)  |
-| Every format both ways                        | 61.1 kB, 19.8 kB gzip (−9 %)  | 69.4 kB, 22.3 kB gzip (+2 %)  |
-| `convertDetailed()`, Greek to transliteration | 63.4 kB, 20.5 kB gzip (−17 %) | 71.7 kB, 23.0 kB gzip (−6 %)  |
+| Greek to Beta Code                            | 31.9 kB, 11.2 kB gzip (−49 %) | 40.4 kB, 13.7 kB gzip (−37 %) |
+| Beta Code to Greek                            | 35.6 kB, 12.2 kB gzip (−44 %) | 44.1 kB, 14.7 kB gzip (−33 %) |
+| Greek to transliteration                      | 39.4 kB, 12.9 kB gzip (−41 %) | 47.9 kB, 15.4 kB gzip (−29 %) |
+| Greek and transliteration both ways           | 54.8 kB, 17.6 kB gzip (−19 %) | 63.3 kB, 20.1 kB gzip (−8 %)  |
+| Every format both ways                        | 61.2 kB, 19.8 kB gzip (−9 %)  | 69.7 kB, 22.4 kB gzip (+2 %)  |
+| `convertDetailed()`, Greek to transliteration | 63.4 kB, 20.5 kB gzip (−17 %) | 71.9 kB, 23.1 kB gzip (−6 %)  |
 
 The `core` entry point is worth it with a preset or the defaults, unless the
 application reads and writes every format. With `prepareOptions()`, it is
@@ -182,6 +182,11 @@ point, would bring the metadata of every preset, about 10 kB.
   to the copy of the library that made them: a function of another copy,
   such as a second version installed beside it, does not take them. A worker
   imports its own, and does not receive them in a message.
+- **Store the name of a preset.** A copy made by `structuredClone()`, by JSON,
+  or by a message holds nothing of prepared options: the functions of `core`
+  refuse it, but the main entry point would read it as no option, and
+  convert with the defaults. Store or send the identifier of a preset
+  (`"sbl-general"`), and import or prepare the options where they are used.
 
 ## Errors
 

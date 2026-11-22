@@ -17,6 +17,7 @@ import {
   OptionError,
   type Preset,
 } from "../src/mod.ts";
+import { readerHooks, writerHooks } from "../src/codec.ts";
 import { parse } from "../src/document.ts";
 import { preparedProfiles } from "../src/prepared.ts";
 import { resolveConversionProfiles } from "../src/presets.ts";
@@ -178,6 +179,33 @@ test("readers, writers and prepared options show nothing", () => {
   }
 });
 
+test("the hooks and the profiles behind the values are frozen", () => {
+  for (const format of FORMATS) {
+    const reading = readerHooks(READERS[format])!;
+    const writing = writerHooks(WRITERS[format])!;
+    assert(Object.isFrozen(reading), format);
+    assert(Object.isFrozen(writing), format);
+    // The joined value holds the same hooks.
+    assert(readerHooks(FORMAT_VALUES[format]) === reading, format);
+    assert(writerHooks(FORMAT_VALUES[format]) === writing, format);
+  }
+  for (
+    const prepared of [
+      ...Object.values(presets),
+      core.prepareOptions({ preset: "perseus", source: {} }),
+    ]
+  ) {
+    const profiles = preparedProfiles(prepared)!;
+    assert(Object.isFrozen(profiles));
+    for (const profile of [profiles.reading, profiles.writing]) {
+      assert(Object.isFrozen(profile));
+      for (const group of Object.values(profile)) {
+        assert(Object.isFrozen(group));
+      }
+    }
+  }
+});
+
 test("readers, writers and prepared options lead to nothing by their constructor", () => {
   const values: unknown[] = [
     greek.greekReader,
@@ -191,7 +219,7 @@ test("readers, writers and prepared options lead to nothing by their constructor
       new (...values: unknown[]): unknown;
     };
     // No static member reads the private fields, and none can be added.
-    assertEquals(Object.getOwnPropertyNames(constructor).sort(), [
+    assertEquals(Reflect.ownKeys(constructor).sort(), [
       "length",
       "name",
       "prototype",
@@ -385,6 +413,39 @@ test("prepared options spread into options are refused, with what to write", () 
     () => core.prepareOptions(presets.iso843Type2 as ConversionOptions),
     TypeError,
     'Expected conversion options, received prepared options, which only the functions of "@humanities/greek-conversion/core" take: name the preset instead, as in { preset: "iso-843-type-2" }.',
+  );
+  // The configuration of a converter, and the options of a bound one.
+  for (
+    const configuration of [
+      presets.sblGeneral,
+      { ...presets.sblGeneral, outOfScopeBehavior: "reject" },
+    ]
+  ) {
+    assertThrows(
+      () => createConverter(configuration as never),
+      TypeError,
+      "Expected the converter configuration, received ",
+    );
+  }
+  assertThrows(
+    () =>
+      createConverter({ preset: "perseus" }).convert(
+        "χάος",
+        "greek",
+        "transliteration",
+        presets.iso843Type2 as ConversionOptions,
+      ),
+    TypeError,
+    'Expected conversion options, received prepared options, which only the functions of "@humanities/greek-conversion/core" take:',
+  );
+  // A preset object given for its name.
+  assertThrows(
+    () =>
+      main.convert("χάος", "greek", "transliteration", {
+        preset: presets.sblGeneral as unknown as Preset,
+      }),
+    OptionError,
+    'Unknown conversion preset: prepared options, which are not its name: name it instead, as in { preset: "sbl-general" }',
   );
   // What the error says to write converts with the preset and the change.
   assertEquals(

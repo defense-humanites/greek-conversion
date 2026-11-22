@@ -193,15 +193,18 @@ minor releases. Constructing one by hand is unsupported; pass partial
 objects; their shape follows the rules above.
 
 `PreparedOptions`, which `prepareOptions()` returns and the presets entry point
-exports, are resolved options with no public member: what they hold may change
-in any release, and only the functions of the core entry point read them. They
-convert as the options they were prepared from, and a preset object as
-`{ preset }`, under the rules above. The object is frozen, and its one property,
-under a symbol, holds the identifier of the preset it is, or `null`: spreading
-prepared options copies that property and none of the options, and the
-functions that take options, as `prepareOptions()` and the main entry point,
-refuse prepared options or a copy of them with a `TypeError`, wherever they are
-given, rather than read them as no option at all.
+exports, are resolved options that only the functions of the core entry point
+read: what they hold may change in any release. They convert as the options
+they were prepared from, and a preset object as `{ preset }`, under the rules
+above. The object is frozen, and has one property, under a symbol, which marks
+it: its presence is covered, not its key or its value. Spreading prepared
+options, or `Object.assign()`, copies that property and none of the options;
+the functions that validate options, such as `prepareOptions()`, the main entry
+point, and `createConverter()`, refuse an object that has it, given as options,
+as `source`, as a group, or as the configuration of a converter, with a
+`TypeError`, rather than read it as no option at all. A copy that loses it,
+such as one made by `structuredClone()`, by JSON, or by a message to a worker,
+is an object without options.
 
 ## Readers and writers
 

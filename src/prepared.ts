@@ -62,12 +62,15 @@ class Prepared {
     Object.freeze(this);
   }
 
-  static {
+  // Assigns the function that reads the private field, from inside the
+  // class, as in `codec.ts`.
+  // oxlint-disable-next-line no-unused-private-class-members
+  static #accessor = (() => {
     preparedProfiles = (value) =>
       typeof value === "object" && value !== null && #profiles in value
         ? value.#profiles
         : undefined;
-  }
+  })();
 }
 Object.freeze(Prepared.prototype);
 Object.freeze(Prepared);

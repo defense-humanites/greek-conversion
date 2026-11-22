@@ -369,7 +369,7 @@ function validateConversionOptions(options: unknown, prefix: string): void {
   if (hasPreparedMark(options)) {
     throw preparedOptionsError(
       options,
-      prefix === "" ? "conversion" : prefix.slice(0, -1),
+      `${prefix === "" ? "conversion" : prefix.slice(0, -1)} options`,
     );
   }
   const keys = prefix === "" ? TOP_LEVEL_KEYS : PROFILE_KEYS;
@@ -400,7 +400,7 @@ function validateConversionOptions(options: unknown, prefix: string): void {
       );
     }
     if (hasPreparedMark(value)) {
-      throw preparedOptionsError(value, prefix + group);
+      throw preparedOptionsError(value, `${prefix}${group} options`);
     }
     const table = CONVERSION_OPTION_VALUES[group] as Record<
       string,
@@ -452,21 +452,26 @@ function validateConversionOptions(options: unknown, prefix: string): void {
 }
 
 /**
- * The error for prepared options, or a copy of them, given as the options
- * that `what` names: the options of a conversion, its `source`, or a group.
- * It says what to write instead: the name of the preset, which the mark
- * holds, or the options that were prepared.
+ * The error for prepared options, or a copy of them, given where `expected`
+ * is: the options of a conversion, its `source`, a group, or the
+ * configuration of a converter. It says what to write instead: the name of
+ * the preset, which the mark holds, or the options that were prepared.
+ *
+ * Internal: `converter.ts` refuses them too.
  */
-function preparedOptionsError(options: object, what: string): TypeError {
+export function preparedOptionsError(
+  options: object,
+  expected: string,
+): TypeError {
   const preset = (options as { [PREPARED]?: unknown })[PREPARED];
   const instead = typeof preset === "string"
     ? `name the preset instead, as in { preset: ${JSON.stringify(preset)} }`
     : "give the options that were prepared instead";
   return new TypeError(
     Object.getPrototypeOf(options) === Object.prototype
-      ? `Expected ${what} options, received a copy of prepared options, ` +
+      ? `Expected ${expected}, received a copy of prepared options, ` +
         `which holds none of them: ${instead}.`
-      : `Expected ${what} options, received prepared options, which only ` +
+      : `Expected ${expected}, received prepared options, which only ` +
         `the functions of "@humanities/greek-conversion/core" take: ${instead}.`,
   );
 }
@@ -598,10 +603,23 @@ export function registeredOptions(
     const removed = Object.hasOwn(REMOVED_PRESETS, preset)
       ? REMOVED_PRESETS[preset]
       : undefined;
+    // A preset imported from `./presets`, given for its name.
+    const named = typeof preset === "object" && preset !== null &&
+        hasPreparedMark(preset)
+      ? (preset as { [PREPARED]?: unknown })[PREPARED]
+      : undefined;
     throw new OptionError(
       `Unknown conversion preset${
         prefix === "" ? "" : ` for ${prefix}preset`
-      }: ${preset}${removed === undefined ? "" : ` (removed: ${removed})`}`,
+      }: ${
+        named === undefined
+          ? preset
+          : `prepared options, which are not its name${
+            typeof named === "string"
+              ? `: name it instead, as in { preset: ${JSON.stringify(named)} }`
+              : ""
+          }`
+      }${removed === undefined ? "" : ` (removed: ${removed})`}`,
       {
         path: `${prefix}preset`,
         received: preset,

@@ -36,9 +36,12 @@ protects these behaviors.
   for a key or value that an earlier release knew, its current spelling
   (`replacement`). An unknown format throws a plain `RangeError`, an option
   group of the wrong type or an input that is not a string a `TypeError`. The
-  functions of the `core` entry point take readers, writers, and options that
-  `prepareOptions()` has checked so: given anything else, the name of a
-  format or an object of options included, they throw a `TypeError`.
+  functions of the `core` entry point take readers, writers, and prepared
+  options, which the presets entry point exports and `prepareOptions()`
+  returns: given anything else, the name of a format or an object of options
+  included, they throw a `TypeError`. Prepared options, or a copy made by
+  spreading them, given where options are validated also throw a `TypeError`,
+  which names the preset to write instead.
   `FORMATS` and `CONVERSION_OPTION_VALUES` list everything that is accepted.
   Every option value is plain ASCII. The configuration of `createConverter()`
   is checked the same way: an unknown key, of the configuration, of an alias,
