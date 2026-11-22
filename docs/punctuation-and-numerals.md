@@ -104,6 +104,9 @@ dash and a solidus. Before anything but a letter, `*` is an asterisk.
 Bare, `<` and `>` write an overline over the letters between them (`<qs>`,
 `θ̅ς̅`), as in the TLG; where no letter stands between them, or a digit
 follows one (`<1`…`>1`, other mark-up of the TLG), they are kept as text.
+Letters between them are overlined whatever they spell: mark-up that a file
+writes in angle brackets around a word, such as `<super>`, is not read as
+mark-up, and gives `σ̅υ̅π̅ε̅ρ̅`.
 The codes of `&` and `"` (`%9` and `%98`) are left out: bare, the TLG uses
 these signs for mark-up (a font, quotation marks), which the reader keeps as
 text, and the writer writes them bare, so that Beta Code converted to itself

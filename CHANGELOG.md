@@ -7,6 +7,18 @@ change.
 
 ## [Unreleased]
 
+### Changed
+
+- **Documentation.** The guarantees name the two cases where converting the
+  output again may change it: the characters of another format that a
+  source holds as literals (`ϗ` or U+0301 typed in Beta Code), which the
+  target's reader may read, and a letter written as a TLG code before a
+  digit. They also say that normalization takes time in the square of the
+  marks on one letter. The reference says that Beta Code reads the letters
+  of mark-up in angle brackets (`<super>`) as overlined, and gives the
+  positions of the letters of a sign, of a breathing joined to its capital,
+  and of the `<` and `>` of an overline.
+
 ### Fixed
 
 - The Greek and transliteration readers read the marks of a letter that
