@@ -5,7 +5,7 @@
  * example given in the page's body. The playground opens in a new tab, as
  * from the header.
  * The logo follows the system's appearance, as the whole site does; its
- * tessera's halves part and join once the page has loaded.
+ * tessera's halves part and join once the page has loaded, once a session.
  */
 import { LinkButton } from "@astrojs/starlight/components";
 import logoSource from "../../public/logo-light.svg?raw";
@@ -14,36 +14,50 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 
 /*
  * The logo, drawn in the page rather than as an image, so that the two
- * halves of the tessera can move: the light file's four colours become
- * classes (each half of the symbol, each word of the name), coloured below
- * for both appearances, and each half gets a group of its own inside the
- * one that places it, for the animation to move it from its place.
+ * halves of the tessera can move. It is split into three drawings stacked
+ * on one another, each with the logo's whole frame: each half of the
+ * symbol, and the name. The halves move as elements of the page, which the
+ * browser moves without drawing them again; moved inside one drawing,
+ * Safari drew the whole logo again at every frame, and stuttered. The
+ * light file's four colours become classes (each half, each word of the
+ * name), coloured below for both appearances.
  */
 let colour = 0;
 const PARTS = ["grec", "latin", "word-greek", "word-conversion"];
-const logo = logoSource
-  .replace(/ width="\d+" height="\d+"/, ' width="308" height="168"')
-  .replace(/ fill="#[0-9A-F]{6}"/g, () => ` class="${PARTS[colour++]}"`)
-  .replace(
-    /(<g transform="[^"]*">)(<path class="(grec|latin)")/g,
-    '$1<g class="half $3">$2',
-  )
-  .replace(/(<path class="(?:grec|latin)"[^>]*\/>)<\/g>/g, "$1</g></g>")
-  // The whole symbol in a group of its own too, for its final bounce.
-  .replace(/^(<svg[^>]*>)(<g transform="[^"]*">)/, '$1$2<g class="tessera">')
-  .replace('</g><g transform="translate(0 ', '</g></g><g transform="translate(0 ');
-if (
-  colour !== PARTS.length || !logo.includes('class="half latin"') ||
-  !logo.includes('<g class="tessera">') ||
-  logo.split("<g").length !== logo.split("</g>").length
-) {
+const coloured = logoSource.trim().replace(
+  / fill="#[0-9A-F]{6}"/g,
+  () => ` class="${PARTS[colour++]}"`,
+);
+const parts = coloured.match(
+  /^<svg[^>]*viewBox="([^"]*)"[^>]*>(<g transform="[^"]*">)(<g transform="[^"]*"><path class="grec"[^>]*\/><\/g>)(<g transform="[^"]*"><path class="latin"[^>]*\/><\/g>)<\/g>(<g transform="[^"]*">(?:<path[^>]*\/>)+<\/g>)<\/svg>$/,
+);
+if (colour !== PARTS.length || parts === null) {
   throw new Error("The logo no longer has the parts the home page moves.");
 }
+const [, viewBox, symbol, grec, latin, name] = parts;
+const drawing = (className: string, content: string) =>
+  `<svg class="${className}" viewBox="${viewBox}" aria-hidden="true">${content}</svg>`;
+const halves = drawing("half grec", symbol + grec + "</g>") +
+  drawing("half latin", symbol + latin + "</g>");
+const wordmark = drawing("name", name);
 ---
 
 <section class="home-hero not-content">
   <div class="intro">
-    <h1 id="_top" class="logo" set:html={logo} />
+    <h1 id="_top" class="logo">
+      <span class="art" role="img" aria-label="greek conversion">
+        <span class="tessera" set:html={halves} />
+        <Fragment set:html={wordmark} />
+      </span>
+    </h1>
+    <script is:inline>
+      // Once a session: a later visit to the home page finds the logo still.
+      try {
+        if (sessionStorage.getItem("gc-tessera")) {
+          document.querySelector(".logo").classList.add("played");
+        } else sessionStorage.setItem("gc-tessera", "1");
+      } catch {}
+    </script>
     <p class="description">
       <span class="line"
         >A TypeScript library that converts Ancient and Modern&nbsp;Greek</span
@@ -96,10 +110,22 @@ if (
     line-height: 0;
   }
   /* 70% of the screen, between that of a 360px screen, the page's
-     narrowest (`theme.css`), and 19rem. */
-  .logo :global(svg) {
+     narrowest (`theme.css`), and 19rem; the three drawings on one another,
+     in the logo's frame. */
+  .art {
+    position: relative;
+    /* Inline, on the heading's baseline as the image it replaces was, so
+       that what follows keeps its distance. */
+    display: inline-block;
     width: clamp(15.75rem, 70vw, 19rem);
-    height: auto;
+    aspect-ratio: 308 / 168;
+  }
+  .art :global(svg),
+  .tessera {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
   /* The colours of the two logo files, by appearance. */
   .logo :global(.grec),
@@ -125,30 +151,30 @@ if (
   /*
    * Once the page has loaded, the tessera's halves part and join again, as
    * a conversion that loses nothing: they draw apart along the break (the
-   * line of their offsets, 8 by 3), the right one straightening out of its
-   * 2°, then come back to their places without overshooting, which would
-   * close the break. As they arrive, the whole tessera gives the bounce of
-   * the site's buttons: it shrinks to 96% in 60ms, then springs back in
-   * 320ms with their overshoot (--squish, --ease-bounce). Once, for those
-   * who do not ask for less motion.
+   * line of their offsets, 8 by 3, 6 units each: 1.82% of the frame's
+   * width, 1.25% of its height), the right one straightening out of its 2°
+   * about the point it turns on (59.7%, 29.1% of the frame), then come back
+   * to their places without overshooting, which would close the break. As
+   * they arrive, the whole tessera gives the bounce of the site's buttons,
+   * from its centre (50.2%, 27.6%): it shrinks to 96% in 60ms, then springs
+   * back in 320ms with their overshoot (--squish, --ease-bounce). Once a
+   * session (`played`), for those who do not ask for less motion.
    */
   @media (prefers-reduced-motion: no-preference) {
-    .logo :global(.half) {
-      transform-box: view-box;
-      transform-origin: 84px 60px;
+    .logo:not(.played) :global(.half) {
       animation-duration: 0.65s;
       animation-delay: 0.25s;
       animation-fill-mode: both;
     }
-    .logo :global(.half.grec) {
+    .logo:not(.played) :global(.half.grec) {
       animation-name: tessera-grec;
     }
-    .logo :global(.half.latin) {
+    .logo:not(.played) :global(.half.latin) {
+      transform-origin: 59.7% 29.1%;
       animation-name: tessera-latin;
     }
-    .logo :global(.tessera) {
-      transform-box: fill-box;
-      transform-origin: center;
+    .logo:not(.played) .tessera {
+      transform-origin: 50.2% 27.6%;
       animation-name: tessera-bounce;
       animation-duration: 0.38s;
       animation-delay: 0.85s;
@@ -174,7 +200,7 @@ if (
       animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
     }
     45% {
-      transform: translate(-6px, -2.25px);
+      transform: translate(-1.82%, -1.25%);
       animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0.6);
     }
     100% {
@@ -187,7 +213,7 @@ if (
       animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
     }
     45% {
-      transform: translate(6px, 2.25px) rotate(-2deg);
+      transform: translate(1.82%, 1.25%) rotate(-2deg);
       animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0.6);
     }
     100% {
