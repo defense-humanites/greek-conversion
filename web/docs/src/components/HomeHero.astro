@@ -165,10 +165,10 @@ const wordmark = drawing("name", name);
   /*
    * Once the page has loaded, the tessera's halves part and join again, as
    * a conversion that loses nothing: they draw apart along the break (the
-   * line of their offsets, 8 by 3, 6 units each: 1.82% of the frame's
-   * width, 1.25% of its height), the right one straightening out of its 2°
+   * line of their offsets, 8 by 3, 7 units each: 2.12% of the frame's
+   * width, 1.46% of its height), the right one straightening out of its 2°
    * about the point it turns on (59.7%, 29.1% of the frame), quickly, as if
-   * sprung (175ms); they hold a moment (65ms), then fall back to their
+   * sprung (175ms); they pause there (120ms), then fall back to their
    * places, faster and faster (260ms), without overshooting, which would
    * close the break. As
    * they arrive, the whole tessera bounces, from its centre (50.2%, 27.6%),
@@ -180,7 +180,7 @@ const wordmark = drawing("name", name);
    */
   @media (prefers-reduced-motion: no-preference) {
     .logo.play :global(.half) {
-      animation-duration: 0.5s;
+      animation-duration: 0.555s;
       animation-delay: 0.1s;
       animation-fill-mode: both;
     }
@@ -195,7 +195,7 @@ const wordmark = drawing("name", name);
       transform-origin: 50.2% 27.6%;
       animation-name: tessera-bounce;
       animation-duration: 0.6s;
-      animation-delay: 0.58s;
+      animation-delay: 0.635s;
       animation-fill-mode: both;
     }
   }
@@ -225,9 +225,9 @@ const wordmark = drawing("name", name);
       transform: none;
       animation-timing-function: cubic-bezier(0.3, 0.8, 0.3, 1);
     }
-    35%,
-    48% {
-      transform: translate(-1.82%, -1.25%);
+    31.5%,
+    53.2% {
+      transform: translate(-2.12%, -1.46%);
       animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.4);
     }
     100% {
@@ -239,9 +239,9 @@ const wordmark = drawing("name", name);
       transform: none;
       animation-timing-function: cubic-bezier(0.3, 0.8, 0.3, 1);
     }
-    35%,
-    48% {
-      transform: translate(1.82%, 1.25%) rotate(-2deg);
+    31.5%,
+    53.2% {
+      transform: translate(2.12%, 1.46%) rotate(-2deg);
       animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.4);
     }
     100% {
