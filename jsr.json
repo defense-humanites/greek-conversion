@@ -1,6 +1,6 @@
 {
   "name": "@humanities/greek-conversion",
-  "version": "1.0.0-rc.11",
+  "version": "1.0.0-rc.12",
   "license": "MIT",
   "exports": {
     ".": "./src/mod.ts",

@@ -7,6 +7,17 @@ change.
 
 ## [Unreleased]
 
+## [1.0.0-rc.12] - 2026-11-22
+
+Twelfth release candidate for `1.0.0`, which converts faster and lets a web
+page bundle only what it uses. The `core` entry point converts with the
+reader and the writer of each format, which their own entry points export,
+and with prepared options, which `/presets` exports for each preset: a page
+that writes Greek in transliteration with one preset weighs 40 kB minified,
+where `convert()` from the main entry point weighs 70 kB. Conversions are as
+fast as in rc.10 or faster, where rc.11 had made most of them slower. No
+output changes.
+
 ### Added
 
 - **Entry points for smaller bundles.** `@humanities/greek-conversion/core`
@@ -48,6 +59,10 @@ change.
   keeps what makes it faster: a bundle that imports `convert()` grows by
   3.8 kB minified, 1.3 kB with gzip, and one that imports `parse()` from
   `/document` by 2.5 kB, 0.9 kB with gzip.
+- **Documentation.** The stability policy covers the new entry points, and
+  says what it promises of readers, writers, and prepared options. The
+  playground shows the canonical document as a table of its tokens, with the
+  JSON a click away.
 
 ## [1.0.0-rc.11] - 2026-11-20
 
@@ -1541,7 +1556,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.11...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.12...HEAD
+[1.0.0-rc.12]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.11...v1.0.0-rc.12
 [1.0.0-rc.11]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.10...v1.0.0-rc.11
 [1.0.0-rc.10]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.9...v1.0.0-rc.10
 [1.0.0-rc.9]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.8...v1.0.0-rc.9

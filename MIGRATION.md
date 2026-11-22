@@ -5,16 +5,25 @@ the `0.14.x` API.
 
 ## Installation
 
-The release candidate `1.0.0-rc.11` is published on JSR, and on npm under the
+The release candidate `1.0.0-rc.12` is published on JSR, and on npm under the
 `next` distribution tag; the stable `1.0.0` will follow with the same content
 unless a problem is found:
 
 ```sh
 npm install @humanities/greek-conversion@next
-npx jsr add @humanities/greek-conversion@1.0.0-rc.11
+npx jsr add @humanities/greek-conversion@1.0.0-rc.12
 ```
 
 The package is ESM-only.
+
+## Updating from `1.0.0-rc.11`
+
+Nothing changes for code that uses rc.11: the API and the output stay the
+same, losses and positions included. The new entry points, `/core`, the
+reader and the writer of each format (`/greek`, `/beta-code`,
+`/transliteration`), and the presets as prepared options (`/presets`), are
+for a web page that bundles a few formats and presets; the guide's page on
+smaller bundles says when they are worth it.
 
 ## Updating from `1.0.0-rc.10`
 
