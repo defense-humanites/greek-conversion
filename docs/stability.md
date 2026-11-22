@@ -1,7 +1,7 @@
 # Stability policy
 
-`greek-conversion` follows [Semantic Versioning](https://semver.org/). This
-document states what the version number promises: which parts of the package are
+The library follows [Semantic Versioning](https://semver.org/). This document
+states what the version number promises: which parts of the package are
 covered, what counts as a breaking change, and how conversion output itself is
 treated. It applies from `1.0.0`.
 

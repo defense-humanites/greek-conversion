@@ -3,7 +3,7 @@ title: "Modern Greek"
 description: "Romanize Modern Greek names and texts after ISO 843, ELOT 743, or ALA-LC, read them back, and turn polytonic text into monotonic."
 ---
 
-greek-conversion reads monotonic Greek, the official orthography since 1982,
+The library reads monotonic Greek, the official orthography since 1982,
 as it reads polytonic: the tonos is an acute accent, the dialytika a
 diaeresis. Three presets romanize Modern Greek after the conventions in use
 today: for identity documents and maps, for a strict transliteration, and for

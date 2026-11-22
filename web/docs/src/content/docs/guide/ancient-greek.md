@@ -3,7 +3,7 @@ title: "Ancient Greek"
 description: "Convert polytonic Greek to and from Beta Code and the scholarly and library romanizations, and know which of them convert back."
 ---
 
-greek-conversion was first written for Ancient Greek. It reads polytonic
+The library was first written for Ancient Greek. It reads polytonic
 Greek with its accents, breathings, iota subscripts, coronides, and quantity
 marks, and writes it in Beta Code or after the romanizations that classicists
 and libraries use. This page helps you choose a convention, says which ones
