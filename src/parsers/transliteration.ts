@@ -83,34 +83,6 @@ function lowercase(char: string): string {
     : char.toLowerCase();
 }
 
-/** A surrogate code unit. */
-const SURROGATE = /[\uD800-\uDFFF]/;
-
-/** The length from which a text is split and lowercased at once. */
-const WHOLE_TEXT = 64;
-
-/** lowercase() of each character, in a new array. */
-function lowercaseEach(chars: readonly string[]): string[] {
-  const lowered: string[] = [];
-  for (let k = 0; k < chars.length; k++) lowered.push(lowercase(chars[k]));
-  return lowered;
-}
-
-/**
- * lowercase() of each code unit of a text without surrogates. The whole text
- * is lowercased at once, which gives the same characters but where the
- * mapping depends on the context or changes the length: the capital sigma,
- * which becomes final at the end of a word, and the dotted capital I, which
- * would become two characters had NFD not decomposed it (checked all the
- * same). There, each character is lowercased.
- */
-function lowercaseUnits(text: string): string[] {
-  const lower = text.toLowerCase();
-  return lower.length === text.length && !text.includes("\u03A3")
-    ? lower.split("")
-    : lowercaseEach(text.split(""));
-}
-
 /**
  * Bit of each combining mark the reader accepts, by code unit. They all lie
  * in U+0300–U+036F: the Greek marks, the tilde among them, plus the cedilla
@@ -188,13 +160,7 @@ function readTransliteration(
   positions: ReadPositions | undefined,
   ordered: boolean,
 ): Document | undefined {
-  // Without surrogates, the characters are the code units, which split()
-  // gives faster than Array.from(), and toLowerCase() lowercases at once
-  // (lowercaseUnits()). Testing for surrogates costs more than it saves on a
-  // short text, which is read character by character.
-  const units = text.length >= WHOLE_TEXT && !SURROGATE.test(text);
-  const split = units ? text.split("") : Array.from(text);
-  const chars = prioritizeEtaMark(split, options);
+  const chars = prioritizeEtaMark(Array.from(text), options);
   // Starts are recorded as indices in `chars` and converted to code units at
   // the end. prioritizeEtaMark() only reorders the marks of a letter, which
   // are one unit each, so the offset of a character in `text` is its offset
@@ -203,14 +169,13 @@ function readTransliteration(
   if (starts !== undefined) starts.length = 0;
   // Whether a letter has marks the reader knows after one it does not.
   let misordered = false;
-  // Lowercased once, after prioritizeEtaMark() has reordered the marks: from
-  // the text when it reordered none. Never with `chars.map()`: once this
-  // function is optimized, V8's inlined `map` returns arrays of a different
-  // elements kind from the builtin's, and the reads of `lowered` below then
-  // deoptimize the whole function every few hundred calls.
-  const lowered = units && chars === split
-    ? lowercaseUnits(text)
-    : lowercaseEach(chars);
+  // Lowercased once, after prioritizeEtaMark() has reordered the marks.
+  // Built with a loop rather than `chars.map()`: once this function is
+  // optimized, V8's inlined `map` returns arrays of a different elements kind
+  // from the builtin's, and the reads of `lowered` below then deoptimize the
+  // whole function every few hundred calls.
+  const lowered: string[] = [];
+  for (let k = 0; k < chars.length; k++) lowered.push(lowercase(chars[k]));
   const out: Token[] = [];
   const trie = transliterationTrie(options);
   const contextualY = new Set<number>();
