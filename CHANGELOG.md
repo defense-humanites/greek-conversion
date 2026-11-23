@@ -26,7 +26,10 @@ change.
   and lowercases a long text at once, where it lowercased each character,
   and finds each letter without allocating. Transliteration converts into
   Greek 6 to 10 % faster, a clause or a long text, and `convertDetailed()`
-  9 %. No output changes.
+  9 %. Writing transliteration writes a small consonant without marks, the
+  most frequent letter, at once: a clause converts into transliteration 7 to
+  9 % faster, a word 4 to 5 %. No output changes. A bundle that imports
+  `convert()` grows by 0.5 kB minified, 0.2 kB with gzip.
 
 ## [1.0.0-rc.12] - 2026-11-22
 
