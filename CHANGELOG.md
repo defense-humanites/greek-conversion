@@ -22,6 +22,11 @@ change.
   Greek and Beta Code convert into transliteration 14 to 20 % faster, long
   texts included, and `convertDetailed()` 6 %. No output changes. A bundle
   that imports `convert()` grows by 0.4 kB minified, 0.2 kB with gzip.
+- **Speed of reading transliteration.** The reader of transliteration splits
+  and lowercases a long text at once, where it lowercased each character,
+  and finds each letter without allocating. Transliteration converts into
+  Greek 6 to 10 % faster, a clause or a long text, and `convertDetailed()`
+  9 %. No output changes.
 
 ## [1.0.0-rc.12] - 2026-11-22
 

@@ -1,6 +1,10 @@
 interface Node<T> {
   children: Map<string, Node<T>>;
-  value?: T;
+  /**
+   * The key that ends here, as longest() returns it: built once, so that
+   * reading a letter allocates nothing.
+   */
+  match?: { readonly value: T; readonly length: number };
 }
 
 export class Trie<T> {
@@ -14,8 +18,10 @@ export class Trie<T> {
 
   #insert(key: string, value: T) {
     let node = this.#root;
+    let length = 0;
 
     for (const char of key) {
+      length++;
       let child = node.children.get(char);
 
       if (!child) {
@@ -26,19 +32,20 @@ export class Trie<T> {
       node = child;
     }
 
-    node.value = value;
+    node.match = { value, length };
   }
+
   /**
    * Returns the longest key that starts at `start`, reading `lowered`, the
-   * input's characters already lowercased.
+   * input's characters already lowercased. The result is shared by every
+   * call that finds the same key: it must not be changed.
    */
   longest(
     lowered: readonly string[],
     start: number,
-  ): { value: T; length: number } | undefined {
+  ): { readonly value: T; readonly length: number } | undefined {
     let node = this.#root;
-    let value: T | undefined;
-    let length = 0;
+    let match: Node<T>["match"];
 
     for (let i = start; i < lowered.length; i++) {
       const child = node.children.get(lowered[i]);
@@ -46,13 +53,9 @@ export class Trie<T> {
       if (!child) break;
 
       node = child;
-
-      if (node.value !== undefined) {
-        value = node.value;
-        length = i - start + 1;
-      }
+      if (node.match !== undefined) match = node.match;
     }
 
-    return value === undefined ? undefined : { value, length };
+    return match;
   }
 }
