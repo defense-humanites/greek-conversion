@@ -100,6 +100,38 @@ test("reads and writes vowel quantity with the TLG percent codes", () => {
   );
 });
 
+test("writes a Latin letter in the case of the Beta Code letters", () => {
+  // It reads back as the letter it spells, which convertDetailed() reports;
+  // in the case of the letters, it converts to itself again.
+  for (
+    const [options, latin, code] of [
+      [{}, "H", "h"],
+      [{ preset: "tlg-core" }, "h", "H"],
+      [{ preset: "tlg-core" }, "c", "C"],
+    ] as const
+  ) {
+    const once = convertDetailed(
+      latin,
+      "transliteration",
+      "beta-code",
+      options,
+    );
+    assertEquals(once.output, code);
+    assertEquals(once.lossy, true);
+    assertEquals(convert(code, "beta-code", "beta-code", options), code);
+  }
+});
+
+test("writes an unread code that would read as a mark as the text it is", () => {
+  // After `>`, `%26` is no macron: it is written as itself.
+  assertEquals(convert("θ̅ς̅%26", "greek", "beta-code"), "<qs>%26");
+  // Right after a letter, it would be: it is written with the code of `%`.
+  const options = { preset: "sbl-general" } as const;
+  const once = convert("<qs>%26", "beta-code", "beta-code", options);
+  assertEquals(once, "qs%826");
+  assertEquals(convert(once, "beta-code", "beta-code", options), once);
+});
+
 test("reads & and ' as TLG Beta Code does, not as quantity", () => {
   // & shifts to the Latin font, which the engine does not interpret: it is
   // kept as a literal. ' is the apostrophe.

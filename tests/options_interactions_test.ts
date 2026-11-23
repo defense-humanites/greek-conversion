@@ -601,6 +601,17 @@ test("BnF numerals stay as written under every letter case and mark removal", ()
     convertDetailed("ϛʹ ͵ϛ", "greek", "transliteration", bnf).lossy,
     false,
   );
+  // After a letter with an accent, or after anything but a letter, an acute
+  // would not read back as the keraia: it is written ʹ, which does.
+  for (
+    const [greek, latin] of [["ίʹ", "íʹ"], ["ε͂ʹ", "ẽʹ"], ["7ʹ", "7ʹ"]]
+  ) {
+    assertNfcEquals(convert(greek, "greek", "transliteration", bnf), latin);
+    assertNfcEquals(
+      convert(latin, "transliteration", "transliteration", bnf),
+      latin,
+    );
+  }
   // A comma before another letter is a comma.
   assertNfcEquals(convert("a,b", "transliteration", "greek", bnf), "α,β");
   assertNfcEquals(
@@ -627,6 +638,22 @@ test("BnF numerals stay as written under every letter case and mark removal", ()
         JSON.stringify(options),
       );
     }
+  }
+});
+
+test("a circumflex on a sigma is written as a tilde, which reads back", () => {
+  // Under ISO 843 and BnF, the circumflex is U+0302, and `ŝ` and `ĉ` read
+  // back as sampi and stigma.
+  for (const preset of ["iso-843-type-1", "bnf-core"] as const) {
+    // After a vowel with a circumflex, whose marks are written the same way
+    // for every letter but sigma.
+    const latin = convert("a= s=", "beta-code", "transliteration", { preset })
+      .slice(-2);
+    assertNfcEquals(latin, "s\u0303");
+    assertNfcEquals(
+      convert(latin, "transliteration", "transliteration", { preset }),
+      latin,
+    );
   }
 });
 

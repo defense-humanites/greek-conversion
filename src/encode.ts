@@ -1,6 +1,7 @@
 import {
   ALPHABET,
   BETA_FOR,
+  BY_BETA,
   GREEK_FOR,
   GREEK_ORDER,
   ORDER,
@@ -615,16 +616,39 @@ export function encodeBetaCode(
   // The letters after the first of a ligature, which its code writes.
   let ligatureEnd = 0;
 
+  // The letter right before `index` in the output, where nothing comes
+  // between them: `>` ends the overline of a letter that has one.
+  const letterBefore = (index: number): Grapheme | undefined => {
+    const previous = rendered[index - 1];
+    return previous?.kind === "grapheme" &&
+        !betaMarks(previous).includes("overline")
+      ? previous
+      : undefined;
+  };
+
   const pieces = rendered.map((token, index) => {
     if (index < ligatureEnd) return "";
     if (token.kind === "literal") {
       // A space, the most frequent literal, is written as itself.
       if (token.value === " ") return " ";
       if (isKeptLetter(token)) return token.value;
+      // A Latin letter reads back as the letter of Beta Code it spells, which
+      // convertDetailed() reports: written in the case of the letters, it
+      // converts to itself again.
+      if (token.value.length === 1 && BY_BETA.has(token.value.toLowerCase())) {
+        return uppercaseCodes
+          ? token.value.toUpperCase()
+          : token.value.toLowerCase();
+      }
       const code = BETA_SIGN_CODES.get(token.value);
       // A spacing breathing kept apart from a capital stays apart.
       const apart = standsApart(rendered, index) ? ZWNJ : "";
       if (code === undefined) {
+        // A code kept as text that reads as a mark after a letter (`%26`,
+        // the macron) is written with the code of `%`, as the text it is.
+        if (isMarkCode(token.value) && letterBefore(index) !== undefined) {
+          return `%8${token.value.slice(1)}${apart}`;
+        }
         return (encodePunctuation(token.value, "beta-code") ?? token.value) +
           apart;
       }
@@ -635,7 +659,7 @@ export function encodeBetaCode(
       if (!EXTENDED_CODE.test(code)) return code;
       const digits = digitsFrom(rendered, index + 1);
       return digits !== "" &&
-          readsBackAsItself(token.value, rendered[index - 1], digits)
+          readsBackAsItself(token.value, letterBefore(index), digits)
         ? token.value
         : code;
     }
@@ -711,9 +735,10 @@ export function encodeTransliteration(
   const smoothInPlace = preservesSmooth &&
     options.transliteration?.smoothBreathing === "greek";
   // The written marks of a token depend only on its marks, on whether it is
-  // epsilon or omicron, on a separation diaeresis, and on whether it follows
-  // an upsilon written v or f: memoized on those four for shared sets, as
-  // byMarks() does, across calls with the same options (latinMarkStrings).
+  // epsilon or omicron, or a sigma, on a separation diaeresis, and on
+  // whether it follows an upsilon written v or f: memoized on those for
+  // shared sets, as byMarks() does, across calls with the same options
+  // (latinMarkStrings).
   const markStrings = latinMarkStrings(options);
   const circumflexReadsAsLength =
     options.transliteration?.circumflexAccent === "circumflex" &&
@@ -725,15 +750,20 @@ export function encodeTransliteration(
   ): string => {
     const shortVowel = token.letter === "epsilon" ||
       token.letter === "omicron";
+    // A sigma, or a stigma or sampi, whose `c̄` and `s̄` the reader would
+    // read with a circumflex U+0302 as part of the letter.
+    const sigma = token.letter === "sigma" || token.letter === "stigma" ||
+      token.letter === "sampi";
     const mask = sharedMask(token.diacritics);
     if (mask === undefined) {
-      return writeLatinMarks(token, shortVowel, separation, consonant);
+      return writeLatinMarks(token, shortVowel, sigma, separation, consonant);
     }
-    const key = mask << 3 | (consonant ? 4 : 0) | (shortVowel ? 2 : 0) |
-      (separation ? 1 : 0);
+    const key = mask << 4 | (sigma ? 8 : 0) | (consonant ? 4 : 0) |
+      (shortVowel ? 2 : 0) | (separation ? 1 : 0);
     return markStrings[key] ??= writeLatinMarks(
       token,
       shortVowel,
+      sigma,
       separation,
       consonant,
     );
@@ -741,6 +771,7 @@ export function encodeTransliteration(
   const writeLatinMarks = (
     token: Grapheme,
     shortVowel: boolean,
+    sigma: boolean,
     separation: boolean,
     consonant: boolean,
   ): string => {
@@ -760,8 +791,11 @@ export function encodeTransliteration(
         // Epsilon and omicron bear a circumflex only where the accent of the
         // upsilon of `ευ` moves to them (`y-with-ou-v-f`). Unless length marks
         // are omitted, `ê` and `ô` read back as eta and omega: the accent is
-        // written as a tilde, which reads back as one.
-        mark === "circumflex" && shortVowel && circumflexReadsAsLength
+        // written as a tilde, which reads back as one. So is a circumflex on
+        // a sigma, which no Greek has: `ŝ` and `ĉ` read back as sampi and
+        // stigma, and `c̄̂` as a stigma without it.
+        mark === "circumflex" &&
+          (shortVowel && circumflexReadsAsLength || sigma)
           ? "\u0303"
           : trMark(mark, options)
       )
@@ -811,7 +845,9 @@ export function encodeTransliteration(
       }
       if (!isBoundaryTransparent(token)) afterLetter = false;
       if (options.transliteration?.keraia === "bnf") {
-        if (token.value === DEXIA_KERAIA) return bnfRightKeraia(options);
+        if (token.value === DEXIA_KERAIA) {
+          return bnfRightKeraia(options, rendered[index - 1]);
+        }
         if (token.value === ARISTERI_KERAIA) return ",";
       }
       return (encodePunctuation(token.value, "transliteration", options) ??
@@ -1262,11 +1298,19 @@ function transliterationBase(
 const ACCENTS: readonly Diacritic[] = ["acute", "grave", "circumflex"];
 
 /**
- * The BnF right keraia: an acute, or the Greek keraia when the acute accents
- * are removed, since the acute would then read back as an accent and go.
+ * The BnF right keraia after `previous`: an acute on its letter, or the Greek
+ * keraia, which the reader also reads as one, where the acute would not read
+ * back as the keraia: when acute accents are removed, since it would then go
+ * as an accent, and after anything but a letter without an accent, where it
+ * would be a second accent (`ίʹ`, `í́`) or stand on no letter.
  */
-function bnfRightKeraia(options: ConversionOptions): string {
-  return preservesDiacritic("acute", options, "transliteration")
+function bnfRightKeraia(
+  options: ConversionOptions,
+  previous: Token | undefined,
+): string {
+  return preservesDiacritic("acute", options, "transliteration") &&
+      previous?.kind === "grapheme" &&
+      !ACCENTS.some((accent) => previous.diacritics.has(accent))
     ? "\u0301"
     : DEXIA_KERAIA;
 }
@@ -1296,7 +1340,7 @@ function bnfNumeralReadsBack(
     }
     if (isBoundaryTransparent(token)) continue;
     return token.value === DEXIA_KERAIA && last?.kind === "grapheme" &&
-      (!isVowel(last.letter) || bnfRightKeraia(options) === DEXIA_KERAIA);
+      (!isVowel(last.letter) || bnfRightKeraia(options, last) === DEXIA_KERAIA);
   }
   return false;
 }

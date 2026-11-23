@@ -71,7 +71,16 @@ itself: a sign outside ASCII (`αʹ1` gives `aʹ1`), or a parenthesis or a
 solidus that no letter precedes (`(1)` gives `(1]1`). Otherwise it does not
 read back: `α(1)` is written `a[11]1`, which reads as `α[11)`, `[1]` reads as
 `(]`, `ϟ2` is written `#12`, and `ᾱ5` `a%265`. `convertDetailed()` reports
-the loss.
+the loss. Where the code and the digit make a code that the reader reads, the
+output reads back as that sign, and may convert otherwise again: `ϛ2` is
+written `#22`, the lower numeral sign, so that `ϛ2ϛ`, written `#22#2`, reads
+back as the numeral `͵ϛ`, which decimal numerals then write `6000`. Such a
+letter before a digit is the one case where converting the output again may
+change it.
+A Latin letter, which Beta Code would read as the Greek letter it spells, is
+written in the case of the letters of the output, so that it reads back and
+converts to itself: `H`, kept from a transliteration, gives `h`, and `H`
+under `betaCode.case: "uppercase"`.
 
 As in the TLG, `'` is the apostrophe (U+2019): `ἀλλ’` gives `a)ll'`. The font
 shifts `&` (Latin) and `$` (Greek) are not interpreted: they are kept as text,
