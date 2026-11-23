@@ -494,10 +494,27 @@ function addsDiaeresis(source: Grapheme, target: Grapheme): boolean {
     target.diacritics.has("diaeresis") && !source.diacritics.has("diaeresis");
 }
 
-/** Whether two literals are canonically equivalent; most are equal. */
+/**
+ * The Greek question mark (U+037E) and ano teleia (U+0387), which the
+ * readers give as punctuation, are canonically a semicolon and a middle dot.
+ */
+const GREEK_SIGNS = /([;·])/;
+
+/**
+ * Whether two literals are canonically equivalent; most are equal. The Greek
+ * question mark and ano teleia are not the semicolon and middle dot that a
+ * reader keeps as literals: a middle dot in transliteration, which Greek
+ * output copies, reads back as the ano teleia.
+ */
 function sameLiteral(source: string, target: string): boolean {
-  return source === target ||
-    source.normalize("NFD") === target.normalize("NFD");
+  if (source === target) return true;
+  if (!GREEK_SIGNS.test(source) && !GREEK_SIGNS.test(target)) {
+    return source.normalize("NFD") === target.normalize("NFD");
+  }
+  const sourceParts = source.split(GREEK_SIGNS);
+  const targetParts = target.split(GREEK_SIGNS);
+  return sourceParts.length === targetParts.length &&
+    sourceParts.every((part, i) => sameLiteral(part, targetParts[i]));
 }
 
 /** Whether `marks` has every mark of `subset`; by mask for shared sets. */

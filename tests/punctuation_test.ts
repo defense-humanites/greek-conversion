@@ -1,6 +1,6 @@
 import { test } from "node:test";
-import { assertNfcEquals } from "./assertions.ts";
-import { convert } from "../src/mod.ts";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
+import { convert, convertDetailed, type Format } from "../src/mod.ts";
 
 test("converts Greek punctuation semantically between formats", () => {
   const greek = "; · ‿ ‐ ’";
@@ -56,6 +56,46 @@ test("keeps format-specific semicolon semantics distinct", () => {
   assertNfcEquals(convert(";", "greek", "transliteration"), "?");
   assertNfcEquals(convert(";", "transliteration", "greek"), "·");
   assertNfcEquals(convert(";", "beta-code", "greek"), ";");
+});
+
+test("keeps a middle dot outside Greek as a literal, lost in Greek output", () => {
+  // Transliteration and Beta Code write the ano teleia `;` and `:`: a middle
+  // dot is not read, whichever of its two code points is typed, and Greek
+  // output, which reads it as the ano teleia, reports it.
+  const sources: [string, Format][] = [
+    ["lógos· ésti", "transliteration"],
+    ["lógos\u0387 ésti", "transliteration"],
+    ["lo/gos· e)/sti", "beta-code"],
+    ["lo/gos\u0387 e)/sti", "beta-code"],
+  ];
+  for (const [input, from] of sources) {
+    for (const anoTeleia of ["canonical", "middle-dot", "greek"] as const) {
+      const result = convertDetailed(input, from, "greek", {
+        greek: { anoTeleia },
+      });
+      assertNfcEquals(result.output, "λόγος· ἔστι");
+      assertEquals(
+        result.losses.map((loss) => [loss.code, loss.offset]),
+        [["unrepresented-literal", input.search(/[\u00B7\u0387]/)]],
+        `${from} ${input} (${anoTeleia})`,
+      );
+    }
+    for (const to of ["beta-code", "transliteration"] as const) {
+      const result = convertDetailed(input, from, to);
+      assertEquals(result.output.includes("\u00B7"), true, `${from} → ${to}`);
+      assertEquals(result.lossy, false, `${from} → ${to}`);
+    }
+  }
+  // The ano teleia of each format converts without loss.
+  for (
+    const [input, from] of [
+      ["λόγος· ἔστι", "greek"],
+      ["lógos; ésti", "transliteration"],
+      ["lo/gos: e)/sti", "beta-code"],
+    ] as const
+  ) {
+    assertEquals(convertDetailed(input, from, "greek").lossy, false, from);
+  }
 });
 
 test("distinguishes Beta Code breve from apostrophe", () => {

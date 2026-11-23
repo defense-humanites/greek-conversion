@@ -71,7 +71,10 @@ export const GREEK_MARKS = new Map<string, Diacritic>([
   ["\u0301", "acute"],
   ["\u0300", "grave"],
   ["\u0342", "circumflex"],
+  // The Latin circumflex and tilde, which some Greek text has for the
+  // perispomeni, as transliteration has.
   ["\u0302", "circumflex"],
+  ["\u0303", "circumflex"],
   ["\u0308", "diaeresis"],
   ["\u0345", "iota-subscript"],
   ["\u0304", "macron"],

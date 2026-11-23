@@ -22,6 +22,63 @@ change.
   Greek and Beta Code convert into transliteration 14 to 20 % faster, long
   texts included, and `convertDetailed()` 6 %. No output changes. A bundle
   that imports `convert()` grows by 0.4 kB minified, 0.2 kB with gzip.
+- **Documentation.** The guarantees name the two cases where converting the
+  output again may change it: the characters of another format that a
+  source holds as literals (`ϗ` or U+0301 typed in Beta Code), which the
+  target's reader may read, and a letter written as a TLG code before a
+  digit. They also say that normalization takes time in the square of the
+  marks on one letter. The reference says that Beta Code reads the letters
+  of mark-up in angle brackets (`<super>`) as overlined, and gives the
+  positions of the letters of a sign, of a breathing joined to its capital,
+  and of the `<` and `>` of an overline.
+
+### Fixed
+
+- The Greek and transliteration readers read the marks of a letter that
+  follow a mark they do not read, when only the Unicode canonical order put
+  them after it. The dot below of the Leiden conventions (combining class
+  220) comes before the accents and breathings (230) once decomposed, so
+  `ἄ̣νθρωπος` gave `ạ̓́nthrōpos` in transliteration, its breathing and
+  accent kept as literals, and `lọ́gos` in Beta Code for `λό̣γος`; they give
+  `ạ́nthrōpos` and `lo/̣gos`.
+- The Greek reader reads the Latin tilde U+0303 as the circumflex, on any
+  letter, as the transliteration reader does and as it read the Latin
+  circumflex U+0302: `ȣ̃`, which Byzantine text has for `ȣ͂`, kept the tilde
+  as a literal, which transliteration then read as a circumflex.
+- The transliteration reader keeps a rough breathing on the diphthong it
+  goes to. The υ of `ου` passed it on to an `ι` after it, as if `υι` were
+  the diphthong, so that `houi`, which ALA-LC and SBL write for `οὑϊ`
+  without its diaeresis, read as `ουἱ` and converted to itself as `ouhi`.
+- A capital sign for several letters that stands alone between words in
+  capitals is read in capitals: `ΛΟΓΟΣ Ϗ ΤΟΥ` gave `LOGOS Kai TOU` in
+  transliteration; it gives `LOGOS KAI TOU`. The nearest word on each side
+  decides, a word of one capital letter deciding nothing. Before, only a
+  capital right after the sign did (`ȢΤΟΣ`).
+- Output that converted otherwise again:
+  - BnF writes a keraia as `ʹ`, which its reader reads as one, after anything
+    but a letter without an accent, where the acute it writes elsewhere
+    would be a second accent or stand on no letter: `ίʹ` gave `í́`, which
+    reads back as `ί`; it gives `íʹ`.
+  - Beta Code writes a Latin letter, which it reads back as the Greek letter
+    it spells, in the case of its own letters: `H`, kept from a
+    transliteration, gave `H`, which converts to `h`; under
+    `betaCode.case: "uppercase"` (`tlg-core`), `h` gave `h`.
+  - Beta Code writes a code kept as text that would read as a mark right
+    after a letter with the code of `%`: `<qs>%26` without its overline gave
+    `qs%26`, which reads as a sigma with a macron. Conversely, after the
+    `>` of an overline, `%` before digits is written as itself:
+    `θ̅ς̅%26` gave `<qs>%826`, which reads as `θ̅ς̅%826`.
+  - Transliteration writes a circumflex on a sigma, a stigma, or a sampi,
+    which no Greek has, as a tilde where the circumflex is U+0302 (ISO 843,
+    BnF): `ŝ` and `ĉ` read back as sampi and stigma, and `c̄̂` as a stigma
+    without it.
+- A middle dot in transliteration or Beta Code, which the readers keep as a
+  literal, is reported lost in Greek output, which reads it as the ano
+  teleia: `lógos· ésti` gave `λόγος· ἔστι` without a loss. The Beta Code
+  reader keeps the Greek ano teleia U+0387 as the middle dot that
+  normalization makes of it, as the transliteration reader does: it read it
+  as the ano teleia, and wrote it `:`. No option reads the middle dot as the
+  ano teleia: one could be added for texts that need it.
 
 ## [1.0.0-rc.12] - 2026-11-22
 
