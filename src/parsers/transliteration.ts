@@ -582,9 +582,10 @@ function prioritizeEtaMark(
 /**
  * The spellings the reader reads under the options. A trie of its own is
  * built where an option adds or replaces spellings (ISO 843, ALA-LC for
- * modern Greek): once for a sealed profile (`profile_cache.ts`), which a
- * word read under such a preset would otherwise spend most of its time
- * building, and at each call for other options.
+ * modern Greek), which a word read under such options would otherwise spend
+ * most of its time building: found once for a sealed profile
+ * (`profile_cache.ts`), and for other options among the tries already built
+ * for the same spellings (`TRIES_BY_SPELLINGS`).
  */
 const transliterationTrie = perProfile(buildTransliterationTrie);
 
@@ -615,11 +616,29 @@ function buildTransliterationTrie(
     if (transliteration.lunateSigma === "c") replaced.add("ch");
   }
 
-  return variants.length === 0 ? TRIE : new Trie<Letter>([
-    ...CANONICAL_ENTRIES.filter(([spelling]) => !replaced.has(spelling)),
-    ...variants,
-  ]);
+  if (variants.length === 0) return TRIE;
+  // Keyed by the spellings, which are all the trie depends on: options that
+  // each conversion resolves anew, and does not seal, find the trie built
+  // for the same spellings by an earlier one.
+  const key = variants.map(([spelling, letter]) => `${spelling}=${letter}`)
+    .join(" ") + ` / ${[...replaced].join(" ")}`;
+  let trie = TRIES_BY_SPELLINGS.get(key);
+  if (trie === undefined) {
+    trie = new Trie<Letter>([
+      ...CANONICAL_ENTRIES.filter(([spelling]) => !replaced.has(spelling)),
+      ...variants,
+    ]);
+    TRIES_BY_SPELLINGS.set(key, trie);
+  }
+  return trie;
 }
+
+/**
+ * The tries built for the spellings that options add or replace, by those
+ * spellings: 72 at most, one for each combination of `beta`, `eta` with its
+ * length mark, `xi`, `phi`, and `chi` with `lunateSigma`.
+ */
+const TRIES_BY_SPELLINGS = new Map<string, Trie<Letter>>();
 
 /** The combining mark that shows the length of eta and omega, if any. */
 function etaMark(

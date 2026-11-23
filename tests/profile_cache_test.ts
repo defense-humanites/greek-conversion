@@ -154,32 +154,34 @@ test("prepared options keep their marks apart", () => {
 test("the transliteration reader keeps the spellings of each profile", () => {
   // Spellings that options add or replace, which the reader reads with a
   // trie of their own: `v` for beta and `f` for phi (ISO 843, ALA-LC for
-  // modern Greek), `ks` and `kh` for xi and chi. A trie kept for one profile
-  // would read them under another.
-  const text = "Ví fos phos ksénos khóra aftós";
+  // modern Greek), `ks` and `kh` for xi and chi, `ī` for eta. A trie kept
+  // for one profile would read them under another; one kept for options of
+  // other forms, by their spellings, would read them under options with
+  // other spellings. The last two sets differ only by a spelling replaced:
+  // `ch`, which the lunate sigma written `c` makes `ϲ` with a rough
+  // breathing.
+  const text = "Ví fos phos ksénos khóra chóra dīmos aftós";
   const variants: ConversionOptions[] = [
     {},
     { preset: "iso-843-type-1" },
     { preset: "ala-lc-modern" },
     { preset: "iso-843-type-2" },
+    { transliteration: { eta: "i", beta: "v" } },
     { transliteration: { xi: "ks", chi: "kh" } },
+    { transliteration: { xi: "ks", chi: "kh", lunateSigma: "c" } },
   ];
   // Outputs written by 1.0.0-rc.12, which kept nothing across calls:
   // computed here, they would share a fault of the cache. ISO 843 Type 1 and
-  // Type 2 read these spellings alike.
+  // Type 2 read these spellings alike, but for the length of eta.
   const expected = [
-    "Vἴ fὀς φος κσένος κὅρα ἀfτός",
-    "Βί φος πὁς κσένος κὅρα αφτός",
-    "Βι fος φος κσενος κὁρα αfτος",
-    "Βί φος πὁς κσένος κὅρα αφτός",
-    "Vἴ fὀς φος ξένος χόρα ἀfτός",
+    "Vἴ fὀς φος κσένος κὅρα χόρα δῑμος ἀfτός",
+    "Βί φος πὁς κσένος κὅρα χόρα δημος αφτός",
+    "Βι fος φος κσενος κὁρα χορα διμος αfτος",
+    "Βί φος πὁς κσένος κὅρα χόρα δῑμος αφτός",
+    "Βί fὀς φος κσένος κὅρα χόρα δημος ἀfτός",
+    "Vἴ fὀς φος ξένος χόρα χόρα δῑμος ἀfτός",
+    "Vἴ fὀς φος ξένος χόρα ϲὅρα δῑμος ἀfτός",
   ];
-  for (const options of variants) {
-    assertEquals(
-      convert(text, "transliteration", "greek", unshared(options)),
-      expected[variants.indexOf(options)],
-    );
-  }
   const prepared = variants.map((options) => core.prepareOptions(options));
   for (const order of [variants, [...variants].reverse()]) {
     for (let round = 0; round < 2; round++) {
@@ -189,6 +191,12 @@ test("the transliteration reader keeps the spellings of each profile", () => {
           convert(text, "transliteration", "greek", options),
           expected[index],
           JSON.stringify(options),
+        );
+        // Resolved at each call, not sealed: the trie is found by spellings.
+        assertEquals(
+          convert(text, "transliteration", "greek", unshared(options)),
+          expected[index],
+          `unshared ${JSON.stringify(options)}`,
         );
         assertEquals(
           core.convert(
