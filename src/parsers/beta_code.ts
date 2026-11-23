@@ -21,7 +21,12 @@ import {
   ligatureLength,
   ligatureLetters,
 } from "../ligatures.ts";
-import { parsePunctuation, TLG_SIGNS } from "../punctuation.ts";
+import {
+  ANO_TELEIA,
+  MIDDLE_DOT,
+  parsePunctuation,
+  TLG_SIGNS,
+} from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
 import type { ReadPositions } from "./positions.ts";
 import { mayHaveSpacingSigns, readSpacingMarks } from "./spacing_marks.ts";
@@ -284,8 +289,11 @@ export function parseBetaCode(
         i = start + 1;
         continue;
       }
+      // The Greek ano teleia is canonically a middle dot, which Beta Code
+      // does not read: it stays the literal that a normalized text has.
       const source = codePointAt(text, i);
-      out.push(share ? sharedLiteral(source) : literal(source));
+      const value = source === ANO_TELEIA ? MIDDLE_DOT : source;
+      out.push(share ? sharedLiteral(value) : literal(value));
       i += source.length;
       continue;
     }

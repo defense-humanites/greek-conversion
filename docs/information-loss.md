@@ -90,7 +90,10 @@ what follows it is read as if it were not there: `*(` gives `*(`, and
 converted to itself, `%2[1`.
 
 Unrecognized characters, including unrecognized combining marks, remain
-literals and are preserved.
+literals and are preserved. A middle dot is one in Beta Code and
+transliteration, but Greek reads it as the ano teleia: Greek output copies
+it, and `convertDetailed()` reports the loss (see
+[Punctuation and numerals](punctuation-and-numerals.md#consequences)).
 
 ### Transliteration
 
