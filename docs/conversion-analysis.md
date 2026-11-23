@@ -114,8 +114,12 @@ Input spans are in order and cover the input without gaps: their starts and
 their ends never decrease, and each span starts where the previous one ends
 or lies inside it and ends with it. Tokens read from one character of the
 input share its span: the three jamo of a Hangul syllable, which the reader
-keeps as literals, or the two letters read from a modern-digraph `b` under ISO
-843 Type 2. A token read from part of a character that the previous token also
+keeps as literals, the two letters read from a modern-digraph `b` under ISO
+843 Type 2, or the three letters read from `ϗ`, which share the span of the
+sign and of the marks after it. A breathing printed before a capital that
+the reader joins to it is one token with it (`῾Ρ`), and in Beta Code the `<`
+and `>` of an overline belong to the first and the last letter between them,
+in the input as in the output. A token read from part of a character that the previous token also
 draws on has that character's span, inside the previous token's: in `pḥ`
 written with a precomposed `ḥ`, the `h` belongs to the `ph` of phi, and the
 dot below, kept as a literal, has the span of `ḥ`.
