@@ -9,6 +9,13 @@ change.
 
 ### Changed
 
+- **Speed.** Writing Greek and Beta Code computes once, for the options that
+  conversions share and for prepared options, what it computed at each call:
+  the marks that each format keeps, and the codes that write them. A word
+  converts 22 to 37 % faster into Greek and into Beta Code, and a clause 9 to
+  22 %. Long texts, transliteration output, and options of other forms
+  convert as fast as before. No output changes. A bundle that imports
+  `convert()` grows by 0.5 kB minified, 0.2 kB with gzip.
 - **Documentation.** The guarantees name the two cases where converting the
   output again may change it: the characters of another format that a
   source holds as literals (`ϗ` or U+0301 typed in Beta Code), which the

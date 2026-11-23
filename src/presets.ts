@@ -11,6 +11,7 @@ import {
 import { isGreekNumeralContext } from "./context.ts";
 import type { Document, Format, Letter } from "./model.ts";
 import { hasPreparedMark, PREPARED } from "./prepared_mark.ts";
+import { sealProfile } from "./profile_cache.ts";
 
 /** Partial option fields contributed by one registered preset. */
 export type PresetOptions = Omit<ConversionOptions, "preset" | "source">;
@@ -222,11 +223,10 @@ export function conversionProfiles(
     // Resolved from the key, not from the caller's object, which could
     // answer otherwise when read again: what is kept is what the key says.
     const { reading, writing } = resolveConversionProfiles(optionsOfKey(key));
-    for (const profile of [reading, writing]) {
-      for (const group of Object.values(profile)) Object.freeze(group);
-      Object.freeze(profile);
-    }
-    profiles = Object.freeze({ reading, writing });
+    profiles = Object.freeze({
+      reading: sealProfile(reading),
+      writing: sealProfile(writing),
+    });
     SIMPLE_PROFILES.set(key, profiles);
   }
   return profiles;
