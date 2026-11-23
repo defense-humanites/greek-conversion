@@ -6,7 +6,7 @@
  * scrolled down, Safari scrolls the page rather than the dialog, which
  * leaves the screen blank until the keyboard is closed. Fixing the body
  * where it was leaves Safari nothing to scroll; closing the dialog puts
- * the page back where it was.
+ * the page back where it was, at once.
  */
 import Default from "@astrojs/starlight/components/Search.astro";
 ---
@@ -15,7 +15,10 @@ import Default from "@astrojs/starlight/components/Search.astro";
 
 <script>
   const body = document.body;
+  const root = document.documentElement;
+  const OPEN = "site-search button[data-open-modal]";
   let held: number | null = null;
+  let unopened: ReturnType<typeof setTimeout> | undefined;
 
   function hold(): void {
     if (held !== null) return;
@@ -25,6 +28,9 @@ import Default from "@astrojs/starlight/components/Search.astro";
     body.style.top = `-${held}px`;
   }
 
+  // Back where it was, at once: the site scrolls smoothly to a place in the
+  // page (theme.css), and a smooth return from the top ran "On this page"
+  // through every section on the way.
   function release(): void {
     if (held === null) return;
     const top = held;
@@ -32,21 +38,45 @@ import Default from "@astrojs/starlight/components/Search.astro";
     body.style.position = "";
     body.style.insetInline = "";
     body.style.top = "";
-    window.scrollTo({ top, behavior: "instant" });
+    root.style.scrollBehavior = "auto";
+    window.scrollTo(0, top);
+    root.style.scrollBehavior = "";
   }
 
-  // Before Starlight's own listener focuses the field, so that the page is
+  const isOpen = () => body.hasAttribute("data-search-modal-open");
+  const onButton = (event: Event) =>
+    (event.target as Element | null)?.closest?.(OPEN) != null;
+
+  // As soon as the finger or the pointer goes down on the field, the page is
+  // fixed, a moment before the click opens the dialog and puts the caret in
+  // its field: fixed in the same moment, a page scrolled down drew the caret
+  // where the field had been, below it, before it found its place. If no
+  // dialog follows (a touch that turns into a scroll), the page is let go.
+  document.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (!onButton(event)) return;
+      hold();
+      clearTimeout(unopened);
+      unopened = setTimeout(() => isOpen() || release(), 1000);
+    },
+    { capture: true },
+  );
+  document.addEventListener(
+    "pointercancel",
+    (event) => onButton(event) && !isOpen() && release(),
+    { capture: true },
+  );
+  // The keyboard's Enter or Space, which opens the dialog without a pointer:
+  // before Starlight's own listener focuses the field, so that the page is
   // fixed before the keyboard comes up.
   document.addEventListener(
     "click",
-    (event) => {
-      const target = event.target as Element | null;
-      if (target?.closest?.("site-search button[data-open-modal]")) hold();
-    },
+    (event) => onButton(event) && hold(),
     { capture: true },
   );
   // Starlight marks the body while the dialog is open, whatever opened it
   // (the field, Ctrl K), and unmarks it when it closes.
-  new MutationObserver(() => body.hasAttribute("data-search-modal-open") ? hold() : release())
+  new MutationObserver(() => isOpen() ? hold() : release())
     .observe(body, { attributes: true, attributeFilter: ["data-search-modal-open"] });
 </script>
