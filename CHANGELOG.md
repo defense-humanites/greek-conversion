@@ -20,6 +20,10 @@ change.
   letter, as the transliteration reader does and as it read the Latin
   circumflex U+0302: `ȣ̃`, which Byzantine text has for `ȣ͂`, kept the tilde
   as a literal, which transliteration then read as a circumflex.
+- The transliteration reader keeps a rough breathing on the diphthong it
+  goes to. The υ of `ου` passed it on to an `ι` after it, as if `υι` were
+  the diphthong, so that `houi`, which ALA-LC and SBL write for `οὑϊ`
+  without its diaeresis, read as `ουἱ` and converted to itself as `ouhi`.
 
 ## [1.0.0-rc.12] - 2026-11-22
 

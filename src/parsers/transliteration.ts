@@ -734,6 +734,9 @@ function inferInitialBreathings(
 ) {
   const infersSmooth = infersSmoothBreathing(options);
   let wordStart = true;
+  // The vowel that a rough breathing went to, the second of a diphthong,
+  // where it stays: `houi` is οὑι, whose υ does not pass it on to the ι.
+  let placed = -1;
 
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
@@ -744,6 +747,7 @@ function inferInitialBreathings(
     }
 
     if (!wordStart) {
+      if (i === placed) continue;
       // An `h` inside a word precedes its vowel group too (`chhoi` → χοἱ):
       // the rough breathing goes to the second vowel of a diphthong.
       const next = tokens[i + 1];
@@ -757,6 +761,7 @@ function inferInitialBreathings(
       ) {
         token.diacritics = withoutDiacritic(token.diacritics, "rough");
         next.diacritics = withDiacritic(next.diacritics, "rough");
+        placed = i + 1;
       }
       continue;
     }
@@ -774,9 +779,10 @@ function inferInitialBreathings(
       continue;
     }
 
-    const target = separatedByBreathing.has(i + 1)
-      ? token
-      : tokens[i + breathingTarget(latinPair(token, tokens[i + 1]), 0)];
+    const targetIndex = separatedByBreathing.has(i + 1)
+      ? i
+      : i + breathingTarget(latinPair(token, tokens[i + 1]), 0);
+    const target = tokens[targetIndex];
     if (target.kind !== "grapheme") continue;
 
     if (
@@ -784,6 +790,7 @@ function inferInitialBreathings(
     ) {
       token.diacritics = withoutDiacritic(token.diacritics, "rough");
       target.diacritics = withDiacritic(target.diacritics, "rough");
+      placed = targetIndex;
     } else if (
       infersSmooth &&
       !target.diacritics.has("rough") &&
