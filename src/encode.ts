@@ -946,6 +946,10 @@ export function encodeTransliteration(
       return latinBase(bases, token.letter, options);
     }
 
+    // The rules below never see a small consonant of PLAIN_CONSONANTS
+    // without marks, written above. A rule that would write such a letter
+    // otherwise must take it out of PLAIN_CONSONANTS, or test it before.
+
     if (
       token.letter === "sigma" &&
       token.glyphVariant === "lunate-sigma" &&
@@ -1300,7 +1304,9 @@ const LATIN_BASES = perProfile(() => new Map<Grapheme["letter"], string>());
  * The consonants that the transliteration writer writes as their Latin
  * letter when they are small and bear no mark, once the modern digraphs are
  * written. Not gamma (nasal), rho (`rh`), sigma (lunate `c`), nor the
- * numeral letters (BnF), which other rules write.
+ * numeral letters (BnF), which other rules write. The rules after that
+ * short path never see these letters: a new rule that writes one of them
+ * otherwise takes it out of this set.
  */
 const PLAIN_CONSONANTS: ReadonlySet<Grapheme["letter"]> = new Set([
   "beta",
