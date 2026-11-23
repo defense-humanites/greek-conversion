@@ -151,6 +151,60 @@ test("prepared options keep their marks apart", () => {
   }
 });
 
+test("the transliteration reader keeps the spellings of each profile", () => {
+  // Spellings that options add or replace, which the reader reads with a
+  // trie of their own: `v` for beta and `f` for phi (ISO 843, ALA-LC for
+  // modern Greek), `ks` and `kh` for xi and chi. A trie kept for one profile
+  // would read them under another.
+  const text = "Ví fos phos ksénos khóra aftós";
+  const variants: ConversionOptions[] = [
+    {},
+    { preset: "iso-843-type-1" },
+    { preset: "ala-lc-modern" },
+    { preset: "iso-843-type-2" },
+    { transliteration: { xi: "ks", chi: "kh" } },
+  ];
+  // Outputs written by 1.0.0-rc.12, which kept nothing across calls:
+  // computed here, they would share a fault of the cache. ISO 843 Type 1 and
+  // Type 2 read these spellings alike.
+  const expected = [
+    "Vἴ fὀς φος κσένος κὅρα ἀfτός",
+    "Βί φος πὁς κσένος κὅρα αφτός",
+    "Βι fος φος κσενος κὁρα αfτος",
+    "Βί φος πὁς κσένος κὅρα αφτός",
+    "Vἴ fὀς φος ξένος χόρα ἀfτός",
+  ];
+  for (const options of variants) {
+    assertEquals(
+      convert(text, "transliteration", "greek", unshared(options)),
+      expected[variants.indexOf(options)],
+    );
+  }
+  const prepared = variants.map((options) => core.prepareOptions(options));
+  for (const order of [variants, [...variants].reverse()]) {
+    for (let round = 0; round < 2; round++) {
+      order.forEach((options) => {
+        const index = variants.indexOf(options);
+        assertEquals(
+          convert(text, "transliteration", "greek", options),
+          expected[index],
+          JSON.stringify(options),
+        );
+        assertEquals(
+          core.convert(
+            text,
+            transliterationReader,
+            greekWriter,
+            prepared[index],
+          ),
+          expected[index],
+          `prepared ${JSON.stringify(options)}`,
+        );
+      });
+    }
+  }
+});
+
 test("options changed between calls are read anew", () => {
   const options = {
     diacritics: { accents: "preserve" as "preserve" | "remove" },

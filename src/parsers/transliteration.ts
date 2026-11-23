@@ -29,8 +29,10 @@ import {
 } from "../model.ts";
 import type { ConversionOptions } from "../options.ts";
 import { parsePunctuation } from "../punctuation.ts";
+import { perProfile } from "../profile_cache.ts";
 import { Trie } from "../trie.ts";
 import { codeUnitTable } from "./code_units.ts";
+import { knownMarkAfterIn, knownMarksFirst } from "./mark_order.ts";
 import type { ReadPositions } from "./positions.ts";
 import { mayHaveSpacingSigns, readSpacingMarks } from "./spacing_marks.ts";
 
@@ -111,16 +113,14 @@ function lowercaseUnits(text: string): string[] {
 
 /**
  * Bit of each combining mark the reader accepts, by code unit. They all lie
- * in U+0300–U+036F: the Greek marks, plus the tilde as a circumflex and the
- * cedilla as an iota subscript.
+ * in U+0300–U+036F: the Greek marks, the tilde among them, plus the cedilla
+ * as an iota subscript.
  */
 const MARKS_START = 0x0300;
 const MARK_BIT = codeUnitTable(MARKS_START, 0x70, [
   ...[...GREEK_MARKS].map(([mark, diacritic]) =>
     [mark, diacriticBit(diacritic)] as const
   ),
-  ["\u0303", diacriticBit("circumflex")],
-  ["\u0342", diacriticBit("circumflex")],
   ["\u0327", diacriticBit("iota-subscript")],
 ]);
 
@@ -150,6 +150,44 @@ export function parseTransliteration(
   positions?: ReadPositions,
 ): Document {
   const text = input.normalize("NFD");
+  return readTransliteration(text, options, positions, false) ??
+    readTransliteration(
+      knownMarksFirst(text, isTransliterationMark),
+      options,
+      positions,
+      true,
+    )!;
+}
+
+/** Whether the reader reads a mark (`mark_order.ts`). */
+const isTransliterationMark = (mark: string): boolean => markBit(mark) !== 0;
+
+/**
+ * Whether the mark at `chars[i]`, which the reader reads, follows marks of a
+ * letter that it does not, and only canonical order put it after them.
+ */
+function misplacedMark(chars: readonly string[], i: number): boolean {
+  const unknown = (char: string) =>
+    !isTransliterationMark(char) && /^\p{M}$/u.test(char);
+  let start = i;
+  while (start > 0 && i - start < 32 && unknown(chars[start - 1])) start--;
+  if (start === i || start === 0) return false;
+  const before = chars[start - 1];
+  return (isTransliterationMark(before) || /^\p{L}$/u.test(before)) &&
+    knownMarkAfterIn(chars, start, isTransliterationMark);
+}
+
+/**
+ * Reads decomposed transliteration; `undefined` when a letter has marks the
+ * reader knows after one it does not, unless `ordered`: the text is then
+ * read again with its marks in the reader's order (`mark_order.ts`).
+ */
+function readTransliteration(
+  text: string,
+  options: ConversionOptions,
+  positions: ReadPositions | undefined,
+  ordered: boolean,
+): Document | undefined {
   // Without surrogates, the characters are the code units, which split()
   // gives faster than Array.from(), and toLowerCase() lowercases at once
   // (lowercaseUnits()). Testing for surrogates costs more than it saves on a
@@ -162,6 +200,9 @@ export function parseTransliteration(
   // are one unit each, so the offset of a character in `text` is its offset
   // in `chars` joined.
   const starts = positions?.starts;
+  if (starts !== undefined) starts.length = 0;
+  // Whether a letter has marks the reader knows after one it does not.
+  let misordered = false;
   // Lowercased once, after prioritizeEtaMark() has reordered the marks: from
   // the text when it reordered none. Never with `chars.map()`: once this
   // function is optimized, V8's inlined `map` returns arrays of a different
@@ -304,6 +345,10 @@ export function parseTransliteration(
         }
       }
 
+      // A mark the reader knows, read here only after one it does not.
+      if (
+        !ordered && markBit(chars[i]) !== 0 && misplacedMark(chars, i)
+      ) misordered = true;
       if (rough) {
         out.push(literal(roughUppercase ? "H" : "h"));
         if (starts !== undefined) starts.push(i);
@@ -497,6 +542,7 @@ export function parseTransliteration(
     }
   }
 
+  if (misordered) return undefined;
   if (positions !== undefined && starts !== undefined) {
     positions.text = text;
     starts.push(chars.length);
@@ -568,7 +614,18 @@ function prioritizeEtaMark(
   return chars;
 }
 
-function transliterationTrie(options: ConversionOptions): Trie<Letter> {
+/**
+ * The spellings the reader reads under the options. A trie of its own is
+ * built where an option adds or replaces spellings (ISO 843, ALA-LC for
+ * modern Greek): once for a sealed profile (`profile_cache.ts`), which a
+ * word read under such a preset would otherwise spend most of its time
+ * building, and at each call for other options.
+ */
+const transliterationTrie = perProfile(buildTransliterationTrie);
+
+function buildTransliterationTrie(
+  options: ConversionOptions,
+): Trie<Letter> {
   const variants: Array<readonly [string, Letter]> = [];
   const transliteration = options.transliteration;
 
@@ -725,6 +782,9 @@ function inferInitialBreathings(
 ) {
   const infersSmooth = infersSmoothBreathing(options);
   let wordStart = true;
+  // The vowel that a rough breathing went to, the second of a diphthong,
+  // where it stays: `houi` is οὑι, whose υ does not pass it on to the ι.
+  let placed = -1;
 
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
@@ -735,6 +795,7 @@ function inferInitialBreathings(
     }
 
     if (!wordStart) {
+      if (i === placed) continue;
       // An `h` inside a word precedes its vowel group too (`chhoi` → χοἱ):
       // the rough breathing goes to the second vowel of a diphthong.
       const next = tokens[i + 1];
@@ -748,6 +809,7 @@ function inferInitialBreathings(
       ) {
         token.diacritics = withoutDiacritic(token.diacritics, "rough");
         next.diacritics = withDiacritic(next.diacritics, "rough");
+        placed = i + 1;
       }
       continue;
     }
@@ -765,9 +827,10 @@ function inferInitialBreathings(
       continue;
     }
 
-    const target = separatedByBreathing.has(i + 1)
-      ? token
-      : tokens[i + breathingTarget(latinPair(token, tokens[i + 1]), 0)];
+    const targetIndex = separatedByBreathing.has(i + 1)
+      ? i
+      : i + breathingTarget(latinPair(token, tokens[i + 1]), 0);
+    const target = tokens[targetIndex];
     if (target.kind !== "grapheme") continue;
 
     if (
@@ -775,6 +838,7 @@ function inferInitialBreathings(
     ) {
       token.diacritics = withoutDiacritic(token.diacritics, "rough");
       target.diacritics = withDiacritic(target.diacritics, "rough");
+      placed = targetIndex;
     } else if (
       infersSmooth &&
       !target.diacritics.has("rough") &&

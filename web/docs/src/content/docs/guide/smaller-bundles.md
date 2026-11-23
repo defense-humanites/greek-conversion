@@ -119,16 +119,16 @@ try {
 Bundles of the conversions below, made with esbuild for this release,
 minified, then with gzip. The percentage compares the size with gzip to that
 of the same conversion imported from the main entry point: `convert()`
-(70.0 kB, 22.6 kB with gzip), or `convertDetailed()` (78.4 kB, 25.3 kB).
+(73.7 kB, 24.0 kB with gzip), or `convertDetailed()` (82.3 kB, 26.7 kB).
 
 | Conversions                                   | With a preset or the defaults | With `prepareOptions()`       |
 | --------------------------------------------- | ----------------------------- | ----------------------------- |
-| Greek to Beta Code                            | 32.3 kB, 11.3 kB gzip (−50 %) | 40.7 kB, 13.8 kB gzip (−39 %) |
-| Beta Code to Greek                            | 36.4 kB, 12.5 kB gzip (−45 %) | 44.9 kB, 15.0 kB gzip (−33 %) |
-| Greek to transliteration                      | 39.7 kB, 13.1 kB gzip (−42 %) | 48.2 kB, 15.6 kB gzip (−31 %) |
-| Greek and transliteration both ways           | 55.8 kB, 18.0 kB gzip (−20 %) | 64.3 kB, 20.5 kB gzip (−9 %)  |
-| Every format both ways                        | 62.4 kB, 20.3 kB gzip (−10 %) | 70.9 kB, 22.9 kB gzip (+1 %)  |
-| `convertDetailed()`, Greek to transliteration | 64.3 kB, 20.8 kB gzip (−18 %) | 72.8 kB, 23.4 kB gzip (−7 %)  |
+| Greek to Beta Code                            | 35.0 kB, 12.2 kB gzip (−49 %) | 43.5 kB, 14.7 kB gzip (−39 %) |
+| Beta Code to Greek                            | 37.6 kB, 12.9 kB gzip (−46 %) | 46.1 kB, 15.4 kB gzip (−36 %) |
+| Greek to transliteration                      | 42.6 kB, 14.0 kB gzip (−41 %) | 51.1 kB, 16.6 kB gzip (−31 %) |
+| Greek and transliteration both ways           | 59.2 kB, 19.2 kB gzip (−20 %) | 67.7 kB, 21.7 kB gzip (−10 %) |
+| Every format both ways                        | 66.1 kB, 21.6 kB gzip (−10 %) | 74.6 kB, 24.2 kB gzip (+1 %)  |
+| `convertDetailed()`, Greek to transliteration | 67.8 kB, 22.1 kB gzip (−18 %) | 76.3 kB, 24.7 kB gzip (−8 %)  |
 
 The `core` entry point is worth it with a preset or the defaults, unless the
 application reads and writes every format. With `prepareOptions()`, it is

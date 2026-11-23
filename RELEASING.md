@@ -59,7 +59,7 @@ Both registries use the same package name and version:
 10. Move the reference of the comparison with the previous release to the
     new release, in a pull request:
     `npm install --save-dev --save-exact greek-conversion-previous@npm:@humanities/greek-conversion@<version>`,
-    and empty `MEANT` in `tests/differential.ts`, whose changes the release
+    and empty `MEANT` in `tests/meant.ts`, whose changes the release
     now holds.
 
 ## A slow JSR step

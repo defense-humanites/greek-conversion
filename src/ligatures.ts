@@ -101,6 +101,62 @@ export function ligatureLetters(
 }
 
 /**
+ * Sets in capitals the letters of a capital sign that stands alone between
+ * words in capitals (`ΛΟΓΟΣ Ϗ ΤΟΥ`, `ΚΑΙ`). The nearest word on each side,
+ * across spaces and punctuation, decides by its two letters nearest the
+ * sign: one side at least has a word in capitals, and no side a word with a
+ * small letter. A word of one capital letter decides nothing (`Ϗ Ὁ λόγος`).
+ * A sign that begins a word, before a small letter, keeps its small letters
+ * (`Ȣ̓τος`), and one before a capital is already in capitals (`ȢΤΟΣ`).
+ */
+export function capitalizeLoneSigns(tokens: Token[]): void {
+  for (let index = 0; index < tokens.length; index++) {
+    const token = tokens[index];
+    if (
+      token.kind !== "grapheme" || !token.uppercase ||
+      (token.glyphVariant !== "kai-symbol" &&
+        token.glyphVariant !== "ou-ligature")
+    ) continue;
+    const length = ligatureLength(token.glyphVariant);
+    const letters = tokens.slice(index + 1, index + length);
+    // A sign that begins a word, or whose letters are capitals already.
+    if (
+      tokens[index + length]?.kind === "grapheme" ||
+      letters.every((letter) => letter.kind === "grapheme" && letter.uppercase)
+    ) continue;
+    const sides = [
+      nearestWord(tokens, index - 1, -1),
+      nearestWord(tokens, index + length, 1),
+    ];
+    if (sides.includes("capitals") && !sides.includes("small")) {
+      for (const letter of letters) (letter as Grapheme).uppercase = true;
+    }
+  }
+}
+
+/**
+ * The case of the nearest word from `start` in `direction`, across tokens
+ * that are not letters, by its two letters nearest `start`: `"single"` for a
+ * word of one capital letter, `undefined` where there is no word.
+ */
+function nearestWord(
+  tokens: readonly Token[],
+  start: number,
+  direction: 1 | -1,
+): "capitals" | "small" | "single" | undefined {
+  let index = start;
+  while (tokens[index] !== undefined && tokens[index].kind !== "grapheme") {
+    index += direction;
+  }
+  const first = tokens[index];
+  if (first?.kind !== "grapheme") return undefined;
+  const second = tokens[index + direction];
+  if (!first.uppercase) return "small";
+  if (second?.kind !== "grapheme") return "single";
+  return second.uppercase ? "capitals" : "small";
+}
+
+/**
  * The sign that Greek output writes for the letters from `index`: `token`,
  * the one there unless another is compared with it, notes it, the letters
  * it stands for follow, with no mark before the last, and

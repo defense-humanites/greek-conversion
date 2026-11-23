@@ -3,6 +3,8 @@ import type { ConversionOptions } from "./options.ts";
 
 export const EROTIMATIKO = "\u037E";
 export const ANO_TELEIA = "\u0387";
+/** The middle dot, to which normalization maps the ano teleia. */
+export const MIDDLE_DOT = "\u00B7";
 export const ENOTIKON = "\u203F";
 export const APOSTROPHE = "\u2019";
 export const HYPHEN = "\u2010";
@@ -27,7 +29,7 @@ const INPUT: Record<Format, ReadonlyMap<string, string>> = {
   greek: new Map([
     [";", EROTIMATIKO],
     ["?", EROTIMATIKO],
-    ["\u00B7", ANO_TELEIA],
+    [MIDDLE_DOT, ANO_TELEIA],
     ["\u203F", ENOTIKON],
     ["\u035C", ENOTIKON],
     ["-", HYPHEN],
@@ -69,7 +71,7 @@ const INPUT: Record<Format, ReadonlyMap<string, string>> = {
 const OUTPUT: Record<Format, ReadonlyMap<string, string>> = {
   greek: new Map([
     [EROTIMATIKO, ";"],
-    [ANO_TELEIA, "\u00B7"],
+    [ANO_TELEIA, MIDDLE_DOT],
     [ENOTIKON, ENOTIKON],
     [HYPHEN, HYPHEN],
     [APOSTROPHE, APOSTROPHE],
