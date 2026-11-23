@@ -75,6 +75,20 @@ subscript last, as the TLG does, with the quantity between them as a TLG
 percent code, `%26` for the macron and `%27` for the breve (`a)/%26`);
 transliteration uses the same quantity-first order as Greek (`ā́`).
 
+The Latin circumflex U+0302 and tilde U+0303, which some Greek text has for
+the perispomeni, are read as the circumflex, on any letter, as
+transliteration reads them, and Greek output writes U+0342: `τω̃ν` gives
+`τῶν`.
+
+A combining mark the library does not read, such as the dot below of the
+Leiden conventions, stays a literal after its letter. The marks that the
+Unicode canonical order puts after it, because their combining class is
+higher, still belong to the letter, in whichever order they were typed:
+`ἄ̣νθρωπος` is α, U+0323, U+0313, U+0301 once decomposed, and gives
+`ạ́nthrōpos` in transliteration and `a)/̣nqrwpos` in Beta Code. A mark the
+library reads after one of the same class, which is not reordered, stays a
+literal with it.
+
 ### Overline
 
 Manuscripts and editions draw a line over abbreviations and numerals, the
