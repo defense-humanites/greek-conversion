@@ -14,7 +14,7 @@ import {
   transliterationWriter,
 } from "../src/formats/transliteration.ts";
 import { resolveConversionOptions } from "../src/presets.ts";
-import { perProfile, sealProfile } from "../src/profile_cache.ts";
+import { perKey, perProfile, sealProfile } from "../src/profile_cache.ts";
 
 /**
  * What a writer derives from its profile is kept across calls for the
@@ -325,4 +325,32 @@ test("only sealed profiles keep what is derived from them", () => {
   assertEquals(derive(frozen), 2);
   assertEquals(derive(frozen), 3);
   assert(Object.isFrozen(sealed) && Object.isFrozen(sealed.diacritics));
+});
+
+test("values kept by key are kept for each key", () => {
+  const built: string[] = [];
+  let keys = 0;
+  const derive = perKey(
+    (options) => (keys++, options.transliteration?.phi ?? "ph"),
+    (options) => {
+      built.push(options.transliteration?.phi ?? "ph");
+      return { phi: options.transliteration?.phi };
+    },
+  );
+  const f = () => resolveConversionOptions({ transliteration: { phi: "f" } });
+  // Options resolved anew at each call, as conversions resolve options of
+  // other forms: the value of their key is found again.
+  const first = derive(f());
+  assert(derive(f()) === first);
+  // Another key, another value.
+  const ph = derive(resolveConversionOptions({}));
+  assert(ph !== first && ph.phi === "ph");
+  // A sealed profile with the same key shares the value; built once each.
+  const sealed = sealProfile(f());
+  assert(derive(sealed) === first);
+  assertEquals(built, ["f", "ph"]);
+  // The key of a sealed profile is read once.
+  const read = keys;
+  assert(derive(sealed) === first);
+  assertEquals(keys, read);
 });

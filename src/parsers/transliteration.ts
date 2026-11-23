@@ -29,7 +29,7 @@ import {
 } from "../model.ts";
 import type { ConversionOptions } from "../options.ts";
 import { parsePunctuation } from "../punctuation.ts";
-import { perProfile } from "../profile_cache.ts";
+import { perKey } from "../profile_cache.ts";
 import { Trie } from "../trie.ts";
 import { codeUnitTable } from "./code_units.ts";
 import { knownMarkAfterIn, knownMarksFirst } from "./mark_order.ts";
@@ -583,15 +583,35 @@ function prioritizeEtaMark(
  * The spellings the reader reads under the options. A trie of its own is
  * built where an option adds or replaces spellings (ISO 843, ALA-LC for
  * modern Greek), which a word read under such options would otherwise spend
- * most of its time building: found once for a sealed profile
- * (`profile_cache.ts`), and for other options among the tries already built
- * for the same spellings (`TRIES_BY_SPELLINGS`).
+ * most of its time building: kept for each sealed profile, and by the
+ * spellings, which are all it depends on, for other options (`perKey()` in
+ * `profile_cache.ts`). There are 72 keys at most, one for each combination
+ * of `beta`, `eta` with its length mark, `xi`, `phi`, and `chi` with
+ * `lunateSigma`.
  */
-const transliterationTrie = perProfile(buildTransliterationTrie);
+const transliterationTrie = perKey(
+  (options) => {
+    const { variants, replaced } = spellingsOf(options);
+    return variants.map(([spelling, letter]) => `${spelling}=${letter}`)
+      .join(" ") + ` / ${[...replaced].join(" ")}`;
+  },
+  (options): Trie<Letter> => {
+    const { variants, replaced } = spellingsOf(options);
+    return variants.length === 0 ? TRIE : new Trie<Letter>([
+      ...CANONICAL_ENTRIES.filter(([spelling]) => !replaced.has(spelling)),
+      ...variants,
+    ]);
+  },
+);
 
-function buildTransliterationTrie(
-  options: ConversionOptions,
-): Trie<Letter> {
+/**
+ * The spellings that the options add to those the reader reads, and those
+ * of its spellings that they replace.
+ */
+function spellingsOf(options: ConversionOptions): {
+  variants: (readonly [string, Letter])[];
+  replaced: Set<string>;
+} {
   const variants: Array<readonly [string, Letter]> = [];
   const transliteration = options.transliteration;
 
@@ -615,30 +635,8 @@ function buildTransliterationTrie(
     // The lunate sigma `c` followed by a rough breathing: `ϲἡ` → `chē`.
     if (transliteration.lunateSigma === "c") replaced.add("ch");
   }
-
-  if (variants.length === 0) return TRIE;
-  // Keyed by the spellings, which are all the trie depends on: options that
-  // each conversion resolves anew, and does not seal, find the trie built
-  // for the same spellings by an earlier one.
-  const key = variants.map(([spelling, letter]) => `${spelling}=${letter}`)
-    .join(" ") + ` / ${[...replaced].join(" ")}`;
-  let trie = TRIES_BY_SPELLINGS.get(key);
-  if (trie === undefined) {
-    trie = new Trie<Letter>([
-      ...CANONICAL_ENTRIES.filter(([spelling]) => !replaced.has(spelling)),
-      ...variants,
-    ]);
-    TRIES_BY_SPELLINGS.set(key, trie);
-  }
-  return trie;
+  return { variants, replaced };
 }
-
-/**
- * The tries built for the spellings that options add or replace, by those
- * spellings: 72 at most, one for each combination of `beta`, `eta` with its
- * length mark, `xi`, `phi`, and `chi` with `lunateSigma`.
- */
-const TRIES_BY_SPELLINGS = new Map<string, Trie<Letter>>();
 
 /** The combining mark that shows the length of eta and omega, if any. */
 function etaMark(
