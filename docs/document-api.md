@@ -24,7 +24,10 @@ new set; any `Set` is accepted. They iterate in canonical mark order.
 The guard stops ordinary calls, not a deliberate bypass: calling
 `Set.prototype.add.call(set, ...)` (or `Reflect.apply`) on a library-built set
 modifies it for every grapheme that shares it, including those of later
-parses in the same process. Do not mutate a set you did not create.
+parses in the same process. Conversions also keep, from one call to the next,
+what they derive from each set of marks: after such a change, they may go on
+writing the marks the set held before. Do not mutate a set you did not
+create.
 
 The optional `glyphVariant` records the form of the letter in the source: a
 sigma shape (`lunate-sigma`, `final-sigma`, `medial-sigma`), a symbol form

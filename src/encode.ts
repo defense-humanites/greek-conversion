@@ -54,8 +54,10 @@ import type {
 } from "./model.ts";
 import type {
   ConversionOptions,
+  GreekOptions,
   MuPiTransliteration,
   NuTauTransliteration,
+  TransliterationOptions,
 } from "./options.ts";
 import { greekUpper } from "./case.ts";
 import { perProfile } from "./profile_cache.ts";
@@ -237,7 +239,7 @@ export function encodeGreek(
   const assimilates = options.greek?.dentalSigma === "assimilate";
   const aspirates = options.greek?.elidedStop === "aspirate";
   const adscript = options.greek?.iotaSubscript;
-  const writesAdscript = adscript !== undefined && adscript !== "subscript";
+  const writesAdscript = adscriptUnder(adscript);
 
   for (let i = 0; i < doc.length; i++) {
     const token = rendered[i];
@@ -517,13 +519,23 @@ export function betaSigma(
  * that begins a word in lowercase, or stands alone (`Ὠιδῇ`, `Ἧι`): read back,
  * the two letters keep the case they were written with.
  */
+/**
+ * Whether a policy for the iota subscript writes it adscript at all.
+ * encodeGreek() tests it once for the call before writesIotaAdscript(),
+ * which starts with it.
+ */
+function adscriptUnder(
+  policy: GreekOptions["iotaSubscript"] | undefined,
+): policy is Exclude<GreekOptions["iotaSubscript"], "subscript" | undefined> {
+  return policy !== undefined && policy !== "subscript";
+}
+
 function writesIotaAdscript(
   token: Grapheme,
   options: ConversionOptions,
 ): boolean {
   const policy = options.greek?.iotaSubscript;
-  return policy !== undefined && policy !== "subscript" &&
-    token.diacritics.has("iota-subscript") &&
+  return adscriptUnder(policy) && token.diacritics.has("iota-subscript") &&
     (policy === "adscript" || token.uppercase);
 }
 
@@ -870,12 +882,11 @@ export function encodeTransliteration(
   // goes before it (`ηὔδα` → `’ívda`).
   // The group that starts a word is read back by initialBreathingTarget(),
   // the rest of the document only for the rough diphthongs.
-  const vowelUpsilonVF = options.transliteration?.upsilon === "y-with-ou-v-f";
+  const upsilonRule = options.transliteration?.upsilon;
+  const vowelUpsilonVF = upsilonRule === "y-with-ou-v-f";
   // The tests of options that every letter would make otherwise, made once
   // for the whole call.
-  const upsilonRule = options.transliteration?.upsilon;
-  const separatesVowels = upsilonRule === "y-with-au-eu-ou" ||
-    upsilonRule === "y-with-diphthong-u" || vowelUpsilonVF;
+  const separatesVowels = separatesUnder(upsilonRule);
   const bnfKeraia = options.transliteration?.keraia === "bnf";
   const lunateC = options.transliteration?.lunateSigma === "c";
   const systematicRho = options.transliteration?.rho === "systematic";
@@ -1073,9 +1084,9 @@ export function encodeTransliteration(
     // A diaeresis and a breathing never share a vowel: none is written where
     // the vowel reads back with one (ὑἱός: `hyhiós`).
     // Only an iota or an upsilon takes one, under a contextual rule for
-    // upsilon: tested here, the call is made for few letters.
-    const separation = separatesVowels &&
-      (token.letter === "iota" || token.letter === "upsilon") &&
+    // upsilon: tested here with the predicates writesSeparationDiaeresis()
+    // starts with, the call is made for few letters.
+    const separation = separatesVowels && takesSeparation(token.letter) &&
       writesSeparationDiaeresis(doc, index, options) &&
       preservesDiaeresis && !hBefore &&
       !(smoothInPlace && token.diacritics.has("smooth"));
@@ -1816,24 +1827,35 @@ function separatesIotaAfterY(
  * reading, the separation would be reread as a diaeresis, so the diaeresis
  * is written at once and the output is idempotent.
  */
+/**
+ * Whether a rule for upsilon writes a separation diaeresis at all: the
+ * contextual ones. encodeTransliteration() tests it once for the call
+ * before writesSeparationDiaeresis(), which starts with it.
+ */
+function separatesUnder(
+  upsilon: TransliterationOptions["upsilon"] | undefined,
+): boolean {
+  return upsilon === "y-with-au-eu-ou" || upsilon === "y-with-diphthong-u" ||
+    upsilon === "y-with-ou-v-f";
+}
+
+/** Whether a letter can take a separation diaeresis: iota or upsilon. */
+function takesSeparation(letter: Letter): boolean {
+  return letter === "iota" || letter === "upsilon";
+}
+
 function writesSeparationDiaeresis(
   document: Document,
   index: number,
   options: ConversionOptions,
 ): boolean {
   const upsilon = options.transliteration?.upsilon;
-  if (
-    upsilon !== "y-with-au-eu-ou" && upsilon !== "y-with-diphthong-u" &&
-    upsilon !== "y-with-ou-v-f"
-  ) {
-    return false;
-  }
+  if (!separatesUnder(upsilon)) return false;
   const token = document[index];
   const first = document[index - 1];
   // The letter first: it is cheaper than the marks, and rarely iota or upsilon.
   if (
-    token?.kind !== "grapheme" ||
-    token.letter !== "iota" && token.letter !== "upsilon" ||
+    token?.kind !== "grapheme" || !takesSeparation(token.letter) ||
     first?.kind !== "grapheme"
   ) return false;
   // An iota written like eta reads back as one, and the pair with it.

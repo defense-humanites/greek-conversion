@@ -154,19 +154,21 @@ test("prepared options keep their marks apart", () => {
 test("the transliteration reader keeps the spellings of each profile", () => {
   // Spellings that options add or replace, which the reader reads with a
   // trie of their own: `v` for beta and `f` for phi (ISO 843, ALA-LC for
-  // modern Greek), `ks` and `kh` for xi and chi, `ī` for eta. A trie kept
-  // for one profile would read them under another; one kept for options of
-  // other forms, by their spellings, would read them under options with
-  // other spellings. The last two sets differ only by a spelling replaced:
+  // modern Greek), `ks` and `kh` for xi and chi, `ī` or `î` for eta. A trie
+  // kept for one profile would read them under another; one kept for
+  // options of other forms, by their spellings, would read them under
+  // options with other spellings. The two sets with `eta: "i"` differ only
+  // by the length mark of eta, the last two only by a spelling replaced:
   // `ch`, which the lunate sigma written `c` makes `ϲ` with a rough
   // breathing.
-  const text = "Ví fos phos ksénos khóra chóra dīmos aftós";
+  const text = "Ví fos phos ksénos khóra chóra dīmos aftós dîmos";
   const variants: ConversionOptions[] = [
     {},
     { preset: "iso-843-type-1" },
     { preset: "ala-lc-modern" },
     { preset: "iso-843-type-2" },
     { transliteration: { eta: "i", beta: "v" } },
+    { transliteration: { eta: "i", beta: "v", longVowels: "circumflex" } },
     { transliteration: { xi: "ks", chi: "kh" } },
     { transliteration: { xi: "ks", chi: "kh", lunateSigma: "c" } },
   ];
@@ -174,13 +176,14 @@ test("the transliteration reader keeps the spellings of each profile", () => {
   // computed here, they would share a fault of the cache. ISO 843 Type 1 and
   // Type 2 read these spellings alike, but for the length of eta.
   const expected = [
-    "Vἴ fὀς φος κσένος κὅρα χόρα δῑμος ἀfτός",
-    "Βί φος πὁς κσένος κὅρα χόρα δημος αφτός",
-    "Βι fος φος κσενος κὁρα χορα διμος αfτος",
-    "Βί φος πὁς κσένος κὅρα χόρα δῑμος αφτός",
-    "Βί fὀς φος κσένος κὅρα χόρα δημος ἀfτός",
-    "Vἴ fὀς φος ξένος χόρα χόρα δῑμος ἀfτός",
-    "Vἴ fὀς φος ξένος χόρα ϲὅρα δῑμος ἀfτός",
+    "Vἴ fὀς φος κσένος κὅρα χόρα δῑμος ἀfτός δῖμος",
+    "Βί φος πὁς κσένος κὅρα χόρα δημος αφτός δῖμος",
+    "Βι fος φος κσενος κὁρα χορα διμος αfτος διμος",
+    "Βί φος πὁς κσένος κὅρα χόρα δῑμος αφτός δῖμος",
+    "Βί fὀς φος κσένος κὅρα χόρα δημος ἀfτός δῖμος",
+    "Βί fὀς φος κσένος κὅρα χόρα δῑμος ἀfτός δημος",
+    "Vἴ fὀς φος ξένος χόρα χόρα δῑμος ἀfτός δῖμος",
+    "Vἴ fὀς φος ξένος χόρα ϲὅρα δῑμος ἀfτός δῖμος",
   ];
   const prepared = variants.map((options) => core.prepareOptions(options));
   for (const order of [variants, [...variants].reverse()]) {
@@ -229,10 +232,85 @@ test("options changed between calls are read anew", () => {
 });
 
 test("Beta Code writes overlines with marks already coded", () => {
-  // The second call finds the codes of the marks kept by the first: the
-  // overline must still be written around the letters.
+  // Each text is converted after another whose letters bear the same marks:
+  // the codes of the marks come from the cache, and the overline must still
+  // be written around the letters. Small letters, capitals alone, and a
+  // ligature, which writes the marks of its last letter, each note the
+  // overline on their own path. Outputs of 1.0.0-rc.12.
+  const cases: [string, string][] = [
+    ["θ̅ς̅", "<qs>"],
+    ["Χ̅Σ̅", "<*x*s>"],
+    ["ϗ̅", "<#1532>"],
+    ["θ̅ς̅ Χ̅Σ̅", "<qs> <*x*s>"],
+  ];
   for (let round = 0; round < 3; round++) {
-    assertEquals(convert("θ̅ς̅ Χ̅Σ̅", "greek", "beta-code"), "<qs> <*x*s>");
+    for (const [text, expected] of cases) {
+      convert("ν̅", "greek", "beta-code");
+      assertEquals(convert(text, "greek", "beta-code"), expected, text);
+    }
+  }
+});
+
+test("a profile keeps the marks of each format apart", () => {
+  // One profile writes the three formats in turn. BnF and an omitted
+  // quantity drop in transliteration the marks of quantity that Greek and
+  // Beta Code keep; and where both keep a long vowel's marks (`κῑ́` by
+  // default), Beta Code writes the accent first and transliteration the
+  // length. A mask or a cache of marks shared by two formats would write
+  // the marks of one in another. Outputs of 1.0.0-rc.12.
+  const text = "ἄ ὦ ῆ ᾱ ᾰ ποιῇ ἅ ϊ ὕ ᾷ ᾱ̓́ κῑ́ θ̅";
+  const writers = {
+    "transliteration": transliterationWriter,
+    "greek": greekWriter,
+    "beta-code": betaCodeWriter,
+  } as const;
+  const cases: [ConversionOptions, Record<Format, string>][] = [
+    [
+      {},
+      {
+        "transliteration": "á ō̃ ē̃ ā ă poiȩ̄̃ há ï hý ã̧ ā́ kī́ th̅",
+        "greek": "ἄ ὦ ῆ ᾱ ᾰ ποιῇ ἅ ϊ ὕ ᾷ ᾱ̓́ κῑ́ θ̅",
+        "beta-code":
+          "a)/ w)= h= a%26 a%27 poih=| a(/ i+ u(/ a=| a)/%26 ki/%26 <q>",
+      },
+    ],
+    [
+      { preset: "bnf-core" },
+      {
+        "transliteration": "a̓́ ō̓̂ ē̂ a a poiȩ̄̂ há ï hý â̧ a̓́ kí th̅",
+        "greek": "ἄ ὦ ῆ ᾱ ᾰ ποιῇ ἅ ϊ ὕ ᾷ ᾱ̓́ κῑ́ θ̅",
+        "beta-code":
+          "a)/ w)= h= a%26 a%27 poih=| a(/ i+ u(/ a=| a)/%26 ki/%26 <q>",
+      },
+    ],
+    [
+      { transliteration: { quantity: "omit" } },
+      {
+        "transliteration": "á ō̃ ē̃ a a poiȩ̄̃ há ï hý ã̧ á kí th̅",
+        "greek": "ἄ ὦ ῆ ᾱ ᾰ ποιῇ ἅ ϊ ὕ ᾷ ᾱ̓́ κῑ́ θ̅",
+        "beta-code":
+          "a)/ w)= h= a%26 a%27 poih=| a(/ i+ u(/ a=| a)/%26 ki/%26 <q>",
+      },
+    ],
+  ];
+  for (const [options, outputs] of cases) {
+    const prepared = core.prepareOptions(options);
+    for (const order of [FORMATS, [...FORMATS].reverse()]) {
+      for (let round = 0; round < 2; round++) {
+        for (const format of order) {
+          assertEquals(
+            convert(text, "greek", format, options),
+            outputs[format],
+            `${JSON.stringify(options)} → ${format}`,
+          );
+          assertEquals(
+            core.convert(text, greekReader, writers[format], prepared),
+            outputs[format],
+            `prepared ${JSON.stringify(options)} → ${format}`,
+          );
+        }
+      }
+    }
   }
 });
 

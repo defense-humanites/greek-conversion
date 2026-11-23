@@ -19,8 +19,8 @@ change.
 - **Speed of transliteration.** Writing transliteration tests the options
   once for each conversion, where it tested them for each letter, and keeps
   the Latin letter of each Greek one for the options that conversions share.
-  Greek and Beta Code convert into transliteration 14 to 20 % faster, long
-  texts included, and `convertDetailed()` 6 %. No output changes. A bundle
+  Greek and Beta Code convert into transliteration 13 to 20 % faster, long
+  texts included, and `convertDetailed()` 5 %. No output changes. A bundle
   that imports `convert()` grows by 0.4 kB minified, 0.2 kB with gzip.
 - **Speed of reading transliteration under ISO 843 and ALA-LC for modern
   Greek.** The reader builds the spellings that options add or replace
@@ -29,15 +29,16 @@ change.
   options of other forms, where it built them at each call. A word in the
   transliteration of these presets converts 57 to 61 % faster, a clause
   19 %; under options of other forms with such spellings, a word converts
-  40 % faster. No output changes.
+  about 35 % faster. No output changes.
 - **Speed of reading transliteration.** The reader of transliteration finds
   each letter without allocating, and reads the rough breathing of each
   letter from the mask of its marks. Transliteration converts into Greek 4
   to 5 % faster, a clause or a long text, and into Beta Code 1 to 3 %. No
   output changes.
 - **Documentation.** The guide on smaller bundles gives how much faster
-  `core` converts a word with options other than a preset: two to three
-  times, where it said up to 30 %.
+  `core` converts a word: up to 10 % with the defaults or a preset, where it
+  said about 5 %, and two to three times with other options, where it said
+  up to 30 %.
 - **Documentation.** The guarantees name the two cases where converting the
   output again may change it: the characters of another format that a
   source holds as literals (`ϗ` or U+0301 typed in Beta Code), which the
