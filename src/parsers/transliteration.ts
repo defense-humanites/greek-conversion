@@ -22,6 +22,7 @@ import {
   type Letter,
   literal,
   ownedGrapheme,
+  sharedMask,
   type Token,
   withDiacritic,
   withoutDiacritic,
@@ -783,7 +784,7 @@ function inferInitialBreathings(
       // the rough breathing goes to the second vowel of a diphthong.
       const next = tokens[i + 1];
       if (
-        token.diacritics.has("rough") &&
+        hasRough(token) &&
         isVowel(token.letter) &&
         next?.kind === "grapheme" &&
         !hasBreathing(next) &&
@@ -834,6 +835,17 @@ function inferInitialBreathings(
       target.diacritics = withDiacritic(target.diacritics, "smooth");
     }
   }
+}
+
+/**
+ * Whether a grapheme has a rough breathing: read from the mask of its marks,
+ * which every set the reader builds has, faster than from the set.
+ */
+function hasRough(token: Grapheme): boolean {
+  const mask = sharedMask(token.diacritics);
+  return mask === undefined
+    ? token.diacritics.has("rough")
+    : (mask & ROUGH) !== 0;
 }
 
 /**

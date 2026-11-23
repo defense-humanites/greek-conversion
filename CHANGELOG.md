@@ -30,6 +30,11 @@ change.
   transliteration of these presets converts 57 to 61 % faster, a clause
   19 %; under options of other forms with such spellings, a word converts
   about 35 % faster. No output changes.
+- **Speed of reading transliteration.** The reader of transliteration finds
+  each letter without allocating, and reads the rough breathing of each
+  letter from the mask of its marks. Transliteration converts into Greek 4
+  to 5 % faster, a clause or a long text, and into Beta Code 1 to 3 %. No
+  output changes.
 - **Documentation.** The guide on smaller bundles gives how much faster
   `core` converts a word: up to 10 % with the defaults or a preset, where it
   said about 5 %, and two to three times with other options, where it said
