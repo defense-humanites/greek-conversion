@@ -29,10 +29,11 @@ change.
   options of other forms, where it built them at each call. A word in the
   transliteration of these presets converts 57 to 61 % faster, a clause
   19 %; under options of other forms with such spellings, a word converts
-  40 % faster. No output changes.
+  about 35 % faster. No output changes.
 - **Documentation.** The guide on smaller bundles gives how much faster
-  `core` converts a word with options other than a preset: two to three
-  times, where it said up to 30 %.
+  `core` converts a word: up to 10 % with the defaults or a preset, where it
+  said about 5 %, and two to three times with other options, where it said
+  up to 30 %.
 - **Documentation.** The guarantees name the two cases where converting the
   output again may change it: the characters of another format that a
   source holds as literals (`ϗ` or U+0301 typed in Beta Code), which the

@@ -154,19 +154,21 @@ test("prepared options keep their marks apart", () => {
 test("the transliteration reader keeps the spellings of each profile", () => {
   // Spellings that options add or replace, which the reader reads with a
   // trie of their own: `v` for beta and `f` for phi (ISO 843, ALA-LC for
-  // modern Greek), `ks` and `kh` for xi and chi, `ī` for eta. A trie kept
-  // for one profile would read them under another; one kept for options of
-  // other forms, by their spellings, would read them under options with
-  // other spellings. The last two sets differ only by a spelling replaced:
+  // modern Greek), `ks` and `kh` for xi and chi, `ī` or `î` for eta. A trie
+  // kept for one profile would read them under another; one kept for
+  // options of other forms, by their spellings, would read them under
+  // options with other spellings. The two sets with `eta: "i"` differ only
+  // by the length mark of eta, the last two only by a spelling replaced:
   // `ch`, which the lunate sigma written `c` makes `ϲ` with a rough
   // breathing.
-  const text = "Ví fos phos ksénos khóra chóra dīmos aftós";
+  const text = "Ví fos phos ksénos khóra chóra dīmos aftós dîmos";
   const variants: ConversionOptions[] = [
     {},
     { preset: "iso-843-type-1" },
     { preset: "ala-lc-modern" },
     { preset: "iso-843-type-2" },
     { transliteration: { eta: "i", beta: "v" } },
+    { transliteration: { eta: "i", beta: "v", longVowels: "circumflex" } },
     { transliteration: { xi: "ks", chi: "kh" } },
     { transliteration: { xi: "ks", chi: "kh", lunateSigma: "c" } },
   ];
@@ -174,13 +176,14 @@ test("the transliteration reader keeps the spellings of each profile", () => {
   // computed here, they would share a fault of the cache. ISO 843 Type 1 and
   // Type 2 read these spellings alike, but for the length of eta.
   const expected = [
-    "Vἴ fὀς φος κσένος κὅρα χόρα δῑμος ἀfτός",
-    "Βί φος πὁς κσένος κὅρα χόρα δημος αφτός",
-    "Βι fος φος κσενος κὁρα χορα διμος αfτος",
-    "Βί φος πὁς κσένος κὅρα χόρα δῑμος αφτός",
-    "Βί fὀς φος κσένος κὅρα χόρα δημος ἀfτός",
-    "Vἴ fὀς φος ξένος χόρα χόρα δῑμος ἀfτός",
-    "Vἴ fὀς φος ξένος χόρα ϲὅρα δῑμος ἀfτός",
+    "Vἴ fὀς φος κσένος κὅρα χόρα δῑμος ἀfτός δῖμος",
+    "Βί φος πὁς κσένος κὅρα χόρα δημος αφτός δῖμος",
+    "Βι fος φος κσενος κὁρα χορα διμος αfτος διμος",
+    "Βί φος πὁς κσένος κὅρα χόρα δῑμος αφτός δῖμος",
+    "Βί fὀς φος κσένος κὅρα χόρα δημος ἀfτός δῖμος",
+    "Βί fὀς φος κσένος κὅρα χόρα δῑμος ἀfτός δημος",
+    "Vἴ fὀς φος ξένος χόρα χόρα δῑμος ἀfτός δῖμος",
+    "Vἴ fὀς φος ξένος χόρα ϲὅρα δῑμος ἀfτός δῖμος",
   ];
   const prepared = variants.map((options) => core.prepareOptions(options));
   for (const order of [variants, [...variants].reverse()]) {
