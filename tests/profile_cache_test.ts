@@ -167,10 +167,85 @@ test("options changed between calls are read anew", () => {
 });
 
 test("Beta Code writes overlines with marks already coded", () => {
-  // The second call finds the codes of the marks kept by the first: the
-  // overline must still be written around the letters.
+  // Each text is converted after another whose letters bear the same marks:
+  // the codes of the marks come from the cache, and the overline must still
+  // be written around the letters. Small letters, capitals alone, and a
+  // ligature, which writes the marks of its last letter, each note the
+  // overline on their own path. Outputs of 1.0.0-rc.12.
+  const cases: [string, string][] = [
+    ["θ̅ς̅", "<qs>"],
+    ["Χ̅Σ̅", "<*x*s>"],
+    ["ϗ̅", "<#1532>"],
+    ["θ̅ς̅ Χ̅Σ̅", "<qs> <*x*s>"],
+  ];
   for (let round = 0; round < 3; round++) {
-    assertEquals(convert("θ̅ς̅ Χ̅Σ̅", "greek", "beta-code"), "<qs> <*x*s>");
+    for (const [text, expected] of cases) {
+      convert("ν̅", "greek", "beta-code");
+      assertEquals(convert(text, "greek", "beta-code"), expected, text);
+    }
+  }
+});
+
+test("a profile keeps the marks of each format apart", () => {
+  // One profile writes the three formats in turn. BnF and an omitted
+  // quantity drop in transliteration the marks of quantity that Greek and
+  // Beta Code keep; and where both keep a long vowel's marks (`κῑ́` by
+  // default), Beta Code writes the accent first and transliteration the
+  // length. A mask or a cache of marks shared by two formats would write
+  // the marks of one in another. Outputs of 1.0.0-rc.12.
+  const text = "ἄ ὦ ῆ ᾱ ᾰ ποιῇ ἅ ϊ ὕ ᾷ ᾱ̓́ κῑ́ θ̅";
+  const writers = {
+    "transliteration": transliterationWriter,
+    "greek": greekWriter,
+    "beta-code": betaCodeWriter,
+  } as const;
+  const cases: [ConversionOptions, Record<Format, string>][] = [
+    [
+      {},
+      {
+        "transliteration": "á ō̃ ē̃ ā ă poiȩ̄̃ há ï hý ã̧ ā́ kī́ th̅",
+        "greek": "ἄ ὦ ῆ ᾱ ᾰ ποιῇ ἅ ϊ ὕ ᾷ ᾱ̓́ κῑ́ θ̅",
+        "beta-code":
+          "a)/ w)= h= a%26 a%27 poih=| a(/ i+ u(/ a=| a)/%26 ki/%26 <q>",
+      },
+    ],
+    [
+      { preset: "bnf-core" },
+      {
+        "transliteration": "a̓́ ō̓̂ ē̂ a a poiȩ̄̂ há ï hý â̧ a̓́ kí th̅",
+        "greek": "ἄ ὦ ῆ ᾱ ᾰ ποιῇ ἅ ϊ ὕ ᾷ ᾱ̓́ κῑ́ θ̅",
+        "beta-code":
+          "a)/ w)= h= a%26 a%27 poih=| a(/ i+ u(/ a=| a)/%26 ki/%26 <q>",
+      },
+    ],
+    [
+      { transliteration: { quantity: "omit" } },
+      {
+        "transliteration": "á ō̃ ē̃ a a poiȩ̄̃ há ï hý ã̧ á kí th̅",
+        "greek": "ἄ ὦ ῆ ᾱ ᾰ ποιῇ ἅ ϊ ὕ ᾷ ᾱ̓́ κῑ́ θ̅",
+        "beta-code":
+          "a)/ w)= h= a%26 a%27 poih=| a(/ i+ u(/ a=| a)/%26 ki/%26 <q>",
+      },
+    ],
+  ];
+  for (const [options, outputs] of cases) {
+    const prepared = core.prepareOptions(options);
+    for (const order of [FORMATS, [...FORMATS].reverse()]) {
+      for (let round = 0; round < 2; round++) {
+        for (const format of order) {
+          assertEquals(
+            convert(text, "greek", format, options),
+            outputs[format],
+            `${JSON.stringify(options)} → ${format}`,
+          );
+          assertEquals(
+            core.convert(text, greekReader, writers[format], prepared),
+            outputs[format],
+            `prepared ${JSON.stringify(options)} → ${format}`,
+          );
+        }
+      }
+    }
   }
 });
 
