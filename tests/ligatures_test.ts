@@ -48,6 +48,35 @@ test("reads ϗ as και and ȣ as ου, noting the sign on the first letter", (
   ]);
 });
 
+test("sets a lone capital sign in capitals between words in capitals", () => {
+  // The nearest word on each side decides, across spaces and punctuation;
+  // a word of one capital letter decides nothing.
+  for (
+    const [greek, latin] of [
+      ["ΛΟΓΟΣ Ϗ ΤΟΥ", "LOGOS KAI TOU"],
+      ["ΛΟΓΟΣ, Ϗ ΤΟΥ.", "LOGOS, KAI TOU."],
+      ["Ϗ ΤΟΥ", "KAI TOU"],
+      ["ΚΑΙ Ȣ ΤΟ", "KAI OU TO"],
+      ["ΛΟΓΟΣ Ϗ Ὁ", "LOGOS KAI Ho"],
+      ["Ϗ τοῦ", "Kai toũ"],
+      ["λόγος Ϗ ΤΟΥ", "lógos Kai TOU"],
+      ["ΛΟΓΟΣ Ϗ τοῦ", "LOGOS Kai toũ"],
+      ["Ϗ Ὁ λόγος", "Kai Ho lógos"],
+      ["Ϗ", "Kai"],
+    ]
+  ) {
+    assertNfcEquals(convert(greek, "greek", "transliteration"), latin);
+  }
+  assertEquals(
+    convert("*L*O*G*O*S #1531 *T*O*U", "beta-code", "greek", {
+      greek: { ligatures: "standard" },
+    }),
+    "ΛΟΓΟΣ ΚΑΙ ΤΟΥ",
+  );
+  // Greek output writes the sign again.
+  assertEquals(convert("ΛΟΓΟΣ Ϗ ΤΟΥ", "greek", "greek"), "ΛΟΓΟΣ Ϗ ΤΟΥ");
+});
+
 test("writes ϗ and ȣ again where the source has them", () => {
   const text = "ἐγὼ ϗ σύ, Ϗ ὁ ἀκȣ́ων Ȣ\u0314\u0342τος";
   assertNfcEquals(reencode(text, "greek"), text);
