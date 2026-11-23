@@ -573,12 +573,20 @@ site-search dialog::backdrop {
   background-color: color-mix(in oklab, var(--surface) 82%, transparent);
 }
 /* On a phone, where it covers the screen, the dialog keeps a margin on its
-   four sides, as the header keeps its text from the edges. */
+   four sides, as the header keeps its text from the edges; its shadow stays
+   within that margin (2px down, 8px of blur in a 12px margin), where
+   Starlight's large one was cut off by the bottom of the screen. */
 @media (max-width: 49.99rem) {
   site-search dialog {
     width: calc(100% - 2 * var(--sl-nav-pad-x));
     height: calc(100% - 2 * var(--sl-nav-pad-x));
     margin: var(--sl-nav-pad-x);
+    box-shadow: 0 2px 8px rgb(31 42 68 / 0.1);
+  }
+}
+@media (max-width: 49.99rem) and (prefers-color-scheme: dark) {
+  site-search dialog {
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
   }
 }
 
