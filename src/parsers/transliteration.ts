@@ -28,6 +28,7 @@ import {
 } from "../model.ts";
 import type { ConversionOptions } from "../options.ts";
 import { parsePunctuation } from "../punctuation.ts";
+import { perProfile } from "../profile_cache.ts";
 import { Trie } from "../trie.ts";
 import { codeUnitTable } from "./code_units.ts";
 import { knownMarkAfterIn, knownMarksFirst } from "./mark_order.ts";
@@ -577,7 +578,18 @@ function prioritizeEtaMark(
   return chars;
 }
 
-function transliterationTrie(options: ConversionOptions): Trie<Letter> {
+/**
+ * The spellings the reader reads under the options. A trie of its own is
+ * built where an option adds or replaces spellings (ISO 843, ALA-LC for
+ * modern Greek): once for a sealed profile (`profile_cache.ts`), which a
+ * word read under such a preset would otherwise spend most of its time
+ * building, and at each call for other options.
+ */
+const transliterationTrie = perProfile(buildTransliterationTrie);
+
+function buildTransliterationTrie(
+  options: ConversionOptions,
+): Trie<Letter> {
   const variants: Array<readonly [string, Letter]> = [];
   const transliteration = options.transliteration;
 

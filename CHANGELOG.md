@@ -22,6 +22,12 @@ change.
   Greek and Beta Code convert into transliteration 14 to 20 % faster, long
   texts included, and `convertDetailed()` 6 %. No output changes. A bundle
   that imports `convert()` grows by 0.4 kB minified, 0.2 kB with gzip.
+- **Speed of reading transliteration under ISO 843 and ALA-LC for modern
+  Greek.** The reader builds the spellings that these presets add (`v`,
+  `f`) once for the options that conversions share and for prepared
+  options, where it built them at each call. A word in their
+  transliteration converts 57 to 61 % faster, a clause 19 %. No output
+  changes.
 - **Documentation.** The guarantees name the two cases where converting the
   output again may change it: the characters of another format that a
   source holds as literals (`ϗ` or U+0301 typed in Beta Code), which the
