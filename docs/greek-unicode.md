@@ -75,6 +75,20 @@ subscript last, as the TLG does, with the quantity between them as a TLG
 percent code, `%26` for the macron and `%27` for the breve (`a)/%26`);
 transliteration uses the same quantity-first order as Greek (`ā́`).
 
+The Latin circumflex U+0302 and tilde U+0303, which some Greek text has for
+the perispomeni, are read as the circumflex, on any letter, as
+transliteration reads them, and Greek output writes U+0342: `τω̃ν` gives
+`τῶν`.
+
+A combining mark the library does not read, such as the dot below of the
+Leiden conventions, stays a literal after its letter. The marks that the
+Unicode canonical order puts after it, because their combining class is
+higher, still belong to the letter, in whichever order they were typed:
+`ἄ̣νθρωπος` is α, U+0323, U+0313, U+0301 once decomposed, and gives
+`ạ́nthrōpos` in transliteration and `a)/̣nqrwpos` in Beta Code. A mark the
+library reads after one of the same class, which is not reordered, stays a
+literal with it.
+
 ### Overline
 
 Manuscripts and editions draw a line over abbreviations and numerals, the
@@ -239,7 +253,12 @@ ligature `ȣ` (`Ȣ`, Beta Code `#1521`) as `ου` (`ou-ligature`). The ligature 
 a Latin letter, OU, which editions use for the Greek one; only the Greek
 reader takes it for `ου`. Marks written after a sign belong to its last
 letter (`ϗ́` is `καί`, `ȣ̓` is `οὐ`); a capital sign begins a word, or is set
-in capitals before a capital (`ȢΤΟΣ`). No accent is read: `ϗ` is `και`.
+in capitals before a capital (`ȢΤΟΣ`), and so is a sign that stands alone
+between words in capitals: the nearest word on each side, across spaces and
+punctuation, has its two letters nearest the sign in capitals, on one side at
+least, and no small letter on the other (`ΛΟΓΟΣ Ϗ ΤΟΥ` is `ΛΟΓΟΣ ΚΑΙ ΤΟΥ`;
+a word of one capital letter decides nothing). No accent is read: `ϗ` is
+`και`.
 
 `greek.stigma: "ligature"` reads a stigma between two letters as `σ` and `τ`
 (`stigma-ligature`), which older printing joined in that sign: `ἐϛὶ` is

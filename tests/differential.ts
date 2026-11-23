@@ -12,6 +12,7 @@
  */
 import * as reference from "greek-conversion-previous";
 import * as current from "../src/mod.ts";
+import { MEANT } from "./meant.ts";
 import type { ConversionOptions, Format } from "../src/mod.ts";
 import * as core from "../src/core.ts";
 import { betaCodeReader, betaCodeWriter } from "../src/formats/beta_code.ts";
@@ -52,18 +53,13 @@ export interface Difference {
   current: string;
 }
 
-/**
- * Changes of output that are meant: the label of the options, the call, and
- * the input, as a difference reports them, with the reason. Empty while the
- * reference is the release before the one in preparation and no output is
- * meant to change.
- */
-export const MEANT: readonly {
-  label: string;
-  call: string;
-  input: string;
-  reason: string;
-}[] = [];
+/** Whether `MEANT` lists a difference. */
+function isMeant(label: string, call: string, input: string): boolean {
+  return MEANT.some((meant) =>
+    meant.input === input && (meant.label ?? label) === label &&
+    (meant.call ?? call) === call
+  );
+}
 
 /**
  * The options compared by default: the defaults, every preset, the options
@@ -191,9 +187,7 @@ export function compareConversions(
     const actual = outcome(run);
     if (
       expected !== actual && differences.length < limit &&
-      !MEANT.some((meant) =>
-        meant.label === label && meant.call === call && meant.input === input
-      )
+      !isMeant(label, call, input)
     ) {
       differences.push({
         label,
@@ -278,10 +272,7 @@ export function compareConverters(
           const call = `createConverter().${method}(${from} → ${to})`;
           if (
             expected !== actual && differences.length < limit &&
-            !MEANT.some((meant) =>
-              meant.label === label && meant.call === call &&
-              meant.input === input
-            )
+            !isMeant(label, call, input)
           ) {
             differences.push({
               label,

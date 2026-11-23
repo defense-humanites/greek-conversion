@@ -31,7 +31,9 @@ numeral provenance there, and `convertDetailed()` reports the loss. A
 consonant bears no accent: its acute reads back as the keraia (`c̄́` → `ϛʹ`),
 as does a comma before `c̄` or `s̄`, the stigma and sampi of numerals
 (`,c̄` → `͵ϛ`). When the accents are removed, the right keraia is written `ʹ`,
-since an acute would read back as an accent and be removed. The BnF table
+since an acute would read back as an accent and be removed, and so it is
+after a letter with an accent, where an acute would be a second one (`ίʹ` →
+`íʹ`), or after anything but a letter; the reader takes `ʹ` for the keraia. The BnF table
 also uses both koppa forms with Latin `q`, which likewise cannot be inverted
 without source provenance.
 Marked uppercase stigma and sampi numerals render with lowercase Latin `c̄`

@@ -14,7 +14,10 @@ protects these behaviors.
   pair, in either direction.
 - **Output is canonical and idempotent.** For fixed formats and options,
   converting the output again with the same options, without `source`,
-  changes nothing.
+  changes nothing, but for the text of another format that a source may hold
+  ([below](#characters-of-another-format)) and a letter written as a TLG
+  code before a digit in Beta Code (see
+  [Information loss](information-loss.md#canonical-spelling-and-unicode)).
 - **A lossless conversion is reversible.** When `convertDetailed()` reports
   `lossy: false`, converting the output back with the same options gives the
   same canonical text. After a restyle, swap `source` and the other options.
@@ -59,7 +62,8 @@ The library converts the whole string it is given. In a text that mixes Greek
 with another language, the punctuation shared by both is converted as Greek
 (`;` becomes `?` in transliteration). The letters of the other language are
 kept as they are, but reported as `unrepresented-literal` losses when the
-target format would read them as Greek:
+target format would read them as Greek, and Beta Code, whose letters are
+Latin, writes them in the case of its own letters, as they read back:
 
 ```ts
 import { convertDetailed } from "@humanities/greek-conversion";
@@ -82,6 +86,22 @@ literals of the Greek itself that a target cannot keep, such as a parenthesis
 before a digit in Beta Code (see
 [Information loss](information-loss.md#canonical-spelling-and-unicode)).
 
+### Characters of another format
+
+Each reader reads its own format, and keeps the rest as literals: Greek
+characters in Beta Code or transliteration, and in Beta Code the Unicode
+combining marks, which are not Beta Code. A writer copies those literals,
+and a reader of the target format may then read them: `ϗ` in a Beta Code
+source is a literal, which Greek output copies, and which Greek reads as
+`και`, as it reads a middle dot as the ano teleia (see
+[Punctuation and numerals](punctuation-and-numerals.md#consequences)). Converting such output again may change it, and `convertDetailed()`
+reports the loss of the literal (`unrepresented-literal`). Type `#1532` in
+Beta Code, and `kai` in transliteration, or the accent's own code (`a/`)
+rather than U+0301. The breathings and accents that older editions print
+before a capital, as signs of their own (U+1FBF, U+1FFE, and their compounds
+with an accent), are the exception: every reader reads them, as the
+capital's at the start of a word (`῾Ρωμαῖοι` is `Ῥωμαῖοι`).
+
 ## What the library does not do
 
 - **It does not infer what the text does not write.** A missing rough
@@ -97,6 +117,10 @@ before a digit in Beta Code (see
 - **It does not lay out text.** Letter shapes, uncial ones included, are a
   matter of font, and removing the spaces between words is left to the
   caller.
+- **It does not bound normalization.** Every conversion normalizes the text
+  (`String.prototype.normalize()`), whose time grows with the square of the
+  number of combining marks on one letter: thousands of them, which no text
+  has, take seconds. Limit the length of untrusted input accordingly.
 
 ## What the engine covers
 

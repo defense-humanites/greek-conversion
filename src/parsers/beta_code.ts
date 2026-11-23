@@ -17,10 +17,16 @@ import {
 } from "../model.ts";
 import {
   BETA_LIGATURES,
+  capitalizeLoneSigns,
   ligatureLength,
   ligatureLetters,
 } from "../ligatures.ts";
-import { parsePunctuation, TLG_SIGNS } from "../punctuation.ts";
+import {
+  ANO_TELEIA,
+  MIDDLE_DOT,
+  parsePunctuation,
+  TLG_SIGNS,
+} from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
 import type { ReadPositions } from "./positions.ts";
 import { mayHaveSpacingSigns, readSpacingMarks } from "./spacing_marks.ts";
@@ -144,8 +150,10 @@ export function parseBetaCode(
   // again only past it, so that a text of many `<` is read in linear time.
   let close = NO_CODE - 1;
   // The letters read with a smooth breathing, which alone may bear a
-  // coronis (see `classifyCoronides`).
+  // coronis (see `classifyCoronides`), and whether a sign for several
+  // letters was read.
   const smooth: number[] = [];
+  let signs = false;
 
   for (let i = 0; i < text.length;) {
     if (overline !== NO_CODE && text.charCodeAt(i) === GREATER) {
@@ -255,6 +263,7 @@ export function parseBetaCode(
       out.push(...letters);
       // The letters share the code's span.
       for (let k = 1; k < letters.length; k++) starts?.push(start);
+      signs = true;
       continue;
     }
 
@@ -280,8 +289,11 @@ export function parseBetaCode(
         i = start + 1;
         continue;
       }
+      // The Greek ano teleia is canonically a middle dot, which Beta Code
+      // does not read: it stays the literal that a normalized text has.
       const source = codePointAt(text, i);
-      out.push(share ? sharedLiteral(source) : literal(source));
+      const value = source === ANO_TELEIA ? MIDDLE_DOT : source;
+      out.push(share ? sharedLiteral(value) : literal(value));
       i += source.length;
       continue;
     }
@@ -298,6 +310,7 @@ export function parseBetaCode(
   }
 
   if (starts !== undefined) starts.push(text.length);
+  if (signs) capitalizeLoneSigns(out);
 
   if (mayHaveSpacingSigns(text) || text.includes("%")) {
     // Joining the spacing signs to the letters moves the letters noted.
