@@ -1,8 +1,9 @@
 interface Node<T> {
   children: Map<string, Node<T>>;
   /**
-   * The key that ends here, as longest() returns it: built once, so that
-   * reading a letter allocates nothing.
+   * The key that ends here, as longest() returns it: built once and frozen,
+   * since every call that finds the key shares it, so that reading a letter
+   * allocates nothing.
    */
   match?: { readonly value: T; readonly length: number };
 }
@@ -32,7 +33,7 @@ export class Trie<T> {
       node = child;
     }
 
-    node.match = { value, length };
+    node.match = Object.freeze({ value, length });
   }
 
   /**
