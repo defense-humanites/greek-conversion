@@ -1,0 +1,107 @@
+---
+title: "Performance"
+description: "How fast the library converts, what each call costs, and how to keep conversions fast on long texts, on many short strings, and in memory."
+---
+
+The conversion functions are synchronous: they read no file and wait for
+nothing, and keep no state but the tables they derive from options. On one
+core, a text of 10,000 characters converts in 1 to 2 ms, a word in 1 to
+3 µs, and a million characters in about a quarter of a second. Time grows
+with the length of the text, and with it only.
+
+## Measures
+
+Thucydides 1.1–10, the input of `npm run bench` (10,555 characters, 1,672
+words), with `convert()` unless the row says otherwise:
+
+| Conversion                                   | Time   | Characters per second |
+| -------------------------------------------- | ------ | --------------------- |
+| Greek → Beta Code                            | 1.2 ms | 9 million             |
+| Beta Code → Greek                            | 1.1 ms | 11 million            |
+| Greek → Greek, with `reencode()`             | 1.2 ms | 9 million             |
+| Greek → transliteration                      | 1.8 ms | 6 million             |
+| Transliteration → Greek                      | 2.0 ms | 6 million             |
+| Greek → transliteration, `iso-843-type-2`    | 2.3 ms | 5 million             |
+| Greek → transliteration, `convertDetailed()` | 4.8 ms | 2 million             |
+
+One word, `Ἕλλησιν`, for each call:
+
+| Call                                                            | Time   |
+| --------------------------------------------------------------- | ------ |
+| `convert()` into Beta Code, with the defaults or a preset       | 1.0 µs |
+| `convert()` into transliteration, with the defaults or a preset | 1.7 µs |
+| `convert()` into transliteration, with other options            | 3.0 µs |
+| `convert()` from `core`, with options prepared once             | 1.4 µs |
+| `convertDetailed()` into transliteration                        | 5.0 µs |
+| `convert()` of a converter from `createConverter()`             | 2.9 µs |
+
+These times were measured with Node.js 24, on one core of a cloud server
+(Intel Xeon), on the version that follows `1.0.0-rc.12`. Another machine
+gives other times, but the ratios between the rows hold better;
+`npm run bench`, in a clone of the repository, measures the main ones on
+yours.
+
+## What costs what
+
+- **The direction.** Transliteration costs most to write and to read: a
+  Latin letter depends on the letters around it (diphthongs, nasal gamma, the
+  breathing of a vowel group), and the reader looks for the longest spelling
+  at each position. Greek and Beta Code cost least.
+- **`convertDetailed()`.** It reads the output again to find what the
+  conversion lost, and keeps the position of every token: it costs two to
+  three times what `convert()` does. Call it where the losses or the
+  positions are wanted, and `convert()` elsewhere.
+- **Options.** The defaults and the presets are checked and resolved once,
+  and what they imply (the marks each format writes, the Latin letter of
+  each Greek one, the spellings the reader accepts) is computed once and
+  kept. Options of any other form are checked and resolved at each call: a
+  word takes about twice as long, a long text hardly longer. For many short
+  strings under such options, prepare them once with `prepareOptions()`
+  from `core`, as [Smaller bundles](/guide/smaller-bundles/) shows.
+- **Converters.** A converter from `createConverter()` looks for its
+  aliases and its own characters at each character, and checks its
+  repertoire: it converts 1.5 to 2 times slower than `convert()`, even with
+  nothing to look for. Create one for these, and not to bind a preset:
+  `convert()` given the preset's name costs less.
+- **The first call.** Loading the package takes some tens of milliseconds
+  in Node.js, and the first conversion one or two milliseconds more, while
+  it builds the tables it needs. Later calls use them.
+
+## Long texts and memory
+
+The time of a conversion grows with the length of its text, and no faster:
+a test makes sure of it (`tests/scaling_test.ts`). While it converts, a
+conversion holds some 100 bytes for each character of the text, or about
+100 MB for a million characters, and `convertDetailed()` two to three times
+as much. To keep memory flat on a corpus, convert it line by line or paragraph
+by paragraph: a call costing a few microseconds, this is no slower.
+
+One input is slow: thousands of combining marks on one letter, which no
+text has, take seconds to normalize. Limit the length of untrusted input
+accordingly, as [Guarantees and limits](/reference/guarantees/) says.
+
+The tables kept for options do not grow with use: one for each preset and
+each set of prepared options, released with them, and a few dozen at most
+for the spellings that options of other forms add.
+
+## Bundle size
+
+On a web page, what the browser loads counts as well. A bundle that imports
+`convert()` from the main entry point keeps every format and every preset;
+[Smaller bundles](/guide/smaller-bundles/) gives its size, and how to bundle
+only the formats and presets a page uses.
+
+## How speed is kept
+
+Two release candidates were given to speed, `1.0.0-rc.4` and `1.0.0-rc.12`,
+and the work went on after the second. On the same machine, compared with
+`1.0.0-rc.3`, long texts now convert about twice as fast, and a word 12 to
+20 times as fast. The [changelog](https://github.com/defense-humanites/greek-conversion/blob/main/CHANGELOG.md)
+gives the gain of each change.
+
+No such change may alter a conversion: a test compares every output, with
+the losses and positions of `convertDetailed()`, with those of the previous
+release, under 29 sets of options. A change to a reader or a writer is
+measured with `npm run bench:ab`, which runs two versions in turn, with a
+control that runs one version against itself, since a gain of a few percent
+hides in the noise of a single run.

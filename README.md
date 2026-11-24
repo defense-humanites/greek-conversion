@@ -151,6 +151,15 @@ reencode("a)/ndra moi e)/nnepe, mou=sa", "beta-code", {
 // → A)/NDRA MOI E)/NNEPE, MOU=SA
 ```
 
+## Performance
+
+Conversions are synchronous, and their time grows with the length of the
+text only. On one core, with Node.js 24, a text of 10,000 characters
+converts in 1 to 2 ms, a word in 1 to 3 µs. Since `1.0.0-rc.3`, long texts
+convert about twice as fast, and a word 12 to 20 times as fast.
+[Performance](https://greek-conversion.humanites.fr/guide/performance/)
+gives the measures, what each call costs, and how to keep conversions fast.
+
 ## Documentation
 
 - [Getting started](https://greek-conversion.humanites.fr/guide/getting-started/),
@@ -161,7 +170,8 @@ reencode("a)/ndra moi e)/nnepe, mou=sa", "beta-code", {
 - [Choosing a preset](https://greek-conversion.humanites.fr/guide/presets/):
   what each convention writes, and what it loses.
 - [Smaller bundles](https://greek-conversion.humanites.fr/guide/smaller-bundles/),
-  for a web application that uses a few formats and presets.
+  for a web application that uses a few formats and presets, and
+  [Performance](https://greek-conversion.humanites.fr/guide/performance/).
 - [Guarantees and limits](https://greek-conversion.humanites.fr/reference/guarantees/),
   then the rest of the reference: the
   [options](https://greek-conversion.humanites.fr/reference/options/),
