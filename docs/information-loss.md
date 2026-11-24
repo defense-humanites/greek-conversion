@@ -118,9 +118,9 @@ Default transliteration has these intrinsic ambiguities:
 - under the contextual upsilon rules (the default `"y-with-diphthong-u"`,
   ISO 843, BnF), the `y` of a pair with upsilon says it is not a diphthong:
   `ἀυτμή` → `aytmḗ`, which reads back with its breathing at the start of a
-  word, as `’aytmī́` does under ISO 843, whose apostrophe precedes the group as
-  `h` does. Where omega is written `o` (ISO 843 Type 2), `’oy` is `ὠυ`, and
-  `ὀυ` takes the diaeresis. Where the breathing would not read back on the first vowel (inside a
+  word, as `’aytmī́` does under ISO 843, whose apostrophe precedes the group
+  as `h` does. Where omega is written `o` (ISO 843 Type 2), `’oy` is `ὠυ`,
+  and `ὀυ` takes the diaeresis. Where the breathing would not read back on the first vowel (inside a
   word, or in a numeral, which takes no breathing), the `y` carries a
   diaeresis, which reads back too: `ἀἑυ` → `aheÿ` → `ἀἑϋ`, and
   `convertDetailed()` reports `added-diacritic`;

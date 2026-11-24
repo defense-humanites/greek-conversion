@@ -48,6 +48,33 @@ test("a `y` after the apostrophe keeps its hiatus", () => {
     convert("’aytmī́", "transliteration", "greek", TYPE_1),
     "ἀυτμή",
   );
+  // Monotonic accentuation removes the breathing: the diaeresis stays.
+  const monotonic = {
+    ...TYPE_1,
+    greek: { accentuation: "monotonic" },
+  } as const;
+  const latin = convert("ἀυτμή", "greek", "transliteration", monotonic);
+  assertNfcEquals(latin, "aÿtmī́");
+  assertEquals(
+    convert(latin, "transliteration", "transliteration", monotonic),
+    latin,
+  );
+});
+
+test("a mark kept apart from its letter belongs to it", () => {
+  // The enclosing circle U+20DD, which no reader reads, does not start a
+  // word, nor end the vowel group of a coronis.
+  for (
+    const [latin, greek] of [
+      ["a⃝’e", "α⃝’ε"],
+      ["kaͅ⃝e’ga", "κᾳ⃝ἐγα"],
+      // A vowel bears one coronis: the apostrophe after a U+1FBD is one.
+      ["ka᾽’ga", "κἀ’γα"],
+    ] as const
+  ) {
+    assertNfcEquals(convert(latin, "transliteration", "greek", TYPE_1), greek);
+  }
+  assertNfcEquals(convert("α⃝’ε", "greek", "transliteration", TYPE_1), "a⃝’e");
 });
 
 test("a spacing breathing sign keeps the breathings after it in place", () => {

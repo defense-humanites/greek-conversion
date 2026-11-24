@@ -78,6 +78,13 @@ change.
 
 ### Fixed
 
+- The transliteration reader keeps the breathing that parts a `y` from the
+  vowel before it after a spacing breathing sign: the sign joins the capital
+  after it, which moved the positions it kept, so that `῾O aytmḗ` gave
+  `Ὁ αὐτμή`; it gives `Ὁ ἀυτμή`, as `aytmḗ` alone does.
+- The transliteration reader no longer reads a koronis U+1FBD after a vowel
+  with a smooth breathing, which Greek writes alike: `o̓᾽n` gave `ὀ̓ν`, two
+  marks that do not read back; it gives `ὀ’ν`.
 - The Greek and transliteration readers read the marks of a letter that
   follow a mark they do not read, when only the Unicode canonical order put
   them after it. The dot below of the Leiden conventions (combining class

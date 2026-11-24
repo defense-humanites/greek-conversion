@@ -2064,8 +2064,9 @@ function writesSeparationDiaeresis(
   // The reader infers a smooth breathing at the start of a word, but not in
   // a numeral, which takes none. It reads one written in place, and the
   // apostrophe before a word as the breathing of its first vowel (`’ay`),
-  // but in a numeral, or for an `o` before `y` where omega is written `o`
-  // that does not read back as the omega of `’oy` (ὠυ).
+  // but in a numeral, under monotonic accentuation, which removes it, or for
+  // an `o` before `y` where omega is written `o` that does not read back as
+  // the omega of `’oy` (ὠυ).
   const smoothBreathing = options.transliteration?.smoothBreathing;
   if (
     first.diacritics.has("smooth") &&
@@ -2074,6 +2075,7 @@ function writesSeparationDiaeresis(
       written("smooth") &&
         (smoothBreathing === "greek" ||
           smoothBreathing === "apostrophe" &&
+            options.greek?.accentuation !== "monotonic" &&
             isWordInitial(document, index - 1) &&
             !isGreekNumeralContext(document, index - 1) &&
             (upsilon !== "y-with-ou-v-f" ||
