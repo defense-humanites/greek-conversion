@@ -60,7 +60,7 @@ import type {
   TransliterationOptions,
 } from "./options.ts";
 import { greekUpper } from "./case.ts";
-import { perProfile } from "./profile_cache.ts";
+import { perKey, perProfile } from "./profile_cache.ts";
 import { applyMonotonicOrthography, isNumeralUnits } from "./orthography.ts";
 import { betaLigature, writtenLigature } from "./ligatures.ts";
 import { isMarkCode, isUnreadCode } from "./parsers/beta_code.ts";
@@ -639,7 +639,11 @@ export function encodeBetaCode(
   options: ConversionOptions = {},
   written?: WrittenPositions,
 ) {
-  const rendered = prepareDiacriticsForRendering(doc, options, "beta-code");
+  const rendered = prepareDiacriticsForRendering(
+    applyMonotonicOrthography(doc, options),
+    options,
+    "beta-code",
+  );
   const betaMarks = byMarks(
     (token) => marks(token, options, "beta-code"),
     BETA_MARKS(options),
@@ -768,7 +772,7 @@ export function encodeTransliteration(
   const uppercaseOutput = options.text?.letterCase === "uppercase";
   const titleCase = options.text?.letterCase === "title";
   const rendered = prepareDiacriticsForRendering(
-    doc,
+    applyMonotonicOrthography(doc, options),
     options,
     "transliteration",
   );
@@ -1149,48 +1153,27 @@ function findRoughDiphthongs(
 }
 
 /**
- * The Latin mark strings already written for shared diacritic sets, by the
- * options they depend on: how transliteration writes the circumflex, the
+ * The Latin mark strings already written for shared diacritic sets, under
+ * the options they depend on: how transliteration writes the circumflex, the
  * smooth breathing, and the coronis (trMark), and whether it omits length
  * marks, under which a circumflex on epsilon or omicron is an accent and not
- * eta or omega (writeLatinMarks). Which marks it keeps does not
- * enter the key: prepareDiacriticsForRendering() has removed the others from
- * the tokens, whose sets are the rest of the key, and a separation diaeresis
- * is added only where diaereses are kept. Kept across calls, since a short
- * text has few tokens to share one call's strings; the options are resolved,
- * so there are at most 36 keys.
+ * eta or omega (writeLatinMarks). Which marks it keeps does not enter the
+ * key: prepareDiacriticsForRendering() has removed the others from the
+ * tokens, whose sets are the rest of the key, and a separation diaeresis is
+ * added only where diaereses are kept. Kept across calls, since a short text
+ * has few tokens to share one call's strings: for each sealed profile, and
+ * by key for other options (`perKey()`); the options are resolved, so there
+ * are at most 36 keys.
  */
-const LATIN_MARK_STRINGS = new Map<string, (string | undefined)[]>();
-
-/**
- * The same strings, by the group of options itself when it is frozen, as
- * the options that conversions share (`conversionProfiles()` in
- * `presets.ts`) and prepared options are: the key need not be built again.
- */
-const LATIN_MARK_STRINGS_OF_GROUP = new WeakMap<
-  object,
-  (string | undefined)[]
->();
-
-function latinMarkStrings(options: ConversionOptions): (string | undefined)[] {
-  const transliteration = options.transliteration;
-  const frozen = transliteration !== undefined &&
-    Object.isFrozen(transliteration);
-  if (frozen) {
-    const strings = LATIN_MARK_STRINGS_OF_GROUP.get(transliteration);
-    if (strings !== undefined) return strings;
-  }
-  const key = transliteration?.circumflexAccent + " " +
-    transliteration?.smoothBreathing + " " + transliteration?.coronis +
-    (transliteration?.longVowels === "omit" ? " omit" : "");
-  let strings = LATIN_MARK_STRINGS.get(key);
-  if (strings === undefined) {
-    strings = [];
-    LATIN_MARK_STRINGS.set(key, strings);
-  }
-  if (frozen) LATIN_MARK_STRINGS_OF_GROUP.set(transliteration, strings);
-  return strings;
-}
+const latinMarkStrings = perKey(
+  (options) => {
+    const transliteration = options.transliteration;
+    return transliteration?.circumflexAccent + " " +
+      transliteration?.smoothBreathing + " " + transliteration?.coronis +
+      (transliteration?.longVowels === "omit" ? " omit" : "");
+  },
+  (): (string | undefined)[] => [],
+);
 
 /** Whether a sigma is written `c` (`lunateSigma: "c"`). */
 function rendersLunateC(token: Grapheme, options: ConversionOptions): boolean {

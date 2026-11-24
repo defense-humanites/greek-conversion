@@ -8,7 +8,9 @@
  * (`makePrepared()`) are frozen whole, and sealed here: what is derived
  * from one of them is computed once and kept for as long as the profile
  * lives. Any other options are derived again at each call, since an object
- * that is not frozen whole may answer otherwise the next time.
+ * that is not frozen whole may answer otherwise the next time, unless the
+ * value depends on a key read from the options (`perKey()`): then it is
+ * kept by key as well.
  *
  * Internal: not exported by an entry point.
  */
@@ -52,4 +54,30 @@ export function perProfile<T>(
     }
     return value;
   };
+}
+
+/**
+ * A function like {@link perProfile}, for a value that depends only on a key
+ * that `keyOf` reads from the options: the value is also kept for each key,
+ * so that options that are not sealed, resolved anew at each conversion,
+ * find the value derived for the same key by an earlier one, and sealed
+ * profiles with the same key share it. `keyOf` must cover every option the
+ * value depends on: what `build` reads, and, for a cache that callers fill,
+ * what they read to fill it (`latinMarkStrings()`, in `encode.ts`). It must
+ * give few keys: they are kept for as long as the process runs.
+ */
+export function perKey<T>(
+  keyOf: (options: ConversionOptions) => string,
+  build: (options: ConversionOptions) => T,
+): (options: ConversionOptions) => T {
+  const byKey = new Map<string, T>();
+  return perProfile((options) => {
+    const key = keyOf(options);
+    let value = byKey.get(key);
+    if (value === undefined) {
+      value = build(options);
+      byKey.set(key, value);
+    }
+    return value;
+  });
 }

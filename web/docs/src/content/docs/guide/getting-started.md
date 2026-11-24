@@ -86,6 +86,40 @@ plain.losses[0].code; // → removed-diacritic
 plain.losses[0].diacritic; // → acute
 ```
 
+## Normalizing a text
+
+To normalize or restyle a text without changing its format, `reencode()`
+reads it and writes it back in the same format, with the options you give:
+polytonic Greek made monotonic, Beta Code typed in capitals, as in TLG
+files, brought back to the library's form, or a transliteration rewritten
+following a preset:
+
+```ts
+import { reencode } from "@humanities/greek-conversion";
+
+const thucydides = "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων";
+
+reencode(thucydides, "greek", { greek: { accentuation: "monotonic" } });
+// → Έλλησιν εγένετο και μέρει τινί των βαρβάρων
+
+reencode("*(/ELLHSIN E)GE/NETO KAI\\ ME/REI", "beta-code");
+// → *(/ellhsin e)ge/neto kai\ me/rei
+
+const transliterated = "Héllēsin egéneto kaì mérei tinì tō̃n barbárōn";
+
+reencode(transliterated, "transliteration", {
+  preset: "iso-843-type-1",
+  source: {},
+});
+// → Héllīsin ’egéneto kaì mérei tinì tō̂n varvárōn
+```
+
+The options describe the text you give as well as the one you get back.
+Greek and Beta Code read the same whatever the options, but a
+transliteration is read according to its style: `source` names the style it
+is written in, here `{}`, the library's own, which `convert()` wrote above.
+Read as ISO 843, which marks the smooth breathing, `egéneto` would have none.
+
 ## Modern Greek
 
 Monotonic Greek converts the same way. Choose a preset made for Modern Greek,

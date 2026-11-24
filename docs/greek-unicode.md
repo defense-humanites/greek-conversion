@@ -6,8 +6,8 @@ the resulting Greek text is encoded.
 
 ## Accentuation systems
 
-Greek output is polytonic by default. Request the mechanical monotonic profile
-with `greek.accentuation`:
+Output is polytonic by default. Request the mechanical monotonic profile with
+`greek.accentuation`, which applies to every format:
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
@@ -56,10 +56,24 @@ longer one:
 To read monotonic text back from transliteration without applying the rules,
 ask only for no breathing (`diacritics: { smoothBreathing: "remove" }`).
 
-It is applied only when the target format is Greek. Beta Code and
-transliteration retain the source document's polytonic distinctions. The
-transform is intentionally lossy and cannot reconstruct the source
-accentuation.
+It applies to every format: Beta Code and transliteration spell the monotonic
+text that Greek output writes, so that a polytonic transliteration or Beta
+Code text re-encodes as a monotonic one. The transform is intentionally lossy
+and cannot reconstruct the source accentuation.
+
+```ts
+import { reencode } from "@humanities/greek-conversion";
+
+reencode("Hē Athḗna eĩnai hē prōteúousa", "transliteration", {
+  greek: { accentuation: "monotonic" },
+});
+// → Ē Athḗna eínai ē prōteúousa
+
+reencode("*(h *)aqh/na ei)=nai h( prwteu/ousa", "beta-code", {
+  greek: { accentuation: "monotonic" },
+});
+// → *h *aqh/na ei/nai h prwteu/ousa
+```
 
 ## Order of marks
 

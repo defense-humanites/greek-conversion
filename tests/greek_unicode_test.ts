@@ -1,6 +1,6 @@
 import { test } from "node:test";
-import { assertEquals } from "./assertions.ts";
-import { convert } from "../src/mod.ts";
+import { assertEquals, assertNfcEquals } from "./assertions.ts";
+import { convert, convertDetailed, reencode } from "../src/mod.ts";
 import { applyGreekOrthography, parse } from "../src/document.ts";
 
 const POLYTONIC = { greek: { accentuation: "polytonic" } } as const;
@@ -144,16 +144,60 @@ test("converts polytonic marks to the mechanical monotonic profile", () => {
   );
 });
 
-test("applies Greek accentuation only to Greek output", () => {
-  const source = "ἄ ᾆ ῑ";
+test("applies monotonic accentuation in every format", () => {
+  // Beta Code and transliteration spell the monotonic text that Greek output
+  // writes: an accent, a diaeresis, and nothing else.
+  const source = "Ἄνθρωπὸς ᾄδει κἀγὼ ῥᾳδίως ἀΐδιος";
+  const expected = {
+    "greek": "Άνθρωπός άδει καγώ ραδίως αΐδιος",
+    "beta-code": "*/anqrwpo/s a/dei kagw/ radi/ws ai+/dios",
+    "transliteration": "Ánthrōpós ádei kagṓ radíōs aḯdios",
+  } as const;
+  const monotonic = convert(source, "greek", "greek", MONOTONIC);
+  for (const format of ["greek", "beta-code", "transliteration"] as const) {
+    assertNfcEquals(
+      convert(source, "greek", format, MONOTONIC),
+      expected[format],
+    );
+    assertNfcEquals(
+      convert(monotonic, "greek", format),
+      expected[format],
+      `${format}, from the monotonic text`,
+    );
+  }
+});
 
+test("reencodes polytonic Beta Code and transliteration as monotonic", () => {
+  // The marks the monotonic text has not are reported as removed.
+  const transliterated = "Hē Athḗna eĩnai hē prōteúousa";
+  const detailed = convertDetailed(
+    transliterated,
+    "transliteration",
+    "transliteration",
+    MONOTONIC,
+  );
+  assertNfcEquals(detailed.output, "Ē Athḗna eínai ē prōteúousa");
   assertEquals(
-    convert(source, "greek", "beta-code", MONOTONIC),
-    "a)/ a)=| i%26",
+    detailed.losses.map((loss) => [loss.code, loss.offset]),
+    [
+      ["removed-diacritic", 0],
+      ["removed-diacritic", 11],
+      ["removed-diacritic", 16],
+    ],
   );
   assertEquals(
-    convert(source, "greek", "transliteration", MONOTONIC),
-    "á ã̧ ī",
+    reencode("*(h *)aqh/na ei)=nai h( prwteu/ousa", "beta-code", MONOTONIC),
+    "*h *aqh/na ei/nai h prwteu/ousa",
+  );
+  // From the default style to the romanization of ISO 843 Type 2, which
+  // writes only the stress of a monotonic text.
+  assertNfcEquals(
+    reencode(transliterated, "transliteration", {
+      ...MONOTONIC,
+      preset: "iso-843-type-2",
+      source: {},
+    }),
+    "I Athína eínai i protévousa",
   );
 });
 

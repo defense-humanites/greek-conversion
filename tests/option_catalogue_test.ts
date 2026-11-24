@@ -42,8 +42,14 @@ test("offers the options that act on a conversion", () => {
   );
   assertEquals(acts("transliteration", "upsilon", "greek", "beta-code"), false);
   assertEquals(acts("greek", "doubleRho", "greek", "beta-code"), true);
-  assertEquals(acts("greek", "accentuation", "greek", "beta-code"), false);
-  assertEquals(acts("greek", "accentuation", "greek", "greek"), true);
+  assertEquals(acts("greek", "composition", "greek", "beta-code"), false);
+  assertEquals(acts("greek", "composition", "greek", "greek"), true);
+  // Monotonic accentuation is spelled in every format.
+  assertEquals(acts("greek", "accentuation", "greek", "beta-code"), true);
+  assertEquals(
+    acts("greek", "accentuation", "greek", "transliteration"),
+    true,
+  );
   assertEquals(acts("betaCode", "case", "greek", "beta-code"), true);
   assertEquals(acts("betaCode", "case", "greek", "greek"), false);
   assertEquals(acts("text", "letterCase", "beta-code", "greek"), true);

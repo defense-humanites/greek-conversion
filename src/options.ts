@@ -195,7 +195,7 @@ export type LongVowelTransliteration =
   | "circumflex"
   | "omit";
 
-/** Selects polytonic output or a mechanical, lossy monotonic transformation. */
+/** Selects polytonic output or a mechanical, lossy monotonic transformation, in every format. */
 export type GreekAccentuation = "polytonic" | "monotonic";
 
 /** Selects composed or canonically decomposed Greek Unicode output. */
@@ -414,9 +414,11 @@ export interface TransliterationOptions {
 /**
  * How Greek is written: letter shapes, accentuation, assimilation, and the
  * Unicode form of the output. `sigma`, `finalSigma`, and `doubleRho` also
- * shape Beta Code, which writes Greek in ASCII; `accentuation` also decides
- * whether reading transliteration infers a smooth breathing, which monotonic
- * Greek has not.
+ * shape Beta Code, which writes Greek in ASCII. `accentuation` shapes every
+ * format, since Beta Code and transliteration spell the accents of Greek:
+ * monotonic accentuation writes the monotonic text in each, and reading
+ * transliteration then infers no smooth breathing, which monotonic Greek has
+ * not.
  */
 export interface GreekOptions {
   /** Sigma glyph policy. Defaults to `"preserve"`, which keeps a lunate sigma the source notes. */
@@ -441,7 +443,7 @@ export interface GreekOptions {
   dentalSigma?: DentalSigmaOrthography;
   /** An elided `π`, `τ`, or `κ` before a rough breathing. Defaults to `"preserve"`, which keeps the consonant the source writes; `"aspirate"` writes `φ`, `θ`, or `χ`. */
   elidedStop?: ElidedStopOrthography;
-  /** Greek accentuation system. Defaults to `"polytonic"`; `"monotonic"` follows the monotonic rules, monosyllables included, as far as the written text allows. */
+  /** Greek accentuation system, in every format. Defaults to `"polytonic"`; `"monotonic"` follows the monotonic rules, monosyllables included, as far as the written text allows, and Beta Code and transliteration spell the result as Greek output writes it. */
   accentuation?: GreekAccentuation;
   /** Composed or decomposed output. Defaults to `"composed"`. */
   composition?: UnicodeComposition;
@@ -477,11 +479,12 @@ export interface TextOptions {
  * The groups are named after what they describe: `transliteration` is the
  * Latin writing system (how each letter and mark is spelled, written and
  * read), `greek` the Greek one (shapes, accentuation, Unicode form; sigma
- * and double rho reach Beta Code too), `betaCode` the Beta Code conventions,
- * `text` the transformations of the whole text in every format, and
- * `diacritics` which classes of marks are kept at all. A name can appear in
- * two groups because the questions differ: `diacritics.coronis` asks whether
- * the coronis is kept, `transliteration.coronis` how it is written in Latin.
+ * and double rho reach Beta Code too, accentuation every format), `betaCode`
+ * the Beta Code conventions, `text` the transformations of the whole text in
+ * every format, and `diacritics` which classes of marks are kept at all. A
+ * name can appear in two groups because the questions differ:
+ * `diacritics.coronis` asks whether the coronis is kept,
+ * `transliteration.coronis` how it is written in Latin.
  *
  * Every accepted value is ASCII; see {@link CONVERSION_OPTION_VALUES}.
  */

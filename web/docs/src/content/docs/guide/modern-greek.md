@@ -161,22 +161,37 @@ Greek printed before 1982 is usually polytonic, and
 [Produce monotonic Greek](/guide/recipes/diacritics-and-unicode/#produce-monotonic-greek)
 explains. Romanized as it is, a polytonic text keeps its marks, since Type 2
 follows Table 3 of ISO 843 for them. The BGN/PCGN rules keep only the stress,
-written as an acute; converting the text to monotonic first gives that:
+written as an acute, which monotonic accentuation gives in every format:
 
 ```ts
-import { convert, reencode } from "@humanities/greek-conversion";
+import { convert } from "@humanities/greek-conversion";
 
-const options = { preset: "iso-843-type-2" } as const;
 const name = "Ἐθνικὸν Μετσόβιον Πολυτεχνεῖον";
 
-convert(name, "greek", "transliteration", options);
+convert(name, "greek", "transliteration", { preset: "iso-843-type-2" });
 // → ’Ethnikòn Metsóvion Polytechneîon
 
-const monotonic = reencode(name, "greek", {
+convert(name, "greek", "transliteration", {
+  preset: "iso-843-type-2",
   greek: { accentuation: "monotonic" },
 });
-monotonic; // → Εθνικόν Μετσόβιον Πολυτεχνείον
-convert(monotonic, "greek", "transliteration", options);
+// → Ethnikón Metsóvion Polytechneíon
+```
+
+A polytonic transliteration converts the same way, from a style whose marks
+reading takes back, such as the default one. ISO 843 writes the smooth
+breathing as an apostrophe, which reading does not take for one: a polytonic
+text romanized after ISO 843 would keep that apostrophe, so convert it from
+the Greek.
+
+```ts
+import { reencode } from "@humanities/greek-conversion";
+
+reencode("Ethnikòn Metsóbion Polytechneĩon", "transliteration", {
+  preset: "iso-843-type-2",
+  greek: { accentuation: "monotonic" },
+  source: {},
+});
 // → Ethnikón Metsóvion Polytechneíon
 ```
 

@@ -16,6 +16,14 @@ npx jsr add @humanities/greek-conversion@1.0.0-rc.12
 
 The package is ESM-only.
 
+## Updating from `1.0.0-rc.12`
+
+`greek.accentuation: "monotonic"` applies to every format: Beta Code and
+transliteration output are monotonic too, where they kept the polytonic marks:
+`ὁ ἄνθρωπος` gives `o a/nqrwpos` and `o ánthrōpos` (rc.12: `o( a)/nqrwpos`
+and `ho ánthrōpos`). To keep the polytonic marks in these formats, leave the
+option out of their conversions.
+
 ## Updating from `1.0.0-rc.11`
 
 Nothing changes for code that uses rc.11: the API and the output stay the
