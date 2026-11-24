@@ -639,7 +639,11 @@ export function encodeBetaCode(
   options: ConversionOptions = {},
   written?: WrittenPositions,
 ) {
-  const rendered = prepareDiacriticsForRendering(doc, options, "beta-code");
+  const rendered = prepareDiacriticsForRendering(
+    applyMonotonicOrthography(doc, options),
+    options,
+    "beta-code",
+  );
   const betaMarks = byMarks(
     (token) => marks(token, options, "beta-code"),
     BETA_MARKS(options),
@@ -768,7 +772,7 @@ export function encodeTransliteration(
   const uppercaseOutput = options.text?.letterCase === "uppercase";
   const titleCase = options.text?.letterCase === "title";
   const rendered = prepareDiacriticsForRendering(
-    doc,
+    applyMonotonicOrthography(doc, options),
     options,
     "transliteration",
   );

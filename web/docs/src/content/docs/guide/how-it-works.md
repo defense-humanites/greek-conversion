@@ -34,13 +34,13 @@ Options come in five groups, named after what they describe. That is why a name
 such as `coronis` can appear in two of them: `diacritics.coronis` asks whether
 the coronis is kept, `transliteration.coronis` how it is written in Latin.
 
-| Group             | What it describes                                                                                                                             | Examples                                                                         |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `transliteration` | The Latin writing system: how each letter and mark is spelled, when transliteration is written and, without `source`, read                    | `beta: "v"`, `upsilon: "y"`, `longVowels: "circumflex"`, `coronis: "apostrophe"` |
-| `greek`           | The Greek writing system: letter shapes, accentuation, assimilation, Unicode form. `sigma`, `finalSigma`, and `doubleRho` reach Beta Code too | `finalSigma: "medial"`, `accentuation: "monotonic"`, `composition: "decomposed"` |
-| `betaCode`        | Beta Code conventions                                                                                                                         | `case: "uppercase"`, `yot: "#401"`                                               |
-| `text`            | Transformations of the whole text, in every format                                                                                            | `letterCase: "lowercase"`, `whitespace: "collapse"`, `numerals: "decimal"`       |
-| `diacritics`      | Which classes of marks are kept at all; `all` sets every class, a class named with it is the exception                                        | `accents: "remove"`, `all: "remove"`                                             |
+| Group             | What it describes                                                                                                                                                          | Examples                                                                         |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `transliteration` | The Latin writing system: how each letter and mark is spelled, when transliteration is written and, without `source`, read                                                 | `beta: "v"`, `upsilon: "y"`, `longVowels: "circumflex"`, `coronis: "apostrophe"` |
+| `greek`           | The Greek writing system: letter shapes, accentuation, assimilation, Unicode form. `sigma`, `finalSigma`, and `doubleRho` reach Beta Code too, `accentuation` every format | `finalSigma: "medial"`, `accentuation: "monotonic"`, `composition: "decomposed"` |
+| `betaCode`        | Beta Code conventions                                                                                                                                                      | `case: "uppercase"`, `yot: "#401"`                                               |
+| `text`            | Transformations of the whole text, in every format                                                                                                                         | `letterCase: "lowercase"`, `whitespace: "collapse"`, `numerals: "decimal"`       |
+| `diacritics`      | Which classes of marks are kept at all; `all` sets every class, a class named with it is the exception                                                                     | `accents: "remove"`, `all: "remove"`                                             |
 
 Every option value is plain ASCII, so it can be typed on any keyboard. The
 [option reference](/reference/options/) lists every option with its values,

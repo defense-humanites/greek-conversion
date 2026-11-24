@@ -287,7 +287,7 @@ Selects the transliteration emitted for archaic koppa.
 
 ## `greek`
 
-How Greek is written: letter shapes, accentuation, assimilation, and the Unicode form of the output. `sigma`, `finalSigma`, and `doubleRho` also shape Beta Code, which writes Greek in ASCII; `accentuation` also decides whether reading transliteration infers a smooth breathing, which monotonic Greek has not.
+How Greek is written: letter shapes, accentuation, assimilation, and the Unicode form of the output. `sigma`, `finalSigma`, and `doubleRho` also shape Beta Code, which writes Greek in ASCII. `accentuation` shapes every format, since Beta Code and transliteration spell the accents of Greek: monotonic accentuation writes the monotonic text in each, and reading transliteration then infers no smooth breathing, which monotonic Greek has not.
 
 ### `greek.sigma`
 
@@ -419,9 +419,9 @@ Selects how Greek output writes a final `π`, `τ`, or `κ` whose vowel is elide
 
 ### `greek.accentuation`
 
-Greek accentuation system. Defaults to `"polytonic"`; `"monotonic"` follows the monotonic rules, monosyllables included, as far as the written text allows.
+Greek accentuation system, in every format. Defaults to `"polytonic"`; `"monotonic"` follows the monotonic rules, monosyllables included, as far as the written text allows, and Beta Code and transliteration spell the result as Greek output writes it.
 
-Selects polytonic output or a mechanical, lossy monotonic transformation.
+Selects polytonic output or a mechanical, lossy monotonic transformation, in every format.
 
 | Value | Greek → Greek | Presets |
 | --- | --- | --- |
