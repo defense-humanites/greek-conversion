@@ -24,20 +24,14 @@ convert("*(/ELLHSIN E)GE/NETO", "beta-code", "greek");
 // → Ἕλλησιν ἐγένετο
 
 // Ancient Greek, with every accent and breathing, and nothing lost
-const { output, lossy } = convertDetailed(
-  "Ἕλλησιν ἐγένετο",
-  "greek",
-  "transliteration",
-);
-output; // → Héllēsin egéneto
-lossy; // → false
+const res = convertDetailed("Ἕλλησιν ἐγένετο", "greek", "transliteration");
+res.output; // → Héllēsin egéneto
+res.lossy; // → false
 
-// Modern Greek: a polytonic transliteration made monotonic,
-// as passports write it
-reencode("Hē Athḗna eĩnai hē prōteúousa", "transliteration", {
+// Modern Greek, from polytonic to monotonic, as passports write it
+reencode("Hi ’Athína ’eînai hi protévousa", "transliteration", {
   preset: "iso-843-type-2",
   greek: { accentuation: "monotonic" },
-  source: {}, // the input is in the default style
 });
 // → I Athína eínai i protévousa
 ```
