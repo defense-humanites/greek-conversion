@@ -14,7 +14,7 @@ import {
   transliterationWriter,
 } from "../src/formats/transliteration.ts";
 import { resolveConversionOptions } from "../src/presets.ts";
-import { perProfile, sealProfile } from "../src/profile_cache.ts";
+import { perKey, perProfile, sealProfile } from "../src/profile_cache.ts";
 
 /**
  * What a writer derives from its profile is kept across calls for the
@@ -325,4 +325,92 @@ test("only sealed profiles keep what is derived from them", () => {
   assertEquals(derive(frozen), 2);
   assertEquals(derive(frozen), 3);
   assert(Object.isFrozen(sealed) && Object.isFrozen(sealed.diacritics));
+});
+
+test("the Latin mark strings are kept by every option they depend on", () => {
+  // The strings of a set of marks are kept by key, for options resolved at
+  // each call as well as for sealed profiles: options that differ only by
+  // one part of the key must not share them. The coronis is one part; the
+  // omitted length is another, under which a circumflex on epsilon is an
+  // accent and not the length of eta. Outputs of 1.0.0-rc.12.
+  const cases: [string, ConversionOptions, string][] = [
+    [
+      "κἀγὼ τοὔνομα χἠ",
+      { transliteration: { coronis: "apostrophe" } },
+      "ka’gṑ toú’noma chē’",
+    ],
+    [
+      "κἀγὼ τοὔνομα χἠ",
+      { transliteration: { coronis: "greek" } },
+      "ka᾽gṑ toú᾽noma chē᾽",
+    ],
+    [
+      "κἀγὼ τοὔνομα χἠ",
+      { transliteration: { coronis: "omit" } },
+      "kagṑ toúnoma chē",
+    ],
+    [
+      "ἐ͂ ὀ͂ ἦ",
+      { transliteration: { circumflexAccent: "circumflex" } },
+      "ẽ õ ē̂",
+    ],
+    [
+      "ἐ͂ ὀ͂ ἦ",
+      {
+        transliteration: { circumflexAccent: "circumflex", longVowels: "omit" },
+      },
+      "ê ô ê",
+    ],
+  ];
+  const prepared = cases.map(([, options]) => core.prepareOptions(options));
+  for (const order of [cases, [...cases].reverse()]) {
+    for (let round = 0; round < 2; round++) {
+      for (const entry of order) {
+        const [text, options, expected] = entry;
+        assertEquals(
+          convert(text, "greek", "transliteration", options),
+          expected,
+          JSON.stringify(options),
+        );
+        assertEquals(
+          core.convert(
+            text,
+            greekReader,
+            transliterationWriter,
+            prepared[cases.indexOf(entry)],
+          ),
+          expected,
+          `prepared ${JSON.stringify(options)}`,
+        );
+      }
+    }
+  }
+});
+
+test("values kept by key are kept for each key", () => {
+  const built: string[] = [];
+  let keys = 0;
+  const derive = perKey(
+    (options) => (keys++, options.transliteration?.phi ?? "ph"),
+    (options) => {
+      built.push(options.transliteration?.phi ?? "ph");
+      return { phi: options.transliteration?.phi };
+    },
+  );
+  const f = () => resolveConversionOptions({ transliteration: { phi: "f" } });
+  // Options resolved anew at each call, as conversions resolve options of
+  // other forms: the value of their key is found again.
+  const first = derive(f());
+  assert(derive(f()) === first);
+  // Another key, another value.
+  const ph = derive(resolveConversionOptions({}));
+  assert(ph !== first && ph.phi === "ph");
+  // A sealed profile with the same key shares the value; built once each.
+  const sealed = sealProfile(f());
+  assert(derive(sealed) === first);
+  assertEquals(built, ["f", "ph"]);
+  // The key of a sealed profile is read once.
+  const read = keys;
+  assert(derive(sealed) === first);
+  assertEquals(keys, read);
 });
