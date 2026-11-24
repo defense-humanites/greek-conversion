@@ -56,7 +56,7 @@ export interface Difference {
 /** Whether `MEANT` lists a difference. */
 function isMeant(label: string, call: string, input: string): boolean {
   return MEANT.some((meant) =>
-    meant.input === input && (meant.label ?? label) === label &&
+    (meant.input ?? input) === input && (meant.label ?? label) === label &&
     (meant.call ?? call) === call
   );
 }

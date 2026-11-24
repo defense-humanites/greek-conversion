@@ -8,10 +8,12 @@
 /**
  * A change of output that is meant: the input, and, where it changes under
  * some options or calls only, their label and the call, as a difference
- * reports them, with the reason.
+ * reports them, with the reason. Without an input, the change is meant for
+ * every input under its options and call: the change of an option, which
+ * every input it acts on shows.
  */
 export interface MeantChange {
-  input: string;
+  input?: string;
   label?: string;
   call?: string;
   reason: string;
@@ -30,6 +32,8 @@ const BNF_KERAIA =
 const MIDDLE_DOT =
   "A middle dot, a literal in transliteration and Beta Code, is reported lost in Greek output, which reads it as the ano teleia.";
 const DETAILED_TO_GREEK = "convertDetailed(transliteration → greek)";
+const MONOTONIC_EVERY_FORMAT =
+  "Monotonic accentuation applies to Beta Code and transliteration, which spell the monotonic text that Greek output writes.";
 
 /** The changes of output that are meant. */
 export const MEANT: readonly MeantChange[] = [
@@ -274,4 +278,27 @@ export const MEANT: readonly MeantChange[] = [
     call: DETAILED_TO_GREEK,
     reason: MIDDLE_DOT,
   },
+  ...monotonicCalls().map((call) => ({
+    label: "monotonic, decomposed",
+    call,
+    reason: MONOTONIC_EVERY_FORMAT,
+  })),
 ];
+
+/**
+ * The calls that write Beta Code or transliteration, as a difference names
+ * them: under monotonic accentuation, every input with a mark it removes
+ * changes there.
+ */
+function monotonicCalls(): string[] {
+  const calls: string[] = [];
+  for (const to of ["beta-code", "transliteration"]) {
+    for (const from of ["greek", "beta-code", "transliteration"]) {
+      for (const call of ["convert", "convertDetailed", "core convert"]) {
+        calls.push(`${call}(${from} → ${to})`);
+      }
+    }
+    calls.push(`reencode(${to})`);
+  }
+  return calls;
+}

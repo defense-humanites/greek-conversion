@@ -86,6 +86,19 @@ monosyllable by synizesis such as `γιὰ` keeps its accent, and the accent tha
 an author puts on a weak pronoun to avoid ambiguity is removed (`μού`). See
 [Greek output](/reference/greek-unicode/#accentuation-systems).
 
+The option applies to every format: Beta Code and transliteration spell the
+monotonic text, so that a polytonic transliteration re-encodes as a
+monotonic one:
+
+```ts
+import { reencode } from "@humanities/greek-conversion";
+
+reencode("Poũ eĩsai? Ḕ edō̃ ḕ ekeĩ, kaì óchi alloũ.", "transliteration", {
+  greek: { accentuation: "monotonic" },
+});
+// → Poú eísai? Ḗ edṓ ḗ ekeí, kai óchi alloú.
+```
+
 ## Control Greek Unicode output
 
 The same Greek text can be encoded in more than one way. `greek.composition`

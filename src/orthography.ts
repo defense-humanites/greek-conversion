@@ -114,10 +114,10 @@ export function applyGreekOrthography(
 }
 
 /**
- * The monotonic part of {@link applyGreekOrthography}, for a document to
- * which {@link applyOrthography} has already been applied: the Greek
- * writer's, which its `prepare` hook gives it so (see
- * `formats/greek_writer.ts`).
+ * The monotonic part of {@link applyGreekOrthography}, which every writer
+ * applies to the document it has prepared: monotonic accentuation is an
+ * orthography of Greek, which Beta Code and transliteration spell as Greek
+ * output writes it.
  */
 export function applyMonotonicOrthography(
   orthographic: Document,
@@ -529,7 +529,7 @@ const MONOTONIC_MARKS: ReadonlySet<Diacritic> = new Set([
  * The reading of a document as `format` writes it under these options, so
  * that a numeral is the one the output reads back as. A letter is bare when
  * it has no mark, or when the options remove each of its marks, monotonic
- * Greek those that are not an accent or a diaeresis. A final sigma is
+ * accentuation those that are not an accent or a diaeresis. A final sigma is
  * written `ς`, a stigma before the keraia, under `greek.finalSigma:
  * "preserve"` in Greek and Beta Code; transliteration has no final sigma.
  */
@@ -537,8 +537,7 @@ function writtenReading(
   options: ConversionOptions,
   format: Format,
 ): NumeralReading {
-  const monotonic = format === "greek" &&
-    options.greek?.accentuation === "monotonic";
+  const monotonic = options.greek?.accentuation === "monotonic";
   const removed = new Set(
     ORDER.filter((mark) =>
       !preservesDiacritic(mark, options, format) ||

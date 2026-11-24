@@ -9,6 +9,19 @@ change.
 
 ### Changed
 
+- **Monotonic accentuation in every format.** `greek.accentuation:
+  "monotonic"` now applies to Beta Code and transliteration, which spell the
+  monotonic text that Greek output writes. It applied to Greek output only,
+  and the other formats kept the polytonic marks. A polytonic transliteration
+  re-encodes as a monotonic one (`Hē Athḗna eĩnai` gives `Ē Athḗna eínai`),
+  and a polytonic text romanizes as a monotonic one in one conversion, as the
+  BGN/PCGN rules write it (`Ἐθνικὸν` gives `Ethnikón` under
+  `iso-843-type-2`). `convertDetailed()` reports the marks removed. ISO 843
+  writes the smooth breathing as an apostrophe, which reading does not take
+  back: a polytonic text romanized after ISO 843 keeps it, so convert it from
+  the Greek. A bundle that writes Beta Code or transliteration, but not
+  Greek, now keeps the monotonic rules: it grows by 1.6 to 1.8 kB minified,
+  0.4 to 0.6 kB with gzip.
 - **Speed.** Writing Greek and Beta Code computes once, for the options that
   conversions share and for prepared options, what it computed at each call:
   the marks that each format keeps, and the codes that write them. A word

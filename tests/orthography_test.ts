@@ -972,15 +972,17 @@ test("reads a numeral on its letters as the output writes them", () => {
     "270 200 hivʹ",
   );
 
-  // Monotonic Greek removes the breathings, and transliteration the quantity
-  // marks under `quantity: "omit"`; each format reads its own.
+  // Monotonic accentuation removes the breathings in every format, and
+  // transliteration the quantity marks under `quantity: "omit"`; each format
+  // reads its own.
   const decimal = { text: { numerals: "decimal" } } as const;
   const monotonic = {
     ...decimal,
     greek: { accentuation: "monotonic" },
   } as const;
-  assertNfcEquals(convert("ἱβʹ", "greek", "greek", monotonic), "12");
-  assertNfcEquals(convert("ἱβʹ", "greek", "beta-code", monotonic), "i(b#");
+  for (const format of ["greek", "beta-code", "transliteration"] as const) {
+    assertNfcEquals(convert("ἱβʹ", "greek", format, monotonic), "12");
+  }
   const omit = { ...decimal, transliteration: { quantity: "omit" } } as const;
   assertNfcEquals(convert("ᾱʹ", "greek", "transliteration", omit), "1");
   assertNfcEquals(convert("ᾱʹ", "greek", "greek", omit), "ᾱʹ");
