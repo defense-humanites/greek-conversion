@@ -6,8 +6,8 @@ description: "Bundle only the formats and presets a web application uses, with t
 The functions of the main entry point take the names of formats and options
 as values, which they read when they are called. A bundler cannot tell which
 of them an application will use: a bundle that imports `convert()` keeps
-every format, every preset, and the validation of options, about 70 kB
-minified (23 kB with gzip). On a server, this costs nothing that matters,
+every format, every preset, and the validation of options, about 78 kB
+minified (25 kB with gzip). On a server, this costs nothing that matters,
 and the main entry point is the one to use. The functions of `core`, which
 check no options when they are called, convert a single word up to 10 %
 faster with the defaults or a preset, and two to three times as fast with
@@ -17,7 +17,7 @@ unless they are prepared; the difference fades on longer texts.
 For a web page, the `core` entry point converts with the same functions,
 given readers, writers, and options that the application imports. A bundle
 then keeps only those: a page that writes Greek in transliteration with one
-preset weighs 40 kB (13 kB with gzip).
+preset weighs 46 kB (15 kB with gzip).
 
 ## Readers and writers
 
@@ -91,7 +91,7 @@ convert("χάος", greekReader, transliterationWriter, options); // → khaos
 ```
 
 `prepareOptions()` brings the validation of options and the table of the
-presets into the bundle, about 8.5 kB (2.6 kB with gzip): an application that
+presets into the bundle, about 8.5 kB (2.5 kB with gzip): an application that
 uses one preset as it is should import it instead. Prepared options cannot be
 changed; prepare them once, outside a loop, and use them for every call. The
 functions of `core` take no other options: an object of options, which they
@@ -160,7 +160,7 @@ convert("Θεσσαλονίκη", greekReader, transliterationWriter, offered[ch
 
 A bundler keeps only the presets that the record reads. The application
 writes the names that it shows: `listPresetMetadata()`, from the main entry
-point, would bring the metadata of every preset, about 10 kB.
+point, would bring the metadata of every preset, about 11 kB.
 
 ## Keeping the gain
 
@@ -168,7 +168,7 @@ point, would bring the metadata of every preset, about 10 kB.
   `createConverter()`, or the functions of the `document` entry point, in the
   application or in one of its dependencies, brings every format back into
   the bundle. `listPresetMetadata()` brings the metadata of the presets, about
-  10 kB. A library that converts Greek in the browser should import from
+  11 kB. A library that converts Greek in the browser should import from
   `core` too.
 - **Import the half you use.** `greekFormat` brings the writer as well as the
   reader of Greek; `greekReader` alone is enough for `convert()`.
