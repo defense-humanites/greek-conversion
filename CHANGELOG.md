@@ -128,6 +128,15 @@ change.
   `ἄ̣νθρωπος` gave `ạ̓́nthrōpos` in transliteration, its breathing and
   accent kept as literals, and `lọ́gos` in Beta Code for `λό̣γος`; they give
   `ạ́nthrōpos` and `lo/̣gos`.
+- The transliteration reader keeps a mark that it does not read, such as
+  the dot below of an uncertain letter, or a join control, inside its word,
+  as the writer does. The vowel after it took a smooth breathing, as at the
+  start of a word, so that `kạe` gave `κα̣ἐ`, and `ạytos` two breathings,
+  `ἀ̣ὐτος`; they give `κα̣ε` and `ἀ̣υτος`. `convertDetailed()` into
+  transliteration no longer reports that breathing inferred (`κα̣ὶ` converts
+  without loss), and a coronis after such a mark (`kạe’ga` under
+  `coronis: "apostrophe"`) no longer shares its vowel with a smooth
+  breathing, which made the output convert otherwise again.
 - The Greek reader reads the Latin tilde U+0303 as the circumflex, on any
   letter, as the transliteration reader does and as it read the Latin
   circumflex U+0302: `ȣ̃`, which Byzantine text has for `ȣ͂`, kept the tilde

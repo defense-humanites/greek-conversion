@@ -103,6 +103,13 @@ higher, still belong to the letter, in whichever order they were typed:
 library reads after one of the same class, which is not reordered, stays a
 literal with it.
 
+Such a mark, like a join control (U+200C, U+200D, U+2060), stays inside its
+word: a vowel after it does not start a word, and takes no smooth breathing
+when transliteration is read (`kạe` gives `κα̣ε`), and the place of a sigma
+before it is that of the letter after it. Two vowels on either side of it
+form no diphthong: `α̣υ` is written `ạy`, whose `a` takes the breathing of
+the word (`ạytos` gives `ἀ̣υτος`).
+
 ### Overline
 
 Manuscripts and editions draw a line over abbreviations and numerals, the
