@@ -24,6 +24,13 @@ transliteration output are monotonic too, where they kept the polytonic marks:
 and `ho ánthrōpos`). To keep the polytonic marks in these formats, leave the
 option out of their conversions.
 
+Under the ISO 843 presets, an apostrophe before the vowel group of a word, or
+between a vowel and a letter after a consonant, reads back as a smooth
+breathing or a coronis. A text written by rc.12 kept an apostrophe of the
+source there as U+2019 (`’Αθήνα` gave `’Athī́na`), which now reads back as
+`Ἀθήνα`: convert such a text from its source again, which writes the
+apostrophe U+02BC (`ʼAthī́na`), or replace it with U+02BC before reading it.
+
 ## Updating from `1.0.0-rc.11`
 
 Nothing changes for code that uses rc.11: the API and the output stay the

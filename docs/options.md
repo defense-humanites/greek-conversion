@@ -208,7 +208,7 @@ Selects whether explicit source quantity marks appear in Latin output.
 
 ### `transliteration.smoothBreathing`
 
-Smooth breathing in transliteration; `"apostrophe"` prefixes an initial vowel. Defaults to `"omit"`.
+Smooth breathing in transliteration; `"apostrophe"` prefixes the vowel group of a word, and reads back before it. Defaults to `"omit"`.
 
 Selects whether a known smooth breathing is rendered on a Latin letter.
 

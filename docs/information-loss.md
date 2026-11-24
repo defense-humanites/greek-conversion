@@ -111,13 +111,16 @@ Default transliteration has these intrinsic ambiguities:
   `convertDetailed()` reports `displaced-diacritic`. The engine does not add
   a diaeresis to compensate, because the same spelling also marks an iota
   adscript (`Ἅιδης`, `τῆι` in editions that write the adscript), which is not
-  a hiatus. `smoothBreathing: "greek"` or `"apostrophe"` writes the breathing
-  in place and keeps the distinction; an accent on the first vowel
-  (`Ἅιδῃ → Háidȩ̄`) keeps it as well;
+  a hiatus. `smoothBreathing: "greek"` writes the breathing in place and keeps
+  the distinction; `"apostrophe"` does not, since the apostrophe precedes the
+  whole vowel group, as the `h` of a rough breathing does. An accent on the
+  first vowel (`Ἅιδῃ → Háidȩ̄`) keeps it as well;
 - under the contextual upsilon rules (the default `"y-with-diphthong-u"`,
   ISO 843, BnF), the `y` of a pair with upsilon says it is not a diphthong:
   `ἀυτμή` → `aytmḗ`, which reads back with its breathing at the start of a
-  word. Where the breathing would not read back on the first vowel (inside a
+  word, as `’aytmī́` does under ISO 843, whose apostrophe precedes the group
+  as `h` does. Where omega is written `o` (ISO 843 Type 2), `’oy` is `ὠυ`,
+  and `ὀυ` takes the diaeresis. Where the breathing would not read back on the first vowel (inside a
   word, or in a numeral, which takes no breathing), the `y` carries a
   diaeresis, which reads back too: `ἀἑυ` → `aheÿ` → `ἀἑϋ`, and
   `convertDetailed()` reports `added-diacritic`;
@@ -144,12 +147,21 @@ Default transliteration has these intrinsic ambiguities:
   denote eta and omega; such a document is already invalid for
   `validateDocument()`, and `convertDetailed()` reports the removed mark.
 
-The `coronis: "apostrophe"` policy makes the mark visible for readers, but
-U+2019 remains punctuation and does not retain semantic provenance. By
-contrast, `coronis: "greek"` emits U+1FBD immediately after the affected vowel;
-the transliteration parser recognizes that scalar as a coronis in precisely
-that position. This provides a lossless interchange spelling for implemented
-coronis contexts without guessing from ordinary apostrophes.
+The `coronis: "apostrophe"` policy writes U+2019 after the vowel of the
+coronis. It reads back as the coronis between that vowel and a letter where the
+vowel group follows a consonant, as in a crasis (`κἀγώ → ka’gṓ`), and bears no
+breathing: at the start of a word, the mark is a breathing, and a vowel group
+bears one. Before the `h` of a rough breathing, after an upsilon written `v` or
+`f` that reads back as beta or phi (ISO 843 Type 2), and at the end of a word,
+where an apostrophe after a vowel may also close a quotation, it is read as
+punctuation, and `convertDetailed()` reports the coronis lost
+(`χὠ → chō’`). `coronis: "greek"` emits U+1FBD immediately after the affected
+vowel, which the transliteration parser recognizes as a coronis in that
+position, at the end of a word as well. Under `smoothBreathing: "apostrophe"`,
+ISO 843 writes the smooth breathing as an apostrophe before the vowel group of
+a word, which reads back as the breathing. Each option reads its own mark. An
+apostrophe of the source that would read back as one of these marks is written
+U+02BC, which reads back as an apostrophe.
 
 ### Letter forms
 

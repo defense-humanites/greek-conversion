@@ -395,7 +395,7 @@ export interface TransliterationOptions {
   circumflexAccent?: CircumflexTransliteration;
   /** Explicit macron/breve in transliteration. Defaults to `"preserve"`. */
   quantity?: QuantityTransliteration;
-  /** Smooth breathing in transliteration; `"apostrophe"` prefixes an initial vowel. Defaults to `"omit"`. */
+  /** Smooth breathing in transliteration; `"apostrophe"` prefixes the vowel group of a word, and reads back before it. Defaults to `"omit"`. */
   smoothBreathing?: SmoothBreathingTransliteration;
   /** Coronis representation in transliteration. Defaults to `"omit"`. */
   coronis?: CoronisTransliteration;
@@ -636,8 +636,9 @@ export interface DefaultConversionOptions {
  * Error raised for an option that cannot be resolved: an unknown key or
  * preset, a value outside the accepted ones, or two values that cannot be
  * combined. A `RangeError`, with the option named by `path` and what was
- * received, what is accepted, and the replacement of a key or value that an
- * earlier release knew, when there is one. The message is for humans.
+ * received, what is accepted, and the replacement of a key or value that a
+ * release candidate of `1.0.0` knew, when there is one. The message is for
+ * humans.
  */
 export class OptionError extends RangeError {
   /** Dotted path of the option, such as `"transliteration.eta"` or `"preset"`; for a key of a converter's configuration, such as `"exclude"` or `"aliases[0].spellings"`. */
@@ -652,8 +653,11 @@ export class OptionError extends RangeError {
   readonly accepted: readonly string[];
   /**
    * The current path of a removed key, or the current spelling of a renamed
-   * value. A property of the error only when there is one: declared without
-   * a field, which would set it to `undefined` on every error.
+   * value, for the names of the release candidates of `1.0.0`: a migration
+   * aid, which a minor release after `1.0.0` may stop giving
+   * (docs/stability.md). A property of the error only when there is one:
+   * declared without a field, which would set it to `undefined` on every
+   * error.
    */
   declare readonly replacement?: string;
 

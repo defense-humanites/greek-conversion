@@ -579,12 +579,13 @@ test("under upsilon: y-with-ou-v-f alone, v and f read back as upsilon", () => {
     );
   }
   // Under ISO 843 Type 2, beta and phi are v and f: the pair reads back as
-  // they do, as documented.
+  // they do, as documented, and the apostrophe before the word as its
+  // smooth breathing.
   assertNfcEquals(
     convert("’aftós", "transliteration", "greek", {
       preset: "iso-843-type-2",
     }),
-    "’αφτός",
+    "ἀφτός",
   );
 });
 

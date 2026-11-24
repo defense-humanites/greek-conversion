@@ -178,19 +178,16 @@ convert(name, "greek", "transliteration", {
 // → Ethnikón Metsóvion Polytechneíon
 ```
 
-A polytonic transliteration converts the same way, from a style whose marks
-reading takes back, such as the default one. ISO 843 writes the smooth
-breathing as an apostrophe, which reading does not take for one: a polytonic
-text romanized after ISO 843 would keep that apostrophe, so convert it from
-the Greek.
+A polytonic transliteration converts the same way, in the style it is
+written in. ISO 843 writes the smooth breathing as an apostrophe before the
+vowel group of a word, which reads back as the breathing:
 
 ```ts
 import { reencode } from "@humanities/greek-conversion";
 
-reencode("Ethnikòn Metsóbion Polytechneĩon", "transliteration", {
+reencode("’Ethnikòn Metsóvion Polytechneîon", "transliteration", {
   preset: "iso-843-type-2",
   greek: { accentuation: "monotonic" },
-  source: {},
 });
 // → Ethnikón Metsóvion Polytechneíon
 ```
