@@ -17,12 +17,27 @@ import Default from "@astrojs/starlight/components/Search.astro";
   const body = document.body;
   const root = document.documentElement;
   const OPEN = "site-search button[data-open-modal]";
+  const FIELD = "site-search dialog input";
   let held: number | null = null;
-  let unopened: ReturnType<typeof setTimeout> | undefined;
+
+  // On a page scrolled down, Safari draws the caret where the field was
+  // before the page was fixed, below it, for a frame or two: the caret is
+  // hidden until it has found its place.
+  function hideCaret(): void {
+    const field = document.querySelector<HTMLInputElement>(FIELD);
+    if (!field) return;
+    field.style.caretColor = "transparent";
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() =>
+        setTimeout(() => (field.style.caretColor = ""), 100)
+      )
+    );
+  }
 
   function hold(): void {
     if (held !== null) return;
     held = window.scrollY;
+    if (held > 0) hideCaret();
     body.style.position = "fixed";
     body.style.insetInline = "0";
     body.style.top = `-${held}px`;
@@ -47,29 +62,10 @@ import Default from "@astrojs/starlight/components/Search.astro";
   const onButton = (event: Event) =>
     (event.target as Element | null)?.closest?.(OPEN) != null;
 
-  // As soon as the finger or the pointer goes down on the field, the page is
-  // fixed, a moment before the click opens the dialog and puts the caret in
-  // its field: fixed in the same moment, a page scrolled down drew the caret
-  // where the field had been, below it, before it found its place. If no
-  // dialog follows (a touch that turns into a scroll), the page is let go.
-  document.addEventListener(
-    "pointerdown",
-    (event) => {
-      if (!onButton(event)) return;
-      hold();
-      clearTimeout(unopened);
-      unopened = setTimeout(() => isOpen() || release(), 1000);
-    },
-    { capture: true },
-  );
-  document.addEventListener(
-    "pointercancel",
-    (event) => onButton(event) && !isOpen() && release(),
-    { capture: true },
-  );
-  // The keyboard's Enter or Space, which opens the dialog without a pointer:
-  // before Starlight's own listener focuses the field, so that the page is
-  // fixed before the keyboard comes up.
+  // Before Starlight's own listener opens the dialog and focuses the field,
+  // so that the page is fixed before the keyboard comes up. Not earlier, on
+  // pointerdown: moving the page under a finger that is still down makes
+  // Safari drop the tap, and the first touch after a scroll opened nothing.
   document.addEventListener(
     "click",
     (event) => onButton(event) && hold(),
