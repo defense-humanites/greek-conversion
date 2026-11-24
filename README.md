@@ -81,11 +81,14 @@ const { output, lossy } = convertDetailed(
 output; // → Héllēsin egéneto
 lossy; // → false
 
-// Modern Greek, from polytonic to monotonic
-reencode("Ἡ Ἀθήνα εἶναι ἡ πρωτεύουσα", "greek", {
+// Modern Greek: a polytonic transliteration made monotonic,
+// as passports write it
+reencode("Hē Athḗna eĩnai hē prōteúousa", "transliteration", {
+  preset: "iso-843-type-2",
   greek: { accentuation: "monotonic" },
+  source: {}, // the input is in the default style
 });
-// → Η Αθήνα είναι η πρωτεύουσα
+// → I Athína eínai i protévousa
 ```
 
 `convertDetailed()` says what a conversion cannot carry back:
