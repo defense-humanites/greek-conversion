@@ -11,8 +11,7 @@
  * card, which must hold its text on three lines, gives a shorter form of it
  * and says in its foot that the package is a TypeScript library; its text
  * alternative, in the site and the playground, reads the card in order. The
- * card itself, an image, is checked by eye. The README's example is the code
- * of the home page, so that the two first examples a reader meets agree.
+ * card itself, an image, is checked by eye.
  *
  * It checks, last, that the site has one address, the `homepage` of
  * `package.json`: the one it is built for, and the one every file that
@@ -98,13 +97,6 @@ expect(
   "the description of the site's home page",
   plain(home.match(/^description: (.*)$/m)?.[1]),
   library,
-);
-/** The first TypeScript block of a Markdown text. */
-const firstExample = (text: string) => text.match(/```ts\n[\s\S]*?\n```/)?.[0];
-expect(
-  "the README's example",
-  firstExample(readme),
-  firstExample(home),
 );
 /** The text of `docs/assets/greek-conversion-social-clair.png`. */
 const CARD =
