@@ -395,7 +395,7 @@ export interface TransliterationOptions {
   circumflexAccent?: CircumflexTransliteration;
   /** Explicit macron/breve in transliteration. Defaults to `"preserve"`. */
   quantity?: QuantityTransliteration;
-  /** Smooth breathing in transliteration; `"apostrophe"` prefixes an initial vowel. Defaults to `"omit"`. */
+  /** Smooth breathing in transliteration; `"apostrophe"` prefixes the vowel group of a word, and reads back before it. Defaults to `"omit"`. */
   smoothBreathing?: SmoothBreathingTransliteration;
   /** Coronis representation in transliteration. Defaults to `"omit"`. */
   coronis?: CoronisTransliteration;

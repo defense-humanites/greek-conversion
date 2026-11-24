@@ -18,7 +18,7 @@ Eight presets cover the common library, scholarly, and interchange conventions:
 | `ala-lc-ancient` | transliteration | Ancient         | Library romanization, Medieval Greek included (before 1454)              |
 | `ala-lc-modern`  | transliteration | Modern          | Library romanization after 1453, with its contextual digraphs            |
 | `bnf-core`       | transliteration | Ancient         | BnF/ISO-based romanization for cataloguing                               |
-| `iso-843-type-1` | transliteration | Ancient, Modern | Strict transliteration, reversible for monotonic text; also ELOT 743     |
+| `iso-843-type-1` | transliteration | Ancient, Modern | Strict, reversible transliteration; also ELOT 743                        |
 | `iso-843-type-2` | transliteration | Modern          | Transcription by pronunciation, as ELOT 743: passports, road signs, maps |
 | `sbl-general`    | transliteration | Ancient         | Biblical studies, as the SBL Handbook writes Greek: no accent            |
 | `tlg-core`       | Beta Code       | Ancient         | Uppercase-ASCII TLG Beta Code for polytonic interchange                  |
@@ -144,8 +144,8 @@ own (see [Knowing what a conversion loses](/guide/losses/)).
 | `ala-lc-ancient` | Accents; diaeresis | Accents; smooth breathing; iota subscript; coronis |
 | `ala-lc-modern` | Accents; diaeresis | Accents; smooth breathing; iota subscript; coronis |
 | `bnf-core` | Nothing | Nothing |
-| `iso-843-type-1` | Nothing | Smooth breathing; coronis |
-| `iso-843-type-2` | The letters eta, omega, upsilon | The letters eta, omega; smooth breathing; coronis |
+| `iso-843-type-1` | Nothing | Nothing |
+| `iso-843-type-2` | The letters eta, omega, upsilon | The letters eta, omega |
 | `perseus` | Nothing | Nothing |
 | `sbl-general` | Accents; diaeresis | Accents; smooth breathing; iota subscript; coronis |
 | `tlg-core` | Nothing | Nothing |
@@ -153,9 +153,8 @@ own (see [Knowing what a conversion loses](/guide/losses/)).
 <!-- END GENERATED LOSS PROFILE -->
 
 "Nothing" means that the output converts back to the same text under the same
-preset. Among the transliterations, `bnf-core` converts both texts back, and
-`iso-843-type-1` the monotonic one: on polytonic text, it writes the smooth
-breathing as an apostrophe, which does not read back as a breathing.
+preset. Among the transliterations, `bnf-core` and `iso-843-type-1` convert
+both texts back.
 
 ## Refine a preset
 

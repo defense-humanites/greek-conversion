@@ -576,12 +576,12 @@ export function elidedAspirate(
 
 /**
  * Whether the letter at `index` follows a vowel and an apostrophe with no
- * space between them: a coronis written as an apostrophe
- * (`coronis: "apostrophe"`), read back as punctuation. An elision apostrophe
- * follows a consonant, and a space follows it. The letter stays inside the
- * word for the rules that tell the start of a word from its middle, as it was
- * when the coronis was a mark: `toú’mpalin` (`τοὔμπαλιν`) is read back as
- * `τού’μπαλιν`, which must not be written `toú’balin`.
+ * space between them: an apostrophe inside a word, or a coronis written as
+ * one (`coronis: "apostrophe"`) where it reads back as punctuation, after a
+ * vowel group with a breathing. An elision apostrophe follows a consonant,
+ * and a space follows it. The letter stays inside the word for the rules that
+ * tell the start of a word from its middle, as it would after the coronis:
+ * `τού’μπαλιν` must not be written `toúʼbalin`.
  */
 export function followsCoronisApostrophe(
   document: Document,

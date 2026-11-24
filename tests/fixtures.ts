@@ -161,12 +161,13 @@ export const LOSSY_CONVERSIONS = [
     canonicalRoundTrip: "τούνομα",
   },
   {
-    name: "a visible transliterated coronis is display-only punctuation",
+    name:
+      "a visible transliterated coronis at the end of a word is punctuation",
     sourceFormat: "greek",
     intermediateFormat: "transliteration",
-    source: "κἀγώ",
-    intermediate: "ka’gṓ",
-    canonicalRoundTrip: "κα’γώ",
+    source: "χὠ",
+    intermediate: "chō’",
+    canonicalRoundTrip: "χω’",
     options: VISIBLE_CORONIS,
   },
   {

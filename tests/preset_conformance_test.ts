@@ -95,14 +95,14 @@ const CASES = [
     rule: "Table 3: smooth breathing is an apostrophe",
     greek: "ἄ",
     latin: "’á",
-    lossy: true,
+    lossy: false,
   },
   {
     preset: "iso-843-type-1",
     rule: "Table 3: perispomeni becomes a circumflex",
     greek: "τοῦ ᾠδῇ",
     latin: "toû ’ō̧dī̧̂",
-    lossy: true,
+    lossy: false,
   },
   {
     preset: "iso-843-type-1",

@@ -98,10 +98,10 @@ test("pairs source and target tokens by their place in the output", () => {
     convertDetailed(input, "greek", "transliteration", { preset }).losses.map((
       { code, offset, length, diacritic },
     ) => [code, input.slice(offset, offset + length), diacritic ?? ""]);
-  // The apostrophe written for the smooth breathing reads back as a literal
-  // before the vowel: the vowel lost its breathing, not its letter.
-  assertEquals(located("ἄλφα", "iso-843-type-1"), [
-    ["removed-diacritic", "ἄ", "smooth"],
+  // The apostrophe written for a coronis at the end of a word reads back as
+  // a literal after the vowel: the vowel lost its coronis, not its letter.
+  assertEquals(located("χὠ", "iso-843-type-1"), [
+    ["removed-diacritic", "ὠ", "coronis"],
   ]);
   // ν before γ reads back as a nasal gamma; the next vowel only lost its
   // grave accent, and χ is kept.
