@@ -124,6 +124,19 @@ export const CONVERTER_CONFIGURATIONS: readonly {
     configuration: { preset: "sbl-general", outOfScopeBehavior: "reject" },
   },
   { label: "ala-lc-ancient", configuration: { preset: "ala-lc-ancient" } },
+  // A converter with nothing to look for, and one with an alias only, which
+  // prepare the tokens as they were read.
+  { label: "no extension", configuration: {} },
+  {
+    label: "an alias",
+    configuration: {
+      aliases: [{
+        letter: "theta",
+        format: "transliteration",
+        spellings: ["þ"],
+      }],
+    },
+  },
 ];
 
 /** The inputs that converters convert, written in `from`. */
