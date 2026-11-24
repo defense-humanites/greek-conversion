@@ -62,6 +62,10 @@ change.
   letter from the mask of its marks. Transliteration converts into Greek 4
   to 5 % faster, a clause or a long text, and into Beta Code 1 to 3 %. No
   output changes.
+- **Documentation.** A guide page on performance gives how fast each
+  conversion runs, on a long text and on a word, what costs more
+  (`convertDetailed()`, options of other forms than a preset, converters),
+  and how much memory a long text takes; the README sums it up.
 - **Documentation.** The guide on smaller bundles gives how much faster
   `core` converts a word: up to 10 % with the defaults or a preset, where it
   said about 5 %, and two to three times with other options, where it said

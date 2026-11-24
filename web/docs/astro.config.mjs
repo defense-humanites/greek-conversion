@@ -448,6 +448,7 @@ export default defineConfig({
             "guide/converters",
             "guide/document",
             "guide/smaller-bundles",
+            "guide/performance",
           ],
         },
         {
