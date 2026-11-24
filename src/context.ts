@@ -280,6 +280,26 @@ export function isVowel(letter: Letter): boolean {
 }
 
 /**
+ * Whether a vowel of the run of vowels that ends at `index` bears a breathing
+ * or a coronis, which Greek writes alike: a vowel group bears one. Under
+ * ISO 843, an apostrophe after such a group is not its coronis.
+ */
+export function marksVowelRun(
+  tokens: readonly Token[],
+  index: number,
+): boolean {
+  for (let at = index; at >= 0; at--) {
+    const token = tokens[at];
+    if (token.kind !== "grapheme" || !isVowel(token.letter)) return false;
+    if (
+      token.diacritics.has("rough") || token.diacritics.has("smooth") ||
+      token.diacritics.has("coronis")
+    ) return true;
+  }
+  return false;
+}
+
+/**
  * A quantity sign in transliteration preserves metrical information but does
  * not say whether a word-initial vowel bore a smooth breathing.  In
  * particular, this lets forms such as `ā` round-trip as `ᾱ`, rather than
@@ -576,12 +596,12 @@ export function elidedAspirate(
 
 /**
  * Whether the letter at `index` follows a vowel and an apostrophe with no
- * space between them: a coronis written as an apostrophe
- * (`coronis: "apostrophe"`), read back as punctuation. An elision apostrophe
- * follows a consonant, and a space follows it. The letter stays inside the
- * word for the rules that tell the start of a word from its middle, as it was
- * when the coronis was a mark: `toú’mpalin` (`τοὔμπαλιν`) is read back as
- * `τού’μπαλιν`, which must not be written `toú’balin`.
+ * space between them: an apostrophe inside a word, or a coronis written as
+ * one (`coronis: "apostrophe"`) where it reads back as punctuation, after a
+ * vowel group with a breathing. An elision apostrophe follows a consonant,
+ * and a space follows it. The letter stays inside the word for the rules that
+ * tell the start of a word from its middle, as it would after the coronis:
+ * `τού’μπαλιν` must not be written `toúʼbalin`.
  */
 export function followsCoronisApostrophe(
   document: Document,

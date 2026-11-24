@@ -25,6 +25,7 @@ import {
   isVowelUpsilonAt,
   isWordFinal,
   isWordInitial,
+  marksVowelRun,
   precedesVoicedSound,
   type QuotationContext,
   roughDiphthongStart,
@@ -70,7 +71,7 @@ import {
   joinPieces,
   type WrittenPositions,
 } from "./parsers/positions.ts";
-import { encodePunctuation, TLG_CODE_OF } from "./punctuation.ts";
+import { APOSTROPHE, encodePunctuation, TLG_CODE_OF } from "./punctuation.ts";
 import {
   applyGreekUnicode,
   normalizeGreek,
@@ -896,6 +897,7 @@ export function encodeTransliteration(
   const systematicRho = options.transliteration?.rho === "systematic";
   const smoothApostrophe =
     options.transliteration?.smoothBreathing === "apostrophe";
+  const coronisApostrophe = options.transliteration?.coronis === "apostrophe";
   const nasalGamma = options.transliteration?.nasalGamma;
   const writesNasalGamma = nasalGamma !== "literal";
   const nasalExceptKappa = nasalGamma === "nasal-except-kappa";
@@ -914,6 +916,10 @@ export function encodeTransliteration(
   // letter kept as it was started it.
   let afterLetter = false;
   let wordStart = -1;
+  // The apostrophes of the source, where ISO 843 writes a mark as one: they
+  // are written once the text around them is (writeApostrophes).
+  const apostropheMarks = smoothApostrophe || coronisApostrophe;
+  let apostrophes: number[] | undefined;
 
   const pieces = rendered.map((token, index) => {
     if (token.kind === "literal") {
@@ -934,6 +940,9 @@ export function encodeTransliteration(
           return bnfRightKeraia(options, rendered[index - 1]);
         }
         if (token.value === ARISTERI_KERAIA) return ",";
+      }
+      if (token.value === APOSTROPHE && apostropheMarks) {
+        (apostrophes ??= []).push(index);
       }
       return (encodePunctuation(token.value, "transliteration", options) ??
         token.value) + (standsApart(rendered, index) ? ZWNJ : "");
@@ -1104,6 +1113,15 @@ export function encodeTransliteration(
           isVowelUpsilonAt(doc, index - 1),
       );
   });
+  if (apostrophes !== undefined) {
+    writeApostrophes(
+      pieces,
+      rendered,
+      apostrophes,
+      smoothApostrophe,
+      coronisApostrophe,
+    );
+  }
   return (written === undefined ? pieces.join("") : joinPieces(pieces, written))
     .normalize("NFC");
 }
@@ -1755,6 +1773,79 @@ function readsBack(
   return letter === first.letter
     ? test(document, start)
     : test([{ ...first, letter }, second], 0);
+}
+
+/** The modifier letter apostrophe, which every reader reads as one. */
+const MODIFIER_APOSTROPHE = "\u02BC";
+
+/**
+ * Writes U+02BC for each apostrophe of the source that would read back as
+ * the smooth breathing or the coronis ISO 843 writes as U+2019: at the start
+ * of a word, before a vowel (`smoothBreathing: "apostrophe"`), or after a
+ * vowel whose group bears no breathing, before a letter other than the `h`
+ * of a rough breathing (`coronis: "apostrophe"`). U+02BC reads back as the
+ * apostrophe it is. The test is made on the text around it, as the reader
+ * sees it, from the last apostrophe: one may follow another.
+ */
+function writeApostrophes(
+  pieces: string[],
+  document: Document,
+  apostrophes: readonly number[],
+  smoothApostrophe: boolean,
+  coronisApostrophe: boolean,
+): void {
+  for (let rank = apostrophes.length - 1; rank >= 0; rank--) {
+    const index = apostrophes[rank];
+    if (pieces[index][0] !== APOSTROPHE) continue;
+    let before = index - 1;
+    while (before >= 0 && pieces[before] === "") before--;
+    let after = index + 1;
+    while (after < pieces.length && pieces[after] === "") after++;
+    const previous = document[before];
+    const written = before < 0 ? "" : pieces[before];
+    const next = baseLetter(pieces[after]);
+    const marks = previous?.kind !== "grapheme"
+      ? smoothApostrophe && LATIN_VOWEL.test(next)
+      : written.endsWith(APOSTROPHE)
+      // After the apostrophe of a coronis, U+02BC lets it read back as one;
+      // where it cannot, it reads as an apostrophe, which this one follows.
+      ? coronisApostrophe &&
+          takesCoronis(document, before, written.slice(0, -1)) ||
+        smoothApostrophe && LATIN_VOWEL.test(next)
+      : coronisApostrophe && takesCoronis(document, before, written) &&
+        (next === MODIFIER_APOSTROPHE ||
+          document[after]?.kind === "grapheme" && /^[a-gi-z]$/i.test(next));
+    if (marks) pieces[index] = MODIFIER_APOSTROPHE + pieces[index].slice(1);
+  }
+}
+
+const LATIN_VOWEL = /^[aeiouy]$/i;
+
+/** The first character of `text` without its marks. */
+function baseLetter(text: string | undefined): string {
+  return text?.normalize("NFD")[0] ?? "";
+}
+
+/** The last letter of `text` without its marks. */
+function lastLetter(text: string): string {
+  return text.normalize("NFD").replace(/\p{M}+$/u, "").slice(-1);
+}
+
+/**
+ * Whether an apostrophe after the letter at `index`, written `written`, reads
+ * back as its coronis before a letter: after a vowel written as one, whose
+ * group bears no breathing, and no coronis before it.
+ */
+function takesCoronis(
+  document: Document,
+  index: number,
+  written: string,
+): boolean {
+  const token = document[index];
+  return token.kind === "grapheme" && isVowel(token.letter) &&
+    !token.diacritics.has("rough") && !token.diacritics.has("smooth") &&
+    LATIN_VOWEL.test(lastLetter(written)) &&
+    !marksVowelRun(document, index - 1);
 }
 
 /**

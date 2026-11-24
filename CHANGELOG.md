@@ -9,6 +9,20 @@ change.
 
 ### Changed
 
+- **ISO 843: the apostrophes read back.** Under the two ISO 843 presets, and
+  wherever `transliteration.smoothBreathing` or `coronis` is
+  `"apostrophe"`, an apostrophe (U+2019) before the vowel group of a word
+  reads back as the smooth breathing it writes (`’Athī́na` gives `Ἀθήνα`,
+  `’eînai` gives `εἶναι`), and one between a vowel and a letter as the
+  coronis (`ka’gṓ` gives `κἀγώ`). Both were read as punctuation, so that
+  `iso-843-type-1` lost the smooth breathings of a polytonic text: it now
+  converts one back without loss, and a polytonic transliteration after ISO
+  843 re-encodes as monotonic. Elsewhere an apostrophe stays one: after a
+  consonant (elision), before a consonant (prodelision, `’gathé`), and at the
+  end of a word, where the coronis of `χὠ` (`chō’`) is still reported lost.
+  An apostrophe of the source that would read back as one of these marks is
+  written U+02BC, which reads back as an apostrophe (`’Αθήνα` gives
+  `ʼAthī́na`).
 - **Monotonic accentuation in every format.** `greek.accentuation:
   "monotonic"` now applies to Beta Code and transliteration, which spell the
   monotonic text that Greek output writes. It applied to Greek output only,
@@ -16,10 +30,8 @@ change.
   re-encodes as a monotonic one (`Hē Athḗna eĩnai` gives `Ē Athḗna eínai`),
   and a polytonic text romanizes as a monotonic one in one conversion, as the
   BGN/PCGN rules write it (`Ἐθνικὸν` gives `Ethnikón` under
-  `iso-843-type-2`). `convertDetailed()` reports the marks removed. ISO 843
-  writes the smooth breathing as an apostrophe, which reading does not take
-  back: a polytonic text romanized after ISO 843 keeps it, so convert it from
-  the Greek. A bundle that writes Beta Code or transliteration, but not
+  `iso-843-type-2`). `convertDetailed()` reports the marks removed. A bundle
+  that writes Beta Code or transliteration, but not
   Greek, now keeps the monotonic rules: it grows by 1.6 to 1.8 kB minified,
   0.4 to 0.6 kB with gzip.
 - **Speed.** Writing Greek and Beta Code computes once, for the options that

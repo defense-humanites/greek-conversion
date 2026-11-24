@@ -101,6 +101,8 @@ export const OPTION_RELEVANCE: Readonly<Record<string, readonly string[]>> = {
   "transliteration.coronis": [
     "greek>transliteration",
     "beta-code>transliteration",
+    "transliteration>greek",
+    "transliteration>beta-code",
     "transliteration>transliteration",
   ],
   "transliteration.hyphen": [

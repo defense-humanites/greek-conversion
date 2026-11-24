@@ -12,6 +12,7 @@ import {
   isVowel,
   isVowelUpsilonAt,
   isWordInitial,
+  marksVowelRun,
 } from "../context.ts";
 import {
   diacriticBit,
@@ -105,6 +106,7 @@ function markBit(char: string): number {
 }
 
 const ROUGH = diacriticBit("rough");
+const SMOOTH = diacriticBit("smooth");
 const BREATHINGS = ROUGH | diacriticBit("smooth");
 const CIRCUMFLEX = diacriticBit("circumflex");
 const ACUTE = diacriticBit("acute");
@@ -190,6 +192,19 @@ function readTransliteration(
     transliteration.muPi !== "mp" && transliteration.beta === "v";
   const digraphD = transliteration?.nuTau === "d-underline-initial";
   const lunateC = transliteration?.lunateSigma === "c";
+  // ISO 843 writes the smooth breathing as an apostrophe before the vowel
+  // group of a word, as it writes the rough one as `h`, and the coronis as
+  // an apostrophe after its vowel, inside the word (`ka’gṓ`). Elsewhere, an
+  // apostrophe is one: after a consonant (elision, `ap’`), before one
+  // (prodelision, `’gathé`), or at the end of a word.
+  const smoothApostrophe = transliteration?.smoothBreathing === "apostrophe";
+  const coronisApostrophe = transliteration?.coronis === "apostrophe";
+  // The vowels whose coronis was read from an apostrophe after them: as the
+  // writer does, the apostrophe parts them from the next vowel (`ta’ys` is
+  // τἀυς), which a `y` after them then does not part again.
+  const splitByCoronis = new Set<number>();
+  // The vowels that the apostrophe before them gave a smooth breathing.
+  const smoothedByApostrophe = new Set<number>();
   const systematicRho = transliteration?.rho === "systematic";
   const circumflexAccent = transliteration?.circumflexAccent === "circumflex";
   // Without a length mark, e and o are epsilon and omicron, and a circumflex
@@ -214,7 +229,16 @@ function readTransliteration(
   for (let i = 0; i < chars.length;) {
     let rough = false;
     let roughUppercase = false;
+    let smooth = false;
     if (starts !== undefined) starts.push(i);
+
+    if (
+      smoothApostrophe && chars[i] === "\u2019" &&
+      out.at(-1)?.kind !== "grapheme" && startsVowel(lowered, i + 1, trie)
+    ) {
+      smooth = true;
+      i++;
+    }
 
     if (digraphB && lowered[i] === "b") {
       const uppercase = chars[i] !== lowered[i];
@@ -297,6 +321,24 @@ function readTransliteration(
         continue;
       }
 
+      if (
+        coronisApostrophe && chars[i] === "\u2019" &&
+        startsLetter(chars, lowered, i + 1, trie)
+      ) {
+        const previous = out.at(-1);
+        if (
+          previous?.kind === "grapheme" && isVowel(previous.letter) &&
+          !marksVowelRun(out, out.length - 1)
+        ) {
+          previous.diacritics = withDiacritic(previous.diacritics, "coronis");
+          splitByCoronis.add(out.length - 1);
+          // No token: the apostrophe joins the vowel's span.
+          if (starts !== undefined) starts.pop();
+          i++;
+          continue;
+        }
+      }
+
       if (chars[i] === "\u1FBD") {
         const previous = out.at(-1);
         if (
@@ -352,7 +394,8 @@ function readTransliteration(
       i++;
     }
 
-    let marks = rough ? ROUGH : 0;
+    let marks = rough ? ROUGH : smooth ? SMOOTH : 0;
+    if (smooth) smoothedByApostrophe.add(out.length);
     let structuralCircumflex = false;
     // Where an acute was read, for a BnF keraia.
     let acuteAt = -1;
@@ -456,14 +499,19 @@ function readTransliteration(
         : isAuEuOuAt(pair, 0) ||
           upsilon === "y-with-ou-v-f" && isVowelUpsilonAt(pair, 0);
       // A diaeresis and a breathing never share a vowel (`hy` is ὑ).
-      if (wouldRenderU && (marks & BREATHINGS) === 0) {
+      if (
+        wouldRenderU && (marks & BREATHINGS) === 0 &&
+        !splitByCoronis.has(out.length - 1)
+      ) {
         // `y` says the pair is not a diphthong. Greek marks such a hiatus by
         // a breathing on the first vowel when the word starts there (ἀυτμή,
         // ἁυ); the diaeresis is the fallback where no breathing will sit.
         const first = out[out.length - 1];
         const breathingWillSit = first.kind === "grapheme" &&
           isWordInitial(out, out.length - 1) &&
-          (first.diacritics.has("rough") || infersSmoothBreathing(options));
+          (first.diacritics.has("rough") ||
+            smoothedByApostrophe.has(out.length - 1) ||
+            infersSmoothBreathing(options));
         if (breathingWillSit) separatedByBreathing.add(out.length);
         else marks |= DIAERESIS;
       }
@@ -473,6 +521,7 @@ function readTransliteration(
       letter === "iota" &&
       upsilon === "y-with-diphthong-u" &&
       contextualY.has(out.length - 1) &&
+      !splitByCoronis.has(out.length - 1) &&
       // A diaeresis and a breathing never share a vowel (`yhi` is υἱ).
       (marks & BREATHINGS) === 0
     ) {
@@ -539,7 +588,12 @@ function readTransliteration(
       next.diacritics = withDiacritic(next.diacritics, "diaeresis");
     }
   }
-  inferInitialBreathings(out, options, separatedByBreathing);
+  inferInitialBreathings(
+    out,
+    options,
+    separatedByBreathing,
+    smoothedByApostrophe,
+  );
 
   return out;
 }
@@ -726,6 +780,22 @@ function followsGamma(tokens: readonly Token[]): boolean {
   return previous?.kind === "grapheme" && previous.letter === "gamma";
 }
 
+/**
+ * Whether a letter that is not the `h` of a rough breathing starts at
+ * `start`, or the U+02BC the writer writes for an apostrophe of the source
+ * after the apostrophe of a coronis: what follows a coronis written as an
+ * apostrophe inside a word.
+ */
+function startsLetter(
+  chars: readonly string[],
+  lowered: readonly string[],
+  start: number,
+  trie: Trie<Letter>,
+): boolean {
+  return chars[start] === "\u02BC" ||
+    lowered[start] !== "h" && trie.longest(lowered, start) !== undefined;
+}
+
 function startsVowel(
   lowered: readonly string[],
   start: number,
@@ -761,6 +831,7 @@ function inferInitialBreathings(
   tokens: Token[],
   options: ConversionOptions,
   separatedByBreathing: ReadonlySet<number>,
+  smoothedByApostrophe: ReadonlySet<number> = new Set(),
 ) {
   const infersSmooth = infersSmoothBreathing(options);
   let wordStart = true;
@@ -809,18 +880,26 @@ function inferInitialBreathings(
       continue;
     }
 
+    const apostrophe = smoothedByApostrophe.has(i);
     const targetIndex = separatedByBreathing.has(i + 1)
       ? i
-      : i + breathingTarget(latinPair(token, tokens[i + 1]), 0);
+      : i + breathingTarget(latinPair(token, tokens[i + 1], apostrophe), 0);
     const target = tokens[targetIndex];
     if (target.kind !== "grapheme") continue;
 
-    if (
-      token.diacritics.has("rough") && target !== token && !hasBreathing(target)
-    ) {
-      token.diacritics = withoutDiacritic(token.diacritics, "rough");
-      target.diacritics = withDiacritic(target.diacritics, "rough");
-      placed = targetIndex;
+    // The apostrophe of a smooth breathing precedes the whole vowel group, as
+    // the `h` of a rough one does.
+    const breathing = apostrophe
+      ? "smooth"
+      : token.diacritics.has("rough")
+      ? "rough"
+      : undefined;
+    if (breathing !== undefined) {
+      if (target !== token && !hasBreathing(target)) {
+        token.diacritics = withoutDiacritic(token.diacritics, breathing);
+        target.diacritics = withDiacritic(target.diacritics, breathing);
+        placed = targetIndex;
+      }
     } else if (
       infersSmooth &&
       !target.diacritics.has("rough") &&
@@ -868,14 +947,18 @@ function hasBreathing(token: Grapheme): boolean {
 function latinPair(
   first: Token | undefined,
   second: Token | undefined,
+  apostrophe = false,
 ): Token[] {
   const pair: Token[] = [];
   if (first === undefined) return pair;
   pair.push(
-    first.kind === "grapheme" && first.diacritics.has("rough")
+    first.kind === "grapheme" && (apostrophe || first.diacritics.has("rough"))
       ? {
         ...first,
-        diacritics: withoutDiacritic(first.diacritics, "rough"),
+        diacritics: withoutDiacritic(
+          first.diacritics,
+          apostrophe ? "smooth" : "rough",
+        ),
       }
       : first,
   );
