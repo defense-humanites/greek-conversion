@@ -57,6 +57,16 @@ change.
   transliteration of these presets converts 57 to 61 % faster, a clause
   19 %; under options of other forms with such spellings, a word converts
   about 35 % faster. No output changes.
+- **Speed of converters.** A converter from `createConverter()` looked for
+  its aliases and its own characters at each character of the text, and
+  prepared each token for its repertoire, even with neither: it converted
+  1.5 to 2 times slower than `convert()`. It now reads the text as it is when
+  it has no spelling to look for in the format of the input, skips the
+  characters that start none, and prepares no token when it keeps every
+  letter. A converter with nothing to look for converts as fast as
+  `convert()`, 33 to 40 % faster than before on a long text; one bound to a
+  preset 28 %, one with characters of its own 34 %, and `convertDetailed()`
+  25 %. No output changes, nor the losses, positions, and diagnostics.
 - **Speed of reading transliteration.** The reader of transliteration finds
   each letter without allocating, and reads the rough breathing of each
   letter from the mask of its marks. Transliteration converts into Greek 4

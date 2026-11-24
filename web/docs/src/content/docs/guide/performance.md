@@ -33,7 +33,7 @@ One word, `Ἕλλησιν`, for each call:
 | `convert()` into transliteration, with other options            | 3.0 µs |
 | `convert()` from `core`, with options prepared once             | 1.4 µs |
 | `convertDetailed()` into transliteration                        | 5.0 µs |
-| `convert()` of a converter from `createConverter()`             | 2.9 µs |
+| `convert()` of a converter from `createConverter({})`           | 1.8 µs |
 
 These times were measured with Node.js 24, on one core of a cloud server
 (Intel Xeon), during the development of `1.0.0`. Another machine
@@ -58,10 +58,11 @@ yours.
   word takes about twice as long, a long text hardly longer. For many short
   strings under such options, prepare them once with `prepareOptions()`
   from `core`, as [Smaller bundles](/guide/smaller-bundles/) shows.
-- **Converters.** A converter from `createConverter()` looks for its
-  aliases and its own characters at each character, and checks its
-  repertoire: it converts 1.5 to 2 times slower than `convert()`, even with
-  nothing to look for. Create one for these, and not to bind a preset:
+- **Converters.** A converter from `createConverter()` with nothing to look
+  for converts as fast as `convert()`. One bound to a preset checks each
+  letter against the preset's repertoire, and one with aliases or characters
+  of its own looks for their spellings: a long text takes about a third
+  longer. Create one for these, and not to bind a preset alone:
   `convert()` given the preset's name costs less.
 - **The first call.** Loading the package takes some tens of milliseconds
   in Node.js, and the first conversion one or two milliseconds more, while

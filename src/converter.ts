@@ -254,6 +254,7 @@ interface PreparedSource {
 }
 
 const BUILTIN_LETTERS = new Set<string>(Object.keys(ALPHABET));
+const NO_ORIGINALS: ReadonlyMap<string, readonly string[]> = new Map();
 const SENTINEL_START = 0xF0000;
 
 /**
@@ -266,6 +267,8 @@ const SENTINEL_START = 0xF0000;
  */
 export class Converter {
   readonly #entries: Readonly<Record<Format, readonly InputEntry[]>>;
+  /** The characters that start a spelling of `#entries`, by format. */
+  readonly #entryStarts: Readonly<Record<Format, ReadonlySet<string>>>;
   readonly #characters: ReadonlyMap<string, NormalizedCustomCharacter>;
   readonly #sentinels: ReadonlyMap<string, {
     character: NormalizedCustomCharacter;
@@ -328,6 +331,13 @@ export class Converter {
       transliteration: freezeEntries(
         entries.filter((entry) => entry.format === "transliteration"),
       ),
+    };
+    const startsOf = (format: Format) =>
+      new Set(this.#entries[format].map((entry) => entry.normalized[0]));
+    this.#entryStarts = {
+      greek: startsOf("greek"),
+      "beta-code": startsOf("beta-code"),
+      transliteration: startsOf("transliteration"),
     };
 
     const known = new Set([...BUILTIN_LETTERS, ...this.#characters.keys()]);
@@ -471,10 +481,22 @@ export class Converter {
     }
 
     const normalizedInput = normalizeSpelling(input, format);
+    const entries = this.#entries[format];
+    // Without aliases or characters of its own in this format, a converter
+    // has nothing to replace: the reader receives the normalized text.
+    if (entries.length === 0) {
+      return {
+        value: normalizedInput,
+        originals: NO_ORIGINALS,
+        input,
+        normalized: normalizedInput,
+        format,
+        matches: [],
+      };
+    }
     const chars = Array.from(normalizedInput);
     const output: string[] = [];
     const originals = new Map<string, string[]>();
-    const entries = this.#entries[format];
     const matches: Match[] = [];
     // Code-unit offset of character `scanned` in the normalized input, and
     // how much longer the output is so far than the input it replaces: only
@@ -487,10 +509,15 @@ export class Converter {
       return scannedOffset;
     };
 
+    const starts = this.#entryStarts[format];
     for (let index = 0; index < chars.length;) {
-      const match = entries.find((entry) =>
-        entry.normalized.every((char, offset) => chars[index + offset] === char)
-      );
+      const match = starts.has(chars[index])
+        ? entries.find((entry) =>
+          entry.normalized.every((char, offset) =>
+            chars[index + offset] === char
+          )
+        )
+        : undefined;
 
       if (match === undefined) {
         output.push(chars[index]);
@@ -568,9 +595,11 @@ export class Converter {
     // diagnostic carries, like the losses and the spans.
     const reported: number[] = [];
     const occurrences = new Map<string, number>();
-    // The parsed token each prepared token comes from.
-    const origins: number[] | undefined = track ? [] : undefined;
-    let prepared = 0;
+    // A converter that keeps every letter, its own characters included,
+    // prepares each token as it was read.
+    const asRead = !this.#keepsLetters;
+    // The parsed token each prepared token comes from, where they differ.
+    const origins: number[] | undefined = track && !asRead ? [] : undefined;
     const kept: KeptLetters = {
       parsed,
       format,
@@ -581,31 +610,38 @@ export class Converter {
       read,
     };
 
-    const document = parsed.flatMap((token, index): readonly Token[] => {
-      const before = diagnostics.length;
-      const tokens = this.#prepareToken(
-        token,
-        index,
-        parsed,
-        input,
-        format,
-        reading,
-        options,
-        target,
-        diagnostics,
-        occurrences,
-        kept,
-      );
-      if (diagnostics.length > before) {
-        diagnostics[before].index = prepared;
-        reported.push(index);
+    let document: Document = parsed;
+    if (!asRead) {
+      const tokens: Token[] = [];
+      for (let index = 0; index < parsed.length; index++) {
+        const token = parsed[index];
+        const before = diagnostics.length;
+        const replaced = this.#prepareToken(
+          token,
+          index,
+          parsed,
+          input,
+          format,
+          reading,
+          options,
+          target,
+          diagnostics,
+          occurrences,
+          kept,
+        );
+        if (diagnostics.length > before) {
+          diagnostics[before].index = tokens.length;
+          reported.push(index);
+        }
+        const count = replaced === undefined ? 1 : replaced.length;
+        if (replaced === undefined) tokens.push(token);
+        else tokens.push(...replaced);
+        if (origins !== undefined) {
+          for (let k = 0; k < count; k++) origins.push(index);
+        }
       }
-      if (origins !== undefined) {
-        for (let k = 0; k < tokens.length; k++) origins.push(index);
-      }
-      prepared += tokens.length;
-      return tokens;
-    });
+      document = tokens;
+    }
 
     if (!track && (positions === "none" || diagnostics.length === 0)) {
       return { document, diagnostics };
@@ -620,6 +656,7 @@ export class Converter {
       diagnostic.offset = parsedSpans.starts[reported[k]];
       diagnostic.length = parsedSpans.ends[reported[k]] - diagnostic.offset;
     }
+    if (asRead) return { document, diagnostics, spans: parsedSpans };
     if (origins === undefined) return { document, diagnostics };
 
     // The literals an out-of-scope token became share its span.
@@ -632,6 +669,10 @@ export class Converter {
     return { document, diagnostics, spans: { starts, ends } };
   }
 
+  /**
+   * The tokens that the parsed token at `index` becomes, out of scope, or
+   * `undefined` when it stays as read.
+   */
   #prepareToken(
     token: Token,
     index: number,
@@ -644,7 +685,7 @@ export class Converter {
     diagnostics: CharacterScopeDiagnostic[],
     occurrences: Map<string, number>,
     kept: KeptLetters,
-  ): readonly Token[] {
+  ): readonly Token[] | undefined {
     if (token.kind === "grapheme") {
       if (!this.#isAllowed(token.letter, parsed, index)) {
         const numeral = inDecimalNumeral(kept, index);
@@ -668,7 +709,7 @@ export class Converter {
           options,
         )
         : undefined;
-      if (issue === undefined) return [token];
+      if (issue === undefined) return undefined;
       const numeral = inDecimalNumeral(kept, index);
       diagnostics.push(
         mappingDiagnostic(
@@ -687,7 +728,7 @@ export class Converter {
       custom === undefined ||
       this.#isAllowed(custom.character.id, parsed, index)
     ) {
-      return [token];
+      return undefined;
     }
 
     diagnostics.push(
