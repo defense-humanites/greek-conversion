@@ -62,35 +62,27 @@ The package is ESM-only and ships its own type declarations.
 ## Example
 
 ```ts
-import { convert } from "@humanities/greek-conversion";
-
-// Ancient Greek, with every accent and breathing
-convert("Ἕλλησιν ἐγένετο", "greek", "transliteration");
-// → Héllēsin egéneto
+import {
+  convert,
+  convertDetailed,
+  reencode,
+} from "@humanities/greek-conversion";
 
 // Beta Code, as the TLG writes it
 convert("*(/ELLHSIN E)GE/NETO", "beta-code", "greek");
 // → Ἕλλησιν ἐγένετο
 
-// Modern Greek, as passports and maps write it
-convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliteration", {
+// Ancient Greek, with every accent and breathing, and nothing lost
+const res = convertDetailed("Ἕλλησιν ἐγένετο", "greek", "transliteration");
+res.output; // → Héllēsin egéneto
+res.lossy; // → false
+
+// Modern Greek, from polytonic to monotonic, as passports write it
+reencode("Hi ’Athína ’eînai hi protévousa", "transliteration", {
   preset: "iso-843-type-2",
+  greek: { accentuation: "monotonic" },
 });
 // → I Athína eínai i protévousa
-```
-
-`convertDetailed()` says what a conversion cannot carry back:
-
-```ts
-import { convertDetailed } from "@humanities/greek-conversion";
-
-const city = convertDetailed("Θεσσαλονίκη", "greek", "transliteration", {
-  preset: "iso-843-type-2",
-});
-
-city.output; // → Thessaloníki
-city.lossy; // → true
-city.losses[0].message; // → The target representation does not retain eta.
 ```
 
 ## Main functions
@@ -103,6 +95,85 @@ city.losses[0].message; // → The target representation does not retain eta.
 | Bind a preset, add characters, or restrict the repertoire                | `createConverter(configuration)`                                      |
 | Inspect or edit the parsed text itself                                   | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
 | Bundle only the formats and presets a web page uses                      | `convert()` from `@humanities/greek-conversion/core`                  |
+
+### `convert()`
+
+`convert()` takes a string from one format to another, after a preset or
+the options it is given:
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+// The first words of the Odyssey, in the Beta Code of Perseus
+convert("ἄνδρα μοι ἔννεπε, μοῦσα", "greek", "beta-code");
+// → a)/ndra moi e)/nnepe, mou=sa
+
+// A Byzantine manuscript's ligature for ου
+convert("τȣ̃ θεȣ̃", "greek", "transliteration");
+// → toũ theoũ
+
+// A Modern Greek author, for a library record
+convert("Νίκος Καζαντζάκης", "greek", "transliteration", {
+  preset: "ala-lc-modern",
+});
+// → Nikos Kazantzakēs
+
+// A search key, without marks or capitals
+convert("Ἀριστοτέλης", "greek", "transliteration", {
+  diacritics: { all: "remove" },
+  transliteration: { longVowels: "omit" },
+  text: { letterCase: "lowercase" },
+});
+// → aristoteles
+```
+
+### `convertDetailed()`
+
+`convertDetailed()` converts as `convert()` does, and says what the output
+cannot carry back, and where:
+
+```ts
+import { convertDetailed } from "@humanities/greek-conversion";
+
+// ISO 843 Type 2, which Greek passports use, writes eta like iota
+const city = convertDetailed("Θεσσαλονίκη", "greek", "transliteration", {
+  preset: "iso-843-type-2",
+});
+city.output; // → Thessaloníki
+city.lossy; // → true
+city.losses[0].message; // → The target representation does not retain eta.
+city.losses[0].offset; // → 10
+
+// SBL's general style drops smooth breathings, accents, iota subscripts
+const verse = convertDetailed("ἐν ἀρχῇ ἦν", "greek", "transliteration", {
+  preset: "sbl-general",
+});
+verse.output; // → en archē ēn
+verse.losses.length; // → 6
+```
+
+### `reencode()`
+
+`reencode()` keeps the format and changes the spelling: it normalizes a
+text, or writes it after other conventions:
+
+```ts
+import { reencode } from "@humanities/greek-conversion";
+
+// The lunate sigma of an edition, made standard
+reencode("ϲοφίαϲ", "greek", { greek: { sigma: "standard" } });
+// → σοφίας
+
+// Greek numerals, in figures
+reencode("ἔτει ͵αωκαʹ", "greek", { text: { numerals: "decimal" } });
+// → ἔτει 1821
+
+// The Beta Code of Perseus, in the capitals of the TLG
+reencode("a)/ndra moi e)/nnepe, mou=sa", "beta-code", {
+  preset: "tlg-core",
+});
+// → A)/NDRA MOI E)/NNEPE, MOU=SA
+```
 
 ## Documentation
 

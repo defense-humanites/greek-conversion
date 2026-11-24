@@ -13,19 +13,25 @@ import HomeHero from "../../components/HomeHero.astro";
 <HomeHero>
 
 ```ts
-import { convert } from "@humanities/greek-conversion";
-
-// Ancient Greek, with every accent and breathing
-convert("Ἕλλησιν ἐγένετο", "greek", "transliteration");
-// → Héllēsin egéneto
+import {
+  convert,
+  convertDetailed,
+  reencode,
+} from "@humanities/greek-conversion";
 
 // Beta Code, as the TLG writes it
 convert("*(/ELLHSIN E)GE/NETO", "beta-code", "greek");
 // → Ἕλλησιν ἐγένετο
 
-// Modern Greek, as passports and maps write it
-convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliteration", {
+// Ancient Greek, with every accent and breathing, and nothing lost
+const res = convertDetailed("Ἕλλησιν ἐγένετο", "greek", "transliteration");
+res.output; // → Héllēsin egéneto
+res.lossy; // → false
+
+// Modern Greek, from polytonic to monotonic, as passports write it
+reencode("Hi ’Athína ’eînai hi protévousa", "transliteration", {
   preset: "iso-843-type-2",
+  greek: { accentuation: "monotonic" },
 });
 // → I Athína eínai i protévousa
 ```
