@@ -897,7 +897,10 @@ function inferInitialBreathings(
     const token = tokens[i];
 
     if (token.kind === "literal") {
-      wordStart = true;
+      // A combining mark that the reader does not read, such as the dot of
+      // an uncertain letter, or a join control stays inside the word, as
+      // the writer reads it (`kạe` is κα̣ε).
+      if (!isBoundaryTransparent(token)) wordStart = true;
       continue;
     }
 

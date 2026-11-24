@@ -38,6 +38,9 @@ const ISO_HIATUS =
   "Under ISO 843, the apostrophe of a smooth breathing reads back on the first vowel of a pair whose hiatus `y` marks, as `h` does: no diaeresis is written.";
 const SOURCE_APOSTROPHE =
   "An apostrophe of the source where ISO 843 writes a smooth breathing or a coronis is written U+02BC, which reads back as an apostrophe.";
+const MARK_INSIDE_WORD =
+  "A mark that the transliteration reader does not read stays inside the word: the vowel after it takes no smooth breathing, which convertDetailed() no longer reports inferred.";
+const DETAILED_TO_TRANSLITERATION = "convertDetailed(greek → transliteration)";
 const MONOTONIC_EVERY_FORMAT =
   "Monotonic accentuation applies to Beta Code and transliteration, which spell the monotonic text that Greek output writes.";
 
@@ -292,6 +295,18 @@ export const MEANT: readonly MeantChange[] = [
     call: DETAILED_TO_GREEK,
     reason: MIDDLE_DOT,
   },
+  ...[
+    "ʼ ϙο\u03070ΕϵϳΞπ\u0323ι0",
+    "\u0300\u00A0ηΔ\u20DDώ",
+    "φ9Γ\u20DDωΞ\u0314Ν",
+    "δΨΑΞ\u20DDαΖΙ",
+    " ·Ξχ\u20DDύ\u0307\u00A0ϟΐ\u0301ύϑ",
+    "\u0301Θ\u0307ȣϜϳ’ἄ\u0300漢Πξ1\u0323",
+  ].map((input) => ({
+    input,
+    call: DETAILED_TO_TRANSLITERATION,
+    reason: MARK_INSIDE_WORD,
+  })),
   ...isoInputs(SOURCE_APOSTROPHE, [
     "+0h||'hd",
     "7/0r#('in1b",

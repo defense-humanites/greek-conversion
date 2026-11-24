@@ -355,6 +355,38 @@ test("ignores combining marks and join controls at word boundaries", () => {
   }
 });
 
+test("infers no breathing after a mark inside a word", () => {
+  for (
+    const transparent of ["̣", "⃝", "‌", "‍", "⁠"]
+  ) {
+    for (
+      const [latin, greek] of [
+        [`ka${transparent}e`, `κα${transparent}ε`],
+        [`s${transparent}a`, `σ${transparent}α`],
+        // The mark parts the vowels, as the writer parts them (`y`): the
+        // first takes the breathing of the word, and the second none.
+        [`a${transparent}ytos`, `ἀ${transparent}υτος`],
+        [`ka${transparent}hoi`, `κα${transparent}οἱ`],
+      ]
+    ) {
+      assertNfcEquals(convert(latin, "transliteration", "greek"), greek);
+      assertNfcEquals(convert(greek, "greek", "transliteration"), latin);
+    }
+  }
+  // The dot of an uncertain letter, in an edition.
+  const uncertain = convertDetailed("κα̣ὶ ἐ̣γένετο", "greek", "transliteration");
+  assertEquals(uncertain.output.normalize(), "kạì ẹgéneto");
+  assertEquals(uncertain.lossy, false);
+  // A coronis after the mark is the vowel's only mark.
+  const coronis = { transliteration: { coronis: "apostrophe" } } as const;
+  const crasis = convert("kạe’ga", "transliteration", "greek", coronis);
+  assertNfcEquals(crasis, "κα̣ἐγα");
+  assertNfcEquals(
+    convert(crasis, "greek", "transliteration", coronis),
+    "kạe’ga",
+  );
+});
+
 test("shares transparent boundaries with medial beta", () => {
   assertNfcEquals(
     convert("α\u200Dβ", "greek", "greek", {
