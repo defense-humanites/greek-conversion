@@ -36,7 +36,7 @@ One word, `Ἕλλησιν`, for each call:
 | `convert()` of a converter from `createConverter()`             | 2.9 µs |
 
 These times were measured with Node.js 24, on one core of a cloud server
-(Intel Xeon), on the version that follows `1.0.0-rc.12`. Another machine
+(Intel Xeon), during the development of `1.0.0`. Another machine
 gives other times, but the ratios between the rows hold better;
 `npm run bench`, in a clone of the repository, measures the main ones on
 yours.
@@ -90,18 +90,3 @@ On a web page, what the browser loads counts as well. A bundle that imports
 `convert()` from the main entry point keeps every format and every preset;
 [Smaller bundles](/guide/smaller-bundles/) gives its size, and how to bundle
 only the formats and presets a page uses.
-
-## How speed is kept
-
-Two release candidates were given to speed, `1.0.0-rc.4` and `1.0.0-rc.12`,
-and the work went on after the second. On the same machine, compared with
-`1.0.0-rc.3`, long texts now convert about twice as fast, and a word 12 to
-20 times as fast. The [changelog](https://github.com/defense-humanites/greek-conversion/blob/main/CHANGELOG.md)
-gives the gain of each change.
-
-No such change may alter a conversion: a test compares every output, with
-the losses and positions of `convertDetailed()`, with those of the previous
-release, under 29 sets of options. A change to a reader or a writer is
-measured with `npm run bench:ab`, which runs two versions in turn, with a
-control that runs one version against itself, since a gain of a few percent
-hides in the noise of a single run.

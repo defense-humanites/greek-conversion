@@ -155,8 +155,7 @@ reencode("a)/ndra moi e)/nnepe, mou=sa", "beta-code", {
 
 Conversions are synchronous, and their time grows with the length of the
 text only. On one core, with Node.js 24, a text of 10,000 characters
-converts in 1 to 2 ms, a word in 1 to 3 µs. Since `1.0.0-rc.3`, long texts
-convert about twice as fast, and a word 12 to 20 times as fast.
+converts in 1 to 2 ms, a word in 1 to 3 µs.
 [Performance](https://greek-conversion.humanites.fr/guide/performance/)
 gives the measures, what each call costs, and how to keep conversions fast.
 
