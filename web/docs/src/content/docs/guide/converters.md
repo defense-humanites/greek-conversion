@@ -4,7 +4,8 @@ description: "Bind a configuration in a converter, add or restrict characters, a
 ---
 
 The conversion functions take their options on every call and check them
-strictly. A converter created with `createConverter()` binds a preset once,
+strictly, unless they are prepared once. A converter created with
+`createConverter()` binds a preset once,
 can extend or restrict the characters it knows, and can enforce the
 repertoire of that preset; the other options are still given on each call.
 
@@ -44,6 +45,30 @@ import {
 FORMATS; // → ["greek","beta-code","transliteration"]
 CONVERSION_OPTION_VALUES.transliteration.eta; // → ["e","i"]
 ```
+
+## Prepare options once
+
+`prepareOptions()` checks and resolves options once, with the same errors,
+and returns prepared options, which every conversion function takes in
+their place:
+
+```ts
+import { convert, prepareOptions } from "@humanities/greek-conversion";
+
+const options = prepareOptions({ transliteration: { chi: "kh" } });
+const words = ["χάος", "ψυχή"];
+words.map((word) => convert(word, "greek", "transliteration", options));
+// → ["kháos","psykhḗ"]
+```
+
+The defaults and each preset named are resolved once anyway. Other options
+are checked and resolved at each call, which a word takes about twice as
+long to convert: prepare them where many short texts are converted, or
+where options come from a configuration file or a form, to check them once.
+Prepared options cannot be changed, nor spread into other options, which
+they would leave empty: spread, given as `source`, or given to a converter,
+which binds its own preset, they throw a `TypeError` that says what to
+write instead.
 
 ## Add or exclude characters
 

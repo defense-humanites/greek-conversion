@@ -336,35 +336,91 @@ test("the core functions name what to import for a value they do not take", () =
   );
 });
 
-test("the main entry point refuses readers, writers and prepared options", () => {
+test("the main entry point refuses readers and writers, and takes prepared options", () => {
   assertThrows(
     () =>
       main.convert("λόγος", greek.greekReader as unknown as Format, "greek"),
     RangeError,
     'Unknown format: [object Object]; readers and writers go to "@humanities/greek-conversion/core"',
   );
+  // Prepared options stand for all the options of a conversion: not for its
+  // source, nor for the options of a converter, which binds its own preset.
+  const source = { source: presets.sblGeneral } as unknown as ConversionOptions;
   for (
-    const options of [
-      presets.sblGeneral,
-      { source: presets.sblGeneral },
-    ] as unknown as ConversionOptions[]
+    const refuse of [
+      () => main.convert("λόγος", "greek", "transliteration", source),
+      () => parse("λόγος", "greek", source),
+    ]
   ) {
     assertThrows(
-      () => main.convert("λόγος", "greek", "transliteration", options),
+      refuse,
       TypeError,
-      'options, received prepared options, which only the functions of "@humanities/greek-conversion/core" take: name the preset instead, as in { preset: "sbl-general" }.',
-    );
-    assertThrows(
-      () => parse("λόγος", "greek", options),
-      TypeError,
-      "received prepared options",
-    );
-    assertThrows(
-      () => createConverter().convert("λόγος", "greek", "greek", options),
-      TypeError,
-      "received prepared options",
+      'Expected source options, received prepared options, which stand for all the options of a conversion: name the preset instead, as in { preset: "sbl-general" }.',
     );
   }
+  assertThrows(
+    () =>
+      createConverter().convert(
+        "λόγος",
+        "greek",
+        "greek",
+        presets.sblGeneral as unknown as ConversionOptions,
+      ),
+    TypeError,
+    'Expected conversion options, received prepared options, which a converter does not take: name the preset instead, as in { preset: "sbl-general" }.',
+  );
+});
+
+test("the main entry point converts with prepared options as with the options prepared", () => {
+  assert(main.prepareOptions === core.prepareOptions);
+  const text = THUCYDIDES_1_1_10.slice(0, 200);
+  for (
+    const options of [
+      {},
+      { preset: "sbl-general" },
+      { transliteration: { chi: "kh" }, diacritics: { accents: "remove" } },
+      { preset: "iso-843-type-2", greek: { accentuation: "monotonic" } },
+      { preset: "tlg-core", source: { preset: "perseus" } },
+    ] as ConversionOptions[]
+  ) {
+    const prepared = main.prepareOptions(options);
+    // Prepared options are prepared already.
+    assert(main.prepareOptions(prepared) === prepared);
+    for (const from of FORMATS) {
+      const input = main.convert(text, "greek", from);
+      for (const to of FORMATS) {
+        assertEquals(
+          main.convert(input, from, to, prepared),
+          main.convert(input, from, to, options),
+        );
+        assertEquals(
+          main.convertDetailed(input, from, to, prepared),
+          main.convertDetailed(input, from, to, options),
+        );
+      }
+      assertEquals(
+        main.reencode(input, from, prepared),
+        main.reencode(input, from, options),
+      );
+      assertEquals(parse(input, from, prepared), parse(input, from, options));
+    }
+    // What they resolve to, as a copy that the caller may change.
+    const resolved = main.resolveConversionOptions(prepared);
+    assertEquals(resolved, main.resolveConversionOptions(options));
+    resolved.transliteration.chi = "kh";
+    resolved.text.letterCase = "uppercase";
+    assertEquals(
+      main.resolveConversionOptions(prepared),
+      main.resolveConversionOptions(options),
+    );
+  }
+  // A preset of the presets entry point, as its name.
+  assertEquals(
+    main.convert("Ἕλλησιν", "greek", "transliteration", presets.sblGeneral),
+    main.convert("Ἕλλησιν", "greek", "transliteration", {
+      preset: "sbl-general",
+    }),
+  );
 });
 
 test("prepared options spread into options are refused, with what to write", () => {
@@ -406,14 +462,9 @@ test("prepared options spread into options are refused, with what to write", () 
           } as unknown as ConversionOptions,
         ),
       TypeError,
-      'Expected source.transliteration options, received prepared options, which only the functions of "@humanities/greek-conversion/core" take: name the preset instead, as in { preset: "iso-843-type-2" }.',
+      'Expected source.transliteration options, received prepared options, which stand for all the options of a conversion: name the preset instead, as in { preset: "iso-843-type-2" }.',
     );
   }
-  assertThrows(
-    () => core.prepareOptions(presets.iso843Type2 as ConversionOptions),
-    TypeError,
-    'Expected conversion options, received prepared options, which only the functions of "@humanities/greek-conversion/core" take: name the preset instead, as in { preset: "iso-843-type-2" }.',
-  );
   // The configuration of a converter, and the options of a bound one.
   for (
     const configuration of [
@@ -436,7 +487,7 @@ test("prepared options spread into options are refused, with what to write", () 
         presets.iso843Type2 as ConversionOptions,
       ),
     TypeError,
-    'Expected conversion options, received prepared options, which only the functions of "@humanities/greek-conversion/core" take:',
+    'Expected conversion options, received prepared options, which a converter does not take: name the preset instead, as in { preset: "iso-843-type-2" }.',
   );
   // A preset object given for its name.
   assertThrows(

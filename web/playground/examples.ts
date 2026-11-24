@@ -48,13 +48,13 @@ export function sourceOf(style: SourceStyle): SourceOptions | undefined {
 export function exampleOptions(
   example: Example,
   preset: Preset | "",
-): Parameters<typeof convert>[3] {
+): ConversionOptions {
   const source = sourceOf(example.sourceStyle ?? "");
   return {
     ...example.options,
     ...(preset ? { preset } : {}),
     ...(source ? { source } : {}),
-  } as Parameters<typeof convert>[3];
+  } as ConversionOptions;
 }
 
 const THUCYDIDES =

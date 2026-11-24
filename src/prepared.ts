@@ -1,6 +1,7 @@
 /**
- * Prepared options: options checked and resolved once, for the functions of
- * the `./core` entry point, which take no other.
+ * Prepared options: options checked and resolved once, which the functions
+ * of the main and document entry points take in place of options, and those
+ * of the `./core` entry point take alone.
  *
  * Internal: the entry points export the type, `prepareOptions()` and the
  * presets made with it.
@@ -10,11 +11,13 @@ import { PREPARED } from "./prepared_mark.ts";
 import { sealProfile } from "./profile_cache.ts";
 
 /**
- * Conversion options already checked and resolved, for the functions of the
- * `./core` entry point: a preset imported from `./presets`, or what
- * `prepareOptions()` returns. The type has no member to use, and an object
- * of another shape is not one: the core functions do not validate options,
- * so that a bundle that does not prepare any leaves the validation out.
+ * Conversion options already checked and resolved: a preset imported from
+ * `./presets`, or what `prepareOptions()` returns. The functions of the main
+ * and `./document` entry points take them in place of options, without
+ * checking or resolving them again; those of the `./core` entry point take
+ * no other, so that a bundle that does not prepare any leaves the validation
+ * out. The type has no member to use, and an object of another shape is not
+ * one.
  */
 export declare class PreparedOptions {
   // The brand that makes the type nominal, declared only.

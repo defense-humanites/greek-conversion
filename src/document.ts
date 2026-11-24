@@ -23,6 +23,7 @@ export {
 import { sharedDiacritics } from "./model.ts";
 import type { Document } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
+import type { PreparedOptions } from "./prepared.ts";
 import { applyGreekOrthography as applyResolvedGreekOrthography } from "./orthography.ts";
 import { resolveConversionOptions } from "./presets.ts";
 
@@ -36,7 +37,7 @@ import { resolveConversionOptions } from "./presets.ts";
  */
 export function applyGreekOrthography(
   document: Document,
-  options: ConversionOptions = {},
+  options: ConversionOptions | PreparedOptions = {},
 ): Document {
   const transformed = applyResolvedGreekOrthography(
     document,
