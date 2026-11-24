@@ -170,10 +170,17 @@ output changed follows the rules of that output change.
 For errors, the class (`RangeError`, `TypeError`, `OptionError`,
 `CharacterScopeError`) and the documented condition are the contract; the
 message is not. The `diagnostics` of a `CharacterScopeError` follow the
-diagnostic rules above; the `path`, `received`, `accepted`, and `replacement` of
-an `OptionError` are part of the contract, and `replacement`, set only for keys
-and values that a `1.0.0` release candidate accepted, is the current path of the
-key at `path` or the current spelling of the value received there.
+diagnostic rules above; the `path`, `received`, and `accepted` of an
+`OptionError` are part of the contract.
+
+The `replacement` of an `OptionError` is a migration aid. It is set only for
+keys and values that a `1.0.0` release candidate accepted, and is the current
+path of the key at `path` or the current spelling of the value received there.
+The `1.0.0` release keeps these aids; a minor release may remove them. The
+error then keeps its class and its condition, an unknown key or value, and
+loses its `replacement` and the end of its message that names the current
+spelling. A major release that renames an option gives the same aid for the
+names of the previous major, under the same rule.
 
 ## Options
 

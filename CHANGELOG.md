@@ -61,6 +61,12 @@ change.
   of mark-up in angle brackets (`<super>`) as overlined, and gives the
   positions of the letters of a sign, of a breathing joined to its capital,
   and of the `<` and `>` of an overline.
+- **Stability policy.** The `replacement` of an `OptionError`, which names
+  the current spelling of a key or value that a release candidate accepted
+  (`orthography.eta` is now `transliteration.eta`), is a migration aid: the
+  `1.0.0` release keeps it, and a minor release may remove it. The error
+  keeps its class and condition. The guarantees and the API documentation say
+  so too.
 
 ### Fixed
 
