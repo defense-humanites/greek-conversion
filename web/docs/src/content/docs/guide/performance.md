@@ -31,7 +31,7 @@ One word, `Ἕλλησιν`, for each call:
 | `convert()` into Beta Code, with the defaults or a preset       | 1.0 µs |
 | `convert()` into transliteration, with the defaults or a preset | 1.7 µs |
 | `convert()` into transliteration, with other options            | 3.0 µs |
-| `convert()` from `core`, with options prepared once             | 1.4 µs |
+| `convert()` into transliteration, with options prepared once    | 1.4 µs |
 | `convertDetailed()` into transliteration                        | 5.0 µs |
 | `convert()` of a converter from `createConverter({})`           | 1.8 µs |
 
@@ -56,8 +56,10 @@ yours.
   each Greek one, the spellings the reader accepts) is computed once and
   kept. Options of any other form are checked and resolved at each call: a
   word takes about twice as long, a long text hardly longer. For many short
-  strings under such options, prepare them once with `prepareOptions()`
-  from `core`, as [Smaller bundles](/guide/smaller-bundles/) shows.
+  strings under such options, prepare them once with `prepareOptions()`,
+  and give the prepared options to each call, as
+  [Converters, options, and errors](/guide/converters/#prepare-options-once)
+  shows.
 - **Converters.** A converter from `createConverter()` with nothing to look
   for converts as fast as `convert()`. One bound to a preset checks each
   letter against the preset's repertoire, and one with aliases or characters

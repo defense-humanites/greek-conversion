@@ -7,6 +7,22 @@ change.
 
 ## [Unreleased]
 
+### Added
+
+- **Prepared options for the main entry point.** `prepareOptions()`, which
+  the `core` entry point exported, is exported by the main one too, with the
+  `PreparedOptions` type, and `convert()`, `convertDetailed()`, `reencode()`,
+  `parse()`, `parseDetailed()`, `encode()`, and `resolveConversionOptions()`
+  take prepared options in place of options, where they threw a
+  `TypeError`. Prepared once, options other than a preset are checked and
+  resolved once: a word converts about twice as fast, a clause 20 % faster.
+  The presets of the presets entry point are taken as well, and
+  `prepareOptions()` returns prepared options as they are. Prepared options
+  given as `source`, as a group, or to a converter, which binds its own
+  preset, and the copies that spreading makes of them, are still refused. A
+  bundle that imports `convert()` grows by 0.3 kB minified, 0.2 kB with
+  gzip.
+
 ### Changed
 
 - **ISO 843: the apostrophes read back.** Under the two ISO 843 presets, an

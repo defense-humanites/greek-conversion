@@ -822,7 +822,11 @@ export class Converter {
       typeof options === "object" && options !== null &&
       hasPreparedMark(options)
     ) {
-      throw preparedOptionsError(options, "conversion options");
+      throw preparedOptionsError(
+        options,
+        "conversion options",
+        "which a converter does not take",
+      );
     }
     return conversionProfiles(
       this.#preset === undefined
@@ -899,7 +903,11 @@ function assertConfiguration(configuration: unknown): void {
     typeof configuration === "object" && configuration !== null &&
     hasPreparedMark(configuration)
   ) {
-    throw preparedOptionsError(configuration, "the converter configuration");
+    throw preparedOptionsError(
+      configuration,
+      "the converter configuration",
+      "which a converter does not take",
+    );
   }
   assertKeys(configuration, CONFIGURATION_KEYS, "");
   const { aliases, characters, repertoire, exclude } = configuration as Record<

@@ -44,6 +44,7 @@ import type {
   ResolvedConversionOptions,
 } from "./options.ts";
 import { type ReadPositions, readSpans } from "./parsers/positions.ts";
+import type { PreparedOptions } from "./prepared.ts";
 import { conversionProfiles } from "./presets.ts";
 
 export { FORMATS } from "./model.ts";
@@ -133,6 +134,8 @@ export type {
   PresetReference,
 } from "./preset_metadata.ts";
 export { getPresetOptions, resolveConversionOptions } from "./presets.ts";
+export { prepareOptions } from "./prepare_options.ts";
+export type { PreparedOptions } from "./prepared.ts";
 export type { PresetOptions } from "./presets.ts";
 
 /**
@@ -147,6 +150,9 @@ export type { PresetOptions } from "./presets.ts";
  * SBL Handbook of Style, with the accents, iota subscript, diaeresis, and
  * quantity marks that the Handbook leaves out.
  *
+ * The defaults and each preset are checked and resolved once; other options,
+ * at each call, unless they are prepared once with {@link prepareOptions}.
+ *
  * @throws {TypeError} If `input` is not a string.
  * @throws {RangeError} If a format is unknown; an {@link OptionError} (a
  * `RangeError`) if a preset, an option key, or an option value is.
@@ -155,7 +161,7 @@ export function convert(
   input: string,
   from: Format,
   to: Format,
-  options: ConversionOptions = {},
+  options: ConversionOptions | PreparedOptions = {},
 ): string {
   return runConversion(input, from, to, options).output;
 }
@@ -189,7 +195,7 @@ export function convert(
 export function reencode(
   input: string,
   format: Format,
-  options: ConversionOptions = {},
+  options: ConversionOptions | PreparedOptions = {},
 ): string {
   return convert(input, format, format, options);
 }
@@ -217,7 +223,7 @@ export function convertDetailed(
   input: string,
   from: Format,
   to: Format,
-  options: ConversionOptions = {},
+  options: ConversionOptions | PreparedOptions = {},
 ): ConversionResult {
   assertTextInput(input);
   assertFormat(from);
@@ -259,7 +265,7 @@ function runConversion(
   input: string,
   from: Format,
   to: Format,
-  options: ConversionOptions,
+  options: ConversionOptions | PreparedOptions,
 ): { source: Document; output: string; resolved: ResolvedConversionOptions } {
   assertTextInput(input);
   assertFormat(from);

@@ -11,6 +11,7 @@ import {
 import { isGreekNumeralContext } from "./context.ts";
 import type { Document, Format, Letter } from "./model.ts";
 import { hasPreparedMark, PREPARED } from "./prepared_mark.ts";
+import { type PreparedOptions, preparedProfiles } from "./prepared.ts";
 import { sealProfile } from "./profile_cache.ts";
 
 /** Partial option fields contributed by one registered preset. */
@@ -157,7 +158,8 @@ export function getPresetOptions(preset: Preset): PresetOptions {
  * value counts, so `{ preset: "bnf-core", transliteration: { longVowels:
  * "circumflex" } }` is rejected too. The `source` profile is checked and
  * resolved as well, on its own, and left out of the result, which holds the
- * options that write the output.
+ * options that write the output. Prepared options give a copy of the options
+ * they write with.
  *
  * @throws {OptionError} If `options.preset` is not registered at runtime, if
  * an option key or value is unknown, or if two values are incompatible. An
@@ -165,9 +167,25 @@ export function getPresetOptions(preset: Preset): PresetOptions {
  * @throws {TypeError} If `options` or an option group has the wrong type.
  */
 export function resolveConversionOptions(
-  options: ConversionOptions = {},
+  options: ConversionOptions | PreparedOptions = {},
 ): ResolvedConversionOptions {
-  return resolveConversionProfiles(options).writing;
+  const prepared = preparedProfiles(options);
+  return prepared === undefined
+    ? resolveConversionProfiles(options as ConversionOptions).writing
+    : copyProfile(prepared.writing);
+}
+
+/** A copy of resolved options that the caller may change. */
+function copyProfile(
+  profile: ResolvedConversionOptions,
+): ResolvedConversionOptions {
+  return {
+    transliteration: { ...profile.transliteration },
+    greek: { ...profile.greek },
+    betaCode: { ...profile.betaCode },
+    text: { ...profile.text },
+    diacritics: { ...profile.diacritics },
+  };
 }
 
 /**
@@ -214,10 +232,15 @@ const SIMPLE_PROFILES = new Map<string, Profiles>();
  * Internal: not exported by an entry point.
  */
 export function conversionProfiles(
-  options: ConversionOptions = {},
+  options: ConversionOptions | PreparedOptions = {},
 ): Profiles {
+  // Prepared options hold their profiles, resolved once.
+  const prepared = preparedProfiles(options);
+  if (prepared !== undefined) return prepared;
   const key = simpleOptionsKey(options, true);
-  if (key === undefined) return resolveConversionProfiles(options);
+  if (key === undefined) {
+    return resolveConversionProfiles(options as ConversionOptions);
+  }
   let profiles = SIMPLE_PROFILES.get(key);
   if (profiles === undefined) {
     // Resolved from the key, not from the caller's object, which could
@@ -555,15 +578,17 @@ function validateConversionOptions(options: unknown, prefix: string): void {
 
 /**
  * The error for prepared options, or a copy of them, given where `expected`
- * is: the options of a conversion, its `source`, a group, or the
- * configuration of a converter. It says what to write instead: the name of
- * the preset, which the mark holds, or the options that were prepared.
+ * is: its `source`, a group, or the options or the configuration of a
+ * converter (`refusal` says why these do not take them). It says what to
+ * write instead: the name of the preset, which the mark holds, or the
+ * options that were prepared.
  *
  * Internal: `converter.ts` refuses them too.
  */
 export function preparedOptionsError(
   options: object,
   expected: string,
+  refusal = "which stand for all the options of a conversion",
 ): TypeError {
   const preset = (options as { [PREPARED]?: unknown })[PREPARED];
   const instead = typeof preset === "string"
@@ -573,8 +598,8 @@ export function preparedOptionsError(
     Object.getPrototypeOf(options) === Object.prototype
       ? `Expected ${expected}, received a copy of prepared options, ` +
         `which holds none of them: ${instead}.`
-      : `Expected ${expected}, received prepared options, which only ` +
-        `the functions of "@humanities/greek-conversion/core" take: ${instead}.`,
+      : `Expected ${expected}, received prepared options, ${refusal}: ` +
+        `${instead}.`,
   );
 }
 

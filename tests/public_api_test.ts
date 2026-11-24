@@ -21,6 +21,7 @@ test("the main runtime API stays deliberately small", () => {
     "getPresetMetadata",
     "getPresetOptions",
     "listPresetMetadata",
+    "prepareOptions",
     "reencode",
     "resolveConversionOptions",
   ]);

@@ -15,9 +15,10 @@
  *   `OptionError` alone weighs less than 1 kB, without the table of option
  *   values beside it in `options.js`.
  * - The sizes that the guide gives are those of the bundles, within 3 %, or
- *   0.05 kB for the smallest, and so are its percentages, within 2 points. A
- *   size that moves further is a module kept by mistake, more often than a
- *   change to write in the guide.
+ *   0.05 kB for the smallest, and so are its percentages, within 2 points;
+ *   the sizes it gives in whole kB, within 3 % or half a kB. A size that
+ *   moves further is a module kept by mistake, more often than a change to
+ *   write in the guide.
  *
  * Run with `node scripts/check_bundles.ts` after `npm run npm:build`;
  * `npm run npm:check` does both.
@@ -224,8 +225,18 @@ function documented(guide: string, row: string): number[][] {
   });
 }
 
-function compare(label: string, measured: number, written: number): void {
-  if (Math.abs(measured - written) > Math.max(0.03 * written, 0.05)) {
+/**
+ * Records a failure when a size the guide gives, `written`, differs from
+ * the size of the bundle by more than 3 %, or than `rounding`, the half of
+ * the unit it is written in.
+ */
+function compare(
+  label: string,
+  measured: number,
+  written: number,
+  rounding = 0.05,
+): void {
+  if (Math.abs(measured - written) > Math.max(0.03 * written, rounding)) {
     failures.push(
       `${label}: the guide gives ${written} kB, the bundle is ${measured} kB.`,
     );
@@ -285,6 +296,25 @@ try {
       "convertDetailed(), gzip",
       kB(references.convertDetailed.gzip),
       Number(intro[4]),
+    );
+  }
+  const opening = guide.match(
+    /about\s+(\d+) kB\s+minified\s+\((\d+) kB\s+with\s+gzip\)/,
+  );
+  if (opening === null) {
+    failures.push("The guide no longer opens with the size of convert().");
+  } else {
+    compare(
+      "convert(), rounded",
+      kB(references.convert.size),
+      +opening[1],
+      0.5,
+    );
+    compare(
+      "convert(), gzip, rounded",
+      kB(references.convert.gzip),
+      +opening[2],
+      0.5,
     );
   }
 
@@ -360,6 +390,33 @@ try {
     );
   }
 
+  // What the metadata of the presets adds to a bundle with one preset.
+  const metadata = await bundle(
+    [
+      ...presetCode("{ iso843Type2 }", "iso843Type2"),
+      `import { listPresetMetadata } from "${P}";`,
+      "console.log(listPresetMetadata());",
+    ].join("\n"),
+  );
+  const metadataSizes = [
+    ...guide.matchAll(
+      /metadata\s+of\s+(?:every\s+preset|the\s+presets),\s+about\s+(\d+) kB/g,
+    ),
+  ];
+  if (metadataSizes.length === 0) {
+    failures.push("The guide no longer gives the size of the metadata.");
+  }
+  for (const [, size] of metadataSizes) {
+    compare(
+      "The metadata of the presets",
+      kB(metadata.size - onePreset.size),
+      Number(size),
+      0.5,
+    );
+  }
+
+  /** The bundles of the table, by row and variant. */
+  const measured = new Map<string, { size: number; gzip: number }>();
   for (const scenario of SCENARIOS) {
     const reference = references[scenario.function];
     const written = documented(guide, scenario.row);
@@ -388,17 +445,56 @@ try {
     for (const [index, variant] of variants.entries()) {
       const label = `${scenario.row}, with ${variant.name}`;
       const result = await kept(label, variant.code, variant.absent);
+      measured.set(label, result);
       const [size, gzip, percent] = written[index] ?? [];
       if (percent === undefined) continue;
       compare(label, kB(result.size), size);
       compare(`${label}, gzip`, kB(result.gzip), gzip);
-      const measured = Math.round((result.gzip / reference.gzip - 1) * 100);
-      if (Math.abs(measured - percent) > 2) {
+      const gain = Math.round((result.gzip / reference.gzip - 1) * 100);
+      if (Math.abs(gain - percent) > 2) {
         failures.push(
-          `${label}: the guide gives ${percent} %, the bundle ${measured} %.`,
+          `${label}: the guide gives ${percent} %, the bundle ${gain} %.`,
         );
       }
     }
+  }
+
+  // The page of the opening, and what `prepareOptions()` adds to it.
+  const page = measured.get("Greek to transliteration, with a preset");
+  const prepared = measured.get(
+    "Greek to transliteration, with prepareOptions()",
+  );
+  const pageSizes = guide.match(
+    /one\s+preset\s+weighs\s+(\d+) kB\s+\((\d+) kB\s+with\s+gzip\)/,
+  );
+  const validation = guide.match(
+    /into\s+the\s+bundle,\s+about\s+(\d+\.\d) kB\s+\((\d+\.\d) kB\s+with\s+gzip\)/,
+  );
+  if (page === undefined || prepared === undefined) {
+    failures.push("The table has no row of Greek to transliteration.");
+  } else if (pageSizes === null || validation === null) {
+    failures.push(
+      "The guide no longer gives the size of the page with one preset, " +
+        "or what prepareOptions() adds to it.",
+    );
+  } else {
+    compare("The page with one preset", kB(page.size), +pageSizes[1], 0.5);
+    compare(
+      "The page with one preset, gzip",
+      kB(page.gzip),
+      +pageSizes[2],
+      0.5,
+    );
+    compare(
+      "What prepareOptions() adds",
+      kB(prepared.size - page.size),
+      +validation[1],
+    );
+    compare(
+      "What prepareOptions() adds, gzip",
+      kB(prepared.gzip - page.gzip),
+      +validation[2],
+    );
   }
 } finally {
   await rm(directory, { recursive: true, force: true });
