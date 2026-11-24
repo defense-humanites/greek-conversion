@@ -36,8 +36,10 @@ protects these behaviors.
   An unknown option key, value, or preset, or two values that cannot be
   combined, throws an `OptionError`. It is a `RangeError` that names the option
   (`path`), what it received (`received`), what it accepts (`accepted`), and,
-  for a key or value that an earlier release knew, its current spelling
-  (`replacement`). An unknown format throws a plain `RangeError`, an option
+  for a key or value that a release candidate knew, its current spelling
+  (`replacement`), an aid that a minor release after `1.0.0` may stop giving
+  (see the [stability policy](stability.md#diagnostics-and-errors)). An
+  unknown format throws a plain `RangeError`, an option
   group of the wrong type or an input that is not a string a `TypeError`. The
   functions of the `core` entry point take readers, writers, and prepared
   options, which the presets entry point exports and `prepareOptions()`
