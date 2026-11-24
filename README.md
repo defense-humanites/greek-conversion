@@ -59,32 +59,6 @@ npx jsr add @humanities/greek-conversion   # JSR, which gives the command for ea
 
 The package is ESM-only and ships its own type declarations.
 
-## Example
-
-```ts
-import {
-  convert,
-  convertDetailed,
-  reencode,
-} from "@humanities/greek-conversion";
-
-// Beta Code, as the TLG writes it
-convert("*(/ELLHSIN E)GE/NETO", "beta-code", "greek");
-// → Ἕλλησιν ἐγένετο
-
-// Ancient Greek, with every accent and breathing, and nothing lost
-const res = convertDetailed("Ἕλλησιν ἐγένετο", "greek", "transliteration");
-res.output; // → Héllēsin egéneto
-res.lossy; // → false
-
-// Modern Greek, from polytonic to monotonic, as passports write it
-reencode("Hi ’Athína ’eînai hi protévousa", "transliteration", {
-  preset: "iso-843-type-2",
-  greek: { accentuation: "monotonic" },
-});
-// → I Athína eínai i protévousa
-```
-
 ## Main functions
 
 | You want to…                                                             | Use                                                                   |
@@ -95,6 +69,8 @@ reencode("Hi ’Athína ’eînai hi protévousa", "transliteration", {
 | Bind a preset, add characters, or restrict the repertoire                | `createConverter(configuration)`                                      |
 | Inspect or edit the parsed text itself                                   | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
 | Bundle only the formats and presets a web page uses                      | `convert()` from `@humanities/greek-conversion/core`                  |
+
+## Examples
 
 ### `convert()`
 
