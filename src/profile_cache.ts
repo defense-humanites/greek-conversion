@@ -61,8 +61,10 @@ export function perProfile<T>(
  * that `keyOf` reads from the options: the value is also kept for each key,
  * so that options that are not sealed, resolved anew at each conversion,
  * find the value derived for the same key by an earlier one, and sealed
- * profiles with the same key share it. `keyOf` must cover every input of
- * `build`, and give few keys: they are kept for as long as the process runs.
+ * profiles with the same key share it. `keyOf` must cover every option the
+ * value depends on: what `build` reads, and, for a cache that callers fill,
+ * what they read to fill it (`latinMarkStrings()`, in `encode.ts`). It must
+ * give few keys: they are kept for as long as the process runs.
  */
 export function perKey<T>(
   keyOf: (options: ConversionOptions) => string,
