@@ -7,12 +7,12 @@ import {
   followsNasalGamma,
   hasQuantity,
   isAuEuOuAt,
+  isBoundaryTransparent,
   isDiphthongAt,
   isGreekNumeralContext,
   isVowel,
   isVowelUpsilonAt,
   isWordInitial,
-  marksVowelRun,
 } from "../context.ts";
 import {
   diacriticBit,
@@ -182,8 +182,9 @@ function readTransliteration(
   const trie = transliterationTrie(options);
   const contextualY = new Set<number>();
   // Upsilons read from a contextual `y` whose separation from the preceding
-  // vowel is carried by a breathing on that vowel rather than by a diaeresis.
-  const separatedByBreathing = new Set<number>();
+  // vowel is carried by a breathing on that vowel rather than by a diaeresis:
+  // the tokens, which readSpacingMarks() may move.
+  const separatedByBreathing = new Set<Token>();
   // The omegas read from an `o` before `y` (ISO 843 Type 2): see below.
   const omegaBeforeY: number[] = [];
   const transliteration = options.transliteration;
@@ -203,8 +204,9 @@ function readTransliteration(
   // writer does, the apostrophe parts them from the next vowel (`ta’ys` is
   // τἀυς), which a `y` after them then does not part again.
   const splitByCoronis = new Set<number>();
-  // The vowels that the apostrophe before them gave a smooth breathing.
-  const smoothedByApostrophe = new Set<number>();
+  // The vowels that the apostrophe before them gave a smooth breathing: the
+  // tokens, which readSpacingMarks() may move.
+  const smoothedByApostrophe = new Set<Token>();
   const systematicRho = transliteration?.rho === "systematic";
   const circumflexAccent = transliteration?.circumflexAccent === "circumflex";
   // Without a length mark, e and o are epsilon and omicron, and a circumflex
@@ -233,8 +235,8 @@ function readTransliteration(
     if (starts !== undefined) starts.push(i);
 
     if (
-      smoothApostrophe && chars[i] === "\u2019" &&
-      out.at(-1)?.kind !== "grapheme" && startsVowel(lowered, i + 1, trie)
+      smoothApostrophe && chars[i] === "\u2019" && !followsLetter(out) &&
+      startsVowel(lowered, i + 1, trie)
     ) {
       smooth = true;
       i++;
@@ -323,12 +325,13 @@ function readTransliteration(
 
       if (
         coronisApostrophe && chars[i] === "\u2019" &&
-        startsLetter(chars, lowered, i + 1, trie)
+        startsLetter(chars, lowered, i + 1, trie, lunateC)
       ) {
         const previous = out.at(-1);
         if (
-          previous?.kind === "grapheme" && isVowel(previous.letter) &&
-          !marksVowelRun(out, out.length - 1)
+          previous?.kind === "grapheme" &&
+          !previous.diacritics.has("coronis") &&
+          takesCoronisApostrophe(out, out.length - 1)
         ) {
           previous.diacritics = withDiacritic(previous.diacritics, "coronis");
           splitByCoronis.add(out.length - 1);
@@ -341,8 +344,10 @@ function readTransliteration(
 
       if (chars[i] === "\u1FBD") {
         const previous = out.at(-1);
+        // Not on the vowel of a smooth breathing, which Greek writes alike.
         if (
-          previous?.kind === "grapheme" && isVowel(previous.letter)
+          previous?.kind === "grapheme" && isVowel(previous.letter) &&
+          !previous.diacritics.has("smooth")
         ) {
           previous.diacritics = withDiacritic(previous.diacritics, "coronis");
           // No token: the coronis joins the previous one's span.
@@ -395,7 +400,8 @@ function readTransliteration(
     }
 
     let marks = rough ? ROUGH : smooth ? SMOOTH : 0;
-    if (smooth) smoothedByApostrophe.add(out.length);
+    // Whether the breathing of the vowel before parts this one from it.
+    let separated = false;
     let structuralCircumflex = false;
     // Where an acute was read, for a BnF keraia.
     let acuteAt = -1;
@@ -442,18 +448,20 @@ function readTransliteration(
         (lowered[i] === "v" || lowered[i] === "f")
       ) {
         // `εῦ`, whose accent ISO 843 Type 2 moves onto the e (note 10).
+        const epsilon = ownedGrapheme(
+          letter,
+          roughUppercase || source !== sourceLower,
+          diacriticsFromMask(marks & ~CIRCUMFLEX),
+        );
         out.push(
-          ownedGrapheme(
-            letter,
-            roughUppercase || source !== sourceLower,
-            diacriticsFromMask(marks & ~CIRCUMFLEX),
-          ),
+          epsilon,
           ownedGrapheme(
             "upsilon",
             chars[i] !== lowered[i],
             diacriticsFromMask(CIRCUMFLEX),
           ),
         );
+        if (smooth) smoothedByApostrophe.add(epsilon);
         if (starts !== undefined) starts.push(i);
         i++;
         continue;
@@ -465,7 +473,7 @@ function readTransliteration(
     // or `oy` with an accent on the `o` or a diaeresis on the `y` (note 9),
     // so an `o` without marks, or with a coronis or an overline only
     // (crasis, `τὠυ`; an abbreviation), before a `y` without diaeresis is
-    // that omega.
+    // that omega. The apostrophe of a smooth breathing precedes the group.
     if (
       letter === "upsilon" && omegaAsO && sourceLower === "y" &&
       (marks & DIAERESIS) === 0
@@ -474,11 +482,14 @@ function readTransliteration(
       if (
         previous?.kind === "grapheme" && previous.letter === "omicron" &&
         [...previous.diacritics].every((mark) =>
-          mark === "coronis" || mark === "overline"
+          mark === "coronis" || mark === "overline" ||
+          mark === "smooth" && smoothedByApostrophe.has(previous)
         )
       ) {
         previous.letter = "omega";
         omegaBeforeY.push(out.length - 1);
+        // The pair is no vowel group: the breathing stays on the omega.
+        if (smoothedByApostrophe.has(previous)) separated = true;
       }
     }
 
@@ -491,6 +502,7 @@ function readTransliteration(
       const pair = latinPair(
         out.at(-1),
         grapheme(letter, false, diacriticsFromMask(marks)),
+        smoothedByApostrophe.has(out[out.length - 1]),
       );
       // Whether the pair, as a diphthong, would be written otherwise than
       // with y (u, or v and f under ISO 843 Type 2).
@@ -510,9 +522,9 @@ function readTransliteration(
         const breathingWillSit = first.kind === "grapheme" &&
           isWordInitial(out, out.length - 1) &&
           (first.diacritics.has("rough") ||
-            smoothedByApostrophe.has(out.length - 1) ||
+            smoothedByApostrophe.has(first) ||
             infersSmoothBreathing(options));
-        if (breathingWillSit) separatedByBreathing.add(out.length);
+        if (breathingWillSit) separated = true;
         else marks |= DIAERESIS;
       }
     }
@@ -528,6 +540,7 @@ function readTransliteration(
       const pair = latinPair(
         out.at(-1),
         grapheme(letter, false, diacriticsFromMask(marks)),
+        smoothedByApostrophe.has(out[out.length - 1]),
       );
       if (isDiphthongAt(pair, 0)) {
         marks |= DIAERESIS;
@@ -544,12 +557,15 @@ function readTransliteration(
 
     const keraia = bnfKeraia && (marks & ACUTE) !== 0 && !isVowel(letter);
     if (keraia) marks &= ~ACUTE;
-    out.push(ownedGrapheme(
+    const token = ownedGrapheme(
       letter,
       roughUppercase || source !== sourceLower,
       diacriticsFromMask(marks),
       lunateSigma ? "lunate-sigma" : undefined,
-    ));
+    );
+    out.push(token);
+    if (smooth) smoothedByApostrophe.add(token);
+    if (separated) separatedByBreathing.add(token);
     if (keraia) {
       out.push(literal(DEXIA_KERAIA));
       if (starts !== undefined) starts.push(acuteAt);
@@ -582,7 +598,7 @@ function readTransliteration(
     const next = out[index + 1];
     if (
       omega.kind === "grapheme" && next?.kind === "grapheme" &&
-      isGreekNumeralContext(out, index)
+      !omega.diacritics.has("coronis") && isGreekNumeralContext(out, index)
     ) {
       omega.letter = "omicron";
       next.diacritics = withDiacritic(next.diacritics, "diaeresis");
@@ -791,9 +807,47 @@ function startsLetter(
   lowered: readonly string[],
   start: number,
   trie: Trie<Letter>,
+  lunateC: boolean,
 ): boolean {
   return chars[start] === "\u02BC" ||
+    markedArchaicLetter(chars, lowered, start) !== undefined ||
+    lunateC && lowered[start] === "c" ||
     lowered[start] !== "h" && trie.longest(lowered, start) !== undefined;
+}
+
+/**
+ * Whether the vowel at `index` may bear the coronis that ISO 843 writes as an
+ * apostrophe after it: the run of vowels it ends follows a consonant, as in a
+ * crasis (`κἀγώ`), and bears no breathing, nor a coronis before it. Greek
+ * writes a breathing and a coronis alike, and a vowel group bears one: at the
+ * start of a word, the mark is a breathing.
+ */
+function takesCoronisApostrophe(
+  tokens: readonly Token[],
+  index: number,
+): boolean {
+  for (let at = index; at >= 0; at--) {
+    const token = tokens[at];
+    // A mark the reader kept apart belongs to the letter before it.
+    if (isBoundaryTransparent(token)) continue;
+    if (token.kind !== "grapheme") return false;
+    if (!isVowel(token.letter)) return at < index;
+    if (
+      token.diacritics.has("rough") || token.diacritics.has("smooth") ||
+      at < index && token.diacritics.has("coronis")
+    ) return false;
+  }
+  return false;
+}
+
+/**
+ * Whether the last token read, but the combining marks after it, is a letter:
+ * an apostrophe after it does not start a word.
+ */
+function followsLetter(out: readonly Token[]): boolean {
+  let index = out.length - 1;
+  while (isBoundaryTransparent(out[index])) index--;
+  return out[index]?.kind === "grapheme";
 }
 
 function startsVowel(
@@ -830,8 +884,8 @@ function resolveLongVowel(
 function inferInitialBreathings(
   tokens: Token[],
   options: ConversionOptions,
-  separatedByBreathing: ReadonlySet<number>,
-  smoothedByApostrophe: ReadonlySet<number> = new Set(),
+  separatedByBreathing: ReadonlySet<Token>,
+  smoothedByApostrophe: ReadonlySet<Token> = new Set(),
 ) {
   const infersSmooth = infersSmoothBreathing(options);
   let wordStart = true;
@@ -869,19 +923,20 @@ function inferInitialBreathings(
     wordStart = false;
 
     if (!isVowel(token.letter)) continue;
-    if (isGreekNumeralContext(tokens, i)) {
+    // The apostrophe of a smooth breathing is written in a numeral as well.
+    const apostrophe = smoothedByApostrophe.has(token);
+    if (!apostrophe && isGreekNumeralContext(tokens, i)) {
       // A numeral takes no breathing: a `y` that a smooth breathing was to
       // separate from this vowel keeps its separation as a diaeresis.
       const next = tokens[i + 1];
       if (
-        separatedByBreathing.has(i + 1) && !token.diacritics.has("rough") &&
-        next?.kind === "grapheme"
+        next?.kind === "grapheme" && separatedByBreathing.has(next) &&
+        !token.diacritics.has("rough")
       ) next.diacritics = withDiacritic(next.diacritics, "diaeresis");
       continue;
     }
 
-    const apostrophe = smoothedByApostrophe.has(i);
-    const targetIndex = separatedByBreathing.has(i + 1)
+    const targetIndex = separatedByBreathing.has(tokens[i + 1])
       ? i
       : i + breathingTarget(latinPair(token, tokens[i + 1], apostrophe), 0);
     const target = tokens[targetIndex];
@@ -895,7 +950,11 @@ function inferInitialBreathings(
       ? "rough"
       : undefined;
     if (breathing !== undefined) {
-      if (target !== token && !hasBreathing(target)) {
+      // A vowel bears a breathing or a coronis (`’ai᾽u`).
+      if (
+        target !== token && !hasBreathing(target) &&
+        !(apostrophe && target.diacritics.has("coronis"))
+      ) {
         token.diacritics = withoutDiacritic(token.diacritics, breathing);
         target.diacritics = withDiacritic(target.diacritics, breathing);
         placed = targetIndex;

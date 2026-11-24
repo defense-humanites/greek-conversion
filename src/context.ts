@@ -280,26 +280,6 @@ export function isVowel(letter: Letter): boolean {
 }
 
 /**
- * Whether a vowel of the run of vowels that ends at `index` bears a breathing
- * or a coronis, which Greek writes alike: a vowel group bears one. Under
- * ISO 843, an apostrophe after such a group is not its coronis.
- */
-export function marksVowelRun(
-  tokens: readonly Token[],
-  index: number,
-): boolean {
-  for (let at = index; at >= 0; at--) {
-    const token = tokens[at];
-    if (token.kind !== "grapheme" || !isVowel(token.letter)) return false;
-    if (
-      token.diacritics.has("rough") || token.diacritics.has("smooth") ||
-      token.diacritics.has("coronis")
-    ) return true;
-  }
-  return false;
-}
-
-/**
  * A quantity sign in transliteration preserves metrical information but does
  * not say whether a word-initial vowel bore a smooth breathing.  In
  * particular, this lets forms such as `ā` round-trip as `ᾱ`, rather than

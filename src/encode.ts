@@ -25,7 +25,6 @@ import {
   isVowelUpsilonAt,
   isWordFinal,
   isWordInitial,
-  marksVowelRun,
   precedesVoicedSound,
   type QuotationContext,
   roughDiphthongStart,
@@ -1114,13 +1113,7 @@ export function encodeTransliteration(
       );
   });
   if (apostrophes !== undefined) {
-    writeApostrophes(
-      pieces,
-      rendered,
-      apostrophes,
-      smoothApostrophe,
-      coronisApostrophe,
-    );
+    writeApostrophes(pieces, rendered, apostrophes, options);
   }
   return (written === undefined ? pieces.join("") : joinPieces(pieces, written))
     .normalize("NFC");
@@ -1782,18 +1775,26 @@ const MODIFIER_APOSTROPHE = "\u02BC";
  * Writes U+02BC for each apostrophe of the source that would read back as
  * the smooth breathing or the coronis ISO 843 writes as U+2019: at the start
  * of a word, before a vowel (`smoothBreathing: "apostrophe"`), or after a
- * vowel whose group bears no breathing, before a letter other than the `h`
- * of a rough breathing (`coronis: "apostrophe"`). U+02BC reads back as the
- * apostrophe it is. The test is made on the text around it, as the reader
- * sees it, from the last apostrophe: one may follow another.
+ * vowel that may bear a coronis (takesCoronisApostrophe()), before a letter
+ * other than the `h` of a rough breathing (`coronis: "apostrophe"`). U+02BC
+ * reads back as the apostrophe it is.
+ *
+ * The test is made from the last apostrophe, since one may follow another,
+ * and on the text written around it, as the reader sees it: whether a vowel
+ * is written as one, an `h` before the next. Whether that text is a letter,
+ * and the breathings of the vowel group, are taken from the document, which
+ * the text reads back as but for letters kept as they were.
  */
 function writeApostrophes(
   pieces: string[],
   document: Document,
   apostrophes: readonly number[],
-  smoothApostrophe: boolean,
-  coronisApostrophe: boolean,
+  options: ConversionOptions,
 ): void {
+  const transliteration = options.transliteration;
+  const smoothApostrophe = transliteration?.smoothBreathing === "apostrophe";
+  const coronisApostrophe = transliteration?.coronis === "apostrophe";
+  const lunateC = transliteration?.lunateSigma === "c";
   for (let rank = apostrophes.length - 1; rank >= 0; rank--) {
     const index = apostrophes[rank];
     if (pieces[index][0] !== APOSTROPHE) continue;
@@ -1804,22 +1805,46 @@ function writeApostrophes(
     const previous = document[before];
     const written = before < 0 ? "" : pieces[before];
     const next = baseLetter(pieces[after]);
+    // The smooth breathing starts a word: not after a letter and its marks.
+    let letter = before;
+    while (isBoundaryTransparent(document[letter])) letter--;
     const marks = previous?.kind !== "grapheme"
-      ? smoothApostrophe && LATIN_VOWEL.test(next)
+      ? smoothApostrophe && document[letter]?.kind !== "grapheme" &&
+        LATIN_VOWEL.test(next)
       : written.endsWith(APOSTROPHE)
       // After the apostrophe of a coronis, U+02BC lets it read back as one;
       // where it cannot, it reads as an apostrophe, which this one follows.
       ? coronisApostrophe &&
-          takesCoronis(document, before, written.slice(0, -1)) ||
+          takesCoronis(
+            document,
+            pieces,
+            before,
+            written.slice(0, -1),
+            options,
+          ) ||
         smoothApostrophe && LATIN_VOWEL.test(next)
-      : coronisApostrophe && takesCoronis(document, before, written) &&
+      : coronisApostrophe &&
+        takesCoronis(document, pieces, before, written, options) &&
         (next === MODIFIER_APOSTROPHE ||
-          document[after]?.kind === "grapheme" && /^[a-gi-z]$/i.test(next));
+          document[after]?.kind === "grapheme" &&
+            startsLetter(pieces[after], lunateC));
     if (marks) pieces[index] = MODIFIER_APOSTROPHE + pieces[index].slice(1);
   }
 }
 
 const LATIN_VOWEL = /^[aeiouy]$/i;
+
+/**
+ * Whether `text` starts with a letter that the reader reads as one, but the
+ * `h` of a rough breathing: `c` starts one in `ch`, as a stigma with its mark
+ * after it, or as a lunate sigma under `lunateSigma: "c"`.
+ */
+function startsLetter(text: string, lunateC: boolean): boolean {
+  const decomposed = text.normalize("NFD");
+  return /^[abd-gi-z]/i.test(decomposed) ||
+    /^c(?:h|\u0302|\u0304)/i.test(decomposed) ||
+    lunateC && /^c/i.test(decomposed);
+}
 
 /** The first character of `text` without its marks. */
 function baseLetter(text: string | undefined): string {
@@ -1832,20 +1857,90 @@ function lastLetter(text: string): string {
 }
 
 /**
- * Whether an apostrophe after the letter at `index`, written `written`, reads
- * back as its coronis before a letter: after a vowel written as one, whose
- * group bears no breathing, and no coronis before it.
+ * Whether an apostrophe after the letter at `index`, written `written`,
+ * reads back as its coronis before a letter, as the reader tells it
+ * (takesCoronisApostrophe()): after a vowel whose run of vowels follows a
+ * consonant and bears no breathing, nor a coronis before it, each letter as
+ * the text reads back. An upsilon written `v` or `f` reads back as a vowel
+ * where beta and phi are not written so, or after the `ê` that takes its
+ * circumflex (ISO 843 Type 2).
  */
 function takesCoronis(
   document: Document,
+  pieces: readonly string[],
   index: number,
   written: string,
+  options: ConversionOptions,
 ): boolean {
-  const token = document[index];
-  return token.kind === "grapheme" && isVowel(token.letter) &&
-    !token.diacritics.has("rough") && !token.diacritics.has("smooth") &&
-    LATIN_VOWEL.test(lastLetter(written)) &&
-    !marksVowelRun(document, index - 1);
+  const transliteration = options.transliteration;
+  const vowelUpsilonVF = transliteration?.upsilon === "y-with-ou-v-f";
+  const upsilonLetters = !vowelUpsilonVF
+    ? ""
+    : (transliteration.beta === "v" ? "" : "v") +
+      (transliteration.phi === "f" ? "" : "f");
+  const movedCircumflex = vowelUpsilonVF &&
+    transliteration.longVowels === "omit" && transliteration.eta === "i";
+  for (let at = index; at >= 0; at--) {
+    const token = document[at];
+    if (isBoundaryTransparent(token)) continue;
+    if (token.kind !== "grapheme") return false;
+    if (at < index && token.diacritics.has("coronis")) return false;
+    const letter = lastLetter(at === index ? written : pieces[at])
+      .toLowerCase();
+    const vowel = isVowel(token.letter) &&
+      (LATIN_VOWEL.test(letter) ||
+        token.letter === "upsilon" && (letter === "v" || letter === "f") &&
+          (upsilonLetters.includes(letter) ||
+            movedCircumflex && at > 0 &&
+              /e\p{M}*\u0302\p{M}*$/iu.test(pieces[at - 1].normalize("NFD"))));
+    if (!vowel) {
+      // A consonant written as one the reader reads (`ç̄` is not).
+      let piece = at;
+      while (piece > 0 && pieces[piece] === "") piece--;
+      return at < index &&
+        startsLetter(pieces[piece], transliteration?.lunateSigma === "c");
+    }
+    if (
+      token.diacritics.has("smooth") ||
+      token.diacritics.has("rough") &&
+        roughReadsBack(document, pieces, at, options)
+    ) return false;
+  }
+  return false;
+}
+
+/**
+ * Whether the reader reads the rough breathing of the vowel at `index`: its
+ * `h`, which starts the piece of the vowel or of the group it ends, does not
+ * join the consonant before into a letter, as `th`, `ph` (but under
+ * `phi: "f"`), `ch` (but where `ch` is a lunate sigma and a rough
+ * breathing), `kh` (under `chi: "kh"`), or `rh`, a rough rho.
+ */
+function roughReadsBack(
+  document: Document,
+  pieces: readonly string[],
+  index: number,
+  options: ConversionOptions,
+): boolean {
+  const transliteration = options.transliteration;
+  const khChi = transliteration?.chi === "kh";
+  const joining = "tr" + (transliteration?.phi === "f" ? "" : "p") +
+    (khChi ? "k" : "") +
+    (khChi && transliteration.lunateSigma === "c" ? "" : "c");
+  for (let at = index; at >= 0; at--) {
+    if (/^h/i.test(pieces[at])) {
+      let before = at - 1;
+      while (before >= 0 && pieces[before] === "") before--;
+      // A mark after the consonant parts it from the `h` (`c̄h`).
+      return before < 0 ||
+        !joining.includes(
+          pieces[before].normalize("NFD").slice(-1).toLowerCase(),
+        );
+    }
+    const token = document[at];
+    if (token.kind !== "grapheme" || !isVowel(token.letter)) return false;
+  }
+  return false;
 }
 
 /**
@@ -1967,13 +2062,29 @@ function writesSeparationDiaeresis(
   }
   if (written("rough") && isWordInitial(document, index - 1)) return false;
   // The reader infers a smooth breathing at the start of a word, but not in
-  // a numeral, which takes none.
+  // a numeral, which takes none. It reads one written in place, and the
+  // apostrophe before a word as the breathing of its first vowel (`’ay`),
+  // but in a numeral, or for an `o` before `y` where omega is written `o`
+  // that does not read back as the omega of `’oy` (ὠυ).
+  const smoothBreathing = options.transliteration?.smoothBreathing;
   if (
     first.diacritics.has("smooth") &&
     (infersSmoothBreathing(options) &&
         !isGreekNumeralContext(document, index - 1) ||
-      (options.transliteration?.smoothBreathing === "greek" &&
-        written("smooth")))
+      written("smooth") &&
+        (smoothBreathing === "greek" ||
+          smoothBreathing === "apostrophe" &&
+            isWordInitial(document, index - 1) &&
+            !isGreekNumeralContext(document, index - 1) &&
+            (upsilon !== "y-with-ou-v-f" ||
+              options.transliteration?.longVowels !== "omit" ||
+              unmarked[0].kind !== "grapheme" ||
+              unmarked[0].letter !== "omicron" ||
+              first.letter === "omega" &&
+                [...first.diacritics].every((mark) =>
+                  mark === "smooth" || mark === "coronis" ||
+                  mark === "overline"
+                ))))
   ) return false;
   return true;
 }

@@ -34,10 +34,20 @@ const MIDDLE_DOT =
 const DETAILED_TO_GREEK = "convertDetailed(transliteration → greek)";
 const ISO_APOSTROPHE =
   "Under ISO 843, the apostrophe of a smooth breathing or a coronis reads back as the mark, which convertDetailed() no longer reports lost.";
+const ISO_HIATUS =
+  "Under ISO 843, the apostrophe of a smooth breathing reads back on the first vowel of a pair whose hiatus `y` marks, as `h` does: no diaeresis is written.";
 const SOURCE_APOSTROPHE =
   "An apostrophe of the source where ISO 843 writes a smooth breathing or a coronis is written U+02BC, which reads back as an apostrophe.";
 const MONOTONIC_EVERY_FORMAT =
   "Monotonic accentuation applies to Beta Code and transliteration, which spell the monotonic text that Greek output writes.";
+
+/** The sets of options that write or read ISO 843, as a difference names them. */
+const ISO_LABELS = [
+  "iso-843-type-1",
+  "iso-843-type-2",
+  "source",
+  'random 8: {"preset":"iso-843-type-1","transliteration":{"nasalGamma":"nasal-medial-kappa","upsilon":"u"},"diacritics":{"overline":"preserve"},"source":{"preset":"iso-843-type-2"}}',
+];
 
 /** The changes of output that are meant. */
 export const MEANT: readonly MeantChange[] = [
@@ -282,19 +292,24 @@ export const MEANT: readonly MeantChange[] = [
     call: DETAILED_TO_GREEK,
     reason: MIDDLE_DOT,
   },
-  { input: "+0h||'hd", reason: SOURCE_APOSTROPHE },
-  { input: "7/0r#('in1b", reason: SOURCE_APOSTROPHE },
-  { input: "m=l''o", reason: SOURCE_APOSTROPHE },
-  { input: "\u0307Χ\u0308Ω\u1FBFζ", reason: SOURCE_APOSTROPHE },
-  { input: "\u0345\u02BCΑ\u0313\u0304a", reason: SOURCE_APOSTROPHE },
-  {
-    input: "\u2009’\u20DD\u1FBDυ͵ϕ\u0304Ϛa—φ5\u0323",
-    reason: SOURCE_APOSTROPHE,
-  },
-  { input: "x\u0308ddùŌôf,'ìbf", reason: SOURCE_APOSTROPHE },
-  { input: "ôòe'éò1\u0314ĭ3Ē", reason: SOURCE_APOSTROPHE },
-  { input: "\u0313éz·BúG\u0300\u0300Tàu'a", reason: SOURCE_APOSTROPHE },
-  { input: "\u0307\u0307\u00A0\u00A0’a", reason: SOURCE_APOSTROPHE },
+  ...isoInputs(SOURCE_APOSTROPHE, [
+    "+0h||'hd",
+    "7/0r#('in1b",
+    "m=l''o",
+    "\u0307Χ\u0308Ω\u1FBFζ",
+    "\u0345\u02BCΑ\u0313\u0304a",
+    "\u2009’\u20DD\u1FBDυ͵ϕ\u0304Ϛa—φ5\u0323",
+    "x\u0308ddùŌôf,'ìbf",
+    "ôòe'éò1\u0314ĭ3Ē",
+    "\u0313éz·BúG\u0300\u0300Tàu'a",
+    "\u0307\u0307\u00A0\u00A0’a",
+  ]),
+  ...isoInputs(ISO_HIATUS, [
+    "ἀυτμή",
+    "ἀυτμή, (1)",
+    "a)utmh/",
+    "a)utmh/, (1]1",
+  ]),
   ...isoApostropheChanges(),
   ...monotonicCalls().map((call) => ({
     label: "monotonic, decomposed",
@@ -303,20 +318,21 @@ export const MEANT: readonly MeantChange[] = [
   })),
 ];
 
+/** Changes of these inputs, under the sets of options of ISO 843 only. */
+function isoInputs(reason: string, inputs: readonly string[]): MeantChange[] {
+  return inputs.flatMap((input) =>
+    ISO_LABELS.map((label) => ({ input, label, reason }))
+  );
+}
+
 /**
  * The losses that convertDetailed() into ISO 843 no longer reports, under
  * the sets of options that write the smooth breathing and the coronis as an
  * apostrophe, as a difference names them.
  */
 function isoApostropheChanges(): MeantChange[] {
-  const labels = [
-    "iso-843-type-1",
-    "iso-843-type-2",
-    "source",
-    'random 8: {"preset":"iso-843-type-1","transliteration":{"nasalGamma":"nasal-medial-kappa","upsilon":"u"},"diacritics":{"overline":"preserve"},"source":{"preset":"iso-843-type-2"}}',
-  ];
   const changes: MeantChange[] = [];
-  for (const label of labels) {
+  for (const label of ISO_LABELS) {
     for (const from of ["greek", "beta-code", "transliteration"]) {
       for (
         const call of ["convertDetailed", "createConverter().convertDetailed"]
