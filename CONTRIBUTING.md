@@ -67,8 +67,8 @@ a temporary worktree. `--aa` measures a copy of the first version as a
 control:
 
 ```sh
-npm run bench:ab -- --aa v1.0.0-rc.12 .
-npm run bench:ab -- --mode word --from beta-code --to greek v1.0.0-rc.12 .
+npm run bench:ab -- --aa v1.0.0-rc.13 .
+npm run bench:ab -- --mode word --from beta-code --to greek v1.0.0-rc.13 .
 ```
 
 The modes are `long` (Thucydides 1.1–10), `short` (its first clause),
