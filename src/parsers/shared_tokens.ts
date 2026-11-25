@@ -1,5 +1,4 @@
 import { ALPHABET } from "../alphabet.ts";
-import { isTextLetter, textLetter } from "../context.ts";
 import {
   diacriticsFromMask,
   type GlyphVariant,
@@ -77,7 +76,6 @@ const FLAGS = 32;
 const graphemes = new Map<number, Grapheme>();
 const unitLiterals = new Map<number, Literal>();
 const literals = new Map<string, Literal>();
-const textLetters = new Map<string, Literal>();
 
 /** Returns the shared grapheme for a letter index, flags and mark mask. */
 export function sharedGrapheme(
@@ -121,39 +119,16 @@ export function sharedLiteral(value: string): Literal {
   return token;
 }
 
-/**
- * A literal that a reader keeps as text, marked as a letter of its word when
- * it writes a letter (see `isTextLetter()`) and `letter` allows it, and
- * shared with `share`.
- */
-export function textLiteral(
-  value: string,
-  share: boolean,
-  letter = true,
-): Literal {
-  if (!letter || !isTextLetter(value)) {
-    return share ? sharedLiteral(value) : literal(value);
-  }
-  if (!share) return textLetter(value);
-  const known = textLetters.get(value);
-  if (known !== undefined) return known;
-  const token = textLetter(value);
-  if (textLetters.size < SHARED_LITERAL_LIMIT) textLetters.set(value, token);
-  return token;
-}
-
 /** Number of cached tokens of each kind, for tests. */
 export function sharedTokenCounts(): {
   graphemes: number;
   unitLiterals: number;
   literals: number;
-  textLetters: number;
 } {
   return {
     graphemes: graphemes.size,
     unitLiterals: unitLiterals.size,
     literals: literals.size,
-    textLetters: textLetters.size,
   };
 }
 
@@ -165,5 +140,4 @@ export function resetSharedTokens(): void {
   graphemes.clear();
   unitLiterals.clear();
   literals.clear();
-  textLetters.clear();
 }

@@ -119,16 +119,16 @@ try {
 Bundles of the conversions below, made with esbuild for this release,
 minified, then with gzip. The percentage compares the size with gzip to that
 of the same conversion imported from the main entry point: `convert()`
-(85.6 kB, 28.0 kB with gzip), or `convertDetailed()` (95.6 kB, 31.3 kB).
+(85.7 kB, 28.0 kB with gzip), or `convertDetailed()` (95.6 kB, 31.3 kB).
 
 | Conversions                                   | With a preset or the defaults | With `prepareOptions()`       |
 | --------------------------------------------- | ----------------------------- | ----------------------------- |
-| Greek to Beta Code                            | 42.1 kB, 14.7 kB gzip (−48 %) | 50.5 kB, 17.2 kB gzip (−39 %) |
-| Beta Code to Greek                            | 44.3 kB, 15.4 kB gzip (−45 %) | 52.6 kB, 17.8 kB gzip (−36 %) |
-| Greek to transliteration                      | 51.7 kB, 17.2 kB gzip (−39 %) | 60.0 kB, 19.6 kB gzip (−30 %) |
+| Greek to Beta Code                            | 42.0 kB, 14.7 kB gzip (−48 %) | 50.3 kB, 17.1 kB gzip (−39 %) |
+| Beta Code to Greek                            | 44.2 kB, 15.3 kB gzip (−45 %) | 52.5 kB, 17.8 kB gzip (−36 %) |
+| Greek to transliteration                      | 51.6 kB, 17.2 kB gzip (−39 %) | 59.9 kB, 19.6 kB gzip (−30 %) |
 | Greek and transliteration both ways           | 70.8 kB, 23.2 kB gzip (−17 %) | 79.2 kB, 25.7 kB gzip (−8 %)  |
 | Every format both ways                        | 77.8 kB, 25.6 kB gzip (−8 %)  | 86.2 kB, 28.2 kB gzip (+1 %)  |
-| `convertDetailed()`, Greek to transliteration | 81.0 kB, 26.6 kB gzip (−15 %) | 89.3 kB, 29.1 kB gzip (−7 %)  |
+| `convertDetailed()`, Greek to transliteration | 81.0 kB, 26.6 kB gzip (−15 %) | 89.3 kB, 29.2 kB gzip (−7 %)  |
 
 The `core` entry point is worth it with a preset or the defaults, unless the
 application reads and writes every format. With `prepareOptions()`, it is

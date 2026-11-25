@@ -13,6 +13,7 @@ import {
   isVowel,
   isVowelUpsilonAt,
   isWordInitial,
+  isWordLetter,
 } from "../context.ts";
 import {
   diacriticBit,
@@ -35,7 +36,6 @@ import { Trie } from "../trie.ts";
 import { codeUnitTable } from "./code_units.ts";
 import { knownMarkAfterIn, knownMarksFirst } from "./mark_order.ts";
 import type { ReadPositions } from "./positions.ts";
-import { textLiteral } from "./shared_tokens.ts";
 import { mayHaveSpacingSigns, readSpacingMarks } from "./spacing_marks.ts";
 
 /** The overline alone, on the last letter of a digraph. */
@@ -382,9 +382,10 @@ function readTransliteration(
         markedArchaicLetter(chars, lowered, i + 1) !== undefined &&
         lowered[i + 1] !== "k";
       out.push(
-        leftKeraia ? literal(ARISTERI_KERAIA) : textLiteral(
-          parsePunctuation(chars[i], "transliteration") ?? chars[i],
-          false,
+        literal(
+          leftKeraia
+            ? ARISTERI_KERAIA
+            : parsePunctuation(chars[i], "transliteration") ?? chars[i],
         ),
       );
       i++;
@@ -857,7 +858,7 @@ function takesCoronisApostrophe(
 function followsLetter(out: readonly Token[]): boolean {
   let index = out.length - 1;
   while (isBoundaryTransparent(out[index])) index--;
-  return out[index]?.kind === "grapheme";
+  return isWordLetter(out[index]);
 }
 
 function startsVowel(
@@ -910,7 +911,8 @@ function inferInitialBreathings(
       // A combining mark that the reader does not read, such as the dot of
       // an uncertain letter, or a join control stays inside the word, as
       // the writer reads it (`kạe` is κα̣ε).
-      if (!isBoundaryTransparent(token)) wordStart = true;
+      if (isWordLetter(token)) wordStart = false;
+      else if (!isBoundaryTransparent(token)) wordStart = true;
       continue;
     }
 
@@ -970,6 +972,12 @@ function inferInitialBreathings(
       ) {
         token.diacritics = withoutDiacritic(token.diacritics, breathing);
         target.diacritics = withDiacritic(target.diacritics, breathing);
+        // `h’` precedes the vowel group of a vowel with both breathings:
+        // the rough one goes with the smooth one (`h’ou` is οὑ̓).
+        if (apostrophe && token.diacritics.has("rough")) {
+          token.diacritics = withoutDiacritic(token.diacritics, "rough");
+          target.diacritics = withDiacritic(target.diacritics, "rough");
+        }
         placed = targetIndex;
       }
     } else if (
@@ -1023,13 +1031,17 @@ function latinPair(
 ): Token[] {
   const pair: Token[] = [];
   if (first === undefined) return pair;
+  // The apostrophe of a smooth breathing precedes the group too, and `h’`
+  // both breathings.
   pair.push(
     first.kind === "grapheme" && (apostrophe || first.diacritics.has("rough"))
       ? {
         ...first,
         diacritics: withoutDiacritic(
-          first.diacritics,
-          apostrophe ? "smooth" : "rough",
+          apostrophe
+            ? withoutDiacritic(first.diacritics, "smooth")
+            : first.diacritics,
+          "rough",
         ),
       }
       : first,

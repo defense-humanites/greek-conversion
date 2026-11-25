@@ -18,8 +18,9 @@ protects these behaviors.
   ([below](#characters-of-another-format)), a letter written as a TLG
   code before a digit in Beta Code (see
   [Information loss](information-loss.md#canonical-spelling-and-unicode)),
-  and a few letters that a converter keeps out of its scope (see
-  [Character extensions](character-extensions.md#restricting-the-repertoire)).
+  and letters that a converter keeps out of its scope, in the cases that
+  [Character extensions](character-extensions.md#restricting-the-repertoire)
+  lists, frequent between Beta Code and transliteration.
 - **A lossless conversion is reversible.** When `convertDetailed()` reports
   `lossy: false`, converting the output back with the same options gives the
   same canonical text, but for the marks of a letter that a converter keeps
@@ -89,18 +90,21 @@ mixed.lossy; // → true
 // → ["unrepresented-literal"]
 ```
 
-A letter that a reader keeps as text next to Greek letters is a letter of
-their word, as is a letter that the transliteration reader does not read: a
-digitized text that writes a Latin `K` for a Greek one keeps its word whole.
-A sigma before such a letter is medial, title case capitalizes the first
-letter of the word only (`Kαζάρμα`), and monotonic accentuation keeps the
-accent of a word whose syllables it cannot count.
-
 Filter the losses by `code` to keep those about the Greek, or convert the
 Greek passages only. The same code reports the few literals of the Greek
 itself that a target cannot keep, such as a parenthesis before a digit in
 Beta Code (see
 [Information loss](information-loss.md#canonical-spelling-and-unicode)).
+
+A letter that a reader keeps as text next to Greek letters is a letter of
+their word, as is a letter that the transliteration reader does not read: a
+digitized text that writes a Latin `K` for a Greek one keeps its word whole.
+A sigma before such a letter is medial, title case capitalizes the first
+letter of the word only (`Kαζάρμα`), monotonic accentuation keeps the accent
+of a word whose syllables it cannot count, a monosyllable included (`Kαί`),
+and a breathing on a vowel after such a letter is a coronis (`Oἰκία`, with
+a Latin `O`). A letter of another script, such as a Chinese character, is
+no letter of the Greek word that it touches.
 
 ### The Greek passages of a text
 
