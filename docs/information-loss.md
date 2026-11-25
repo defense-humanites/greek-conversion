@@ -24,9 +24,9 @@ the row format to the column format and parsing the result again.
 
 | From \ To | Greek | Beta Code | Transliteration |
 | --- | --- | --- | --- |
-| **Greek** | Selected glyph, accent, punctuation, and composition policies | Canonical spelling and mark order; symbol forms other than the lunate sigma | Symbol forms; the lunate sigma unless `lunateSigma: "c"`; a sigma whose shape contradicts its place; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; the absence of a breathing on an initial vowel (monotonic or uncial text), which reads back as a smooth breathing; `ν` before a velar under nasal-gamma inference; `τ`, `π`, or `ρ` before a rough breathing inside a word, which merges with its `h` |
-| **Beta Code** | Canonical Greek glyphs | Canonical ASCII case, asterisk placement, mark order, aliases, and punctuation | Same transliteration losses as Greek, including the lunate sigma unless `lunateSigma: "c"`, a sigma whose shape contradicts its place (`s1`, `s2`), coronis, and marked double rho |
-| **Transliteration** | Initial smooth breathing is inferred where quantity is not explicit; under `elidedStop: "aspirate"`, an elided mute is aspirated before a rough breathing | Initial smooth breathing is inferred where quantity is not explicit; accepted aliases converge to canonical Beta Code | Accepted aliases, punctuation, combining-mark order, NFC, and orthographic spelling converge |
+| **Greek** | Selected glyph, accent, punctuation, and composition policies; the accents, breathings, coronis, and quantity marks of words in capitals (`greek.capitalMarks`) | Canonical spelling and mark order; symbol forms other than the lunate sigma | Symbol forms; the lunate sigma unless `lunateSigma: "c"`; a sigma whose shape contradicts its place; coronis; explicitly marked double rho; smooth breathing on an initial quantity-marked vowel; a hiatus marked only by a smooth breathing on its first vowel; the absence of a breathing on an initial vowel (monotonic or uncial text), which reads back as a smooth breathing; `ν` before a velar under nasal-gamma inference; `τ`, `π`, or `ρ` before a rough breathing inside a word, which merges with its `h` |
+| **Beta Code** | Canonical Greek glyphs; the marks of words in capitals (`greek.capitalMarks`) | Canonical ASCII case, asterisk placement, mark order, aliases, and punctuation | Same transliteration losses as Greek, including the lunate sigma unless `lunateSigma: "c"`, a sigma whose shape contradicts its place (`s1`, `s2`), coronis, and marked double rho |
+| **Transliteration** | Initial smooth breathing is inferred where quantity is not explicit; under `elidedStop: "aspirate"`, an elided mute is aspirated before a rough breathing; the marks of words in capitals (`greek.capitalMarks`) | Initial smooth breathing is inferred where quantity is not explicit; accepted aliases converge to canonical Beta Code | Accepted aliases, punctuation, combining-mark order, NFC, and orthographic spelling converge |
 
 “Canonical documents” excludes invalid or ambiguous combinations. Use
 `validateDocument()` when that distinction matters.
@@ -108,8 +108,8 @@ Default transliteration has these intrinsic ambiguities:
 - a smooth breathing written on the first vowel of a pair that could form a
   diphthong marks a hiatus or an iota adscript (`Ἀίδης`), but the omitted
   breathing leaves `Aídēs`, which parses back as a diphthong;
-  `convertDetailed()` reports `displaced-diacritic`. The engine does not add
-  a diaeresis to compensate, because the same spelling also marks an iota
+  `convertDetailed()` reports `displaced-diacritic`. Transliteration does not
+  add a diaeresis to compensate, because the same spelling also marks an iota
   adscript (`Ἅιδης`, `τῆι` in editions that write the adscript), which is not
   a hiatus. `smoothBreathing: "greek"` writes the breathing in place and keeps
   the distinction; `"apostrophe"` does not, since the apostrophe precedes the
@@ -207,8 +207,8 @@ options. Consequently, for a Greek source:
 - a form that exists in one case only is lost when the case changes, unless
   the options write it again: `ϑ` in capitals is `Θ`, as `toUpperCase()`
   writes it, and `ϴ` in lowercase is `θ`. So is the shape a small sigma
-  notes against its place: `λόγοσ` in capitals is `ΛΌΓΟΣ`, which reads back
-  as `λόγος` in lowercase. Only the lunate sigma has both a capital and a
+  notes against its place: `λόγοσ` in capitals is `ΛΟΓΟΣ`, whose sigma
+  reads back as `ς` in lowercase. Only the lunate sigma has both a capital and a
   small form. `changed-case` reports the case itself.
 
 A conversion can also write a form the source did not have: under
@@ -308,9 +308,10 @@ source can be reconstructed from the output: yes, no, or partly.
 | `stigma: "ligature"` | Reads a stigma between two letters as `στ`, in every format | Reading only; a stigma letter between two letters is read as the ligature |
 | `kaiAccent: "byzantine"` or `"modern"` | Writes the accent of `καί` where the output writes `ϗ` as letters: the grave, or the accent of modern editions | No: the accent reads back as the source's, and `convertDetailed()` reports `added-diacritic` |
 | `iotaSubscript: "capital-adscript"` or `"adscript"` | Writes a kept iota subscript on the line, after a capital or after every vowel | No: the iota reads back as a letter, and the subscript is reported as removed (`removed-diacritic`) |
+| `capitalMarks: "omit"` (default) | Writes words in capitals in Greek output without accents, breathings, coronis, or quantity marks, with a diaeresis where a mark showed a hiatus, and keeps the accent of the disjunctive `ή`; `"preserve"` writes every mark | No: the marks are reported as removed (`removed-diacritic`), and a diaeresis written as added (`added-diacritic`) |
 | `dentalSigma: "assimilate"` | Deletes `τ`, `δ`, or `θ` before sigma in Greek output | No |
 | `elidedStop: "aspirate"` | Writes an elided final `π`, `τ`, or `κ` as `φ`, `θ`, or `χ` before a rough breathing in Greek output | No: the aspirate reads back as itself |
-| `accentuation: "monotonic"` | In every format, keeps diaeresis, maps every accent to acute, removes other polytonic marks, and unaccents monosyllables except `ή`, `πού`, `πώς`, and abbreviations (`κ.ά.`) | No |
+| `accentuation: "monotonic"` | In every format, keeps diaeresis, maps every accent to acute, removes other polytonic marks, unaccents monosyllables except `ή`, `πού`, `πώς`, an accented weak pronoun (`μού`), an elided word (`δείξ’`), and abbreviations (`κ.ά.`), and keeps two accents on a proparoxytone only | No |
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | Partly: the accent is recoverable; its scalar preference is not |
 | `questionMark: "greek"`, `anoTeleia: "greek"` | Selects a canonically unstable punctuation scalar | Partly: the punctuation meaning is recoverable; its scalar preference is not |

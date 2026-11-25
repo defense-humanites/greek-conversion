@@ -1,6 +1,6 @@
 import { GREEK_MARKS } from "../alphabet.ts";
 import { ligatureLength } from "../ligatures.ts";
-import { isVowel } from "../context.ts";
+import { isVowel, TONOS_SIGN } from "../context.ts";
 import {
   type Diacritic,
   type Document,
@@ -15,7 +15,8 @@ import { APOSTROPHE } from "../punctuation.ts";
 /**
  * The spacing breathings, psili U+1FBF and dasia U+1FFE, and the spacing
  * diaeresis U+00A8, which their compounds with an accent decompose to
- * (U+1FCD–U+1FCF, U+1FDD–U+1FDF; U+0385, U+1FC1, U+1FED, U+1FEE).
+ * (U+1FCD–U+1FCF, U+1FDD–U+1FDF; U+0385, U+1FC1, U+1FED, U+1FEE), and the
+ * spacing tonos U+0384, which decomposes to none.
  */
 const PSILI = "\u1FBF";
 const DASIA = "\u1FFE";
@@ -23,6 +24,7 @@ const SPACING_BASES = new Set([0x1fbf, 0x1ffe, 0x00a8]);
 /** The first units of the spacing signs, composed or not. */
 const SPACING_SIGNS: ReadonlySet<number> = new Set([
   0x00a8,
+  0x0384,
   0x0385,
   0x1fbf,
   0x1fc1,
@@ -36,9 +38,15 @@ const SPACING_SIGNS: ReadonlySet<number> = new Set([
   0x1fee,
   0x1ffe,
 ]);
+/** Whether a token is a spacing sign, composed or not. */
+export function isSpacingSign(token: Token | undefined): boolean {
+  return token?.kind === "literal" &&
+    SPACING_SIGNS.has(token.value.charCodeAt(0));
+}
+
 /** The spacing signs, decomposed or not. */
 const SPACING_SIGN =
-  /[\u00A8\u0385\u1FBF\u1FC1\u1FCD-\u1FCF\u1FDD-\u1FDF\u1FED\u1FEE\u1FFE]/;
+  /[\u00A8\u0384\u0385\u1FBF\u1FC1\u1FCD-\u1FCF\u1FDD-\u1FDF\u1FED\u1FEE\u1FFE]/;
 
 /**
  * Whether a text may have a spacing sign, so that its reader calls
@@ -86,10 +94,13 @@ function accentOf(value: string): Diacritic | undefined {
 }
 
 /**
- * The marks of a spacing breathing, alone or with accents (`῾`, `῎`), or
- * undefined for any other literal.
+ * The marks of a spacing breathing, alone or with accents (`῾`, `῎`), or of
+ * the spacing tonos (`΄`), or undefined for any other literal.
  */
 function breathingMarks(value: string): Diacritic[] | undefined {
+  if (value === TONOS_SIGN) return ["acute"];
+  // Most literals are spaces and punctuation, which need no normalization.
+  if (!SPACING_SIGNS.has(value.charCodeAt(0))) return undefined;
   const marks = value.normalize("NFD");
   const breathing: Diacritic | undefined = marks[0] === PSILI
     ? "smooth"
@@ -145,7 +156,8 @@ export function standsApart(document: Document, index: number): boolean {
  * - at the start of a word (not after a letter or a digit), spacing
  *   breathings, with their accents, before a capital vowel or rho are the
  *   capital's: older typesetting, and the digitizations of it, writes
- *   `῾Ρωμαῖοι` for `Ῥωμαῖοι`;
+ *   `῾Ρωμαῖοι` for `Ῥωμαῖοι`, and the typewriter and ISO 8859-7 the tonos
+ *   before a capital vowel, `΄Ελληνας` for `Έλληνας`;
  * - after a letter, a psili is the apostrophe of elision that it looks like
  *   (`τ᾿ ἐστί`).
  *

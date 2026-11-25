@@ -186,6 +186,11 @@ export const OPTION_RELEVANCE: Readonly<Record<string, readonly string[]>> = {
     "beta-code>greek",
     "transliteration>greek",
   ],
+  "greek.capitalMarks": [
+    "greek>greek",
+    "beta-code>greek",
+    "transliteration>greek",
+  ],
   "greek.doubleRho": [
     "greek>greek",
     "greek>beta-code",

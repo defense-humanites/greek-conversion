@@ -63,6 +63,31 @@ const WORD_JOIN_CONTROLS = new Set(["\u200C", "\u200D", "\u2060", "\uFEFF"]);
 
 export const DEXIA_KERAIA = "\u02B9";
 export const ARISTERI_KERAIA = "\u0375";
+/**
+ * The spacing tonos U+0384, which the Greek keyboard, having no keraia,
+ * types for one (`Β΄`, `ΙΑ΄`), and before a capital for its tonos
+ * (`΄Ελληνας`).
+ */
+export const TONOS_SIGN = "\u0384";
+
+/**
+ * The right keraiai that the source typed as a spacing tonos: they are
+ * keraiai, and Greek output writes them as typed (`Β΄`). The mark is the
+ * token itself, so that no rule needs to read it but the writer of Greek.
+ */
+const TONOS_KERAIAI = new WeakSet<Token>();
+
+/** A right keraia typed as a spacing tonos. */
+export function tonosKeraia(): Literal {
+  const token = literal(DEXIA_KERAIA);
+  TONOS_KERAIAI.add(token);
+  return token;
+}
+
+/** Whether a right keraia was typed as a spacing tonos. */
+export function isTonosKeraia(token: Token): boolean {
+  return TONOS_KERAIAI.has(token);
+}
 
 const ELIDED_ASPIRATES = new Map<Letter, Letter>([
   ["pi", "phi"],
@@ -95,6 +120,11 @@ export function keptLetter(value: string, uppercase: boolean): Literal {
  */
 export function isKeptLetter(token: Token): boolean {
   return KEPT_LETTERS.has(token);
+}
+
+/** The case of a letter kept as it was, or undefined for another token. */
+export function keptLetterCase(token: Token): boolean | undefined {
+  return KEPT_LETTERS.get(token);
 }
 
 /** Whether a token is a letter of a word: a grapheme, or a kept letter. */
@@ -336,6 +366,13 @@ export function hasHiatusMark(token: Grapheme): boolean {
   return mask === undefined
     ? HIATUS_MARKS.some((mark) => token.diacritics.has(mark))
     : (mask & HIATUS_MASK) !== 0;
+}
+
+/**
+ * Whether two vowels form a diphthong when no mark parts them (`αι`, `ευ`).
+ */
+export function mayFormDiphthong(first: Letter, second: Letter): boolean {
+  return DIPHTHONG_SECONDS.get(first)?.has(second) === true;
 }
 
 export function isDiphthongAt(document: Document, start: number): boolean {

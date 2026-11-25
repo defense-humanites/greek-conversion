@@ -25,6 +25,22 @@ change.
 
 ### Changed
 
+- **Words in capitals without marks.** Greek output writes words in
+  capitals as Greek usage sets them: without accents, breathings, coronis,
+  or quantity marks, with their
+  diaeresis, and with one where a mark on the first of two vowels showed
+  their hiatus (`Μάιος` in capitals gives `ΜΑΪΟΣ`, `ἀίδηλος` `ΑΪΔΗΛΟΣ`,
+  where rc.12 gave `ΜΆΙΟΣ`, `ἈΊΔΗΛΟΣ`), or an iota adscript, which no mark
+  tells from a hiatus (`Ἅιδης` gives `ΑΪΔΗΣ`). The disjunctive `ή` keeps
+  its accent (`Ή`).
+  A capital that begins a word in small letters keeps its marks, as a word
+  of one letter does, unless the nearest longer words around it are in
+  capitals (`Η Δ’ ΑΕΚΟΥΣ’`) or the text is set in capitals. The new
+  option `greek.capitalMarks` selects it: `"omit"`, the default, or
+  `"preserve"`, which writes every mark, as rc.12 did. `convertDetailed()`
+  reports the marks removed and each diaeresis written. Beta Code and
+  transliteration keep the marks. A bundle that writes Greek grows by 2.6 to
+  2.7 kB minified, 0.9 to 1.0 kB with gzip.
 - **ISO 843: the apostrophes read back.** Under the two ISO 843 presets, an
   apostrophe (U+2019) before the vowel group of a word reads back as the
   smooth breathing it writes (`’Athī́na` gives `Ἀθήνα`, `’eînai` gives
@@ -52,6 +68,45 @@ change.
   that writes Beta Code or transliteration, but not
   Greek, now keeps the monotonic rules: it grows by 1.6 to 1.8 kB minified,
   0.4 to 0.6 kB with gzip.
+- **Monotonic accentuation keeps the accents of monotonic orthography.**
+  Under `greek.accentuation: "monotonic"`, in every format, a monotonic text
+  converts to itself, where accents that the official orthography requires
+  were removed:
+  - the accent of a weak pronoun, `μου`, `σου`, `του`, `της`, `μας`, `σας`,
+    or `τους`, that an author writes to avoid ambiguity, read from an acute
+    before the word it belongs to (`ο πατέρας μού είπε`, `δώσε μού το`,
+    which gave `μου`); a circumflex or a grave marks the article (`τοῦ`,
+    `τῆς`, `τοὺς`), and an acute before punctuation or an enclitic of
+    ancient Greek an oxytone (`σάς.`, `τούς τε`), which lose it;
+  - the accent of a word that elision made a monosyllable, which ends in a
+    consonant before an apostrophe (`δείξ’ το`, `πάρ’ το`, `ὅτ᾽` → `ότ’`,
+    which gave `δειξ’`, `παρ’`, `οτ’`).
+
+  A word accented on its last two syllables, as polytonic Greek accents a
+  paroxytone or a properispomenon before an enclitic, keeps the first
+  (`τὸ σῶμά μου` gives `το σώμα μου`, `εἶναί τινα` `είναι τινα`, which gave
+  `σώμά`, `είναί`): monotonic Greek writes two accents on a proparoxytone
+  only (`ο άνθρωπός μου`). `convertDetailed()` reports the accent removed.
+  A bundle that writes any format grows by 1.0 to 1.1 kB minified, 0.3 to
+  0.4 kB with gzip.
+- **The spacing tonos typed for a keraia or before a capital.** The Greek
+  keyboard has no keraia, and types the spacing tonos `΄` (U+0384) for it.
+  After the letters of a numeral, Greek reads it as the right keraia, which
+  Greek output writes as typed, and the other formats as their keraia:
+  `Β΄ Παγκόσμιος` gives `*b# *pagko/smios` and, under `ala-lc-modern`,
+  `2 Pankosmios` (rc.12: `*b΄ *pagko/smios`, `V΄ Pankosmios`).
+  `convertDetailed()` reports the sign typed as lost in those formats
+  (`unrepresented-literal`). A consonant alone that elision leaves (`σ`,
+  `μ`, `τ`, `ν`, `θ`, `π`), `κι`, and `υπ` before a word that starts with a
+  vowel keep the sign as an apostrophe (`σ΄ αγαπώ`, `υπ΄ όψιν`), whatever
+  their case and marks, so that a numeral of one such letter before such a
+  word is not read (`Θ΄ αιώνας`); so do letters before a vowel that follows
+  the sign without a space (`σ΄αγαπώ`), letters that no numeral writes
+  (`όλ΄ αυτά`), and any other word (`απ΄ όλα`). Every reader
+  takes the sign before a capital vowel, at the start of a word, as its
+  tonos, as it takes the spacing breathings (`΄Ελληνας` gives `Έλληνας`).
+  A bundle that reads Greek grows by 1.6 to 1.7 kB minified, 0.4 to 0.5 kB
+  with gzip.
 - **Speed.** Writing Greek and Beta Code computes once, for the options that
   conversions share and for prepared options, what it computed at each call:
   the marks that each format keeps, and the codes that write them. A word

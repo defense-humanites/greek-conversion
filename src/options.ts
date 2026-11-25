@@ -64,6 +64,29 @@ export type StigmaReading = "letter" | "ligature";
 export type KaiAccent = "none" | "byzantine" | "modern";
 
 /**
+ * Selects the marks of a word in capitals in Greek output. `"omit"`, the
+ * default, follows Greek usage, which writes words in capitals without
+ * accents: a word in capitals takes no accent, breathing, coronis, or
+ * quantity mark, keeps its diaeresis, and takes one on the second of two
+ * vowels where a mark on the first showed their hiatus (`Μάιος` → `ΜΑΪΟΣ`,
+ * `ἀίδηλος` → `ΑΪΔΗΛΟΣ`), or an iota adscript, which it cannot tell from a
+ * hiatus (`Ἅιδης` → `ΑΪΔΗΣ`); the disjunctive `ή` keeps its accent, which
+ * tells it from the article (`Ή`, from `ή`, `ἤ`, or `ἢ`). A word is in
+ * capitals when all its letters are, and a word of one letter when the
+ * nearest word on either side, words of one letter and numerals aside, is
+ * in capitals and neither is in small letters (`Ο ΛΟΓΟΣ`, `Η Δ’ ΟΣ`), or
+ * the text is set in capitals (`text.letterCase: "uppercase"`); a capital
+ * that begins a word in small letters keeps its marks (`Έλληνας`).
+ * The iota subscript follows `iotaSubscript`, whose `"capital-adscript"`
+ * writes it as a letter after a capital (`ΤΗΙ ΩΙΔΗΙ`). Each mark removed and
+ * each diaeresis written is reported. `"preserve"` writes every mark the
+ * document has (`ΜΆΙΟΣ`, `ἈΘΗ͂ΝΑΙ`), as an edition that prints them does.
+ * Beta Code and transliteration keep the marks, which they write on
+ * capitals.
+ */
+export type CapitalMarksOrthography = "preserve" | "omit";
+
+/**
  * Selects where Greek output writes a kept iota subscript.
  *
  * `"subscript"` writes it below the line, and after a capital as the
@@ -437,6 +460,8 @@ export interface GreekOptions {
   kaiAccent?: KaiAccent;
   /** Where a kept iota subscript is written. Defaults to `"subscript"`; whether it is kept is `diacritics.iotaSubscript`. */
   iotaSubscript?: IotaSubscriptOrthography;
+  /** The marks of a word in capitals in Greek output. Defaults to `"omit"`, which writes words in capitals without accents or breathings, as Greek usage does; `"preserve"` writes them. */
+  capitalMarks?: CapitalMarksOrthography;
   /** Double-rho marks in Greek output. Defaults to `"unmarked"`. */
   doubleRho?: DoubleRhoOrthography;
   /** Dental assimilation before sigma. Defaults to `"preserve"`. */
@@ -599,6 +624,7 @@ export interface DefaultConversionOptions {
     readonly stigma: "letter";
     readonly kaiAccent: "none";
     readonly iotaSubscript: "subscript";
+    readonly capitalMarks: "omit";
     readonly doubleRho: "unmarked";
     readonly dentalSigma: "preserve";
     readonly elidedStop: "preserve";
@@ -766,6 +792,7 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues =
       stigma: ["letter", "ligature"],
       kaiAccent: ["none", "byzantine", "modern"],
       iotaSubscript: ["subscript", "capital-adscript", "adscript"],
+      capitalMarks: ["omit", "preserve"],
       doubleRho: ["unmarked", "smooth-rough"],
       dentalSigma: ["preserve", "assimilate"],
       elidedStop: ["preserve", "aspirate"],

@@ -1,5 +1,5 @@
 import type { WriterHooks } from "./codec.ts";
-import { isVowel, type QuotationContext } from "./context.ts";
+import { isTonosKeraia, isVowel, type QuotationContext } from "./context.ts";
 import { ACCENTS } from "./kai_accent.ts";
 import { sharedMask } from "./model.ts";
 import type {
@@ -43,8 +43,8 @@ export interface ConversionLoss {
    * The affected semantic mark when {@link code} is `"removed-diacritic"`,
    * `"added-diacritic"`, `"displaced-diacritic"`, or `"inferred-breathing"`.
    * An added diacritic is the diaeresis that transliteration writes on a
-   * contextual `y`, or the accent of `καί` that `greek.kaiAccent` writes for
-   * `ϗ`.
+   * contextual `y`, or Greek output in capitals under `greek.capitalMarks`,
+   * or the accent of `καί` that `greek.kaiAccent` writes for `ϗ`.
    */
   diacritic?: Diacritic;
   /**
@@ -314,7 +314,7 @@ function pairByPosition(
     }
     if (
       text !== undefined && text !== "" && token.kind === "literal" &&
-      sameLiteral(token.value, text)
+      sameLiteral(token.value, text) && !isTonosKeraia(token)
     ) spelled[index] = 1;
   }
   return { counterparts, spelled };
@@ -474,7 +474,10 @@ function preservesToken(
 ): boolean {
   if (source.kind !== target.kind) return false;
   if (source.kind === "literal" && target.kind === "literal") {
-    return sameLiteral(source.value, target.value);
+    // A keraia typed as a tonos, which Greek output keeps, reads back as a
+    // keraia from the other formats.
+    return sameLiteral(source.value, target.value) &&
+      (!isTonosKeraia(source) || isTonosKeraia(target));
   }
   if (source.kind !== "grapheme" || target.kind !== "grapheme") return false;
   return source.letter === target.letter &&

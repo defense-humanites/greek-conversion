@@ -66,6 +66,21 @@ const EDITION_PASSAGE = "῾Ο δὲ λόγος ἐστὶν ἀληθὴς κα
  */
 const SPACING_RUN = "῾᾿῎῾᾿";
 
+/**
+ * Words of one capital, whose case the nearest longer word decides under
+ * `greek.capitalMarks: "omit"`: searching past all the others for it, from
+ * each of them, would be quadratic.
+ */
+const ONE_CAPITAL_WORDS = "Ἣ Δ’ Ὁ, ";
+
+/**
+ * One word in capitals, with a mark that the reader does not read after
+ * each letter: looking for a numeral after each such mark, to the end of
+ * the word, would be quadratic in its length.
+ */
+const MARKED_WORD = [..."ΑΒΓΔΕΖΗΘΙΚ"].map((letter) => letter + "\u0307")
+  .join("");
+
 /** Stigmas read as `στ` under `greek.stigma: "ligature"` (`ἐϛὶ`). */
 const STIGMA_PASSAGE = "ἐϛὶν ἄϛυ ";
 
@@ -141,6 +156,20 @@ const CASES: readonly {
     options: { greek: { stigma: "ligature" } },
     passage: STIGMA_PASSAGE,
     name: "stigma ligatures",
+  },
+  {
+    format: "greek",
+    target: "greek",
+    options: {},
+    passage: ONE_CAPITAL_WORDS,
+    name: "words of one capital",
+  },
+  {
+    format: "greek",
+    target: "greek",
+    options: {},
+    passage: MARKED_WORD,
+    name: "a word in capitals with unread marks",
   },
 ];
 

@@ -132,26 +132,19 @@ monotonic Greek is typed, so that a text converts back to itself code point
 for code point.
 
 `accentuation: "monotonic"` also applies the monotonic rules to what it
-writes: a monosyllable loses its accent, except `ή`, `πού`, and `πώς`, and
-those that abbreviate a longer word (`ό,τι`, `κ.ά.`, `20ός`). The count is
-mechanical, and also removes the accent that an author puts on a weak
-pronoun to avoid ambiguity (`μού`). To read Latin script back without
-touching its accents, ask only for no breathing:
+writes: a monosyllable loses its accent, except `ή`, `πού`, and `πώς`, a
+weak pronoun that an author accents to avoid ambiguity (`μού`), a word that
+elision made a monosyllable (`δείξ’ το`), and those that abbreviate a longer
+word (`ό,τι`, `κ.ά.`, `20ός`). Monotonic Latin script therefore reads back
+with its accents:
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
 
-const latin = "ó,ti eípe o patéras moú, k.á.";
-
-convert(latin, "transliteration", "greek", {
+convert("o patéras moú eípe ó,ti xérei", "transliteration", "greek", {
   greek: { accentuation: "monotonic" },
 });
-// → ό,τι είπε ο πατέρας μου, κ.ά.
-
-convert(latin, "transliteration", "greek", {
-  diacritics: { smoothBreathing: "remove" },
-});
-// → ό,τι είπε ο πατέρας μού, κ.ά.
+// → ο πατέρας μού είπε ό,τι ξέρει
 ```
 
 ## From polytonic to monotonic
@@ -192,6 +185,27 @@ reencode("’Ethnikòn Metsóvion Polytechneîon", "transliteration", {
 // → Ethnikón Metsóvion Polytechneíon
 ```
 
+## Text in capitals
+
+Greek sets words in capitals without accents, but for the disjunctive `ή`,
+and writes a diaeresis where the accent showed a hiatus. Greek output does
+so by default, as `toLocaleUpperCase("el")` does:
+
+```ts
+import { reencode } from "@humanities/greek-conversion";
+
+reencode("Αθήνα ή Πάτρα, Μάιος", "greek", {
+  text: { letterCase: "uppercase" },
+});
+// → ΑΘΗΝΑ Ή ΠΑΤΡΑ, ΜΑΪΟΣ
+```
+
+A capital that begins a word in small letters keeps its accent (`Έλληνας`),
+and Beta Code and transliteration keep the marks of capitals.
+`greek.capitalMarks: "preserve"` writes the marks of words in capitals as
+well. See
+[Marks in capitals](/reference/greek-unicode/#marks-in-capitals).
+
 ## Search keys and URL slugs
 
 A search key matches a name whatever its accents, its case, and the forms of
@@ -230,8 +244,11 @@ A preset applies its rules to the text it is given, and some rules need more:
 
 - **Punctuation and numerals.** The Greek question mark `;` is written `?`
   in Latin script, and a `?` typed in Greek text is read as one. A numeral
-  is read with a keraia (`ιβʹ`), not with the tonos that often stands for it
-  (`ιβ΄`). See
+  is read with a keraia, or with the tonos that the Greek keyboard types for
+  it (`Β΄ Παγκόσμιος` gives `2 Pankosmios`), which Greek output keeps. The
+  same sign typed for an apostrophe after a consonant alone stays one
+  (`σ΄ αγαπώ`), and so does a numeral of one such letter before a word with
+  a vowel (`Θ΄ αιώνας`), which the keraia `ʹ` writes. See
   [Punctuation and numerals](/reference/punctuation-and-numerals/).
 - **Stress in capitals.** Monotonic Greek writes no accent on capitals, and
   the preset cannot tell where the stress falls: `ΑΘΗΝΑ` gives `ATHINA`.

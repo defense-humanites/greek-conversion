@@ -6,7 +6,7 @@
 import { makeWriter, type Writer, type WriterHooks } from "../codec.ts";
 import { encodeGreek, greekGlyphForm } from "../encode.ts";
 import { supplyKaiAccents } from "../kai_accent.ts";
-import { applyOrthography } from "../orthography.ts";
+import { applyCapitalOrthography, applyOrthography } from "../orthography.ts";
 
 /** How Greek is written. */
 export const GREEK_WRITING: WriterHooks & { readonly format: "greek" } = {
@@ -17,6 +17,7 @@ export const GREEK_WRITING: WriterHooks & { readonly format: "greek" } = {
       options,
       targets,
       "greek",
+      applyCapitalOrthography,
     ),
   write: encodeGreek,
   form: (options) => options.greek.composition === "decomposed" ? "NFD" : "NFC",

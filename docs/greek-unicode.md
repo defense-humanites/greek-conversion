@@ -22,24 +22,43 @@ The monotonic transform:
 
 - preserves diaeresis;
 - maps acute, grave, and circumflex to acute, keeping the second accent that
-  a word receives from a following enclitic (`ἄνθρωπός τις → άνθρωπός τις`);
+  a proparoxytone receives from a following enclitic
+  (`ἄνθρωπός τις → άνθρωπός τις`): the second accent of a word accented on
+  its last two syllables, as polytonic Greek accents a paroxytone or a
+  properispomenon before an enclitic, is removed (`σῶμά μου → σώμα μου`,
+  `εἶναί τινα → είναι τινα`);
 - removes smooth and rough breathings, coronis, iota subscript, macron, and
   breve;
 - leaves monosyllables unaccented (`καὶ → και`, `τῶν → των`, `κἂν → καν`),
-  except the three the monotonic system distinguishes, which the polytonic
-  marks identify: disjunctive `ή` from `ἤ` or `ἢ` (not the article `ἡ`, nor
-  `ἦ` or `ἥ`), and interrogative `πού` and `πώς` from `ποῦ` and `πῶς` (not the
-  relative or indefinite `ποὺ`, `που`, `πὼς`, `πως`), and except a word that
-  abbreviates a longer one (`ὅ,τι → ό,τι`, `κ.ἄ. → κ.ά.`, `20ός`).
+  except those that the monotonic system distinguishes, which the marks of
+  the source identify: disjunctive `ή` from `ἤ` or `ἢ` (not the article `ἡ`,
+  nor `ἦ` or `ἥ`); interrogative `πού` and `πώς` from `ποῦ` and `πῶς` (not
+  the relative or indefinite `ποὺ`, `που`, `πὼς`, `πως`); and the weak forms
+  of the personal pronouns that an author accents to avoid ambiguity,
+  written with an acute before the word they belong to
+  (`ο πατέρας μού είπε`, `δώσε μού το`; not the article `τοῦ`, `τῆς`,
+  `τοὺς`, nor an oxytone before punctuation or an enclitic of ancient Greek,
+  such as the possessive `σάς.` or `τούς τε`).
+  A word that elision made a monosyllable, which ends in a consonant before
+  an apostrophe, keeps its accent (`δεῖξ’ το → δείξ’ το`, `ὅτ’ → ότ’`), as
+  does a word that abbreviates a longer one (`ὅ,τι → ό,τι`, `κ.ἄ. → κ.ά.`,
+  `20ός`).
 
 Syllables are counted on the written vowels: a diphthong is one syllable, and a
-diaeresis or an accent on the first of two vowels marks two. An acute on `πού`
-or `πώς` is kept, because that is how monotonic text writes the interrogative,
-so these words are already canonical in monotonic input. Two cases need
-knowledge of the word and are left as written: a monosyllable by synizesis
-(`γιὰ`, `μιὰ`, `δυὸ`, `πιὰ` keep their accent, since `Διός` and `κιών`, with the
-same vowels, are disyllables), and the optional accent that monotonic authors
-put on a weak pronoun to avoid ambiguity (`μού`), which is removed.
+diaeresis or an accent on the first of two vowels marks two. An acute on `πού`,
+`πώς`, or a weak pronoun is kept, because that is how monotonic text writes
+them, so these words are already canonical in monotonic input; a polytonic
+enclitic that received an acute from the next is kept as well
+(`πατήρ μού ἐστιν → πατήρ μού εστιν`). A word in quotation marks is no
+elision (`‘πῦρ’ → ‘πυρ’`), the closing mark being the apostrophe. Some cases
+need knowledge of the word and are left as written: the last word of a
+quotation of several words, which ends as an elided word does
+(`‘τὸ πῦρ’ → ‘το πύρ’`), an oxytone before an elided `τε` (`τούς τ’`), a
+monosyllable by synizesis (`γιὰ`, `μιὰ`, `δυὸ`, `πιὰ` keep their accent,
+since `Διός` and `κιών`, with the same vowels, are disyllables), and the
+accent that an imperative accented on its penult passes to the first of two
+weak pronouns (`δῶσέ μου το` gives `δώσε μου το`, where monotonic writes
+`δώσε μού το`).
 
 The count takes as a word what stands between spaces and punctuation, except
 where usage keeps the accent of a word of one vowel, because it abbreviates a
@@ -53,8 +72,8 @@ longer one:
 - the ending of an ordinal written with digits keeps its accent (`20ός`,
   `το 20ό`).
 
-To read monotonic text back from transliteration without applying the rules,
-ask only for no breathing (`diacritics: { smoothBreathing: "remove" }`).
+Monotonic text reads back from transliteration as written, its accents
+included (`o patéras moú eípe` gives `ο πατέρας μού είπε`).
 
 It applies to every format: Beta Code and transliteration spell the monotonic
 text that Greek output writes, so that a polytonic transliteration or Beta
@@ -231,6 +250,54 @@ capitals, and small after a capital that begins a lowercase word or stands
 alone. Written on the line, it is a letter: it reads back as iota, and the
 conversion reports the loss of the subscript. Monotonic output has no iota
 subscript to write.
+
+## Marks in capitals
+
+Greek usage writes words in capitals without accents, and Greek output
+follows it by default (`greek.capitalMarks: "omit"`). `"preserve"` writes every mark, as an
+edition that prints them does:
+
+```ts
+import { reencode } from "@humanities/greek-conversion";
+
+const capitals = { text: { letterCase: "uppercase" } } as const;
+reencode("Μάιος, ἀίδηλος ή Ἀθῆναι", "greek", capitals);
+// → ΜΑΪΟΣ, ΑΪΔΗΛΟΣ Ή ΑΘΗΝΑΙ
+reencode("Μάιος, ἀίδηλος", "greek", {
+  ...capitals,
+  greek: { capitalMarks: "preserve" },
+});
+// → ΜΆΙΟΣ, ἈΊΔΗΛΟΣ
+```
+
+A word in capitals takes no accent, breathing, coronis, or quantity mark,
+and keeps its diaeresis. Where a mark on the first of two vowels that
+would form a diphthong showed their hiatus, the second takes a diaeresis
+(`Μάιος` → `ΜΑΪΟΣ`), unless the first ends a diphthong (`εύι` → `ΕΥΙ`,
+which `toLocaleUpperCase("el")` writes `ΕΥΪ`). The same mark shows an iota
+adscript (`Ἅιδης`, that is `ᾍδης`), which takes the diaeresis all the same
+(`ΑΪΔΗΣ`), since telling them apart takes knowledge of the word (see
+[Information loss](information-loss.md)). A breathing is such a mark,
+as every reader takes it: a text in capitals that puts the breathing of a
+diphthong on its first vowel, as some editions do, takes a diaeresis
+(`ἘΥΡΏΠΗ` → `ΕΫΡΩΠΗ`), which `"preserve"` avoids. The disjunctive `ή`,
+from `ή`, `ἤ`, or `ἢ`, keeps its accent, which tells it from the article
+(`Ή`, `Η`), where `toLocaleUpperCase("el")` keeps that of `ἦ`, `ἥ`, and
+`ἣ` too.
+
+A word is in capitals when all its letters are. A word of one letter is
+when the nearest word on either side, words of one letter and numerals
+aside, is in capitals and neither is in small letters (`Ο ΛΟΓΟΣ`,
+`Η Δ’ ΑΕΚΟΥΣ’`, but `Ὁ λόγος`), and always under
+`text.letterCase: "uppercase"`. The search crosses punctuation: at the
+start of a text, the word after decides alone (`Ὁ ΟΗΕ ἀποφάσισε` →
+`Ο ΟΗΕ ἀποφάσισε`), and elsewhere a word in small letters before keeps the
+marks (`λόγος. Ὁ ΟΗΕ`). A capital that begins a word in small letters keeps
+its marks (`Έλληνας`). The iota subscript follows `iotaSubscript`:
+`"capital-adscript"` writes `ᾠδῇ` in capitals as `ΩΙΔΗΙ`. Each mark removed
+and each diaeresis written is reported. Beta Code and transliteration keep
+the marks, which they write on capitals, as the BGN/PCGN rules ask for the
+stress (`ATHÍNA`).
 
 ## Letter forms
 

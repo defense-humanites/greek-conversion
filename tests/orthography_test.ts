@@ -905,7 +905,7 @@ test("folds Greek variants while keeping letter case independent", () => {
   } as const;
   assertNfcEquals(
     convert("ϐίος ΛΌΓΟΣ ϲῶμα βʹ σʹ", "greek", "greek", fold),
-    "βίοσ ΛΌΓΟΣ σῶμα βʹ σʹ",
+    "βίοσ ΛΟΓΟΣ σῶμα βʹ σʹ",
   );
   assertNfcEquals(
     convert("ϐΊΟΣ ϹῶΜΑ", "greek", "greek", {
