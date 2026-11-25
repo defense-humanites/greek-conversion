@@ -18,6 +18,7 @@ test("a spacing tonos after the letters of a numeral is its keraia", () => {
       ["α΄ έκδοση", "a# e/kdosh", "1 ekdosē"],
       ["του ΙΘ΄ αιώνα", "tou *i*q# aiw/na", "tou 19 aiōna"],
       ["͵αϠ΄", "#22a*#5#", "1900"],
+      ["ΣΤ΄ Δημοτικού", "*s*t# *dhmotikou/", "6 Dēmotikou"],
     ]
   ) {
     // Greek output writes it as typed, and nothing is lost.
@@ -26,14 +27,15 @@ test("a spacing tonos after the letters of a numeral is its keraia", () => {
     assertEquals(greekResult.lossy, false);
     assertEquals(convert(greek, "greek", "beta-code"), betaCode);
     assertEquals(convert(greek, "greek", "transliteration", ALA_LC), number);
-    // The other formats write their keraia, which reads back as U+0374: the
-    // sign typed is lost.
+    // The other formats write their keraia, which reads back as U+02B9:
+    // the sign typed is lost.
     const losses = convertDetailed(greek, "greek", "beta-code").losses;
     assertEquals(
       losses.map(({ code, offset }) => [code, offset]),
       [["unrepresented-literal", greek.indexOf("\u0384")]],
     );
-    // It reads as the keraia U+0374 does, which Greek output keeps too.
+    // It reads as the keraia U+0374 does, which Greek output keeps too, as
+    // U+02B9.
     const keraia = greek.replace("΄", "ʹ");
     assertEquals(
       convert(greek, "greek", "beta-code"),
@@ -65,6 +67,14 @@ test("a spacing tonos for an apostrophe stays a sign", () => {
       "Σ΄ αγαπώ",
       "ΣΑΣ ΕΙΠΑ: ΣΑΣ ΚΙ΄ ΕΓΩ",
       "του Θ΄ αιώνα",
+      // Before a vowel, which follows the sign without a space.
+      "σ΄αγαπώ",
+      "κι΄εγώ",
+      // Letters that no numeral writes, two tens (`όλ΄`), and `υπ΄`, which
+      // elides `υπό` (`υπ΄ όψιν`, `υπ΄ αριθμόν`).
+      "όλ΄ αυτά",
+      "ποι΄ είναι",
+      "υπ΄ όψιν",
     ]
   ) {
     assertEquals(reencode(text, "greek"), text);
@@ -78,6 +88,12 @@ test("a spacing tonos for an apostrophe stays a sign", () => {
   assertEquals(
     convert("σ΄ το σπίτι", "greek", "transliteration", ALA_LC),
     "200 to spiti",
+  );
+  // A spacing tonos before the vowel, which the capital takes, leaves the
+  // sign an apostrophe (`σ΄ ΄Ελληνα`, as ISO 8859-7 types `σ’ Έλληνα`).
+  assertEquals(
+    convert("σ΄ ΄Ελληνα", "greek", "transliteration", ALA_LC),
+    "s΄ Ellēna",
   );
 });
 

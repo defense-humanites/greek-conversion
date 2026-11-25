@@ -207,12 +207,18 @@ under `ala-lc-modern`. `convertDetailed()` reports the sign typed as lost
 there (`unrepresented-literal`), since the keraia reads back as `ʹ`.
 
 The same sign is typed for an apostrophe. A consonant alone, which elision
-leaves of `σε`, `με`, `το`, `να`, `θα`, or `από`, and `κι`, are no numeral
-before a word that starts with a vowel (`σ΄ αγαπώ`, `Σ΄ αγαπώ`,
-`κι΄ εγώ`): the sign stays as typed there, as after any other word
-(`απ΄ όλα`). Neither case nor marks decide, so that an output converts
-again as it reads: a capital numeral alone before such a word is therefore
-not read (`Θ΄ αιώνας`, the ninth century), and needs the keraia `ʹ`.
+leaves of `σε`, `με`, `το`, `να`, `θα`, or `από`, `κι`, and `υπ`, are no
+numeral before a word that starts with a vowel (`σ΄ αγαπώ`, `Σ΄ αγαπώ`,
+`κι΄ εγώ`, `υπ΄ όψιν`): the sign stays as typed there, as after any other
+word (`απ΄ όλα`), before a vowel that follows it without a space
+(`σ΄αγαπώ`), and after letters that no numeral writes, which has one
+letter for each order (`όλ΄ αυτά`, two tens). Neither case nor marks
+decide, so that an output converts again as it reads: a capital numeral
+alone before such a word is therefore not read (`Θ΄ αιώνας`, the ninth
+century), and needs the keraia `ʹ`. These are the elisions of Modern Greek:
+an ancient text that types the sign for its apostrophe reads `δ΄`, `γ΄`, or
+`θ΄` before a vowel as a numeral, since `δ΄ έκδοση` is the fourth edition,
+and needs the apostrophe `’`.
 Before a capital vowel, at the start of a word, the sign is its tonos
 (`΄Ελληνας` is `Έλληνας`), as the spacing breathings are.
 

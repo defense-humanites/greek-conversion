@@ -200,8 +200,8 @@ function readGreek(
         continue;
       }
       if (isSpacingSign(unit)) {
-        spacing = true;
         if (unit === 0x0384) tonos = true;
+        else spacing = true;
       }
       // A mark the reader knows, read here only after one it does not.
       if (!ordered && markBit(unit) !== 0 && misplacedMark(text, i)) {
@@ -241,8 +241,8 @@ function readGreek(
   if (starts !== undefined) starts.push(text.length);
   if (signs) capitalizeLoneSigns(out);
   // The spacing tonos typed for a keraia, which then follows a numeral as
-  // a keraia does, before the spacing signs.
-  if (tonos) readTonosKeraiai(out);
+  // a keraia does, before the spacing signs, which read those left.
+  if (tonos && readTonosKeraiai(out)) spacing = true;
 
   if (spacing) {
     // Joining the spacing signs to the letters moves the letters noted.

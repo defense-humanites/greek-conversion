@@ -73,8 +73,8 @@ change.
     or `τους`, that an author writes to avoid ambiguity, read from an acute
     before the word it belongs to (`ο πατέρας μού είπε`, `δώσε μού το`,
     which gave `μου`); a circumflex or a grave marks the article (`τοῦ`,
-    `τῆς`, `τοὺς`), and an acute before punctuation an oxytone (`σάς.`),
-    which lose it;
+    `τῆς`, `τοὺς`), and an acute before punctuation or an enclitic of
+    ancient Greek an oxytone (`σάς.`, `τούς τε`), which lose it;
   - the accent of a word that elision made a monosyllable, which ends in a
     consonant before an apostrophe (`δείξ’ το`, `πάρ’ το`, `ὅτ᾽` → `ότ’`,
     which gave `δειξ’`, `παρ’`, `οτ’`).
@@ -84,8 +84,8 @@ change.
   (`τὸ σῶμά μου` gives `το σώμα μου`, `εἶναί τινα` `είναι τινα`, which gave
   `σώμά`, `είναί`): monotonic Greek writes two accents on a proparoxytone
   only (`ο άνθρωπός μου`). `convertDetailed()` reports the accent removed.
-  A bundle that writes any format grows by 0.7 to 0.8 kB minified, 0.2 to
-  0.3 kB with gzip.
+  A bundle that writes any format grows by 1.0 to 1.1 kB minified, 0.3 to
+  0.4 kB with gzip.
 - **The spacing tonos typed for a keraia or before a capital.** The Greek
   keyboard has no keraia, and types the spacing tonos `΄` (U+0384) for it.
   After the letters of a numeral, Greek reads it as the right keraia, which
@@ -94,13 +94,15 @@ change.
   `2 Pankosmios` (rc.12: `*b΄ *pagko/smios`, `V΄ Pankosmios`).
   `convertDetailed()` reports the sign typed as lost in those formats
   (`unrepresented-literal`). A consonant alone that elision leaves (`σ`,
-  `μ`, `τ`, `ν`, `θ`, `π`) and `κι` before a word that starts with a vowel
-  keep the sign as an apostrophe (`σ΄ αγαπώ`), whatever their case and
-  marks, so that a numeral of one such letter before such a word is not
-  read (`Θ΄ αιώνας`); any other word keeps it too (`απ΄ όλα`). Every reader
+  `μ`, `τ`, `ν`, `θ`, `π`), `κι`, and `υπ` before a word that starts with a
+  vowel keep the sign as an apostrophe (`σ΄ αγαπώ`, `υπ΄ όψιν`), whatever
+  their case and marks, so that a numeral of one such letter before such a
+  word is not read (`Θ΄ αιώνας`); so do letters before a vowel that follows
+  the sign without a space (`σ΄αγαπώ`), letters that no numeral writes
+  (`όλ΄ αυτά`), and any other word (`απ΄ όλα`). Every reader
   takes the sign before a capital vowel, at the start of a word, as its
   tonos, as it takes the spacing breathings (`΄Ελληνας` gives `Έλληνας`).
-  A bundle that reads Greek grows by 1.0 to 1.1 kB minified, 0.3 to 0.5 kB
+  A bundle that reads Greek grows by 1.6 to 1.7 kB minified, 0.4 to 0.5 kB
   with gzip.
 - **Speed.** Writing Greek and Beta Code computes once, for the options that
   conversions share and for prepared options, what it computed at each call:

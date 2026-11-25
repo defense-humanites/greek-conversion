@@ -38,6 +38,12 @@ const SPACING_SIGNS: ReadonlySet<number> = new Set([
   0x1fee,
   0x1ffe,
 ]);
+/** Whether a token is a spacing sign, composed or not. */
+export function isSpacingSign(token: Token | undefined): boolean {
+  return token?.kind === "literal" &&
+    SPACING_SIGNS.has(token.value.charCodeAt(0));
+}
+
 /** The spacing signs, decomposed or not. */
 const SPACING_SIGN =
   /[\u00A8\u0384\u0385\u1FBF\u1FC1\u1FCD-\u1FCF\u1FDD-\u1FDF\u1FED\u1FEE\u1FFE]/;
@@ -93,6 +99,8 @@ function accentOf(value: string): Diacritic | undefined {
  */
 function breathingMarks(value: string): Diacritic[] | undefined {
   if (value === TONOS_SIGN) return ["acute"];
+  // Most literals are spaces and punctuation, which need no normalization.
+  if (!SPACING_SIGNS.has(value.charCodeAt(0))) return undefined;
   const marks = value.normalize("NFD");
   const breathing: Diacritic | undefined = marks[0] === PSILI
     ? "smooth"

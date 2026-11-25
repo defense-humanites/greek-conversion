@@ -47,6 +47,12 @@ yours.
   Latin letter depends on the letters around it (diphthongs, nasal gamma, the
   breathing of a vowel group), and the reader looks for the longest spelling
   at each position. Greek and Beta Code cost least.
+- **Spacing signs.** A Greek text with a spacing breathing (`῾Ο`), or with
+  a spacing tonos (`΄`) typed for an apostrophe or before a capital
+  (`σ΄ αγαπώ`, `΄Ελληνας`), is read a second time to join these signs to
+  their letters: a text of 10,000 characters takes some 0.4 ms longer, a
+  quarter to two fifths, however few signs it has. A spacing tonos typed
+  for the keraia of a numeral (`Β΄ Παγκόσμιος`) adds about a tenth.
 - **`convertDetailed()`.** It reads the output again to find what the
   conversion lost, and keeps the position of every token: it costs two to
   three times what `convert()` does. Call it where the losses or the
