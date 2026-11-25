@@ -134,6 +134,22 @@ convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliter
 // → I Athína eínai i protévousa
 ```
 
+## Size and speed
+
+The examples of this documentation import everything from the main entry
+point: it is the simplest way, and fast enough for most uses, as a text of
+10,000 characters converts in 1 to 2 ms. Two refinements count in some
+cases. A web page that converts in one direction can import its conversion
+from the `core` entry point, with only the formats and presets it uses, and
+ship a bundle up to half as heavy, as
+[Smaller bundles](/guide/smaller-bundles/) explains. An application that
+converts many short strings under options of its own can prepare them once
+with `prepareOptions()`, which makes each call about twice as fast, as
+[Converters, options, and errors](/guide/converters/#prepare-options-once)
+shows. [Performance](/guide/performance/) gives what each call costs:
+`convertDetailed()`, for one, costs two to three times what `convert()`
+does.
+
 ## Next steps
 
 - To see why every format converts to every other with the same rules,
@@ -152,6 +168,9 @@ convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliter
   [diacritics and Unicode output](/guide/recipes/diacritics-and-unicode/),
   [transliteration and Beta Code](/guide/recipes/transliteration-and-beta-code/),
   and [letters and text](/guide/recipes/letters-and-text/).
+- To keep a web page's bundle small, or many conversions fast, see
+  [Smaller bundles](/guide/smaller-bundles/) and
+  [Performance](/guide/performance/).
 - Before you rely on it, read
   [Guarantees and limits](/reference/guarantees/); for a word of this
   documentation, see the [Glossary](/guide/glossary/).
