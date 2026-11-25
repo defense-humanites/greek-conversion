@@ -255,6 +255,67 @@ test("monotonic monosyllables carry no accent except ή, πού, and πώς", ()
   );
 });
 
+test("monotonic accentuation keeps the accents of monotonic orthography", () => {
+  // Monotonic text keeps them, and is canonical.
+  for (
+    const text of [
+      "ο πατέρας μού είπε, ο πατέρας μου είπε",
+      "γράψε μού το, δώσε μού το, Ο ΠΑΤΈΡΑΣ ΜΟΎ ΕΊΠΕ",
+      "δείξ’ το, πάρ’ το, άσ’ το, όσ’ ήθελε",
+      "ο άνθρωπός μου, φυτεύοντάς τα",
+    ]
+  ) assertEquals(reencode(text, "greek", MONOTONIC), text);
+  // The accent of a weak pronoun is an acute: the article, which a
+  // circumflex or a grave marks, has none.
+  assertNfcEquals(
+    reencode("τοῦ πατρός, τῆς μητρός, τοὺς φίλους", "greek", MONOTONIC),
+    "του πατρός, της μητρός, τους φίλους",
+  );
+  // It belongs to the word after: before punctuation, an acute is that of
+  // an oxytone, such as the possessive `σάς`.
+  assertNfcEquals(
+    reencode("σάς. είπε μού, τούς", "greek", MONOTONIC),
+    "σας. είπε μου, τους",
+  );
+  // A word that elision made a monosyllable keeps its accent, whatever the
+  // elision mark; a word in quotation marks or that ends as a word does is
+  // no elision.
+  assertNfcEquals(
+    reencode("δεῖξ᾽ το, ὅτ᾽ ἦλθε, ἀλλ’ ἐκεῖνος", "greek", MONOTONIC),
+    "δείξ’ το, ότ’ ήλθε, αλλ’ εκείνος",
+  );
+  assertNfcEquals(
+    reencode("‘πῦρ’ καὶ ‘γῆς’", "greek", MONOTONIC),
+    "‘πυρ’ και ‘γης’",
+  );
+  // Two accents on the last two syllables, of a paroxytone or a
+  // properispomenon before an enclitic, are one; a proparoxytone keeps both.
+  assertNfcEquals(
+    reencode(
+      "τὸ σῶμά μου, εἶναί τινα, δῶσέ μου το, ὁ ἄνθρωπός μου",
+      "greek",
+      MONOTONIC,
+    ),
+    "το σώμα μου, είναι τινα, δώσε μου το, ο άνθρωπός μου",
+  );
+  // In every format, and the loss is reported.
+  const romanized = convertDetailed("τὸ σῶμά μου", "greek", "transliteration", {
+    ...MONOTONIC,
+    preset: "iso-843-type-2",
+  });
+  assertEquals(romanized.output.normalize(), "to sóma mou");
+  assertEquals(
+    romanized.losses.some((loss) =>
+      loss.code === "removed-diacritic" && loss.diacritic === "acute"
+    ),
+    true,
+  );
+  assertEquals(
+    convert("δεῖξ᾽ το", "greek", "beta-code", MONOTONIC),
+    "dei/c' to",
+  );
+});
+
 test("monotonic rendering does not create blocked contractions", () => {
   assertEquals(
     convert("βσ̓ κσ̓", "greek", "greek", {

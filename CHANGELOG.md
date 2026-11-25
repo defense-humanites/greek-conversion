@@ -52,6 +52,27 @@ change.
   that writes Beta Code or transliteration, but not
   Greek, now keeps the monotonic rules: it grows by 1.6 to 1.8 kB minified,
   0.4 to 0.6 kB with gzip.
+- **Monotonic accentuation keeps the accents of monotonic orthography.**
+  Under `greek.accentuation: "monotonic"`, in every format, a monotonic text
+  converts to itself, where accents that the official orthography requires
+  were removed:
+  - the accent of a weak pronoun, `μου`, `σου`, `του`, `της`, `μας`, `σας`,
+    or `τους`, that an author writes to avoid ambiguity, read from an acute
+    before the word it belongs to (`ο πατέρας μού είπε`, `δώσε μού το`,
+    which gave `μου`); a circumflex or a grave marks the article (`τοῦ`,
+    `τῆς`, `τοὺς`), and an acute before punctuation an oxytone (`σάς.`),
+    which lose it;
+  - the accent of a word that elision made a monosyllable, which ends in a
+    consonant before an apostrophe (`δείξ’ το`, `πάρ’ το`, `ὅτ᾽` → `ότ’`,
+    which gave `δειξ’`, `παρ’`, `οτ’`).
+
+  A word accented on its last two syllables, as polytonic Greek accents a
+  paroxytone or a properispomenon before an enclitic, keeps the first
+  (`τὸ σῶμά μου` gives `το σώμα μου`, `εἶναί τινα` `είναι τινα`, which gave
+  `σώμά`, `είναί`): monotonic Greek writes two accents on a proparoxytone
+  only (`ο άνθρωπός μου`). `convertDetailed()` reports the accent removed.
+  A bundle that writes any format grows by 0.7 to 0.8 kB minified, 0.2 to
+  0.3 kB with gzip.
 - **Speed.** Writing Greek and Beta Code computes once, for the options that
   conversions share and for prepared options, what it computed at each call:
   the marks that each format keeps, and the codes that write them. A word

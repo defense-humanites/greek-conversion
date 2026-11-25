@@ -22,7 +22,11 @@ The package is ESM-only.
 transliteration output are monotonic too, where they kept the polytonic marks:
 `ὁ ἄνθρωπος` gives `o a/nqrwpos` and `o ánthrōpos` (rc.12: `o( a)/nqrwpos`
 and `ho ánthrōpos`). To keep the polytonic marks in these formats, leave the
-option out of their conversions.
+option out of their conversions. It keeps the accent of a weak pronoun
+written with an acute and of a word that elision made a monosyllable
+(`ο πατέρας μού είπε`, `δείξ’ το`; rc.12: `μου`, `δειξ’`), and removes the
+second accent of a word accented on its last two syllables (`τὸ σῶμά μου`
+gives `το σώμα μου`; rc.12: `σώμά`).
 
 Under the ISO 843 presets, an apostrophe before the vowel group of a word, or
 between a vowel and a letter after a consonant, reads back as a smooth

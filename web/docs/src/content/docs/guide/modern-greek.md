@@ -132,26 +132,19 @@ monotonic Greek is typed, so that a text converts back to itself code point
 for code point.
 
 `accentuation: "monotonic"` also applies the monotonic rules to what it
-writes: a monosyllable loses its accent, except `ή`, `πού`, and `πώς`, and
-those that abbreviate a longer word (`ό,τι`, `κ.ά.`, `20ός`). The count is
-mechanical, and also removes the accent that an author puts on a weak
-pronoun to avoid ambiguity (`μού`). To read Latin script back without
-touching its accents, ask only for no breathing:
+writes: a monosyllable loses its accent, except `ή`, `πού`, and `πώς`, a
+weak pronoun that an author accents to avoid ambiguity (`μού`), a word that
+elision made a monosyllable (`δείξ’ το`), and those that abbreviate a longer
+word (`ό,τι`, `κ.ά.`, `20ός`). Monotonic Latin script therefore reads back
+with its accents:
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
 
-const latin = "ó,ti eípe o patéras moú, k.á.";
-
-convert(latin, "transliteration", "greek", {
+convert("o patéras moú eípe ó,ti xérei", "transliteration", "greek", {
   greek: { accentuation: "monotonic" },
 });
-// → ό,τι είπε ο πατέρας μου, κ.ά.
-
-convert(latin, "transliteration", "greek", {
-  diacritics: { smoothBreathing: "remove" },
-});
-// → ό,τι είπε ο πατέρας μού, κ.ά.
+// → ο πατέρας μού είπε ό,τι ξέρει
 ```
 
 ## From polytonic to monotonic

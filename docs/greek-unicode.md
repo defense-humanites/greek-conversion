@@ -22,24 +22,39 @@ The monotonic transform:
 
 - preserves diaeresis;
 - maps acute, grave, and circumflex to acute, keeping the second accent that
-  a word receives from a following enclitic (`ἄνθρωπός τις → άνθρωπός τις`);
+  a proparoxytone receives from a following enclitic
+  (`ἄνθρωπός τις → άνθρωπός τις`): the second accent of a word accented on
+  its last two syllables, as polytonic Greek accents a paroxytone or a
+  properispomenon before an enclitic, is removed (`σῶμά μου → σώμα μου`,
+  `εἶναί τινα → είναι τινα`);
 - removes smooth and rough breathings, coronis, iota subscript, macron, and
   breve;
 - leaves monosyllables unaccented (`καὶ → και`, `τῶν → των`, `κἂν → καν`),
-  except the three the monotonic system distinguishes, which the polytonic
-  marks identify: disjunctive `ή` from `ἤ` or `ἢ` (not the article `ἡ`, nor
-  `ἦ` or `ἥ`), and interrogative `πού` and `πώς` from `ποῦ` and `πῶς` (not the
-  relative or indefinite `ποὺ`, `που`, `πὼς`, `πως`), and except a word that
-  abbreviates a longer one (`ὅ,τι → ό,τι`, `κ.ἄ. → κ.ά.`, `20ός`).
+  except those that the monotonic system distinguishes, which the marks of
+  the source identify: disjunctive `ή` from `ἤ` or `ἢ` (not the article `ἡ`,
+  nor `ἦ` or `ἥ`); interrogative `πού` and `πώς` from `ποῦ` and `πῶς` (not
+  the relative or indefinite `ποὺ`, `που`, `πὼς`, `πως`); and the weak forms
+  of the personal pronouns that an author accents to avoid ambiguity,
+  written with an acute before the word they belong to
+  (`ο πατέρας μού είπε`, `δώσε μού το`; not the article `τοῦ`, `τῆς`,
+  `τοὺς`, nor an oxytone before punctuation, such as the possessive `σάς.`).
+  A word that elision made a monosyllable, which ends in a consonant before
+  an apostrophe, keeps its accent (`δεῖξ’ το → δείξ’ το`, `ὅτ’ → ότ’`), as
+  does a word that abbreviates a longer one (`ὅ,τι → ό,τι`, `κ.ἄ. → κ.ά.`,
+  `20ός`).
 
 Syllables are counted on the written vowels: a diphthong is one syllable, and a
-diaeresis or an accent on the first of two vowels marks two. An acute on `πού`
-or `πώς` is kept, because that is how monotonic text writes the interrogative,
-so these words are already canonical in monotonic input. Two cases need
-knowledge of the word and are left as written: a monosyllable by synizesis
-(`γιὰ`, `μιὰ`, `δυὸ`, `πιὰ` keep their accent, since `Διός` and `κιών`, with the
-same vowels, are disyllables), and the optional accent that monotonic authors
-put on a weak pronoun to avoid ambiguity (`μού`), which is removed.
+diaeresis or an accent on the first of two vowels marks two. An acute on `πού`,
+`πώς`, or a weak pronoun is kept, because that is how monotonic text writes
+them, so these words are already canonical in monotonic input; a polytonic
+enclitic that received an acute from the next is kept as well
+(`πατήρ μού ἐστιν → πατήρ μού εστιν`). A word in quotation marks is no
+elision (`‘πῦρ’ → ‘πυρ’`), the closing mark being the apostrophe. Some cases
+need knowledge of the word and are left as written: a monosyllable by
+synizesis (`γιὰ`, `μιὰ`, `δυὸ`, `πιὰ` keep their accent, since `Διός` and
+`κιών`, with the same vowels, are disyllables), and the accent that an
+imperative accented on its penult passes to the first of two weak pronouns
+(`δῶσέ μου το` gives `δώσε μου το`, where monotonic writes `δώσε μού το`).
 
 The count takes as a word what stands between spaces and punctuation, except
 where usage keeps the accent of a word of one vowel, because it abbreviates a
@@ -53,8 +68,8 @@ longer one:
 - the ending of an ordinal written with digits keeps its accent (`20ός`,
   `το 20ό`).
 
-To read monotonic text back from transliteration without applying the rules,
-ask only for no breathing (`diacritics: { smoothBreathing: "remove" }`).
+Monotonic text reads back from transliteration as written, its accents
+included (`o patéras moú eípe` gives `ο πατέρας μού είπε`).
 
 It applies to every format: Beta Code and transliteration spell the monotonic
 text that Greek output writes, so that a polytonic transliteration or Beta

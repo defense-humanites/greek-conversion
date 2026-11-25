@@ -20,6 +20,7 @@ import {
   withoutDiacritic,
 } from "./model.ts";
 import { preservesDiacritic } from "./diacritics.ts";
+import { APOSTROPHE } from "./punctuation.ts";
 import type {
   Diacritic,
   Document,
@@ -96,12 +97,11 @@ export function applyOrthography(
  *
  * The monotonic policy is mechanical and lossy: it preserves diaeresis and
  * overline, collapses acute/grave/circumflex to one acute, removes
- * breathings, coronis,
- * iota subscript, and explicit quantity, and leaves monosyllables unaccented
- * except for the three the monotonic system distinguishes (see
- * {@link keepsMonosyllableAccent}) and those that abbreviate a longer word
- * (`ό,τι`, `κ.ά.`, `20ός`). It does not use lexical or morphological
- * knowledge.
+ * breathings, coronis, iota subscript, and explicit quantity, and applies
+ * the accent rules of monotonic orthography to each word (see
+ * {@link accentWords}). It does not use lexical or morphological knowledge:
+ * the accents it keeps on monosyllables are read from the marks of the
+ * source.
  */
 export function applyGreekOrthography(
   document: Document,
@@ -148,22 +148,29 @@ export function applyMonotonicOrthography(
     return { ...token, diacritics: sharedDiacritics(diacritics) };
   });
 
-  changed = unaccentMonosyllables(orthographic, monotonic) || changed;
+  changed = accentWords(orthographic, monotonic) || changed;
   return changed ? monotonic : orthographic;
 }
 
 /**
- * Removes the accent of monosyllabic words from the monotonic view, in place.
+ * Applies the accent rules of monotonic orthography to each word of the
+ * monotonic view, in place:
+ *
+ * - a monosyllable loses its accent, but for those the monotonic system
+ *   distinguishes ({@link keepsMonosyllableAccent}), a word that abbreviates
+ *   a longer one (`ό,τι`, `κ.ά.`, `20ός`), and a word that elision made a
+ *   monosyllable, which keeps it (`δείξ’ το`, {@link isElided});
+ * - a word accented on its last two syllables, as polytonic Greek accents a
+ *   paroxytone or properispomenon before an enclitic (`σῶμά μου`), loses the
+ *   second accent: monotonic Greek writes two accents on a proparoxytone only
+ *   (`άνθρωπός μου`).
  *
  * Syllables are counted on the monotonic view itself, where an accent on the
  * first of two vowels is the only remaining sign of hiatus, so that rendering
  * the output again gives the same result. The exceptions are read from the
  * marks of the source.
  */
-function unaccentMonosyllables(
-  source: Document,
-  monotonic: Token[],
-): boolean {
+function accentWords(source: Document, monotonic: Token[]): boolean {
   let changed = false;
   for (let start = 0; start < monotonic.length; start++) {
     if (
@@ -188,28 +195,111 @@ function unaccentMonosyllables(
     const first = start;
     start = end - 1;
 
-    const accented = word.filter((index) =>
-      (monotonic[index] as Grapheme).diacritics.has("acute")
-    );
     if (
-      kept || accented.length === 0 ||
+      kept || !word.some((index) => isAccented(monotonic[index])) ||
       isGreekNumeralContext(monotonic, word[0]) ||
-      isAbbreviation(monotonic, first, end) ||
-      syllableCount(monotonic, word) !== 1 ||
-      keepsMonosyllableAccent(source, word)
+      isAbbreviation(monotonic, first, end)
     ) continue;
 
-    for (const index of accented) {
+    // The syllables of the word, a diphthong being one, and those that bear
+    // an accent: the first and the last, and how many.
+    let syllables = 0;
+    let lastSyllable = -1;
+    let accented = 0;
+    let firstAccented = -1;
+    let lastAccented = -1;
+    for (const index of word) {
       const token = monotonic[index] as Grapheme;
+      if (!isVowel(token.letter)) continue;
+      if (
+        index - 1 < first || monotonic[index - 1].kind !== "grapheme" ||
+        !isDiphthongAt(monotonic, index - 1)
+      ) {
+        syllables++;
+        lastSyllable = index;
+      }
+      if (token.diacritics.has("acute") && lastAccented !== syllables) {
+        accented++;
+        if (firstAccented < 0) firstAccented = syllables;
+        lastAccented = syllables;
+      }
+    }
+
+    let unaccented: readonly number[];
+    if (syllables === 1) {
+      if (
+        keepsMonosyllableAccent(
+          source,
+          word,
+          precedesWord(monotonic, word[word.length - 1]),
+        ) ||
+        isElided(monotonic, word, end)
+      ) continue;
+      unaccented = word;
+    } else if (
+      accented === 2 && firstAccented === syllables - 1 &&
+      lastAccented === syllables
+    ) {
+      // The accents of the last two syllables: the second goes.
+      unaccented = word.filter((index) =>
+        index >= lastSyllable &&
+        isVowel((monotonic[index] as Grapheme).letter)
+      );
+    } else continue;
+
+    for (const index of unaccented) {
+      const token = monotonic[index] as Grapheme;
+      if (!token.diacritics.has("acute")) continue;
       monotonic[index] = {
         ...token,
         diacritics: withoutDiacritic(token.diacritics, "acute"),
       };
+      changed = true;
     }
-    changed = true;
   }
   return changed;
 }
+
+/**
+ * Whether the letter at `last`, which ends a word, is followed by spaces and
+ * another word, with no punctuation between them.
+ */
+function precedesWord(document: Document, last: number): boolean {
+  let index = last + 1;
+  while (isBoundaryTransparent(document[index])) index++;
+  const space = index;
+  while (index < document.length && isWhitespace(document[index])) index++;
+  return index > space && document[index]?.kind === "grapheme";
+}
+
+function isAccented(token: Token): boolean {
+  return token.kind === "grapheme" && token.diacritics.has("acute");
+}
+
+/**
+ * Whether elision made the word a monosyllable: it ends in a consonant that
+ * ends no Greek word, so that a vowel was elided, before an apostrophe
+ * (`δείξ’ το`, `πάρ’ το`). A word keeps its accent then, which the
+ * monotonic system writes ("Όταν μια λέξη παθαίνει έκθλιψη ή αποκοπή και
+ * γίνεται μονοσύλλαβη, κρατάει τον τόνο"). The closing quotation mark is
+ * the apostrophe too: after a word that ends in a vowel, `ν`, or `ς`, as a
+ * modern Greek word does, or that an opening one starts (`‘πῦρ’`), it is no
+ * elision.
+ */
+function isElided(
+  document: Document,
+  word: readonly number[],
+  end: number,
+): boolean {
+  const last = document[word[word.length - 1]] as Grapheme;
+  const before = document[word[0] - 1];
+  return isLiteral(document[end], APOSTROPHE) && !isVowel(last.letter) &&
+    last.letter !== "nu" && last.glyphVariant !== "final-sigma" &&
+    !isLiteral(before, OPENING_QUOTE) && !isLiteral(before, APOSTROPHE);
+}
+
+/** The opening single quotation mark, which the closing one pairs with. */
+const OPENING_QUOTE = "\u2018";
 
 /**
  * Whether the word from `start` to `end` (excluded) abbreviates a longer one,
@@ -231,19 +321,6 @@ function isAbbreviation(
     isLiteral(document[end], ".") && isWordLetter(document[end + 1]);
 }
 
-function syllableCount(document: Document, word: readonly number[]): number {
-  let count = 0;
-  for (const index of word) {
-    const token = document[index] as Grapheme;
-    if (!isVowel(token.letter)) continue;
-    if (word.includes(index - 1) && isDiphthongAt(document, index - 1)) {
-      continue;
-    }
-    count++;
-  }
-  return count;
-}
-
 /**
  * The monosyllables that keep their accent in monotonic orthography, as far
  * as the source marks identify them:
@@ -251,15 +328,23 @@ function syllableCount(document: Document, word: readonly number[]): number {
  * - disjunctive `ή` ("or"), written `ἤ` or `ἢ` in polytonic Greek, as opposed
  *   to the article `ἡ` and to `ἦ`;
  * - interrogative `πού` and `πώς`, written `ποῦ` and `πῶς` in polytonic Greek,
- *   as opposed to the relative or indefinite `που`, `ποὺ`, `πως`, `πὼς`.
+ *   as opposed to the relative or indefinite `που`, `ποὺ`, `πως`, `πὼς`;
+ * - the weak forms of the personal pronouns, `μου`, `σου`, `του`, `της`,
+ *   `μας`, `σας`, `τους`, written with an acute where they could be read as
+ *   enclitics of the word before (`ο πατέρας μού είπε`, `δώσε μού το`), and
+ *   which belong to the word after (`beforeWord`). A circumflex or a grave
+ *   does not identify them, since `τοῦ`, `τῆς`, and `τοὺς` are the article,
+ *   nor an acute before punctuation, which polytonic Greek writes on an
+ *   oxytone (`σάς.`, the possessive).
  *
- * An acute on `πού` or `πώς` is kept, because it is how monotonic text writes
- * the interrogative; a polytonic enclitic that received an acute from a
- * following enclitic is therefore kept as well.
+ * An acute on these words is kept, because it is how monotonic text writes
+ * them; a polytonic enclitic that received an acute from a following
+ * enclitic is therefore kept as well.
  */
 function keepsMonosyllableAccent(
   source: Document,
   word: readonly number[],
+  beforeWord: boolean,
 ): boolean {
   const tokens = word.map((index) => source[index]);
   if (!tokens.every((token) => token?.kind === "grapheme")) return false;
@@ -276,8 +361,23 @@ function keepsMonosyllableAccent(
       diacritics.has("circumflex") || diacritics.has("acute")
     );
   }
+  if (WEAK_PRONOUNS.has(letters)) {
+    return beforeWord &&
+      graphemes.some(({ diacritics }) => diacritics.has("acute"));
+  }
   return false;
 }
+
+/** The weak forms of the personal pronouns, by their letters. */
+const WEAK_PRONOUNS: ReadonlySet<string> = new Set([
+  "mu omicron upsilon",
+  "sigma omicron upsilon",
+  "tau omicron upsilon",
+  "tau eta sigma",
+  "mu alpha sigma",
+  "sigma alpha sigma",
+  "tau omicron upsilon sigma",
+]);
 
 /**
  * Applies the transformations of the whole text that every format shares:

@@ -310,7 +310,7 @@ source can be reconstructed from the output: yes, no, or partly.
 | `iotaSubscript: "capital-adscript"` or `"adscript"` | Writes a kept iota subscript on the line, after a capital or after every vowel | No: the iota reads back as a letter, and the subscript is reported as removed (`removed-diacritic`) |
 | `dentalSigma: "assimilate"` | Deletes `τ`, `δ`, or `θ` before sigma in Greek output | No |
 | `elidedStop: "aspirate"` | Writes an elided final `π`, `τ`, or `κ` as `φ`, `θ`, or `χ` before a rough breathing in Greek output | No: the aspirate reads back as itself |
-| `accentuation: "monotonic"` | In every format, keeps diaeresis, maps every accent to acute, removes other polytonic marks, and unaccents monosyllables except `ή`, `πού`, `πώς`, and abbreviations (`κ.ά.`) | No |
+| `accentuation: "monotonic"` | In every format, keeps diaeresis, maps every accent to acute, removes other polytonic marks, unaccents monosyllables except `ή`, `πού`, `πώς`, an accented weak pronoun (`μού`), an elided word (`δείξ’`), and abbreviations (`κ.ά.`), and keeps two accents on a proparoxytone only | No |
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | Partly: the accent is recoverable; its scalar preference is not |
 | `questionMark: "greek"`, `anoTeleia: "greek"` | Selects a canonically unstable punctuation scalar | Partly: the punctuation meaning is recoverable; its scalar preference is not |

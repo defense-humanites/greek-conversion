@@ -5,6 +5,9 @@
  * change and that the list does not have yet.
  */
 
+import * as reference from "greek-conversion-previous";
+import { THUCYDIDES_1_1_10 } from "../bench/thucydides.ts";
+
 /**
  * A change of output that is meant: the input, and, where it changes under
  * some options or calls only, their label and the call, as a difference
@@ -41,6 +44,8 @@ const SOURCE_APOSTROPHE =
 const MARK_INSIDE_WORD =
   "A mark that the transliteration reader does not read stays inside the word: the vowel after it takes no smooth breathing, which convertDetailed() no longer reports inferred.";
 const DETAILED_TO_TRANSLITERATION = "convertDetailed(greek → transliteration)";
+const MONOTONIC_ACCENTS =
+  "Monotonic accentuation keeps the accent of a word that elision made a monosyllable and of an accented weak pronoun, and removes the second accent of a word accented on its last two syllables.";
 const MONOTONIC_EVERY_FORMAT =
   "Monotonic accentuation applies to Beta Code and transliteration, which spell the monotonic text that Greek output writes.";
 
@@ -326,6 +331,32 @@ export const MEANT: readonly MeantChange[] = [
     "a)utmh/, (1]1",
   ]),
   ...isoApostropheChanges(),
+  ...[
+    THUCYDIDES_1_1_10,
+    reference.convert(THUCYDIDES_1_1_10, "greek", "beta-code"),
+    reference.convert(THUCYDIDES_1_1_10, "greek", "transliteration"),
+    "ὅσ᾿",
+    "Μ—ν\u0300\u0314\u0307\u0304ΐὅ\u0304τ",
+    "ΔΡ᾿[Ξ;῍a\u0300ήάθΞϰ",
+    "ΑΕ\u0313a\u0306ϵ37;ίή",
+    " ·Ξχ\u20DDύ\u0307\u00A0ϟΐ\u0301ύϑ",
+    "\u00A0 ξ\u0305· ϐό\u0313ύ6ψ",
+    "\u0307φα\u03075μ\u0305\u00A0ἄςΐ",
+    "o(/s'",
+    "hós’",
+    "ôòe'éò1\u0314ĭ3Ē",
+    "ēŌèú",
+    "᾿âYDóí῾-k\u0301῾éâ(",
+    "dōzâǘ9",
+    "òTMr\u0342\u0305ï)ǘs’é",
+    "ǘAX1w7\u0313íè\u0308",
+    "-\u0305lò,\u0308è\u03146",
+    "0ca3ī·ô\u0300xă\u0342",
+  ].map((input) => ({
+    input,
+    label: "monotonic, decomposed",
+    reason: MONOTONIC_ACCENTS,
+  })),
   ...monotonicCalls().map((call) => ({
     label: "monotonic, decomposed",
     call,
