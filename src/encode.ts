@@ -27,6 +27,7 @@ import {
   isVowelUpsilonAt,
   isWordFinal,
   isWordInitial,
+  isWordLetter,
   precedesVoicedSound,
   roughDiphthongStart,
   roughDiphthongStarts,
@@ -1831,7 +1832,7 @@ function writeApostrophes(
     let letter = before;
     while (isBoundaryTransparent(document[letter])) letter--;
     const marks = previous?.kind !== "grapheme"
-      ? smoothApostrophe && document[letter]?.kind !== "grapheme" &&
+      ? smoothApostrophe && !isWordLetter(document[letter]) &&
         LATIN_VOWEL.test(next)
       : written.endsWith(APOSTROPHE)
       // After the apostrophe of a coronis, U+02BC lets it read back as one;
