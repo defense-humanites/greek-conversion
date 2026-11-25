@@ -1233,3 +1233,69 @@ test("a letter kept from an overlined run of Beta Code keeps its overline", () =
     stigma.convert("<a#2b>", "beta-code", "greek"),
   );
 });
+
+test("a mark the reader does not know stays once after a kept letter", () => {
+  // Unicode writes it in one cluster with the marks of the letter, whose
+  // span in Greek it shared: the kept letter took it, and the literal of the
+  // mark followed, so that each conversion doubled it.
+  const noAlpha = createConverter({ exclude: ["alpha"] });
+  for (
+    const [target, expected] of [
+      ["greek", "ἅ̇ιδης"],
+      ["beta-code", "ἅ̇idhs"],
+      ["transliteration", "ἅ̇idēs"],
+    ] as const
+  ) {
+    assertNfcEquals(noAlpha.convert("ἅ̇ιδης", "greek", target), expected);
+  }
+  const dots = (text: string) =>
+    text.normalize("NFD").split("\u0307").length - 1;
+  for (
+    const [text, options] of [
+      ["ἀ̇́ ᾅ̇", {}],
+      ["Ἅ̇ιδης", { text: { letterCase: "uppercase" } }],
+      ["ἅ̇ιδης", { text: { letterCase: "title" } }],
+      ["Ἅ̇ιδης", { text: { letterCase: "lowercase" } }],
+    ] as const
+  ) {
+    const output = noAlpha.convert(text, "greek", "greek", options);
+    assertEquals(dots(output), dots(text));
+    assertEquals(noAlpha.convert(output, "greek", "greek", options), output);
+  }
+  // Nothing is reported lost.
+  assertEquals(
+    noAlpha.convertDetailed("ἅ̇ιδης", "greek", "greek").lossy,
+    false,
+  );
+});
+
+test("a spacing breathing stays apart from a kept capital", () => {
+  // A capital kept out of scope is a literal, whose letter no rule reads:
+  // the writer keeps a sign before it apart, as before a capital that could
+  // take it, so that the sign does not join it when read again: a spacing
+  // breathing, or the spacing tonos `΄`.
+  const zwnj = "\u200C";
+  const noAlpha = createConverter({ exclude: ["alpha"] });
+  const upper = { text: { letterCase: "uppercase" } } as const;
+  for (
+    const [text, format] of [
+      ["῾ά λόγος", "greek"],
+      ["΄ά λόγος", "greek"],
+      ["%31a/ lo/gos", "beta-code"],
+      ["῾á lógos", "transliteration"],
+    ] as const
+  ) {
+    const output = noAlpha.convert(text, format, format, upper);
+    assertEquals(output.includes(zwnj), true);
+    assertEquals(noAlpha.convert(output, format, format, upper), output);
+  }
+  assertNfcEquals(
+    createConverter({ exclude: ["rho"] }).convert(
+      "῾ρόδος",
+      "greek",
+      "greek",
+      upper,
+    ),
+    `῾${zwnj}ΡΟΔΟΣ`,
+  );
+});

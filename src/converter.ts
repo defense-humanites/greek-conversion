@@ -1338,6 +1338,8 @@ interface KeptLetters {
 interface WrittenWord {
   readonly start: number;
   readonly end: number;
+  /** Its tokens, with the sigma shapes that the whole source gives. */
+  readonly tokens: readonly Token[];
   readonly output: string;
   readonly spans: SpanTable;
 }
@@ -1400,7 +1402,7 @@ function keptSpelling(
 ): string {
   return kept.format === "transliteration"
     ? copiedSpelling(kept, index, uppercase)
-    : writtenSpelling(kept, index);
+    : writtenSpelling(kept, index, uppercase);
 }
 
 /**
@@ -1409,18 +1411,32 @@ function keptSpelling(
  * case (`keptOptions()`). A sigma whose shape the source does not note, a
  * capital that the letter case lowercases, takes the shape of its place in
  * the whole source, which may depend on a quotation opened before its word.
+ * A mark that the reader does not know, written after a letter with marks,
+ * shares the letter's span in Greek, whose normalization writes them as one
+ * cluster (`ἅ̇`): the letter is then written alone, in the case `uppercase`
+ * gives it, since the mark stays a literal of its own after it.
  */
-function writtenSpelling(kept: KeptLetters, index: number): string {
+function writtenSpelling(
+  kept: KeptLetters,
+  index: number,
+  uppercase: boolean,
+): string {
   const options = kept.writing ??= keptOptions(kept.options.text.letterCase);
   let word = kept.word;
   if (word === undefined || index < word.start || index >= word.end) {
     word = kept.word = writtenWord(kept, index, options);
   }
   const position = index - word.start;
-  let spelling = word.output.slice(
-    word.spans.starts[position],
-    word.spans.ends[position],
-  );
+  let spelling = sharesSpan(word.spans, position)
+    ? encodeResolved(
+      [{ ...word.tokens[position] as Grapheme, uppercase }],
+      kept.format,
+      keptOptions("preserve"),
+    )
+    : word.output.slice(
+      word.spans.starts[position],
+      word.spans.ends[position],
+    );
   const token = kept.parsed[index] as Grapheme;
   if (kept.format !== "beta-code") return spelling;
   // Beta Code writes an overline around a run of letters, whose first and
@@ -1443,6 +1459,12 @@ function writtenSpelling(kept: KeptLetters, index: number): string {
     );
   }
   return overlined ? `<${spelling}>` : spelling;
+}
+
+/** Whether the span of the token at `position` overlaps a neighbour's. */
+function sharesSpan({ starts, ends }: SpanTable, position: number): boolean {
+  return position > 0 && ends[position - 1] > starts[position] ||
+    position + 1 < starts.length && starts[position + 1] < ends[position];
 }
 
 /** A small sigma at the start of its Beta Code, with its code. */
@@ -1489,7 +1511,7 @@ function writtenWord(
     }
   }
   const { output, spans } = encodeTracked(tokens, kept.format, options);
-  return { start, end, output, spans };
+  return { start, end, tokens, output, spans };
 }
 
 /**

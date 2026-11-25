@@ -146,7 +146,10 @@ kept as the source writes it in its word:
   options, which only shape the converted text. A letter of a sign for
   several letters is written alone (`ϗ`, with iota out of scope, gives
   `kaι`), and a letter overlined in Beta Code in an overline of its own
-  (`<i#2>`, with stigma out of scope, gives `i̅<#2>`);
+  (`<i#2>`, with stigma out of scope, gives `i̅<#2>`). A mark that the
+  reader does not know stays after it as a literal, once, though Unicode
+  writes it in one cluster with the letter's own marks (`ἅ̇`, with alpha
+  out of scope);
 - from transliteration, copied from the source as it was read (with
   `source`, when the options give one), since a transliteration's spelling
   depends on options that can leave marks out: the `n` of `ng` stays `n`, and
@@ -195,6 +198,12 @@ kept capital is among capitals (`ΘΕΟΣ`, with epsilon out of scope, gives
 - A letter whose spelling the reader shares with a neighbour, as the two
   letters of a modern digraph do (`b` for μπ), is written alone, as it was
   read.
+- A spacing breathing or tonos (`΄`) before a kept capital, at the start of
+  a word, is written with a zero-width non-joiner (U+200C) after it, as
+  before a capital that cannot carry it, since the writer cannot tell
+  whether the kept capital would take it: the sign stays apart when the
+  output is read again (`῾ά` or `΄ά`, with alpha out of scope, in
+  capitals).
 
 `convertDetailed()` keeps scope diagnostics separate from conversion losses:
 
