@@ -174,16 +174,18 @@ test("the transliteration reader keeps the spellings of each profile", () => {
   ];
   // Outputs written by 1.0.0-rc.12, which kept nothing across calls:
   // computed here, they would share a fault of the cache. ISO 843 Type 1 and
-  // Type 2 read these spellings alike, but for the length of eta.
+  // Type 2 read these spellings alike, but for the length of eta. Since then,
+  // a vowel after a letter that the reader does not read (`V`, `f`) is
+  // inside its word, and takes no smooth breathing.
   const expected = [
-    "Vἴ fὀς φος κσένος κὅρα χόρα δῑμος ἀfτός δῖμος",
+    "Vί fος φος κσένος κὅρα χόρα δῑμος ἀfτός δῖμος",
     "Βί φος πὁς κσένος κὅρα χόρα δημος αφτός δῖμος",
     "Βι fος φος κσενος κὁρα χορα διμος αfτος διμος",
     "Βί φος πὁς κσένος κὅρα χόρα δῑμος αφτός δῖμος",
-    "Βί fὀς φος κσένος κὅρα χόρα δημος ἀfτός δῖμος",
-    "Βί fὀς φος κσένος κὅρα χόρα δῑμος ἀfτός δημος",
-    "Vἴ fὀς φος ξένος χόρα χόρα δῑμος ἀfτός δῖμος",
-    "Vἴ fὀς φος ξένος χόρα ϲὅρα δῑμος ἀfτός δῖμος",
+    "Βί fος φος κσένος κὅρα χόρα δημος ἀfτός δῖμος",
+    "Βί fος φος κσένος κὅρα χόρα δῑμος ἀfτός δημος",
+    "Vί fος φος ξένος χόρα χόρα δῑμος ἀfτός δῖμος",
+    "Vί fος φος ξένος χόρα ϲὅρα δῑμος ἀfτός δῖμος",
   ];
   const prepared = variants.map((options) => core.prepareOptions(options));
   for (const order of [variants, [...variants].reverse()]) {
