@@ -18,8 +18,9 @@ protects these behaviors.
   ([below](#characters-of-another-format)), a letter written as a TLG
   code before a digit in Beta Code (see
   [Information loss](information-loss.md#canonical-spelling-and-unicode)),
-  and a few letters that a converter keeps out of its scope (see
-  [Character extensions](character-extensions.md#restricting-the-repertoire)).
+  and letters that a converter keeps out of its scope, in the cases that
+  [Character extensions](character-extensions.md#restricting-the-repertoire)
+  lists, frequent between Beta Code and transliteration.
 - **A lossless conversion is reversible.** When `convertDetailed()` reports
   `lossy: false`, converting the output back with the same options gives the
   same canonical text, but for the marks of a letter that a converter keeps

@@ -219,7 +219,12 @@ reads otherwise:
   Code);
 - a kept letter in the target's own format, which reads back as that letter:
   with sigma out of scope, a `Σ` kept in Greek output is a sigma, which can
-  begin a numeral (`ΣΤ΄`);
+  begin a numeral under decimal numerals (`ΣΤ΄`);
+- a kept letter of transliteration in Beta Code output, or the reverse,
+  which the target reads as one of its own letters: Beta Code reads no case,
+  and with iota out of scope, transliteration `Ia` gives `Ia` in Beta Code,
+  and `ia` when converted again. Between these two formats, whose letters
+  are both Latin, this is frequent;
 - under decimal numerals, a numeral after a kept letter whose combining mark
   the target reads apart: `μὰςʹ`, with alpha out of scope, gives `mὰsʹ` in
   transliteration, whose `sʹ` reads back as the numeral 200.
