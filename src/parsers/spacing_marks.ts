@@ -1,6 +1,6 @@
 import { GREEK_MARKS } from "../alphabet.ts";
 import { ligatureLength } from "../ligatures.ts";
-import { isVowel } from "../context.ts";
+import { isVowel, keptLetterCase } from "../context.ts";
 import {
   type Diacritic,
   type Document,
@@ -116,7 +116,8 @@ export const ZWNJ = "\u200C";
  * written without the mark that kept them apart (`῾A` in transliteration,
  * `῾Α` in monotonic Greek) would take it when read again, so writers put a
  * zero-width non-joiner after such a sign, which keeps it apart in every
- * format.
+ * format. So they do before a capital that a converter keeps as it was,
+ * whose letter no rule reads, and which may be one that takes the sign.
  */
 export function standsApart(document: Document, index: number): boolean {
   const token = document[index];
@@ -124,9 +125,14 @@ export function standsApart(document: Document, index: number): boolean {
   if (
     token?.kind !== "literal" ||
     !SPACING_SIGNS.has(token.value.charCodeAt(0)) ||
-    next?.kind !== "grapheme" || !next.uppercase ||
-    !(next.letter === "rho" || isVowel(next.letter)) ||
-    endsWithLetter(document[index - 1], true)
+    next === undefined || endsWithLetter(document[index - 1], true)
+  ) return false;
+  if (keptLetterCase(next) === true) {
+    return breathingMarks(token.value) !== undefined;
+  }
+  if (
+    next.kind !== "grapheme" || !next.uppercase ||
+    !(next.letter === "rho" || isVowel(next.letter))
   ) return false;
   const marks = breathingMarks(token.value);
   const bearer = document[index + ligatureLength(next.glyphVariant)];

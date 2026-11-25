@@ -97,6 +97,11 @@ export function isKeptLetter(token: Token): boolean {
   return KEPT_LETTERS.has(token);
 }
 
+/** The case of a letter kept as it was, or undefined for another token. */
+export function keptLetterCase(token: Token): boolean | undefined {
+  return KEPT_LETTERS.get(token);
+}
+
 /** Whether a token is a letter of a word: a grapheme, or a kept letter. */
 export function isWordLetter(token: Token | undefined): boolean {
   return token !== undefined &&
