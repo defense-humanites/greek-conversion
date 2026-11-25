@@ -216,9 +216,9 @@ letter for each order (`όλ΄ αυτά`, two tens). Neither case nor marks
 decide, so that an output converts again as it reads: a capital numeral
 alone before such a word is therefore not read (`Θ΄ αιώνας`, the ninth
 century), and needs the keraia `ʹ`. These are the elisions of Modern Greek:
-an ancient text that types the sign for its apostrophe reads `δ΄`, `γ΄`, or
-`θ΄` before a vowel as a numeral, since `δ΄ έκδοση` is the fourth edition,
-and needs the apostrophe `’`.
+an ancient text that types the sign for its apostrophe reads `δ΄` and `γ΄`
+before a vowel, and a word such as `ὅθ΄`, as numerals, since `δ΄ έκδοση` is
+the fourth edition, and needs the apostrophe `’`.
 Before a capital vowel, at the start of a word, the sign is its tonos
 (`΄Ελληνας` is `Έλληνας`), as the spacing breathings are.
 
