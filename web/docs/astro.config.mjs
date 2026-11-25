@@ -273,6 +273,14 @@ const NO_SAFARI_FADE = `
 })();`;
 
 /**
+ * Pressed states on a touch screen: Safari on iOS applies :active only
+ * where a touchstart listener is registered, on the element or above it.
+ * An empty one, passive, on the document lets every link and button answer
+ * a tap (theme.css: the sidebar's entries, the buttons, the logo).
+ */
+const TOUCH_ACTIVE = `document.addEventListener("touchstart", () => {}, { passive: true });`;
+
+/**
  * A sidebar link that leaves the documentation: it opens in a new tab, and
  * says so to screen readers; theme.css draws the mark.
  * @param {string} label @param {string} link
@@ -348,6 +356,7 @@ export default defineConfig({
         { tag: "script", content: PLAYGROUND_REDIRECT },
         { tag: "script", content: MIN_WIDTH },
         { tag: "script", content: NO_SAFARI_FADE },
+        { tag: "script", content: TOUCH_ACTIVE },
         // Where the menu stays beside the page (from 1100px), the new page is
         // not drawn before its menu is whole: from one page to the next, the
         // menu stays put (theme.css), and Safari would otherwise show it cut

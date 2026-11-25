@@ -658,12 +658,22 @@ site-search dialog::backdrop {
    stands out. */
 .sidebar-content ul a {
   color: var(--muted);
-  transition: color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
 }
 @media (hover: hover) {
   .sidebar-content ul a:hover {
     color: var(--ink);
   }
+}
+/* Pressed, an entry takes the ink on the tint of a pressed secondary button
+   (--press): on a touch screen, which has no hover, the only answer to a
+   tap. At once, then fading, as a tap is brief. A group's line likewise. */
+.sidebar-content ul a:active {
+  background: var(--press);
+  color: var(--ink);
+  transition: none;
 }
 .sidebar-content a[aria-current="page"],
 .sidebar-content a[aria-current="page"]:hover,
@@ -700,6 +710,17 @@ site-search dialog::backdrop {
   .sidebar-content summary:hover :is(svg.caret, .group-label .large) {
     color: var(--ink);
   }
+}
+.sidebar-content summary {
+  border-radius: var(--radius);
+  transition: background-color 0.15s ease;
+}
+.sidebar-content summary:active {
+  background: var(--press);
+  transition: none;
+}
+.sidebar-content summary:active :is(svg.caret, .group-label .large) {
+  color: var(--ink);
 }
 
 /* "On this page" in its own column, on a wide screen. Its title is a label,
