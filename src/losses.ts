@@ -43,8 +43,8 @@ export interface ConversionLoss {
    * The affected semantic mark when {@link code} is `"removed-diacritic"`,
    * `"added-diacritic"`, `"displaced-diacritic"`, or `"inferred-breathing"`.
    * An added diacritic is the diaeresis that transliteration writes on a
-   * contextual `y`, or the accent of `καί` that `greek.kaiAccent` writes for
-   * `ϗ`.
+   * contextual `y`, or Greek output in capitals under `greek.capitalMarks`,
+   * or the accent of `καί` that `greek.kaiAccent` writes for `ϗ`.
    */
   diacritic?: Diacritic;
   /**

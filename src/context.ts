@@ -363,6 +363,13 @@ export function hasHiatusMark(token: Grapheme): boolean {
     : (mask & HIATUS_MASK) !== 0;
 }
 
+/**
+ * Whether two vowels form a diphthong when no mark parts them (`αι`, `ευ`).
+ */
+export function mayFormDiphthong(first: Letter, second: Letter): boolean {
+  return DIPHTHONG_SECONDS.get(first)?.has(second) === true;
+}
+
 export function isDiphthongAt(document: Document, start: number): boolean {
   const first = document[start];
   const second = document[start + 1];

@@ -70,6 +70,7 @@ export type {
   BetaCodeOptions,
   BetaCodeYot,
   BetaTransliteration,
+  CapitalMarksOrthography,
   ChiTransliteration,
   CircumflexTransliteration,
   ConversionOptions,

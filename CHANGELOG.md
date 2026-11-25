@@ -9,6 +9,17 @@ change.
 
 ### Added
 
+- **Words in capitals without marks.** `greek.capitalMarks: "omit"` writes
+  the words in capitals of Greek output as Greek usage sets them, and as
+  `toLocaleUpperCase("el")` does: without accents, breathings, coronis, or
+  quantity marks, with their diaeresis, and with one where a mark on the
+  first of two vowels showed their hiatus (`Μάιος` → `ΜΑΪΟΣ`, `Ἅιδης` →
+  `ΑΪΔΗΣ`). The disjunctive `ή` keeps its accent (`Ή`). A capital that
+  begins a word in small letters keeps its marks, as a word of one letter
+  does unless the words around it are in capitals. The default,
+  `"preserve"`, writes every mark, as before. `convertDetailed()` reports
+  the marks removed and each diaeresis written. A bundle that writes Greek
+  grows by 1.5 to 1.6 kB minified, 0.4 to 0.5 kB with gzip.
 - **Prepared options for the main entry point.** `prepareOptions()`, which
   the `core` entry point exported, is exported by the main one too, with the
   `PreparedOptions` type, and `convert()`, `convertDetailed()`, `reencode()`,

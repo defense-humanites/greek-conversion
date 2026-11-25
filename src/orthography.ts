@@ -2,12 +2,14 @@ import {
   ARISTERI_KERAIA,
   DEXIA_KERAIA,
   followsApostropheInWord,
+  hasHiatusMark,
   isBoundaryTransparent,
   isDiphthongAt,
   isGreekNumeralContext,
   isVowel,
   isWordInitial,
   isWordLetter,
+  mayFormDiphthong,
   TONOS_SIGN,
   tonosKeraia,
 } from "./context.ts";
@@ -77,8 +79,15 @@ export function applyOrthography(
   options: ConversionOptions = {},
   targets?: TokenTargets,
   format: "greek" | "beta-code" = "greek",
+  capitals?: CapitalOrthography,
 ): Document {
-  const numbered = applyNumeralOrthography(document, options, targets, format);
+  const numbered = applyNumeralOrthography(
+    document,
+    options,
+    targets,
+    format,
+    capitals,
+  );
   if (options.greek?.doubleRho !== "smooth-rough") return numbered;
 
   return numbered.map((token, index) => {
@@ -110,7 +119,13 @@ export function applyGreekOrthography(
   options: ConversionOptions = {},
 ): Document {
   return applyMonotonicOrthography(
-    applyOrthography(document, options),
+    applyOrthography(
+      document,
+      options,
+      undefined,
+      "greek",
+      applyCapitalOrthography,
+    ),
     options,
   );
 }
@@ -381,21 +396,150 @@ const WEAK_PRONOUNS: ReadonlySet<string> = new Set([
   "tau omicron upsilon sigma",
 ]);
 
+/** {@link applyCapitalOrthography}, or another pass of the same shape. */
+export type CapitalOrthography = (
+  document: Document,
+  options: ConversionOptions,
+) => Document;
+
+/** The marks that a word in capitals keeps under `capitalMarks: "omit"`. */
+const CAPITAL_MARKS: readonly Diacritic[] = [
+  "diaeresis",
+  "overline",
+  "iota-subscript",
+];
+
+/**
+ * Writes the words in capitals of Greek output without accents, breathings,
+ * coronis, or quantity marks, under `greek.capitalMarks: "omit"` (see
+ * `CapitalMarksOrthography`): their diaeresis stays, one is written on
+ * the second of two vowels whose hiatus a mark on the first showed, and the
+ * disjunctive `ή` keeps its accent. Returns `document` itself when no word
+ * changes.
+ */
+export function applyCapitalOrthography(
+  document: Document,
+  options: ConversionOptions,
+): Document {
+  if (options.greek?.capitalMarks !== "omit") return document;
+  const adscript = options.greek?.iotaSubscript === "capital-adscript" ||
+    options.greek?.iotaSubscript === "adscript";
+  const keepsSubscript = preservesDiacritic("iota-subscript", options, "greek");
+  // A capital whose iota subscript Greek output writes on the line.
+  const writesAdscript = (letter: Grapheme) =>
+    adscript && keepsSubscript && letter.uppercase &&
+    letter.diacritics.has("iota-subscript");
+  let output: Token[] | undefined;
+  for (let start = 0; start < document.length; start++) {
+    const first = document[start];
+    if (
+      first.kind !== "grapheme" || !first.uppercase ||
+      !isWordInitial(document, start)
+    ) continue;
+
+    const word: number[] = [];
+    let capitals = true;
+    let end = start;
+    for (; end < document.length; end++) {
+      const token = document[end];
+      if (token.kind === "grapheme") {
+        word.push(end);
+        if (!token.uppercase) capitals = false;
+      } else if (isWordLetter(token)) capitals = false;
+      else if (!isBoundaryTransparent(token)) break;
+    }
+    start = end - 1;
+    if (!capitals) continue;
+    // A word of one letter takes the case of the words around it, unless
+    // an iota written on the line after it makes two capitals.
+    if (word.length === 1 && !writesAdscript(document[word[0]] as Grapheme)) {
+      const sides = [
+        caseNear(document, word[0] - 1, -1, writesAdscript),
+        caseNear(document, word[0] + 1, 1, writesAdscript),
+      ];
+      if (!sides.includes("capitals") || sides.includes("small")) continue;
+    }
+
+    // The disjunctive `ή`, which the accent tells from the article.
+    const only = document[word[0]] as Grapheme;
+    const disjunctive = word.length === 1 && only.letter === "eta" &&
+      !only.diacritics.has("iota-subscript") &&
+      keepsMonosyllableAccent(document, word, false);
+    for (let k = 0; k < word.length; k++) {
+      const index = word[k];
+      const letter = document[index] as Grapheme;
+      const marks = new Set<Diacritic>();
+      for (const mark of CAPITAL_MARKS) {
+        if (letter.diacritics.has(mark)) marks.add(mark);
+      }
+      if (disjunctive) marks.add("acute");
+      // A mark on the first of two vowels that would form a diphthong
+      // showed their hiatus, which the diaeresis shows in capitals; a vowel
+      // that ends a diphthong begins none.
+      const previous = document[index - 1];
+      if (
+        k > 0 && word[k - 1] === index - 1 && previous.kind === "grapheme" &&
+        mayFormDiphthong(previous.letter, letter.letter) &&
+        hasHiatusMark(previous) &&
+        !previous.diacritics.has("iota-subscript") &&
+        !(k > 1 && word[k - 2] === index - 2 &&
+          isDiphthongAt(document, index - 2))
+      ) marks.add("diaeresis");
+      if (sameDiacritics(letter.diacritics, marks)) continue;
+      output ??= [...document];
+      output[index] = { ...letter, diacritics: sharedDiacritics(marks) };
+    }
+  }
+  return output ?? document;
+}
+
+/**
+ * The case of the nearest word from `start` in `direction`, across spaces
+ * and punctuation, by its two letters nearest `start`: `"single"` for a word
+ * of one capital letter, `undefined` where there is none before a literal
+ * with a letter or a digit, such as a numeral, which may be written as a
+ * number. A capital with an iota written on the line is two capitals.
+ */
+function caseNear(
+  document: Document,
+  start: number,
+  direction: 1 | -1,
+  writesAdscript: (letter: Grapheme) => boolean,
+): "capitals" | "small" | "single" | undefined {
+  let index = start;
+  for (; document[index]?.kind === "literal"; index += direction) {
+    if (/[\p{L}\p{N}]/u.test((document[index] as { value: string }).value)) {
+      return undefined;
+    }
+  }
+  const first = document[index];
+  if (first?.kind !== "grapheme") return undefined;
+  if (!first.uppercase) return "small";
+  if (writesAdscript(first)) return "capitals";
+  const second = document[index + direction];
+  if (second?.kind !== "grapheme") return "single";
+  return second.uppercase ? "capitals" : "small";
+}
+
 /**
  * Applies the transformations of the whole text that every format shares:
  * whitespace, letter case, and decimal numerals. A numeral is read on its
  * letters as `format` writes them: a letter whose marks the options all
  * remove is a digit (`σόʹ` is 270 with the accents removed), since the
- * output would read back as one.
+ * output would read back as one. `capitals`, which the writer of Greek
+ * gives, writes the words in capitals before their numerals are read: it is
+ * a parameter, so that a bundle that writes no Greek leaves it out.
  */
 export function applyNumeralOrthography(
   document: Document,
   options: ConversionOptions = {},
   targets?: TokenTargets,
   format: Format = "greek",
+  capitals?: CapitalOrthography,
 ): Document {
   const spaced = applyWhitespaceOrthography(document, options, targets);
-  const cased = applyLetterCaseOrthography(spaced, options);
+  const lettered = applyLetterCaseOrthography(spaced, options);
+  const cased = capitals === undefined ? lettered : capitals(lettered, options);
   if (options.text?.numerals !== "decimal" || !cased.some(isKeraia)) {
     return cased;
   }

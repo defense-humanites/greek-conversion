@@ -247,6 +247,38 @@ alone. Written on the line, it is a letter: it reads back as iota, and the
 conversion reports the loss of the subscript. Monotonic output has no iota
 subscript to write.
 
+## Marks in capitals
+
+Greek output keeps the marks of a word in capitals by default
+(`ΜΆΙΟΣ`, `ἈΘΗ͂ΝΑΙ`). Greek usage writes words in capitals without accents,
+as `toLocaleUpperCase("el")` does, and `greek.capitalMarks: "omit"` follows
+it:
+
+```ts
+import { reencode } from "@humanities/greek-conversion";
+
+reencode("Μάιος, Ἅιδης ή Ἀθῆναι", "greek", {
+  text: { letterCase: "uppercase" },
+  greek: { capitalMarks: "omit" },
+});
+// → ΜΑΪΟΣ, ΑΪΔΗΣ Ή ΑΘΗΝΑΙ
+```
+
+A word in capitals then takes no accent, breathing, coronis, or quantity
+mark, and keeps its diaeresis. Where a mark on the first of two vowels that
+would form a diphthong showed their hiatus, the second takes a diaeresis
+(`Μάιος` → `ΜΑΪΟΣ`), unless the first ends a diphthong (`εύι` → `ΕΥΙ`,
+which ICU writes `ΕΥΪ`). The disjunctive `ή`, from `ή`, `ἤ`, or `ἢ`, keeps
+its accent, which tells it from the article (`Ή`, `Η`). A word is in
+capitals when all its letters are; a word of one letter, when the nearest
+word on either side is in capitals and neither is in small letters
+(`Ο ΛΟΓΟΣ`, but `Ὁ λόγος`); a capital that begins a word in small letters
+keeps its marks (`Έλληνας`). The iota subscript follows `iotaSubscript`:
+`"capital-adscript"` writes `ᾠδῇ` in capitals as `ΩΙΔΗΙ`. Each mark removed
+and each diaeresis written is reported. Beta Code and transliteration keep
+the marks, which they write on capitals, as the BGN/PCGN rules ask for the
+stress (`ATHÍNA`).
+
 ## Letter forms
 
 The Greek reader reads the symbol forms of letters as those letters, which is

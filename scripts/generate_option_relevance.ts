@@ -56,11 +56,14 @@ function single(
 /**
  * Options that act only with another value set, with that value: they also
  * act on the conversions where they change the result with it.
+ * `greek.capitalMarks` acts on words in capitals, which uppercase output
+ * writes.
  * `greek.kaiAccent` accents the `και` written for `ϗ`, and `greek.stigma`
  * reads `στ` for a stigma between two letters, which Greek writes as letters
  * only under `greek.ligatures: "standard"`, and as the sign otherwise.
  */
 const COMPANIONS: Readonly<Record<string, ConversionOptions>> = {
+  "greek.capitalMarks": { text: { letterCase: "uppercase" } },
   "greek.kaiAccent": { greek: { ligatures: "standard" } },
   "greek.stigma": { greek: { ligatures: "standard" } },
 };
