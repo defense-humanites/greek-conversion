@@ -261,20 +261,23 @@ edition that prints them does:
 import { reencode } from "@humanities/greek-conversion";
 
 const capitals = { text: { letterCase: "uppercase" } } as const;
-reencode("Μάιος, Ἅιδης ή Ἀθῆναι", "greek", capitals);
-// → ΜΑΪΟΣ, ΑΪΔΗΣ Ή ΑΘΗΝΑΙ
-reencode("Μάιος, Ἅιδης", "greek", {
+reencode("Μάιος, ἀίδηλος ή Ἀθῆναι", "greek", capitals);
+// → ΜΑΪΟΣ, ΑΪΔΗΛΟΣ Ή ΑΘΗΝΑΙ
+reencode("Μάιος, ἀίδηλος", "greek", {
   ...capitals,
   greek: { capitalMarks: "preserve" },
 });
-// → ΜΆΙΟΣ, ἍΙΔΗΣ
+// → ΜΆΙΟΣ, ἈΊΔΗΛΟΣ
 ```
 
 A word in capitals takes no accent, breathing, coronis, or quantity mark,
 and keeps its diaeresis. Where a mark on the first of two vowels that
 would form a diphthong showed their hiatus, the second takes a diaeresis
 (`Μάιος` → `ΜΑΪΟΣ`), unless the first ends a diphthong (`εύι` → `ΕΥΙ`,
-which `toLocaleUpperCase("el")` writes `ΕΥΪ`). A breathing is such a mark,
+which `toLocaleUpperCase("el")` writes `ΕΥΪ`). The same mark shows an iota
+adscript (`Ἅιδης`, that is `ᾍδης`), which takes the diaeresis all the same
+(`ΑΪΔΗΣ`), since telling them apart takes knowledge of the word (see
+[Information loss](information-loss.md)). A breathing is such a mark,
 as every reader takes it: a text in capitals that puts the breathing of a
 diphthong on its first vowel, as some editions do, takes a diaeresis
 (`ἘΥΡΏΠΗ` → `ΕΫΡΩΠΗ`), which `"preserve"` avoids. The disjunctive `ή`,

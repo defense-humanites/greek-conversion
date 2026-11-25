@@ -119,16 +119,16 @@ try {
 Bundles of the conversions below, made with esbuild for this release,
 minified, then with gzip. The percentage compares the size with gzip to that
 of the same conversion imported from the main entry point: `convert()`
-(82.6 kB, 26.8 kB with gzip), or `convertDetailed()` (91.2 kB, 29.7 kB).
+(83.0 kB, 27.0 kB with gzip), or `convertDetailed()` (91.6 kB, 29.8 kB).
 
 | Conversions                                   | With a preset or the defaults | With `prepareOptions()`       |
 | --------------------------------------------- | ----------------------------- | ----------------------------- |
 | Greek to Beta Code                            | 39.5 kB, 13.6 kB gzip (−49 %) | 48.1 kB, 16.2 kB gzip (−40 %) |
-| Beta Code to Greek                            | 41.3 kB, 14.2 kB gzip (−47 %) | 49.8 kB, 16.7 kB gzip (−38 %) |
-| Greek to transliteration                      | 49.0 kB, 16.1 kB gzip (−40 %) | 57.6 kB, 18.7 kB gzip (−30 %) |
-| Greek and transliteration both ways           | 67.7 kB, 22.0 kB gzip (−18 %) | 76.2 kB, 24.6 kB gzip (−8 %)  |
-| Every format both ways                        | 74.7 kB, 24.4 kB gzip (−9 %)  | 83.2 kB, 27.0 kB gzip (+1 %)  |
-| `convertDetailed()`, Greek to transliteration | 76.4 kB, 24.8 kB gzip (−16 %) | 84.9 kB, 27.4 kB gzip (−8 %)  |
+| Beta Code to Greek                            | 41.7 kB, 14.3 kB gzip (−47 %) | 50.2 kB, 16.9 kB gzip (−37 %) |
+| Greek to transliteration                      | 49.0 kB, 16.1 kB gzip (−40 %) | 57.6 kB, 18.7 kB gzip (−31 %) |
+| Greek and transliteration both ways           | 68.1 kB, 22.1 kB gzip (−18 %) | 76.7 kB, 24.7 kB gzip (−8 %)  |
+| Every format both ways                        | 75.1 kB, 24.6 kB gzip (−9 %)  | 83.6 kB, 27.2 kB gzip (+1 %)  |
+| `convertDetailed()`, Greek to transliteration | 76.8 kB, 25.0 kB gzip (−16 %) | 85.3 kB, 27.6 kB gzip (−7 %)  |
 
 The `core` entry point is worth it with a preset or the defaults, unless the
 application reads and writes every format. With `prepareOptions()`, it is

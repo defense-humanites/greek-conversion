@@ -69,13 +69,14 @@ export type KaiAccent = "none" | "byzantine" | "modern";
  * accents: a word in capitals takes no accent, breathing, coronis, or
  * quantity mark, keeps its diaeresis, and takes one on the second of two
  * vowels where a mark on the first showed their hiatus (`Μάιος` → `ΜΑΪΟΣ`,
- * `Ἅιδης` → `ΑΪΔΗΣ`); the disjunctive `ή` keeps its accent, which tells it
- * from the article (`Ή`, from `ή`, `ἤ`, or `ἢ`). A word is in capitals when
- * all its letters are, and a word of one letter when the nearest word on
- * either side, words of one letter and numerals aside, is in capitals and
- * neither is in small letters (`Ο ΛΟΓΟΣ`, `Η Δ’ ΟΣ`), or the text is set in
- * capitals (`text.letterCase: "uppercase"`); a capital that begins a word
- * in small letters keeps its marks (`Έλληνας`).
+ * `ἀίδηλος` → `ΑΪΔΗΛΟΣ`), or an iota adscript, which it cannot tell from a
+ * hiatus (`Ἅιδης` → `ΑΪΔΗΣ`); the disjunctive `ή` keeps its accent, which
+ * tells it from the article (`Ή`, from `ή`, `ἤ`, or `ἢ`). A word is in
+ * capitals when all its letters are, and a word of one letter when the
+ * nearest word on either side, words of one letter and numerals aside, is
+ * in capitals and neither is in small letters (`Ο ΛΟΓΟΣ`, `Η Δ’ ΟΣ`), or
+ * the text is set in capitals (`text.letterCase: "uppercase"`); a capital
+ * that begins a word in small letters keeps its marks (`Έλληνας`).
  * The iota subscript follows `iotaSubscript`, whose `"capital-adscript"`
  * writes it as a letter after a capital (`ΤΗΙ ΩΙΔΗΙ`). Each mark removed and
  * each diaeresis written is reported. `"preserve"` writes every mark the

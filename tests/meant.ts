@@ -17,7 +17,9 @@ import { THUCYDIDES_1_1_10 } from "../bench/thucydides.ts";
  * every input it acts on shows. A pattern stands for the inputs or the
  * labels it matches. The change of a default goes with `undoneBy`, the
  * options that restore the reference: a difference is meant only where the
- * current tree, given them, gives the reference again.
+ * current tree, given them, gives the reference again. The comparison then
+ * checks only what those options keep: an error in the code that they turn
+ * off, which the default runs, is for that code's own tests to find.
  */
 export interface MeantChange {
   input?: string | RegExp;

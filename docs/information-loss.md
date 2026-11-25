@@ -108,8 +108,8 @@ Default transliteration has these intrinsic ambiguities:
 - a smooth breathing written on the first vowel of a pair that could form a
   diphthong marks a hiatus or an iota adscript (`Ἀίδης`), but the omitted
   breathing leaves `Aídēs`, which parses back as a diphthong;
-  `convertDetailed()` reports `displaced-diacritic`. The engine does not add
-  a diaeresis to compensate, because the same spelling also marks an iota
+  `convertDetailed()` reports `displaced-diacritic`. Transliteration does not
+  add a diaeresis to compensate, because the same spelling also marks an iota
   adscript (`Ἅιδης`, `τῆι` in editions that write the adscript), which is not
   a hiatus. `smoothBreathing: "greek"` writes the breathing in place and keeps
   the distinction; `"apostrophe"` does not, since the apostrophe precedes the

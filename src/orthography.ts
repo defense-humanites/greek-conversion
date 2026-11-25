@@ -475,6 +475,8 @@ export function applyCapitalOrthography(
       preservesDiacritic("iota-subscript", options, "greek"));
   const letterCase = options.text?.letterCase;
   const capitalIota = letterCase === "uppercase";
+  // Whether numerals become numbers, which cut the words that hold them.
+  const decimal = options.text?.numerals === "decimal";
   // The case that the searches of `caseNear()` found past each word of one
   // capital, by direction, so that a run of them costs no more than its
   // length.
@@ -484,6 +486,11 @@ export function applyCapitalOrthography(
   // are cut as they read back, where a letter a converter keeps, written
   // with a sign that is no letter (`*s3`), ends one.
   let afterLetter = false;
+  // Whether the word began after a left keraia, under decimal numerals, and
+  // has only letters the reader of numerals reads: a numeral, which its
+  // first mark or joiner ends, so that the letters after it begin a word
+  // once it is a number (`͵α̇ΟΜΆΙΟΣ`).
+  let thousands = false;
   for (let start = 0; start < document.length; start++) {
     const first = document[start];
     if (first.kind === "literal") {
@@ -494,15 +501,22 @@ export function applyCapitalOrthography(
         afterLetter = false;
         continue;
       }
-      if (isBoundaryTransparent(first)) continue;
+      if (isBoundaryTransparent(first)) {
+        if (thousands) afterLetter = thousands = false;
+        continue;
+      }
       if (!isLetters(value)) {
         afterLetter = false;
         continue;
       }
+      // A letter that the reader of numerals does not read ends a numeral.
+      thousands = false;
     }
     // Within a word, or a word that starts with a small letter.
     if (afterLetter) continue;
     afterLetter = true;
+    thousands = decimal && first.kind === "grapheme" &&
+      isLiteral(document[start - 1], ARISTERI_KERAIA);
     if (first.kind === "grapheme") {
       // A small letter first or second: the word is not in capitals.
       if (!first.uppercase) continue;
@@ -517,27 +531,30 @@ export function applyCapitalOrthography(
     for (; end < document.length; end++) {
       const token = document[end];
       if (token.kind === "grapheme") {
-        // The letters of a numeral after a mark or joiner that the word
-        // holds aside, which the reader of numerals does not, are a word of
-        // their own, which may be written as a number (`Ἰ̇βʹ`).
+        // Under decimal numerals, the letters of a numeral after a mark or
+        // joiner that the word holds aside, which the reader of numerals
+        // does not, are a word of their own, which may become a number
+        // (`Ἰ̇βʹ`).
         if (
-          end > start && isBoundaryTransparent(document[end - 1]) &&
-          isGreekNumeralContext(document, end)
+          decimal && end > start && isBoundaryTransparent(document[end - 1]) &&
+          beginsNumeral(document, end)
         ) break;
         word.push(end);
         if (!token.uppercase) capitals = false;
       } else if (isCapitalWordLetter(token)) {
         // Letters of another script, or a letter a converter keeps as it
         // was, which reads back as letters, are of the word: the kept one
-        // takes the case of the text once written, or keeps its own.
+        // takes the case of the text once written, or keeps its own. The
+        // reader of numerals reads none.
         kept++;
+        thousands = false;
         if (
           isWordLetter(token)
             ? letterCase === "lowercase" || letterCase === "title" ||
               letterCase !== "uppercase" && !keptLetterCase(token)
             : /\p{Ll}/u.test(token.value)
         ) capitals = false;
-      } else if (!isBoundaryTransparent(token)) break;
+      } else if (!isBoundaryTransparent(token) || thousands) break;
     }
     start = end - 1;
     afterLetter = true;
@@ -551,8 +568,8 @@ export function applyCapitalOrthography(
       if (writesAdscript(document[word[0]] as Grapheme)) continue;
       near ??= [new Map(), new Map()];
       const sides = [
-        caseNear(document, word[0] - 1, -1, writesAdscript, near[0]),
-        caseNear(document, word[0] + 1, 1, writesAdscript, near[1]),
+        caseNear(document, word[0] - 1, -1, writesAdscript, decimal, near[0]),
+        caseNear(document, word[0] + 1, 1, writesAdscript, decimal, near[1]),
       ];
       if (!sides.includes("capitals") || sides.includes("small")) continue;
     }
@@ -609,15 +626,17 @@ type NearCases = Map<number, NearCase>;
  * either of which may be written as a number. A word of one capital tells
  * nothing, and the search goes on past it (`Ἣ Δ’ ΑΕΚΟΥΣ’`), but for a
  * capital with an iota written on the line, which outside text set in
- * capitals is a capital and a small letter. `passed` keeps, for each word
- * of one capital passed, the case found beyond it, which a later search
- * that reaches it takes as it is.
+ * capitals is a capital and a small letter. Words are cut as the pass cuts
+ * them, at the numerals that `decimal` numerals make numbers. `passed`
+ * keeps, for each word of one capital passed, the case found beyond it,
+ * which a later search that reaches it takes as it is.
  */
 function caseNear(
   document: Document,
   start: number,
   direction: 1 | -1,
   writesAdscript: (letter: Grapheme) => boolean,
+  decimal: boolean,
   passed: NearCases,
 ): NearCase {
   const words: number[] = [];
@@ -631,9 +650,12 @@ function caseNear(
     }
     const first = document[index];
     // The letters of a numeral, which may be written as a number, are no
-    // word either (`Ἠ ιβʹ`).
+    // word either (`Ἠ ιβʹ`, `͵αβ Ἠ`).
     if (
-      first?.kind !== "grapheme" || isGreekNumeralContext(document, index)
+      first?.kind !== "grapheme" ||
+      (direction === 1
+        ? beginsNumeral(document, index)
+        : endsThousands(document, index))
     ) break;
     if (!first.uppercase) {
       found = "small";
@@ -644,11 +666,18 @@ function caseNear(
       break;
     }
     // The next letter of the word, the marks and joiners that the word
-    // holds aside, as the word is cut.
+    // holds aside, as the word is cut: under decimal numerals, a numeral on
+    // the other side of them is a word of its own (`Ἰ̇βʹ`, `͵α̇Ο`).
     let next = index + direction;
     while (isBoundaryTransparent(document[next])) next += direction;
     const second = document[next];
-    if (second?.kind === "grapheme") {
+    if (
+      second?.kind === "grapheme" &&
+      !(decimal && next !== index + direction &&
+        (direction === 1
+          ? beginsNumeral(document, next)
+          : endsThousands(document, next)))
+    ) {
       found = second.uppercase ? "capitals" : "small";
       break;
     }
@@ -661,6 +690,31 @@ function caseNear(
   }
   for (const word of words) passed.set(word, found);
   return found;
+}
+
+/**
+ * Whether a numeral, which may be written as a number, starts at `index`, as
+ * the reader of numerals reads one: after a left keraia, or as letters up to
+ * a right keraia, which a mark or joiner between them would end (in `Ἰ̇βʹ`,
+ * only `βʹ` is one). The letters are read up to the first token that is no
+ * letter, once for each run of them, so that the time stays linear.
+ */
+function beginsNumeral(document: Document, index: number): boolean {
+  if (isLiteral(document[index - 1], ARISTERI_KERAIA)) return true;
+  let end = index;
+  while (document[end]?.kind === "grapheme") end++;
+  return end > index && isLiteral(document[end], DEXIA_KERAIA);
+}
+
+/**
+ * Whether the letters that end at `index` began after a left keraia, which
+ * a numeral without a right keraia has (`͵αβ`), read back to the first
+ * token that is no letter.
+ */
+function endsThousands(document: Document, index: number): boolean {
+  let start = index;
+  while (document[start - 1]?.kind === "grapheme") start--;
+  return isLiteral(document[start - 1], ARISTERI_KERAIA);
 }
 
 /**

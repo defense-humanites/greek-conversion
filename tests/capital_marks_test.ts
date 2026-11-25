@@ -103,11 +103,53 @@ test("words of one letter between words of one letter", () => {
   assertNfcEquals(reencode("ἣ δʼ", "greek", UPPERCASE), "Η Δ’");
   assertNfcEquals(reencode("ἢ", "greek", UPPERCASE), "Ή");
   // A numeral, which may be written as a number, is no word of either
-  // case, and its keraia ends the word before it.
+  // case, and its keraia ends the word before it, as does the end of its
+  // letters after a left keraia (`͵αβ`).
   const decimal = { ...OMIT, text: { numerals: "decimal" } } as const;
-  for (const text of ["ΑΠΟ Ἠ ιβʹ", "αʹἈΫΠΝΊΑ", "ὤʹΘὉ", "ΑΑ Ἰ\u0307βʹ"]) {
+  assertNfcEquals(
+    reencode("͵αβ Ἠ ΛΟΓΟΣ", "greek", decimal),
+    "1002 Η ΛΟΓΟΣ",
+  );
+  // Under decimal numerals, a mark or joiner within letters ends a numeral,
+  // as the reader of numerals reads it, and the letters on its other side
+  // are a word of their own: in `ΑΑ̇βʹ`, only `βʹ` is a numeral, and `ΑΑ`
+  // a word in capitals; in `͵α̇ΟΜΆΙΟΣ`, `͵α` is one, and `ΟΜΆΙΟΣ` a word.
+  for (
+    const text of [
+      "ΑΠΟ Ἠ ιβʹ",
+      "αʹἈΫΠΝΊΑ",
+      "ὤʹΘὉ",
+      "ΑΑ Ἰ\u0307βʹ",
+      "Ἠ ΑΑ\u0307βʹ",
+      "Ἀ\u0307Β\u0307Γʹ",
+      "Α’ Ἢ’ ΟΗ\u0323Εʹ",
+      "͵αβ Ἠ ΛΟΓΟΣ",
+      "͵α\u0307Ο Ἠ ΛΟΓΟΣ",
+      "ΟΗΕ, ͵α\u0307ΟΜΆΙΟΣ",
+      "͵Α\u200DΟΜΆΙΟΣ",
+    ]
+  ) {
     const output = reencode(text, "greek", decimal);
     assertEquals(reencode(output, "greek", decimal), output);
+  }
+  assertNfcEquals(reencode("Ἠ ΑΑ\u0307βʹ", "greek", decimal), "Η ΑΑ\u03072");
+  assertNfcEquals(
+    reencode("͵α\u0307ΟΜΆΙΟΣ", "greek", decimal),
+    "1000\u0307ΟΜΑΪΟΣ",
+  );
+  // Letters that no numeral ends stay in the word, whatever the options,
+  // and every numeral does where none becomes a number.
+  assertNfcEquals(
+    reencode("ᾯ\u0307ΙΒ\u0307ʹ", "greek", {
+      greek: { iotaSubscript: "capital-adscript" },
+    }),
+    "ΩΙ\u0307ΙΒ\u0307ʹ",
+  );
+  for (const joiner of ["\u200D", ""]) {
+    assertNfcEquals(
+      reencode(`ΚἈΓ\u20DDΏΣ${joiner}Τʹ`, "greek"),
+      `ΚΑΓ\u20DDΩΣ${joiner}Τʹ`,
+    );
   }
 });
 
