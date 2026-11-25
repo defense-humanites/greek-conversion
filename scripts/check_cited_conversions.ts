@@ -68,6 +68,7 @@ const NOT_CONVERSIONS: Readonly<
   },
   "docs/character-extensions.md": {
     "ΘϷΑ": "needs a converter with a custom character",
+    "σα": "needs a converter with alpha out of its scope",
     "Ϸ": "the form of a custom character, not a conversion",
   },
   "docs/greek-unicode.md": {
