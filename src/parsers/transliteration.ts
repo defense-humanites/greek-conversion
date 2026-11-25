@@ -241,6 +241,16 @@ function readTransliteration(
     ) {
       smooth = true;
       i++;
+    } else if (
+      // A vowel with both breathings, which the writer writes `h’` before
+      // it, reads back with both.
+      smoothApostrophe && lowered[i] === "h" && chars[i + 1] === "\u2019" &&
+      !followsLetter(out) && startsVowel(lowered, i + 2, trie)
+    ) {
+      rough = true;
+      roughUppercase = chars[i] !== lowered[i];
+      smooth = true;
+      i += 2;
     }
 
     if (digraphB && lowered[i] === "b") {
@@ -375,8 +385,6 @@ function readTransliteration(
         leftKeraia ? literal(ARISTERI_KERAIA) : textLiteral(
           parsePunctuation(chars[i], "transliteration") ?? chars[i],
           false,
-          // The `h` of a rough breathing that goes to no vowel is a sign.
-          lowered[i] !== "h",
         ),
       );
       i++;
@@ -401,7 +409,7 @@ function readTransliteration(
       i++;
     }
 
-    let marks = rough ? ROUGH : smooth ? SMOOTH : 0;
+    let marks = (rough ? ROUGH : 0) | (smooth ? SMOOTH : 0);
     // Whether the breathing of the vowel before parts this one from it.
     let separated = false;
     let structuralCircumflex = false;
