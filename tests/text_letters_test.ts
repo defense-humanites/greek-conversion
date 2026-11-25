@@ -83,6 +83,16 @@ test("a letter that a reader keeps as text is a letter of its word", () => {
     }),
     "ύc",
   );
+  // A letter of a third script, which no converter keeps, joins no word.
+  assertNfcEquals(
+    convert("在Ἀθῆναι", "greek", "greek", { text: { letterCase: "title" } }),
+    "在Ἀθῆναι",
+  );
+  assertNfcEquals(convert("λόγος是", "greek", "beta-code"), "lo/gos是");
+  assertNfcEquals(
+    convert("logos漢字", "transliteration", "greek"),
+    "λογος漢字",
+  );
 });
 
 test("a vowel with both breathings reads back with both under ISO 843", () => {

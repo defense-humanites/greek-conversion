@@ -101,8 +101,8 @@ A sigma before such a letter is medial, title case capitalizes the first
 letter of the word only (`Kαζάρμα`), monotonic accentuation keeps the accent
 of a word whose syllables it cannot count, a monosyllable included (`Kαί`),
 and a breathing on a vowel after such a letter is a coronis (`Oἰκία`, with
-a Latin `O`). A letter of another script that has no case, such as a Chinese
-character, joins a Greek word that it touches as well.
+a Latin `O`). A letter of another script, such as a Chinese character, is
+no letter of the Greek word that it touches.
 
 ### Characters of another format
 

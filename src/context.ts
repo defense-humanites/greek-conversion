@@ -127,13 +127,19 @@ export function keptLetterCase(token: Token): boolean | undefined {
   return KEPT_LETTERS.get(token);
 }
 
-const LETTER = /^[\p{Lu}\p{Ll}\p{Lt}\p{Lo}]/u;
+/**
+ * A letter of the Latin or the Greek script, the scripts in which a letter
+ * can be kept: the spacing breathings, of the Greek script, are no letters.
+ */
+const LETTER =
+  /^(?=[\p{Lu}\p{Ll}\p{Lt}\p{Lo}])[\p{Script=Latin}\p{Script=Greek}]/u;
 const CAPITAL = /^[\p{Lu}\p{Lt}]/u;
 
 /**
  * Whether a literal writes a letter that a reader keeps as text: a letter
- * of another script (a Latin letter in Greek, a Greek one in Beta Code), or
- * one that the reader does not read (`c` in transliteration). A letter that
+ * of the other script (a Latin letter in Greek, a Greek one in Beta Code),
+ * or one that the reader does not read (`c` in transliteration). A letter of
+ * a third script, such as a Chinese character, joins no Greek word. A letter that
  * a converter keeps is written in its source format and reads back as such
  * a literal: as a letter of its word, it keeps the place in it that it had
  * when it was written. The test reads the value, not a mark of the token,

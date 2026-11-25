@@ -53,11 +53,6 @@ export const MEANT: readonly MeantChange[] = [
   },
   { input: "ότaω7Σ", label: TITLE_CASE, reason: TEXT_LETTER_TITLE },
   {
-    input: "[ν\u0300ϗ\u0306漢",
-    label: "monotonic, decomposed",
-    reason: TEXT_LETTER_MONOTONIC,
-  },
-  {
     input: "ΔΡ᾿[Ξ\u037E῍a\u0300ήάθΞϰ",
     label: "monotonic, decomposed",
     reason: TEXT_LETTER_MONOTONIC,
@@ -67,34 +62,8 @@ export const MEANT: readonly MeantChange[] = [
     label: TITLE_CASE,
     reason: TEXT_LETTER_TITLE,
   },
-  {
-    input: "\u0301Θ\u0307ȣϜϳ’ἄ\u0300漢Πξ1\u0323",
-    label: "monotonic, decomposed",
-    reason: TEXT_LETTER_MONOTONIC,
-  },
-  {
-    input: "\u0301Θ\u0307ȣϜϳ’ἄ\u0300漢Πξ1\u0323",
-    label: TITLE_CASE,
-    reason: TEXT_LETTER_TITLE,
-  },
-  { input: "ϙ΅ρυΛάψι漢ο;'»Ϟ", label: TITLE_CASE, reason: TEXT_LETTER_TITLE },
   {
     input: "ΑΕ\u0313a\u0306ϵ37;ίή",
-    label: TITLE_CASE,
-    reason: TEXT_LETTER_TITLE,
-  },
-  {
-    input: "\u2009ʹ\u0374Ω1漢ΕΤ\u0306",
-    label: TITLE_CASE,
-    reason: TEXT_LETTER_TITLE,
-  },
-  {
-    input: "a0ϝϠάω\u2009·漢σ΅\u20DD\u0305\u0323",
-    label: TITLE_CASE,
-    reason: TEXT_LETTER_TITLE,
-  },
-  {
-    input: "λφ3,ῥ\u20DDβ\u2009漢\u20DDσ",
     label: TITLE_CASE,
     reason: TEXT_LETTER_TITLE,
   },
