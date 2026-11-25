@@ -159,7 +159,7 @@ migration guide says how to keep those of rc.12.
 - **Documentation.** A guide page on performance gives how fast each
   conversion runs, on a long text and on a word, what costs more
   (`convertDetailed()`, options of other forms than a preset, converters),
-  and how much memory a long text takes; the README sums it up.
+  and how much memory a long text takes. The README links to it.
 - **Documentation.** The guide on smaller bundles gives how much faster
   `core` converts a word: up to 10 % with the defaults or a preset, where it
   said about 5 %, and two to three times with other options, where it said
