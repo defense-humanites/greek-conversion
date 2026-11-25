@@ -122,6 +122,12 @@ export const OPTION_RELEVANCE: Readonly<Record<string, readonly string[]>> = {
     "beta-code>transliteration",
     "transliteration>transliteration",
   ],
+  "transliteration.anoTeleia": [
+    "greek>transliteration",
+    "beta-code>transliteration",
+    "transliteration>beta-code",
+    "transliteration>transliteration",
+  ],
   "transliteration.lunateSigma": [
     "greek>transliteration",
     "beta-code>transliteration",

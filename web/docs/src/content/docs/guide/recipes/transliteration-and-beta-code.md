@@ -48,6 +48,19 @@ are listed in the [option reference](/reference/options/#transliteration).
 Supply the same options when reading transliteration back, and the chosen
 spellings are recognized.
 
+Punctuation follows the romanization tables: the Greek question mark is
+written `?`, and the ano teleia `;`. `anoTeleia: "middle-dot"` writes the ano
+teleia as Greek does, and reads it back:
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("ναί· ἀλλ’ οὖν;", "greek", "transliteration", {
+  transliteration: { anoTeleia: "middle-dot" },
+});
+// → naí· all’ oũn?
+```
+
 A reader follows the convention of its options and does not guess another one:
 under `phi: "f"`, `ph` is pi followed by a rough breathing, which is how `πἡ` is
 written (`phē`), so that the output reads back as itself. The

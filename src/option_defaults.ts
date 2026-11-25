@@ -42,6 +42,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         hyphen: "ascii",
         keraia: "greek",
         enotikon: "preserve",
+        anoTeleia: "semicolon",
         lunateSigma: "s",
         archaicKoppa: "k-dot-below",
       }),
