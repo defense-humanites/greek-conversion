@@ -548,10 +548,11 @@ export function applyCapitalOrthography(
         // reader of numerals reads none.
         kept++;
         thousands = false;
+        const keptCase = keptLetterCase(token);
         if (
-          isWordLetter(token)
+          keptCase !== undefined
             ? letterCase === "lowercase" || letterCase === "title" ||
-              letterCase !== "uppercase" && !keptLetterCase(token)
+              letterCase !== "uppercase" && !keptCase
             : /\p{Ll}/u.test(token.value)
         ) capitals = false;
       } else if (!isBoundaryTransparent(token) || thousands) break;

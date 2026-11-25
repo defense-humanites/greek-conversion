@@ -34,6 +34,7 @@ import {
   LETTERS,
   sharedGrapheme,
   sharedLiteral,
+  textLiteral,
   VARIANTS,
 } from "./shared_tokens.ts";
 
@@ -293,7 +294,7 @@ export function parseBetaCode(
       // does not read: it stays the literal that a normalized text has.
       const source = codePointAt(text, i);
       const value = source === ANO_TELEIA ? MIDDLE_DOT : source;
-      out.push(share ? sharedLiteral(value) : literal(value));
+      out.push(textLiteral(value, share));
       i += source.length;
       continue;
     }

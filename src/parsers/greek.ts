@@ -6,7 +6,6 @@ import {
   diacriticsFromMask,
   type Document,
   type GlyphVariant,
-  literal,
   ownedGrapheme,
   type Token,
 } from "../model.ts";
@@ -29,7 +28,7 @@ import { readSpacingMarks } from "./spacing_marks.ts";
 import {
   LETTERS,
   sharedGrapheme,
-  sharedLiteral,
+  textLiteral,
   VARIANTS,
 } from "./shared_tokens.ts";
 
@@ -209,7 +208,7 @@ function readGreek(
       }
       const source = codePointAt(text, i);
       const value = parsePunctuation(source, "greek") ?? source;
-      out.push(share ? sharedLiteral(value) : literal(value));
+      out.push(textLiteral(value, share));
       i += source.length;
       continue;
     }

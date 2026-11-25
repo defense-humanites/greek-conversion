@@ -127,16 +127,50 @@ export function keptLetterCase(token: Token): boolean | undefined {
   return KEPT_LETTERS.get(token);
 }
 
-/** Whether a token is a letter of a word: a grapheme, or a kept letter. */
+/**
+ * The literals that a reader keeps as text and that write a letter, and
+ * whether it is a capital: a letter of another script (a Latin letter in
+ * Greek, a Greek one in Beta Code), or one that the reader does not read
+ * (`c` in transliteration). A letter that a converter keeps is written in
+ * its source format and reads back as such a literal: as a letter of its
+ * word, it keeps the place in it that it had when it was written.
+ */
+const TEXT_LETTERS = new WeakMap<Token, boolean>();
+
+const LETTER = /^[\p{Lu}\p{Ll}\p{Lt}\p{Lo}]/u;
+const CAPITAL = /^[\p{Lu}\p{Lt}]/u;
+
+/**
+ * Whether a literal that a reader keeps writes a letter. Modifier letters,
+ * such as the keraia, are signs. Most literals are spaces and punctuation,
+ * below `A`.
+ */
+export function isTextLetter(value: string): boolean {
+  return value.charCodeAt(0) >= 0x41 && LETTER.test(value);
+}
+
+/** A literal that writes a letter a reader keeps as text. */
+export function textLetter(value: string): Literal {
+  const token = literal(value);
+  TEXT_LETTERS.set(token, CAPITAL.test(value));
+  return token;
+}
+
+/**
+ * Whether a token is a letter of a word: a grapheme, a kept letter, or a
+ * letter that a reader kept as text.
+ */
 export function isWordLetter(token: Token | undefined): boolean {
   return token !== undefined &&
-    (token.kind === "grapheme" || KEPT_LETTERS.has(token));
+    (token.kind === "grapheme" || KEPT_LETTERS.has(token) ||
+      TEXT_LETTERS.has(token));
 }
 
 /** Whether a letter of a word is a capital, or undefined for another token. */
 function capitalLetter(token: Token | undefined): boolean | undefined {
   if (token === undefined) return undefined;
-  return token.kind === "grapheme" ? token.uppercase : KEPT_LETTERS.get(token);
+  if (token.kind === "grapheme") return token.uppercase;
+  return KEPT_LETTERS.get(token) ?? TEXT_LETTERS.get(token);
 }
 
 export function isWordInitial(document: Document, index: number): boolean {

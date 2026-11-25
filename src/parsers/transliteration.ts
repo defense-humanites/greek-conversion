@@ -35,6 +35,7 @@ import { Trie } from "../trie.ts";
 import { codeUnitTable } from "./code_units.ts";
 import { knownMarkAfterIn, knownMarksFirst } from "./mark_order.ts";
 import type { ReadPositions } from "./positions.ts";
+import { textLiteral } from "./shared_tokens.ts";
 import { mayHaveSpacingSigns, readSpacingMarks } from "./spacing_marks.ts";
 
 /** The overline alone, on the last letter of a digraph. */
@@ -371,10 +372,11 @@ function readTransliteration(
         markedArchaicLetter(chars, lowered, i + 1) !== undefined &&
         lowered[i + 1] !== "k";
       out.push(
-        literal(
-          leftKeraia
-            ? ARISTERI_KERAIA
-            : parsePunctuation(chars[i], "transliteration") ?? chars[i],
+        leftKeraia ? literal(ARISTERI_KERAIA) : textLiteral(
+          parsePunctuation(chars[i], "transliteration") ?? chars[i],
+          false,
+          // The `h` of a rough breathing that goes to no vowel is a sign.
+          lowered[i] !== "h",
         ),
       );
       i++;
