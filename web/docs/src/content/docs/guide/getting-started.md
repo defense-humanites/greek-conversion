@@ -11,9 +11,9 @@ text.
 ## Installation
 
 The package is published as `@humanities/greek-conversion` on
-[JSR](https://jsr.io/@humanities/greek-conversion) and
-[npm](https://www.npmjs.com/package/@humanities/greek-conversion), with the same
-named exports in both. It is ESM-only and ships its own type declarations. It
+[npm](https://www.npmjs.com/package/@humanities/greek-conversion) and
+[JSR](https://jsr.io/@humanities/greek-conversion), with the same named
+exports in both. It is ESM-only and ships its own type declarations. It
 has no dependencies and uses no runtime-specific API: it runs in Node.js,
 from version 24, and in browsers, as the playground does.
 
