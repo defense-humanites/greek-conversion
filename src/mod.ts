@@ -13,6 +13,7 @@ import {
   encodeResolved,
   encodeTracked,
   parseResolved,
+  readerFor,
   writerFor,
 } from "./conversion.ts";
 export { CharacterScopeError, createConverter } from "./converter.ts";
@@ -44,6 +45,7 @@ import type {
   ResolvedConversionOptions,
 } from "./options.ts";
 import { type ReadPositions, readSpans } from "./parsers/positions.ts";
+import { convertPassages, convertPassagesDetailed } from "./passages.ts";
 import type { PreparedOptions } from "./prepared.ts";
 import { conversionProfiles } from "./presets.ts";
 
@@ -117,6 +119,7 @@ export type {
   StigmaReading,
   SymbolFormOrthography,
   TextOptions,
+  TextScope,
   TransliterationOptions,
   UnicodeComposition,
   UpsilonTransliteration,
@@ -231,6 +234,17 @@ export function convertDetailed(
   assertFormat(from);
   assertFormat(to);
   const { reading, writing: resolved } = conversionProfiles(options);
+  if (resolved.text.scope === "greek") {
+    return convertPassagesDetailed(
+      input,
+      readerFor(from),
+      writerFor(to),
+      readerFor(to),
+      writerFor(from).glyphForm,
+      reading,
+      resolved,
+    );
+  }
   const read: ReadPositions = { text: "", starts: [] };
   const source = parseResolved(input, from, reading, true, read);
   const inputSpans = readSpans(input, read);
@@ -273,6 +287,16 @@ function runConversion(
   assertFormat(from);
   assertFormat(to);
   const { reading, writing: resolved } = conversionProfiles(options);
+  if (resolved.text.scope === "greek") {
+    const output = convertPassages(
+      input,
+      readerFor(from),
+      writerFor(to),
+      reading,
+      resolved,
+    );
+    return { source: [], output, resolved };
+  }
   const source = parseResolved(input, from, reading, true);
   return { source, output: encodeResolved(source, to, resolved), resolved };
 }

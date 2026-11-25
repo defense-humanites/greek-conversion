@@ -67,12 +67,13 @@ on each change, over a corpus of difficult forms
 
 ## Text that mixes Greek with another language
 
-The library converts the whole string it is given. In a text that mixes Greek
-with another language, the punctuation shared by both is converted as Greek
-(`;` becomes `?` in transliteration). The letters of the other language are
-kept as they are, but reported as `unrepresented-literal` losses when the
-target format would read them as Greek, and Beta Code, whose letters are
-Latin, writes them in the case of its own letters, as they read back:
+By default, the library converts the whole string it is given. In a text
+that mixes Greek with another language, the punctuation shared by both is
+converted as Greek (`;` becomes `?` in transliteration). The letters of the
+other language are kept as they are, but reported as `unrepresented-literal`
+losses when the target format would read them as Greek, and Beta Code, whose
+letters are Latin, writes them in the case of its own letters, as they read
+back:
 
 ```ts
 import { convertDetailed } from "@humanities/greek-conversion";
@@ -89,10 +90,10 @@ mixed.lossy; // → true
 // → ["unrepresented-literal"]
 ```
 
-Filter the losses by `code` to keep those about the Greek, or extract the Greek
-before converting when the punctuation matters. The same code reports the few
-literals of the Greek itself that a target cannot keep, such as a parenthesis
-before a digit in Beta Code (see
+Filter the losses by `code` to keep those about the Greek, or convert the
+Greek passages only. The same code reports the few literals of the Greek
+itself that a target cannot keep, such as a parenthesis before a digit in
+Beta Code (see
 [Information loss](information-loss.md#canonical-spelling-and-unicode)).
 
 A letter that a reader keeps as text next to Greek letters is a letter of
@@ -104,6 +105,58 @@ of a word whose syllables it cannot count, a monosyllable included (`Kαί`),
 and a breathing on a vowel after such a letter is a coronis (`Oἰκία`, with
 a Latin `O`). A letter of another script, such as a Chinese character, is
 no letter of the Greek word that it touches.
+
+### The Greek passages of a text
+
+`text.scope: "greek"` converts the Greek passages of a Greek source, and
+copies the rest of the text as it is, code unit by code unit. The rules of
+the conversion see the whole text, as they would in a conversion of the
+whole text: before the period of `Θ.`, the capital is an initial.
+
+```ts
+import { convertDetailed } from "@humanities/greek-conversion";
+
+const passages = convertDetailed(
+  "Voir ϐίϐλος ; cf. ψυχή.",
+  "greek",
+  "transliteration",
+  { text: { scope: "greek" } },
+);
+
+passages.output; // → Voir bíblos ; cf. psychḗ.
+passages.losses.map((loss) => loss.code);
+// → ["removed-glyph-variant","removed-glyph-variant"]
+```
+
+The library does not guess what belongs to the Greek, and converts only what
+does without doubt:
+
+- **Greek letters and their marks**, and the signs that only Greek uses, by
+  their code points: the Greek question mark (U+037E), the ano teleia
+  (U+0387), the koronis (U+1FBD), the spacing breathings and accents, and the
+  keraiai (U+0374 and U+0375), with U+02B9, which normalization makes of the
+  right keraia, after Greek letters.
+- **The punctuation that Greek shares** with other scripts is copied, glued
+  to a Greek word or not: `;`, `?`, the middle dot `·` (U+00B7), `:`, `'`, `’`,
+  and `-`. In `see λόγος; also`, `;` is English; in `λογο·τέχνης`, the
+  middle dot separates the elements of a word, as the Bailly writes them. A
+  Greek passage typed with the shared signs is converted as a whole, without
+  the option, by the application that knows it is Greek. Normalization
+  turns the Greek question mark and ano teleia into the shared signs: in a
+  text normalized before the conversion, they are copied, which leaves the
+  output incomplete, not wrong.
+- **The options apply to the passages only**: letter case, the Unicode form
+  of Greek output, its Greek punctuation scalars. `text.whitespace` has
+  nothing to collapse, since whitespace is never Greek.
+
+The passages are converted as their letters are, wherever they are: a Greek
+letter in another language (`β-carotène`, `π`, a siglum) is converted too.
+`convertDetailed()` reads back the Greek passages of the output, and reports
+no loss for the text copied, whose spans in the output are those in the
+input, moved. Only Greek is read so: in Beta Code and transliteration, Latin
+letters are the Greek text, and `text.scope: "greek"` throws an
+`OptionError` for another source format. A converter (`createConverter()`)
+does not convert the passages of a text, and throws one too.
 
 ### Characters of another format
 

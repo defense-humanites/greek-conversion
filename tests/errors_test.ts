@@ -85,7 +85,12 @@ test("option errors are OptionErrors that locate the option", () => {
   assertEquals(unknownKey.name, "OptionError");
   assertEquals(unknownKey.path, "text.foo");
   assertEquals(unknownKey.received, undefined);
-  assertEquals(unknownKey.accepted, ["letterCase", "whitespace", "numerals"]);
+  assertEquals(unknownKey.accepted, [
+    "letterCase",
+    "whitespace",
+    "numerals",
+    "scope",
+  ]);
   assertEquals(unknownKey.replacement, undefined);
 
   const badValue = assertThrows(

@@ -9,6 +9,24 @@ change.
 
 ### Added
 
+- **`text.scope: "greek"` converts the Greek passages of a text** and copies
+  the rest as it is, code unit by code unit, for Greek quoted in a text in
+  another language. A passage is a run of Greek letters with their marks, and
+  of the signs that only Greek uses, by their code points (the Greek question
+  mark, the ano teleia, the koronis, the keraiai); the punctuation that Greek
+  shares with other scripts is copied, glued to a Greek word or not, and the
+  options apply to the passages only. The rules see the whole text: in
+  `Voir λόγος ; cf. Θ. Δημητρίου.`, the `;` stays, and `Θ` before the period
+  is an initial (`Voir lógos ; cf. Th. Dēmētríou.`), where converting word by
+  word, as an application had to, lost the period. `convert()`,
+  `convertDetailed()`, and `reencode()` of both entry points take it, for a
+  Greek source; another source format, and a converter, throw an
+  `OptionError`. A text takes about 1.6 times as long as its conversion as a
+  whole. A bundle grows by 2.2 kB minified, 0.9 kB with gzip, and by 3.5 kB,
+  1.4 kB with gzip, with `convertDetailed()`; `OptionError` moves to a module
+  of its own, so that the bundles of the `core` entry point keep none of the
+  tables of option values.
+
 - **`transliteration.anoTeleia`** writes the ano teleia as the romanization
   tables do, `;` (`"semicolon"`, the default), or as Greek does, `·`
   (`"middle-dot"`). Under `"middle-dot"`, the reader reads a middle dot as
