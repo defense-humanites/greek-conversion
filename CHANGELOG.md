@@ -78,6 +78,15 @@ change.
   if it writes Greek too.
 ### Fixed
 
+- **The marks typed on a Greek koronis in transliteration are the vowel's**
+  (#183). The reader puts the koronis (U+1FBD) on the vowel before it, and
+  kept the combining marks after it as text, which joined the vowel when the
+  output was read again, in another order: in monotonic Greek, `Ã᾽̈to` gave
+  `Ά̈το`, then `Α̈́το`. They go with the koronis, onto the vowel (`Α̈́το`, at
+  once). At the start of a word, a vowel with a koronis takes no smooth
+  breathing besides, which Greek writes alike: `a᾽to` gave `ἀ̓το`, and gives
+  `ἀτο`. Of the fuzzers' transliterated strings, 713 failures go, and none
+  comes.
 - **A letter that a converter keeps out of its scope reads back as a letter
   of its word** (#173). The output of such a converter converts again to
   itself, and back to the source when `convertDetailed()` reports no loss,
