@@ -205,6 +205,25 @@ kept capital is among capitals (`ΘΕΟΣ`, with epsilon out of scope, gives
   output is read again (`῾ά` or `΄ά`, with alpha out of scope, in
   capitals).
 
+Read again, a kept letter is a letter that the reader of the target keeps as
+text, which is also a letter of its word (see
+[Guarantees](guarantees.md#text-that-mixes-greek-with-another-language)):
+the rules around it decide again what they decided. With alpha out of scope,
+`σα` gives `sα` in Beta Code, which reads back as `σα`, and `έα`, in
+monotonic Beta Code, keeps its accent: `e/α`. A second conversion still
+reads otherwise:
+
+- the marks of a kept letter spelled in its source format, which the target
+  reads as its own characters: `a+`, from Beta Code with alpha out of scope,
+  gives `a+` in Greek, whose `+` reads back as a plus sign (`a%7` in Beta
+  Code);
+- a kept letter in the target's own format, which reads back as that letter:
+  with sigma out of scope, a `Σ` kept in Greek output is a sigma, which can
+  begin a numeral (`ΣΤ΄`);
+- under decimal numerals, a numeral after a kept letter whose combining mark
+  the target reads apart: `μὰςʹ`, with alpha out of scope, gives `mὰsʹ` in
+  transliteration, whose `sʹ` reads back as the numeral 200.
+
 `convertDetailed()` keeps scope diagnostics separate from conversion losses:
 
 ```ts

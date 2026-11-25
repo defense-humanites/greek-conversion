@@ -7,6 +7,45 @@ change.
 
 ## [Unreleased]
 
+### Changed
+
+- **A letter that a reader keeps as text is a letter of its word.** Each
+  reader marks the letters it keeps as text, with their case: a Latin letter
+  in Greek, a Greek one in Beta Code or transliteration, and a letter that
+  transliteration does not read. The rules that look at the letters around a
+  letter count them, as they count a letter that a converter keeps:
+  - a sigma before such a letter is medial (`sc`, in transliteration, gives
+    `σc`);
+  - title case capitalizes the first letter of a word only: `Kαζάρμα`, with a
+    Latin `K`, as digitized texts have it, stays `Kαζάρμα`, where rc.13 gave
+    `KΑζάρμα`;
+  - monotonic accentuation keeps the accent of a word whose syllables it
+    cannot count (`ùc` gives `ύc`);
+  - ISO 843 type 2 writes a beta before such a letter as `mp`, inside the
+    word.
+
+  A smooth breathing after a letter that transliteration does not read is
+  reported lost in Greek output, which reads it as a coronis, though the
+  output converts back to the source (`co` gives `cὀ`). A bundle that reads a
+  format grows by 0.4 to 0.5 kB minified, up to 0.2 kB with gzip.
+
+### Fixed
+
+- **A letter that a converter keeps out of its scope reads back as a letter
+  of its word** (#173). The output of such a converter converts again to
+  itself, and back to the source when `convertDetailed()` reports no loss,
+  where final sigma, letter case, monotonic accentuation, or numerals read
+  otherwise: with alpha out of scope, `σα` gave `sα` in Beta Code, which read
+  back as `ςα`, and `έα`, in monotonic Beta Code, gave `e/α`, then `eα`. A
+  second conversion still reads otherwise the marks of a kept letter spelled
+  in its source format (`a+`), a kept letter in the target's own format, and
+  a numeral after a kept letter whose mark the target reads apart, as
+  `character-extensions.md` documents.
+- **The transliteration reader reads back a vowel with both breathings**,
+  which the writer writes after `h’` under the presets that write the smooth
+  breathing as an apostrophe: `Ὁ̓Υ` gave `H’OY`, which read back without its
+  rough breathing.
+
 ## [1.0.0-rc.13] - 2026-11-25
 
 Thirteenth release candidate for `1.0.0`, which writes Modern Greek as its

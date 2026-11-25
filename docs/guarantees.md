@@ -15,12 +15,17 @@ protects these behaviors.
 - **Output is canonical and idempotent.** For fixed formats and options,
   converting the output again with the same options, without `source`,
   changes nothing, but for the text of another format that a source may hold
-  ([below](#characters-of-another-format)) and a letter written as a TLG
+  ([below](#characters-of-another-format)), a letter written as a TLG
   code before a digit in Beta Code (see
-  [Information loss](information-loss.md#canonical-spelling-and-unicode)).
+  [Information loss](information-loss.md#canonical-spelling-and-unicode)),
+  and a few letters that a converter keeps out of its scope (see
+  [Character extensions](character-extensions.md#restricting-the-repertoire)).
 - **A lossless conversion is reversible.** When `convertDetailed()` reports
   `lossy: false`, converting the output back with the same options gives the
-  same canonical text. After a restyle, swap `source` and the other options.
+  same canonical text, but for the marks of a letter that a converter keeps
+  in its source format (see
+  [Character extensions](character-extensions.md#restricting-the-repertoire)).
+  After a restyle, swap `source` and the other options.
   The [information-loss contract](information-loss.md) lists what each format
   pair and option loses, and the
   [conversion-analysis contract](conversion-analysis.md) describes the report.
@@ -82,6 +87,13 @@ mixed.lossy; // → true
 [...new Set(mixed.losses.map((loss) => loss.code))];
 // → ["unrepresented-literal"]
 ```
+
+A letter that a reader keeps as text next to Greek letters is a letter of
+their word, as is a letter that the transliteration reader does not read: a
+digitized text that writes a Latin `K` for a Greek one keeps its word whole.
+A sigma before such a letter is medial, title case capitalizes the first
+letter of the word only (`Kαζάρμα`), and monotonic accentuation keeps the
+accent of a word whose syllables it cannot count.
 
 Filter the losses by `code` to keep those about the Greek, or extract the Greek
 before converting when the punctuation matters. The same code reports the few

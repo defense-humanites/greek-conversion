@@ -257,6 +257,12 @@ Monotonic or uncial Greek (`άνθρωπος`, `ΑΙΔΗΣ`) therefore reads bac
 smooth breathing, and `convertDetailed()` reports `inferred-breathing` on the
 vowel that acquires it.
 
+A letter that transliteration does not read starts no word: the vowel after
+it takes a smooth breathing, but Greek output, which reads that letter as a
+letter of its word, reads the breathing as a coronis. `convertDetailed()`
+reports the breathing lost, though the output converts back to the source:
+`co` gives `cὀ`, which gives `co` again.
+
 With default nasal-gamma inference, `n` before gamma, kappa, xi, or chi becomes
 gamma in the canonical document. Set `nasalGamma: "literal"` to keep `n` as
 nu; this changes the accepted spelling contract for transliteration input.
