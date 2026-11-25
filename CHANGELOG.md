@@ -78,6 +78,13 @@ change.
   if it writes Greek too.
 ### Fixed
 
+- **A diphthong of two capitals keeps them before lowercase text** in
+  transliteration (#182). `ΕἹα` gave `Heia`, which lost the capital of its
+  iota; it gives `HEIa`. A vowel with a rough breathing before a capital,
+  without an accent to mark the hiatus (`ἙΙα`), gave `HEIa`, which read back
+  as that diphthong and was written `Heia`; its output now converts again to
+  itself, as `ἝΙα` does under the presets that drop the accent
+  (`ala-lc-modern`, `ala-lc-ancient`, `sbl-general`).
 - **A letter that a converter keeps out of its scope reads back as a letter
   of its word** (#173). The output of such a converter converts again to
   itself, and back to the source when `convertDetailed()` reports no loss,

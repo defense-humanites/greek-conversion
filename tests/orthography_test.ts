@@ -76,6 +76,9 @@ test("writes Latin digraphs in full capitals among capitals", () => {
     ["Θ. ΘεΟΣ", "Th. TheOS"],
     ["ἙΛΛΑΣ ΑἹΜΑ ΟἹ ὍΜΗΡΟΣ", "HELLAS HAIMA HOI HÓMĒROS"],
     ["Ἑλλάς Αἷμα Οἱ Ὁ", "Hellás Haĩma Hoi Ho"],
+    // A diphthong of two capitals keeps them before lowercase text, as a
+    // capital of one Latin letter does (#182).
+    ["ΕἹα ΑἹμα", "HEIa HAIma"],
     ["ῬΟΔΟΣ ΠΥΡΡΟΣ ΠΥΡΡ", "RHODOS PYRRHOS PYRRH"],
     ["Ῥόδος Πύρρος", "Rhódos Pýrrhos"],
   ] as const;
@@ -158,6 +161,47 @@ test("combines uppercase output with ALA-LC digraphs", () => {
   assertNfcEquals(
     convert("μπ ντ γκ αγκά αγκ", "greek", "transliteration", options),
     "B D̲ GK ANKÁ AGK",
+  );
+});
+
+test("a vowel and a capital after it keep their case through a second conversion", () => {
+  // Without an accent to mark the hiatus, its breathing moves to the
+  // diphthong that transliteration reads back, which convertDetailed()
+  // reports; the capitals stay (#182).
+  for (
+    const options of [
+      {},
+      { preset: "ala-lc-modern" },
+      { preset: "ala-lc-ancient" },
+      { preset: "sbl-general" },
+      { preset: "iso-843-type-1" },
+    ] as const
+  ) {
+    for (const greek of ["ἝΙα", "ἙΙα", "ἍΙα", "ὍΙα"]) {
+      const result = convertDetailed(
+        greek,
+        "greek",
+        "transliteration",
+        options,
+      );
+      const label = `${greek} ${JSON.stringify(options)}`;
+      assertEquals(
+        convert(result.output, "transliteration", "transliteration", options),
+        result.output,
+        label,
+      );
+      if (!result.lossy) {
+        assertNfcEquals(
+          convert(result.output, "transliteration", "greek", options),
+          greek,
+          label,
+        );
+      }
+    }
+  }
+  assertNfcEquals(
+    convert("ἝΙα", "greek", "transliteration", { preset: "ala-lc-modern" }),
+    "HEIa",
   );
 });
 

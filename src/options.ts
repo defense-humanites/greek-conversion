@@ -323,7 +323,9 @@ export type RhoTransliteration = "contextual" | "systematic";
  * spelled with several Latin letters (`TH`, `CH`, `PS`, and the `H` of a rough
  * breathing or of rho) is written in full capitals among capitals, and with
  * its first letter only before lowercase text, which ISO 843 allows (note 11):
- * `ΘΑΛΑΣΣΑ` → `THALASSA`, `Θάλασσα` → `Thálassa`. A capital on its own, such
+ * `ΘΑΛΑΣΣΑ` → `THALASSA`, `Θάλασσα` → `Thálassa`. A diphthong of two capitals
+ * with a rough breathing keeps both before lowercase text, its second letter
+ * being a capital of its own (`ΕἹα` → `HEIa`). A capital on its own, such
  * as a letter name, takes the case of the nearest words on either side, as a
  * word of one letter does in Greek: in full capitals where they are in
  * capitals and none is in small letters (`ΘΕΟΣ Θ` → `THEOS TH`), and with its
