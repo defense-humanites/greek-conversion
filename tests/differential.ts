@@ -56,9 +56,15 @@ export interface Difference {
 /** Whether `MEANT` lists a difference. */
 function isMeant(label: string, call: string, input: string): boolean {
   return MEANT.some((meant) =>
-    (meant.input ?? input) === input && (meant.label ?? label) === label &&
+    matches(meant.input, input) && matches(meant.label, label) &&
     (meant.call ?? call) === call
   );
+}
+
+/** Whether a value is the one, or matches the pattern, that `MEANT` gives. */
+function matches(meant: string | RegExp | undefined, value: string): boolean {
+  return meant === undefined ||
+    (typeof meant === "string" ? meant === value : meant.test(value));
 }
 
 /**

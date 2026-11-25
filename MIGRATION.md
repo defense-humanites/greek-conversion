@@ -28,6 +28,11 @@ written with an acute and of a word that elision made a monosyllable
 second accent of a word accented on its last two syllables (`τὸ σῶμά μου`
 gives `το σώμα μου`; rc.12: `σώμά`).
 
+Greek output writes words in capitals without accents or breathings, as
+Greek usage sets them: `Μάιος` in capitals gives `ΜΑΪΟΣ` (rc.12: `ΜΆΙΟΣ`).
+To keep every mark, as rc.12 did, set
+`greek: { capitalMarks: "preserve" }`.
+
 A spacing tonos `΄` (U+0384) after the letters of a numeral is read as its
 keraia: `Β΄` gives `*b#` in Beta Code and `2` under the ALA-LC presets
 (rc.12: `*b΄`, `V΄`). Before a capital vowel, it is the capital's tonos:

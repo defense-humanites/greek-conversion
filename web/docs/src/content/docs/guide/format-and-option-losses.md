@@ -76,7 +76,7 @@ converted back to the source, and `convertDetailed()` reports what went:
 | `diacritics`, for any class it removes                                               | The marks of that class                                                                                               |
 | `greek.accentuation: "monotonic"`                                                    | Breathings, coronis, quantity marks, the iota subscript, which of the three accents, the accent of most monosyllables |
 | `greek.iotaSubscript: "capital-adscript"` or `"adscript"`                            | That an iota written on the line was subscript                                                                        |
-| `greek.capitalMarks: "omit"`                                                         | The accents, breathings, coronis, and quantity marks of words in capitals, and whether a diaeresis was written        |
+| `greek.capitalMarks: "omit"`, the default                                            | The accents, breathings, coronis, and quantity marks of words in capitals, and whether a diaeresis was written        |
 | `greek.elidedStop: "aspirate"`                                                       | The consonant the source writes before an elision                                                                     |
 | `greek.dentalSigma: "assimilate"`                                                    | A dental before sigma                                                                                                 |
 | `text.numerals: "decimal"`                                                           | The letters of a numeral                                                                                              |

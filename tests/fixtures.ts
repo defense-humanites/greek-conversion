@@ -27,7 +27,7 @@ export const EQUIVALENCES = [
   { greek: "σάλπιγξ", betaCode: "sa/lpigc", transliteration: "sálpinx" },
   { greek: "ἔλεγχος", betaCode: "e)/legxos", transliteration: "élenchos" },
   { greek: "ποιῇ", betaCode: "poih=|", transliteration: "poiȩ̄̃" },
-  { greek: "ΠΟΙῌ͂", betaCode: "*p*o*i*=h|", transliteration: "POIȨ̄̃" },
+  { greek: "ΠΟΙῌ", betaCode: "*p*o*i*h|", transliteration: "POIȨ̄" },
   { greek: "Αἶα", betaCode: "*ai)=a", transliteration: "Aĩa" },
   { greek: "Ἠώς", betaCode: "*)hw/s", transliteration: "Ēṓs" },
   {

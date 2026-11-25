@@ -9,14 +9,24 @@ const UPPERCASE = {
   greek: { capitalMarks: "omit" },
 } as const;
 
-test("capitals keep every mark by default", () => {
+test("words in capitals take no accent by default, but on request", () => {
+  const uppercase = { text: { letterCase: "uppercase" } } as const;
   assertNfcEquals(
-    reencode("Μάιος, Ἀθῆναι", "greek", { text: { letterCase: "uppercase" } }),
+    reencode("Μάιος, Ἀθῆναι", "greek", uppercase),
+    "ΜΑΪΟΣ, ΑΘΗΝΑΙ",
+  );
+  assertNfcEquals(
+    reencode("Μάιος, Ἀθῆναι", "greek", {
+      ...uppercase,
+      greek: { capitalMarks: "preserve" },
+    }),
     "ΜΆΙΟΣ, ἈΘΗ͂ΝΑΙ",
   );
+  assertNfcEquals(convert("*MA/IOS", "beta-code", "greek"), "Μάιος");
+  assertNfcEquals(convert("*M*A/*I*O*S", "beta-code", "greek"), "ΜΑΪΟΣ");
 });
 
-test("words in capitals take no accent or breathing on request", () => {
+test("words in capitals take no accent or breathing", () => {
   for (
     const [text, capitals, icu] of [
       // The usage of Greek, as `toLocaleUpperCase("el")` writes it.
@@ -52,6 +62,11 @@ test("only words in capitals lose their marks", () => {
   assertNfcEquals(
     reencode("ΜΆΙΟΣ καὶ Ἕλληνες, Ὁ λόγος, Ο ΛΌΓΟΣ, ΤΟ Ά ΤΟ", "greek", OMIT),
     "ΜΑΪΟΣ καὶ Ἕλληνες, Ὁ λόγος, Ο ΛΟΓΟΣ, ΤΟ Α ΤΟ",
+  );
+  // Letters of another script are of the word, as they read back.
+  assertNfcEquals(
+    reencode("ΜΆΙΟΣabc ΜΆΙΟΣABC", "greek", OMIT),
+    "ΜΆΙΟΣabc ΜΑΪΟΣABC",
   );
   // Beta Code and transliteration write the marks on capitals.
   assertEquals(convert("ΜΆΙΟΣ", "greek", "beta-code", OMIT), "*m*/a*i*o*s");

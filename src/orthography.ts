@@ -9,6 +9,7 @@ import {
   isVowel,
   isWordInitial,
   isWordLetter,
+  keptLetterCase,
   mayFormDiphthong,
   TONOS_SIGN,
   tonosKeraia,
@@ -402,6 +403,23 @@ export type CapitalOrthography = (
   options: ConversionOptions,
 ) => Document;
 
+/** A literal made of letters, with their marks. */
+const LETTERS = /^\p{L}[\p{L}\p{M}]*$/u;
+
+/**
+ * Whether a literal is made of letters. Most literals are spaces and
+ * punctuation: one unit below `A` needs no regex.
+ */
+function isLetters(value: string): boolean {
+  return (value.length !== 1 || value.charCodeAt(0) >= 0x41) &&
+    LETTERS.test(value);
+}
+
+/** Whether a token is a letter of a word in capitals, as it reads back. */
+function isCapitalWordLetter(token: Token): boolean {
+  return token.kind === "grapheme" || isLetters(token.value);
+}
+
 /** The marks that a word in capitals keeps under `capitalMarks: "omit"`. */
 const CAPITAL_MARKS: readonly Diacritic[] = [
   "diaeresis",
@@ -411,7 +429,7 @@ const CAPITAL_MARKS: readonly Diacritic[] = [
 
 /**
  * Writes the words in capitals of Greek output without accents, breathings,
- * coronis, or quantity marks, under `greek.capitalMarks: "omit"` (see
+ * coronis, or quantity marks, unless `greek.capitalMarks` is `"preserve"` (see
  * `CapitalMarksOrthography`): their diaeresis stays, one is written on
  * the second of two vowels whose hiatus a mark on the first showed, and the
  * disjunctive `ή` keeps its accent. Returns `document` itself when no word
@@ -421,23 +439,47 @@ export function applyCapitalOrthography(
   document: Document,
   options: ConversionOptions,
 ): Document {
-  if (options.greek?.capitalMarks !== "omit") return document;
-  const adscript = options.greek?.iotaSubscript === "capital-adscript" ||
-    options.greek?.iotaSubscript === "adscript";
-  const keepsSubscript = preservesDiacritic("iota-subscript", options, "greek");
-  // A capital whose iota subscript Greek output writes on the line.
+  if (options.greek?.capitalMarks === "preserve") return document;
+  const policy = options.greek?.iotaSubscript;
+  // Whether Greek output writes an iota subscript on the line, which only a
+  // word of one letter asks.
+  let adscript: boolean | undefined;
+  // A capital whose iota subscript Greek output writes on the line, as a
+  // capital in text set in capitals, and else, after a capital alone, small.
   const writesAdscript = (letter: Grapheme) =>
-    adscript && keepsSubscript && letter.uppercase &&
-    letter.diacritics.has("iota-subscript");
+    letter.uppercase && letter.diacritics.has("iota-subscript") &&
+    (adscript ??= (policy === "capital-adscript" || policy === "adscript") &&
+      preservesDiacritic("iota-subscript", options, "greek"));
+  const letterCase = options.text?.letterCase;
+  const capitalIota = letterCase === "uppercase";
   let output: Token[] | undefined;
+  // Whether the token before, spaces and marks aside, is a letter: words
+  // are cut as they read back, where a letter a converter keeps, written
+  // with a sign that is no letter (`*s3`), ends one.
+  let afterLetter = false;
   for (let start = 0; start < document.length; start++) {
     const first = document[start];
-    if (
-      first.kind !== "grapheme" || !first.uppercase ||
-      !isWordInitial(document, start)
-    ) continue;
+    if (first.kind === "literal") {
+      // Most literals are spaces and punctuation, below `A`, which neither
+      // a mark nor a letter is.
+      const value = first.value;
+      if (value.length === 1 && value.charCodeAt(0) < 0x41) {
+        afterLetter = false;
+        continue;
+      }
+      if (isBoundaryTransparent(first)) continue;
+      if (!LETTERS.test(value)) {
+        afterLetter = false;
+        continue;
+      }
+    }
+    // Within a word, or a word that starts with a small letter.
+    if (afterLetter) continue;
+    afterLetter = true;
+    if (first.kind === "grapheme" && !first.uppercase) continue;
 
     const word: number[] = [];
+    let kept = 0;
     let capitals = true;
     let end = start;
     for (; end < document.length; end++) {
@@ -445,24 +487,42 @@ export function applyCapitalOrthography(
       if (token.kind === "grapheme") {
         word.push(end);
         if (!token.uppercase) capitals = false;
-      } else if (isWordLetter(token)) capitals = false;
-      else if (!isBoundaryTransparent(token)) break;
+      } else if (isCapitalWordLetter(token)) {
+        // Letters of another script, or a letter a converter keeps as it
+        // was, which reads back as letters, are of the word: the kept one
+        // takes the case of the text once written, or keeps its own.
+        kept++;
+        if (
+          isWordLetter(token)
+            ? letterCase === "lowercase" || letterCase === "title" ||
+              letterCase !== "uppercase" && !keptLetterCase(token)
+            : /\p{Ll}/u.test(token.value)
+        ) capitals = false;
+      } else if (!isBoundaryTransparent(token)) break;
     }
     start = end - 1;
-    if (!capitals) continue;
+    afterLetter = true;
+    if (!capitals || word.length === 0) continue;
     // A word of one letter takes the case of the words around it, unless
-    // an iota written on the line after it makes two capitals.
-    if (word.length === 1 && !writesAdscript(document[word[0]] as Grapheme)) {
-      const sides = [
-        caseNear(document, word[0] - 1, -1, writesAdscript),
-        caseNear(document, word[0] + 1, 1, writesAdscript),
-      ];
-      if (!sides.includes("capitals") || sides.includes("small")) continue;
+    // an iota written on the line after it makes it two letters, two
+    // capitals in text set in capitals, and else a capital and a small
+    // letter, which begin a word in small letters (`Ὠι`).
+    if (word.length === 1 && kept === 0) {
+      if (writesAdscript(document[word[0]] as Grapheme)) {
+        if (!capitalIota) continue;
+      } else {
+        const sides = [
+          caseNear(document, word[0] - 1, -1, writesAdscript, capitalIota),
+          caseNear(document, word[0] + 1, 1, writesAdscript, capitalIota),
+        ];
+        if (!sides.includes("capitals") || sides.includes("small")) continue;
+      }
     }
 
     // The disjunctive `ή`, which the accent tells from the article.
     const only = document[word[0]] as Grapheme;
-    const disjunctive = word.length === 1 && only.letter === "eta" &&
+    const disjunctive = word.length === 1 && kept === 0 &&
+      only.letter === "eta" &&
       !only.diacritics.has("iota-subscript") &&
       keepsMonosyllableAccent(document, word, false);
     for (let k = 0; k < word.length; k++) {
@@ -498,13 +558,15 @@ export function applyCapitalOrthography(
  * and punctuation, by its two letters nearest `start`: `"single"` for a word
  * of one capital letter, `undefined` where there is none before a literal
  * with a letter or a digit, such as a numeral, which may be written as a
- * number. A capital with an iota written on the line is two capitals.
+ * number. A capital alone with an iota written on the line is two letters,
+ * capitals if `capitalIota`, and else a capital and a small letter.
  */
 function caseNear(
   document: Document,
   start: number,
   direction: 1 | -1,
   writesAdscript: (letter: Grapheme) => boolean,
+  capitalIota: boolean,
 ): "capitals" | "small" | "single" | undefined {
   let index = start;
   for (; document[index]?.kind === "literal"; index += direction) {
@@ -515,9 +577,11 @@ function caseNear(
   const first = document[index];
   if (first?.kind !== "grapheme") return undefined;
   if (!first.uppercase) return "small";
-  if (writesAdscript(first)) return "capitals";
   const second = document[index + direction];
-  if (second?.kind !== "grapheme") return "single";
+  if (second?.kind !== "grapheme") {
+    if (!writesAdscript(first)) return "single";
+    return capitalIota ? "capitals" : "small";
+  }
   return second.uppercase ? "capitals" : "small";
 }
 

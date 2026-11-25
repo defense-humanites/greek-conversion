@@ -54,7 +54,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         stigma: "letter",
         kaiAccent: "none",
         iotaSubscript: "subscript",
-        capitalMarks: "preserve",
+        capitalMarks: "omit",
         doubleRho: "unmarked",
         dentalSigma: "preserve",
         elidedStop: "preserve",

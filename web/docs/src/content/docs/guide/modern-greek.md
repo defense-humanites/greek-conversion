@@ -188,22 +188,22 @@ reencode("’Ethnikòn Metsóvion Polytechneîon", "transliteration", {
 ## Text in capitals
 
 Greek sets words in capitals without accents, but for the disjunctive `ή`,
-and writes a diaeresis where the accent showed a hiatus.
-`greek.capitalMarks: "omit"` writes Greek output so, as
-`toLocaleUpperCase("el")` does; by default, the marks stay:
+and writes a diaeresis where the accent showed a hiatus. Greek output does
+so by default, as `toLocaleUpperCase("el")` does:
 
 ```ts
 import { reencode } from "@humanities/greek-conversion";
 
 reencode("Αθήνα ή Πάτρα, Μάιος", "greek", {
   text: { letterCase: "uppercase" },
-  greek: { capitalMarks: "omit" },
 });
 // → ΑΘΗΝΑ Ή ΠΑΤΡΑ, ΜΑΪΟΣ
 ```
 
 A capital that begins a word in small letters keeps its accent (`Έλληνας`),
-and Beta Code and transliteration keep the marks of capitals. See
+and Beta Code and transliteration keep the marks of capitals.
+`greek.capitalMarks: "preserve"` writes the marks of words in capitals as
+well. See
 [Marks in capitals](/reference/greek-unicode/#marks-in-capitals).
 
 ## Search keys and URL slugs

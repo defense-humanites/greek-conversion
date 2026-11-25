@@ -249,23 +249,26 @@ subscript to write.
 
 ## Marks in capitals
 
-Greek output keeps the marks of a word in capitals by default
-(`ΜΆΙΟΣ`, `ἈΘΗ͂ΝΑΙ`). Greek usage writes words in capitals without accents,
-as `toLocaleUpperCase("el")` does, and `greek.capitalMarks: "omit"` follows
-it:
+Greek usage writes words in capitals without accents, as
+`toLocaleUpperCase("el")` does, and Greek output follows it by default
+(`greek.capitalMarks: "omit"`). `"preserve"` writes every mark, as an
+edition that prints them does:
 
 ```ts
 import { reencode } from "@humanities/greek-conversion";
 
-reencode("Μάιος, Ἅιδης ή Ἀθῆναι", "greek", {
-  text: { letterCase: "uppercase" },
-  greek: { capitalMarks: "omit" },
-});
+const capitals = { text: { letterCase: "uppercase" } } as const;
+reencode("Μάιος, Ἅιδης ή Ἀθῆναι", "greek", capitals);
 // → ΜΑΪΟΣ, ΑΪΔΗΣ Ή ΑΘΗΝΑΙ
+reencode("Μάιος, Ἅιδης", "greek", {
+  ...capitals,
+  greek: { capitalMarks: "preserve" },
+});
+// → ΜΆΙΟΣ, ἍΙΔΗΣ
 ```
 
-A word in capitals then takes no accent, breathing, coronis, or quantity
-mark, and keeps its diaeresis. Where a mark on the first of two vowels that
+A word in capitals takes no accent, breathing, coronis, or quantity mark,
+and keeps its diaeresis. Where a mark on the first of two vowels that
 would form a diphthong showed their hiatus, the second takes a diaeresis
 (`Μάιος` → `ΜΑΪΟΣ`), unless the first ends a diphthong (`εύι` → `ΕΥΙ`,
 which ICU writes `ΕΥΪ`). The disjunctive `ή`, from `ή`, `ἤ`, or `ἢ`, keeps

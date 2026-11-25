@@ -260,11 +260,18 @@ test("monotonic accentuation keeps the accents of monotonic orthography", () => 
   for (
     const text of [
       "ο πατέρας μού είπε, ο πατέρας μου είπε",
-      "γράψε μού το, δώσε μού το, Ο ΠΑΤΈΡΑΣ ΜΟΎ ΕΊΠΕ",
+      "γράψε μού το, δώσε μού το",
       "δείξ’ το, πάρ’ το, άσ’ το, όσ’ ήθελε",
       "ο άνθρωπός μου, φυτεύοντάς τα",
     ]
   ) assertEquals(reencode(text, "greek", MONOTONIC), text);
+  // In capitals, where Greek writes accents only if asked to.
+  assertEquals(
+    reencode("Ο ΠΑΤΈΡΑΣ ΜΟΎ ΕΊΠΕ", "greek", {
+      greek: { accentuation: "monotonic", capitalMarks: "preserve" },
+    }),
+    "Ο ΠΑΤΈΡΑΣ ΜΟΎ ΕΊΠΕ",
+  );
   // The accent of a weak pronoun is an acute: the article, which a
   // circumflex or a grave marks, has none.
   assertNfcEquals(
