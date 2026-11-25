@@ -58,6 +58,11 @@ yours.
   case of each word to find them: converting a text in small letters into
   Greek takes about 5 % longer than with `"preserve"`, and a text in
   capitals about a fifth longer.
+- **The Greek passages of a text.** Under `text.scope: "greek"`, the reader
+  records where each token starts, and the writer where it writes each one,
+  to copy the text around the passages as it is: a text takes about 1.6 times
+  as long as its conversion as a whole, and a word about 1 µs more. The text
+  around the passages is read with them, for the rules to see it.
 - **`convertDetailed()`.** It reads the output again to find what the
   conversion lost, and keeps the position of every token: it costs two to
   three times what `convert()` does. Call it where the losses or the

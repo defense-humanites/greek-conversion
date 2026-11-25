@@ -72,6 +72,7 @@ export const DEFAULT_CONVERSION_OPTIONS: DefaultConversionOptions = Object
         letterCase: "preserve",
         whitespace: "preserve",
         numerals: "alphabetic",
+        scope: "all",
       }),
       diacritics: Object.freeze({
         accents: "preserve",

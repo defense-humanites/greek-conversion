@@ -22,6 +22,7 @@ export const TRANSLITERATION_WRITING: WriterHooks & {
     ),
   write: encodeTransliteration,
   form: () => "NFC",
+  finish: (text) => text.normalize("NFC"),
   glyphForm: transliterationGlyphForm,
 };
 

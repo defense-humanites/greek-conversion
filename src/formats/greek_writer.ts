@@ -7,6 +7,7 @@ import { makeWriter, type Writer, type WriterHooks } from "../codec.ts";
 import { encodeGreek, greekGlyphForm } from "../encode.ts";
 import { supplyKaiAccents } from "../kai_accent.ts";
 import { applyCapitalOrthography, applyOrthography } from "../orthography.ts";
+import { applyGreekUnicode } from "../unicode.ts";
 
 /** How Greek is written. */
 export const GREEK_WRITING: WriterHooks & { readonly format: "greek" } = {
@@ -21,6 +22,7 @@ export const GREEK_WRITING: WriterHooks & { readonly format: "greek" } = {
     ),
   write: encodeGreek,
   form: (options) => options.greek.composition === "decomposed" ? "NFD" : "NFC",
+  finish: applyGreekUnicode,
   glyphForm: greekGlyphForm,
 };
 

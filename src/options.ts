@@ -156,6 +156,22 @@ export type FinalSigmaOrthography = "preserve" | "contextual" | "medial";
 export type NumeralOrthography = "alphabetic" | "decimal";
 
 /**
+ * What a conversion converts: the whole text (`"all"`), or only its Greek
+ * passages (`"greek"`), for Greek quoted in a text in another language. A
+ * Greek passage is a run of Greek letters with their combining marks, and of
+ * the signs that only Greek uses, by their code points: the Greek question
+ * mark (U+037E), the ano teleia (U+0387), the koronis (U+1FBD), the spacing
+ * breathings and accents, and the keraiai (U+0374, which normalization makes
+ * U+02B9, and U+0375). Everything else, the punctuation that Greek shares
+ * with other scripts included (`;`, `?`, `·`, `'`, `’`, `-`), is copied as it
+ * is, code unit by code unit, and the options apply to the passages only. The
+ * rules of the conversion see the whole text: before `.`, `Θ` is an initial
+ * (`Th.`). `"greek"` reads Greek only, and does not apply to `encode()`,
+ * which writes a document.
+ */
+export type TextScope = "all" | "greek";
+
+/**
  * Selects Greek keraia marks or the BnF comma and combining acute in Latin
  * output. Under `"bnf"`, an acute after a consonant reads back as the right
  * keraia, which a consonant cannot bear as an accent, and a comma before
@@ -496,6 +512,8 @@ export interface TextOptions {
   whitespace?: WhitespaceOrthography;
   /** Alphabetic or decimal numeral output. Defaults to `"alphabetic"`. */
   numerals?: NumeralOrthography;
+  /** What is converted: the whole text, or only its Greek passages. Defaults to `"all"`; `"greek"` copies the rest of the text as it is, and reads Greek only. */
+  scope?: TextScope;
 }
 
 /**
@@ -644,6 +662,7 @@ export interface DefaultConversionOptions {
     readonly letterCase: "preserve";
     readonly whitespace: "preserve";
     readonly numerals: "alphabetic";
+    readonly scope: "all";
   };
   /** Literal default disposition of every semantic diacritic class. */
   readonly diacritics: {
@@ -658,55 +677,7 @@ export interface DefaultConversionOptions {
   };
 }
 
-/**
- * Error raised for an option that cannot be resolved: an unknown key or
- * preset, a value outside the accepted ones, or two values that cannot be
- * combined. A `RangeError`, with the option named by `path` and what was
- * received, what is accepted, and the replacement of a key or value that a
- * release candidate of `1.0.0` knew, when there is one. The message is for
- * humans.
- */
-export class OptionError extends RangeError {
-  /** Dotted path of the option, such as `"transliteration.eta"` or `"preset"`; for a key of a converter's configuration, such as `"exclude"` or `"aliases[0].spellings"`. */
-  readonly path: string;
-  /** The value received, or undefined for an unknown key. */
-  readonly received: unknown;
-  /**
-   * The accepted values of the option, or the accepted keys of its group.
-   * For two values that cannot be combined, the values accepted next to the
-   * other one.
-   */
-  readonly accepted: readonly string[];
-  /**
-   * The current path of a removed key, or the current spelling of a renamed
-   * value, for the names of the release candidates of `1.0.0`: a migration
-   * aid, which a minor release after `1.0.0` may stop giving
-   * (docs/stability.md). A property of the error only when there is one:
-   * declared without a field, which would set it to `undefined` on every
-   * error.
-   */
-  declare readonly replacement?: string;
-
-  /** Creates the error with its message and the details of the option. */
-  constructor(
-    message: string,
-    details: {
-      path: string;
-      received: unknown;
-      accepted: readonly string[];
-      replacement?: string;
-    },
-  ) {
-    super(message);
-    this.name = "OptionError";
-    this.path = details.path;
-    this.received = details.received;
-    this.accepted = Object.freeze([...details.accepted]);
-    if (details.replacement !== undefined) {
-      this.replacement = details.replacement;
-    }
-  }
-}
+export { OptionError } from "./option_error.ts";
 
 /** Accepted values of every field of one option group. */
 export type OptionValueTable<T> = {
@@ -810,6 +781,7 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues =
       letterCase: ["preserve", "lowercase", "uppercase", "title"],
       whitespace: ["preserve", "collapse"],
       numerals: ["alphabetic", "decimal"],
+      scope: ["all", "greek"],
     }),
     diacritics: /* @__PURE__ */ freezeTable<DiacriticOptions>({
       all: ["preserve", "remove"],

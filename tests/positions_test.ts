@@ -1075,6 +1075,10 @@ test("span invariants hold for every value of every option", () => {
       for (const value of values as readonly string[]) {
         const options = { [group]: { [key]: value } } as ConversionOptions;
         for (const [index, from] of FORMATS.entries()) {
+          // The Greek passages of a text are read from Greek only.
+          if (key === "scope" && value === "greek" && from !== "greek") {
+            continue;
+          }
           for (const to of FORMATS) {
             checkInvariants(inputs[index], from, to, options);
           }

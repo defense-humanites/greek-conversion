@@ -283,6 +283,11 @@ export const OPTION_RELEVANCE: Readonly<Record<string, readonly string[]>> = {
     "transliteration>beta-code",
     "transliteration>transliteration",
   ],
+  "text.scope": [
+    "greek>greek",
+    "greek>beta-code",
+    "greek>transliteration",
+  ],
   "diacritics.all": [
     "greek>greek",
     "greek>beta-code",

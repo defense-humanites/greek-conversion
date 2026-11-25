@@ -39,6 +39,16 @@ const WRITERS: Readonly<Record<Format, WriterHooks>> = {
 };
 
 /**
+ * The hooks of the reader of a format: those of the handle that the
+ * `./core` entry point would be given.
+ *
+ * Internal: not exported by the package entry points.
+ */
+export function readerFor(format: Format): ReaderHooks {
+  return READERS[format];
+}
+
+/**
  * The hooks of the writer of a format: those of the handle that the
  * `./core` entry point would be given.
  *
