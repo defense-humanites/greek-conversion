@@ -168,9 +168,6 @@ does.
   [diacritics and Unicode output](/guide/recipes/diacritics-and-unicode/),
   [transliteration and Beta Code](/guide/recipes/transliteration-and-beta-code/),
   and [letters and text](/guide/recipes/letters-and-text/).
-- To keep a web page's bundle small, or many conversions fast, see
-  [Smaller bundles](/guide/smaller-bundles/) and
-  [Performance](/guide/performance/).
 - Before you rely on it, read
   [Guarantees and limits](/reference/guarantees/); for a word of this
   documentation, see the [Glossary](/guide/glossary/).
