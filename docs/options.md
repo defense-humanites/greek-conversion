@@ -566,6 +566,17 @@ Preserves marked alphabetic numerals or renders valid groups as decimals.
 | `"alphabetic"` (default) | <span class="conversion"><span lang="el">ϛʹ</span> <span class="to">→</span> c̄ʹ</span> |  |
 | `"decimal"` | <span class="conversion"><span lang="el">ϛʹ</span> <span class="to">→</span> 6</span> | `ala-lc-ancient`, `ala-lc-modern` |
 
+### `text.scope`
+
+What is converted: the whole text, or only its Greek passages. Defaults to `"all"`; `"greek"` copies the rest of the text as it is, and reads Greek only.
+
+What a conversion converts: the whole text (`"all"`), or only its Greek passages (`"greek"`), for Greek quoted in a text in another language. A Greek passage is a run of Greek letters with their combining marks, and of the signs that only Greek uses, by their code points: the Greek question mark (U+037E), the ano teleia (U+0387), the koronis (U+1FBD), the spacing breathings and accents, and the keraiai (U+0374, which normalization makes U+02B9, and U+0375). Everything else, the punctuation that Greek shares with other scripts included (`;`, `?`, `·`, `'`, `’`, `-`), is copied as it is, code unit by code unit, and the options apply to the passages only. The rules of the conversion see the whole text: before `.`, `Θ` is an initial (`Th.`). `"greek"` reads Greek only, and does not apply to `encode()`, which writes a document.
+
+| Value | Greek → transliteration | Presets |
+| --- | --- | --- |
+| `"all"` (default) | <span class="conversion"><span lang="el">βαρβάρων·</span> <span class="to">→</span> barbárōn;</span> |  |
+| `"greek"` | <span class="conversion"><span lang="el">βαρβάρων·</span> <span class="to">→</span> barbárōn·</span> |  |
+
 ## `diacritics`
 
 Which semantic diacritics are kept. `all` sets every class at once; a class named alongside it is the exception: `{ all: "remove", roughBreathing: "preserve" }`. The shorthand is expanded where it is written, so `all` in the caller's options overrides every class a preset set.

@@ -22,6 +22,7 @@ export const BETA_CODE_WRITING: WriterHooks & {
     ),
   write: encodeBetaCode,
   form: () => "NFC",
+  finish: (text) => text,
   glyphForm: betaCodeGlyphForm,
 };
 

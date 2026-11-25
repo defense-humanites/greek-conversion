@@ -44,6 +44,7 @@ import {
 import { assertTextInput } from "./model.ts";
 import { DEFAULT_CONVERSION_OPTIONS } from "./option_defaults.ts";
 import { type ReadPositions, readSpans } from "./parsers/positions.ts";
+import { convertPassages, convertPassagesDetailed } from "./passages.ts";
 import { readWith, writeTracked, writeWith } from "./pipeline.ts";
 import {
   type PreparedOptions,
@@ -61,7 +62,7 @@ export type {
 } from "./losses.ts";
 export type { Format } from "./model.ts";
 export type { ConversionOptions, Preset, SourceOptions } from "./options.ts";
-export { OptionError } from "./options.ts";
+export { OptionError } from "./option_error.ts";
 export { prepareOptions } from "./prepare_options.ts";
 export type { PreparedOptions } from "./prepared.ts";
 
@@ -103,6 +104,9 @@ export function convert(
   const reader = readerOf(from, "from");
   const writer = writerOf(to, "to");
   const { reading, writing } = profilesOf(options);
+  if (writing.text.scope === "greek") {
+    return convertPassages(input, reader, writer, reading, writing);
+  }
   return writeWith(writer, readWith(reader, input, reading, true), writing);
 }
 
@@ -141,6 +145,9 @@ export function reencode(
   assertTextInput(input);
   const [reader, writer] = formatOf(format, "format");
   const { reading, writing } = profilesOf(options);
+  if (writing.text.scope === "greek") {
+    return convertPassages(input, reader, writer, reading, writing);
+  }
   return writeWith(writer, readWith(reader, input, reading, true), writing);
 }
 
@@ -179,6 +186,17 @@ export function convertDetailed(
   const [sourceReader, sourceWriter] = formatOf(from, "from");
   const [targetReader, targetWriter] = formatOf(to, "to");
   const { reading, writing } = profilesOf(options);
+  if (writing.text.scope === "greek") {
+    return convertPassagesDetailed(
+      input,
+      sourceReader,
+      targetWriter,
+      targetReader,
+      sourceWriter.glyphForm,
+      reading,
+      writing,
+    );
+  }
   const read: ReadPositions = { text: "", starts: [] };
   const source = readWith(sourceReader, input, reading, true, read);
   const inputSpans = readSpans(input, read);

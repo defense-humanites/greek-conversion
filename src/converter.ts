@@ -828,11 +828,18 @@ export class Converter {
         "which a converter does not take",
       );
     }
-    return conversionProfiles(
+    const profiles = conversionProfiles(
       this.#preset === undefined
         ? options
         : { ...options, preset: this.#preset },
     );
+    if (profiles.writing.text.scope === "greek") {
+      throw new OptionError(
+        'A converter does not convert the Greek passages of a text (text.scope "greek"): convert() and convertDetailed() do',
+        { path: "text.scope", received: "greek", accepted: ["all"] },
+      );
+    }
+    return profiles;
   }
 
   #assertScope(diagnostics: readonly CharacterScopeDiagnostic[]): void {

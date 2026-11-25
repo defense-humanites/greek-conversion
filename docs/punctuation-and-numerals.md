@@ -142,8 +142,10 @@ is lost, and `convertDetailed()` reports it (see
 - **The whole text is read as Greek.** In a text that mixes Greek with
   another language, the punctuation of that language is converted with the
   rest: a `?` becomes `;` in Greek output, and a `;` becomes `?` in
-  transliteration (see
-  [Guarantees and limits](guarantees.md#text-that-mixes-greek-with-another-language)).
+  transliteration. `text.scope: "greek"` converts the Greek passages only,
+  with the signs that only Greek uses, and copies the shared punctuation
+  (see
+  [Guarantees and limits](guarantees.md#the-greek-passages-of-a-text)).
 - **A colon is a literal in Greek**, and is copied. Beta Code writes it
   `%10`, since `:` is the ano teleia there; before a digit, as in `10:30`, it
   cannot be written, and `convertDetailed()` reports it

@@ -1,6 +1,6 @@
 ---
 title: "Letters and text"
-description: "Keep or fold letter forms, write the iota on the line, aspirate an elided consonant, normalize case and whitespace, and build a search key."
+description: "Keep or fold letter forms, write the iota on the line, aspirate an elided consonant, normalize case and whitespace, convert the Greek of a text in another language, and build a search key."
 sidebar:
   order: 3
 ---
@@ -147,6 +147,31 @@ convert("Θ, θ (θῆτα). Ὁ δὲ", "greek", "transliteration");
 convert("ΘΕΟΣ Θ", "greek", "transliteration");
 // → THEOS TH
 ```
+
+## Convert the Greek of a text in another language
+
+`text.scope: "greek"` converts the Greek passages of a text and copies the
+rest as it is: a French or English text keeps its punctuation, where a
+conversion of the whole text would read `;` as the Greek question mark. The
+rules see the text around the passages: before a period, a capital is an
+initial.
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("Voir λόγος ; cf. Θ. Δημητρίου.", "greek", "transliteration", {
+  text: { scope: "greek" },
+});
+// → Voir lógos ; cf. Th. Dēmētríou.
+```
+
+The signs that only Greek uses are converted, by their code points, and the
+punctuation that it shares with other scripts is copied, even glued to a Greek
+word: the library cannot tell `see λόγος; also` from a Greek question. A Greek
+letter in another language is converted too (`β-carotène` gives `b-carotène`).
+The option reads Greek only; the
+[guarantees](/reference/guarantees/#the-greek-passages-of-a-text) give the
+details.
 
 ## Build a search key
 

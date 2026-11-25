@@ -70,6 +70,12 @@ export interface WriterHooks {
   /** The Unicode normalization form of the output. */
   form(options: ResolvedConversionOptions): "NFC" | "NFD";
   /**
+   * What {@link write} does to the text it assembled, recorded in
+   * `written.text`, to return the output: its Unicode normalization, and the
+   * substitutions that follow.
+   */
+  finish(text: string, options: ResolvedConversionOptions): string;
+  /**
    * The glyph that the format writes for a grapheme where a letter form
    * matters, or `""` (see `losses.ts`).
    */
