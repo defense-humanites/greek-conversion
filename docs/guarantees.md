@@ -102,8 +102,9 @@ reports the loss of the literal (`unrepresented-literal`). Type `#1532` in
 Beta Code, and `kai` in transliteration, or the accent's own code (`a/`)
 rather than U+0301. The breathings and accents that older editions print
 before a capital, as signs of their own (U+1FBF, U+1FFE, and their compounds
-with an accent), are the exception: every reader reads them, as the
-capital's at the start of a word (`῾Ρωμαῖοι` is `Ῥωμαῖοι`).
+with an accent), and the tonos that typewriters and ISO 8859-7 put before
+one (U+0384), are the exception: every reader reads them, as the capital's
+at the start of a word (`῾Ρωμαῖοι` is `Ῥωμαῖοι`, `΄Ελληνας` `Έλληνας`).
 
 ## What the library does not do
 

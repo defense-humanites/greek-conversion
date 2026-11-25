@@ -73,6 +73,22 @@ change.
   only (`ο άνθρωπός μου`). `convertDetailed()` reports the accent removed.
   A bundle that writes any format grows by 0.7 to 0.8 kB minified, 0.2 to
   0.3 kB with gzip.
+- **The spacing tonos typed for a keraia or before a capital.** The Greek
+  keyboard has no keraia, and types the spacing tonos `΄` (U+0384) for it.
+  After the letters of a numeral, Greek reads it as the right keraia, which
+  Greek output writes as typed, and the other formats as their keraia:
+  `Β΄ Παγκόσμιος` gives `*b# *pagko/smios` and, under `ala-lc-modern`,
+  `2 Pankosmios` (rc.12: `*b΄ *pagko/smios`, `V΄ Pankosmios`).
+  `convertDetailed()` reports the sign typed as lost in those formats
+  (`unrepresented-literal`). A consonant alone that elision leaves (`σ`,
+  `μ`, `τ`, `ν`, `θ`, `π`) and `κι` before a word that starts with a vowel
+  keep the sign as an apostrophe (`σ΄ αγαπώ`), whatever their case and
+  marks, so that a numeral of one such letter before such a word is not
+  read (`Θ΄ αιώνας`); any other word keeps it too (`απ΄ όλα`). Every reader
+  takes the sign before a capital vowel, at the start of a word, as its
+  tonos, as it takes the spacing breathings (`΄Ελληνας` gives `Έλληνας`).
+  A bundle that reads Greek grows by 1.0 to 1.1 kB minified, 0.3 to 0.5 kB
+  with gzip.
 - **Speed.** Writing Greek and Beta Code computes once, for the options that
   conversions share and for prepared options, what it computed at each call:
   the marks that each format keeps, and the codes that write them. A word

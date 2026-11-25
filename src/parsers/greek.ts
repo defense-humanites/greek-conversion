@@ -15,6 +15,7 @@ import {
   GREEK_LIGATURES,
   ligatureLetters,
 } from "../ligatures.ts";
+import { readTonosKeraiai } from "../orthography.ts";
 import { parsePunctuation } from "../punctuation.ts";
 import { codePointAt, codeUnitTable } from "./code_units.ts";
 import {
@@ -138,10 +139,10 @@ function misplacedMark(text: string, i: number): boolean {
 /**
  * Whether a unit of decomposed text is a spacing sign (see
  * `spacing_marks.ts`): psili, dasia, or the spacing diaeresis, which the
- * compounds of each with an accent decompose to.
+ * compounds of each with an accent decompose to, or the spacing tonos.
  */
 const isSpacingSign = (unit: number): boolean =>
-  unit === 0x1fbf || unit === 0x1ffe || unit === 0x00a8;
+  unit === 0x1fbf || unit === 0x1ffe || unit === 0x00a8 || unit === 0x0384;
 
 /**
  * Reads Greek. With `share`, equal tokens are one shared object (see
@@ -179,6 +180,7 @@ function readGreek(
   // read rather than searched for afterwards.
   const smooth: number[] = [];
   let spacing = false;
+  let tonos = false;
   // Whether a letter has marks the reader knows after one it does not, and
   // whether a sign for several letters was read.
   let misordered = false;
@@ -197,7 +199,10 @@ function readGreek(
         signs = true;
         continue;
       }
-      if (isSpacingSign(unit)) spacing = true;
+      if (isSpacingSign(unit)) {
+        spacing = true;
+        if (unit === 0x0384) tonos = true;
+      }
       // A mark the reader knows, read here only after one it does not.
       if (!ordered && markBit(unit) !== 0 && misplacedMark(text, i)) {
         misordered = true;
@@ -235,6 +240,9 @@ function readGreek(
   if (misordered) return undefined;
   if (starts !== undefined) starts.push(text.length);
   if (signs) capitalizeLoneSigns(out);
+  // The spacing tonos typed for a keraia, which then follows a numeral as
+  // a keraia does, before the spacing signs.
+  if (tonos) readTonosKeraiai(out);
 
   if (spacing) {
     // Joining the spacing signs to the letters moves the letters noted.

@@ -223,8 +223,11 @@ A preset applies its rules to the text it is given, and some rules need more:
 
 - **Punctuation and numerals.** The Greek question mark `;` is written `?`
   in Latin script, and a `?` typed in Greek text is read as one. A numeral
-  is read with a keraia (`ιβʹ`), not with the tonos that often stands for it
-  (`ιβ΄`). See
+  is read with a keraia, or with the tonos that the Greek keyboard types for
+  it (`Β΄ Παγκόσμιος` gives `2 Pankosmios`), which Greek output keeps. The
+  same sign typed for an apostrophe after a consonant alone stays one
+  (`σ΄ αγαπώ`), and so does a numeral of one such letter before a word with
+  a vowel (`Θ΄ αιώνας`), which the keraia `ʹ` writes. See
   [Punctuation and numerals](/reference/punctuation-and-numerals/).
 - **Stress in capitals.** Monotonic Greek writes no accent on capitals, and
   the preset cannot tell where the stress falls: `ΑΘΗΝΑ` gives `ATHINA`.

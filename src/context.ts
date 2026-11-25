@@ -63,6 +63,31 @@ const WORD_JOIN_CONTROLS = new Set(["\u200C", "\u200D", "\u2060", "\uFEFF"]);
 
 export const DEXIA_KERAIA = "\u02B9";
 export const ARISTERI_KERAIA = "\u0375";
+/**
+ * The spacing tonos U+0384, which the Greek keyboard, having no keraia,
+ * types for one (`Β΄`, `ΙΑ΄`), and before a capital for its tonos
+ * (`΄Ελληνας`).
+ */
+export const TONOS_SIGN = "\u0384";
+
+/**
+ * The right keraiai that the source typed as a spacing tonos: they are
+ * keraiai, and Greek output writes them as typed (`Β΄`). The mark is the
+ * token itself, so that no rule needs to read it but the writer of Greek.
+ */
+const TONOS_KERAIAI = new WeakSet<Token>();
+
+/** A right keraia typed as a spacing tonos. */
+export function tonosKeraia(): Literal {
+  const token = literal(DEXIA_KERAIA);
+  TONOS_KERAIAI.add(token);
+  return token;
+}
+
+/** Whether a right keraia was typed as a spacing tonos. */
+export function isTonosKeraia(token: Token): boolean {
+  return TONOS_KERAIAI.has(token);
+}
 
 const ELIDED_ASPIRATES = new Map<Letter, Letter>([
   ["pi", "phi"],

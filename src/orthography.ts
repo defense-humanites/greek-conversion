@@ -8,6 +8,8 @@ import {
   isVowel,
   isWordInitial,
   isWordLetter,
+  TONOS_SIGN,
+  tonosKeraia,
 } from "./context.ts";
 import {
   diacriticBit,
@@ -526,9 +528,104 @@ function applyWhitespaceOrthography(
 
 /**
  * The right keraia as Greek and Beta Code write it: `ʹ`, the Greek numeral
- * sign that NFC turns into it, and Beta Code `#`.
+ * sign that NFC turns into it, the spacing tonos typed for it, and Beta Code
+ * `#`.
  */
-const KERAIA = /[#\u0374\u02B9]/;
+const KERAIA = /[#\u0374\u02B9\u0384]/;
+
+/**
+ * Reads a spacing tonos after the letters of a numeral as its keraia, which
+ * the Greek keyboard types so (`Β΄ Παγκόσμιος`, `ΙΑ΄`, `α΄ έκδοση`); Greek
+ * output writes it as typed. The same sign also stands for an apostrophe: a
+ * consonant alone, which elision leaves of `σε`, `με`, `το`, `να`, `θα`, or
+ * `από`, or `κι`, before a word that starts with a vowel, is no numeral
+ * (`σ΄ αγαπώ`, `Σ΄ αγαπώ`, `κι΄ εγώ`), and keeps the sign as it is, as does
+ * any other word (`απ΄ όλα`). Neither the case nor the marks of the letters
+ * decide, which the options of a conversion may change: its output reads
+ * back so. The Greek reader reads them before the spacing signs, which
+ * follow a keraia as a letter (`ςʹ᾿` ends with an apostrophe).
+ */
+export function readTonosKeraiai(tokens: Token[]): void {
+  for (let index = 1; index < tokens.length; index++) {
+    if (
+      !isLiteral(tokens[index], TONOS_SIGN) ||
+      tokens[index - 1].kind !== "grapheme"
+    ) continue;
+    let start = index;
+    while (tokens[start - 1]?.kind === "grapheme") start--;
+    if (isElisionOfTonos(tokens, start, index)) continue;
+    if (isLiteral(tokens[start - 1], ARISTERI_KERAIA)) start--;
+    const from = Math.max(0, start - 1);
+    const window = [...tokens.slice(from, index), literal(DEXIA_KERAIA)];
+    if (readsAsNumeral(window, start - from)) tokens[index] = tonosKeraia();
+  }
+}
+
+/** A reading of numerals that takes every letter as bare. */
+const ANY_MARKS: NumeralReading = { bare: () => true, finalSigma: false };
+
+/**
+ * Whether the window, which ends with a keraia, reads as one numeral from
+ * `start`, whatever the marks of its letters: its last letter may be a final
+ * sigma that writes a stigma (`ις΄`, 16), which
+ * {@link readFinalSigmaStigmas} reads once the keraia is.
+ */
+function readsAsNumeral(window: Token[], start: number): boolean {
+  if (readNumeral(window, start, ANY_MARKS)?.end === window.length) {
+    return true;
+  }
+  const units = window[window.length - 2];
+  if (
+    units.kind !== "grapheme" || units.letter !== "sigma" ||
+    units.glyphVariant !== "final-sigma"
+  ) return false;
+  window[window.length - 2] = { ...units, letter: "stigma" };
+  return readNumeral(window, start, ANY_MARKS)?.end === window.length;
+}
+
+/** The words that elision leaves as one consonant, and `κι`. */
+const ELIDED_BEFORE_TONOS: ReadonlySet<string> = new Set([
+  "sigma",
+  "mu",
+  "tau",
+  "nu",
+  "theta",
+  "pi",
+  "kappa iota",
+]);
+
+/**
+ * Whether the letters from `start` to the spacing tonos at `index` are a
+ * word that elision left, before a word that starts with a vowel, the
+ * spaces aside. Before another numeral, they are one too (`σ΄ ιβ΄`), which
+ * may be written as a number.
+ */
+function isElisionOfTonos(
+  document: Document,
+  start: number,
+  index: number,
+): boolean {
+  const letters = document.slice(start, index) as Grapheme[];
+  if (!ELIDED_BEFORE_TONOS.has(letters.map(({ letter }) => letter).join(" "))) {
+    return false;
+  }
+  let next = index + 1;
+  while (next < document.length && isWhitespace(document[next])) next++;
+  const vowel = document[next];
+  if (
+    next === index + 1 || vowel?.kind !== "grapheme" || !isVowel(vowel.letter)
+  ) {
+    return false;
+  }
+  let end = next;
+  while (document[end]?.kind === "grapheme") end++;
+  const sign = document[end];
+  return !(isLiteral(sign, TONOS_SIGN) || isLiteral(sign, DEXIA_KERAIA)) ||
+    !readsAsNumeral(
+      [...document.slice(next - 1, end), literal(DEXIA_KERAIA)],
+      1,
+    );
+}
 
 /**
  * {@link readFinalSigmaStigmas} for the Greek and Beta Code readers, which

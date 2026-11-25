@@ -1,5 +1,5 @@
 import type { WriterHooks } from "./codec.ts";
-import { isVowel, type QuotationContext } from "./context.ts";
+import { isTonosKeraia, isVowel, type QuotationContext } from "./context.ts";
 import { ACCENTS } from "./kai_accent.ts";
 import { sharedMask } from "./model.ts";
 import type {
@@ -314,7 +314,7 @@ function pairByPosition(
     }
     if (
       text !== undefined && text !== "" && token.kind === "literal" &&
-      sameLiteral(token.value, text)
+      sameLiteral(token.value, text) && !isTonosKeraia(token)
     ) spelled[index] = 1;
   }
   return { counterparts, spelled };
@@ -474,7 +474,10 @@ function preservesToken(
 ): boolean {
   if (source.kind !== target.kind) return false;
   if (source.kind === "literal" && target.kind === "literal") {
-    return sameLiteral(source.value, target.value);
+    // A keraia typed as a tonos, which Greek output keeps, reads back as a
+    // keraia from the other formats.
+    return sameLiteral(source.value, target.value) &&
+      (!isTonosKeraia(source) || isTonosKeraia(target));
   }
   if (source.kind !== "grapheme" || target.kind !== "grapheme") return false;
   return source.letter === target.letter &&

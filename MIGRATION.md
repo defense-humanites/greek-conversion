@@ -28,6 +28,11 @@ written with an acute and of a word that elision made a monosyllable
 second accent of a word accented on its last two syllables (`τὸ σῶμά μου`
 gives `το σώμα μου`; rc.12: `σώμά`).
 
+A spacing tonos `΄` (U+0384) after the letters of a numeral is read as its
+keraia: `Β΄` gives `*b#` in Beta Code and `2` under the ALA-LC presets
+(rc.12: `*b΄`, `V΄`). Before a capital vowel, it is the capital's tonos:
+`΄Ελληνας` gives `Έλληνας` (rc.12: `΄Ελληνας`).
+
 Under the ISO 843 presets, an apostrophe before the vowel group of a word, or
 between a vowel and a letter after a consonant, reads back as a smooth
 breathing or a coronis. A text written by rc.12 kept an apostrophe of the
