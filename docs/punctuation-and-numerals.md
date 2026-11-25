@@ -66,8 +66,10 @@ normalization gives, `;` (U+003B) and `·` (U+00B7); `greek.questionMark` and
 `greek.anoTeleia` select the Greek scalars instead (see
 [Greek punctuation scalars](greek-unicode.md#greek-punctuation-scalars)).
 In transliteration, `transliteration.hyphen: "typographic"` writes the hyphen
-`‐`, and `transliteration.enotikon: "hyphen"` writes the enotikon `-`, which
-then reads back as a hyphen.
+`‐`, `transliteration.enotikon: "hyphen"` writes the enotikon `-`, which
+then reads back as a hyphen, and `transliteration.anoTeleia: "middle-dot"`
+writes the ano teleia `·`, as Greek does, which then reads back as the ano
+teleia, as `;` still does.
 
 ### Signs with a TLG code
 
@@ -154,10 +156,8 @@ is lost, and `convertDetailed()` reports it (see
   the library keeps it, whichever of its two code points is typed (U+00B7,
   or the Greek ano teleia U+0387, which normalization makes the same). Greek
   output copies it, but reads it as the ano teleia, so `convertDetailed()`
-  reports it (`unrepresented-literal`). This is a choice, not an omission:
-  an option that reads it as the ano teleia would be a compatible addition
-  (see [Stability policy](stability.md#compatible-additions-minor)), for
-  texts that need it.
+  reports it (`unrepresented-literal`). A transliteration that writes the
+  ano teleia so is read with `transliteration.anoTeleia: "middle-dot"`:
 
   ```ts
   import { convertDetailed } from "@humanities/greek-conversion";
@@ -166,6 +166,13 @@ is lost, and `convertDetailed()` reports it (see
 
   dotted.output; // → λόγος· ἔστι
   dotted.losses.map((loss) => loss.code); // → ["unrepresented-literal"]
+
+  const read = convertDetailed("lógos· ésti", "transliteration", "greek", {
+    transliteration: { anoTeleia: "middle-dot" },
+  });
+
+  read.output; // → λόγος· ἔστι
+  read.lossy; // → false
   ```
 - **An apostrophe written for a smooth breathing or a coronis**
   (`smoothBreathing: "apostrophe"`, `coronis: "apostrophe"`) reads back as

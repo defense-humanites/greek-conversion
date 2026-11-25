@@ -65,6 +65,7 @@ export type {
   ConversionSpan,
 } from "./losses.ts";
 export type {
+  AnoTeleiaTransliteration,
   ArchaicKoppaTransliteration,
   BetaCodeCase,
   BetaCodeOptions,

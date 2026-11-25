@@ -386,7 +386,8 @@ function readTransliteration(
         literal(
           leftKeraia
             ? ARISTERI_KERAIA
-            : parsePunctuation(chars[i], "transliteration") ?? chars[i],
+            : parsePunctuation(chars[i], "transliteration", options) ??
+              chars[i],
         ),
       );
       i++;
