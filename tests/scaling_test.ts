@@ -81,6 +81,16 @@ const ONE_CAPITAL_WORDS = "Ἣ Δ’ Ὁ, ";
 const MARKED_WORD = [..."ΑΒΓΔΕΖΗΘΙΚ"].map((letter) => letter + "\u0307")
   .join("");
 
+/**
+ * One long word, as a text without spaces makes one (an inscription in
+ * scriptio continua). Its sigmas, its betas under `medialBeta: "symbol"`,
+ * its `μπ` under ALA-LC, its dentals before sigma under `dentalSigma:
+ * "assimilate"`, and its rough breathings inside the word, read back from
+ * transliteration, each asked whether they stood in a numeral, which reading
+ * the rest of the word answered: in 1.0.0-rc.13, the ratio was about 55.
+ */
+const LONG_WORD = "σοϐμπατσἁγκι".repeat(4);
+
 /** Stigmas read as `στ` under `greek.stigma: "ligature"` (`ἐϛὶ`). */
 const STIGMA_PASSAGE = "ἐϛὶν ἄϛυ ";
 
@@ -170,6 +180,34 @@ const CASES: readonly {
     options: {},
     passage: MARKED_WORD,
     name: "a word in capitals with unread marks",
+  },
+  {
+    format: "greek",
+    target: "greek",
+    options: { greek: { medialBeta: "symbol", dentalSigma: "assimilate" } },
+    passage: LONG_WORD,
+    name: "one long word",
+  },
+  {
+    format: "greek",
+    target: "beta-code",
+    options: {},
+    passage: LONG_WORD,
+    name: "one long word",
+  },
+  {
+    format: "greek",
+    target: "transliteration",
+    options: { preset: "ala-lc-modern" },
+    passage: LONG_WORD,
+    name: "one long word",
+  },
+  {
+    format: "transliteration",
+    target: "greek",
+    options: {},
+    passage: LONG_WORD,
+    name: "one long word",
   },
 ];
 

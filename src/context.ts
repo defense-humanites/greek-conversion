@@ -154,11 +154,15 @@ export function isWordFinal(document: Document, index: number): boolean {
 }
 
 /**
- * The apostrophes of a document that close a quotation, found once for all
- * the sigmas of a conversion that need them (see `sigmaEndsWord()`).
+ * What a writer finds in a document once for all the letters that need it,
+ * for one conversion: the apostrophes that close a quotation (see
+ * `sigmaEndsWord()`), and whether the tokens of a long run of letters are in
+ * a numeral (see `isGreekNumeralContext()`), which each letter would
+ * otherwise find by reading the rest of its word.
  */
-export interface QuotationContext {
+export interface DocumentContext {
   closingQuotes?: Uint8Array;
+  numerals?: Uint8Array;
 }
 
 /**
@@ -170,7 +174,7 @@ export interface QuotationContext {
 export function sigmaEndsWord(
   document: Document,
   index: number,
-  quotations: QuotationContext,
+  context: DocumentContext,
 ): boolean {
   if (!isWordFinal(document, index)) return false;
   const next = adjacentIndex(document, index, 1);
@@ -180,8 +184,8 @@ export function sigmaEndsWord(
   // which is written medial.
   if (isWordInitial(document, index)) return false;
   if (precedesVowelWord(document, next)) return false;
-  quotations.closingQuotes ??= closingQuotes(document);
-  return quotations.closingQuotes[next] === 1;
+  context.closingQuotes ??= closingQuotes(document);
+  return context.closingQuotes[next] === 1;
 }
 
 const LEFT_QUOTATION_MARK = "‘";
@@ -319,9 +323,25 @@ export function hasQuantity(token: Grapheme): boolean {
   return token.diacritics.has("macron") || token.diacritics.has("breve");
 }
 
+/**
+ * The length of a run of letters from which {@link isGreekNumeralContext}
+ * keeps what it reads: longer than nearly every word, so that reading a
+ * short one costs no more than reading it.
+ */
+const LONG_RUN = 16;
+
+/**
+ * Whether the token at `start` is in a numeral: after a left keraia, or in a
+ * run of letters that a right keraia ends. The run is read to its end, from
+ * `start`: each letter of a long word that asks would read the rest of it,
+ * and its letters would take a time that grows with its square. With
+ * `context`, what the reading of a long run finds is kept for the tokens it
+ * read, so that each token of such a run is read once for the document.
+ */
 export function isGreekNumeralContext(
   document: Document,
   start: number,
+  context?: DocumentContext,
 ): boolean {
   const previous = document[start - 1];
   if (
@@ -330,13 +350,25 @@ export function isGreekNumeralContext(
     return true;
   }
 
-  for (let i = start; i < document.length; i++) {
-    const token = document[i];
-    if (isWordLetter(token) || isBoundaryTransparent(token)) continue;
-    return (token as Literal).value === DEXIA_KERAIA;
+  // 0: not read yet; 1: the run of the token ends without a keraia; 2: with
+  // one.
+  let runs = context?.numerals;
+  let end = start;
+  while (end < document.length && (runs === undefined || runs[end] === 0)) {
+    const token = document[end];
+    if (!isWordLetter(token) && !isBoundaryTransparent(token)) break;
+    end++;
+    if (
+      runs === undefined && context !== undefined && end - start === LONG_RUN
+    ) runs = context.numerals = new Uint8Array(document.length);
   }
-
-  return false;
+  const known = runs === undefined || end === document.length ? 0 : runs[end];
+  const numeral = known === 0
+    ? end < document.length &&
+      (document[end] as Literal).value === DEXIA_KERAIA
+    : known === 2;
+  runs?.fill(numeral ? 2 : 1, start, Math.min(end + 1, document.length));
+  return numeral;
 }
 
 /** Marks that, on the first vowel of a pair, signal that it is not a diphthong. */
@@ -675,6 +707,7 @@ export function isBoundaryTransparent(token: Token | undefined): boolean {
 export function assimilatedDental(
   document: Document,
   index: number,
+  context?: DocumentContext,
 ): Pick<Grapheme, "uppercase" | "glyphVariant"> | undefined {
   const dental = document[index];
   const sigma = document[index + 1];
@@ -687,7 +720,7 @@ export function assimilatedDental(
     sigma.letter !== "sigma" ||
     sigma.diacritics.size > 0 ||
     sigma.uppercase && !dental.uppercase ||
-    isGreekNumeralContext(document, index)
+    isGreekNumeralContext(document, index, context)
   ) {
     return undefined;
   }

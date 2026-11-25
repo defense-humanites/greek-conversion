@@ -4,6 +4,7 @@ import {
   ARISTERI_KERAIA,
   breathingTarget,
   DEXIA_KERAIA,
+  type DocumentContext,
   followsNasalGamma,
   hasQuantity,
   isAuEuOuAt,
@@ -888,6 +889,8 @@ function inferInitialBreathings(
   smoothedByApostrophe: ReadonlySet<Token> = new Set(),
 ) {
   const infersSmooth = infersSmoothBreathing(options);
+  // The numerals of the tokens, found once: the pass moves marks only.
+  const context: DocumentContext = {};
   let wordStart = true;
   // The vowel that a rough breathing went to, the second of a diphthong,
   // where it stays: `houi` is οὑι, whose υ does not pass it on to the ι.
@@ -914,7 +917,7 @@ function inferInitialBreathings(
         isVowel(token.letter) &&
         next?.kind === "grapheme" &&
         !hasBreathing(next) &&
-        !isGreekNumeralContext(tokens, i) &&
+        !isGreekNumeralContext(tokens, i, context) &&
         breathingTarget(latinPair(token, next), 0) === 1
       ) {
         token.diacritics = withoutDiacritic(token.diacritics, "rough");
@@ -928,7 +931,7 @@ function inferInitialBreathings(
     if (!isVowel(token.letter)) continue;
     // The apostrophe of a smooth breathing is written in a numeral as well.
     const apostrophe = smoothedByApostrophe.has(token);
-    if (!apostrophe && isGreekNumeralContext(tokens, i)) {
+    if (!apostrophe && isGreekNumeralContext(tokens, i, context)) {
       // A numeral takes no breathing: a `y` that a smooth breathing was to
       // separate from this vowel keeps its separation as a diaeresis.
       const next = tokens[i + 1];

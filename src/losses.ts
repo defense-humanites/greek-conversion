@@ -1,5 +1,5 @@
 import type { WriterHooks } from "./codec.ts";
-import { isTonosKeraia, isVowel, type QuotationContext } from "./context.ts";
+import { type DocumentContext, isTonosKeraia, isVowel } from "./context.ts";
 import { ACCENTS } from "./kai_accent.ts";
 import { sharedMask } from "./model.ts";
 import type {
@@ -239,13 +239,13 @@ function glyphComparison(
   document: Document,
   { glyphForm, options }: SourceGlyphs,
 ): GlyphComparison {
-  const quotations: QuotationContext = {};
+  const context: DocumentContext = {};
   // The target is compared in the source's case: `changed-case` reports the
   // case, and a variant is lost only if the other case has no such form
   // (`ϑ` → `Θ`) and the options do not write it again.
   return (index, source, target) =>
     source.glyphVariant === target.glyphVariant ||
-    glyphForm(document, index, source, options, quotations) ===
+    glyphForm(document, index, source, options, context) ===
       glyphForm(
         document,
         index,
@@ -253,7 +253,7 @@ function glyphComparison(
           ? target
           : { ...target, uppercase: source.uppercase },
         options,
-        quotations,
+        context,
       );
 }
 

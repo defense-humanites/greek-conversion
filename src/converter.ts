@@ -13,11 +13,11 @@ import {
   findConversionLosses,
 } from "./losses.ts";
 import {
+  type DocumentContext,
   isBoundaryTransparent,
   isVowel,
   isWordInitial,
   keptLetter,
-  type QuotationContext,
   sigmaEndsWord,
 } from "./context.ts";
 import {
@@ -1327,8 +1327,8 @@ interface KeptLetters {
   word?: WrittenWord;
   /** The tokens of decimal numerals (`decimalNumeralTokens()`). */
   numerals?: Uint8Array;
-  /** The quotations the sigmas of the source close (`sigmaEndsWord()`). */
-  quotations?: QuotationContext;
+  /** What a writer finds once in the parsed document (`sigmaEndsWord()`). */
+  context?: DocumentContext;
 }
 
 /**
@@ -1454,7 +1454,7 @@ function writtenSpelling(
         index,
         { ...token, uppercase: false },
         options,
-        kept.quotations ??= {},
+        kept.context ??= {},
       ),
     );
   }
@@ -1501,10 +1501,10 @@ function writtenWord(
         token.kind !== "grapheme" || token.letter !== "sigma" ||
         token.glyphVariant !== undefined
       ) continue;
-      const quotations = kept.quotations ??= {};
+      const context = kept.context ??= {};
       tokens[k] = {
         ...token,
-        glyphVariant: sigmaEndsWord(document, start + k, quotations)
+        glyphVariant: sigmaEndsWord(document, start + k, context)
           ? "final-sigma"
           : "medial-sigma",
       };
