@@ -230,11 +230,7 @@ function accentWords(source: Document, monotonic: Token[]): boolean {
     let unaccented: readonly number[];
     if (syllables === 1) {
       if (
-        keepsMonosyllableAccent(
-          source,
-          word,
-          precedesWord(monotonic, word[word.length - 1]),
-        ) ||
+        keepsMonosyllableAccent(source, word, monotonic) ||
         isElided(monotonic, word, end)
       ) continue;
       unaccented = word;
@@ -264,15 +260,37 @@ function accentWords(source: Document, monotonic: Token[]): boolean {
 
 /**
  * Whether the letter at `last`, which ends a word, is followed by spaces and
- * another word, with no punctuation between them.
+ * another word, with no punctuation between them, that is no enclitic of
+ * ancient Greek: polytonic Greek writes an acute on an oxytone before one
+ * (`τούς τε`, `σού γε`).
  */
 function precedesWord(document: Document, last: number): boolean {
   let index = last + 1;
   while (isBoundaryTransparent(document[index])) index++;
   const space = index;
   while (index < document.length && isWhitespace(document[index])) index++;
-  return index > space && document[index]?.kind === "grapheme";
+  if (index === space || document[index]?.kind !== "grapheme") return false;
+  let letters = "";
+  for (; document[index]?.kind === "grapheme"; index++) {
+    letters += (letters === "" ? "" : " ") +
+      (document[index] as Grapheme).letter;
+  }
+  return !ANCIENT_ENCLITICS.has(letters);
 }
+
+/**
+ * The enclitics of ancient Greek that follow an oxytone, by their letters,
+ * which no weak pronoun of Modern Greek precedes.
+ */
+const ANCIENT_ENCLITICS: ReadonlySet<string> = new Set([
+  "tau epsilon",
+  "gamma epsilon",
+  "tau omicron iota",
+  "pi epsilon rho",
+  "rho alpha",
+  "mu omicron iota",
+  "sigma omicron iota",
+]);
 
 function isAccented(token: Token): boolean {
   return token.kind === "grapheme" && token.diacritics.has("acute");
@@ -280,8 +298,8 @@ function isAccented(token: Token): boolean {
 
 /**
  * Whether elision made the word a monosyllable: it ends in a consonant that
- * ends no Greek word, so that a vowel was elided, before an apostrophe
- * (`δείξ’ το`, `πάρ’ το`). A word keeps its accent then, which the
+ * ends no word of Modern Greek, so that a vowel was elided, before an
+ * apostrophe (`δείξ’ το`, `πάρ’ το`). A word keeps its accent then, which the
  * monotonic system writes ("Όταν μια λέξη παθαίνει έκθλιψη ή αποκοπή και
  * γίνεται μονοσύλλαβη, κρατάει τον τόνο"). The closing quotation mark is
  * the apostrophe too: after a word that ends in a vowel, `ν`, or `ς`, as a
@@ -334,10 +352,11 @@ function isAbbreviation(
  * - the weak forms of the personal pronouns, `μου`, `σου`, `του`, `της`,
  *   `μας`, `σας`, `τους`, written with an acute where they could be read as
  *   enclitics of the word before (`ο πατέρας μού είπε`, `δώσε μού το`), and
- *   which belong to the word after (`beforeWord`). A circumflex or a grave
- *   does not identify them, since `τοῦ`, `τῆς`, and `τοὺς` are the article,
- *   nor an acute before punctuation, which polytonic Greek writes on an
- *   oxytone (`σάς.`, the possessive).
+ *   which belong to the word after, in `following` ({@link precedesWord}).
+ *   A circumflex or a grave does not identify them, since `τοῦ`, `τῆς`, and
+ *   `τοὺς` are the article, nor an acute before punctuation or an ancient
+ *   enclitic, which polytonic Greek writes on an oxytone (`σάς.`, the
+ *   possessive, `τούς τε`).
  *
  * An acute on these words is kept, because it is how monotonic text writes
  * them; a polytonic enclitic that received an acute from a following
@@ -346,7 +365,7 @@ function isAbbreviation(
 function keepsMonosyllableAccent(
   source: Document,
   word: readonly number[],
-  beforeWord: boolean,
+  following?: Document,
 ): boolean {
   const tokens = word.map((index) => source[index]);
   if (!tokens.every((token) => token?.kind === "grapheme")) return false;
@@ -364,8 +383,9 @@ function keepsMonosyllableAccent(
     );
   }
   if (WEAK_PRONOUNS.has(letters)) {
-    return beforeWord &&
-      graphemes.some(({ diacritics }) => diacritics.has("acute"));
+    return following !== undefined &&
+      graphemes.some(({ diacritics }) => diacritics.has("acute")) &&
+      precedesWord(following, word[word.length - 1]);
   }
   return false;
 }

@@ -37,7 +37,8 @@ The monotonic transform:
   of the personal pronouns that an author accents to avoid ambiguity,
   written with an acute before the word they belong to
   (`ο πατέρας μού είπε`, `δώσε μού το`; not the article `τοῦ`, `τῆς`,
-  `τοὺς`, nor an oxytone before punctuation, such as the possessive `σάς.`).
+  `τοὺς`, nor an oxytone before punctuation or an enclitic of ancient Greek,
+  such as the possessive `σάς.` or `τούς τε`).
   A word that elision made a monosyllable, which ends in a consonant before
   an apostrophe, keeps its accent (`δεῖξ’ το → δείξ’ το`, `ὅτ’ → ότ’`), as
   does a word that abbreviates a longer one (`ὅ,τι → ό,τι`, `κ.ἄ. → κ.ά.`,
@@ -50,11 +51,14 @@ them, so these words are already canonical in monotonic input; a polytonic
 enclitic that received an acute from the next is kept as well
 (`πατήρ μού ἐστιν → πατήρ μού εστιν`). A word in quotation marks is no
 elision (`‘πῦρ’ → ‘πυρ’`), the closing mark being the apostrophe. Some cases
-need knowledge of the word and are left as written: a monosyllable by
-synizesis (`γιὰ`, `μιὰ`, `δυὸ`, `πιὰ` keep their accent, since `Διός` and
-`κιών`, with the same vowels, are disyllables), and the accent that an
-imperative accented on its penult passes to the first of two weak pronouns
-(`δῶσέ μου το` gives `δώσε μου το`, where monotonic writes `δώσε μού το`).
+need knowledge of the word and are left as written: the last word of a
+quotation of several words, which ends as an elided word does
+(`‘τὸ πῦρ’ → ‘το πύρ’`), an oxytone before an elided `τε` (`τούς τ’`), a
+monosyllable by synizesis (`γιὰ`, `μιὰ`, `δυὸ`, `πιὰ` keep their accent,
+since `Διός` and `κιών`, with the same vowels, are disyllables), and the
+accent that an imperative accented on its penult passes to the first of two
+weak pronouns (`δῶσέ μου το` gives `δώσε μου το`, where monotonic writes
+`δώσε μού το`).
 
 The count takes as a word what stands between spaces and punctuation, except
 where usage keeps the accent of a word of one vowel, because it abbreviates a

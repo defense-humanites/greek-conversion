@@ -277,6 +277,12 @@ test("monotonic accentuation keeps the accents of monotonic orthography", () => 
     reencode("σάς. είπε μού, τούς", "greek", MONOTONIC),
     "σας. είπε μου, τους",
   );
+  // So does an acute before an ancient enclitic, which follows no weak
+  // pronoun of Modern Greek.
+  assertNfcEquals(
+    reencode("τούς τε Ἀθηναίους, σού γε, τούς μοι", "greek", MONOTONIC),
+    "τους τε Αθηναίους, σου γε, τους μοι",
+  );
   // A word that elision made a monosyllable keeps its accent, whatever the
   // elision mark; a word in quotation marks or that ends as a word does is
   // no elision.
