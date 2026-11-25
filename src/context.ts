@@ -296,9 +296,7 @@ export function isAmongCapitals(document: Document, index: number): boolean {
 /**
  * Whether the letter at `index` is a word of one letter that is not an
  * initial: nothing that spells a letter is next to it, and no period follows
- * it. A capital consonant on its own is a letter name, a numeral, a siglum,
- * or a label, and its Latin spelling is written in full capitals (`Θ` →
- * `TH`); followed by a period, it is an abbreviated initial (`Θ.` → `Th.`).
+ * it. Followed by a period, it is an abbreviated initial (`Θ.` → `Th.`).
  */
 export function standsAlone(document: Document, index: number): boolean {
   const next = adjacentToken(document, index, 1);
