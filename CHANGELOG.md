@@ -60,8 +60,8 @@ change.
     or `τους`, that an author writes to avoid ambiguity, read from an acute
     before the word it belongs to (`ο πατέρας μού είπε`, `δώσε μού το`,
     which gave `μου`); a circumflex or a grave marks the article (`τοῦ`,
-    `τῆς`, `τοὺς`), and an acute before punctuation an oxytone (`σάς.`),
-    which lose it;
+    `τῆς`, `τοὺς`), and an acute before punctuation or an enclitic of
+    ancient Greek an oxytone (`σάς.`, `τούς τε`), which lose it;
   - the accent of a word that elision made a monosyllable, which ends in a
     consonant before an apostrophe (`δείξ’ το`, `πάρ’ το`, `ὅτ᾽` → `ότ’`,
     which gave `δειξ’`, `παρ’`, `οτ’`).
@@ -71,8 +71,8 @@ change.
   (`τὸ σῶμά μου` gives `το σώμα μου`, `εἶναί τινα` `είναι τινα`, which gave
   `σώμά`, `είναί`): monotonic Greek writes two accents on a proparoxytone
   only (`ο άνθρωπός μου`). `convertDetailed()` reports the accent removed.
-  A bundle that writes any format grows by 0.7 to 0.8 kB minified, 0.2 to
-  0.3 kB with gzip.
+  A bundle that writes any format grows by 1.0 to 1.1 kB minified, 0.3 to
+  0.4 kB with gzip.
 - **Speed.** Writing Greek and Beta Code computes once, for the options that
   conversions share and for prepared options, what it computed at each call:
   the marks that each format keeps, and the codes that write them. A word
