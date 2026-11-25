@@ -76,8 +76,16 @@ change.
   `i orgánosi Ch kai` under ISO 843 type 2). A bundle that writes
   transliteration grows by 0.9 kB minified, 0.3 kB with gzip, and by 0.2 kB
   if it writes Greek too.
+
 ### Fixed
 
+- **A diphthong of two capitals keeps them before lowercase text** in
+  transliteration (#182). `ΕἹα` gave `Heia`, which lost the capital of its
+  iota; it gives `HEIa`. A vowel with a rough breathing before a capital,
+  without an accent to mark the hiatus (`ἙΙα`), gave `HEIa`, which read back
+  as that diphthong and was written `Heia`; its output now converts again to
+  itself, as `ἝΙα` does under the presets that drop the accent
+  (`ala-lc-modern`, `ala-lc-ancient`, `sbl-general`).
 - **The marks typed on a Greek koronis in transliteration are the vowel's**
   (#183). The reader puts the koronis (U+1FBD) on the vowel before it, and
   kept the combining marks after it as text, which joined the vowel when the
