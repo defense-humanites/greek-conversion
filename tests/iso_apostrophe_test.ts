@@ -168,7 +168,7 @@ test("writes an apostrophe of the source apart from the marks", () => {
     const [greek, latin] of [
       ["’Αθήνα", "ʼAthī́na"],
       ["τοῦ’τον", "toûʼton"],
-      ["σε’Χ", "seʼCH"],
+      ["σε’Χ", "seʼCh"],
       // After the apostrophe of a coronis, which reads back as one.
       ["κἀ’γώ", "ka’ʼgṓ"],
       // One apostrophe before another, which would read back as a breathing.

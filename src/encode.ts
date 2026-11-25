@@ -64,7 +64,12 @@ import type {
 } from "./options.ts";
 import { greekUpper } from "./case.ts";
 import { perKey, perProfile } from "./profile_cache.ts";
-import { applyMonotonicOrthography, isNumeralUnits } from "./orthography.ts";
+import {
+  amongCapitalWords,
+  applyMonotonicOrthography,
+  isNumeralUnits,
+  type NearCases,
+} from "./orthography.ts";
 import { betaLigature, writtenLigature } from "./ligatures.ts";
 import { isMarkCode, isUnreadCode } from "./parsers/beta_code.ts";
 import { standsApart, ZWNJ } from "./parsers/spacing_marks.ts";
@@ -783,6 +788,9 @@ export function encodeTransliteration(
 ) {
   const uppercaseOutput = options.text?.letterCase === "uppercase";
   const titleCase = options.text?.letterCase === "title";
+  const decimal = options.text?.numerals === "decimal";
+  // The cases found past words of one capital, for those on their own.
+  let near: [NearCases, NearCases] | undefined;
   const rendered = prepareDiacriticsForRendering(
     applyMonotonicOrthography(doc, options),
     options,
@@ -1044,12 +1052,13 @@ export function encodeTransliteration(
         breathingToken.uppercase);
     // A Greek capital whose Latin spelling has several letters is written in
     // full capitals among capitals (`ΘΑΛΑΣΣΑ` → `THALASSA`, `ἙΛΛΑΣ` →
-    // `HELLAS`) or on its own (`Θ` → `TH`), and with its first letter only
-    // before lowercase text or a period (`Θάλασσα` → `Thálassa`, `Θ.` →
-    // `Th.`). A rough-breathing group is capitalized as a whole: every
-    // letter of it must be uppercase; on its own, it is a word, such as the
-    // article at the head of a sentence (`Ὁ δὲ` → `Ho dè`). Title case asks
-    // for the first letter only.
+    // `HELLAS`), and on its own among words in capitals (`ΘΕΟΣ Θ` → `THEOS
+    // TH`), and with its first letter only before lowercase text or a
+    // period, or on its own elsewhere (`Θάλασσα` → `Thálassa`, `Θ.` →
+    // `Th.`, `Θ, ϑ, θ` → `Th, th, th`). A rough-breathing group is
+    // capitalized as a whole: every letter of it must be uppercase; on its
+    // own, it is a word, such as the article at the head of a sentence (`Ὁ
+    // δὲ` → `Ho dè`). Title case asks for the first letter only.
     const capitals = uppercaseOutput ||
       (groupUppercase
         ? groupStart?.kind === "grapheme" && groupStart.uppercase &&
@@ -1057,7 +1066,13 @@ export function encodeTransliteration(
           isAmongCapitals(doc, breathingIndex!)
         : token.uppercase &&
           (isAmongCapitals(doc, index) ||
-            !titleCase && standsAlone(doc, index)));
+            !titleCase && standsAlone(doc, index) &&
+              amongCapitalWords(
+                doc,
+                index,
+                decimal,
+                near ??= [new Map(), new Map()],
+              )));
     const h = capitals ? "H" : "h";
     let base = token.letter === "upsilon"
       ? transliterationBase(doc, index, token.letter, options, context)

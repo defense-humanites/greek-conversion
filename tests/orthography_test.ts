@@ -98,14 +98,18 @@ test("writes Latin digraphs in full capitals among capitals", () => {
   );
 });
 
-test("writes a capital that stands alone in full capitals", () => {
-  // A capital consonant on its own is a letter name, a numeral, a siglum, or
-  // a label (#47); followed by a period, it is an abbreviated initial.
+test("writes a capital on its own in full capitals among words in capitals", () => {
+  // A capital on its own takes the case of the nearest words on either side,
+  // as a word of one letter does in Greek: in full capitals where they are in
+  // capitals and none is in small letters, and with its first letter only
+  // elsewhere, as a letter name (`Θ, θ`) or before a period, as an initial.
   const cases = [
-    ["Θ Φ Χ Ψ Ῥ", "TH PH CH PS RH"],
+    ["Θ Φ Χ Ψ Ῥ", "Th Ph Ch Ps Rh"],
     ["ΘΕΟΣ Θ", "THEOS TH"],
-    ["Θ, θ", "TH, th"],
-    ["(Ψ) Θʹ Χ1", "(PS) THʹ CH1"],
+    ["Ο Θ ΛΟΓΟΣ", "O TH LOGOS"],
+    ["ΛΟΓΟΣ Χ λόγος", "LOGOS Ch lógos"],
+    ["Θ, θ", "Th, th"],
+    ["(Ψ) Θʹ Χ1", "(Ps) Thʹ Ch1"],
     ["Θ. Δημητρίου", "Th. Dēmētríou"],
     ["Ῥ.", "Rh."],
     // A vowel with a rough breathing can be a word on its own, such as the
@@ -120,10 +124,16 @@ test("writes a capital that stands alone in full capitals", () => {
     );
   }
   assertNfcEquals(
+    convert("ΛΟΓΟΣ Ξ Χ", "greek", "transliteration", {
+      transliteration: { xi: "ks", chi: "kh" },
+    }),
+    "LOGOS KS KH",
+  );
+  assertNfcEquals(
     convert("Ξ Χ", "greek", "transliteration", {
       transliteration: { xi: "ks", chi: "kh" },
     }),
-    "KS KH",
+    "Ks Kh",
   );
   // Title case asks for the first letter only.
   assertNfcEquals(
@@ -186,7 +196,7 @@ test("transliterates every rho with one final h per group", () => {
       "transliteration",
       systematic,
     ),
-    "rh arh rrh rrrh rh rrh RH RRH",
+    "rh arh rrh rrrh rh rrh Rh RRH",
   );
   assertNfcEquals(
     convert(

@@ -298,12 +298,14 @@ export type RhoTransliteration = "contextual" | "systematic";
  * spelled with several Latin letters (`TH`, `CH`, `PS`, and the `H` of a rough
  * breathing or of rho) is written in full capitals among capitals, and with
  * its first letter only before lowercase text, which ISO 843 allows (note 11):
- * `ΘΑΛΑΣΣΑ` → `THALASSA`, `Θάλασσα` → `Thálassa`. A capital consonant on its
- * own, such as a letter name, a numeral, or a siglum, is written in full
- * capitals (`Θ` → `TH`), except before a period, where it is an abbreviated
- * initial (`Θ.` → `Th.`). A vowel with a rough breathing on its own, such as
- * the article at the head of a sentence, keeps its first letter only
- * (`Ὁ` → `Ho`).
+ * `ΘΑΛΑΣΣΑ` → `THALASSA`, `Θάλασσα` → `Thálassa`. A capital on its own, such
+ * as a letter name, takes the case of the nearest words on either side, as a
+ * word of one letter does in Greek: in full capitals where they are in
+ * capitals and none is in small letters (`ΘΕΟΣ Θ` → `THEOS TH`), and with its
+ * first letter only elsewhere, before a period, as an initial, included
+ * (`Θ, θ` → `Th, th`, `Θ.` → `Th.`). A vowel with a rough breathing on its
+ * own, such as the article at the head of a sentence, keeps its first letter
+ * only (`Ὁ` → `Ho`).
  *
  * `"title"` capitalizes the first letter of each word; an apostrophe between
  * two letters, as a coronis written so (`Ka’gṓ`), does not start a word.
