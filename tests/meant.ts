@@ -36,13 +36,22 @@ const TEXT_LETTER_TITLE =
 const TEXT_LETTER_SIGMA = `${TEXT_LETTER}: a sigma before it is medial.`;
 const TEXT_LETTER_ISO =
   `${TEXT_LETTER}: ISO 843 type 2 writes \`μπ\` before it as \`mp\`, inside the word, not \`b\`.`;
-const TEXT_LETTER_CORONIS =
-  `${TEXT_LETTER}: Greek output reads a smooth breathing after a letter that transliteration does not read as a coronis, which convertDetailed() reports lost, though the output converts back to the source.`;
+const TEXT_LETTER_BREATHING =
+  `${TEXT_LETTER}: a vowel after a letter that transliteration does not read is inside the word, and takes no smooth breathing, which Greek output read as a coronis.`;
 
 /** The labels of the options that write in title case, and of ISO 843 type 2. */
 const TITLE_CASE = /"letterCase":"title"/;
 const ISO_TYPE_2 = /^(?:iso-843-type-2|source)$/;
 const DETAILED_TO_GREEK = "convertDetailed(transliteration → greek)";
+/** The calls whose output the breathing of a vowel after a letter changes. */
+const BREATHING_CALLS = [
+  "convert(transliteration → greek)",
+  "core convert(transliteration → greek)",
+  DETAILED_TO_GREEK,
+  "convert(transliteration → beta-code)",
+  "core convert(transliteration → beta-code)",
+  "convertDetailed(transliteration → beta-code)",
+];
 
 /** The changes of output that are meant. */
 export const MEANT: readonly MeantChange[] = [
@@ -68,32 +77,32 @@ export const MEANT: readonly MeantChange[] = [
     reason: TEXT_LETTER_TITLE,
   },
   { input: "ϡ'ζaΘ", label: TITLE_CASE, reason: TEXT_LETTER_TITLE },
-  {
+  ...BREATHING_CALLS.map((call) => ({
     input: "\u0305īS M9h\u0304ēó",
-    call: DETAILED_TO_GREEK,
-    reason: TEXT_LETTER_CORONIS,
-  },
+    call,
+    reason: TEXT_LETTER_BREATHING,
+  })),
   {
     input: "\u0305īS M9h\u0304ēó",
     label: TITLE_CASE,
     reason: TEXT_LETTER_TITLE,
   },
-  {
+  ...BREATHING_CALLS.map((call) => ({
     input: "cóRt\u03421 ăk0ōʹ",
-    call: DETAILED_TO_GREEK,
-    reason: TEXT_LETTER_CORONIS,
-  },
+    call,
+    reason: TEXT_LETTER_BREATHING,
+  })),
   {
     input: "cóRt\u03421 ăk0ōʹ",
     label: "monotonic, decomposed",
     reason: TEXT_LETTER_MONOTONIC,
   },
   { input: "cóRt\u03421 ăk0ōʹ", label: TITLE_CASE, reason: TEXT_LETTER_TITLE },
-  {
+  ...BREATHING_CALLS.map((call) => ({
     input: "῾(vo῾āʹK\u0342\u0304w",
-    call: DETAILED_TO_GREEK,
-    reason: TEXT_LETTER_CORONIS,
-  },
+    call,
+    reason: TEXT_LETTER_BREATHING,
+  })),
   {
     input: "῾(vo῾āʹK\u0342\u0304w",
     label: TITLE_CASE,
@@ -113,21 +122,21 @@ export const MEANT: readonly MeantChange[] = [
     label: TITLE_CASE,
     reason: TEXT_LETTER_TITLE,
   },
-  {
+  ...BREATHING_CALLS.map((call) => ({
     input: "uHǖü\u0308ûD\u0308fu᾿h0M",
-    call: DETAILED_TO_GREEK,
-    reason: TEXT_LETTER_CORONIS,
-  },
+    call,
+    reason: TEXT_LETTER_BREATHING,
+  })),
   {
     input: "uHǖü\u0308ûD\u0308fu᾿h0M",
     label: TITLE_CASE,
     reason: TEXT_LETTER_TITLE,
   },
-  {
+  ...BREATHING_CALLS.map((call) => ({
     input: "0ca3ī·ô\u0300xă\u0342",
-    call: DETAILED_TO_GREEK,
-    reason: TEXT_LETTER_CORONIS,
-  },
+    call,
+    reason: TEXT_LETTER_BREATHING,
+  })),
   {
     input: "0ca3ī·ô\u0300xă\u0342",
     label: TITLE_CASE,

@@ -83,6 +83,22 @@ test("a letter that a reader keeps as text is a letter of its word", () => {
     }),
     "ύc",
   );
+  // The transliteration reader infers no breathing after such a letter, and
+  // under ISO 843 reads the apostrophe after it as one.
+  for (
+    const [latin, greek, options] of [
+      ["co", "cο", {}],
+      ["c’a", "c’α", { preset: "iso-843-type-1" }],
+    ] as const
+  ) {
+    const read = convertDetailed(latin, "transliteration", "greek", options);
+    assertNfcEquals(read.output, greek);
+    assertEquals(read.lossy, false);
+    assertEquals(
+      convert(read.output, "greek", "transliteration", options),
+      latin,
+    );
+  }
   // A letter of a third script, which no converter keeps, joins no word.
   assertNfcEquals(
     convert("在Ἀθῆναι", "greek", "greek", { text: { letterCase: "title" } }),

@@ -25,13 +25,16 @@ change.
   - a breathing on a vowel after such a letter is a coronis (`Oἰκία`, with
     a Latin `O`);
   - ISO 843 type 2 writes `μπ` before such a letter as `mp`, inside the word,
-    not `b` (`abc`, restyled, gives `ampc`).
+    not `b` (`abc`, restyled, gives `ampc`);
+  - the transliteration reader infers no smooth breathing on a vowel after
+    a letter that it does not read (`co` gives `cο`, where rc.13 gave `cὀ`,
+    whose breathing Greek output read as a coronis), and under ISO 843, an
+    apostrophe after such a letter is one (`c’a` gives `c’α`, where rc.13
+    gave `cἀ`).
 
-  A smooth breathing after a letter that transliteration does not read is
-  reported lost in Greek output, which reads it as a coronis: `co` gives
-  `cὀ`, which converts back to `co`, and `c’a`, under ISO 843, gives `cἀ`,
-  which converts back to `ca’`. A bundle that reads a format grows by
-  0.1 to 0.5 kB minified, up to 0.15 kB with gzip.
+  A letter of a third script, such as a Chinese character, joins no Greek
+  word. A bundle that reads a format grows by 0.2 to 0.5 kB minified, up to
+  0.2 kB with gzip.
 
 ### Fixed
 

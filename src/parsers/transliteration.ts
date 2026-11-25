@@ -13,6 +13,7 @@ import {
   isVowel,
   isVowelUpsilonAt,
   isWordInitial,
+  isWordLetter,
 } from "../context.ts";
 import {
   diacriticBit,
@@ -857,7 +858,7 @@ function takesCoronisApostrophe(
 function followsLetter(out: readonly Token[]): boolean {
   let index = out.length - 1;
   while (isBoundaryTransparent(out[index])) index--;
-  return out[index]?.kind === "grapheme";
+  return isWordLetter(out[index]);
 }
 
 function startsVowel(
@@ -910,7 +911,8 @@ function inferInitialBreathings(
       // A combining mark that the reader does not read, such as the dot of
       // an uncertain letter, or a join control stays inside the word, as
       // the writer reads it (`kạe` is κα̣ε).
-      if (!isBoundaryTransparent(token)) wordStart = true;
+      if (isWordLetter(token)) wordStart = false;
+      else if (!isBoundaryTransparent(token)) wordStart = true;
       continue;
     }
 
