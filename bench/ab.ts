@@ -15,8 +15,8 @@
  *   --aa                                    measure a copy of the first
  *                                           version too, as a control
  *
- * For instance, `npm run bench:ab -- --aa v1.0.0-rc.12 .` compares the
- * working tree with rc.12, Greek into transliteration, on Thucydides 1.1–10.
+ * For instance, `npm run bench:ab -- --aa v1.0.0-rc.13 .` compares the
+ * working tree with rc.13, Greek into transliteration, on Thucydides 1.1–10.
  * The first version is the reference of the percentages; the A/A copy shows
  * the noise of the run. The worktrees are removed at the end, after an error,
  * and after a Ctrl-C, which stops the run at the end of a round.
