@@ -23,6 +23,7 @@ import {
 } from "./model.ts";
 import { preservesDiacritic } from "./diacritics.ts";
 import { APOSTROPHE } from "./punctuation.ts";
+import { isSpacingSign } from "./parsers/spacing_marks.ts";
 import type {
   Diacritic,
   Document,
@@ -558,27 +559,44 @@ const KERAIA = /[#\u0374\u02B9\u0384]/;
  * the Greek keyboard types so (`Β΄ Παγκόσμιος`, `ΙΑ΄`, `α΄ έκδοση`); Greek
  * output writes it as typed. The same sign also stands for an apostrophe: a
  * consonant alone, which elision leaves of `σε`, `με`, `το`, `να`, `θα`, or
- * `από`, or `κι`, before a word that starts with a vowel, is no numeral
- * (`σ΄ αγαπώ`, `Σ΄ αγαπώ`, `κι΄ εγώ`), and keeps the sign as it is, as does
- * any other word (`απ΄ όλα`). Neither the case nor the marks of the letters
- * decide, which the options of a conversion may change: its output reads
- * back so. The Greek reader reads them before the spacing signs, which
- * follow a keraia as a letter (`ςʹ᾿` ends with an apostrophe).
+ * `από`, `κι`, or `υπ`, before a word that starts with a vowel, is no
+ * numeral (`σ΄ αγαπώ`, `Σ΄ αγαπώ`, `κι΄ εγώ`, `υπ΄ όψιν`), nor are letters
+ * before a vowel that follows the sign without a space (`σ΄αγαπώ`), or that
+ * no numeral writes, which has one letter for each order (`όλ΄ αυτά`); they
+ * keep the sign as it is, as does any other word (`απ΄ όλα`). Neither the
+ * case nor the marks of the letters decide, which the options of a
+ * conversion may change: its output reads back so. The Greek reader reads
+ * them before the spacing signs, which follow a keraia as a letter (`ςʹ᾿`
+ * ends with an apostrophe), and which read the signs left: returns whether
+ * there is one.
  */
-export function readTonosKeraiai(tokens: Token[]): void {
-  for (let index = 1; index < tokens.length; index++) {
-    if (
-      !isLiteral(tokens[index], TONOS_SIGN) ||
-      tokens[index - 1].kind !== "grapheme"
-    ) continue;
-    let start = index;
-    while (tokens[start - 1]?.kind === "grapheme") start--;
-    if (isElisionOfTonos(tokens, start, index)) continue;
-    if (isLiteral(tokens[start - 1], ARISTERI_KERAIA)) start--;
-    const from = Math.max(0, start - 1);
-    const window = [...tokens.slice(from, index), literal(DEXIA_KERAIA)];
-    if (readsAsNumeral(window, start - from)) tokens[index] = tonosKeraia();
+export function readTonosKeraiai(tokens: Token[]): boolean {
+  let left = false;
+  for (let index = 0; index < tokens.length; index++) {
+    if (!isLiteral(tokens[index], TONOS_SIGN)) continue;
+    if (isTonosKeraiaAt(tokens, index)) tokens[index] = tonosKeraia();
+    else left = true;
   }
+  return left;
+}
+
+/** Whether the spacing tonos at `index` is the keraia of a numeral. */
+function isTonosKeraiaAt(tokens: Token[], index: number): boolean {
+  if (tokens[index - 1]?.kind !== "grapheme") return false;
+  // A vowel right after the sign makes it an apostrophe (`σ΄αγαπώ`), but
+  // for that of a numeral, which may be written as a number.
+  const next = tokens[index + 1];
+  if (
+    next?.kind === "grapheme" && isVowel(next.letter) &&
+    !startsNumeral(tokens, index + 1)
+  ) return false;
+  let start = index;
+  while (tokens[start - 1]?.kind === "grapheme") start--;
+  if (isElisionOfTonos(tokens, start, index)) return false;
+  if (isLiteral(tokens[start - 1], ARISTERI_KERAIA)) start--;
+  const from = Math.max(0, start - 1);
+  const window = [...tokens.slice(from, index), literal(DEXIA_KERAIA)];
+  return readsAsNumeral(window, start - from);
 }
 
 /** A reading of numerals that takes every letter as bare. */
@@ -592,7 +610,7 @@ const ANY_MARKS: NumeralReading = { bare: () => true, finalSigma: false };
  */
 function readsAsNumeral(window: Token[], start: number): boolean {
   if (readNumeral(window, start, ANY_MARKS)?.end === window.length) {
-    return true;
+    return hasOneLetterPerOrder(window, start);
   }
   const units = window[window.length - 2];
   if (
@@ -600,10 +618,42 @@ function readsAsNumeral(window: Token[], start: number): boolean {
     units.glyphVariant !== "final-sigma"
   ) return false;
   window[window.length - 2] = { ...units, letter: "stigma" };
-  return readNumeral(window, start, ANY_MARKS)?.end === window.length;
+  return readNumeral(window, start, ANY_MARKS)?.end === window.length &&
+    hasOneLetterPerOrder(window, start);
 }
 
-/** The words that elision leaves as one consonant, and `κι`. */
+/**
+ * Whether each letter of the numeral that the window reads from `start` is
+ * of a lower order than the one before, as numerals are written (`ιβ΄`,
+ * `ΣΤ΄`, `͵ασ΄`): `όλ΄` (70 and 30), which the reader of numerals takes as
+ * 100, is a word whose apostrophe the spacing tonos types.
+ */
+function hasOneLetterPerOrder(window: Token[], start: number): boolean {
+  let order = 4;
+  let thousands = false;
+  for (let index = start; index < window.length - 1; index++) {
+    const token = window[index];
+    if (token.kind !== "grapheme") {
+      thousands = true;
+      continue;
+    }
+    // `στ` before the keraia is six.
+    const six = token.letter === "sigma" && index === window.length - 3 &&
+      (window[index + 1] as Grapheme).letter === "tau";
+    const value = six ? 6 : NUMERAL_VALUES.get(token.letter) ?? 0;
+    const current = thousands ? 3 : value >= 100 ? 2 : value >= 10 ? 1 : 0;
+    if (current >= order) return false;
+    order = current;
+    thousands = false;
+    if (six) index++;
+  }
+  return true;
+}
+
+/**
+ * The words that elision leaves as one consonant, `κι`, and `υπ`, which
+ * reads as a numeral (480) where `υπ΄ όψιν` and `υπ΄ αριθμόν` elide `υπό`.
+ */
 const ELIDED_BEFORE_TONOS: ReadonlySet<string> = new Set([
   "sigma",
   "mu",
@@ -612,6 +662,7 @@ const ELIDED_BEFORE_TONOS: ReadonlySet<string> = new Set([
   "theta",
   "pi",
   "kappa iota",
+  "upsilon pi",
 ]);
 
 /**
@@ -631,18 +682,25 @@ function isElisionOfTonos(
   }
   let next = index + 1;
   while (next < document.length && isWhitespace(document[next])) next++;
+  if (next === index + 1) return false;
+  // A spacing sign that the capital after it takes (`σ΄ ΄Ελληνα`).
+  while (isSpacingSign(document[next])) next++;
   const vowel = document[next];
-  if (
-    next === index + 1 || vowel?.kind !== "grapheme" || !isVowel(vowel.letter)
-  ) {
-    return false;
-  }
-  let end = next;
+  return vowel?.kind === "grapheme" && isVowel(vowel.letter) &&
+    !startsNumeral(document, next);
+}
+
+/**
+ * Whether the letters from `start` are a numeral, before a keraia or a
+ * spacing tonos.
+ */
+function startsNumeral(document: Document, start: number): boolean {
+  let end = start;
   while (document[end]?.kind === "grapheme") end++;
   const sign = document[end];
-  return !(isLiteral(sign, TONOS_SIGN) || isLiteral(sign, DEXIA_KERAIA)) ||
-    !readsAsNumeral(
-      [...document.slice(next - 1, end), literal(DEXIA_KERAIA)],
+  return (isLiteral(sign, TONOS_SIGN) || isLiteral(sign, DEXIA_KERAIA)) &&
+    readsAsNumeral(
+      [...document.slice(start - 1, end), literal(DEXIA_KERAIA)],
       1,
     );
 }
