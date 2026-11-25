@@ -7,6 +7,19 @@ change.
 
 ## [Unreleased]
 
+## [1.0.0-rc.13] - 2026-11-25
+
+Thirteenth release candidate for `1.0.0`, which writes Modern Greek as its
+orthography and its usage set it. Monotonic accentuation applies to Beta Code
+and transliteration as it does to Greek, and keeps the accents that monotonic
+orthography requires. Greek output writes words in capitals without accents
+or breathings, as Greek usage does (`greek.capitalMarks`, `"omit"` by
+default). The spacing tonos that Greek keyboards type for the keraia is read
+as one after the letters of a numeral, and as the tonos of a capital before
+it. The main entry point takes prepared options, a word converts a fifth to
+a third faster, and transliteration a tenth faster. Outputs change: the
+migration guide says how to keep those of rc.12.
+
 ### Added
 
 - **Prepared options for the main entry point.** `prepareOptions()`, which
@@ -1791,7 +1804,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.12...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.13...HEAD
+[1.0.0-rc.13]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.12...v1.0.0-rc.13
 [1.0.0-rc.12]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.11...v1.0.0-rc.12
 [1.0.0-rc.11]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.10...v1.0.0-rc.11
 [1.0.0-rc.10]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.9...v1.0.0-rc.10
