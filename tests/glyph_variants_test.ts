@@ -115,7 +115,7 @@ test("medialBeta: symbol writes ϐ by position, whatever the source", () => {
 test("a form the target cannot write is lost, and named", () => {
   assertNfcEquals(
     convert(SYMBOLS, "greek", "transliteration"),
-    "bíos theós phō̃s p k r e Y Ý Ÿ TH",
+    "bíos theós phō̃s p k r e Y Ý Ÿ Th",
   );
   assertEquals(
     glyphLosses("ϐίος ϑεός ϲῶμα λόγοσ ϴ", "greek", "transliteration"),

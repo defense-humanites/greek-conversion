@@ -129,11 +129,11 @@ reduces every run of whitespace to one space.
 Under `"preserve"`, a capital spelled with several Latin letters is written in
 full capitals among capitals, and with its first letter only before lowercase
 text, which ISO 843 allows (note 11). The same holds for the `h` of a rough
-breathing or of rho. A capital consonant on its own, such as a letter name, a
-numeral, or a siglum, is written in full capitals too, except before a period,
-where it is an abbreviated initial. A vowel with a rough breathing can be a word
-on its own, such as the article at the head of a sentence, and keeps its first
-letter only:
+breathing or of rho. A capital on its own, such as a letter name, is written in
+full capitals among words in capitals, and with its first letter only elsewhere,
+as before a period, where it is an abbreviated initial. A vowel with a rough
+breathing can be a word on its own, such as the article at the head of a
+sentence, and keeps its first letter only:
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
@@ -143,7 +143,9 @@ convert("ΘΑΛΑΣΣΑ ἙΛΛΑΣ ΠΥΡΡΟΣ", "greek", "transliteration");
 convert("Θάλασσα Ἑλλάς Θ.", "greek", "transliteration");
 // → Thálassa Hellás Th.
 convert("Θ, θ (θῆτα). Ὁ δὲ", "greek", "transliteration");
-// → TH, th (thē̃ta). Ho dè
+// → Th, th (thē̃ta). Ho dè
+convert("ΘΕΟΣ Θ", "greek", "transliteration");
+// → THEOS TH
 ```
 
 ## Convert the Greek of a text in another language

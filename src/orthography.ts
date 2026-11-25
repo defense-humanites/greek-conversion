@@ -618,7 +618,31 @@ export function applyCapitalOrthography(
 /** The case of the words near a text, as {@link caseNear} gives it. */
 type NearCase = "capitals" | "small" | undefined;
 /** The cases found past words of one capital, by their index. */
-type NearCases = Map<number, NearCase>;
+export type NearCases = Map<number, NearCase>;
+
+/**
+ * Whether the word of one capital at `index` is among words in capitals: the
+ * nearest word on either side, words of one letter and numerals aside, is in
+ * capitals, and neither is in small letters (`ΘΕΟΣ Θ`, but not `Θ, ϑ, θ`).
+ * `near` keeps the cases found past each side's words of one capital, for
+ * the searches of one document.
+ */
+export function amongCapitalWords(
+  document: Document,
+  index: number,
+  decimal: boolean,
+  near: readonly [NearCases, NearCases],
+): boolean {
+  const sides = [
+    caseNear(document, index - 1, -1, writesNoAdscript, decimal, near[0]),
+    caseNear(document, index + 1, 1, writesNoAdscript, decimal, near[1]),
+  ];
+  return sides.includes("capitals") && !sides.includes("small");
+}
+
+function writesNoAdscript(): boolean {
+  return false;
+}
 
 /**
  * The case of the nearest word from `start` in `direction`, across spaces

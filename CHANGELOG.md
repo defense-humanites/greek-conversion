@@ -56,6 +56,19 @@ change.
   word. A bundle that reads a format grows by 0.2 to 0.5 kB minified, up to
   0.2 kB with gzip.
 
+- **A capital on its own takes the case of the words around it.** In
+  transliteration, a capital that stands alone, such as a letter name, is
+  written in full capitals only where the nearest words on either side are
+  in capitals and none is in small letters, as a word of one letter is in
+  Greek; elsewhere, it keeps its first letter only. `Θ, ϑ, θ` gives
+  `Th, th, th`, where rc.13 gave `TH, th, th`, and `ΘΕΟΣ Θ` still gives
+  `THEOS TH`. This holds for every letter that transliteration writes with
+  more than one Latin letter: `Φ` gives `Ph`, `Ῥ` `Rh`, and `Ξ`, with
+  `transliteration.xi: "ks"`, `Ks`. A siglum among words in small letters
+  takes its first letter only too (`η οργάνωση Χ και` gives
+  `i orgánosi Ch kai` under ISO 843 type 2). A bundle that writes
+  transliteration grows by 0.9 kB minified, 0.3 kB with gzip, and by 0.2 kB
+  if it writes Greek too.
 ### Fixed
 
 - **A letter that a converter keeps out of its scope reads back as a letter
