@@ -35,7 +35,7 @@ const TEXT_LETTER_TITLE =
   `${TEXT_LETTER}: title case leaves the letters after it small.`;
 const TEXT_LETTER_SIGMA = `${TEXT_LETTER}: a sigma before it is medial.`;
 const TEXT_LETTER_ISO =
-  `${TEXT_LETTER}: ISO 843 type 2 writes a beta before it as \`mp\`, inside the word.`;
+  `${TEXT_LETTER}: ISO 843 type 2 writes \`μπ\` before it as \`mp\`, inside the word, not \`b\`.`;
 const TEXT_LETTER_CORONIS =
   `${TEXT_LETTER}: Greek output reads a smooth breathing after a letter that transliteration does not read as a coronis, which convertDetailed() reports lost, though the output converts back to the source.`;
 
@@ -130,7 +130,20 @@ export const MEANT: readonly MeantChange[] = [
     label: TITLE_CASE,
     reason: TEXT_LETTER_TITLE,
   },
-  { input: "í1èì\u0305sc\u0314Ro’", reason: TEXT_LETTER_SIGMA },
+  ...[
+    "convert(transliteration → greek)",
+    "core convert(transliteration → greek)",
+    DETAILED_TO_GREEK,
+  ].map((call) => ({
+    input: "í1èì\u0305sc\u0314Ro’",
+    call,
+    reason: TEXT_LETTER_SIGMA,
+  })),
+  {
+    input: "í1èì\u0305sc\u0314Ro’",
+    label: TITLE_CASE,
+    reason: TEXT_LETTER_TITLE,
+  },
   {
     input: "uHǖü\u0308ûD\u0308fu᾿h0M",
     call: DETAILED_TO_GREEK,

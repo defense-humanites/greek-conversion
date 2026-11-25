@@ -102,8 +102,10 @@ test("canonical fixtures produce no validation diagnostics", () => {
 test("invalid graphemes produce structured diagnostics", async (t) => {
   for (const invalid of INVALID_CASES) {
     await t.test(`${invalid.letter}: ${invalid.codes.join(", ")}`, () => {
+      // A literal that is no letter: one that writes a letter is a letter
+      // of the word, after which a vowel is not initial.
       const diagnostics = validateDocument([
-        literal("prefix"),
+        literal("("),
         grapheme(invalid.letter, false, invalid.diacritics),
       ]);
 

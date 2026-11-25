@@ -257,11 +257,13 @@ Monotonic or uncial Greek (`άνθρωπος`, `ΑΙΔΗΣ`) therefore reads bac
 smooth breathing, and `convertDetailed()` reports `inferred-breathing` on the
 vowel that acquires it.
 
-A letter that transliteration does not read starts no word: the vowel after
-it takes a smooth breathing, but Greek output, which reads that letter as a
-letter of its word, reads the breathing as a coronis. `convertDetailed()`
-reports the breathing lost, though the output converts back to the source:
-`co` gives `cὀ`, which gives `co` again.
+When the transliteration reader looks for the start of a word, it does not
+count a letter that it does not read: the vowel after it takes a smooth
+breathing, but Greek output, which reads that letter as a letter of its word,
+reads the breathing as a coronis, and `convertDetailed()` reports it lost. An inferred breathing
+still converts back to the source: `co` gives `cὀ`, which gives `co` again.
+The apostrophe of ISO 843 does not: `c’a` gives `cἀ`, whose coronis ISO 843
+writes after its vowel (`ca’`).
 
 With default nasal-gamma inference, `n` before gamma, kappa, xi, or chi becomes
 gamma in the canonical document. Set `nasalGamma: "literal"` to keep `n` as

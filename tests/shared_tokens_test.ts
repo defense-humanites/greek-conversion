@@ -126,14 +126,13 @@ test("non-Greek text cannot use up the room of Greek tokens in the cache", () =>
   resetSharedTokens();
   try {
     // 5,000 distinct CJK characters: one literal each, more than the cache
-    // holds, as a server converting arbitrary text could receive. They are
-    // letters the reader keeps as text, which have a cache of their own.
+    // holds, as a server converting arbitrary text could receive.
     const foreign = Array.from(
       { length: 5000 },
       (_, index) => String.fromCodePoint(0x4E00 + index),
     ).join("");
     convert(foreign, "greek", "transliteration");
-    assertEquals(sharedTokenCounts().textLetters, SHARED_LITERAL_LIMIT);
+    assertEquals(sharedTokenCounts().literals, SHARED_LITERAL_LIMIT);
 
     // Every grapheme and literal of a Greek text read afterwards is still
     // shared: one object per distinct token.
