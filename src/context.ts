@@ -127,16 +127,50 @@ export function keptLetterCase(token: Token): boolean | undefined {
   return KEPT_LETTERS.get(token);
 }
 
-/** Whether a token is a letter of a word: a grapheme, or a kept letter. */
+/**
+ * A letter of the Latin or the Greek script, the scripts in which a letter
+ * can be kept: the spacing breathings, of the Greek script, are no letters.
+ */
+const LETTER =
+  /^(?=[\p{Lu}\p{Ll}\p{Lt}\p{Lo}])[\p{Script=Latin}\p{Script=Greek}]/u;
+const CAPITAL = /^[\p{Lu}\p{Lt}]/u;
+
+/**
+ * Whether a literal writes a letter that a reader keeps as text: a letter
+ * of the other script (a Latin letter in Greek, a Greek one in Beta Code),
+ * or one that the reader does not read (`c` in transliteration). A letter of
+ * a third script, such as a Chinese character, joins no Greek word. A letter that
+ * a converter keeps is written in its source format and reads back as such
+ * a literal: as a letter of its word, it keeps the place in it that it had
+ * when it was written. The test reads the value, not a mark of the token,
+ * so that a document built by hand, copied, or whose literal a caller
+ * changed reads as its text. Modifier letters, such as the keraia, are
+ * signs. Most literals are spaces and punctuation, below `A`.
+ */
+function writesLetter(value: string): boolean {
+  const unit = value.charCodeAt(0);
+  if (unit < 0x41) return false;
+  if (unit < 0x80) return (unit | 0x20) >= 0x61 && (unit | 0x20) <= 0x7A;
+  return LETTER.test(value);
+}
+
+/**
+ * Whether a token is a letter of a word: a grapheme, a kept letter, or a
+ * literal that writes a letter.
+ */
 export function isWordLetter(token: Token | undefined): boolean {
   return token !== undefined &&
-    (token.kind === "grapheme" || KEPT_LETTERS.has(token));
+    (token.kind === "grapheme" || KEPT_LETTERS.has(token) ||
+      writesLetter(token.value));
 }
 
 /** Whether a letter of a word is a capital, or undefined for another token. */
 function capitalLetter(token: Token | undefined): boolean | undefined {
   if (token === undefined) return undefined;
-  return token.kind === "grapheme" ? token.uppercase : KEPT_LETTERS.get(token);
+  if (token.kind === "grapheme") return token.uppercase;
+  const kept = KEPT_LETTERS.get(token);
+  if (kept !== undefined) return kept;
+  return writesLetter(token.value) ? CAPITAL.test(token.value) : undefined;
 }
 
 export function isWordInitial(document: Document, index: number): boolean {
