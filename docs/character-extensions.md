@@ -198,11 +198,12 @@ kept capital is among capitals (`ΘΕΟΣ`, with epsilon out of scope, gives
 - A letter whose spelling the reader shares with a neighbour, as the two
   letters of a modern digraph do (`b` for μπ), is written alone, as it was
   read.
-- A spacing breathing before a kept capital, at the start of a word, is
-  written with a zero-width non-joiner (U+200C) after it, as before a
-  capital that cannot carry it, since the writer cannot tell whether the
-  kept capital would take it: the sign stays apart when the output is read
-  again (`῾ά`, with alpha out of scope, in capitals).
+- A spacing breathing or tonos (`΄`) before a kept capital, at the start of
+  a word, is written with a zero-width non-joiner (U+200C) after it, as
+  before a capital that cannot carry it, since the writer cannot tell
+  whether the kept capital would take it: the sign stays apart when the
+  output is read again (`῾ά` or `΄ά`, with alpha out of scope, in
+  capitals).
 
 `convertDetailed()` keeps scope diagnostics separate from conversion losses:
 

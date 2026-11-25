@@ -175,11 +175,11 @@ change.
   took whole before the mark was written again, so that `ἅ̇`, with alpha
   out of scope, gave `ἅ̇̇`, and each further conversion doubled the marks
   again. It gives `ἅ̇`, in every target.
-- A spacing breathing before a capital that a converter keeps out of its
-  scope stays apart from it: writers now put the zero-width non-joiner after
-  it that they put before a capital that cannot carry it, so that `῾ά`, with
-  alpha out of scope, written in capitals as `῾Ά`, no longer reads back as
-  `Ἅ`.
+- A spacing breathing or tonos (`΄`) before a capital that a converter
+  keeps out of its scope stays apart from it: writers now put the
+  zero-width non-joiner after it that they put before a capital that cannot
+  carry it, so that `῾ά`, with alpha out of scope, written in capitals as
+  `῾Α`, no longer reads back as `Ἁ`.
 - The transliteration reader keeps the breathing that parts a `y` from the
   vowel before it after a spacing breathing sign: the sign joins the capital
   after it, which moved the positions it kept, so that `῾O aytmḗ` gave

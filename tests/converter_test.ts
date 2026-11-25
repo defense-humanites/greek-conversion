@@ -1272,13 +1272,15 @@ test("a mark the reader does not know stays once after a kept letter", () => {
 test("a spacing breathing stays apart from a kept capital", () => {
   // A capital kept out of scope is a literal, whose letter no rule reads:
   // the writer keeps a sign before it apart, as before a capital that could
-  // take it, so that the sign does not join it when read again.
+  // take it, so that the sign does not join it when read again: a spacing
+  // breathing, or the spacing tonos `΄`.
   const zwnj = "\u200C";
   const noAlpha = createConverter({ exclude: ["alpha"] });
   const upper = { text: { letterCase: "uppercase" } } as const;
   for (
     const [text, format] of [
       ["῾ά λόγος", "greek"],
+      ["΄ά λόγος", "greek"],
       ["%31a/ lo/gos", "beta-code"],
       ["῾á lógos", "transliteration"],
     ] as const
