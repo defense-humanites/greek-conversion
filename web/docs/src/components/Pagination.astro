@@ -5,7 +5,8 @@
  * after "Next"; the title stands below, aligned with the line's start or
  * end. Not links in a link colour, but the way on: the label reads as
  * the sidebar's group names, the title as a heading, in the ink; on hover,
- * the label darkens and the arrow steps ahead.
+ * the label darkens and the arrow steps ahead. Pressed, the link shrinks
+ * towards its own side and springs back, as the logo and the buttons do.
  */
 import { icon } from "../../../shared/icons.ts";
 
@@ -58,11 +59,20 @@ const isRtl = dir === "rtl";
     color: var(--muted);
     text-decoration: none;
     overflow-wrap: anywhere;
+    transform-origin: left center;
+    transition: scale 0.32s var(--ease-bounce);
   }
   [rel="next"] {
     grid-column: -2;
     align-items: flex-end;
     text-align: end;
+    transform-origin: right center;
+  }
+  [dir="rtl"] a {
+    transform-origin: right center;
+  }
+  [dir="rtl"] [rel="next"] {
+    transform-origin: left center;
   }
   /* The label as the sidebar's group names: small spaced capitals. */
   .label {
@@ -101,6 +111,15 @@ const isRtl = dir === "rtl";
   @media (hover: hover) {
     a:hover .label {
       color: var(--ink);
+    }
+  }
+  a:active .label {
+    color: var(--ink);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    a:active {
+      scale: var(--squish);
+      transition: scale 0.06s ease-in;
     }
   }
   @media (hover: hover) and (prefers-reduced-motion: no-preference) {
