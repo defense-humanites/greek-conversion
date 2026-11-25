@@ -21,6 +21,7 @@ import {
   isGreekNumeralContext,
   isKeptLetter,
   isNasalGamma,
+  isTonosKeraia,
   isVowel,
   isVowelUpsilonAt,
   isWordFinal,
@@ -31,6 +32,7 @@ import {
   roughDiphthongStarts,
   sigmaEndsWord,
   standsAlone,
+  TONOS_SIGN,
 } from "./context.ts";
 import {
   infersSmoothBreathing,
@@ -249,6 +251,8 @@ export function encodeGreek(
     if (token.kind === "literal") {
       out += isKeptLetter(token)
         ? token.value
+        : isTonosKeraia(token)
+        ? TONOS_SIGN
         : encodePunctuation(token.value, "greek") ?? token.value;
       if (standsApart(rendered, i)) out += ZWNJ;
       if (ends !== undefined) ends[i] = out.length;

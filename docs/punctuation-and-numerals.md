@@ -196,9 +196,31 @@ writes it `ς`, as the source does, or `ϛ` under `greek.symbolForms:
 and `convertDetailed()` reports the form as lost (`final-sigma-stigma`).
 
 The right keraia is read from U+0374 or U+02B9, which are canonically
-equivalent, and written U+02B9; the left keraia is U+0375. An apostrophe, a
-tonos (`΄`, U+0384), or a prime (`′`) is not a keraia: `ιβ΄` is not read as a
-numeral.
+equivalent, and written U+02B9; the left keraia is U+0375. An apostrophe or
+a prime (`′`) is not a keraia.
+
+The Greek keyboard has no keraia, and the spacing tonos `΄` (U+0384) is
+typed for it. After the letters of a numeral, Greek reads it as the right
+keraia, which Greek output writes as typed and the other formats as theirs:
+`Β΄ Παγκόσμιος` gives `*b# *pagko/smios` in Beta Code, and `2 Pankosmios`
+under `ala-lc-modern`. `convertDetailed()` reports the sign typed as lost
+there (`unrepresented-literal`), since the keraia reads back as `ʹ`.
+
+The same sign is typed for an apostrophe. A consonant alone, which elision
+leaves of `σε`, `με`, `το`, `να`, `θα`, or `από`, `κι`, and `υπ`, are no
+numeral before a word that starts with a vowel (`σ΄ αγαπώ`, `Σ΄ αγαπώ`,
+`κι΄ εγώ`, `υπ΄ όψιν`): the sign stays as typed there, as after any other
+word (`απ΄ όλα`), before a vowel that follows it without a space
+(`σ΄αγαπώ`), and after letters that no numeral writes, which has one
+letter for each order (`όλ΄ αυτά`, two tens). Neither case nor marks
+decide, so that an output converts again as it reads: a capital numeral
+alone before such a word is therefore not read (`Θ΄ αιώνας`, the ninth
+century), and needs the keraia `ʹ`. These are the elisions of Modern Greek:
+an ancient text that types the sign for its apostrophe reads `δ΄` and `γ΄`
+before a vowel, and a word such as `ὅθ΄`, as numerals, since `δ΄ έκδοση` is
+the fourth edition, and needs the apostrophe `’`.
+Before a capital vowel, at the start of a word, the sign is its tonos
+(`΄Ελληνας` is `Έλληνας`), as the spacing breathings are.
 
 | Number | Greek | Beta Code | Transliteration |
 | --- | --- | --- | --- |
@@ -242,9 +264,10 @@ import { convert } from "@humanities/greek-conversion";
 
 const decimal = { text: { numerals: "decimal" } } as const;
 
-// Values that do not go down, a letter with a mark, a tonos for the keraia.
-convert("αιʹ ἀʹ ιβ΄", "greek", "transliteration", decimal);
-// → aiʹ aʹ ib΄
+// Values that do not go down, a letter with a mark, a tonos for an
+// apostrophe.
+convert("αιʹ ἀʹ σ΄ αγαπώ", "greek", "transliteration", decimal);
+// → aiʹ aʹ s΄ agapṓ
 ```
 
 A final sigma that is not the units before the keraia is a sigma: `ςαʹ` is

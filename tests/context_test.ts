@@ -240,6 +240,9 @@ test("does not infer breathings on internal vowel groups", () => {
   assertNfcEquals(convert("kau", "transliteration", "greek"), "καυ");
 });
 
+/** Greek output that writes the marks of words in capitals. */
+const PRESERVE_CAPITALS = { greek: { capitalMarks: "preserve" } } as const;
+
 test("writes an internal rough breathing before its diphthong", () => {
   // "The h precedes the romanized vowel or diphthong" (ALA-LC), inside a
   // word as at its start: χοἱ like οἱ (issue #44).
@@ -253,7 +256,11 @@ test("writes an internal rough breathing before its diphthong", () => {
     ]
   ) {
     assertNfcEquals(convert(greek, "greek", "transliteration"), latin);
-    assertNfcEquals(convert(latin, "transliteration", "greek"), greek);
+    // Greek writes no breathing in capitals, unless asked to.
+    assertNfcEquals(
+      convert(latin, "transliteration", "greek", PRESERVE_CAPITALS),
+      greek,
+    );
   }
   for (const preset of ["ala-lc-ancient", "ala-lc-modern"] as const) {
     assertNfcEquals(

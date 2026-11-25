@@ -15,7 +15,8 @@ test("reads the apostrophe of the smooth breathing back", () => {
       // The breathing goes to the second vowel of a diphthong, as the `h`
       // of the rough one does.
       ["’Aischýlos", "Αἰσχύλος"],
-      ["’ATHĪNA ’EÎNAI", "ἈΘΗΝΑ ΕἾΝΑΙ"],
+      // Greek writes no breathing in capitals, unless asked to.
+      ["’ATHĪNA ’EÎNAI", "ΑΘΗΝΑ ΕΙΝΑΙ"],
       // An elision ends its word: the apostrophe after it is the next word's
       // breathing.
       ["’ap’ ’autoû", "ἀπ’ αὐτοῦ"],
@@ -27,6 +28,13 @@ test("reads the apostrophe of the smooth breathing back", () => {
   ) {
     assertNfcEquals(convert(latin, "transliteration", "greek", TYPE_1), greek);
   }
+  assertNfcEquals(
+    convert("’ATHĪNA ’EÎNAI", "transliteration", "greek", {
+      ...TYPE_1,
+      greek: { capitalMarks: "preserve" },
+    }),
+    "ἈΘΗΝΑ ΕἾΝΑΙ",
+  );
   // Only the apostrophe the writer writes: an ASCII one, or U+02BC, is an
   // apostrophe, as an opening quotation mark typed in ASCII is.
   for (const apostrophe of ["'", "ʼ"]) {

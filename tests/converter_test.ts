@@ -819,7 +819,7 @@ test("the transformations of the whole text reach an excluded letter", () => {
     sigma.convert("λόγος σῶμα", "greek", "greek", {
       text: { letterCase: "uppercase" },
     }),
-    "ΛΌΓΟΣ ΣΩ͂ΜΑ",
+    "ΛΟΓΟΣ ΣΩΜΑ",
   );
   const omega = createConverter({ exclude: ["omega"] });
   assertNfcEquals(
@@ -856,7 +856,7 @@ test("the transformations of the whole text reach an excluded letter", () => {
     sigma.convert("lógos sō̃ma", "transliteration", "greek", {
       text: { letterCase: "uppercase" },
     }),
-    "ΛΌΓΟS SΩ͂ΜΑ",
+    "ΛΟΓΟS SΩΜΑ",
   );
   const theta = createConverter({ exclude: ["theta"] });
   assertNfcEquals(
@@ -869,7 +869,7 @@ test("the transformations of the whole text reach an excluded letter", () => {
     theta.convert("Thoukydídēs", "transliteration", "greek", {
       text: { letterCase: "uppercase" },
     }),
-    "THΟΥΚΥΔΊΔΗΣ",
+    "THΟΥΚΥΔΙΔΗΣ",
   );
   assertNfcEquals(
     sigma.convert(" λόγος \n\t σῶμα ", "greek", "greek", {
@@ -1294,6 +1294,6 @@ test("a spacing breathing stays apart from a kept capital", () => {
       "greek",
       upper,
     ),
-    `῾${zwnj}ΡΌΔΟΣ`,
+    `῾${zwnj}ΡΟΔΟΣ`,
   );
 });

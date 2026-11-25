@@ -20,6 +20,7 @@ export {
   type ParseResult,
   type TokenSpan,
 } from "./conversion.ts";
+import { isTonosKeraia, tonosKeraia } from "./context.ts";
 import { sharedDiacritics } from "./model.ts";
 import type { Document } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
@@ -44,10 +45,10 @@ export function applyGreekOrthography(
     resolveConversionOptions(options),
   );
   return transformed.map((token) =>
-    token.kind === "literal" ? { ...token } : {
-      ...token,
-      diacritics: sharedDiacritics(token.diacritics),
-    }
+    token.kind === "literal"
+      // A keraia typed as a tonos is written so from its copy too.
+      ? isTonosKeraia(token) ? tonosKeraia() : { ...token }
+      : { ...token, diacritics: sharedDiacritics(token.diacritics) }
   );
 }
 

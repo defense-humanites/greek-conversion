@@ -22,7 +22,21 @@ The package is ESM-only.
 transliteration output are monotonic too, where they kept the polytonic marks:
 `ὁ ἄνθρωπος` gives `o a/nqrwpos` and `o ánthrōpos` (rc.12: `o( a)/nqrwpos`
 and `ho ánthrōpos`). To keep the polytonic marks in these formats, leave the
-option out of their conversions.
+option out of their conversions. It keeps the accent of a weak pronoun
+written with an acute and of a word that elision made a monosyllable
+(`ο πατέρας μού είπε`, `δείξ’ το`; rc.12: `μου`, `δειξ’`), and removes the
+second accent of a word accented on its last two syllables (`τὸ σῶμά μου`
+gives `το σώμα μου`; rc.12: `σώμά`).
+
+Greek output writes words in capitals without accents or breathings, as
+Greek usage sets them: `Μάιος` in capitals gives `ΜΑΪΟΣ` (rc.12: `ΜΆΙΟΣ`).
+To keep every mark, as rc.12 did, set
+`greek: { capitalMarks: "preserve" }`.
+
+A spacing tonos `΄` (U+0384) after the letters of a numeral is read as its
+keraia: `Β΄` gives `*b#` in Beta Code and `2` under the ALA-LC presets
+(rc.12: `*b΄`, `V΄`). Before a capital vowel, it is the capital's tonos:
+`΄Ελληνας` gives `Έλληνας` (rc.12: `΄Ελληνας`).
 
 Under the ISO 843 presets, an apostrophe before the vowel group of a word, or
 between a vowel and a letter after a consonant, reads back as a smooth
