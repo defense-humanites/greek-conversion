@@ -263,6 +263,17 @@ Preserves the enotikon or renders it as an ambiguous Latin hyphen.
 | `"preserve"` (default) | <span class="conversion"><span lang="el">πολυ‿λογία</span> <span class="to">→</span> poly‿logía</span> |  |
 | `"hyphen"` | <span class="conversion"><span lang="el">πολυ‿λογία</span> <span class="to">→</span> poly-logía</span> | `iso-843-type-1`, `iso-843-type-2` |
 
+### `transliteration.anoTeleia`
+
+Transliteration of the Greek ano teleia. Defaults to `"semicolon"`; `"middle-dot"` writes `·`, which reads back as the ano teleia.
+
+Selects the Latin sign of the ano teleia: the semicolon, which the romanization tables give, or the middle dot (`·`, U+00B7), which Greek writes. The reader reads the semicolon as the ano teleia either way, and the middle dot under `"middle-dot"` only: elsewhere, a middle dot in Latin text is kept as it is.
+
+| Value | Greek → transliteration | Presets |
+| --- | --- | --- |
+| `"semicolon"` (default) | <span class="conversion"><span lang="el">βαρβάρων·</span> <span class="to">→</span> barbárōn;</span> |  |
+| `"middle-dot"` | <span class="conversion"><span lang="el">βαρβάρων·</span> <span class="to">→</span> barbárōn·</span> |  |
+
 ### `transliteration.lunateSigma`
 
 Provenanced lunate sigma transliteration. Defaults to `"s"`.

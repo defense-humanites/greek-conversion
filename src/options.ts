@@ -254,6 +254,15 @@ export type HyphenTransliteration = "ascii" | "typographic";
 /** Preserves the enotikon or renders it as an ambiguous Latin hyphen. */
 export type EnotikonTransliteration = "preserve" | "hyphen";
 
+/**
+ * Selects the Latin sign of the ano teleia: the semicolon, which the
+ * romanization tables give, or the middle dot (`·`, U+00B7), which Greek
+ * writes. The reader reads the semicolon as the ano teleia either way, and
+ * the middle dot under `"middle-dot"` only: elsewhere, a middle dot in Latin
+ * text is kept as it is.
+ */
+export type AnoTeleiaTransliteration = "semicolon" | "middle-dot";
+
 /** Selects `b` or modern `v` for beta in transliteration. */
 export type BetaTransliteration = "b" | "v";
 
@@ -428,6 +437,8 @@ export interface TransliterationOptions {
   keraia?: KeraiaTransliteration;
   /** Transliteration of Greek enotikon (U+203F). Defaults to `"preserve"`. */
   enotikon?: EnotikonTransliteration;
+  /** Transliteration of the Greek ano teleia. Defaults to `"semicolon"`; `"middle-dot"` writes `·`, which reads back as the ano teleia. */
+  anoTeleia?: AnoTeleiaTransliteration;
   /** Provenanced lunate sigma transliteration. Defaults to `"s"`. */
   lunateSigma?: LunateSigmaTransliteration;
   /** Archaic-koppa transliteration. Defaults to `"k-dot-below"`; BnF uses `"q"`. */
@@ -611,6 +622,7 @@ export interface DefaultConversionOptions {
     readonly hyphen: "ascii";
     readonly keraia: "greek";
     readonly enotikon: "preserve";
+    readonly anoTeleia: "semicolon";
     readonly lunateSigma: "s";
     readonly archaicKoppa: "k-dot-below";
   };
@@ -780,6 +792,7 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues =
       hyphen: ["ascii", "typographic"],
       keraia: ["greek", "bnf"],
       enotikon: ["preserve", "hyphen"],
+      anoTeleia: ["semicolon", "middle-dot"],
       lunateSigma: ["s", "c"],
       archaicKoppa: ["k-dot-below", "q"],
     }),

@@ -7,6 +7,15 @@ change.
 
 ## [Unreleased]
 
+### Added
+
+- **`transliteration.anoTeleia`** writes the ano teleia as the romanization
+  tables do, `;` (`"semicolon"`, the default), or as Greek does, `·`
+  (`"middle-dot"`). Under `"middle-dot"`, the reader reads a middle dot as
+  the ano teleia, as it reads `;`, where it kept it as text: Greek output
+  then writes the ano teleia without loss. A bundle grows by 0.2 kB
+  minified, under 0.1 kB with gzip.
+
 ## [1.0.0-rc.13] - 2026-11-25
 
 Thirteenth release candidate for `1.0.0`, which writes Modern Greek as its

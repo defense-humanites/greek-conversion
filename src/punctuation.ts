@@ -188,7 +188,12 @@ export const TLG_CODE_OF: ReadonlyMap<string, string> = new Map([
 export function parsePunctuation(
   character: string,
   format: Format,
+  options?: ConversionOptions,
 ): string | undefined {
+  if (
+    character === MIDDLE_DOT && format === "transliteration" &&
+    options?.transliteration?.anoTeleia === "middle-dot"
+  ) return ANO_TELEIA;
   return INPUT[format].get(character);
 }
 
@@ -205,5 +210,9 @@ export function encodePunctuation(
     format === "transliteration" && punctuation === ENOTIKON &&
     options.transliteration?.enotikon === "hyphen"
   ) return "-";
+  if (
+    format === "transliteration" && punctuation === ANO_TELEIA &&
+    options.transliteration?.anoTeleia === "middle-dot"
+  ) return MIDDLE_DOT;
   return OUTPUT[format].get(punctuation);
 }
