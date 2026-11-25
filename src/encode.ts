@@ -11,6 +11,7 @@ import {
   assimilatedDental,
   breathingTarget,
   DEXIA_KERAIA,
+  type DocumentContext,
   elidedAspirate,
   followsCoronisApostrophe,
   hasHiatusMark,
@@ -28,7 +29,6 @@ import {
   isWordInitial,
   isWordLetter,
   precedesVoicedSound,
-  type QuotationContext,
   roughDiphthongStart,
   roughDiphthongStarts,
   sigmaEndsWord,
@@ -238,7 +238,7 @@ export function encodeGreek(
   );
   const starts = written?.starts;
   const ends = written?.ends;
-  const quotations: QuotationContext = {};
+  const context: DocumentContext = {};
   const uppercaseOutput = options.text?.letterCase === "uppercase";
   // Decomposed output is written as letters and marks, as it ends.
   const composes = options.greek?.composition !== "decomposed";
@@ -283,18 +283,21 @@ export function encodeGreek(
       continue;
     }
 
-    const assimilated = assimilates ? assimilatedDental(doc, i) : undefined;
+    const assimilated = assimilates
+      ? assimilatedDental(doc, i, context)
+      : undefined;
 
     if (assimilated !== undefined) {
       let base = ALPHABET.sigma.greek;
-      if (writesLunateSigma(doc, i + 1, assimilated, options)) base = "ϲ";
-      else if (
+      if (writesLunateSigma(doc, i + 1, assimilated, options, context)) {
+        base = "ϲ";
+      } else if (
         (options.greek?.finalSigma ?? "preserve") === "preserve"
           ? assimilated.glyphVariant === "final-sigma" ||
             assimilated.glyphVariant !== "medial-sigma" &&
-              sigmaEndsWord(doc, i + 1, quotations)
+              sigmaEndsWord(doc, i + 1, context)
           : options.greek?.finalSigma !== "medial" &&
-            sigmaEndsWord(doc, i + 1, quotations)
+            sigmaEndsWord(doc, i + 1, context)
       ) base = "ς";
       out += assimilated.uppercase ? greekUpper(base) : base;
       // The dental and the sigma it became are written as one letter.
@@ -310,7 +313,7 @@ export function encodeGreek(
       ? elidedAspirate(doc, i) ?? token.letter
       : token.letter;
     let base = outputLetter === token.letter
-      ? greekGlyph(doc, i, token, options, quotations)
+      ? greekGlyph(doc, i, token, options, context)
       : ALPHABET[outputLetter].greek;
     // greekGlyph() writes a symbol form only in its own case, which
     // greekUpper() leaves as it is (ϴ, ϒ).
@@ -353,14 +356,16 @@ export function greekGlyph(
   index: number,
   token: Grapheme,
   options: ConversionOptions,
-  quotations: QuotationContext,
+  context: DocumentContext,
 ): string {
   const ordinary = ALPHABET[token.letter].greek;
   if (token.letter === "sigma") {
-    if (writesLunateSigma(document, index, token, options)) return "ϲ";
+    if (writesLunateSigma(document, index, token, options, context)) {
+      return "ϲ";
+    }
     // In a numeral, a sigma is 200, written `σ`; a final sigma the source
     // writes there, which no numeral reads, is kept under `"preserve"`.
-    if (isGreekNumeralContext(document, index)) {
+    if (isGreekNumeralContext(document, index, context)) {
       return token.glyphVariant === "final-sigma" &&
           (options.greek?.finalSigma ?? "preserve") === "preserve"
         ? "ς"
@@ -369,9 +374,9 @@ export function greekGlyph(
     return ((options.greek?.finalSigma ?? "preserve") === "preserve"
         ? token.glyphVariant === "final-sigma" ||
           token.glyphVariant !== "medial-sigma" &&
-            sigmaEndsWord(document, index, quotations)
+            sigmaEndsWord(document, index, context)
         : options.greek?.finalSigma !== "medial" &&
-          sigmaEndsWord(document, index, quotations))
+          sigmaEndsWord(document, index, context))
       ? "ς"
       : ordinary;
   }
@@ -386,7 +391,7 @@ export function greekGlyph(
     if (token.uppercase) return ordinary;
     switch (options.greek?.medialBeta) {
       case "symbol":
-        return isGreekNumeralContext(document, index) ||
+        return isGreekNumeralContext(document, index, context) ||
             isWordInitial(document, index)
           ? ordinary
           : "ϐ";
@@ -418,10 +423,10 @@ export function greekGlyphForm(
   index: number,
   token: Grapheme,
   options: ConversionOptions,
-  quotations: QuotationContext,
+  context: DocumentContext,
 ): string {
   return writtenLigature(document, index, options, token)?.greek ??
-    greekGlyph(document, index, token, options, quotations);
+    greekGlyph(document, index, token, options, context);
 }
 
 /** {@link greekGlyphForm} for Beta Code output. */
@@ -430,11 +435,11 @@ export function betaCodeGlyphForm(
   index: number,
   token: Grapheme,
   options: ConversionOptions,
-  quotations: QuotationContext,
+  context: DocumentContext,
 ): string {
   return betaLigature(document, index, options, token)?.code ??
     (token.letter === "sigma"
-      ? betaSigma(document, index, token, options, quotations)
+      ? betaSigma(document, index, token, options, context)
       : "");
 }
 
@@ -497,14 +502,16 @@ export function betaSigma(
   index: number,
   token: Grapheme,
   options: ConversionOptions,
-  quotations: QuotationContext,
+  context: DocumentContext,
 ): "s" | "s1" | "s2" | "s3" {
-  if (writesLunateSigma(document, index, token, options)) return "s3";
+  if (writesLunateSigma(document, index, token, options, context)) {
+    return "s3";
+  }
   if (token.uppercase) return "s";
   const next = document[index + 1];
   const code = next?.kind === "literal" ? next.value.charCodeAt(0) : 0;
   const beforeDigit = code >= 0x31 && code <= 0x33;
-  const numeral = isGreekNumeralContext(document, index);
+  const numeral = isGreekNumeralContext(document, index, context);
   const policy = options.greek?.finalSigma ?? "preserve";
   // In a numeral, a sigma is `σ`; a final sigma there is kept, as Greek
   // output keeps it.
@@ -513,7 +520,7 @@ export function betaSigma(
       !numeral && token.glyphVariant === "medial-sigma");
   if (!noted && !beforeDigit) return "s";
   const ends = !numeral &&
-    (sigmaEndsWord(document, index, quotations) ||
+    (sigmaEndsWord(document, index, context) ||
       extendedByDigit(document, index + 1, options));
   const final = noted
     ? token.glyphVariant === "final-sigma"
@@ -686,7 +693,7 @@ export function encodeBetaCode(
   let overline = false;
   const uppercaseCodes = options.betaCode?.case === "uppercase";
   const yotCode = options.betaCode?.yot === "#401";
-  const quotations: QuotationContext = {};
+  const context: DocumentContext = {};
   // The letters after the first of a ligature, which its code writes.
   let ligatureEnd = 0;
 
@@ -749,7 +756,7 @@ export function encodeBetaCode(
     }
     // The codes of the alphabet are small letters.
     const code = token.letter === "sigma"
-      ? betaSigma(doc, index, token, options, quotations)
+      ? betaSigma(doc, index, token, options, context)
       : token.letter === "yot" && yotCode
       ? "#401"
       : ALPHABET[token.letter].beta;
@@ -804,6 +811,8 @@ export function encodeTransliteration(
     nuTau: options.transliteration?.nuTau ?? "nt",
   };
   const rewritesDigraphs = digraphs.muPi !== "mp" || digraphs.nuTau !== "nt";
+  // What the letters of `doc` find once (see `DocumentContext`).
+  const context: DocumentContext = {};
   const preservesRough = preservesDiacritic(
     "rough",
     options,
@@ -964,12 +973,14 @@ export function encodeTransliteration(
     afterLetter = true;
 
     if (rewritesDigraphs) {
-      const modernDigraph = modernDigraphAt(doc, index, digraphs);
+      const modernDigraph = modernDigraphAt(doc, index, digraphs, context);
       if (modernDigraph !== undefined) {
         const second = doc[index + 1];
         return caseDigraph(modernDigraph, token, second);
       }
-      if (modernDigraphAt(doc, index - 1, digraphs) !== undefined) return "";
+      if (modernDigraphAt(doc, index - 1, digraphs, context) !== undefined) {
+        return "";
+      }
     }
 
     if (
@@ -1064,10 +1075,10 @@ export function encodeTransliteration(
               )));
     const h = capitals ? "H" : "h";
     let base = token.letter === "upsilon"
-      ? transliterationBase(doc, index, token.letter, options)
+      ? transliterationBase(doc, index, token.letter, options, context)
       : token.letter === "gamma" && writesNasalGamma &&
           isNasalGamma(doc, index, nasalExceptKappa) &&
-          !(nasalMedialKappa && isEdgeGammaKappa(doc, index))
+          !(nasalMedialKappa && isEdgeGammaKappa(doc, index, context))
       ? "n"
       : latinBase(bases, token.letter, options);
     const bnfLowercaseNumeral = bnfKeraia &&
@@ -1222,11 +1233,12 @@ function writesLunateSigma(
   index: number,
   token: Pick<Grapheme, "glyphVariant">,
   options: ConversionOptions,
+  context: DocumentContext,
 ): boolean {
   const policy = options.greek?.sigma ?? "preserve";
   return policy === "preserve"
     ? token.glyphVariant === "lunate-sigma"
-    : policy === "lunate" && !isGreekNumeralContext(document, index);
+    : policy === "lunate" && !isGreekNumeralContext(document, index, context);
 }
 
 /**
@@ -1244,6 +1256,7 @@ function modernDigraphAt(
   document: Document,
   index: number,
   { muPi, nuTau }: DigraphPolicy,
+  context?: DocumentContext,
 ): string | undefined {
   if (index < 0) return undefined;
 
@@ -1258,7 +1271,7 @@ function modernDigraphAt(
     second.diacritics.size > 0 ||
     // Checked last: the numeral context is the costly test, and most pairs
     // of letters are not a digraph at all.
-    isGreekNumeralContext(document, index)
+    isGreekNumeralContext(document, index, context)
   ) {
     return undefined;
   }
@@ -1280,13 +1293,17 @@ function modernDigraphAt(
  * Under `nasalGamma: "nasal-medial-kappa"` (ALA-LC), `γκ` at the beginning or
  * end of a word keeps a literal `g`: `gk`, and `nk` inside the word.
  */
-function isEdgeGammaKappa(document: Document, index: number): boolean {
+function isEdgeGammaKappa(
+  document: Document,
+  index: number,
+  context: DocumentContext,
+): boolean {
   const first = document[index];
   const second = document[index + 1];
   return first?.kind === "grapheme" && first.letter === "gamma" &&
     second?.kind === "grapheme" && second.letter === "kappa" &&
     first.diacritics.size === 0 && second.diacritics.size === 0 &&
-    !isGreekNumeralContext(document, index) &&
+    !isGreekNumeralContext(document, index, context) &&
     (isWordInitial(document, index) &&
         !followsCoronisApostrophe(document, index) ||
       isWordFinal(document, index + 1));
@@ -1333,6 +1350,7 @@ function transliterationBase(
   index: number,
   letter: Grapheme["letter"],
   options: ConversionOptions,
+  context?: DocumentContext,
 ): string {
   switch (letter) {
     case "archaic-koppa":
@@ -1364,7 +1382,7 @@ function transliterationBase(
         return previous?.kind === "grapheme" &&
             (previous.letter === "omicron" ||
               readBackLetter(previous, options) === "omicron" &&
-                isGreekNumeralContext(document, index - 1)) &&
+                isGreekNumeralContext(document, index - 1, context)) &&
             !splitByCoronis(previous, options) &&
             isDiphthongAt(document, index - 1)
           ? "u"

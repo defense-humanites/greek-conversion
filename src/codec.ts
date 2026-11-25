@@ -12,7 +12,7 @@
  * Internal: the module is not an entry point; the entry points export its
  * types and the handles made with it.
  */
-import type { QuotationContext } from "./context.ts";
+import type { DocumentContext } from "./context.ts";
 import type { Document, Format, Grapheme } from "./model.ts";
 import type {
   ConversionOptions,
@@ -84,7 +84,7 @@ export interface WriterHooks {
     index: number,
     token: Grapheme,
     options: ConversionOptions,
-    quotations: QuotationContext,
+    context: DocumentContext,
   ): string;
 }
 

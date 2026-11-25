@@ -93,6 +93,17 @@ change.
   breathing as an apostrophe, and the vowel group whose second vowel has
   them: `Ὁ̓Υ` gave `H’OY`, which read back without its rough breathing, and
   `οὑ̓` gives `h’ou`.
+- **A long word converts in a time proportional to its length** (#181).
+  Its sigmas, its betas under `greek.medialBeta: "symbol"`, its `μπ` and
+  `ντ` under the presets of Modern Greek, its dentals before sigma under
+  `greek.dentalSigma: "assimilate"`, and its rough breathings inside the word
+  read from transliteration each read the rest of the word to know whether
+  they stood in a numeral. A conversion now keeps what it reads of a long
+  word, for the letters that ask after the first: a word of 40,000 sigmas, as
+  a text without spaces can make one, took 1.6 s to convert into Greek, and
+  takes a few milliseconds, as does a word of Greek and Latin letters, which
+  are letters of their word. A bundle grows by 0.25 to 0.3 kB minified, 0.1
+  to 0.2 kB with gzip.
 
 ## [1.0.0-rc.13] - 2026-11-25
 
