@@ -91,7 +91,8 @@ converted to itself, `%2[1`.
 
 Unrecognized characters, including unrecognized combining marks, remain
 literals and are preserved. A middle dot is one in Beta Code and
-transliteration, but Greek reads it as the ano teleia: Greek output copies
+transliteration, unless `transliteration.anoTeleia: "middle-dot"` reads it
+as the ano teleia, but Greek reads it as the ano teleia: Greek output copies
 it, and `convertDetailed()` reports the loss (see
 [Punctuation and numerals](punctuation-and-numerals.md#consequences)).
 

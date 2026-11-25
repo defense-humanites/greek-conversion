@@ -98,6 +98,46 @@ test("keeps a middle dot outside Greek as a literal, lost in Greek output", () =
   }
 });
 
+test("writes and reads the ano teleia as a middle dot in transliteration on demand", () => {
+  const middleDot = { transliteration: { anoTeleia: "middle-dot" } } as const;
+  for (const greek of ["ναί· ἀλλ’ οὖν;", "ναί\u0387 ἀλλ’ οὖν;"]) {
+    const result = convertDetailed(
+      greek,
+      "greek",
+      "transliteration",
+      middleDot,
+    );
+    assertNfcEquals(result.output, "naí· all’ oũn?");
+    assertEquals(result.lossy, false, greek);
+  }
+  // The middle dot reads back as the ano teleia, whichever of its two code
+  // points is typed, and so does the semicolon.
+  for (const latin of ["lógos· ésti", "lógos\u0387 ésti", "lógos; ésti"]) {
+    const result = convertDetailed(
+      latin,
+      "transliteration",
+      "greek",
+      middleDot,
+    );
+    assertNfcEquals(result.output, "λόγος· ἔστι");
+    assertEquals(result.lossy, false, latin);
+    assertNfcEquals(
+      convert(latin, "transliteration", "beta-code", middleDot),
+      "lo/gos: e)/sti",
+    );
+    assertNfcEquals(
+      convert(latin, "transliteration", "transliteration", middleDot),
+      "lógos· ésti",
+    );
+  }
+  // By default, the ano teleia is written `;`, and a middle dot is kept.
+  assertNfcEquals(convert("ναί·", "greek", "transliteration"), "naí;");
+  assertNfcEquals(
+    convert("lógos· ésti", "transliteration", "transliteration"),
+    "lógos· ésti",
+  );
+});
+
 test("distinguishes Beta Code breve from apostrophe", () => {
   assertNfcEquals(convert("a%27 p'", "beta-code", "greek"), "ᾰ π’");
   assertNfcEquals(convert("ᾰ π’", "greek", "beta-code"), "a%27 p'");
