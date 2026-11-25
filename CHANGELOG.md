@@ -26,18 +26,19 @@ change.
 ### Changed
 
 - **Words in capitals without marks.** Greek output writes words in
-  capitals as Greek usage sets them, and as `toLocaleUpperCase("el")` does:
-  without accents, breathings, coronis, or quantity marks, with their
+  capitals as Greek usage sets them: without accents, breathings, coronis,
+  or quantity marks, with their
   diaeresis, and with one where a mark on the first of two vowels showed
   their hiatus (`Μάιος` in capitals gives `ΜΑΪΟΣ`, `Ἅιδης` `ΑΪΔΗΣ`, where
   rc.12 gave `ΜΆΙΟΣ`, `ἍΙΔΗΣ`). The disjunctive `ή` keeps its accent (`Ή`).
   A capital that begins a word in small letters keeps its marks, as a word
-  of one letter does unless the words around it are in capitals. The new
+  of one letter does, unless the nearest longer words around it are in
+  capitals (`Η Δ’ ΑΕΚΟΥΣ’`) or the text is set in capitals. The new
   option `greek.capitalMarks` selects it: `"omit"`, the default, or
   `"preserve"`, which writes every mark, as rc.12 did. `convertDetailed()`
   reports the marks removed and each diaeresis written. Beta Code and
-  transliteration keep the marks. A bundle that writes Greek grows by 1.5 to
-  1.6 kB minified, 0.4 to 0.5 kB with gzip.
+  transliteration keep the marks. A bundle that writes Greek grows by 2.2 to
+  2.3 kB minified, 0.7 to 0.9 kB with gzip.
 - **ISO 843: the apostrophes read back.** Under the two ISO 843 presets, an
   apostrophe (U+2019) before the vowel group of a word reads back as the
   smooth breathing it writes (`’Athī́na` gives `Ἀθήνα`, `’eînai` gives

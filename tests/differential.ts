@@ -53,12 +53,36 @@ export interface Difference {
   current: string;
 }
 
-/** Whether `MEANT` lists a difference. */
-function isMeant(label: string, call: string, input: string): boolean {
+/**
+ * Whether `MEANT` lists a difference. `undone` tells whether the current
+ * tree, given more options, gives the reference again.
+ */
+function isMeant(
+  label: string,
+  call: string,
+  input: string,
+  undone: (options: ConversionOptions) => boolean,
+): boolean {
   return MEANT.some((meant) =>
     matches(meant.input, input) && matches(meant.label, label) &&
-    (meant.call ?? call) === call
+    (meant.call ?? call) === call &&
+    (meant.undoneBy === undefined || undone(meant.undoneBy))
   );
+}
+
+/** `options`, with the groups of `more` merged into theirs. */
+function withOptions(
+  options: ConversionOptions,
+  more: ConversionOptions | undefined,
+): ConversionOptions {
+  if (more === undefined) return options;
+  const merged: Record<string, unknown> = { ...options };
+  for (const [group, values] of Object.entries(more)) {
+    merged[group] = typeof values === "object"
+      ? { ...(merged[group] as object | undefined), ...values }
+      : values;
+  }
+  return merged as ConversionOptions;
 }
 
 /** Whether a value is the one, or matches the pattern, that `MEANT` gives. */
@@ -187,13 +211,18 @@ export function compareConversions(
     call: string,
     input: string,
     expected: string,
-    run: () => unknown,
+    run: (more?: ConversionOptions) => unknown,
   ) => {
     compared++;
-    const actual = outcome(run);
+    const actual = outcome(() => run());
     if (
       expected !== actual && differences.length < limit &&
-      !isMeant(label, call, input)
+      !isMeant(
+        label,
+        call,
+        input,
+        (more) => outcome(() => run(more)) === expected,
+      )
     ) {
       differences.push({
         label,
@@ -223,18 +252,38 @@ export function compareConversions(
           `convert(${from} → ${to})`,
           input,
           plain,
-          () => current.convert(input, from, to, options),
+          (more) =>
+            current.convert(input, from, to, withOptions(options, more)),
         );
-        record(label, `core convert(${from} → ${to})`, input, plain, () => {
-          if (prepared === undefined) throw refused;
-          return core.convert(input, reader, CORE_CODECS[to][1], prepared);
-        });
+        record(
+          label,
+          `core convert(${from} → ${to})`,
+          input,
+          plain,
+          (more) => {
+            if (prepared === undefined) throw refused;
+            return core.convert(
+              input,
+              reader,
+              CORE_CODECS[to][1],
+              more === undefined
+                ? prepared
+                : core.prepareOptions(withOptions(options, more)),
+            );
+          },
+        );
         record(
           label,
           `convertDetailed(${from} → ${to})`,
           input,
           outcome(() => reference.convertDetailed(input, from, to, options)),
-          () => current.convertDetailed(input, from, to, options),
+          (more) =>
+            current.convertDetailed(
+              input,
+              from,
+              to,
+              withOptions(options, more),
+            ),
         );
       }
       record(
@@ -242,7 +291,7 @@ export function compareConversions(
         `reencode(${from})`,
         input,
         outcome(() => reference.reencode(input, from, options)),
-        () => current.reencode(input, from, options),
+        (more) => current.reencode(input, from, withOptions(options, more)),
       );
     }
   }
@@ -264,8 +313,18 @@ export function compareConverters(
   for (const { label, configuration } of configurations) {
     const made = [reference, current].map((library) =>
       (library.createConverter as (configuration: object) => {
-        convert(input: string, from: Format, to: Format): unknown;
-        convertDetailed(input: string, from: Format, to: Format): unknown;
+        convert(
+          input: string,
+          from: Format,
+          to: Format,
+          options?: ConversionOptions,
+        ): unknown;
+        convertDetailed(
+          input: string,
+          from: Format,
+          to: Format,
+          options?: ConversionOptions,
+        ): unknown;
       })(configuration)
     );
     for (const input of inputs) {
@@ -278,7 +337,14 @@ export function compareConverters(
           const call = `createConverter().${method}(${from} → ${to})`;
           if (
             expected !== actual && differences.length < limit &&
-            !isMeant(label, call, input)
+            !isMeant(
+              label,
+              call,
+              input,
+              (more) =>
+                outcome(() => made[1][method](input, from, to, more)) ===
+                expected,
+            )
           ) {
             differences.push({
               label,

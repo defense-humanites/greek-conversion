@@ -253,9 +253,8 @@ subscript to write.
 
 ## Marks in capitals
 
-Greek usage writes words in capitals without accents, as
-`toLocaleUpperCase("el")` does, and Greek output follows it by default
-(`greek.capitalMarks: "omit"`). `"preserve"` writes every mark, as an
+Greek usage writes words in capitals without accents, and Greek output
+follows it by default (`greek.capitalMarks: "omit"`). `"preserve"` writes every mark, as an
 edition that prints them does:
 
 ```ts
@@ -275,12 +274,23 @@ A word in capitals takes no accent, breathing, coronis, or quantity mark,
 and keeps its diaeresis. Where a mark on the first of two vowels that
 would form a diphthong showed their hiatus, the second takes a diaeresis
 (`Μάιος` → `ΜΑΪΟΣ`), unless the first ends a diphthong (`εύι` → `ΕΥΙ`,
-which ICU writes `ΕΥΪ`). The disjunctive `ή`, from `ή`, `ἤ`, or `ἢ`, keeps
-its accent, which tells it from the article (`Ή`, `Η`). A word is in
-capitals when all its letters are; a word of one letter, when the nearest
-word on either side is in capitals and neither is in small letters
-(`Ο ΛΟΓΟΣ`, but `Ὁ λόγος`); a capital that begins a word in small letters
-keeps its marks (`Έλληνας`). The iota subscript follows `iotaSubscript`:
+which `toLocaleUpperCase("el")` writes `ΕΥΪ`). A breathing is such a mark,
+as every reader takes it: a text in capitals that puts the breathing of a
+diphthong on its first vowel, as some editions do, takes a diaeresis
+(`ἘΥΡΏΠΗ` → `ΕΫΡΩΠΗ`), which `"preserve"` avoids. The disjunctive `ή`,
+from `ή`, `ἤ`, or `ἢ`, keeps its accent, which tells it from the article
+(`Ή`, `Η`), where `toLocaleUpperCase("el")` keeps that of `ἦ`, `ἥ`, and
+`ἣ` too.
+
+A word is in capitals when all its letters are. A word of one letter is
+when the nearest word on either side, words of one letter and numerals
+aside, is in capitals and neither is in small letters (`Ο ΛΟΓΟΣ`,
+`Η Δ’ ΑΕΚΟΥΣ’`, but `Ὁ λόγος`), and always under
+`text.letterCase: "uppercase"`. The search crosses punctuation: at the
+start of a text, the word after decides alone (`Ὁ ΟΗΕ ἀποφάσισε` →
+`Ο ΟΗΕ ἀποφάσισε`), and elsewhere a word in small letters before keeps the
+marks (`λόγος. Ὁ ΟΗΕ`). A capital that begins a word in small letters keeps
+its marks (`Έλληνας`). The iota subscript follows `iotaSubscript`:
 `"capital-adscript"` writes `ᾠδῇ` in capitals as `ΩΙΔΗΙ`. Each mark removed
 and each diaeresis written is reported. Beta Code and transliteration keep
 the marks, which they write on capitals, as the BGN/PCGN rules ask for the

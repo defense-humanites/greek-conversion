@@ -66,6 +66,13 @@ const EDITION_PASSAGE = "῾Ο δὲ λόγος ἐστὶν ἀληθὴς κα
  */
 const SPACING_RUN = "῾᾿῎῾᾿";
 
+/**
+ * Words of one capital, whose case the nearest longer word decides under
+ * `greek.capitalMarks: "omit"`: searching past all the others for it, from
+ * each of them, would be quadratic.
+ */
+const ONE_CAPITAL_WORDS = "Ἣ Δ’ Ὁ, ";
+
 /** Stigmas read as `στ` under `greek.stigma: "ligature"` (`ἐϛὶ`). */
 const STIGMA_PASSAGE = "ἐϛὶν ἄϛυ ";
 
@@ -141,6 +148,13 @@ const CASES: readonly {
     options: { greek: { stigma: "ligature" } },
     passage: STIGMA_PASSAGE,
     name: "stigma ligatures",
+  },
+  {
+    format: "greek",
+    target: "greek",
+    options: {},
+    passage: ONE_CAPITAL_WORDS,
+    name: "words of one capital",
   },
 ];
 

@@ -24,6 +24,19 @@ test("words in capitals take no accent by default, but on request", () => {
   );
   assertNfcEquals(convert("*MA/IOS", "beta-code", "greek"), "Μάιος");
   assertNfcEquals(convert("*M*A/*I*O*S", "beta-code", "greek"), "ΜΑΪΟΣ");
+  // Beta Code and transliteration write them both ways, as the fixture of
+  // `ΠΟΙῌ͂` did before the default changed.
+  assertNfcEquals(
+    convert("*p*o*i*=h|", "beta-code", "transliteration"),
+    "POIȨ̄̃",
+  );
+  assertEquals(convert("POIȨ̄̃", "transliteration", "beta-code"), "*p*o*i*=h|");
+  assertNfcEquals(
+    convert("*p*o*i*=h|", "beta-code", "greek", {
+      greek: { capitalMarks: "preserve" },
+    }),
+    "ΠΟΙῌ͂",
+  );
 });
 
 test("words in capitals take no accent or breathing", () => {
@@ -77,6 +90,25 @@ test("only words in capitals lose their marks", () => {
     }),
     "ATHÍNA",
   );
+});
+
+test("words of one letter between words of one letter", () => {
+  // A word of one letter tells nothing of the case of the text: the search
+  // goes on past it, as ancient Greek has many (`ἣ δ’`, `ἦ δ’ ὅς`).
+  assertNfcEquals(
+    reencode("Ἣ Δ’ ΑΕΚΟΥΣ’, Ὅ, Ἦ Δ’ ὍΣ", "greek", OMIT),
+    "Η Δ’ ΑΕΚΟΥΣ’, Ο, Η Δ’ ΟΣ",
+  );
+  // In text set in capitals, every word is in capitals, alone too.
+  assertNfcEquals(reencode("ἣ δʼ", "greek", UPPERCASE), "Η Δ’");
+  assertNfcEquals(reencode("ἢ", "greek", UPPERCASE), "Ή");
+  // A numeral, which may be written as a number, is no word of either
+  // case, and its keraia ends the word before it.
+  const decimal = { ...OMIT, text: { numerals: "decimal" } } as const;
+  for (const text of ["ΑΠΟ Ἠ ιβʹ", "αʹἈΫΠΝΊΑ", "ὤʹΘὉ", "ΑΑ Ἰ\u0307βʹ"]) {
+    const output = reencode(text, "greek", decimal);
+    assertEquals(reencode(output, "greek", decimal), output);
+  }
 });
 
 test("the iota subscript of capitals follows iotaSubscript", () => {

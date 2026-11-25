@@ -207,8 +207,8 @@ options. Consequently, for a Greek source:
 - a form that exists in one case only is lost when the case changes, unless
   the options write it again: `ϑ` in capitals is `Θ`, as `toUpperCase()`
   writes it, and `ϴ` in lowercase is `θ`. So is the shape a small sigma
-  notes against its place: `λόγοσ` in capitals is `ΛΌΓΟΣ`, which reads back
-  as `λόγος` in lowercase. Only the lunate sigma has both a capital and a
+  notes against its place: `λόγοσ` in capitals is `ΛΟΓΟΣ`, whose sigma
+  reads back as `ς` in lowercase. Only the lunate sigma has both a capital and a
   small form. `changed-case` reports the case itself.
 
 A conversion can also write a form the source did not have: under

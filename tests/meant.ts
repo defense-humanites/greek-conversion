@@ -6,6 +6,7 @@
  */
 
 import * as reference from "greek-conversion-previous";
+import type { ConversionOptions } from "../src/mod.ts";
 import { THUCYDIDES_1_1_10 } from "../bench/thucydides.ts";
 
 /**
@@ -14,13 +15,15 @@ import { THUCYDIDES_1_1_10 } from "../bench/thucydides.ts";
  * reports them, with the reason. Without an input, the change is meant for
  * every input under its options and call: the change of an option, which
  * every input it acts on shows. A pattern stands for the inputs or the
- * labels it matches: the change of a default, which the inputs that have
- * what it acts on show, and the options that write it.
+ * labels it matches. The change of a default goes with `undoneBy`, the
+ * options that restore the reference: a difference is meant only where the
+ * current tree, given them, gives the reference again.
  */
 export interface MeantChange {
   input?: string | RegExp;
   label?: string | RegExp;
   call?: string;
+  undoneBy?: ConversionOptions;
   reason: string;
 }
 
@@ -48,10 +51,6 @@ const MARK_INSIDE_WORD =
 const DETAILED_TO_TRANSLITERATION = "convertDetailed(greek → transliteration)";
 const CAPITAL_MARKS =
   'Greek output writes words in capitals without accents or breathings by default (greek.capitalMarks: "omit").';
-/** The inputs with a capital: a capital letter, or Beta Code's asterisk. */
-const CAPITALS = /\p{Lu}|\*/u;
-/** The options, drawn at random, that write in capitals. */
-const UPPERCASE_SETS = /"letterCase":"uppercase"/;
 const MONOTONIC_ACCENTS =
   "Monotonic accentuation keeps the accent of a word that elision made a monosyllable and of an accented weak pronoun, and removes the second accent of a word accented on its last two syllables.";
 const MONOTONIC_EVERY_FORMAT =
@@ -370,10 +369,11 @@ export const MEANT: readonly MeantChange[] = [
     call,
     reason: MONOTONIC_EVERY_FORMAT,
   })),
-  ...greekCalls().flatMap((call) => [
-    { input: CAPITALS, call, reason: CAPITAL_MARKS },
-    { label: UPPERCASE_SETS, call, reason: CAPITAL_MARKS },
-  ]),
+  ...greekCalls().map((call) => ({
+    call,
+    undoneBy: { greek: { capitalMarks: "preserve" } } as const,
+    reason: CAPITAL_MARKS,
+  })),
 ];
 
 /** Changes of these inputs, under the sets of options of ISO 843 only. */
@@ -406,11 +406,6 @@ function isoApostropheChanges(): MeantChange[] {
   return changes;
 }
 
-/**
- * The calls that write Beta Code or transliteration, as a difference names
- * them: under monotonic accentuation, every input with a mark it removes
- * changes there.
- */
 /** The calls that write Greek. */
 function greekCalls(): string[] {
   const calls = [
@@ -426,6 +421,11 @@ function greekCalls(): string[] {
   return calls;
 }
 
+/**
+ * The calls that write Beta Code or transliteration, as a difference names
+ * them: under monotonic accentuation, every input with a mark it removes
+ * changes there.
+ */
 function monotonicCalls(): string[] {
   const calls: string[] = [];
   for (const to of ["beta-code", "transliteration"]) {

@@ -17,7 +17,7 @@ words), with `convert()` unless the row says otherwise:
 | Conversion                                   | Time   | Characters per second |
 | -------------------------------------------- | ------ | --------------------- |
 | Greek → Beta Code                            | 1.2 ms | 9 million             |
-| Beta Code → Greek                            | 1.1 ms | 11 million            |
+| Beta Code → Greek                            | 1.2 ms | 11 million            |
 | Greek → Greek, with `reencode()`             | 1.2 ms | 9 million             |
 | Greek → transliteration                      | 1.8 ms | 6 million             |
 | Transliteration → Greek                      | 2.0 ms | 6 million             |
@@ -53,6 +53,11 @@ yours.
   their letters: a text of 10,000 characters takes some 0.4 ms longer, a
   quarter to two fifths, however few signs it has. A spacing tonos typed
   for the keraia of a numeral (`Β΄ Παγκόσμιος`) adds about a tenth.
+- **Words in capitals.** Greek output removes the marks of words in
+  capitals (`greek.capitalMarks: "omit"`, the default), and looks at the
+  case of each word to find them: converting a text in small letters into
+  Greek takes about 5 % longer than with `"preserve"`, and a text in
+  capitals about a fifth longer.
 - **`convertDetailed()`.** It reads the output again to find what the
   conversion lost, and keeps the position of every token: it costs two to
   three times what `convert()` does. Call it where the losses or the
