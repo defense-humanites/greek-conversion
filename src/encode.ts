@@ -849,13 +849,21 @@ export function encodeTransliteration(
   const circumflexReadsAsLength =
     options.transliteration?.circumflexAccent === "circumflex" &&
     options.transliteration?.longVowels !== "omit";
+  // Without length marks, omega is written `o`, and eta `e` unless it is
+  // `i`: as epsilon and omicron, they take no quantity mark, which would make
+  // `ō` and `ē`, read back as omega and eta with none, or `ŏ` and `ĕ`, read
+  // back as omicron and epsilon.
+  const omitsLength = options.transliteration?.longVowels === "omit";
+  const etaAsI = options.transliteration?.eta === "i";
+  const writtenShort = (letter: Letter) =>
+    omitsLength && (letter === "omega" || letter === "eta" && !etaAsI);
   const markString = (
     token: Grapheme,
     separation: boolean,
     consonant: boolean,
   ): string => {
     const shortVowel = token.letter === "epsilon" ||
-      token.letter === "omicron";
+      token.letter === "omicron" || writtenShort(token.letter);
     // A sigma, or a stigma or sampi, whose `c̄` and `s̄` the reader would
     // read with a circumflex U+0302 as part of the letter.
     const sigma = token.letter === "sigma" || token.letter === "stigma" ||
@@ -947,6 +955,27 @@ export function encodeTransliteration(
   let roughDiphthongs: Uint8Array | undefined;
   // The last run of letters that bnfNumeralReadsBack() read.
   let bnfRun: BnfRun | undefined;
+
+  // The `h` of a rough breathing after a consonant that it forms a letter
+  // with reads back as that letter's (`ρἁ` → `rha`, read as ῥα), whose case
+  // the consonant gives: the `h` before the vowel at `index` is written in
+  // it, and the vowel in its own (`ρἉ` → `rhA`, not `rHa`, which reads back
+  // as `rha`). A rho written with an `h` of its own leaves the vowel its `h`
+  // (`ῥἉ` → `rhHa`). Undefined where the `h` is the vowel's.
+  const mergedH = (index: number): "h" | "H" | undefined => {
+    if (!mergesWithH(doc, index - 1, options, digraphs)) return undefined;
+    const consonant = doc[index - 1] as Grapheme;
+    const before = doc[index - 2];
+    if (
+      consonant.letter === "rho" &&
+      (systematicRho || preservesRough && consonant.diacritics.has("rough") ||
+        !markedRho && before?.kind === "grapheme" && before.letter === "rho")
+    ) return undefined;
+    return uppercaseOutput ||
+        consonant.uppercase && isAmongCapitals(doc, index - 1)
+      ? "H"
+      : "h";
+  };
 
   // The tokens are written in order, so whether a letter starts a word is
   // known from the ones before (isWordInitial): `afterLetter` tells whether
@@ -1141,8 +1170,11 @@ export function encodeTransliteration(
     // with a rough breathing.
     let hBefore = false;
     if (initialRough && index === breathingStart) {
-      base = (groupUppercase ? "H" : "h") +
-        (capitals ? base.toUpperCase() : base.toLowerCase());
+      const merged = mergedH(index);
+      base = merged !== undefined
+        ? merged + ownCase(base, token, capitals)
+        : (groupUppercase ? "H" : "h") +
+          (capitals ? base.toUpperCase() : base.toLowerCase());
       hBefore = true;
     } else if (token.letter === "rho" && systematicRho) {
       if (next?.kind !== "grapheme" || next.letter !== "rho") base += h;
@@ -1151,11 +1183,13 @@ export function encodeTransliteration(
       token.diacritics.has("rough") && index !== breathingIndex
     ) {
       if (token.letter === "rho") base += h;
-      else if (token.uppercase) {
-        base = "H" + (capitals ? base.toUpperCase() : base.toLowerCase());
-        hBefore = true;
-      } else {
-        base = "h" + base;
+      else {
+        const merged = mergedH(index);
+        base = merged !== undefined
+          ? merged + ownCase(base, token, capitals)
+          : token.uppercase
+          ? "H" + (capitals ? base.toUpperCase() : base.toLowerCase())
+          : "h" + base;
         hBefore = true;
       }
     } else if (
@@ -1843,6 +1877,19 @@ function marksAsReadBack(
     copy[index] = { ...token, diacritics };
   }
   return copy ?? document;
+}
+
+/**
+ * A vowel's Latin letters in its own case, after an `h` that is not its own
+ * (see mergedH()): in capitals among capitals, with a capital first letter
+ * for a capital, and in small letters otherwise.
+ */
+function ownCase(base: string, token: Grapheme, capitals: boolean): string {
+  return capitals
+    ? base.toUpperCase()
+    : token.uppercase
+    ? base[0].toUpperCase() + base.slice(1)
+    : base.toLowerCase();
 }
 
 /**

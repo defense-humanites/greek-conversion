@@ -441,6 +441,9 @@ function readTransliteration(
     // Whether the breathing of the vowel before parts this one from it.
     let separated = false;
     let lengthMark = false;
+    // A second macron after the one that makes `ē` or `ō`, which is the
+    // letter's own (`ē̄` is η̄, as `ē̆` is η̆).
+    let markedMacron = false;
     // Where an acute was read, for a BnF keraia.
     let acuteAt = -1;
 
@@ -466,6 +469,7 @@ function readTransliteration(
       const bit = markBit(chars[i]);
       if (bit === 0) break;
       if (bit === ACUTE) acuteAt = i;
+      if (bit === MACRON && (marks & MACRON) !== 0) markedMacron = true;
       marks |= bit;
       i++;
     }
@@ -476,7 +480,9 @@ function readTransliteration(
       lengthMark,
     );
     // The macron of `ē` and `ō` makes the letter, not a mark.
-    if (letter !== match.value && !lengthMark) marks &= ~MACRON;
+    if (letter !== match.value && !lengthMark && !markedMacron) {
+      marks &= ~MACRON;
+    }
 
     if (omitLength && (marks & IOTA_SUBSCRIPT) !== 0) {
       // Only alpha, eta, and omega bear an iota subscript.

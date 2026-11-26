@@ -70,6 +70,26 @@ change.
     inside a word too, where the reader infers no breathing: `ke̓u`, in
     transliteration, gave `key`, then `keÿ`, and so did `ce̓u`, whose Latin
     `c` is a letter of the word. They give `keÿ` and `ceÿ` at once.
+- **A capital vowel with a rough breathing keeps its case after `t`, `p`,
+  or `r` in transliteration.** The `h` forms a letter with the consonant
+  before it (`th`, `ph`, `rh`, and `kh` under `chi: "kh"`), which reads back
+  with the consonant's case. The writer put a capital on the `h`, which was
+  lost: `ρἉ` gave `rHa`, then `rha`, and `r#1521(`, from Beta Code, `rHou`,
+  then `rhou`. The `h` now takes the case of the consonant, and the vowel
+  keeps its own: `ρἉ` gives `rhA`, which reads back as `ῥΑ`. The loss of the
+  breathing is reported as before.
+- **A macron on eta or omega reads back in transliteration.**
+  - By default, eta with a macron is written `ē̄`, as eta with a breve is
+    written `ē̆`, but the reader dropped the second macron: `η̄` gave `ē̄`,
+    then `ē`. It reads it as the letter's, and `η̄` converts back and forth
+    without loss, as `ω̄` does under ISO 843 type 1, whose `ō̄` the reader
+    dropped too. As on `ē̆`, no smooth breathing is inferred on a vowel with
+    a quantity mark: `ē̄` gave `ἠ`, and gives `η̄`.
+  - Under `longVowels: "omit"`, omega is written `o`, and eta `e` unless
+    `eta: "i"`, and their quantity marks read back otherwise: under ISO 843
+    type 2, `ω̄` gave `ō`, read back as omega without the macron, and `ω̆`
+    gave `ŏ`, read back as omicron. They take no quantity mark, as epsilon
+    and omicron do, and the loss is reported.
 - **Title case leaves small the letter after an apostrophe that follows a
   Latin letter.** An apostrophe between two letters does not start a word,
   but title case counted only the Greek letters before it, although a Latin
