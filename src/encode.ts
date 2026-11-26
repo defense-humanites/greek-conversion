@@ -1056,7 +1056,8 @@ export function encodeTransliteration(
             index - 1,
             options,
             vowelUpsilonVF,
-          ) === index
+          ) === index &&
+          !roughInNumeral(rendered, index - 1, options, doc, context)
       ? index - 1
       : undefined;
     // The h of a rough breathing is written only when the breathing is kept.
@@ -1076,7 +1077,8 @@ export function encodeTransliteration(
         )
         : undefined);
     // The breathing of a rough diphthong inside a word is on its second vowel.
-    const breathingIndex = breathingStart === undefined
+    // A numeral has no diphthong at its start either (roughInNumeral()).
+    let breathingIndex = breathingStart === undefined
       ? undefined
       : initialStart === undefined
       ? breathingStart + 1
@@ -1087,6 +1089,10 @@ export function encodeTransliteration(
         options,
         vowelUpsilonVF,
       );
+    if (
+      initialStart !== undefined && breathingIndex !== breathingStart &&
+      roughInNumeral(rendered, breathingStart!, options, doc, context)
+    ) breathingIndex = breathingStart;
     const breathingToken = breathingIndex === undefined
       ? undefined
       : rendered[breathingIndex];
@@ -1140,7 +1146,14 @@ export function encodeTransliteration(
               )));
     const h = capitals ? "H" : "h";
     let base = token.letter === "upsilon"
-      ? transliterationBase(doc, index, token.letter, options, context)
+      ? transliterationBase(
+        doc,
+        index,
+        token.letter,
+        options,
+        context,
+        rendered,
+      )
       : token.letter === "gamma" && writesNasalGamma &&
           isNasalGamma(doc, index, nasalExceptKappa) &&
           !(nasalMedialKappa && isEdgeGammaKappa(doc, index, context))
@@ -1253,6 +1266,12 @@ function findRoughDiphthongs(
         token.letter === "omega" && next?.kind === "grapheme" &&
         next.letter === "upsilon"
       ) starts[index] = 0;
+    }
+  }
+  // A numeral has no diphthong (roughInNumeral()).
+  for (let index = 0; index < starts.length; index++) {
+    if (starts[index] === 1 && roughInNumeral(readBack, index, options)) {
+      starts[index] = 0;
     }
   }
   // A coronis written as an apostrophe after the first vowel splits the pair
@@ -1428,6 +1447,7 @@ function transliterationBase(
   letter: Grapheme["letter"],
   options: ConversionOptions,
   context?: DocumentContext,
+  rendered: Document = document,
 ): string {
   switch (letter) {
     case "archaic-koppa":
@@ -1445,11 +1465,18 @@ function transliterationBase(
   }
 
   if (letter === "upsilon") {
+    // A numeral has no diphthong whose second vowel bears a rough breathing,
+    // which the reader leaves there (roughInNumeral()): its upsilon is
+    // written as outside a diphthong, but the `u` of `ου` under ISO 843
+    // Type 2, which reads back after an `h` (`οὑʹ` → `ohuʹ`).
     switch (options.transliteration?.upsilon) {
       case "y":
         return "y";
       case "y-with-ou-v-f": {
-        if (isVowelUpsilonAt(document, index - 1)) {
+        if (
+          isVowelUpsilonAt(document, index - 1) &&
+          !roughInNumeral(rendered, index - 1, options, document, context)
+        ) {
           return precedesVoicedSound(document, index) ? "v" : "f";
         }
         // Table 2 lists `ου` but not `ωυ`, which note 8 converts letter by
@@ -1467,14 +1494,23 @@ function transliterationBase(
       }
       case "y-with-au-eu-ou":
         return isDiphthongAt(document, index - 1) &&
-            readsBack(document, index - 1, options, isAuEuOuAt)
+            readsBack(document, index - 1, options, isAuEuOuAt) &&
+            !roughInNumeral(rendered, index - 1, options, document, context)
           ? "u"
           : "y";
       case "y-with-diphthong-u":
         return isDiphthongAt(document, index - 1) &&
-              readsBack(document, index - 1, options, isDiphthongAt) ||
+              readsBack(document, index - 1, options, isDiphthongAt) &&
+              !roughInNumeral(
+                rendered,
+                index - 1,
+                options,
+                document,
+                context,
+              ) ||
             isDiphthongAt(document, index) &&
-              readsBack(document, index, options, isDiphthongAt)
+              readsBack(document, index, options, isDiphthongAt) &&
+              !roughInNumeral(rendered, index, options, document, context)
           ? "u"
           : "y";
       default:
@@ -1831,6 +1867,40 @@ function meetsRoughIotaOrUpsilon(
   const next = document[index + 1];
   return next !== undefined && next.kind === "grapheme" &&
     isRoughIotaOrUpsilon(next, etaAsIota);
+}
+
+/**
+ * Whether the pair at `start` is two vowels of a numeral, the second with a
+ * rough breathing. A numeral has no diphthong, and the reader leaves that
+ * breathing on the second vowel: its `h` goes right before it (`αἱʹ` →
+ * `ahiʹ`, where `haiʹ` reads back as ἁιʹ). A coronis written as an apostrophe
+ * on the pair may read back as punctuation, which ends the numeral, and so
+ * may the keraiai of the BnF: the pair is then written as elsewhere. The
+ * numeral is found in `numerals`, the document that `document` was rendered
+ * from.
+ */
+function roughInNumeral(
+  document: Document,
+  start: number,
+  options: ConversionOptions,
+  numerals: Document = document,
+  context?: DocumentContext,
+): boolean {
+  const first = document[start];
+  const second = document[start + 1];
+  if (
+    first?.kind !== "grapheme" || second?.kind !== "grapheme" ||
+    !second.diacritics.has("rough") ||
+    !preservesDiacritic("rough", options, "transliteration")
+  ) return false;
+  if (
+    options.transliteration?.coronis === "apostrophe" &&
+    (first.diacritics.has("coronis") || second.diacritics.has("coronis"))
+  ) return false;
+  // The keraiai of the BnF, an acute and a comma, read back as such where
+  // they may: the reader finds no numeral to leave the breathing in.
+  if (options.transliteration?.keraia === "bnf") return false;
+  return isGreekNumeralContext(numerals, start, context);
 }
 
 /**

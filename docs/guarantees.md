@@ -24,7 +24,10 @@ protects these behaviors.
   keraia: `Λ́Θ` gives `ĹTH`, then `ĹTh`),
   letters that a converter keeps out of its scope, in the cases that
   [Character extensions](character-extensions.md#restricting-the-repertoire)
-  lists, frequent between Beta Code and transliteration, and monotonic
+  lists, frequent between Beta Code and transliteration, a vowel with both
+  a coronis and a breathing or an upsilon with an iota subscript, which
+  `validateDocument()` rejects (under `iso-843-type-2`, `KA᾽̔to` gives
+  `KHa’to`, then `KHA’to`), and monotonic
   accentuation with a transliteration that writes eta and omega without a
   length mark (`longVowels: "omit"`, as `iso-843-type-2` does), where a
   word read back with an iota or an omicron may be a monosyllable, whose

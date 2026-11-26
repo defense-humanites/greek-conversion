@@ -17,7 +17,7 @@ unless they are prepared; the difference fades on longer texts.
 For a web page, the `core` entry point converts with the same functions,
 given readers, writers, and options that the application imports. A bundle
 then keeps only those: a page that writes Greek in transliteration with one
-preset weighs 45 kB (15 kB with gzip).
+preset weighs 47 kB (15 kB with gzip).
 
 ## Readers and writers
 
@@ -129,7 +129,7 @@ of the same conversion imported from the main entry point: `convert()`
 | --------------------------------------------- | ----------------------------- | ----------------------------- |
 | Greek to Beta Code                            | 34.8 kB, 12.3 kB gzip (−57 %) | 49.8 kB, 16.8 kB gzip (−41 %) |
 | Beta Code to Greek                            | 38.4 kB, 13.3 kB gzip (−53 %) | 52.4 kB, 17.5 kB gzip (−38 %) |
-| Greek to transliteration                      | 45.4 kB, 15.1 kB gzip (−47 %) | 60.8 kB, 19.8 kB gzip (−30 %) |
+| Greek to transliteration                      | 46.6 kB, 15.4 kB gzip (−47 %) | 62.1 kB, 20.1 kB gzip (−30 %) |
 | Greek and transliteration both ways           | 65.9 kB, 21.5 kB gzip (−24 %) | 79.9 kB, 25.9 kB gzip (−9 %)  |
 | Every format both ways                        | 74.1 kB, 24.4 kB gzip (−14 %) | 88.1 kB, 28.7 kB gzip (+1 %)  |
 | `convertDetailed()`, Greek to transliteration | 74.8 kB, 24.5 kB gzip (−22 %) | 88.7 kB, 28.8 kB gzip (−8 %)  |
