@@ -49,15 +49,20 @@ change.
   - monotonic accentuation keeps the accent of a word whose syllables it
     cannot count (`ùc` gives `ύc`), a monosyllable included (`Kαί`, with a
     Latin `K`, where rc.13 gave `Kαι`);
+  - Greek letters glued to such a letter are a word, not a numeral: `mτ΄`
+    stays `mτ΄` under `text.numerals: "decimal"`, where rc.13 gave `m300`;
   - a breathing on a vowel after such a letter is a coronis (`Oἰκία`, with
     a Latin `O`);
   - ISO 843 type 2 writes `μπ` before such a letter as `mp`, inside the word,
-    not `b` (`abc`, restyled, gives `ampc`);
+    not `b` (`abc`, re-encoded, gives `ampc`);
   - the transliteration reader infers no smooth breathing on a vowel after
     a letter that it does not read (`co` gives `cο`, where rc.13 gave `cὀ`,
     whose breathing Greek output read as a coronis), and under ISO 843, an
     apostrophe after such a letter is one (`c’a` gives `c’α`, where rc.13
-    gave `cἀ`).
+    gave `cἀ`);
+  - the transliteration writer starts no word after such a letter either:
+    `cὀἱ`, with a Latin `c`, gives `co’hi` under ISO 843 type 2, not
+    `cho’i`, whose `ch` would read back as a chi.
 
   A letter of a third script, such as a Chinese character, joins no Greek
   word. A bundle that reads a format grows by 0.2 to 0.5 kB minified, up to
