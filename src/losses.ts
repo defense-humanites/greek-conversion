@@ -328,8 +328,22 @@ function pairByPosition(
     }
     if (
       text !== undefined && text !== "" && token.kind === "literal" &&
-      sameLiteral(token.value, text) && !isTonosKeraia(token)
-    ) spelled[index] = 1;
+      !isTonosKeraia(token)
+    ) {
+      // A writer may also write several literals as one character, which
+      // the reader reads as one (`é`, a letter and a mark kept as text, in
+      // Beta Code): the literals after this one that share its output, as
+      // an empty piece does (joinPieces()), belong to its text.
+      let run = token.value;
+      let next = index + 1;
+      for (
+        let following = source[next];
+        following?.kind === "literal" && written.starts[next] === start &&
+        written.ends[next] === end;
+        following = source[++next]
+      ) run += following.value;
+      if (sameLiteral(run, text)) spelled.fill(1, index, next);
+    }
   }
   return { counterparts, spelled };
 }

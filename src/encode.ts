@@ -704,8 +704,10 @@ export function encodeBetaCode(
   const uppercaseCodes = options.betaCode?.case === "uppercase";
   const yotCode = options.betaCode?.yot === "#401";
   const context: DocumentContext = {};
-  // The letters after the first of a ligature, which its code writes.
-  let ligatureEnd = 0;
+  // The tokens that an earlier one writes: the letters after the first of a
+  // ligature, which its code writes, or the marks that compose with a letter
+  // kept as text.
+  let writtenEnd = 0;
 
   // The letter right before `index` in the output, where nothing comes
   // between them: `>` ends the overline of a letter that has one.
@@ -718,15 +720,24 @@ export function encodeBetaCode(
   };
 
   const pieces = rendered.map((token, index) => {
-    if (index < ligatureEnd) return "";
+    if (index < writtenEnd) return "";
     if (token.kind === "literal") {
       // A space, the most frequent literal, is written as itself.
       if (token.value === " ") return " ";
       if (isKeptLetter(token)) return token.value;
-      // A Latin letter reads back as the letter of Beta Code it spells, which
-      // convertDetailed() reports: written in the case of the letters, it
-      // converts to itself again.
       if (token.value.length === 1 && BY_BETA.has(token.value.toLowerCase())) {
+        // A Latin letter with marks that compose with it is written as the
+        // character they make (`é`), which the reader keeps as text, where
+        // the letter and the marks would read back as a letter of Beta Code
+        // and marks kept as text.
+        const composed = composedLiteral(rendered, index, true);
+        if (composed !== undefined) {
+          writtenEnd = composed.end;
+          return composed.text;
+        }
+        // A Latin letter reads back as the letter of Beta Code it spells,
+        // which convertDetailed() reports: written in the case of the
+        // letters, it converts to itself again.
         return uppercaseCodes
           ? token.value.toUpperCase()
           : token.value.toLowerCase();
@@ -735,6 +746,22 @@ export function encodeBetaCode(
       // A spacing breathing kept apart from a capital stays apart.
       const apart = standsApart(rendered, index) ? ZWNJ : "";
       if (code === undefined) {
+        // So is a letter of a third script (`ǽ`), its marks in their
+        // canonical order: it reads back as the same text either way, but
+        // Greek and transliteration write it so, and a conversion back to
+        // Beta Code gives it as Beta Code does. A Greek letter is text of
+        // another format, which Greek output writes in its own forms (with
+        // the oxia), and which Beta Code copies.
+        if (
+          token.value.charCodeAt(0) >= 0xC0 &&
+          LETTER_CHARACTER.test(token.value)
+        ) {
+          const composed = composedLiteral(rendered, index, false);
+          if (composed !== undefined) {
+            writtenEnd = composed.end;
+            return composed.text + apart;
+          }
+        }
         // A code kept as text that reads as a mark after a letter (`%26`,
         // the macron) is written with the code of `%`, as the text it is.
         if (isMarkCode(token.value) && letterBefore(index) !== undefined) {
@@ -759,8 +786,8 @@ export function encodeBetaCode(
       : betaLigature(doc, index, options);
     if (ligature !== undefined) {
       // The code for the letters, with the marks of the last one.
-      ligatureEnd = index + ligature.length;
-      const codes = markCodes(rendered[ligatureEnd - 1] as Grapheme);
+      writtenEnd = index + ligature.length;
+      const codes = markCodes(rendered[writtenEnd - 1] as Grapheme);
       if (codes.overline) overline = true;
       return ligature.code + codes.codes;
     }
@@ -786,6 +813,36 @@ export function encodeBetaCode(
   if (overline) writeOverlines(pieces, rendered, doc, options, betaMarks);
   return written === undefined ? pieces.join("") : joinPieces(pieces, written);
 }
+
+/**
+ * The literal letter at `index` and the combining marks after it, kept as
+ * text, in NFC, with the end of those marks: none where NFC leaves them as
+ * they are, or, for a letter of Beta Code (`latin`), where the marks do not
+ * compose with it, since it would read back as a letter of Beta Code anyway.
+ */
+function composedLiteral(
+  document: Document,
+  index: number,
+  latin: boolean,
+): { text: string; end: number } | undefined {
+  let end = index + 1;
+  let text = (document[index] as { value: string }).value;
+  while (end < document.length) {
+    const token = document[end];
+    if (token.kind !== "literal" || !COMBINING_MARK.test(token.value)) break;
+    text += token.value;
+    end++;
+  }
+  if (end === index + 1) return undefined;
+  const composed = text.normalize("NFC");
+  return composed === text ||
+      latin && composed.codePointAt(0) === text.codePointAt(0)
+    ? undefined
+    : { text: composed, end };
+}
+
+const COMBINING_MARK = /^\p{M}+$/u;
+const LETTER_CHARACTER = /^(?![\u0370-\u03FF\u1F00-\u1FFF])\p{L}$/u;
 
 /**
  * Writes transliteration. With `written`, records the range of each token's
