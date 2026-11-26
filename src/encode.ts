@@ -828,6 +828,11 @@ export function encodeTransliteration(
     options,
     "transliteration",
   );
+  // Eta written as iota, without a length mark (ISO 843 Type 2), reads back
+  // as one: with a rough breathing after a vowel, it is the second vowel of a
+  // rough diphthong, whose h goes before the pair (`κεἡ`, `khei`).
+  const etaAsIota = options.transliteration?.longVowels === "omit" &&
+    options.transliteration?.eta === "i";
   const preservesSmooth = preservesDiacritic(
     "smooth",
     options,
@@ -1027,7 +1032,7 @@ export function encodeTransliteration(
       : undefined;
     // The h of a rough breathing is written only when the breathing is kept.
     const breathingStart = initialStart ??
-      (preservesRough && meetsRoughIotaOrUpsilon(rendered, index)
+      (preservesRough && meetsRoughIotaOrUpsilon(rendered, index, etaAsIota)
         ? roughDiphthongStart(
           roughDiphthongs ??= findRoughDiphthongs(
             options.transliteration?.longVowels === "omit"
@@ -1767,7 +1772,8 @@ function readBackBeforeBreathings(
     const next = rendered[index + 1];
     if (
       !isWordInitial(rendered, index) && !isWordInitial(rendered, index - 1) &&
-      !(next?.kind === "grapheme" && next.diacritics.has("rough"))
+      !(next?.kind === "grapheme" && next.diacritics.has("rough")) &&
+      !token.diacritics.has("rough")
     ) continue;
     if (vowelUpsilonVF && isVowelUpsilonAt(doc, index)) continue;
     copy ??= rendered.slice();
@@ -1781,16 +1787,25 @@ function readBackBeforeBreathings(
  * with a rough breathing: only then can it belong to a rough diphthong inside
  * a word. Called for every letter, so it compares letters before marks.
  */
-function meetsRoughIotaOrUpsilon(document: Document, index: number): boolean {
+function meetsRoughIotaOrUpsilon(
+  document: Document,
+  index: number,
+  etaAsIota: boolean,
+): boolean {
   const token = document[index] as Grapheme;
-  if (isRoughIotaOrUpsilon(token)) return true;
+  if (isRoughIotaOrUpsilon(token, etaAsIota)) return true;
   const next = document[index + 1];
   return next !== undefined && next.kind === "grapheme" &&
-    isRoughIotaOrUpsilon(next);
+    isRoughIotaOrUpsilon(next, etaAsIota);
 }
 
-function isRoughIotaOrUpsilon(token: Grapheme): boolean {
-  return (token.letter === "iota" || token.letter === "upsilon") &&
+/**
+ * Whether a letter is an iota or upsilon with a rough breathing, or an eta
+ * with one, written as iota and read back so, when `etaAsIota`.
+ */
+function isRoughIotaOrUpsilon(token: Grapheme, etaAsIota: boolean): boolean {
+  return (token.letter === "iota" || token.letter === "upsilon" ||
+    etaAsIota && token.letter === "eta") &&
     token.diacritics.has("rough");
 }
 
@@ -2196,6 +2211,7 @@ function writesSeparationDiaeresis(
   if (
     first.diacritics.has("smooth") &&
     (infersSmoothBreathing(options) &&
+        isWordInitial(document, index - 1) &&
         !isGreekNumeralContext(document, index - 1) ||
       written("smooth") &&
         (smoothBreathing === "greek" ||

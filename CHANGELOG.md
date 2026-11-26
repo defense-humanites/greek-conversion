@@ -57,6 +57,19 @@ change.
 
 ### Fixed
 
+- **Two outputs of the transliteration writer convert again to
+  themselves.**
+  - Under ISO 843 type 2, eta is written `i` and reads back as iota: with a
+    rough breathing after a vowel, it is the second vowel of a rough
+    diphthong, whose `h` goes before the pair. The writer put the `h` before
+    the eta, where a second conversion moved it: `κεἡ` gave `kehi`, then
+    `khei`. It gives `khei` at once, as for an eta before an iota (`ηἱ`).
+  - A smooth breathing that marks a hiatus before an upsilon is written as
+    a diaeresis on the upsilon where the reader would not infer it, as the
+    reader reads a `y` after a vowel. The writer left out the diaeresis
+    inside a word too, where the reader infers no breathing: `ke̓u`, in
+    transliteration, gave `key`, then `keÿ`, and so did `ce̓u`, whose Latin
+    `c` is a letter of the word. They give `keÿ` and `ceÿ` at once.
 - **A converter reports a letter kept out of its scope whose output does not
   convert back.** A kept letter is written as its source spells it, and the
   target may read that spelling as other characters:
