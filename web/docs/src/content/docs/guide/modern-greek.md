@@ -261,8 +261,9 @@ A preset applies its rules to the text it is given, and some rules need more:
   writes an `h` only where the source marks the breathing. See the
   [ALA-LC corpus](/reference/ala-lc-conformance-corpus/).
 - **The reversible UN system.** The United Nations system also has a
-  reversible version, given in Annex B of ISO 843, which marks the letters
-  that Type 2 merges. No preset implements it.
+  reversible version, given in Annex B of ISO 843, which marks with a macron
+  below the letters that Type 2 merges: eta `i̠`, omega `o̠`, and the `v` or
+  `f` of `αυ`, `ευ`, and `ηυ` (`av̠`, `ef̠`). No preset implements it.
 
 Each preset lists its references and its limits in the
 [preset reference](/reference/presets/).
