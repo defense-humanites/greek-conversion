@@ -639,9 +639,13 @@ test("character exclusions preserve source-format spelling", () => {
     converter.convert("a#2b", "beta-code", "greek"),
     "α#2β",
   );
+  // The code of the stigma is text in Greek, which Beta Code writes as such
+  // (`a%1012b`): the conversion does not convert back, and says so.
   assertEquals(
-    converter.convertDetailed("a#2b", "beta-code", "greek").lossy,
-    false,
+    converter.convertDetailed("a#2b", "beta-code", "greek").losses.map((
+      { code, index },
+    ) => [code, index]),
+    [["unrepresented-literal", 1]],
   );
 
   const detailed = converter.convertDetailed(
@@ -730,6 +734,50 @@ test("an excluded letter keeps its spelling in its word", () => {
     }),
     "jα",
   );
+});
+
+test("an excluded letter that does not convert back is reported lost", () => {
+  // A kept letter is written as its source spells it: the case and marks
+  // that the source format notes with characters of its own read back as
+  // those characters.
+  const alpha = createConverter({ exclude: ["alpha"] });
+  const iso = createConverter({ preset: "iso-843-type-1", exclude: ["alpha"] });
+  const decimal = { text: { numerals: "decimal" } } as const;
+  const cases = [
+    [alpha, "a)", "beta-code", "greek", {}, true],
+    [alpha, "*a", "beta-code", "greek", {}, true],
+    [alpha, "a/", "beta-code", "transliteration", {}, true],
+    [iso, "1’a", "transliteration", "greek", {}, true],
+    [iso, "1’a", "transliteration", "beta-code", {}, true],
+    // Combining marks read back, and Greek letters in Beta Code.
+    [alpha, "ā", "transliteration", "greek", {}, false],
+    [alpha, "ἀ", "greek", "beta-code", {}, false],
+    [alpha, "ᾆω", "greek", "transliteration", decimal, false],
+    // A letter whose marks the target reads apart, which makes a numeral of
+    // the letters after it.
+    [alpha, "ᾆωʹ", "greek", "transliteration", decimal, true],
+  ] as const;
+  for (const [converter, input, from, to, options, lossy] of cases) {
+    const label = `${input}: ${from} → ${to}`;
+    const result = converter.convertDetailed(input, from, to, options);
+    assertEquals(result.lossy, lossy, label);
+    if (lossy) {
+      const kept = result.diagnostics[0].index;
+      assertEquals(
+        result.losses.some(({ code, index }) =>
+          code === "unrepresented-literal" && index === kept
+        ),
+        true,
+        label,
+      );
+    } else {
+      assertEquals(
+        converter.convert(result.output, to, from, options),
+        converter.convert(input, from, from, options),
+        label,
+      );
+    }
+  }
 });
 
 test("an excluded letter of a transliteration is copied from the source", () => {

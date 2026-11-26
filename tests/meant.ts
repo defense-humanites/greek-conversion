@@ -37,6 +37,9 @@ const EDGE_NU_KAPPA =
 const MARKED_RHO =
   'ISO 843, ALA-LC Modern, and BnF write the h of rho only for a rough breathing that Greek writes (rho: "marked"): Πύρρος gives Pýrros.';
 
+const KEPT_LETTER =
+  "A converter reports a letter kept out of its scope whose output does not convert back to its spelling in the source (unrepresented-literal).";
+
 /** The changes of output that are meant. */
 export const MEANT: readonly MeantChange[] = [
   {
@@ -53,5 +56,17 @@ export const MEANT: readonly MeantChange[] = [
     label:
       /^(?:ala-lc-modern|bnf-core|iso-843-type-[12]|source|random 9: \{"preset":"ala-lc-modern")/u,
     reason: MARKED_RHO,
+  },
+  ...["greek", "transliteration"].map((to) => ({
+    input: "e)#2i\\ #2# i#2#",
+    label: /^(?:iso-843-type-1|ala-lc-ancient)$/u,
+    call: `createConverter().convertDetailed(beta-code → ${to})`,
+    reason: KEPT_LETTER,
+  })),
+  {
+    input: "ec̄ì ec̄ʹ",
+    label: "ala-lc-ancient",
+    call: "createConverter().convertDetailed(transliteration → beta-code)",
+    reason: KEPT_LETTER,
   },
 ];

@@ -139,6 +139,11 @@ export interface OutputPositions {
  * could guess wrong: `παιδαγωγῶν` under `iso-843-type-2` reported its loss on
  * `γ` and `ῶ` instead of `ω`, and a loss in a long text could land on another
  * line.
+ *
+ * `unreadKept` holds the source tokens that a converter kept out of its
+ * scope as letters whose marks the target reads as other characters
+ * (`Converter.convertDetailed()`): each is reported as a literal that the
+ * target does not represent.
  */
 export function findConversionLosses(
   source: Document,
@@ -146,6 +151,7 @@ export function findConversionLosses(
   spans: SpanTable,
   positions: () => OutputPositions,
   glyphs: SourceGlyphs,
+  unreadKept?: ReadonlySet<number>,
 ): readonly ConversionLoss[] {
   const losses = new Losses(spans);
   const sameGlyph = glyphComparison(source, glyphs);
@@ -159,6 +165,14 @@ export function findConversionLosses(
   );
 
   for (let index = 0; index < source.length; index++) {
+    if (unreadKept?.has(index)) {
+      losses.add(
+        "unrepresented-literal",
+        index,
+        "A letter kept out of the converter's scope is written as its source format spells it, which does not convert back from the target.",
+      );
+      continue;
+    }
     if (paired?.spelled[index] === 1) continue;
     const counterpart = counterparts === undefined
       ? index

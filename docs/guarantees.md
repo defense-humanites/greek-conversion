@@ -31,8 +31,8 @@ protects these behaviors.
   accent goes (`ή` gives `í`, then `i`).
 - **A lossless conversion is reversible.** When `convertDetailed()` reports
   `lossy: false`, converting the output back with the same options gives the
-  same canonical text, but for the marks of a letter that a converter keeps
-  in its source format (see
+  same canonical text, a letter that a converter keeps out of its scope
+  included (see
   [Character extensions](character-extensions.md#restricting-the-repertoire)).
   After a restyle, swap `source` and the other options.
   The [information-loss contract](information-loss.md) lists what each format

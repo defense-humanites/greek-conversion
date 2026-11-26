@@ -78,7 +78,7 @@ the text the loss is about.
 | `added-diacritic` | The target writes a diacritic the source token did not have, which reads back: the diaeresis on a contextual `y` that keeps a hiatus the reader would otherwise lose (`ἀἑυ` → `aheÿ` → `ἀἑϋ`), the diaeresis that `greek.capitalMarks: "omit"` writes in capitals where an accent showed a hiatus (`ΜΆΙΟΣ` → `ΜΑΪΟΣ`), or the accent of `καί` that `greek.kaiAccent` writes where `ϗ` is written as letters; `diacritic` is `"diaeresis"`, `"acute"`, or `"grave"` |
 | `inferred-breathing` | The target does not distinguish an unmarked initial vowel from one with a smooth breathing, so the reparsed target carries a smooth breathing the source did not have; `index` is the vowel that acquires it (the second element of an initial diphthong), and `diacritic` is `"smooth"` |
 | `unrepresented-grapheme` | A source letter or its position cannot be recovered from the target document |
-| `unrepresented-literal` | A source literal token cannot be recovered from the target document |
+| `unrepresented-literal` | A source literal token cannot be recovered from the target document, a letter that a converter keeps out of its scope included, when its output does not convert back to its spelling in the source |
 
 The codes describe observable information loss rather than the implementation
 rule that caused it. A dental assimilation and an elision-induced consonant

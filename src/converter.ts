@@ -11,10 +11,12 @@ import {
   type ConversionResult,
   type ConversionSpan,
   findConversionLosses,
+  type OutputPositions,
 } from "./losses.ts";
 import {
   type DocumentContext,
   isBoundaryTransparent,
+  isKeptLetter,
   isVowel,
   isWordInitial,
   keptLetter,
@@ -27,7 +29,14 @@ import {
   grapheme,
   literal,
 } from "./model.ts";
-import type { Document, Format, Grapheme, Letter, Token } from "./model.ts";
+import type {
+  Document,
+  Format,
+  Grapheme,
+  Letter,
+  Literal,
+  Token,
+} from "./model.ts";
 import {
   type ConversionOptions,
   DEFAULT_CONVERSION_OPTIONS,
@@ -247,11 +256,26 @@ interface PreprocessedInput {
   matches: readonly Match[];
 }
 
+/** The formats and options of a conversion. */
+interface Conversion {
+  from: Format;
+  to: Format;
+  reading: ResolvedConversionOptions;
+  writing: ResolvedConversionOptions;
+}
+
 interface PreparedSource {
   document: Document;
   diagnostics: readonly CharacterScopeDiagnostic[];
   /** The span in the supplied input of each token of `document`, if asked. */
   spans?: SpanTable;
+  /**
+   * The indices of the tokens of `document` that keep a letter out of scope,
+   * in a source prepared with spans for a target, and whether one of these
+   * letters has marks.
+   */
+  kept?: number[];
+  keptMarks?: boolean;
 }
 
 const BUILTIN_LETTERS = new Set<string>(Object.keys(ALPHABET));
@@ -414,24 +438,47 @@ export class Converter {
       prepared.document.length,
       map,
     );
-    const losses = findConversionLosses(
-      prepared.document,
-      target,
-      inputSpans,
-      // Reading the output again with positions, only if the losses need it.
-      () => ({
-        written: outputSpans,
-        read: targetRead.spans ?? this.#prepareSource(
-          targetInput,
-          to,
-          resolved,
-          resolved,
-          undefined,
-          "spans",
-        ).spans!,
-      }),
-      { glyphForm: writerFor(from).glyphForm, options: reading },
+    // Reading the output again with positions, only if the losses need it.
+    let positions: OutputPositions | undefined;
+    const lossesWith = (unreadKept?: ReadonlySet<number>) =>
+      findConversionLosses(
+        prepared.document,
+        target,
+        inputSpans,
+        () =>
+          positions ??= {
+            written: outputSpans,
+            read: targetRead.spans ?? this.#prepareSource(
+              targetInput,
+              to,
+              resolved,
+              resolved,
+              undefined,
+              "spans",
+            ).spans!,
+          },
+        { glyphForm: writerFor(from).glyphForm, options: reading },
+        unreadKept,
+      );
+    // The letters kept as text, which may not read back (see
+    // #unreadKeptLetters()).
+    const kept = from === to ? undefined : prepared.kept;
+    const conversion = { from, to, reading, writing: resolved };
+    let losses = lossesWith(
+      kept === undefined ? undefined : this.#unreadKeptLetters(
+        kept,
+        prepared,
+        output,
+        outputSpans,
+        conversion,
+      ),
     );
+    if (
+      kept !== undefined && prepared.keptMarks && losses.length === 0 &&
+      !this.#convertsBack(input, output, conversion)
+    ) {
+      losses = lossesWith(new Set(kept));
+    }
     const spans: ConversionSpan[] = new Array(prepared.document.length);
     for (let index = 0; index < spans.length; index++) {
       spans[index] = {
@@ -451,6 +498,58 @@ export class Converter {
     };
   }
 
+  /**
+   * The letters kept out of scope (`kept`) whose output does not convert back
+   * to their spelling in the source, which `convertDetailed()` reports lost:
+   * the source format may spell them, their case, or their marks with
+   * characters that the target reads as those characters (`*a`, `a)`, `#2` in
+   * Beta Code, `’a` under ISO 843). Each spelling is converted back once, as
+   * the guarantees say: read with the options that wrote it and written with
+   * those that read the source.
+   */
+  #unreadKeptLetters(
+    kept: readonly number[],
+    prepared: PreparedSource,
+    output: string,
+    spans: SpanTable,
+    conversion: Conversion,
+  ): ReadonlySet<number> | undefined {
+    const { from, to, reading, writing } = conversion;
+    const readsBack = new Map<string, boolean>();
+    let unread: Set<number> | undefined;
+    for (const index of kept) {
+      const spelling = (prepared.document[index] as Literal).value;
+      const written = output.slice(spans.starts[index], spans.ends[index]);
+      const key = `${written}\u0000${spelling}`;
+      let same = readsBack.get(key);
+      if (same === undefined) {
+        same = this.#convertResolved(written, to, from, writing, reading)
+          .normalize("NFC") === spelling.normalize("NFC");
+        readsBack.set(key, same);
+      }
+      if (!same) (unread ??= new Set()).add(index);
+    }
+    return unread;
+  }
+
+  /**
+   * Whether the output converts back to the canonical source, as the
+   * guarantees say: read with the options that wrote it and written with
+   * those that read the source. A lossless conversion with letters kept with
+   * marks may not, though each letter does alone: the target may read their
+   * combining marks apart, and the letters after them otherwise (`ᾆωʹ`, with
+   * alpha out of scope, gives `ᾆōʹ`, whose `ōʹ` reads back as a numeral under
+   * decimal numerals). Checked only then, since it converts the text twice.
+   */
+  #convertsBack(
+    input: string,
+    output: string,
+    { from, to, reading, writing }: Conversion,
+  ): boolean {
+    return this.#convertResolved(output, to, from, writing, reading) ===
+      this.#convertResolved(input, from, from, reading, reading);
+  }
+
   #run(
     input: string,
     from: Format,
@@ -461,6 +560,19 @@ export class Converter {
     assertFormat(from);
     assertFormat(to);
     const { reading, writing: resolved } = this.#resolveProfiles(options);
+    return {
+      output: this.#convertResolved(input, from, to, reading, resolved),
+    };
+  }
+
+  /** {@link convert} with resolved options, input and formats checked. */
+  #convertResolved(
+    input: string,
+    from: Format,
+    to: Format,
+    reading: ResolvedConversionOptions,
+    resolved: ResolvedConversionOptions,
+  ): string {
     const preprocessed = this.#preprocess(input, from, reading);
     // Only a rejection shows the diagnostics, in the error it throws.
     const prepared = this.#prepareSource(
@@ -473,7 +585,7 @@ export class Converter {
     );
     this.#assertScope(prepared.diagnostics);
     const encoded = encodeResolved(prepared.document, to, resolved);
-    return { output: this.#postprocess(encoded, to).output };
+    return this.#postprocess(encoded, to).output;
   }
 
   #preprocess(
@@ -609,6 +721,9 @@ export class Converter {
     const asRead = !this.#keepsLetters;
     // The parsed token each prepared token comes from, where they differ.
     const origins: number[] | undefined = track && !asRead ? [] : undefined;
+    // The letters kept as text, which may not read back from the target.
+    let keptLetters: number[] | undefined;
+    let keptMarks = false;
     const kept: KeptLetters = {
       parsed,
       format,
@@ -645,6 +760,14 @@ export class Converter {
         const count = replaced === undefined ? 1 : replaced.length;
         if (replaced === undefined) tokens.push(token);
         else tokens.push(...replaced);
+        if (
+          track && target !== undefined && count === 1 &&
+          replaced !== undefined && isKeptLetter(replaced[0]) &&
+          token.kind === "grapheme"
+        ) {
+          (keptLetters ??= []).push(tokens.length - 1);
+          if (token.diacritics.size > 0) keptMarks = true;
+        }
         if (origins !== undefined) {
           for (let k = 0; k < count; k++) origins.push(index);
         }
@@ -675,7 +798,13 @@ export class Converter {
       starts[index] = parsedSpans.starts[origins[index]];
       ends[index] = parsedSpans.ends[origins[index]];
     }
-    return { document, diagnostics, spans: { starts, ends } };
+    return {
+      document,
+      diagnostics,
+      spans: { starts, ends },
+      kept: keptLetters,
+      keptMarks,
+    };
   }
 
   /**
