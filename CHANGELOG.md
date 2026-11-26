@@ -15,6 +15,13 @@ change.
 
 ### Changed
 
+- **The sentence that describes the project names the atomic options**:
+  "Convert Ancient, Byzantine, and Modern Greek between Greek script, Beta
+  Code, and Latin script, with atomic options composed into standards-based
+  presets, and information-loss diagnostics." The presets are sets of the
+  options, which also combine beyond them. Every copy of the sentence
+  follows, but for the social card and its text alternative, which wait for
+  the card to be drawn again.
 - **The preset `bnf-core` is now `bnf-ancient`**, and its prepared options,
   exported by `./presets`, `bnfAncient`. Its name came from a profile of the
   BnF rules that apply mechanically; the preset now writes the whole BnF
