@@ -7,6 +7,19 @@ change.
 
 ## [Unreleased]
 
+## [1.0.0-rc.14] - 2026-11-26
+
+Fourteenth release candidate for `1.0.0`. `convertGreekPassages()` converts
+the Greek passages of a text in another language and copies the rest, its
+punctuation included. A letter that a reader keeps as text, such as a Latin
+letter typed in a Greek word, is a letter of its word for every rule that
+looks at the letters around it, and in transliteration, a capital on its own
+takes the case of the words around it (`Θ, θ` gives `Th, th`). Transliteration
+can write the ano teleia as a middle dot and, as French academic writing
+does, eta with a grave and omega with a circumflex. A long word converts in a
+time proportional to its length. Outputs change: the migration guide says
+how.
+
 ### Added
 
 - **`convertGreekPassages()` converts the Greek passages of a text** and
@@ -1974,7 +1987,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.13...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.14...HEAD
+[1.0.0-rc.14]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.13...v1.0.0-rc.14
 [1.0.0-rc.13]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.12...v1.0.0-rc.13
 [1.0.0-rc.12]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.11...v1.0.0-rc.12
 [1.0.0-rc.11]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.10...v1.0.0-rc.11

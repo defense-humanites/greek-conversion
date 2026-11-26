@@ -5,16 +5,51 @@ the `0.14.x` API.
 
 ## Installation
 
-The release candidate `1.0.0-rc.13` is published on JSR, and on npm under the
+The release candidate `1.0.0-rc.14` is published on JSR, and on npm under the
 `next` distribution tag; the stable `1.0.0` will follow with the same content
 unless a problem is found:
 
 ```sh
 npm install @humanities/greek-conversion@next
-npx jsr add @humanities/greek-conversion@1.0.0-rc.13
+npx jsr add @humanities/greek-conversion@1.0.0-rc.14
 ```
 
 The package is ESM-only.
+
+## Updating from `1.0.0-rc.13`
+
+In transliteration, a capital on its own, such as a letter name, takes the
+case of the nearest words on either side: in full capitals among words in
+capitals, and with its first letter only elsewhere. `Θ, ϑ, θ` gives
+`Th, th, th` (rc.13: `TH, th, th`), and `ΛΟΓΟΣ Χ λόγος` gives
+`LOGOS Ch lógos` (rc.13: `LOGOS CH lógos`); `ΘΕΟΣ Θ` still gives `THEOS TH`.
+A vowel with a rough breathing on its own follows the same rule:
+`ΚΑΙ Ὁ ΛΟΓΟΣ` gives `KAI HO LOGOS` (rc.13: `KAI Ho LOGOS`). Under
+`text.letterCase: "uppercase"`, every capital is written in full, as before.
+
+A letter that a reader keeps as text, such as a Latin letter in Greek, is a
+letter of its word, for the rules that look at the letters around a letter:
+a digitized text that types a Latin `K` for a Greek one keeps its word whole.
+Title case gives `Kαζάρμα` (rc.13: `KΑζάρμα`); a sigma before such a letter is
+medial (`sc` gives `σc`; rc.13: `ςc`); monotonic accentuation keeps the accent
+of `Kαί` (rc.13: `Kαι`); Greek letters glued to such a letter are no numeral
+(`mτ΄` under decimal numerals; rc.13: `m300`); and a word of one Greek
+capital takes its case from the Latin words around it (`ABC Ἡ` gives
+`ABC Η`; rc.13: `ABC Ἡ`). The transliteration reader infers no smooth
+breathing on a vowel after a letter that it does not read: `co` gives `cο`
+(rc.13: `cὀ`). Where Latin letters stand for Greek ones, replace them before
+converting.
+
+In transliteration, a diphthong of two capitals keeps them before lowercase
+text: `ΕἹα` gives `HEIa` (rc.13: `Heia`). The combining marks typed on a
+Greek koronis (U+1FBD) in transliteration are the vowel's, and a vowel with a
+koronis takes no smooth breathing besides: `a᾽to` gives `ἀτο` (rc.13:
+`ἀ̓το`).
+
+An application that converted the Greek of a text in another language word
+by word, to keep the punctuation of that language, can call
+`convertGreekPassages()`, which converts the Greek passages of the whole
+text and copies the rest: the rules then see the text around each passage.
 
 ## Updating from `1.0.0-rc.12`
 
