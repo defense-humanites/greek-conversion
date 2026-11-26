@@ -30,25 +30,18 @@
 `greek-conversion` is a TypeScript library for everyone who moves Greek
 between scripts:
 
-- **Ancient Greek**: read polytonic Greek with its breathings, iota
-  subscripts, coronides, and quantity marks, and digamma, koppa, and sampi;
-  transliterate an edition with every accent and length mark, or after SBL,
-  the BnF, ALA-LC, or ISO 843; read and write the Beta Code of the TLG and
-  Perseus, which notes every mark; keep an elision as the edition writes it,
-  and on request the iota adscript and the coronis of a crasis.
-- **Byzantine Greek**, under the same conventions: read the breathings that
-  older editions print before a capital, the καί symbol and the other signs
-  for several letters, and alphabetic numerals; keep the lunate sigma, the
-  overline of the nomina sacra, and Byzantine punctuation, in Greek and in
-  the TLG's Beta Code; write in the style of the uncial manuscripts; romanize
-  for a library catalogue after ALA-LC, whose table runs to 1453.
-- **Modern Greek**: transcribe names as Greek passports, road signs, and
-  maps write them, after ELOT 743, which the United Nations and BGN/PCGN
-  adopted and ISO 843 gives as its Type 2 (`μπ` at a word's edge as `b`, `ευ`
-  as `ev` or `ef`); transliterate after ISO 843 Type 1, which ELOT 743 has
-  followed since 2001 and which converts back, or ALA-LC for library records;
-  turn polytonic text into monotonic, after the monotonic accent rules; set
-  capitals without accents, as Greek does; build search keys and URL slugs.
+- **Ancient Greek**: read polytonic Greek with every mark, digamma, koppa,
+  and sampi; transliterate an edition with its accents and length marks, or
+  after SBL, the BnF, ALA-LC, or ISO 843; read and write the Beta Code of
+  the TLG and Perseus.
+- **Byzantine Greek**, under the same conventions: read the breathings
+  printed before capitals, the καί symbol, and alphabetic numerals; keep the
+  lunate sigma, the overline of the nomina sacra, and Byzantine punctuation;
+  romanize after ALA-LC, whose table runs to 1453.
+- **Modern Greek**: transcribe names as passports and maps write them, after
+  ELOT 743, which the United Nations adopted and ISO 843 gives as its Type 2;
+  transliterate after ISO 843 Type 1, which converts back, or ALA-LC; turn
+  polytonic text into monotonic; build search keys and URL slugs.
 
 Each convention is a preset that states its references and how far it
 follows them. The ALA-LC, BnF, and ISO 843 presets are tested against
