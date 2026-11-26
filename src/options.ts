@@ -203,8 +203,9 @@ export type UpsilonTransliteration =
 /**
  * Selects the mark that shows the length of eta and omega in
  * transliteration: a macron (`ē`, `ō`), a circumflex (`ê`, `ô`), a grave on
- * eta and a circumflex on omega (`è`, `ô`, as French academic writing has
- * it: `hylè`, `technè`, `khôra`), or none (`e`, `o`, as in ISO 843 Type 2).
+ * eta and a circumflex on omega (`ἠώς` → `èôs`, as French academic writing
+ * has it: `hylè`, `technè`, `khôra`), or none (`e`, `o`, as in ISO 843 Type
+ * 2).
  * The letter that carries it on eta is chosen by {@link EtaTransliteration}.
  * The same mark distinguishes stigma and sampi from `c` and `s` (`c̄`, `ĉ`);
  * under `"grave-circumflex"`, they take the circumflex, and under `"omit"`,

@@ -222,14 +222,14 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
     {
       title: "French academic usage",
       note: "η takes a grave and ω a circumflex, without the accents",
-      text: "ὕλη καὶ ψυχή, χώρα",
+      text: "ἠώς",
       from: "greek",
       to: "transliteration",
       options: {
-        transliteration: { longVowels: "grave-circumflex", chi: "kh" },
+        transliteration: { longVowels: "grave-circumflex" },
         diacritics: { accents: "remove" },
       },
-      output: "hylè kai psykhè, khôra",
+      output: "èôs",
     },
   ],
   "ala-lc-ancient": [

@@ -47,10 +47,12 @@ import {
   knownOptions,
   matchEntries,
   OPTION_ENTRIES,
+  requiredSettings,
   sameOptions,
   settingsOf,
   standardValue,
   withSetting,
+  withSettings,
 } from "./option_catalogue.ts";
 import type { OptionEntry } from "./option_catalogue.ts";
 
@@ -1400,12 +1402,14 @@ function setOption(
 ): void {
   // The standard's own value is no departure from it.
   const standard = standardValue(currentPreset(), entry.group, entry.key);
-  conversionOptions = withSetting(
+  const next = withSetting(
     conversionOptions,
     entry.group,
     entry.key,
     value === standard ? undefined : value,
   );
+  // With the value of another option that it requires.
+  conversionOptions = withSettings(next, requiredSettings(next));
   update();
 }
 
@@ -1528,14 +1532,14 @@ function setPreview(next: typeof preview): void {
 
 /** The options in effect: the reader's, with the value under preview. */
 function effectiveOptions(): ConversionOptions {
-  return preview
-    ? withSetting(
-      conversionOptions,
-      preview.entry.group,
-      preview.entry.key,
-      preview.value,
-    )
-    : conversionOptions;
+  if (!preview) return conversionOptions;
+  const next = withSetting(
+    conversionOptions,
+    preview.entry.group,
+    preview.entry.key,
+    preview.value,
+  );
+  return withSettings(next, requiredSettings(next));
 }
 
 /** Highlights, in a copy of the output laid under it, the words that changed. */
@@ -1568,12 +1572,12 @@ function valueExample(
 ): { word: string; before: string; after: string } | undefined {
   if (conversion === undefined) return undefined;
   const { converter, from, to } = conversion;
-  const alternative = withSetting(
-    conversionOptions,
-    entry.group,
-    entry.key,
-    value,
-  );
+  const chosen = withSetting(conversionOptions, entry.group, entry.key, value);
+  // A value that requires another is shown with it, and what it changes
+  // against the settings with that other alone.
+  const required = requiredSettings(chosen);
+  const settings = withSettings(conversionOptions, required);
+  const alternative = withSettings(chosen, required);
   const write = (text: string, options: ConversionOptions) => {
     try {
       return converter.convert(text, from, to, options);
@@ -1591,7 +1595,7 @@ function valueExample(
   }
   for (const text of [source.value.slice(0, 4000), sample]) {
     if (!text) continue;
-    const before = write(text, conversionOptions);
+    const before = write(text, settings);
     const after = write(text, alternative);
     if (before === undefined || after === undefined) continue;
     const change = firstChange(text, before, after);

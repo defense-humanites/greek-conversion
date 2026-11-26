@@ -38,8 +38,9 @@ change.
   minified, under 0.1 kB with gzip.
 
 - **`transliteration.longVowels: "grave-circumflex"`** marks eta with a
-  grave and omega with a circumflex, as French academic writing does: `ὕλη`
-  gives `hylè`, and `χώρα` `chôra`, or `khôra` with `chi: "kh"`. Under
+  grave and omega with a circumflex, as French academic writing does: `ἠώς`
+  gives `èôs`, `ὕλη` `hylè`, and `χώρα` `chôra`, or `khôra` with
+  `chi: "kh"`. Under
   `eta: "i"`, eta is `ì`; stigma and sampi take the circumflex (`ĉ`, `ŝ`).
   The value requires `diacritics.accents: "remove"`, since the usage writes
   no Greek accent and `ὲ` would be written `è`; otherwise it throws an
