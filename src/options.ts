@@ -73,10 +73,12 @@ export type KaiAccent = "none" | "byzantine" | "modern";
  * hiatus (`Ἅιδης` → `ΑΪΔΗΣ`); the disjunctive `ή` keeps its accent, which
  * tells it from the article (`Ή`, from `ή`, `ἤ`, or `ἢ`). A word is in
  * capitals when all its letters are, and a word of one letter when the
- * nearest word on either side, words of one letter and numerals aside, is
- * in capitals and neither is in small letters (`Ο ΛΟΓΟΣ`, `Η Δ’ ΟΣ`), or
- * the text is set in capitals (`text.letterCase: "uppercase"`); a capital
- * that begins a word in small letters keeps its marks (`Έλληνας`).
+ * nearest word on either side is in capitals and neither is in small letters
+ * (`Ο ΛΟΓΟΣ`, `Η Δ’ ΟΣ`), or the text is set in capitals
+ * (`text.letterCase: "uppercase"`); a capital that begins a word in small
+ * letters keeps its marks (`Έλληνας`). The search for the nearest word
+ * passes the words of one letter, and stops at a number or a numeral, past
+ * which it finds none (`ΘΕΟΣ ιβʹ Ὁ` keeps its marks).
  * The iota subscript follows `iotaSubscript`, whose `"capital-adscript"`
  * writes it as a letter after a capital (`ΤΗΙ ΩΙΔΗΙ`). Each mark removed and
  * each diaeresis written is reported. `"preserve"` writes every mark the
@@ -336,8 +338,10 @@ export type RhoTransliteration = "contextual" | "marked" | "systematic";
  * capitals where they are in capitals and none is in small letters (`ΘΕΟΣ
  * Θ` → `THEOS TH`, `ABC Θ` → `ABC TH`), and with its first letter only
  * elsewhere, before a period, as an initial, included (`Θ, θ` → `Th, th`,
- * `Θ.` → `Th.`). So does a vowel with a rough breathing on its own, such as
- * the article (`ΚΑΙ Ὁ ΛΟΓΟΣ` → `KAI HO LOGOS`, `Ὁ δὲ` → `Ho dè`).
+ * `Θ.` → `Th.`). A number or a numeral ends the search on its side
+ * (`ΘΕΟΣ ιβʹ Θ` → `THEOS ibʹ Th`). So does a vowel with a rough breathing on
+ * its own, such as the article (`ΚΑΙ Ὁ ΛΟΓΟΣ` → `KAI HO LOGOS`, `Ὁ δὲ` →
+ * `Ho dè`).
  *
  * `"title"` capitalizes the first letter of each word; an apostrophe between
  * two letters, as a coronis written so (`Ka’gṓ`), does not start a word.

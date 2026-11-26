@@ -110,6 +110,9 @@ test("words of one letter between words of one letter", () => {
     reencode("͵αβ Ἠ ΛΟΓΟΣ", "greek", decimal),
     "1002 Η ΛΟΓΟΣ",
   );
+  // The search stops at a numeral or a number, and finds no word past it.
+  assertNfcEquals(reencode("ΘΕΟΣ ιβʹ Ὁ", "greek", OMIT), "ΘΕΟΣ ιβʹ Ὁ");
+  assertNfcEquals(reencode("ΘΕΟΣ 12 Ὁ", "greek", OMIT), "ΘΕΟΣ 12 Ὁ");
   // Under decimal numerals, a mark or joiner within letters ends a numeral,
   // as the reader of numerals reads it, and the letters on its other side
   // are a word of their own: in `ΑΑ̇βʹ`, only `βʹ` is a numeral, and `ΑΑ`
