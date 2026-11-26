@@ -97,8 +97,11 @@ as much. To keep memory flat on a corpus, convert it line by line or paragraph
 by paragraph: a call costing a few microseconds, this is no slower.
 
 One input is slow: thousands of combining marks on one letter, which no
-text has, take seconds to normalize. Limit the length of untrusted input
-accordingly, as [Guarantees and limits](/reference/guarantees/) says.
+text has. Normalizing them takes a time that grows with the square of their
+number. `convertDetailed()` from Beta Code is slower still, since it pairs
+each mark of the source with the output: 4,000 marks take about 5 ms to
+convert, but 1 to 3 s with `convertDetailed()`. Limit the length of untrusted
+input accordingly, as [Guarantees and limits](/reference/guarantees/) says.
 
 The tables kept for options do not grow with use: one for each preset and
 each set of prepared options, released with them, and a few dozen at most

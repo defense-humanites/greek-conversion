@@ -687,7 +687,7 @@ export class Converter {
     kept: KeptLetters,
   ): readonly Token[] | undefined {
     if (token.kind === "grapheme") {
-      if (!this.#isAllowed(token.letter, parsed, index)) {
+      if (!this.#isAllowed(token.letter, parsed, index, kept)) {
         const numeral = inDecimalNumeral(kept, index);
         diagnostics.push(
           scopeDiagnostic(
@@ -707,6 +707,7 @@ export class Converter {
           index,
           target,
           options,
+          kept.context ??= {},
         )
         : undefined;
       if (issue === undefined) return undefined;
@@ -726,7 +727,7 @@ export class Converter {
     const custom = this.#sentinels.get(token.value);
     if (
       custom === undefined ||
-      this.#isAllowed(custom.character.id, parsed, index)
+      this.#isAllowed(custom.character.id, parsed, index, kept)
     ) {
       return undefined;
     }
@@ -841,11 +842,27 @@ export class Converter {
     }
   }
 
-  #isAllowed(id: string, document: Document, index: number): boolean {
+  /**
+   * Whether the converter's scope holds the character at `index`: `kept`
+   * keeps what the numerals of `document`, its parsed source, read for the
+   * other letters (`isCharacterInPresetScope()`).
+   */
+  #isAllowed(
+    id: string,
+    document: Document,
+    index: number,
+    kept: KeptLetters,
+  ): boolean {
     return !this.#excluded.has(id) &&
       (this.#repertoire === undefined || this.#repertoire.has(id)) &&
       (this.#preset === undefined ||
-        isCharacterInPresetScope(this.#preset, id, document, index));
+        isCharacterInPresetScope(
+          this.#preset,
+          id,
+          document,
+          index,
+          kept.context ??= {},
+        ));
   }
 }
 

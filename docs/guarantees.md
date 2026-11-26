@@ -199,7 +199,9 @@ at the start of a word (`῾Ρωμαῖοι` is `Ῥωμαῖοι`, `΄Ελλη�
 - **It does not bound normalization.** Every conversion normalizes the text
   (`String.prototype.normalize()`), whose time grows with the square of the
   number of combining marks on one letter: thousands of them, which no text
-  has, take seconds. Limit the length of untrusted input accordingly.
+  has, take seconds, `convertDetailed()` from Beta Code most of all, since it
+  pairs each mark with the output. Limit the length of untrusted input
+  accordingly.
 
 ## What the engine covers
 

@@ -147,6 +147,16 @@ test("the detailed conversion reports the Greek passages and copies the rest", (
   );
 });
 
+test("the detailed conversion of a long text into Greek keeps every span", () => {
+  // The spans of the Greek read back were spread into push(), which
+  // overflowed the call stack past about 120,000 tokens.
+  const input = "λόγος ".repeat(25_000);
+  const result = convertGreekPassagesDetailed(input, "greek");
+  assertEquals(result.output, input);
+  assertEquals(result.spans.length, 150_000);
+  assertEquals(result.lossy, false);
+});
+
 test("the core entry point converts the Greek passages", () => {
   const options = prepareOptions({ preset: "ala-lc-ancient" });
   const input = "Θ. Δημητρίου ; λόγος";

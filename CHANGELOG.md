@@ -7,6 +7,31 @@ change.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Five more inputs convert in a time proportional to their length.** In
+  each, every letter of a long run read the rest of the run again:
+  - letters under one overline written into Beta Code, and `<…>` read from
+    Beta Code;
+  - omegas before `y`, read from transliteration under ISO 843 type 2;
+  - capital stigmas and sampis written under `bnf-core`;
+  - signs `ϗ` written without spaces under `greek.kaiAccent: "modern"`;
+  - in a converter bound to ALA-LC, its stigmas, sampis, and koppas, and in
+    one bound to ISO 843, every letter under decimal numerals.
+
+  Each conversion keeps what it reads once for the whole run. Under
+  `kaiAccent: "modern"`, 8,000 signs `ϗ` took 10 s and now take a few
+  milliseconds. `tests/scaling_test.ts` checks each of these inputs.
+- **`convertGreekPassagesDetailed()` into Greek converts a long text.** It
+  threw a `RangeError` past about 120,000 tokens, because it passed the
+  spans of the Greek read back as the arguments of one call.
+- **The transliteration reader finds its omegas after spacing signs** under
+  ISO 843 type 2. The reader marks an `o` before `y` as an omega, and turns it
+  back into an omicron in a numeral (`oyʹ` gives `οϋʹ`). It noted the omegas
+  by their place, then joined spacing signs to the tokens around them,
+  after which the places no longer named the omegas. `῎oyʹ` gave `῎ωυʹ`, and
+  `῎῎oy` threw a `TypeError`; they give `῎οϋʹ` and `῎῎ωυ`.
+
 ## [1.0.0-rc.14] - 2026-11-26
 
 Fourteenth release candidate for `1.0.0`. `convertGreekPassages()` converts

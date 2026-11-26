@@ -628,22 +628,28 @@ function readTransliteration(
     for (let k = 0; k < starts.length; k++) starts[k] = offsets[starts[k]];
   }
 
-  if (mayHaveSpacingSigns(text)) readSpacingMarks(out, starts);
-  if (nasalGamma !== "literal") {
-    inferNasalGammas(out, nasalGamma === "nasal-except-kappa");
-  }
   // A numeral, whose letters Type 2 writes as it reads them back (`ωυʹ` is
   // `ouʹ`), keeps the `o` and the separation the `y` gives, by a diaeresis.
+  // Before readSpacingMarks(), which joins tokens, so that the indices are
+  // those of the tokens read. The numerals of the tokens are found once: the
+  // loop changes letters and marks only, and a long word of such omegas
+  // would otherwise be read to its end from each of them.
+  const numerals: DocumentContext = {};
   for (const index of omegaBeforeY) {
     const omega = out[index];
     const next = out[index + 1];
     if (
       omega.kind === "grapheme" && next?.kind === "grapheme" &&
-      !omega.diacritics.has("coronis") && isGreekNumeralContext(out, index)
+      !omega.diacritics.has("coronis") &&
+      isGreekNumeralContext(out, index, numerals)
     ) {
       omega.letter = "omicron";
       next.diacritics = withDiacritic(next.diacritics, "diaeresis");
     }
+  }
+  if (mayHaveSpacingSigns(text)) readSpacingMarks(out, starts);
+  if (nasalGamma !== "literal") {
+    inferNasalGammas(out, nasalGamma === "nasal-except-kappa");
   }
   inferInitialBreathings(
     out,

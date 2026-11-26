@@ -633,14 +633,22 @@ function writeOverlines(
     index = last;
   }
   const overlined = (index: number): boolean => overline[index] === true;
+  // The end of the run of overlined units being written, and whether digits
+  // follow it: found once for the run, so that a long one costs no more than
+  // its length.
+  let runEnd = -1;
+  let beforeDigits = false;
   for (let index = 0; index < rendered.length; index++) {
     const last = lasts[index] ?? index;
     if (overlined(last) && pieces[index] !== "") {
-      let end = last + 1;
-      while (overlined(end)) end++;
-      if (digitsFrom(rendered, end) === "") {
+      if (last >= runEnd) {
+        runEnd = last + 1;
+        while (overlined(runEnd)) runEnd++;
+        beforeDigits = digitsFrom(rendered, runEnd) !== "";
+      }
+      if (!beforeDigits) {
         pieces[index] = (overlined(index - 1) ? "" : "<") + pieces[index] +
-          (end === last + 1 ? ">" : "");
+          (runEnd === last + 1 ? ">" : "");
       }
     }
     index = last;
@@ -929,6 +937,8 @@ export function encodeTransliteration(
   // The rough diphthongs inside a word, found once and only when a vowel
   // meets an iota or upsilon with a rough breathing: they are rare.
   let roughDiphthongs: Uint8Array | undefined;
+  // The last run of letters that bnfNumeralReadsBack() read.
+  let bnfRun: BnfRun | undefined;
 
   // The tokens are written in order, so whether a letter starts a word is
   // known from the ones before (isWordInitial): `afterLetter` tells whether
@@ -1102,7 +1112,12 @@ export function encodeTransliteration(
     const bnfLowercaseNumeral = bnfKeraia &&
       token.uppercase &&
       (token.letter === "stigma" || token.letter === "sampi") &&
-      bnfNumeralReadsBack(doc, index, options);
+      bnfNumeralReadsBack(
+        doc,
+        index,
+        options,
+        bnfRun ??= { start: -1, end: -1, readsBack: false },
+      );
     if (
       token.uppercase && !bnfLowercaseNumeral &&
       (!groupUppercase || capitals)
@@ -1490,23 +1505,44 @@ function bnfNumeralReadsBack(
   document: Document,
   index: number,
   options: ConversionOptions,
+  run: BnfRun,
 ): boolean {
   const previous = document[index - 1];
   if (previous?.kind === "literal" && previous.value === ARISTERI_KERAIA) {
     return true;
   }
+  // The letters of a run that was read get its answer: read from each of
+  // them, a long run would take a time that grows with its square.
+  if (index >= run.start && index < run.end) return run.readsBack;
   let last: Token | undefined;
-  for (let i = index; i < document.length; i++) {
-    const token = document[i];
+  let readsBack = false;
+  let end = index;
+  for (; end < document.length; end++) {
+    const token = document[end];
     if (token.kind === "grapheme") {
       last = token;
       continue;
     }
     if (isBoundaryTransparent(token)) continue;
-    return token.value === DEXIA_KERAIA && last?.kind === "grapheme" &&
+    readsBack = token.value === DEXIA_KERAIA && last?.kind === "grapheme" &&
       (!isVowel(last.letter) || bnfRightKeraia(options, last) === DEXIA_KERAIA);
+    break;
   }
-  return false;
+  run.start = index;
+  run.end = end;
+  run.readsBack = readsBack;
+  return readsBack;
+}
+
+/**
+ * The run of letters, and the marks and joiners among them, that
+ * bnfNumeralReadsBack() read last, from `start` to the token that ends it at
+ * `end`, and its answer, which is that of each letter in it.
+ */
+interface BnfRun {
+  start: number;
+  end: number;
+  readsBack: boolean;
 }
 
 /**

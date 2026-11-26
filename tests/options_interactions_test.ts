@@ -321,6 +321,11 @@ test("writes vowel pairs as they read back, under the ISO and SBL presets", () =
   // omicron: ωυʹ (1200) like ουʹ (470).
   assertNfcEquals(convert("ωυʹ", "greek", "transliteration", iso), "ouʹ");
   assertNfcEquals(convert("oyʹ", "transliteration", "greek", iso), "οϋʹ");
+  // So after spacing signs, which the reader joins once it has read the
+  // omegas: it looked for them where they had been, and threw a TypeError
+  // past the end of the text (`῎῎oy`).
+  assertNfcEquals(convert("῎oyʹ", "transliteration", "greek", iso), "῎οϋʹ");
+  assertNfcEquals(convert("῎῎oy", "transliteration", "greek", iso), "῎῎ωυ");
   // The apostrophe of a coronis reads back as punctuation; the μπ after it
   // stays inside the word, where it is mp.
   assertNfcEquals(

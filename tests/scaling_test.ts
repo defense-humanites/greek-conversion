@@ -4,6 +4,7 @@ import {
   type ConversionOptions,
   convert,
   convertDetailed,
+  createConverter,
   type Format,
 } from "../src/mod.ts";
 import { parse } from "../src/document.ts";
@@ -93,6 +94,31 @@ const LONG_WORD = "σοϐμπατσἁγκι".repeat(4);
 
 /** Stigmas read as `στ` under `greek.stigma: "ligature"` (`ἐϛὶ`). */
 const STIGMA_PASSAGE = "ἐϛὶν ἄϛυ ";
+
+/**
+ * Letters under one overline, which Beta Code writes `<…>`: each one looked
+ * for the end of the overline, to the end of the run, until 1.0.0-rc.15.
+ */
+const OVERLINE_RUN = [..."θεοςκυριοςχριστος"].map((letter) => letter + "\u0305")
+  .join("");
+
+/**
+ * Omegas before `y` in a long word, read under ISO 843 Type 2: each one asked
+ * whether it stood in a numeral, which reading the rest of the word answered.
+ */
+const OMEGA_Y_WORD = "oyoioyai".repeat(5);
+
+/**
+ * Capital stigmas and sampis, which BnF writes small in a numeral: each one
+ * read the rest of its word to find a keraia.
+ */
+const BNF_NUMERAL_WORD = "ϚϠΑ".repeat(12);
+
+/**
+ * Signs `ϗ` written without spaces, in a polytonic text, under `greek.kaiAccent:
+ * "modern"`: the accent of each read the word after it to its end.
+ */
+const KAI_WORD = "ϗϗϗἀ".repeat(10);
 
 function fastest(run: () => unknown): number {
   run();
@@ -209,6 +235,34 @@ const CASES: readonly {
     passage: LONG_WORD,
     name: "one long word",
   },
+  {
+    format: "greek",
+    target: "beta-code",
+    options: {},
+    passage: OVERLINE_RUN,
+    name: "letters under one overline",
+  },
+  {
+    format: "transliteration",
+    target: "greek",
+    options: { preset: "iso-843-type-2" },
+    passage: OMEGA_Y_WORD,
+    name: "omegas before y in a long word",
+  },
+  {
+    format: "greek",
+    target: "transliteration",
+    options: { preset: "bnf-core" },
+    passage: BNF_NUMERAL_WORD,
+    name: "capital stigmas and sampis in a long word",
+  },
+  {
+    format: "greek",
+    target: "transliteration",
+    options: { greek: { kaiAccent: "modern" } },
+    passage: KAI_WORD,
+    name: "signs of καί written without spaces",
+  },
 ];
 
 test("conversion cost grows linearly with the input", () => {
@@ -243,6 +297,46 @@ test("conversion cost grows linearly with the input", () => {
         }: an 8× longer input took ${ratio.toFixed(1)}× as long`,
       );
     }
+  }
+});
+
+test("a converter checks the scope of a long word in linear time", () => {
+  // A converter bound to ALA-LC asked, for each stigma, sampi, or koppa,
+  // whether it stood in a numeral, and one bound to ISO 843 did for every
+  // letter under decimal numerals: reading the rest of the word each time,
+  // until 1.0.0-rc.15.
+  const ala = createConverter({ preset: "ala-lc-ancient" });
+  const iso = createConverter({ preset: "iso-843-type-1" });
+  const decimal = { text: { numerals: "decimal" } } as const;
+  for (
+    const [name, passage, run] of [
+      [
+        "ALA-LC",
+        "ϛϡϙα".repeat(12),
+        (text: string) => ala.convert(text, "greek", "transliteration"),
+      ],
+      [
+        "ISO 843, decimal numerals",
+        "αβγδ".repeat(12),
+        (text: string) =>
+          iso.convert(text, "greek", "transliteration", decimal),
+      ],
+    ] as const
+  ) {
+    const small = passage.repeat(SMALL);
+    const large = passage.repeat(LARGE);
+    let ratio = Infinity;
+    for (let attempt = 0; attempt < ATTEMPTS && ratio >= MAX_RATIO; attempt++) {
+      ratio = Math.min(
+        ratio,
+        fastest(() => run(large)) / fastest(() => run(small)),
+      );
+    }
+    assertEquals(
+      ratio < MAX_RATIO,
+      true,
+      `${name}: an 8× longer input took ${ratio.toFixed(1)}× as long`,
+    );
   }
 });
 

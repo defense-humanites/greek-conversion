@@ -8,7 +8,7 @@ import {
   type Preset,
   type ResolvedConversionOptions,
 } from "./options.ts";
-import { isGreekNumeralContext } from "./context.ts";
+import { type DocumentContext, isGreekNumeralContext } from "./context.ts";
 import type { Document, Format, Letter } from "./model.ts";
 import { hasPreparedMark, PREPARED } from "./prepared_mark.ts";
 import { type PreparedOptions, preparedProfiles } from "./prepared.ts";
@@ -679,12 +679,17 @@ function expandDiacritics(
   return expanded as DiacriticClassOptions;
 }
 
-/** Returns whether one character occurrence is inside a bound preset's scope. */
+/**
+ * Returns whether one character occurrence is inside a bound preset's scope.
+ * `context` keeps what the numerals of `document` read for its other
+ * occurrences (`isGreekNumeralContext()`).
+ */
 export function isCharacterInPresetScope(
   preset: Preset,
   character: string,
   document: Document,
   index: number,
+  context?: DocumentContext,
 ): boolean {
   if (!ADDITIONAL_LETTERS.has(character as Letter)) return true;
 
@@ -693,10 +698,10 @@ export function isCharacterInPresetScope(
     case "ala-lc-ancient":
       if (letter === "digamma" || letter === "archaic-koppa") return true;
       return ALA_LC_NUMERAL_ONLY.has(letter) &&
-        isGreekNumeralContext(document, index);
+        isGreekNumeralContext(document, index, context);
     case "ala-lc-modern":
       return ALA_LC_NUMERAL_ONLY.has(letter) &&
-        isGreekNumeralContext(document, index);
+        isGreekNumeralContext(document, index, context);
     case "perseus":
     case "sbl-general":
       return false;
@@ -708,7 +713,11 @@ export function isCharacterInPresetScope(
   }
 }
 
-/** A recognized ISO source character without an established Type 1 or 2 mapping. */
+/**
+ * A recognized ISO source character without an established Type 1 or 2
+ * mapping. `context` keeps what the numerals of `document` read for its
+ * other occurrences (`isGreekNumeralContext()`).
+ */
 export function presetMappingIssue(
   preset: Preset,
   character: Letter,
@@ -716,6 +725,7 @@ export function presetMappingIssue(
   index: number,
   target: Format,
   options: ResolvedConversionOptions,
+  context?: DocumentContext,
 ): "undefined-preset-mapping" | "unresolved-preset-mapping" | undefined {
   if (
     (preset !== "iso-843-type-1" && preset !== "iso-843-type-2") ||
@@ -723,17 +733,18 @@ export function presetMappingIssue(
   ) {
     return undefined;
   }
+  const issue = character === "archaic-koppa"
+    ? "unresolved-preset-mapping"
+    : character === "stigma" || character === "koppa" ||
+        character === "sampi"
+    ? "undefined-preset-mapping"
+    : undefined;
   // ISO's separate numeral table permits decimal indexing when requested.
   if (
-    options.text.numerals === "decimal" &&
-    isGreekNumeralContext(document, index)
+    issue === undefined || options.text.numerals === "decimal" &&
+      isGreekNumeralContext(document, index, context)
   ) return undefined;
-
-  if (character === "archaic-koppa") return "unresolved-preset-mapping";
-  if (
-    character === "stigma" || character === "koppa" || character === "sampi"
-  ) return "undefined-preset-mapping";
-  return undefined;
+  return issue;
 }
 
 /**

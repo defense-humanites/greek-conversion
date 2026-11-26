@@ -352,9 +352,13 @@ export function convertPassagesDetailed(
     for (const token of readWith(targetReader, output, writing, true, read)) {
       target.push(token);
     }
+    // One token at a time: spread into push(), the spans of a text of more
+    // than about 120,000 tokens overflow the call stack.
     const outputRead = readSpans(output, read);
-    readStarts.push(...outputRead.starts);
-    readEnds.push(...outputRead.ends);
+    for (let i = 0; i < outputRead.starts.length; i++) {
+      readStarts.push(outputRead.starts[i]);
+      readEnds.push(outputRead.ends[i]);
+    }
   }
   // A token the output dropped has an empty span where the output of the
   // next token starts, as in a conversion of the whole text.
