@@ -648,8 +648,10 @@ export type NearCases = Map<number, NearCase>;
 
 /**
  * Whether the word of one capital at `index` is among words in capitals: the
- * nearest word on either side, words of one letter and numerals aside, is in
- * capitals, and neither is in small letters (`ΘΕΟΣ Θ`, but not `Θ, ϑ, θ`).
+ * nearest word on either side, words of one letter aside, is in capitals,
+ * and neither is in small letters (`ΘΕΟΣ Θ`, but not `Θ, ϑ, θ`). A number
+ * or a numeral ends the search on its side (`ΘΕΟΣ ιβʹ Θ`), as
+ * {@link caseNear} says.
  * `near` keeps the cases found past each side's words of one capital, for
  * the searches of one document.
  */

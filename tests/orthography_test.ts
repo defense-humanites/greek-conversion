@@ -123,6 +123,12 @@ test("writes a capital on its own in full capitals among words in capitals", () 
     ["Ῥ.", "Rh."],
     ["ABC Θ", "ABC TH"],
     ["abc Θ ΛΟΓΟΣ", "abc Th LOGOS"],
+    // A number or a numeral ends the search on its side: its case, or that
+    // of its letters, says nothing of the words, and it may be written as a
+    // number.
+    ["ΘΕΟΣ ιβʹ Θ", "THEOS ibʹ Th"],
+    ["ΘΕΟΣ 12 Θ", "THEOS 12 Th"],
+    ["Θ ιβʹ ΘΕΟΣ", "Th ibʹ THEOS"],
     // So does a vowel with a rough breathing on its own, such as the
     // article.
     ["Ὁ δὲ", "Ho dè"],
