@@ -64,7 +64,7 @@
     "dprint": "0.65.0",
     "dprint-plugin-yaml": "0.6.0",
     "esbuild": "0.28.2",
-    "greek-conversion-previous": "npm:@humanities/greek-conversion@1.0.0-rc.13",
+    "greek-conversion-previous": "npm:@humanities/greek-conversion@1.0.0-rc.14",
     "jsr": "0.14.3",
     "lucide-static": "1.76.0",
     "mitata": "1.0.34",
