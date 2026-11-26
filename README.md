@@ -43,9 +43,10 @@ between scripts:
   the TLG's Beta Code; write in the style of the uncial manuscripts; romanize
   for a library catalogue after ALA-LC, whose table runs to 1453.
 - **Modern Greek**: transcribe names as Greek passports, road signs, and
-  maps write them, after ELOT 743 and ISO 843, which the United Nations
-  adopted (`μπ` at a word's edge as `b`, `ευ` as `ev` or `ef`); transliterate
-  after ISO 843 Type 1, which converts back, or ALA-LC for library records;
+  maps write them, after ELOT 743, which the United Nations and BGN/PCGN
+  adopted and ISO 843 gives as its Type 2 (`μπ` at a word's edge as `b`, `ευ`
+  as `ev` or `ef`); transliterate after ISO 843 Type 1, which ELOT 743 has
+  followed since 2001 and which converts back, or ALA-LC for library records;
   turn polytonic text into monotonic, after the monotonic accent rules; set
   capitals without accents, as Greek does; build search keys and URL slugs.
 
