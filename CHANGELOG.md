@@ -76,6 +76,7 @@ change.
   `i orgánosi Ch kai` under ISO 843 type 2). A bundle that writes
   transliteration grows by 0.9 kB minified, 0.3 kB with gzip, and by 0.2 kB
   if it writes Greek too.
+
 ### Fixed
 
 - **A diphthong of two capitals keeps them before lowercase text** in
@@ -85,6 +86,22 @@ change.
   as that diphthong and was written `Heia`; its output now converts again to
   itself, as `ἝΙα` does under the presets that drop the accent
   (`ala-lc-modern`, `ala-lc-ancient`, `sbl-general`).
+- **The marks typed on a Greek koronis in transliteration are the vowel's**
+  (#183). The reader puts the koronis (U+1FBD) on the vowel before it, and
+  kept the combining marks after it as text, which joined the vowel when the
+  output was read again, in another order: in monotonic Greek, `Ã᾽̈to` gave
+  `Ά̈το`, then `Α̈́το`. They go with the koronis, onto the vowel (`Α̈́το`, at
+  once). At the start of a word, a vowel with a koronis takes no smooth
+  breathing besides, which Greek writes alike: `a᾽to` gave `ἀ̓το`, and gives
+  `ἀτο`. A smooth breathing typed on the koronis is the koronis again, and a
+  macron on eta or omega the letter's own length; under
+  `transliteration.keraia: "bnf"`, a keraia after the koronis is written
+  `ʹ`, since an acute there is the vowel's (`ψἀʹ` gives `psa᾽ʹ`). Of 2.9
+  million conversions of a vowel, a koronis, and up to two marks that the
+  reader knows, under eight sets of options, every output into Greek or Beta
+  Code converts again to itself. Into transliteration, 12,096 do not; all but
+  108 of them fail as well with the same marks typed on the vowel, before the
+  koronis or without it.
 - **A letter that a converter keeps out of its scope reads back as a letter
   of its word** (#173). The output of such a converter converts again to
   itself, and back to the source when `convertDetailed()` reports no loss,

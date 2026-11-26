@@ -365,6 +365,22 @@ function readTransliteration(
           // No token: the coronis joins the previous one's span.
           if (starts !== undefined) starts.pop();
           i++;
+          // The marks typed on the koronis go with it, onto the vowel, where
+          // Greek output writes them: kept as text, they would join the
+          // vowel when read again, in another order (#183).
+          // A smooth breathing is the koronis again, which Greek writes
+          // alike, and a macron on eta or omega is the letter's own length.
+          while (i < chars.length && markBit(chars[i]) !== 0) {
+            const mark = GREEK_MARKS.get(chars[i]) ?? "iota-subscript";
+            if (
+              mark !== "smooth" &&
+              !(mark === "macron" &&
+                (previous.letter === "eta" || previous.letter === "omega"))
+            ) {
+              previous.diacritics = withDiacritic(previous.diacritics, mark);
+            }
+            i++;
+          }
           continue;
         }
       }
@@ -987,6 +1003,8 @@ function inferInitialBreathings(
     } else if (
       infersSmooth &&
       !target.diacritics.has("rough") &&
+      // A vowel bears a breathing or a coronis, which Greek writes alike.
+      !target.diacritics.has("coronis") &&
       // A diaeresis and a breathing never share a vowel; Greek writes an
       // initial `ϊ` or `ϋ` without a breathing, so none is inferred.
       !target.diacritics.has("diaeresis") &&

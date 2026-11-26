@@ -1,6 +1,11 @@
 import { test } from "node:test";
 import { assertEquals, assertNfcEquals } from "./assertions.ts";
-import { convert, convertDetailed, createConverter } from "../src/mod.ts";
+import {
+  type ConversionOptions,
+  convert,
+  convertDetailed,
+  createConverter,
+} from "../src/mod.ts";
 import { parse } from "../src/document.ts";
 import { MEDIAL_BETA_SYMBOL, SMOOTH_ROUGH_DOUBLE_RHO } from "./fixtures.ts";
 
@@ -677,6 +682,69 @@ test("preserves the provenance of the Greek coronis scalar", () => {
     convert(transliteration, "transliteration", "greek", greekCoronis),
     "κἀγώ",
   );
+});
+
+test("reads the marks typed on a Greek koronis as the vowel's", () => {
+  // A combining mark after U+1FBD sits on the koronis, which the reader
+  // puts on the vowel; kept as text, it joined the vowel once the coronis
+  // was written as a mark, or dropped, in another order (#183).
+  const monotonic = { greek: { accentuation: "monotonic" } } as const;
+  const cases: [string, ConversionOptions][] = [
+    ["\u00C3\u1FBD\u0308to", monotonic],
+    ["ka\u1FBD\u0308to", {}],
+    ["ka\u1FBD\u0308to", monotonic],
+    ["YO\u1FBD\u0301A", {}],
+    // At the start of a word, the coronis stands for the smooth breathing,
+    // which is not inferred besides.
+    ["a\u1FBDto", {}],
+    // A smooth breathing typed on the koronis is the koronis again, and a
+    // macron on eta or omega the letter's own length.
+    ["ka\u1FBD\u0313to", {}],
+    ["ka\u1FBD\u0313to", { preset: "iso-843-type-2" }],
+    ["k\u0113\u1FBD\u0304to", { preset: "iso-843-type-1" }],
+    ["\u014D\u1FBD\u0304", { preset: "iso-843-type-2" }],
+    // Under BnF, a keraia after the koronis is written as it is: an acute
+    // there would be the vowel's.
+    ["i\u1FBD\u02B9", { preset: "bnf-core" }],
+  ];
+  for (const [latin, options] of cases) {
+    for (const target of ["greek", "transliteration", "beta-code"] as const) {
+      const result = convertDetailed(latin, "transliteration", target, options);
+      assertEquals(
+        convert(result.output, target, target, options),
+        result.output,
+        `${latin} → ${target} ${JSON.stringify(options)}`,
+      );
+      if (!result.lossy) {
+        assertEquals(
+          convert(result.output, target, "transliteration", options),
+          convert(latin, "transliteration", "transliteration", options),
+        );
+      }
+    }
+  }
+  assertNfcEquals(
+    convert("\u00C3\u1FBD\u0308to", "transliteration", "greek", monotonic),
+    "\u0391\u0308\u0301το",
+  );
+  assertNfcEquals(convert("a\u1FBDto", "transliteration", "greek"), "ἀτο");
+  assertEquals(
+    convert("ka\u1FBD\u0313to", "transliteration", "beta-code"),
+    "ka)to",
+  );
+  const bnf = { preset: "bnf-core" } as const;
+  for (const greek of ["ψἀʹ", "Νἰʹ", "ΤἈʹ"]) {
+    const result = convertDetailed(greek, "greek", "transliteration", bnf);
+    assertEquals(result.lossy, false, greek);
+    assertEquals(
+      convert(result.output, "transliteration", "transliteration", bnf),
+      result.output,
+    );
+    assertEquals(
+      convert(result.output, "transliteration", "greek", bnf),
+      convert(greek, "greek", "greek", bnf),
+    );
+  }
 });
 
 test("does not infer coronis from ordinary apostrophe punctuation", () => {

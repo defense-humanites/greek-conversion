@@ -169,10 +169,9 @@ source is a literal, which Greek output copies, and which Greek reads as
 [Punctuation and numerals](punctuation-and-numerals.md#consequences)). Converting such output again may change it, and `convertDetailed()`
 reports the loss of the literal (`unrepresented-literal`). Type `#1532` in
 Beta Code, and `kai` in transliteration, or the accent's own code (`a/`)
-rather than U+0301. So may a combining mark that a reader keeps as a
-literal, after a sign that it reads as a mark: in transliteration, the
-acute after the coronis of `YO᾽́A` joins the omicron once the coronis is
-removed, here from a word in capitals (`ΥΌΑ`, then `ΥΟΑ`). The breathings and accents that older editions print
+rather than U+0301. A combining mark typed on a sign that a reader reads as
+a mark goes with it: in transliteration, the acute after the koronis of
+`YO᾽́A` is the omicron's, as the koronis is. The breathings and accents that older editions print
 before a capital, as signs of their own (U+1FBF, U+1FFE, and their compounds
 with an accent), and the tonos that typewriters and ISO 8859-7 put before
 one (U+0384), are the exception: every reader reads them, as the capital's

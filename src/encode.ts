@@ -1454,7 +1454,12 @@ function bnfRightKeraia(
 ): string {
   return preservesDiacritic("acute", options, "transliteration") &&
       previous?.kind === "grapheme" &&
-      !ACCENTS.some((accent) => previous.diacritics.has(accent))
+      !ACCENTS.some((accent) => previous.diacritics.has(accent)) &&
+      // An acute after the Greek koronis is the vowel's, as the reader reads
+      // the marks typed on it: the keraia is written as it is there.
+      !(previous.diacritics.has("coronis") &&
+        options.transliteration?.coronis === "greek" &&
+        preservesDiacritic("coronis", options, "transliteration"))
     ? "\u0301"
     : DEXIA_KERAIA;
 }
