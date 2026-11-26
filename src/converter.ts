@@ -14,13 +14,15 @@ import {
   type OutputPositions,
 } from "./losses.ts";
 import {
+  adjacentIndex,
   type DocumentContext,
   isBoundaryTransparent,
+  isElisionMark,
   isKeptLetter,
   isVowel,
-  isWordInitial,
   keptLetter,
   sigmaEndsWord,
+  startsTitleCaseWord,
 } from "./context.ts";
 import {
   assertFormat,
@@ -1536,7 +1538,7 @@ function keptCase(kept: KeptLetters, index: number): boolean {
     case "lowercase":
       return false;
     case "title":
-      return isWordInitial(kept.parsed, index);
+      return startsTitleCaseWord(kept.parsed, index);
     default:
       return (kept.parsed[index] as Grapheme).uppercase;
   }
@@ -1627,7 +1629,9 @@ const SMALL_SIGMA_CODE = /^s[123]?/;
 
 /**
  * The word of the letter at `index`, with the token on either side of it (a
- * space, a keraia, an apostrophe), written in the source format. Only the
+ * space, a keraia, an apostrophe), written in the source format. Before an
+ * apostrophe, it takes the token before it too, which title case reads
+ * (`startsTitleCaseWord()`: `τ’ἀνήρ` keeps a small alpha). Only the
  * shape of a sigma depends on more than the word, and is decided on the whole
  * source (here for Greek, in `writtenSpelling()` for the Beta Code sigma
  * codes), so that a conversion writes no more of the source again than the
@@ -1646,6 +1650,9 @@ function writtenWord(
   let end = index + 1;
   while (end < document.length && inWord(document[end])) end++;
   start = Math.max(0, start - 1);
+  if (isElisionMark(document[start])) {
+    start = Math.max(0, adjacentIndex(document, start, -1));
+  }
   end = Math.min(document.length, end + 1);
 
   const tokens = document.slice(start, end);

@@ -5,6 +5,7 @@ import {
   type ConversionOptions,
   convert,
   convertDetailed,
+  createConverter,
   reencode,
 } from "../src/mod.ts";
 
@@ -801,6 +802,29 @@ test("title case leaves the letter after an apostrophe inside its word", () => {
     }),
     "Δ’ἐγώ Δ’ Ἐγώ",
   );
+  // The letter before the apostrophe may be of another script, with a mark
+  // or not, or one that a converter keeps: it is a letter of its word.
+  const title = { text: { letterCase: "title" } } as const;
+  assertNfcEquals(
+    convert("l’ἀνήρ é’ἀνήρ", "greek", "greek", title),
+    "l’ἀνήρ é’ἀνήρ",
+  );
+  assertNfcEquals(
+    convert("l’ἀνήρ", "greek", "transliteration", title),
+    "l’anḗr",
+  );
+  const noAlpha = createConverter({ exclude: ["alpha"] });
+  for (
+    const [input, from, to, expected] of [
+      ["τ’ἀνήρ", "greek", "greek", "Τ’ἀνήρ"],
+      ["t’anḗr", "transliteration", "greek", "Τ’aνήρ"],
+      ["ā’ho", "transliteration", "greek", "Ā’ὁ"],
+    ] as const
+  ) {
+    const output = noAlpha.convert(input, from, to, title);
+    assertNfcEquals(output, expected);
+    assertNfcEquals(noAlpha.convert(output, to, to, title), output);
+  }
 });
 
 test("upsilon written v or f reads back after an eta written i", () => {

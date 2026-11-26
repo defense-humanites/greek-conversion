@@ -317,7 +317,11 @@ function adjacentToken(
   return document[adjacentIndex(document, index, step)];
 }
 
-function adjacentIndex(
+/**
+ * The index of the token next to `index` in the direction of `step`, past
+ * the combining marks and join controls that do not end a word.
+ */
+export function adjacentIndex(
   document: Document,
   index: number,
   step: 1 | -1,
@@ -695,15 +699,22 @@ export function followsCoronisApostrophe(
 }
 
 /**
- * Whether the letter at `index` follows a letter and an apostrophe with no
- * space between them, for title case (see followsCoronisApostrophe()).
+ * Whether title case writes the letter at `index` as a capital: the letter
+ * starts a word, and follows no apostrophe that follows a letter with no
+ * space between them. Such an apostrophe is a coronis written so and read
+ * back (`Ka’gṓ`, `Taf’tón`, where the upsilon of `ταὐτόν` is written `f`),
+ * which was a mark of the word, or an elision written without a space. The
+ * letter before it may be of another script, or one that a converter keeps
+ * (`l’ἀνήρ`), as for the other rules of the word (see `isWordLetter()`).
  */
-export function followsApostropheInWord(
+export function startsTitleCaseWord(
   document: Document,
   index: number,
 ): boolean {
-  return isElisionMark(document[index - 1]) &&
-    document[index - 2]?.kind === "grapheme";
+  if (!isWordInitial(document, index)) return false;
+  const mark = adjacentIndex(document, index, -1);
+  return !isElisionMark(document[mark]) ||
+    !isWordLetter(document[adjacentIndex(document, mark, -1)]);
 }
 
 /** Whether a literal is an apostrophe: elision, or a coronis written so. */
