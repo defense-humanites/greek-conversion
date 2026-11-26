@@ -30,9 +30,12 @@
 `greek-conversion` is a TypeScript library for everyone who moves Greek
 between scripts:
 
-- **Ancient Greek**: transliterate an edition after SBL, the BnF, or
-  ALA-LC; read and write the Beta Code of the TLG and Perseus; keep the
-  accents, breathings, and letter forms of polytonic text.
+- **Ancient Greek**: read polytonic Greek with its breathings, iota
+  subscripts, coronides, and quantity marks, and digamma, koppa, and sampi;
+  transliterate an edition with every accent and length mark, or after SBL,
+  the BnF, ALA-LC, or ISO 843; read and write the Beta Code of the TLG and
+  Perseus, which notes every mark; keep an elision as the edition writes it,
+  and on request the iota adscript and the coronis of a crasis.
 - **Byzantine Greek**, under the same conventions: read the breathings that
   older editions print before a capital, the καί symbol and the other signs
   for several letters, and alphabetic numerals; keep the lunate sigma, the
