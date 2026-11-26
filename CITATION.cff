@@ -5,11 +5,11 @@ message: >-
 type: software
 title: greek-conversion
 abstract: >-
-  A TypeScript library that converts Ancient and Modern Greek between Greek
-  script, Beta Code, and Latin script, with standards-based presets and
-  information-loss diagnostics. Each preset implements a published convention
-  (ALA-LC, BnF, ISO 843 and ELOT 743, SBL, TLG, Perseus) as a set of atomic
-  conversion options.
+  A TypeScript library that converts Ancient, Byzantine, and Modern Greek
+  between Greek script, Beta Code, and Latin script, with standards-based
+  presets and information-loss diagnostics. Each preset implements a
+  published convention (ALA-LC, BnF, ISO 843 and ELOT 743, SBL, TLG, Perseus)
+  as a set of atomic conversion options.
 authors:
   - family-names: Boquet
     given-names: Antoine

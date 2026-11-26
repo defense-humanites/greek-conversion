@@ -8,9 +8,9 @@
 </p>
 
 <p align="center">
-  <b>A TypeScript library that converts Ancient and Modern Greek between
-  Greek script, Beta Code, and Latin script, with standards-based presets
-  and information-loss diagnostics.</b>
+  <b>A TypeScript library that converts Ancient, Byzantine, and Modern Greek
+  between Greek script, Beta Code, and Latin script, with standards-based
+  presets and information-loss diagnostics.</b>
 </p>
 
 <p align="center">
