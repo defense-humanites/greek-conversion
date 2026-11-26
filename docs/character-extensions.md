@@ -213,10 +213,12 @@ the rules around it decide again what they decided. With alpha out of scope,
 monotonic Beta Code, keeps its accent: `e/α`. A second conversion still
 reads otherwise:
 
-- the marks of a kept letter spelled in its source format, which the target
-  reads as its own characters: `a+`, from Beta Code with alpha out of scope,
-  gives `a+` in Greek, whose `+` reads back as a plus sign (`a%7` in Beta
-  Code);
+- the spelling of a kept letter in its source format, its case, marks, and
+  codes included, which the target reads as its own characters: `a+`, from
+  Beta Code with alpha out of scope, gives `a+` in Greek, whose `+` reads
+  back as a plus sign (`a%7` in Beta Code), and `1’a`, under ISO 843, gives
+  `1’a`, whose apostrophe transliteration writes again as a modifier letter
+  (`1ʼa`), lest it read back as a smooth breathing;
 - a kept letter in the target's own format, which reads back as that letter:
   with sigma out of scope, a `Σ` kept in Greek output is a sigma, which can
   begin a numeral under decimal numerals (`ΣΤ΄`);
@@ -228,6 +230,14 @@ reads otherwise:
 - under decimal numerals, a numeral after a kept letter whose combining mark
   the target reads apart: `μὰςʹ`, with alpha out of scope, gives `mὰsʹ` in
   transliteration, whose `sʹ` reads back as the numeral 200.
+
+`convertDetailed()` reports a kept letter whose output does not convert back
+to its spelling in the source as a literal that the target does not
+represent (`unrepresented-literal`). It reports so the kept letters with
+marks of a conversion that would otherwise be lossless, when the output does
+not convert back as a whole. A conversion that it reports as lossless
+therefore converts back to its source, as the [guarantees](guarantees.md)
+say.
 
 `convertDetailed()` keeps scope diagnostics separate from conversion losses:
 

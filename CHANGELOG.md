@@ -57,6 +57,27 @@ change.
 
 ### Fixed
 
+- **A converter reports a letter kept out of its scope whose output does not
+  convert back.** A kept letter is written as its source spells it, and the
+  target may read that spelling as other characters:
+  - with alpha out of scope, `a)` and `*a`, from Beta Code, gave `a)` and
+    `*a` in Greek, which convert back to `a]1` and `%2a`;
+  - with stigma out of scope, `a#2b` gave `α#2β`, which converts back to
+    `a%1012b`;
+  - with alpha out of scope, `1’a`, under ISO 843, gave `1’a` in Greek,
+    whose apostrophe transliteration writes again as a modifier letter
+    (`1ʼa`), lest it read back as a smooth breathing.
+
+  `convertDetailed()` called these conversions lossless. It now reports such
+  a letter as a literal that the target does not represent
+  (`unrepresented-literal`), and so the letters kept with marks when the
+  output does not convert back as a whole: the target may read their
+  combining marks apart, and a numeral after them otherwise (`ᾆωʹ` gives
+  `ᾆōʹ`, whose `ōʹ` reads back as 800 under decimal numerals). A lossless
+  conversion now converts back to its source without exception: the
+  guarantees no longer except the marks of kept letters. The check converts
+  back each spelling of a kept letter once, and the whole output only when a
+  letter kept with marks would otherwise leave the conversion lossless.
 - **Five more inputs convert in a time proportional to their length.** In
   each, every letter of a long run read the rest of the run again:
   - letters under one overline written into Beta Code, and `<…>` read from
