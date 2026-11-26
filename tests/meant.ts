@@ -56,24 +56,59 @@ const BREATHING_CALLS = [
 const LONE_CAPITAL =
   "A capital on its own takes the case of the nearest words on either side, as a word of one letter does in Greek: it is written in full capitals only among words in capitals.";
 
+/**
+ * The changes of a capital on its own: the conversions of `inputs`, written
+ * in `from`, into transliteration, and the other calls given.
+ */
+function loneCapitals(
+  from: string,
+  inputs: readonly string[],
+  converterCalls: readonly string[] = [],
+  calls: readonly string[] = [],
+): MeantChange[] {
+  const written = [
+    "convert",
+    "core convert",
+    "convertDetailed",
+    ...converterCalls,
+  ].map((call) => `${call}(${from} → transliteration)`);
+  return inputs.flatMap((input) =>
+    [...written, ...calls].map((call) => ({
+      input,
+      call,
+      reason: LONE_CAPITAL,
+    }))
+  );
+}
+
 /** The changes of output that are meant. */
 export const MEANT: readonly MeantChange[] = [
-  { input: "῎῾Ρ", reason: LONE_CAPITAL },
-  { input: "ἀίδηλος ῎῾Ρ", reason: LONE_CAPITAL },
-  { input: "῎῾Ρ\nὦ", reason: LONE_CAPITAL },
-  { input: "ἀροἱ, ἐγώ, ῎῾Ρ", reason: LONE_CAPITAL },
-  { input: ";έ0\u0300\u0374\n\u0304Χ", reason: LONE_CAPITAL },
-  { input: "\u0342\u0307\u00A0ί\nΧ\u0305—", reason: LONE_CAPITAL },
-  { input: "Ρ\u2009Χξ\u20DD—Ψ", reason: LONE_CAPITAL },
-  { input: "Ϝϝη͵φ'Φ\u0342", reason: LONE_CAPITAL },
-  { input: "a)i/dhlos %35*(r", reason: LONE_CAPITAL },
-  { input: "%35*(r\nw)=", reason: LONE_CAPITAL },
-  { input: "%35*(r", reason: LONE_CAPITAL },
-  { input: "a)roi(, e)gw/, %35*(r", reason: LONE_CAPITAL },
-  { input: "aídēlos ῎RH", reason: LONE_CAPITAL },
-  { input: "῎RH\nō\u0303", reason: LONE_CAPITAL },
-  { input: "῎RH", reason: LONE_CAPITAL },
-  { input: "arhoi, egṓ, ῎RH", reason: LONE_CAPITAL },
+  ...loneCapitals(
+    "greek",
+    ["῎῾Ρ"],
+    ["createConverter().convert", "createConverter().convertDetailed"],
+  ),
+  ...loneCapitals("greek", [
+    "ἀίδηλος ῎῾Ρ",
+    "῎῾Ρ\nὦ",
+    "ἀροἱ, ἐγώ, ῎῾Ρ",
+    ";έ0\u0300\u0374\n\u0304Χ",
+    "\u0342\u0307\u00A0ί\nΧ\u0305—",
+    "Ρ\u2009Χξ\u20DD—Ψ",
+    "Ϝϝη͵φ'Φ\u0342",
+  ]),
+  ...loneCapitals("beta-code", [
+    "a)i/dhlos %35*(r",
+    "%35*(r\nw)=",
+    "%35*(r",
+    "a)roi(, e)gw/, %35*(r",
+  ]),
+  ...loneCapitals(
+    "transliteration",
+    ["aídēlos ῎RH", "῎RH\nō\u0303", "῎RH", "arhoi, egṓ, ῎RH"],
+    [],
+    ["reencode(transliteration)"],
+  ),
   {
     input: "ότaω7Σ",
     label: "monotonic, decomposed",
