@@ -8,11 +8,15 @@ import {
   type Preset,
   type ResolvedConversionOptions,
 } from "./options.ts";
-import { isGreekNumeralContext } from "./context.ts";
+import { type DocumentContext, isGreekNumeralContext } from "./context.ts";
+import { supplyKaiAccents } from "./kai_accent.ts";
+import { readStigmaLigatures } from "./ligatures.ts";
 import type { Document, Format, Letter } from "./model.ts";
+import { applyMonotonicOrthography } from "./orthography.ts";
 import { hasPreparedMark, PREPARED } from "./prepared_mark.ts";
 import { type PreparedOptions, preparedProfiles } from "./prepared.ts";
 import { sealProfile } from "./profile_cache.ts";
+import { linkSteps, type Steps } from "./steps.ts";
 
 /** Partial option fields contributed by one registered preset. */
 export type PresetOptions = Omit<ConversionOptions, "preset" | "source">;
@@ -33,6 +37,18 @@ const ALA_LC_NUMERAL_ONLY = new Set<Letter>([
   "archaic-koppa",
   "sampi",
 ]);
+
+/**
+ * Whether a converter bound to a preset checks the letters it reads: whether
+ * {@link isCharacterInPresetScope} may leave one out, or
+ * {@link presetMappingIssue} report one. The scopes of BnF and of the TLG
+ * hold every character, and neither preset reports a mapping: a converter
+ * bound to one keeps no letter, and reads as `convert()` does. Both
+ * functions answer for these presets by this one.
+ */
+export function presetChecksLetters(preset: Preset): boolean {
+  return preset !== "bnf-core" && preset !== "tlg-core";
+}
 
 const OMIT_NON_ROUGH_DIACRITICS = {
   all: "remove",
@@ -56,6 +72,7 @@ const PRESET_OPTIONS = {
       muPi: "b-initial",
       nasalGamma: "nasal-medial-kappa",
       nuTau: "d-underline-initial",
+      rho: "marked",
       upsilon: "y-with-diphthong-u",
     },
     text: {
@@ -71,6 +88,7 @@ const PRESET_OPTIONS = {
       keraia: "bnf",
       lunateSigma: "c",
       quantity: "omit",
+      rho: "marked",
       smoothBreathing: "greek",
       upsilon: "y-with-au-eu-ou",
     },
@@ -87,6 +105,7 @@ const PRESET_OPTIONS = {
       eta: "i",
       nasalGamma: "literal",
       phi: "f",
+      rho: "marked",
       smoothBreathing: "apostrophe",
       upsilon: "y-with-au-eu-ou",
     },
@@ -102,6 +121,7 @@ const PRESET_OPTIONS = {
       muPi: "b-initial-final",
       nasalGamma: "nasal-except-kappa",
       phi: "f",
+      rho: "marked",
       smoothBreathing: "apostrophe",
       upsilon: "y-with-ou-v-f",
     },
@@ -172,12 +192,18 @@ export function resolveConversionOptions(
   options: ConversionOptions | PreparedOptions = {},
 ): ResolvedConversionOptions {
   const prepared = preparedProfiles(options);
-  return prepared === undefined
-    ? resolveConversionProfiles(options as ConversionOptions).writing
-    : copyProfile(prepared.writing);
+  return copyProfile(
+    prepared === undefined
+      ? resolveConversionProfiles(options as ConversionOptions).writing
+      : prepared.writing,
+  );
 }
 
-/** A copy of resolved options that the caller may change. */
+/**
+ * A copy of resolved options that the caller may change, without the steps
+ * that the library links to them (see `steps.ts`): given back as options,
+ * they are resolved again.
+ */
 function copyProfile(
   profile: ResolvedConversionOptions,
 ): ResolvedConversionOptions {
@@ -189,6 +215,17 @@ function copyProfile(
     diacritics: { ...profile.diacritics },
   };
 }
+
+/**
+ * The steps that only options outside the presets take, which the options
+ * resolved here carry (see `steps.ts`): a bundle that resolves no options
+ * leaves them out.
+ */
+const STEPS: Steps = {
+  kaiAccents: supplyKaiAccents,
+  monotonic: applyMonotonicOrthography,
+  stigmaLigatures: readStigmaLigatures,
+};
 
 /**
  * The two profiles of a conversion: the options that write its output, and
@@ -318,7 +355,10 @@ function optionsOfKey(key: string): ConversionOptions {
   };
 }
 
-/** Resolves validated options, whose errors name their paths after `prefix`. */
+/**
+ * Resolves validated options, whose errors name their paths after `prefix`,
+ * with the steps that they take (see `steps.ts`).
+ */
 function resolveProfile(
   options: ConversionOptions,
   prefix: string,
@@ -328,7 +368,7 @@ function resolveProfile(
   const merged = mergeConversionOptions(base, custom);
   assertCompatibleOptions(merged, preset, custom, prefix);
 
-  return {
+  return linkSteps({
     transliteration: {
       ...DEFAULT_CONVERSION_OPTIONS.transliteration,
       ...merged.transliteration,
@@ -349,7 +389,7 @@ function resolveProfile(
       ...DEFAULT_CONVERSION_OPTIONS.diacritics,
       ...merged.diacritics,
     },
-  };
+  }, STEPS);
 }
 
 /**
@@ -679,27 +719,36 @@ function expandDiacritics(
   return expanded as DiacriticClassOptions;
 }
 
-/** Returns whether one character occurrence is inside a bound preset's scope. */
+/**
+ * Returns whether one character occurrence is inside a bound preset's scope.
+ * `context` keeps what the numerals of `document` read for its other
+ * occurrences (`isGreekNumeralContext()`).
+ */
 export function isCharacterInPresetScope(
   preset: Preset,
   character: string,
   document: Document,
   index: number,
+  context?: DocumentContext,
 ): boolean {
-  if (!ADDITIONAL_LETTERS.has(character as Letter)) return true;
+  if (
+    !ADDITIONAL_LETTERS.has(character as Letter) ||
+    !presetChecksLetters(preset)
+  ) return true;
 
   const letter = character as Letter;
   switch (preset) {
     case "ala-lc-ancient":
       if (letter === "digamma" || letter === "archaic-koppa") return true;
       return ALA_LC_NUMERAL_ONLY.has(letter) &&
-        isGreekNumeralContext(document, index);
+        isGreekNumeralContext(document, index, context);
     case "ala-lc-modern":
       return ALA_LC_NUMERAL_ONLY.has(letter) &&
-        isGreekNumeralContext(document, index);
+        isGreekNumeralContext(document, index, context);
     case "perseus":
     case "sbl-general":
       return false;
+    // `bnf-core` and `tlg-core` check no letter (presetChecksLetters()).
     case "bnf-core":
     case "iso-843-type-1":
     case "iso-843-type-2":
@@ -708,7 +757,11 @@ export function isCharacterInPresetScope(
   }
 }
 
-/** A recognized ISO source character without an established Type 1 or 2 mapping. */
+/**
+ * A recognized ISO source character without an established Type 1 or 2
+ * mapping. `context` keeps what the numerals of `document` read for its
+ * other occurrences (`isGreekNumeralContext()`).
+ */
 export function presetMappingIssue(
   preset: Preset,
   character: Letter,
@@ -716,24 +769,27 @@ export function presetMappingIssue(
   index: number,
   target: Format,
   options: ResolvedConversionOptions,
+  context?: DocumentContext,
 ): "undefined-preset-mapping" | "unresolved-preset-mapping" | undefined {
+  // Only ISO 843 reports mappings, as presetChecksLetters() counts on.
   if (
     (preset !== "iso-843-type-1" && preset !== "iso-843-type-2") ||
     target !== "transliteration"
   ) {
     return undefined;
   }
+  const issue = character === "archaic-koppa"
+    ? "unresolved-preset-mapping"
+    : character === "stigma" || character === "koppa" ||
+        character === "sampi"
+    ? "undefined-preset-mapping"
+    : undefined;
   // ISO's separate numeral table permits decimal indexing when requested.
   if (
-    options.text.numerals === "decimal" &&
-    isGreekNumeralContext(document, index)
+    issue === undefined || options.text.numerals === "decimal" &&
+      isGreekNumeralContext(document, index, context)
   ) return undefined;
-
-  if (character === "archaic-koppa") return "unresolved-preset-mapping";
-  if (
-    character === "stigma" || character === "koppa" || character === "sampi"
-  ) return "undefined-preset-mapping";
-  return undefined;
+  return issue;
 }
 
 /**

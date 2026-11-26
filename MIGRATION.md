@@ -16,6 +16,14 @@ npx jsr add @humanities/greek-conversion@1.0.0-rc.14
 
 The package is ESM-only.
 
+## Updating from `1.0.0-rc.14`
+
+`iso-843-type-1`, `iso-843-type-2`, `ala-lc-modern`, and `bnf-core` write a
+double rho `rr` unless Greek writes a rough breathing on it, as their tables
+do: `Ερρίκος` gives `Erríkos` under `iso-843-type-2` (rc.14: `Errhíkos`), and
+`Πύρρος` gives `Pýrros` under `bnf-core` (rc.14: `Pýrrhos`). Add
+`transliteration: { rho: "contextual" }` to keep the previous spelling.
+
 ## Updating from `1.0.0-rc.13`
 
 In transliteration, a capital on its own, such as a letter name, takes the

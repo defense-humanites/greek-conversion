@@ -22,9 +22,13 @@ protects these behaviors.
   the letters and words around it, when one of them reads back otherwise
   after a loss (under `bnf-core`, an acute on a consonant reads back as a
   keraia: `Λ́Θ` gives `ĹTH`, then `ĹTh`),
-  and letters that a converter keeps out of its scope, in the cases that
+  letters that a converter keeps out of its scope, in the cases that
   [Character extensions](character-extensions.md#restricting-the-repertoire)
-  lists, frequent between Beta Code and transliteration.
+  lists, frequent between Beta Code and transliteration, and monotonic
+  accentuation with a transliteration that writes eta and omega without a
+  length mark (`longVowels: "omit"`, as `iso-843-type-2` does), where a
+  word read back with an iota or an omicron may be a monosyllable, whose
+  accent goes (`ή` gives `í`, then `i`).
 - **A lossless conversion is reversible.** When `convertDetailed()` reports
   `lossy: false`, converting the output back with the same options gives the
   same canonical text, but for the marks of a letter that a converter keeps
@@ -199,7 +203,9 @@ at the start of a word (`῾Ρωμαῖοι` is `Ῥωμαῖοι`, `΄Ελλη�
 - **It does not bound normalization.** Every conversion normalizes the text
   (`String.prototype.normalize()`), whose time grows with the square of the
   number of combining marks on one letter: thousands of them, which no text
-  has, take seconds. Limit the length of untrusted input accordingly.
+  has, take seconds, `convertDetailed()` from Beta Code most of all, since it
+  pairs each mark with the output. Limit the length of untrusted input
+  accordingly.
 
 ## What the engine covers
 

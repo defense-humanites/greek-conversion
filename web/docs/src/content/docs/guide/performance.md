@@ -78,10 +78,11 @@ yours.
   [Converters, options, and errors](/guide/converters/#prepare-options-once)
   shows.
 - **Converters.** A converter from `createConverter()` with nothing to look
-  for converts as fast as `convert()`. One bound to a preset checks each
-  letter against the preset's repertoire, and one with aliases or characters
-  of its own looks for their spellings: a long text takes about a third
-  longer. Create one for these, and not to bind a preset alone:
+  for converts as fast as `convert()`, and so does one bound to `bnf-core` or
+  `tlg-core`, whose repertoires hold every character. One bound to another
+  preset checks each letter against the preset's repertoire, and one with
+  aliases or characters of its own looks for their spellings: a long text
+  takes about a third longer. Create one for these, and not to bind a preset alone:
   `convert()` given the preset's name costs less.
 - **The first call.** Loading the package takes some tens of milliseconds
   in Node.js, and the first conversion one or two milliseconds more, while
@@ -97,8 +98,11 @@ as much. To keep memory flat on a corpus, convert it line by line or paragraph
 by paragraph: a call costing a few microseconds, this is no slower.
 
 One input is slow: thousands of combining marks on one letter, which no
-text has, take seconds to normalize. Limit the length of untrusted input
-accordingly, as [Guarantees and limits](/reference/guarantees/) says.
+text has. Normalizing them takes a time that grows with the square of their
+number. `convertDetailed()` from Beta Code is slower still, since it pairs
+each mark of the source with the output: 4,000 marks take about 5 ms to
+convert, but 1 to 3 s with `convertDetailed()`. Limit the length of untrusted
+input accordingly, as [Guarantees and limits](/reference/guarantees/) says.
 
 The tables kept for options do not grow with use: one for each preset and
 each set of prepared options, released with them, and a few dozen at most

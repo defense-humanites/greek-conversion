@@ -13,6 +13,7 @@ import {
   isGreekNumeralContext,
   isVowel,
   isVowelUpsilonAt,
+  isWordFinal,
   isWordInitial,
   isWordLetter,
 } from "../context.ts";
@@ -210,6 +211,9 @@ function readTransliteration(
   // tokens, which readSpacingMarks() may move.
   const smoothedByApostrophe = new Set<Token>();
   const systematicRho = transliteration?.rho === "systematic";
+  // Under `rho: "marked"`, `h` is written only for a rough breathing, which
+  // the second rho of a pair then has too.
+  const markedRho = transliteration?.rho === "marked";
   const circumflexAccent = transliteration?.circumflexAccent === "circumflex";
   // Without a length mark, e and o are epsilon and omicron, and a circumflex
   // on them is an accent: one that only the long vowel can bear.
@@ -424,7 +428,8 @@ function readTransliteration(
 
       if (
         !systematicRho &&
-        (previous?.kind !== "grapheme" || previous.letter !== "rho")
+        (markedRho || previous?.kind !== "grapheme" ||
+          previous.letter !== "rho")
       ) {
         rough = true;
       }
@@ -628,22 +633,32 @@ function readTransliteration(
     for (let k = 0; k < starts.length; k++) starts[k] = offsets[starts[k]];
   }
 
-  if (mayHaveSpacingSigns(text)) readSpacingMarks(out, starts);
-  if (nasalGamma !== "literal") {
-    inferNasalGammas(out, nasalGamma === "nasal-except-kappa");
-  }
   // A numeral, whose letters Type 2 writes as it reads them back (`ωυʹ` is
   // `ouʹ`), keeps the `o` and the separation the `y` gives, by a diaeresis.
+  // Before readSpacingMarks(), which joins tokens, so that the indices are
+  // those of the tokens read. The numerals of the tokens are found once: the
+  // loop changes letters and marks only, and a long word of such omegas
+  // would otherwise be read to its end from each of them.
+  const numerals: DocumentContext = {};
   for (const index of omegaBeforeY) {
     const omega = out[index];
     const next = out[index + 1];
     if (
       omega.kind === "grapheme" && next?.kind === "grapheme" &&
-      !omega.diacritics.has("coronis") && isGreekNumeralContext(out, index)
+      !omega.diacritics.has("coronis") &&
+      isGreekNumeralContext(out, index, numerals)
     ) {
       omega.letter = "omicron";
       next.diacritics = withDiacritic(next.diacritics, "diaeresis");
     }
+  }
+  if (mayHaveSpacingSigns(text)) readSpacingMarks(out, starts);
+  if (nasalGamma !== "literal") {
+    inferNasalGammas(
+      out,
+      nasalGamma === "nasal-except-kappa",
+      nasalGamma === "nasal-medial-kappa",
+    );
   }
   inferInitialBreathings(
     out,
@@ -802,7 +817,16 @@ function markedArchaicLetter(
   }
 }
 
-function inferNasalGammas(tokens: Token[], exceptKappa: boolean) {
+/**
+ * Reads `n` before a velar as gamma. Under `medialKappa` (ALA-LC), `γκ` at
+ * the beginning or end of a word is written `gk`, so `nk` there is nu and
+ * kappa, as `Φρανκ` writes them (`Phrank`).
+ */
+function inferNasalGammas(
+  tokens: Token[],
+  exceptKappa: boolean,
+  medialKappa: boolean,
+) {
   for (let i = 0; i < tokens.length - 1; i++) {
     const token = tokens[i];
     const next = tokens[i + 1];
@@ -811,7 +835,10 @@ function inferNasalGammas(tokens: Token[], exceptKappa: boolean) {
       token.kind === "grapheme" &&
       token.letter === "nu" &&
       next.kind === "grapheme" &&
-      followsNasalGamma(next.letter, exceptKappa)
+      followsNasalGamma(next.letter, exceptKappa) &&
+      !(medialKappa && next.letter === "kappa" &&
+        token.diacritics.size === 0 && next.diacritics.size === 0 &&
+        (isWordInitial(tokens, i) || isWordFinal(tokens, i + 1)))
     ) {
       token.letter = "gamma";
     }

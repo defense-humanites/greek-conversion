@@ -27,5 +27,31 @@ export interface MeantChange {
   reason: string;
 }
 
+const MONOTONIC_HIATUS =
+  "Monotonic accentuation writes a diaeresis where a breathing or an iota subscript it removes showed a hiatus (αϋτμή), as words in capitals do.";
+const NUMERAL_NEXT_TO_DIGIT =
+  "A numeral next to a digit is not written as a number, which would make one number with the digit and read back otherwise.";
+
+const EDGE_NU_KAPPA =
+  "Under ALA-LC, nk at the beginning or end of a word reads back as νκ, since γκ is written gk there.";
+const MARKED_RHO =
+  'ISO 843, ALA-LC Modern, and BnF write the h of rho only for a rough breathing that Greek writes (rho: "marked"): Πύρρος gives Pýrros.';
+
 /** The changes of output that are meant. */
-export const MEANT: readonly MeantChange[] = [];
+export const MEANT: readonly MeantChange[] = [
+  {
+    input: /^(?:Ἀίδης|ἀίδηλος|ἀυτμή|a\)i\/dhlos|a\)utmh\/)/u,
+    label: "monotonic, decomposed",
+    reason: MONOTONIC_HIATUS,
+  },
+  { input: "7/0r#('in1b", reason: NUMERAL_NEXT_TO_DIGIT },
+  { input: "cóRt\u03421 ăk0ōʹ", reason: NUMERAL_NEXT_TO_DIGIT },
+  { input: "[\u03BD\u0300\u03D7\u0306漢", reason: EDGE_NU_KAPPA },
+  { input: "chhoi\u00A0nkhē", reason: EDGE_NU_KAPPA },
+  {
+    input: /ρρ|ῤρ|rr/iu,
+    label:
+      /^(?:ala-lc-modern|bnf-core|iso-843-type-[12]|source|random 9: \{"preset":"ala-lc-modern")/u,
+    reason: MARKED_RHO,
+  },
+];

@@ -41,6 +41,7 @@ import {
   conversionProfiles,
   isCharacterInPresetScope,
   preparedOptionsError,
+  presetChecksLetters,
   presetMappingIssue,
   resolveConversionOptions,
 } from "./presets.ts";
@@ -350,7 +351,8 @@ export class Converter {
       validateCharacterIds(configuration.exclude ?? [], known, "exclude"),
     );
     this.#keepsLetters = this.#excluded.size > 0 ||
-      this.#repertoire !== undefined || this.#preset !== undefined;
+      this.#repertoire !== undefined ||
+      this.#preset !== undefined && presetChecksLetters(this.#preset);
 
     Object.freeze(this);
   }
@@ -390,14 +392,21 @@ export class Converter {
     const { output, map } = this.#postprocess(encoded.output, to, true);
 
     const targetInput = this.#preprocess(output, to, resolved);
-    const target = this.#prepareSource(
+    // The positions of the target, for the losses, recorded as it is read
+    // where its letters read back as others (`convertDetailed()` of the
+    // main entry point), and else read again only if the losses need them.
+    const targetRead = this.#prepareSource(
       targetInput,
       to,
       resolved,
       resolved,
       undefined,
-      "none",
-    ).document;
+      to === "transliteration" &&
+        resolved.transliteration.longVowels === "omit"
+        ? "spans"
+        : "none",
+    );
+    const target = targetRead.document;
     const inputSpans = prepared.spans!;
     const outputSpans = map === undefined ? encoded.spans : spansIn(
       encoded.spans.starts,
@@ -412,7 +421,7 @@ export class Converter {
       // Reading the output again with positions, only if the losses need it.
       () => ({
         written: outputSpans,
-        read: this.#prepareSource(
+        read: targetRead.spans ?? this.#prepareSource(
           targetInput,
           to,
           resolved,
@@ -687,7 +696,7 @@ export class Converter {
     kept: KeptLetters,
   ): readonly Token[] | undefined {
     if (token.kind === "grapheme") {
-      if (!this.#isAllowed(token.letter, parsed, index)) {
+      if (!this.#isAllowed(token.letter, parsed, index, kept)) {
         const numeral = inDecimalNumeral(kept, index);
         diagnostics.push(
           scopeDiagnostic(
@@ -707,6 +716,7 @@ export class Converter {
           index,
           target,
           options,
+          kept.context ??= {},
         )
         : undefined;
       if (issue === undefined) return undefined;
@@ -726,7 +736,7 @@ export class Converter {
     const custom = this.#sentinels.get(token.value);
     if (
       custom === undefined ||
-      this.#isAllowed(custom.character.id, parsed, index)
+      this.#isAllowed(custom.character.id, parsed, index, kept)
     ) {
       return undefined;
     }
@@ -841,11 +851,27 @@ export class Converter {
     }
   }
 
-  #isAllowed(id: string, document: Document, index: number): boolean {
+  /**
+   * Whether the converter's scope holds the character at `index`: `kept`
+   * keeps what the numerals of `document`, its parsed source, read for the
+   * other letters (`isCharacterInPresetScope()`).
+   */
+  #isAllowed(
+    id: string,
+    document: Document,
+    index: number,
+    kept: KeptLetters,
+  ): boolean {
     return !this.#excluded.has(id) &&
       (this.#repertoire === undefined || this.#repertoire.has(id)) &&
       (this.#preset === undefined ||
-        isCharacterInPresetScope(this.#preset, id, document, index));
+        isCharacterInPresetScope(
+          this.#preset,
+          id,
+          document,
+          index,
+          kept.context ??= {},
+        ));
   }
 }
 

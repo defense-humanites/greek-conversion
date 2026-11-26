@@ -36,6 +36,13 @@ const CASES = [
   },
   {
     preset: "bnf-core",
+    rule: "§ 4.3.5, example 12: rh only for a rho with a rough breathing",
+    greek: "Ῥητορικὴ Πύρρος ἄῤῥητος",
+    latin: "Rhētorikḕ Pýrros a̓́r̓rhētos",
+    lossy: false,
+  },
+  {
+    preset: "bnf-core",
     rule: "§ 4.2: coronis retains a Greek sign",
     greek: "κἀγώ",
     latin: "ka᾽gṓ",
@@ -109,6 +116,13 @@ const CASES = [
     rule: "Table 3: initial rough rho",
     greek: "ῥ",
     latin: "rh",
+    lossy: false,
+  },
+  {
+    preset: "iso-843-type-1",
+    rule: "Tables 1 and 3: rho is r, and h only for a written rough breathing",
+    greek: "Πύρρος ἀρῥ",
+    latin: "Pýrros ’arrh",
     lossy: false,
   },
   {
@@ -217,6 +231,13 @@ const CASES = [
     greek: "τοῦ ᾠδῇ ῥῆμα",
     latin: "toû ’o̧dî̧ rhîma",
     lossy: true,
+  },
+  {
+    preset: "iso-843-type-2",
+    rule: "Table 2 and Table 3: rho is r, and h only for a rough breathing",
+    greek: "Πύρρος Ερρίκος ΠΥΡΡΟΣ",
+    latin: "Pýrros Erríkos PYRROS",
+    lossy: false,
   },
   {
     preset: "iso-843-type-2",

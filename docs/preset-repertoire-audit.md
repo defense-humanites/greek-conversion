@@ -97,7 +97,9 @@ Morpheus describes Perseus Beta Code as a letters-and-diacritics subset of TLG.
 The cited executable Perseids mapping makes that subset concrete: it contains
 the ordinary alphabet and lunate sigma, but none of the engine's six additional
 letter entries. A Perseus-specific converter may therefore use the ordinary
-twenty-four letters as its exact semantic allow-list.
+twenty-four letters as its exact semantic allow-list. The mapping also reads
+`j` as a final sigma (and `*j` as a capital sigma), which the engine reads
+and writes as yot.
 
 ### SBL
 

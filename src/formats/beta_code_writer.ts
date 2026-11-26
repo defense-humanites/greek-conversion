@@ -5,7 +5,7 @@
  */
 import { makeWriter, type Writer, type WriterHooks } from "../codec.ts";
 import { betaCodeGlyphForm, encodeBetaCode } from "../encode.ts";
-import { supplyKaiAccents } from "../kai_accent.ts";
+import { kaiAccents } from "../steps.ts";
 import { applyOrthography } from "../orthography.ts";
 
 /** How Beta Code is written. */
@@ -15,7 +15,7 @@ export const BETA_CODE_WRITING: WriterHooks & {
   format: "beta-code",
   prepare: (document, options, targets) =>
     applyOrthography(
-      supplyKaiAccents(document, "beta-code", options),
+      kaiAccents(document, "beta-code", options),
       options,
       targets,
       "beta-code",

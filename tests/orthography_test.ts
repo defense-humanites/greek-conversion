@@ -290,6 +290,24 @@ test("transliterates every rho with one final h per group", () => {
   );
 });
 
+test("writes the h of rho only for a written rough breathing on demand", () => {
+  const marked = { transliteration: { rho: "marked" } } as const;
+
+  assertNfcEquals(
+    convert("ρ αρ ρρ ρῥ ῥ ῤῥ Ρ ΡΡ", "greek", "transliteration", marked),
+    "r ar rr rrh rh rrh R RR",
+  );
+  // Every rh is a rho with a rough breathing, the second of a pair too.
+  assertNfcEquals(
+    convert("r rr rrh rh RR", "transliteration", "greek", marked),
+    "ρ ρρ ρῥ ῥ ΡΡ",
+  );
+  assertEquals(
+    convertDetailed("ῤῥ", "greek", "transliteration", marked).lossy,
+    true,
+  );
+});
+
 test("applies the beta symbol only to medial lowercase beta", () => {
   assertNfcEquals(
     convert("bárbaros", "transliteration", "greek"),
@@ -627,6 +645,24 @@ test("applies contextual ALA-LC modern digraphs", () => {
   );
 });
 
+test("reads nk at the edge of a word as nu and kappa under ALA-LC", () => {
+  // ALA-LC writes γκ gk at either end of a word: nk there is νκ, which a
+  // foreign name has (Φρανκ), and converts to itself.
+  const modern = { preset: "ala-lc-modern" } as const;
+  assertNfcEquals(
+    convert("Φρανκ Νκρούμα Ενκελάδος", "greek", "transliteration", modern),
+    "Phrank Nkrouma Enkelados",
+  );
+  assertNfcEquals(
+    convert("Phrank Nkrouma Enkelados", "transliteration", "greek", modern),
+    "Φρανκ Νκρουμα Εγκελαδος",
+  );
+  assertNfcEquals(
+    convert("Phrank", "transliteration", "transliteration", modern),
+    "Phrank",
+  );
+});
+
 test("recognizes reversible ALA-LC digraph spellings", () => {
   const alaLc = {
     transliteration: {
@@ -639,7 +675,7 @@ test("recognizes reversible ALA-LC digraph spellings", () => {
 
   assertNfcEquals(
     convert("b v d̲ d gk nk", "transliteration", "greek", alaLc),
-    "μπ β ντ δ γκ γκ",
+    "μπ β ντ δ γκ νκ",
   );
   assertNfcEquals(
     convert("μπ β ντ δ γκ αγκά αγκ", "greek", "transliteration", alaLc),
@@ -1100,6 +1136,21 @@ test("converts marked alphabetic numerals to decimal on demand", () => {
   assertNfcEquals(
     convert("στʹ ͵α ͵αα ͵αβ", "greek", "greek", decimal),
     "6 1000 1001 1002",
+  );
+});
+
+test("writes no numeral as a number next to a digit", () => {
+  const decimal = { text: { numerals: "decimal" } } as const;
+  // The second thousands sign follows a letter, then a digit: either way,
+  // it is no numeral, and the output converts to itself.
+  for (const format of ["greek", "beta-code", "transliteration"] as const) {
+    const once = convert("͵α͵β", "greek", format, decimal);
+    assertEquals(convert(once, format, format, decimal), once);
+  }
+  assertNfcEquals(convert("͵α͵β", "greek", "greek", decimal), "1000͵β");
+  assertNfcEquals(
+    convert("1αʹ αʹ1 ͵α1 2͵β αʹ", "greek", "greek", decimal),
+    "1αʹ αʹ1 ͵α1 2͵β 1",
   );
 });
 

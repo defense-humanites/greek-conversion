@@ -167,23 +167,27 @@ const TLG_CODES: readonly (readonly [code: string, sign: string])[] = [
  * `#12` and `#17`, obeli that the TLG gives as a dash and a solidus, stay
  * text: `ϟ2` and `ϟ7`, which Beta Code cannot write, give them.
  */
-export const TLG_SIGNS: ReadonlyMap<string, string> = new Map([
-  ...TLG_CODES,
-  ["%1", EROTIMATIKO],
-  ["%12", "*"],
-]);
+export const TLG_SIGNS: ReadonlyMap<string, string> =
+  /* @__PURE__ */ (() =>
+    new Map([
+      ...TLG_CODES,
+      ["%1", EROTIMATIKO],
+      ["%12", "*"],
+    ]))();
 
 /**
  * The TLG code of each sign that Beta Code writes with one, and of the
  * signs canonically equivalent to them (the oxia U+1FFD is the acute accent
  * U+00B4).
  */
-export const TLG_CODE_OF: ReadonlyMap<string, string> = new Map([
-  ...TLG_CODES.map(([code, sign]) => [sign, code] as const),
-  ["\u1FFD", "%32"],
-  ["\u1FEF", "%33"],
-  ["\u1FEE", "%132"],
-]);
+export const TLG_CODE_OF: ReadonlyMap<string, string> =
+  /* @__PURE__ */ (() =>
+    new Map([
+      ...TLG_CODES.map(([code, sign]) => [sign, code] as const),
+      ["\u1FFD", "%32"],
+      ["\u1FEF", "%33"],
+      ["\u1FEE", "%132"],
+    ]))();
 
 export function parsePunctuation(
   character: string,

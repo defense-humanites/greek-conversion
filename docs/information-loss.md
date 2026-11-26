@@ -103,7 +103,9 @@ Default transliteration has these intrinsic ambiguities:
 - a coronis is omitted, so crasis remains spelled but is no longer explicitly
   marked;
 - the conventional `rrh` spelling does not retain whether double rho was
-  explicitly marked smooth–rough in Greek or Beta Code;
+  explicitly marked smooth–rough in Greek or Beta Code (`rho: "marked"`,
+  which ISO 843, ALA-LC Modern, and BnF select, writes `rr` for an unmarked
+  pair);
 - an initial vowel with explicit quantity has no inferred smooth breathing, so
   an explicitly smooth quantity-marked source converges to the unmarked form;
 - a smooth breathing written on the first vowel of a pair that could form a
@@ -282,7 +284,7 @@ source can be reconstructed from the output: yes, no, or partly.
 | `lunateSigma: "c"` | Transliterates only a provenanced lunate sigma as `c` and recognizes `c/C` on input | Yes: marked `c̄/ĉ` remains stigma |
 | `nasalGamma: "nasal"` (default) | Converges nasal gamma and nu-before-velar transliteration spellings | No |
 | `nasalGamma: "nasal-except-kappa"` | As `"nasal"`, but writes `γκ` as `gk` (ISO 843 Type 2) | Partly: yes for `γκ`; as `"nasal"` otherwise |
-| `nasalGamma: "nasal-medial-kappa"` | Writes `γκ` as `nk` inside a word and `gk` at its edges (ALA-LC) | Yes |
+| `nasalGamma: "nasal-medial-kappa"` | Writes `γκ` as `nk` inside a word and `gk` at its edges (ALA-LC), where `nk` reads back as `νκ` (`Φρανκ` → `Phrank`) | Partly: yes for `γκ`; `νκ` inside a word reads back as `γκ` |
 | `coronis: "omit"` (default) | Omits coronis from transliteration | No |
 | `coronis: "apostrophe"` | Emits U+2019 as display punctuation; a letter right after it, as in `τοὔμπαλιν`, still counts as inside the word for the `μπ`, `ντ`, and `γκ` rules | No |
 | `coronis: "greek"` | Emits semantic U+1FBD after the affected vowel | Yes, in the implemented coronis contexts |
@@ -291,6 +293,7 @@ source can be reconstructed from the output: yes, no, or partly.
 | `nuTau: "d-underline-initial"` | Writes word-initial `ντ` as `d̲` (ALA-LC) | Yes: `d̲` remains distinct from delta |
 | `upsilon: "y-with-ou-v-f"` | Writes the upsilon of `αυ/ευ/ηυ` as `v` or `f` and moves its accent to the vowel (ISO 843 Type 2) | Partly: yes alone; no with `beta: "v"` or `phi: "f"`, as in ISO 843 Type 2, under which `v` and `f` read back as beta and phi, and the accent stays on the vowel. A circumflex moved to epsilon is written as a tilde where `ê` is eta (`εὖ` → `’ẽf` under ISO 843 Type 1), and a `v` or `f` after an eta written `i` without a length mark reads back as the upsilon of `ηυ`. Under `longVowels: "omit"`, `ωυ` is written letter by letter (`oy`) and reads back as omega and upsilon, except in a numeral, written as it reads back (`ωυʹ` → `ouʹ`) |
 | `longVowels: "omit"` | Writes eta and omega without a length mark (ISO 843 Type 2); a vowel pair is written as it reads back, so `ωυ` is written like `ου` (but `oy` under `upsilon: "y-with-ou-v-f"`, outside a numeral), and `ηἱ` like `εἱ` (or like `ιἱ` under `eta: "i"`) | No: they read back as epsilon (or iota) and omicron, except where a circumflex or an iota subscript only fits the long vowel, and a bare `o` before `y` under `upsilon: "y-with-ou-v-f"` |
+| `rho: "marked"` | Writes the `h` of rho only for a rough breathing that Greek writes, the second rho of a pair included (ISO 843, ALA-LC Modern, BnF), and reads every `rh` as one | Yes, but for a smooth breathing on rho |
 | `rho: "systematic"` | Adds one final `h` to every contiguous rho group | Partly: the rho letters are recoverable; an explicit rough breathing is not |
 | Letter spellings (`beta`, `eta`, …), `upsilon`, `longVowels` | Selects a canonical output spelling | Partly: the canonical letters normally remain recoverable, but `eta: "i"` with `longVowels: "macron"` writes eta like iota with a macron |
 
@@ -317,7 +320,7 @@ source can be reconstructed from the output: yes, no, or partly.
 | `capitalMarks: "omit"` (default) | Writes words in capitals in Greek output without accents, breathings, coronis, or quantity marks, with a diaeresis where a mark showed a hiatus, and keeps the accent of the disjunctive `ή`; `"preserve"` writes every mark | No: the marks are reported as removed (`removed-diacritic`), and a diaeresis written as added (`added-diacritic`) |
 | `dentalSigma: "assimilate"` | Deletes `τ`, `δ`, or `θ` before sigma in Greek output | No |
 | `elidedStop: "aspirate"` | Writes an elided final `π`, `τ`, or `κ` as `φ`, `θ`, or `χ` before a rough breathing in Greek output | No: the aspirate reads back as itself |
-| `accentuation: "monotonic"` | In every format, keeps diaeresis, maps every accent to acute, removes other polytonic marks, unaccents monosyllables except `ή`, `πού`, `πώς`, an accented weak pronoun (`μού`), an elided word (`δείξ’`), and abbreviations (`κ.ά.`), and keeps two accents on a proparoxytone only | No |
+| `accentuation: "monotonic"` | In every format, keeps diaeresis, maps every accent to acute, removes other polytonic marks, writes a diaeresis where a removed breathing or iota subscript showed a hiatus (`ἀυτμή` → `αϋτμή`), unaccents monosyllables except `ή`, `πού`, `πώς`, an accented weak pronoun (`μού`), an elided word (`δείξ’`), and abbreviations (`κ.ά.`), and keeps two accents on a proparoxytone only | No |
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | Partly: the accent is recoverable; its scalar preference is not |
 | `questionMark: "greek"`, `anoTeleia: "greek"` | Selects a canonically unstable punctuation scalar | Partly: the punctuation meaning is recoverable; its scalar preference is not |

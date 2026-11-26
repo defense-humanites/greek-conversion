@@ -71,7 +71,8 @@ test("exposes descriptive metadata for every preset", () => {
     ],
     limitations: [
       "The Perseus subset covers letters, accents, breathings, diaeresis, and iota subscript; TLG markup escapes are outside its scope.",
-      "The cited Perseids mapping contains the standard alphabet and lunate sigma, but none of the engine's six additional letter entries (digamma, yot, stigma, either koppa, or sampi).",
+      "The cited Perseids mapping contains the standard alphabet and lunate sigma, but none of the engine's six additional letter entries (digamma, yot, stigma, either koppa, or sampi). It reads j as a final sigma, the engine as yot.",
+      "The dot below (?) is not read.",
     ],
   });
 });
@@ -89,7 +90,7 @@ test("returns detached preset metadata", () => {
     second.references[0].title,
     "TLG Beta Code Quick Reference Guide",
   );
-  assertEquals(second.limitations.length, 1);
+  assertEquals(second.limitations.length, 2);
 });
 
 test("resolves custom options after nested preset options", () => {
@@ -118,6 +119,7 @@ test("resolves custom options after nested preset options", () => {
       muPi: "b-initial",
       nasalGamma: "nasal-medial-kappa",
       nuTau: "d-underline-initial",
+      rho: "marked",
       upsilon: "y-with-diphthong-u",
     },
     text: {

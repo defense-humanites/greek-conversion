@@ -61,6 +61,14 @@ const NEVER = [
 ];
 /** Modules that only `prepareOptions()` brings. */
 const VALIDATION = ["prepare_options.js", "presets.js", "options.js"];
+/**
+ * The module of the accent of καί, one of the steps that only options
+ * outside the presets take, which their resolution links (see
+ * `src/steps.ts`): a conversion with a preset keeps it only for the accents
+ * that the loss analysis imports from it. The other steps are functions of
+ * modules that every conversion keeps.
+ */
+const STEPS = ["kai_accent.js"];
 /** The most that `OptionError` imported alone may weigh, minified. */
 const OPTION_ERROR_BYTES = 1000;
 
@@ -431,7 +439,12 @@ try {
           ...scenario.imports,
           `console.log(${scenario.calls("iso843Type2")});`,
         ],
-        absent: [...NEVER, ...VALIDATION, ...scenario.absent],
+        absent: [
+          ...NEVER,
+          ...VALIDATION,
+          ...(scenario.function === "convert" ? STEPS : []),
+          ...scenario.absent,
+        ],
       },
       {
         name: "prepareOptions()",

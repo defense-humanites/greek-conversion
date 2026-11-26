@@ -96,6 +96,20 @@ function encliticForms(): ReadonlySet<string> {
   return enclitics ??= new Set(ENCLITIC_FORMS.split(" "));
 }
 
+let longestEnclitic: number | undefined;
+
+/**
+ * The most letters of an enclitic, elided or not (`σφισιν`): a longer word
+ * is none. The small letters of the forms are their letters.
+ */
+function longestEncliticLength(): number {
+  return longestEnclitic ??= Math.max(
+    ...ENCLITIC_FORMS.split(" ").map((form) =>
+      form.replace(/[^a-z]/g, "").length
+    ),
+  );
+}
+
 /**
  * Writes the accent of `καί` for each `ϗ` that the output writes as letters,
  * as `options.greek.kaiAccent` says: in transliteration, and where Greek and
@@ -161,7 +175,14 @@ function modernAccent(document: Document, from: number): "acute" | "grave" {
     return PAUSES.has(next.value) ? "acute" : "grave";
   }
   let end = start + 1;
-  while (document[end]?.kind === "grapheme") end++;
+  while (document[end]?.kind === "grapheme") {
+    end++;
+    // A word longer than every enclitic is none, elided or not, and needs
+    // no more reading: read to its end from each sign of a long run of them
+    // written without spaces, it would take a time that grows with the
+    // square of its length.
+    if (end - start > longestEncliticLength()) return "grave";
+  }
   const form = formOf(document, start, end);
   if (isElisionMark(document[end])) {
     return ELIDED_ENCLITICS.has(form) ? "acute" : "grave";

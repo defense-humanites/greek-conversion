@@ -64,9 +64,9 @@ import type {
 } from "./options.ts";
 import { greekUpper } from "./case.ts";
 import { perKey, perProfile } from "./profile_cache.ts";
+import { monotonic } from "./steps.ts";
 import {
   amongCapitalWords,
-  applyMonotonicOrthography,
   isNumeralUnits,
   type NearCases,
 } from "./orthography.ts";
@@ -146,9 +146,9 @@ function marksCache<T>(): (options: ConversionOptions) => T[] {
 }
 
 /** The marks that each format writes, by set of marks and profile. */
-const GREEK_MARKS = marksCache<string>();
-const LATIN_MARKS = marksCache<readonly Diacritic[]>();
-const BETA_MARKS = marksCache<readonly Diacritic[]>();
+const GREEK_MARKS = /* @__PURE__ */ marksCache<string>();
+const LATIN_MARKS = /* @__PURE__ */ marksCache<readonly Diacritic[]>();
+const BETA_MARKS = /* @__PURE__ */ marksCache<readonly Diacritic[]>();
 
 /**
  * The Beta Code of a set of marks after a small letter, and whether the set
@@ -161,8 +161,10 @@ interface BetaMarkCodes {
 }
 
 /** The Beta Code of a set of marks before a capital, and after it. */
-const BETA_CAPITAL_CODES = marksCache<readonly [string, string]>();
-const BETA_MARK_CODES = marksCache<BetaMarkCodes>();
+const BETA_CAPITAL_CODES = /* @__PURE__ */ marksCache<
+  readonly [string, string]
+>();
+const BETA_MARK_CODES = /* @__PURE__ */ marksCache<BetaMarkCodes>();
 
 /**
  * The letters of the Greek and Coptic block, U+0370–U+03FF, composed with
@@ -232,7 +234,7 @@ export function encodeGreek(
     GREEK_MARKS(options),
   );
   const rendered = prepareDiacriticsForRendering(
-    applyMonotonicOrthography(doc, options),
+    monotonic(doc, options),
     options,
     "greek",
   );
@@ -633,14 +635,22 @@ function writeOverlines(
     index = last;
   }
   const overlined = (index: number): boolean => overline[index] === true;
+  // The end of the run of overlined units being written, and whether digits
+  // follow it: found once for the run, so that a long one costs no more than
+  // its length.
+  let runEnd = -1;
+  let beforeDigits = false;
   for (let index = 0; index < rendered.length; index++) {
     const last = lasts[index] ?? index;
     if (overlined(last) && pieces[index] !== "") {
-      let end = last + 1;
-      while (overlined(end)) end++;
-      if (digitsFrom(rendered, end) === "") {
+      if (last >= runEnd) {
+        runEnd = last + 1;
+        while (overlined(runEnd)) runEnd++;
+        beforeDigits = digitsFrom(rendered, runEnd) !== "";
+      }
+      if (!beforeDigits) {
         pieces[index] = (overlined(index - 1) ? "" : "<") + pieces[index] +
-          (end === last + 1 ? ">" : "");
+          (runEnd === last + 1 ? ">" : "");
       }
     }
     index = last;
@@ -657,7 +667,7 @@ export function encodeBetaCode(
   written?: WrittenPositions,
 ) {
   const rendered = prepareDiacriticsForRendering(
-    applyMonotonicOrthography(doc, options),
+    monotonic(doc, options),
     options,
     "beta-code",
   );
@@ -792,7 +802,7 @@ export function encodeTransliteration(
   // The cases found past words of one capital, for those on their own.
   let near: [NearCases, NearCases] | undefined;
   const rendered = prepareDiacriticsForRendering(
-    applyMonotonicOrthography(doc, options),
+    monotonic(doc, options),
     options,
     "transliteration",
   );
@@ -916,6 +926,7 @@ export function encodeTransliteration(
   const bnfKeraia = options.transliteration?.keraia === "bnf";
   const lunateC = options.transliteration?.lunateSigma === "c";
   const systematicRho = options.transliteration?.rho === "systematic";
+  const markedRho = options.transliteration?.rho === "marked";
   const smoothApostrophe =
     options.transliteration?.smoothBreathing === "apostrophe";
   const coronisApostrophe = options.transliteration?.coronis === "apostrophe";
@@ -929,6 +940,8 @@ export function encodeTransliteration(
   // The rough diphthongs inside a word, found once and only when a vowel
   // meets an iota or upsilon with a rough breathing: they are rare.
   let roughDiphthongs: Uint8Array | undefined;
+  // The last run of letters that bnfNumeralReadsBack() read.
+  let bnfRun: BnfRun | undefined;
 
   // The tokens are written in order, so whether a letter starts a word is
   // known from the ones before (isWordInitial): `afterLetter` tells whether
@@ -963,7 +976,7 @@ export function encodeTransliteration(
       } else if (!isBoundaryTransparent(token)) afterLetter = false;
       if (bnfKeraia) {
         if (token.value === DEXIA_KERAIA) {
-          return bnfRightKeraia(options, rendered[index - 1]);
+          return bnfRightKeraia(options, rendered, index);
         }
         if (token.value === ARISTERI_KERAIA) return ",";
       }
@@ -1102,7 +1115,12 @@ export function encodeTransliteration(
     const bnfLowercaseNumeral = bnfKeraia &&
       token.uppercase &&
       (token.letter === "stigma" || token.letter === "sampi") &&
-      bnfNumeralReadsBack(doc, index, options);
+      bnfNumeralReadsBack(
+        doc,
+        index,
+        options,
+        bnfRun ??= { start: -1, end: -1, readsBack: false },
+      );
     if (
       token.uppercase && !bnfLowercaseNumeral &&
       (!groupUppercase || capitals)
@@ -1136,7 +1154,7 @@ export function encodeTransliteration(
         hBefore = true;
       }
     } else if (
-      token.letter === "rho" &&
+      token.letter === "rho" && !markedRho &&
       previous?.kind === "grapheme" &&
       previous.letter === "rho"
     ) {
@@ -1225,7 +1243,7 @@ function findRoughDiphthongs(
  * by key for other options (`perKey()`); the options are resolved, so there
  * are at most 36 keys.
  */
-const latinMarkStrings = perKey(
+const latinMarkStrings = /* @__PURE__ */ perKey(
   (options) => {
     const transliteration = options.transliteration;
     return transliteration?.circumflexAccent + " " +
@@ -1344,7 +1362,9 @@ function caseDigraph(
  * transliterationBase() writes from the options alone: filled as the letters
  * come, and kept across calls for a sealed profile.
  */
-const LATIN_BASES = perProfile(() => new Map<Grapheme["letter"], string>());
+const LATIN_BASES = /* @__PURE__ */ perProfile(() =>
+  new Map<Grapheme["letter"], string>()
+);
 
 /**
  * transliterationBase() for a letter but upsilon, kept in `bases`. The empty
@@ -1457,16 +1477,20 @@ function transliterationBase(
 const ACCENTS: readonly Diacritic[] = ["acute", "grave", "circumflex"];
 
 /**
- * The BnF right keraia after `previous`: an acute on its letter, or the Greek
- * keraia, which the reader also reads as one, where the acute would not read
- * back as the keraia: when acute accents are removed, since it would then go
- * as an accent, and after anything but a letter without an accent, where it
- * would be a second accent (`ίʹ`, `í́`) or stand on no letter.
+ * The BnF right keraia at `index`: an acute on the letter before it, or the
+ * Greek keraia, which the reader also reads as one, where the acute would
+ * not read back as the keraia: when acute accents are removed, since it
+ * would then go as an accent, after anything but a letter without an accent,
+ * where it would be a second accent (`ίʹ`, `í́`) or stand on no letter, and,
+ * under monotonic accentuation, after the vowel of letters that read back as
+ * a word of one syllable, which loses its accent (`καʹ`, `kaʹ`).
  */
 function bnfRightKeraia(
   options: ConversionOptions,
-  previous: Token | undefined,
+  document: Document,
+  index: number,
 ): string {
+  const previous = document[index - 1];
   return preservesDiacritic("acute", options, "transliteration") &&
       previous?.kind === "grapheme" &&
       !ACCENTS.some((accent) => previous.diacritics.has(accent)) &&
@@ -1474,9 +1498,25 @@ function bnfRightKeraia(
       // the marks typed on it: the keraia is written as it is there.
       !(previous.diacritics.has("coronis") &&
         options.transliteration?.coronis === "greek" &&
-        preservesDiacritic("coronis", options, "transliteration"))
+        preservesDiacritic("coronis", options, "transliteration")) &&
+      !(options.greek?.accentuation === "monotonic" &&
+        isVowel(previous.letter) && isMonosyllable(document, index))
     ? "\u0301"
     : DEXIA_KERAIA;
+}
+
+/** Whether the letters right before `end` count one syllable. */
+function isMonosyllable(document: Document, end: number): boolean {
+  let start = end;
+  while (document[start - 1]?.kind === "grapheme") start--;
+  let syllables = 0;
+  for (let index = start; index < end; index++) {
+    const token = document[index] as Grapheme;
+    if (!isVowel(token.letter)) continue;
+    if (index > start && isDiphthongAt(document, index - 1)) continue;
+    syllables++;
+  }
+  return syllables === 1;
 }
 
 /**
@@ -1490,23 +1530,45 @@ function bnfNumeralReadsBack(
   document: Document,
   index: number,
   options: ConversionOptions,
+  run: BnfRun,
 ): boolean {
   const previous = document[index - 1];
   if (previous?.kind === "literal" && previous.value === ARISTERI_KERAIA) {
     return true;
   }
+  // The letters of a run that was read get its answer: read from each of
+  // them, a long run would take a time that grows with its square.
+  if (index >= run.start && index < run.end) return run.readsBack;
   let last: Token | undefined;
-  for (let i = index; i < document.length; i++) {
-    const token = document[i];
+  let readsBack = false;
+  let end = index;
+  for (; end < document.length; end++) {
+    const token = document[end];
     if (token.kind === "grapheme") {
       last = token;
       continue;
     }
     if (isBoundaryTransparent(token)) continue;
-    return token.value === DEXIA_KERAIA && last?.kind === "grapheme" &&
-      (!isVowel(last.letter) || bnfRightKeraia(options, last) === DEXIA_KERAIA);
+    readsBack = token.value === DEXIA_KERAIA && last?.kind === "grapheme" &&
+      (!isVowel(last.letter) ||
+        bnfRightKeraia(options, document, end) === DEXIA_KERAIA);
+    break;
   }
-  return false;
+  run.start = index;
+  run.end = end;
+  run.readsBack = readsBack;
+  return readsBack;
+}
+
+/**
+ * The run of letters, and the marks and joiners among them, that
+ * bnfNumeralReadsBack() read last, from `start` to the token that ends it at
+ * `end`, and its answer, which is that of each letter in it.
+ */
+interface BnfRun {
+  start: number;
+  end: number;
+  readsBack: boolean;
 }
 
 /**

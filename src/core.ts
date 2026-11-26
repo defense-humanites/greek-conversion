@@ -188,16 +188,26 @@ export function convertDetailed(
     source,
     writing,
   );
-  const target = readWith(targetReader, output, writing, true);
   // Where the target tokens were read, only if the losses need it: reading
-  // the output again with positions costs less than recording them each time.
+  // the output again with positions costs less than recording them each
+  // time, but for an output whose letters read back as others
+  // (`convertDetailed()` of the main entry point).
+  const readTarget: ReadPositions | undefined =
+    targetReader.format === "transliteration" &&
+      writing.transliteration.longVowels === "omit"
+      ? { text: "", starts: [] }
+      : undefined;
+  const target = readWith(targetReader, output, writing, true, readTarget);
   const losses = findConversionLosses(
     source,
     target,
     inputSpans,
     () => {
-      const reread: ReadPositions = { text: "", starts: [] };
-      readWith(targetReader, output, writing, true, reread);
+      let reread = readTarget;
+      if (reread === undefined) {
+        reread = { text: "", starts: [] };
+        readWith(targetReader, output, writing, true, reread);
+      }
       return { written: outputSpans, read: readSpans(output, reread) };
     },
     { glyphForm: sourceWriter.glyphForm, options: reading },

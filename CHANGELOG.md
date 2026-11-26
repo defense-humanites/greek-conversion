@@ -7,6 +7,87 @@ change.
 
 ## [Unreleased]
 
+### Added
+
+- **`transliteration.rho: "marked"` writes the `h` of rho only for a rough
+  breathing that Greek writes**, the second rho of a pair included, and
+  reads every `rh` as one: `Πύρρος` gives `Pýrros`, `ῥήτωρ` `rhḗtōr`.
+
+### Changed
+
+- **ISO 843, ALA-LC Modern, and BnF write a double rho `rr`.** The tables of
+  ISO 843 (both types) and of ALA-LC for Modern Greek write `h` only for a
+  rough breathing that Greek writes, and the BnF only for a rho that bears
+  one (§ 4.3.5). `iso-843-type-1`, `iso-843-type-2`, `ala-lc-modern`, and
+  `bnf-core` wrote the second rho of every pair `rh`, as classical studies
+  do: `Ερρίκος` gave `Errhíkos` under `iso-843-type-2`, and now gives
+  `Erríkos`. They select `transliteration.rho: "marked"`.
+- **`convertDetailed()` into transliteration under `longVowels: "omit"`
+  (ISO 843 type 2) takes about a fifth less time.** It read its output twice
+  when the output's letters read back as others, as eta written `i` does in
+  nearly every text: it now reads it once, with the positions of its
+  tokens.
+- **A converter bound to `bnf-core` or `tlg-core` converts as fast as
+  `convert()`**, 12 to 18 % faster on a long text: their repertoires hold
+  every character, and the converter no longer checks each letter.
+- **A bundle of the `core` entry point with a preset or the defaults is 4
+  to 12 % smaller with gzip**, the more so as it uses fewer formats. It
+  keeps only the code of the options it can take:
+  - the accent of καί, monotonic accentuation, and the stigma read as `στ`,
+    which no preset takes, come with the resolution of options, which links
+    them to the options that take them, and so with `prepareOptions()`;
+  - the tables of the formats a bundle does not use, which calls built
+    where esbuild kept them, are built in annotated functions.
+
+  Greek to transliteration with a preset weighs 45.4 kB, 15.1 kB with gzip,
+  where it weighed 51.3 kB and 17.0 kB. `prepareOptions()` adds 15.3 kB to
+  such a bundle, 4.7 kB with gzip, where it added 9.0 kB and 2.7 kB. The
+  main entry point takes 0.6 kB more, 0.2 kB with gzip. Outputs do not
+  change.
+
+### Fixed
+
+- **Five more inputs convert in a time proportional to their length.** In
+  each, every letter of a long run read the rest of the run again:
+  - letters under one overline written into Beta Code, and `<…>` read from
+    Beta Code;
+  - omegas before `y`, read from transliteration under ISO 843 type 2;
+  - capital stigmas and sampis written under `bnf-core`;
+  - signs `ϗ` written without spaces under `greek.kaiAccent: "modern"`;
+  - in a converter bound to ALA-LC, its stigmas, sampis, and koppas, and in
+    one bound to ISO 843, every letter under decimal numerals.
+
+  Each conversion keeps what it reads once for the whole run. Under
+  `kaiAccent: "modern"`, 8,000 signs `ϗ` took 10 s and now take a few
+  milliseconds. `tests/scaling_test.ts` checks each of these inputs.
+- **`convertGreekPassagesDetailed()` into Greek converts a long text.** It
+  threw a `RangeError` past about 120,000 tokens, because it passed the
+  spans of the Greek read back as the arguments of one call.
+- **The transliteration reader finds its omegas after spacing signs** under
+  ISO 843 type 2. The reader marks an `o` before `y` as an omega, and turns it
+  back into an omicron in a numeral (`oyʹ` gives `οϋʹ`). It noted the omegas
+  by their place, then joined spacing signs to the tokens around them,
+  after which the places no longer named the omegas. `῎oyʹ` gave `῎ωυʹ`, and
+  `῎῎oy` threw a `TypeError`; they give `῎οϋʹ` and `῎῎ωυ`.
+- **Monotonic accentuation shows a hiatus that a removed mark showed.**
+  Where a breathing or an iota subscript on the first of two vowels that
+  would form a diphthong was the only sign of their hiatus, the second
+  takes a diaeresis, as in words in capitals: `ἀυτμή` gives `αϋτμή`,
+  `ἀίδηλος` `αΐδηλος`, in every format. Transliteration wrote `ay` for
+  `ἁυ`, which read back as `aÿ`.
+- **A numeral next to a digit is not written as a number.** Under
+  `text.numerals: "decimal"`, as the ALA-LC presets select, `͵α͵β` gave
+  `1000͵β`, which converted again to `10002000`, and `1αʹ` gave `11`; such
+  a numeral now stays as written.
+- **The BnF keraia of a numeral of one syllable under monotonic
+  accentuation is written `ʹ`.** An acute after its vowel read back as the
+  accent of a monosyllable, which monotonic accentuation removes: `καʹ`
+  gave `ká`, then `ka`. It now gives `kaʹ`.
+- **Under `nasalGamma: "nasal-medial-kappa"` (`ala-lc-modern`), `nk` at the
+  beginning or end of a word reads back as `νκ`.** ALA-LC writes `γκ` as
+  `gk` there, so `Φρανκ`, written `Phrank`, read back as `Φραγκ` and
+  converted again to `Phragk`.
+
 ## [1.0.0-rc.14] - 2026-11-26
 
 Fourteenth release candidate for `1.0.0`. `convertGreekPassages()` converts

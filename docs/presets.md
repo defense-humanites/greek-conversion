@@ -151,6 +151,7 @@ Romanization profile for Modern Greek after 1453.
     "muPi": "b-initial",
     "nasalGamma": "nasal-medial-kappa",
     "nuTau": "d-underline-initial",
+    "rho": "marked",
     "upsilon": "y-with-diphthong-u"
   },
   "text": {
@@ -202,6 +203,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
     "keraia": "bnf",
     "lunateSigma": "c",
     "quantity": "omit",
+    "rho": "marked",
     "smoothBreathing": "greek",
     "upsilon": "y-with-au-eu-ou"
   },
@@ -246,6 +248,7 @@ Type 1 transliteration of Greek characters into Latin characters, also that of E
     "eta": "i",
     "nasalGamma": "literal",
     "phi": "f",
+    "rho": "marked",
     "smoothBreathing": "apostrophe",
     "upsilon": "y-with-au-eu-ou"
   }
@@ -289,6 +292,7 @@ Type 2 transcription of Greek characters into Latin characters, favouring pronun
     "muPi": "b-initial-final",
     "nasalGamma": "nasal-except-kappa",
     "phi": "f",
+    "rho": "marked",
     "smoothBreathing": "apostrophe",
     "upsilon": "y-with-ou-v-f"
   }
@@ -299,6 +303,7 @@ Type 2 transcription of Greek characters into Latin characters, favouring pronun
 
 - A transcription is not reversible by design: the v and f of αυ, ευ, ηυ read back as beta and phi, i and o as iota and omicron, and b at the edge of a word as μπ; convertDetailed() reports these losses. An o without marks before a y without diaeresis reads back as omega: Table 2 does not list ωυ, which note 8 writes letter by letter, while ου is written ou, or oy with an accent or a diaeresis (note 9).
 - Reading back is designed for the preset's own output: an e with a circumflex is read as εῦ before v or f, where Type 2 writes it, and otherwise as epsilon with a circumflex, which validateDocument() rejects.
+- Under monotonic accentuation, í, pós, zoí (ή, πώς, ζωή) read back as monosyllables, which lose their accent: reencode() to monotonic Greek first.
 - Notes 3 and 4 list the letters of the modern alphabet; before an archaic letter, the upsilon of αυ, ευ, ηυ follows that letter's sound (f before stigma, koppa, sampi; v before digamma and yot), and any non-letter after it counts as the end of the word.
 - The apostrophe of the smooth breathing reads back as one before the vowel group of a word, and that of the coronis between its vowel and a letter, in a crasis; elsewhere an apostrophe is punctuation, so that a coronis at the end of a word is reported lost. As the h of a rough breathing, the apostrophe precedes the whole vowel group: a breathing on the first vowel of a pair that could form a diphthong (Ἀίδης) reads back on the second, and convertDetailed() reports it displaced.
 - Note 2 reads a Latin s followed by a hyphen as medial sigma, for a word divided at the end of a line; the parser treats a hyphen as a word boundary and reads final sigma there.
@@ -333,7 +338,8 @@ Lowercase-ASCII subset of TLG Beta Code used by the Perseus Digital Library proj
 **Known limitations:**
 
 - The Perseus subset covers letters, accents, breathings, diaeresis, and iota subscript; TLG markup escapes are outside its scope.
-- The cited Perseids mapping contains the standard alphabet and lunate sigma, but none of the engine's six additional letter entries (digamma, yot, stigma, either koppa, or sampi).
+- The cited Perseids mapping contains the standard alphabet and lunate sigma, but none of the engine's six additional letter entries (digamma, yot, stigma, either koppa, or sampi). It reads j as a final sigma, the engine as yot.
+- The dot below (?) is not read.
 
 ### `sbl-general` — SBL — General-purpose style
 
@@ -400,6 +406,7 @@ Canonical Beta Code together with the TLG characters implemented by the engine.
 **Known limitations:**
 
 - The TLG character inventory contains more than one thousand assignments; only the Greek alphabet and the documented additional characters and punctuation are implemented.
+- The dot below (?) and the en dash (%19) are not read.
 
 <!-- END GENERATED PRESET REFERENCE -->
 
@@ -443,6 +450,10 @@ Presets never infer a missing rough breathing and do not perform transformations
 that intrinsically require lexical or morphological knowledge. Consequently,
 ALA-LC output can only render `h` when the source document actually carries a
 rough breathing. This is a deliberate scope boundary, not an implicit fallback.
+The second rho of a pair inside a word is the one convention: SBL and ALA-LC
+Ancient write it `rh`, as classical studies do, while ISO 843, ALA-LC Modern,
+and BnF, whose tables write `h` only for a rough breathing that Greek writes,
+select `transliteration.rho: "marked"` (`Πύρρος` → `Pýrros`).
 
 The ALA-LC policy omits diaeresis visually. Under contextual `y/u`, the parser
 nevertheless preserves its deterministic provenance: `y` is interpreted as a
@@ -468,6 +479,12 @@ conversion therefore reports information loss through `convertDetailed()`;
 the transliteration parser does not guess which character was intended. A
 consonant bears no accent, so its acute reads back as the keraia, and a comma
 before `c̄` or `s̄`, the stigma and sampi of numerals, as the left keraia. With
-the accents removed, the right keraia is written `ʹ`.
+the accents removed, the right keraia is written `ʹ`, and so it is under
+monotonic accentuation after the vowel of a numeral of one syllable.
 Canonical NFC output may compose the acute with a preceding Latin vowel.
 Set `transliteration.keraia: "greek"` to keep the original numeral marks.
+
+`bnf-core` writes the smooth breathing as the combining comma above on its
+vowel (`Eu̓dēmeíōn`), as example 27 of the BnF page does. Its table gives the
+spacing psili (U+1FBF), and most of its examples write the apostrophe of
+ISO 843 (`’Alkiviádīs`), which `smoothBreathing: "apostrophe"` writes.

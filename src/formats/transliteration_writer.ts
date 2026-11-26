@@ -5,7 +5,7 @@
  */
 import { makeWriter, type Writer, type WriterHooks } from "../codec.ts";
 import { encodeTransliteration, transliterationGlyphForm } from "../encode.ts";
-import { supplyKaiAccents } from "../kai_accent.ts";
+import { kaiAccents } from "../steps.ts";
 import { applyNumeralOrthography } from "../orthography.ts";
 
 /** How transliteration is written. */
@@ -15,7 +15,7 @@ export const TRANSLITERATION_WRITING: WriterHooks & {
   format: "transliteration",
   prepare: (document, options, targets) =>
     applyNumeralOrthography(
-      supplyKaiAccents(document, "transliteration", options),
+      kaiAccents(document, "transliteration", options),
       options,
       targets,
       "transliteration",

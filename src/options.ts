@@ -122,7 +122,8 @@ export type QuantityTransliteration = "preserve" | "omit";
  * `ng`, `γκ` → `nk`); `"nasal-except-kappa"` does so except before kappa
  * (`γκ` → `gk`), as ISO 843 Type 2 does; `"nasal-medial-kappa"` writes `γκ`
  * as `nk` inside a word and `gk` at its beginning or end, as ALA-LC does for
- * Modern Greek; `"literal"` always writes `g`.
+ * Modern Greek, so that `nk` there reads back as `νκ` (`Φρανκ` → `Phrank`);
+ * `"literal"` always writes `g`.
  */
 export type NasalGammaTransliteration =
   | "nasal"
@@ -162,7 +163,9 @@ export type NumeralOrthography = "alphabetic" | "decimal";
  * `c̄` or `s̄`, the stigma and sampi of numerals, as the left keraia; after a
  * vowel, the acute reads back as an accent (`αʹ` and `ά` are both `á`). When
  * the acute accents are removed, the right keraia is written `ʹ`, which an
- * acute would not survive.
+ * acute would not survive, and so it is under monotonic accentuation after
+ * the vowel of a numeral of one syllable, whose accent would go (`καʹ` →
+ * `kaʹ`).
  */
 export type KeraiaTransliteration = "greek" | "bnf";
 
@@ -306,8 +309,17 @@ export type MuPiTransliteration = "mp" | "b-initial" | "b-initial-final";
  */
 export type NuTauTransliteration = "nt" | "d-initial" | "d-underline-initial";
 
-/** Selects contextual rho spelling or one final `h` per contiguous rho group. */
-export type RhoTransliteration = "contextual" | "systematic";
+/**
+ * Selects how rho is written. `"contextual"` writes the `h` of a rough
+ * breathing, and after the second rho of a pair, as classical studies write
+ * it whether Greek marks it or not (`Πύρρος` → `Pýrrhos`); `"marked"` writes
+ * it only where Greek writes a rough breathing, as ISO 843, the ALA-LC table
+ * of Modern Greek, and the BnF do (`Πύρρος` → `Pýrros`, `ῥήτωρ` → `rhḗtōr`),
+ * and
+ * reads every `rh` as a rho with a rough breathing; `"systematic"` writes one
+ * final `h` per contiguous rho group.
+ */
+export type RhoTransliteration = "contextual" | "marked" | "systematic";
 
 /**
  * Selects the mechanical case transformation applied during rendering.
@@ -742,7 +754,7 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues =
       ],
       muPi: ["mp", "b-initial", "b-initial-final"],
       nuTau: ["nt", "d-initial", "d-underline-initial"],
-      rho: ["contextual", "systematic"],
+      rho: ["contextual", "marked", "systematic"],
       nasalGamma: [
         "nasal",
         "nasal-except-kappa",

@@ -187,6 +187,8 @@ when:
 
 - the letters carry no mark (under `numerals: "decimal"`, no mark that the
   output keeps, as said below) and follow no other letter;
+- no digit stands right before or after the numeral, which would make one
+  number with it once written as a number (`͵α1`, `1αʹ`);
 - their values go down from one letter to the next: hundreds, tens, units;
 - a right keraia `ʹ` closes the group;
 - thousands, if any, come first, as a left keraia `͵` and a letter from 1

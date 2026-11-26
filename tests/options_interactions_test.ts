@@ -321,6 +321,11 @@ test("writes vowel pairs as they read back, under the ISO and SBL presets", () =
   // omicron: ωυʹ (1200) like ουʹ (470).
   assertNfcEquals(convert("ωυʹ", "greek", "transliteration", iso), "ouʹ");
   assertNfcEquals(convert("oyʹ", "transliteration", "greek", iso), "οϋʹ");
+  // So after spacing signs, which the reader joins once it has read the
+  // omegas: it looked for them where they had been, and threw a TypeError
+  // past the end of the text (`῎῎oy`).
+  assertNfcEquals(convert("῎oyʹ", "transliteration", "greek", iso), "῎οϋʹ");
+  assertNfcEquals(convert("῎῎oy", "transliteration", "greek", iso), "῎῎ωυ");
   // The apostrophe of a coronis reads back as punctuation; the μπ after it
   // stays inside the word, where it is mp.
   assertNfcEquals(
@@ -631,11 +636,26 @@ test("BnF numerals stay as written under every letter case and mark removal", ()
     }),
     "c̄ʹ aʹ ,c̄",
   );
+  // Monotonic accentuation removes the accent of a word of one syllable,
+  // as the acute after its vowel would read back: the keraia is written ʹ.
+  assertNfcEquals(
+    convert("καʹ ροαʹ ιβʹ", "greek", "transliteration", {
+      ...bnf,
+      greek: { accentuation: "monotonic" },
+    }),
+    "kaʹ roá ib\u0301",
+  );
   const numerals = "ϛʹ Ϛʹ αʹ ιαʹ ϙʹ ϡʹ ͵ϛ ͵Ϡ βʹ ϡαʹ ϡβʹ";
   for (
     const letterCase of ["preserve", "uppercase", "title", "lowercase"] as const
   ) {
-    for (const marks of [{}, { diacritics: { all: "remove" } }] as const) {
+    for (
+      const marks of [
+        {},
+        { diacritics: { all: "remove" } },
+        { greek: { accentuation: "monotonic" } },
+      ] as const
+    ) {
       const options = {
         transliteration: { keraia: "bnf" },
         text: { letterCase },
