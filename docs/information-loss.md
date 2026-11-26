@@ -130,7 +130,10 @@ Default transliteration has these intrinsic ambiguities:
 - with the default `nasalGamma: "nasal"`, Greek gamma and nu before a velar can
   both be read as nasal gamma after transliteration;
 - the `h` of a rough breathing precedes its vowel or diphthong inside a word as
-  at its start (`χοἱ` → `chhoi`, like `οἱ` → `hoi`). After `t`, `p` (except
+  at its start (`χοἱ` → `chhoi`, like `οἱ` → `hoi`). A numeral has no
+  diphthong: there it precedes the vowel that bears the breathing, where the
+  reader leaves it, and an upsilon is written as outside a diphthong
+  (`αἱʹ` → `ahiʹ`, `εὑʹ` → `ehyʹ`). After `t`, `p` (except
   under `phi: "f"`, where `ph` reads as pi and a rough breathing), or `r`, it
   forms `th`, `ph`, or `rh`, which read back as theta, phi, or a rough rho:
   `τἡ` → `thē` → `θη`, `ποὑ` → `phou` → `φου`, `ἀροἱ` → `arhoi` → `ἀῥοι`, and

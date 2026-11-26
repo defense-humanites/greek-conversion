@@ -85,6 +85,15 @@ change.
   then `rhou`. The `h` now takes the case of the consonant, and the vowel
   keeps its own: `ρἉ` gives `rhA`, which reads back as `ῥΑ`. The loss of the
   breathing is reported as before.
+- **A rough breathing on the second vowel of a pair in a numeral reads
+  back in transliteration.** A numeral has no diphthong, and the reader
+  leaves the breathing on the vowel that its `h` precedes. The writer put
+  the `h` before the pair, as for a diphthong: `αἱʹ` gave `haiʹ`, read back
+  as `ἁιʹ`, and `εὑʹ` gave `heuʹ`, then `heyʹ`. The `h` now precedes its
+  vowel, and an upsilon is written as outside a diphthong: `αἱʹ` gives
+  `ahiʹ` and `εὑʹ` `ehyʹ`, both without loss. Under the BnF keraiai, and
+  where a coronis is written as an apostrophe on the pair, which may read
+  back as no numeral, the pair is written as before.
 - **A macron on eta or omega reads back in transliteration.**
   - By default, eta with a macron is written `ē̄`, as eta with a breve is
     written `ē̆`, but the reader dropped the second macron: `η̄` gave `ē̄`,
