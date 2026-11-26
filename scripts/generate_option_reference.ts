@@ -25,6 +25,10 @@ import {
   getPresetOptions,
   listPresetMetadata,
 } from "../src/mod.ts";
+import {
+  requiredSettings,
+  withSettings,
+} from "../web/playground/option_catalogue.ts";
 import { PROBE_GREEK } from "../web/playground/option_probe.ts";
 
 const START = "<!-- BEGIN GENERATED OPTION REFERENCE -->";
@@ -238,12 +242,18 @@ function example(
   from: Format,
   to: Format,
 ): Change | undefined {
-  const options = { [group]: { [key]: value } } as ConversionOptions;
+  const chosen = { [group]: { [key]: value } } as ConversionOptions;
+  // A value that requires another is shown with it, against the default
+  // with that other alone (`longVowels: "grave-circumflex"`, which requires
+  // `diacritics.accents: "remove"`).
+  const required = requiredSettings(chosen);
+  const options = withSettings(chosen, required);
+  const base = withSettings({}, required);
   // One line at a time: the lines of the probe are separate texts.
   for (const greek of PROBE_GREEK.split("\n")) {
     const source = from === "greek" ? greek : attempt(greek, "greek", from);
     if (source === undefined) continue;
-    const before = attempt(source, from, to);
+    const before = attempt(source, from, to, base);
     const after = attempt(source, from, to, options);
     if (before === undefined || after === undefined || before === after) {
       continue;

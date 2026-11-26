@@ -60,8 +60,8 @@ const french = {
   diacritics: { accents: "remove" },
 } as const;
 
-convert("ὕλη, τέχνη, χώρα", "greek", "transliteration", french);
-// → hulè, tekhnè, khôra
+convert("ἠώς, ὕλη, χώρα", "greek", "transliteration", french);
+// → èôs, hulè, khôra
 convert("hylè, technê", "transliteration", "greek", french);
 // → ὑλη, τεχνη
 ```

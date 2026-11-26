@@ -163,6 +163,7 @@ const GRAVE_CIRCUMFLEX = {
 
 test("writes eta with a grave and omega with a circumflex", () => {
   const cases = [
+    ["ἠώς", "èôs"],
     ["ὕλη", "hylè"],
     ["τέχνη", "technè"],
     ["ἀλήθεια", "alètheia"],

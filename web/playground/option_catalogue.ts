@@ -1,5 +1,6 @@
 import {
   CONVERSION_OPTION_VALUES,
+  OptionError,
   resolveConversionOptions,
 } from "../../src/mod.ts";
 import type { ConversionOptions, Format, Preset } from "../../src/mod.ts";
@@ -121,6 +122,48 @@ export function withSetting(
     delete next[group];
   }
   return next;
+}
+
+/**
+ * The settings that `options` require besides, as
+ * `resolveConversionOptions()` names them: one value of another option,
+ * without which a value does not combine (`longVowels: "grave-circumflex"`
+ * requires `diacritics.accents: "remove"`).
+ */
+export function requiredSettings(
+  options: ConversionOptions,
+): OptionSetting[] {
+  const required: OptionSetting[] = [];
+  let current = options;
+  for (const _ of OPTION_ENTRIES) {
+    try {
+      resolveConversionOptions(current);
+      return required;
+    } catch (error) {
+      if (!(error instanceof OptionError) || error.accepted.length !== 1) {
+        return required;
+      }
+      const entry = OPTION_ENTRIES.find(({ group, key }) =>
+        `${group}.${key}` === error.path
+      );
+      if (entry === undefined) return required;
+      const value = error.accepted[0];
+      required.push({ group: entry.group, key: entry.key, value });
+      current = withSetting(current, entry.group, entry.key, value);
+    }
+  }
+  return required;
+}
+
+/** `options` with the settings of `settings`. */
+export function withSettings(
+  options: ConversionOptions,
+  settings: readonly OptionSetting[],
+): ConversionOptions {
+  return settings.reduce(
+    (next, { group, key, value }) => withSetting(next, group, key, value),
+    options,
+  );
 }
 
 /** Keeps the known options of a parsed value and drops anything else. */

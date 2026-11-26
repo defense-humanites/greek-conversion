@@ -11,6 +11,7 @@ import {
   knownOptions,
   matchEntries,
   OPTION_ENTRIES,
+  requiredSettings,
   sameOptions,
   settingsOf,
   standardValue,
@@ -141,4 +142,31 @@ test("finds the changed words of an output", () => {
   ]);
   assertEquals(changedSpans("a b", "a  b c"), [{ start: 2, end: 6 }]);
   assertEquals(changedSpans("same", "same"), []);
+});
+
+test("a value that requires another option brings its value", () => {
+  // `"grave-circumflex"` requires transliteration without accents.
+  assertEquals(
+    requiredSettings({ transliteration: { longVowels: "grave-circumflex" } }),
+    [{ group: "diacritics", key: "accents", value: "remove" }],
+  );
+  assertEquals(
+    requiredSettings({
+      transliteration: { longVowels: "grave-circumflex" },
+      diacritics: { accents: "remove" },
+    }),
+    [],
+  );
+  // Two values that cannot be combined, either of which may give way, bring
+  // nothing.
+  assertEquals(
+    requiredSettings({
+      transliteration: {
+        longVowels: "circumflex",
+        circumflexAccent: "circumflex",
+      },
+    }),
+    [],
+  );
+  assertEquals(requiredSettings({}), []);
 });
