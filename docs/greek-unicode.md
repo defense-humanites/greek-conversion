@@ -28,7 +28,11 @@ The monotonic transform:
   properispomenon before an enclitic, is removed (`σῶμά μου → σώμα μου`,
   `εἶναί τινα → είναι τινα`);
 - removes smooth and rough breathings, coronis, iota subscript, macron, and
-  breve;
+  breve; where a breathing or an iota subscript on the first of two vowels
+  that would form a diphthong showed their hiatus, the second takes a
+  diaeresis, as in words in capitals (`ἀυτμή → αϋτμή`,
+  `ἀίδηλος → αΐδηλος`), while an accent on the first still shows it
+  (`ἄυλος → άυλος`);
 - leaves monosyllables unaccented (`καὶ → και`, `τῶν → των`, `κἂν → καν`),
   except those that the monotonic system distinguishes, which the marks of
   the source identify: disjunctive `ή` from `ἤ` or `ἢ` (not the article `ἡ`,
@@ -73,7 +77,10 @@ longer one:
   `το 20ό`).
 
 Monotonic text reads back from transliteration as written, its accents
-included (`o patéras moú eípe` gives `ο πατέρας μού είπε`).
+included (`o patéras moú eípe` gives `ο πατέρας μού είπε`), where the
+transliteration tells eta and omega from the other vowels: under
+`longVowels: "omit"` (ISO 843 Type 2), `í` may be the disjunctive `ή`, but
+reads back as an iota, whose accent the monotonic rules remove.
 
 It applies to every format: Beta Code and transliteration spell the monotonic
 text that Greek output writes, so that a polytonic transliteration or Beta

@@ -122,7 +122,8 @@ export type QuantityTransliteration = "preserve" | "omit";
  * `ng`, `γκ` → `nk`); `"nasal-except-kappa"` does so except before kappa
  * (`γκ` → `gk`), as ISO 843 Type 2 does; `"nasal-medial-kappa"` writes `γκ`
  * as `nk` inside a word and `gk` at its beginning or end, as ALA-LC does for
- * Modern Greek; `"literal"` always writes `g`.
+ * Modern Greek, so that `nk` there reads back as `νκ` (`Φρανκ` → `Phrank`);
+ * `"literal"` always writes `g`.
  */
 export type NasalGammaTransliteration =
   | "nasal"
@@ -162,7 +163,9 @@ export type NumeralOrthography = "alphabetic" | "decimal";
  * `c̄` or `s̄`, the stigma and sampi of numerals, as the left keraia; after a
  * vowel, the acute reads back as an accent (`αʹ` and `ά` are both `á`). When
  * the acute accents are removed, the right keraia is written `ʹ`, which an
- * acute would not survive.
+ * acute would not survive, and so it is under monotonic accentuation after
+ * the vowel of a numeral of one syllable, whose accent would go (`καʹ` →
+ * `kaʹ`).
  */
 export type KeraiaTransliteration = "greek" | "bnf";
 

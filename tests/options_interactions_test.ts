@@ -636,11 +636,26 @@ test("BnF numerals stay as written under every letter case and mark removal", ()
     }),
     "c̄ʹ aʹ ,c̄",
   );
+  // Monotonic accentuation removes the accent of a word of one syllable,
+  // as the acute after its vowel would read back: the keraia is written ʹ.
+  assertNfcEquals(
+    convert("καʹ ροαʹ ιβʹ", "greek", "transliteration", {
+      ...bnf,
+      greek: { accentuation: "monotonic" },
+    }),
+    "kaʹ roá ib\u0301",
+  );
   const numerals = "ϛʹ Ϛʹ αʹ ιαʹ ϙʹ ϡʹ ͵ϛ ͵Ϡ βʹ ϡαʹ ϡβʹ";
   for (
     const letterCase of ["preserve", "uppercase", "title", "lowercase"] as const
   ) {
-    for (const marks of [{}, { diacritics: { all: "remove" } }] as const) {
+    for (
+      const marks of [
+        {},
+        { diacritics: { all: "remove" } },
+        { greek: { accentuation: "monotonic" } },
+      ] as const
+    ) {
       const options = {
         transliteration: { keraia: "bnf" },
         text: { letterCase },

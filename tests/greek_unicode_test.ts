@@ -329,6 +329,23 @@ test("monotonic accentuation keeps the accents of monotonic orthography", () => 
   );
 });
 
+test("monotonic accentuation shows a hiatus that a removed mark showed", () => {
+  // A breathing or an iota subscript on the first of two vowels that would
+  // form a diphthong showed their hiatus; monotonic Greek shows it with a
+  // diaeresis, as words in capitals do. An accent on the first still does.
+  const source = "ἀυτμή ἀίδηλος ἁυ ᾳυ ἄυλος οἱ";
+  const expected = {
+    "greek": "αϋτμή αΐδηλος αϋ αϋ άυλος οι",
+    "beta-code": "au+tmh/ ai+/dhlos au+ au+ a/ulos oi",
+    "transliteration": "aÿtmḗ aḯdēlos aÿ aÿ áylos oi",
+  } as const;
+  for (const format of ["greek", "beta-code", "transliteration"] as const) {
+    const once = convert(source, "greek", format, MONOTONIC);
+    assertNfcEquals(once, expected[format]);
+    assertEquals(convert(once, format, format, MONOTONIC), once);
+  }
+});
+
 test("monotonic rendering does not create blocked contractions", () => {
   assertEquals(
     convert("βσ̓ κσ̓", "greek", "greek", {

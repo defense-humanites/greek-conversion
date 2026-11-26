@@ -167,6 +167,7 @@ const PRESET_METADATA = {
     limitations: [
       "A transcription is not reversible by design: the v and f of αυ, ευ, ηυ read back as beta and phi, i and o as iota and omicron, and b at the edge of a word as μπ; convertDetailed() reports these losses. An o without marks before a y without diaeresis reads back as omega: Table 2 does not list ωυ, which note 8 writes letter by letter, while ου is written ou, or oy with an accent or a diaeresis (note 9).",
       "Reading back is designed for the preset's own output: an e with a circumflex is read as εῦ before v or f, where Type 2 writes it, and otherwise as epsilon with a circumflex, which validateDocument() rejects.",
+      "Under monotonic accentuation, í, pós, zoí (ή, πώς, ζωή) read back as monosyllables, which lose their accent: reencode() to monotonic Greek first.",
       "Notes 3 and 4 list the letters of the modern alphabet; before an archaic letter, the upsilon of αυ, ευ, ηυ follows that letter's sound (f before stigma, koppa, sampi; v before digamma and yot), and any non-letter after it counts as the end of the word.",
       "The apostrophe of the smooth breathing reads back as one before the vowel group of a word, and that of the coronis between its vowel and a letter, in a crasis; elsewhere an apostrophe is punctuation, so that a coronis at the end of a word is reported lost. As the h of a rough breathing, the apostrophe precedes the whole vowel group: a breathing on the first vowel of a pair that could form a diphthong (Ἀίδης) reads back on the second, and convertDetailed() reports it displaced.",
       "Note 2 reads a Latin s followed by a hyphen as medial sigma, for a word divided at the end of a line; the parser treats a hyphen as a word boundary and reads final sigma there.",
@@ -200,7 +201,8 @@ const PRESET_METADATA = {
     ],
     limitations: [
       "The Perseus subset covers letters, accents, breathings, diaeresis, and iota subscript; TLG markup escapes are outside its scope.",
-      "The cited Perseids mapping contains the standard alphabet and lunate sigma, but none of the engine's six additional letter entries (digamma, yot, stigma, either koppa, or sampi).",
+      "The cited Perseids mapping contains the standard alphabet and lunate sigma, but none of the engine's six additional letter entries (digamma, yot, stigma, either koppa, or sampi). It reads j as a final sigma, the engine as yot.",
+      "The dot below (?) is not read.",
     ],
   },
   "sbl-general": {
@@ -236,6 +238,7 @@ const PRESET_METADATA = {
     }],
     limitations: [
       "The TLG character inventory contains more than one thousand assignments; only the Greek alphabet and the documented additional characters and punctuation are implemented.",
+      "The dot below (?) and the en dash (%19) are not read.",
     ],
   },
 } as const satisfies Record<Preset, PresetMetadata>;

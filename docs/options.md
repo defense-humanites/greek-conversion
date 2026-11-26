@@ -161,7 +161,7 @@ Nasal gamma spelling. Defaults to `"nasal"`.
 
 Selects contextual nasal gamma (`n`) or literal gamma (`g`).
 
-`"nasal"` writes `n` for gamma before gamma, kappa, xi, and chi (`γγ` → `ng`, `γκ` → `nk`); `"nasal-except-kappa"` does so except before kappa (`γκ` → `gk`), as ISO 843 Type 2 does; `"nasal-medial-kappa"` writes `γκ` as `nk` inside a word and `gk` at its beginning or end, as ALA-LC does for Modern Greek; `"literal"` always writes `g`.
+`"nasal"` writes `n` for gamma before gamma, kappa, xi, and chi (`γγ` → `ng`, `γκ` → `nk`); `"nasal-except-kappa"` does so except before kappa (`γκ` → `gk`), as ISO 843 Type 2 does; `"nasal-medial-kappa"` writes `γκ` as `nk` inside a word and `gk` at its beginning or end, as ALA-LC does for Modern Greek, so that `nk` there reads back as `νκ` (`Φρανκ` → `Phrank`); `"literal"` always writes `g`.
 
 | Value | Greek → transliteration | Presets |
 | --- | --- | --- |
@@ -246,7 +246,7 @@ Selects ASCII or typographic hyphen in transliteration output.
 
 Keraia marks in transliteration. Defaults to `"greek"`; `"bnf"` is not always reversible.
 
-Selects Greek keraia marks or the BnF comma and combining acute in Latin output. Under `"bnf"`, an acute after a consonant reads back as the right keraia, which a consonant cannot bear as an accent, and a comma before `c̄` or `s̄`, the stigma and sampi of numerals, as the left keraia; after a vowel, the acute reads back as an accent (`αʹ` and `ά` are both `á`). When the acute accents are removed, the right keraia is written `ʹ`, which an acute would not survive.
+Selects Greek keraia marks or the BnF comma and combining acute in Latin output. Under `"bnf"`, an acute after a consonant reads back as the right keraia, which a consonant cannot bear as an accent, and a comma before `c̄` or `s̄`, the stigma and sampi of numerals, as the left keraia; after a vowel, the acute reads back as an accent (`αʹ` and `ά` are both `á`). When the acute accents are removed, the right keraia is written `ʹ`, which an acute would not survive, and so it is under monotonic accentuation after the vowel of a numeral of one syllable, whose accent would go (`καʹ` → `kaʹ`).
 
 | Value | Greek → transliteration | Presets |
 | --- | --- | --- |

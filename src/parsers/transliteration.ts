@@ -13,6 +13,7 @@ import {
   isGreekNumeralContext,
   isVowel,
   isVowelUpsilonAt,
+  isWordFinal,
   isWordInitial,
   isWordLetter,
 } from "../context.ts";
@@ -649,7 +650,11 @@ function readTransliteration(
   }
   if (mayHaveSpacingSigns(text)) readSpacingMarks(out, starts);
   if (nasalGamma !== "literal") {
-    inferNasalGammas(out, nasalGamma === "nasal-except-kappa");
+    inferNasalGammas(
+      out,
+      nasalGamma === "nasal-except-kappa",
+      nasalGamma === "nasal-medial-kappa",
+    );
   }
   inferInitialBreathings(
     out,
@@ -808,7 +813,16 @@ function markedArchaicLetter(
   }
 }
 
-function inferNasalGammas(tokens: Token[], exceptKappa: boolean) {
+/**
+ * Reads `n` before a velar as gamma. Under `medialKappa` (ALA-LC), `γκ` at
+ * the beginning or end of a word is written `gk`, so `nk` there is nu and
+ * kappa, as `Φρανκ` writes them (`Phrank`).
+ */
+function inferNasalGammas(
+  tokens: Token[],
+  exceptKappa: boolean,
+  medialKappa: boolean,
+) {
   for (let i = 0; i < tokens.length - 1; i++) {
     const token = tokens[i];
     const next = tokens[i + 1];
@@ -817,7 +831,10 @@ function inferNasalGammas(tokens: Token[], exceptKappa: boolean) {
       token.kind === "grapheme" &&
       token.letter === "nu" &&
       next.kind === "grapheme" &&
-      followsNasalGamma(next.letter, exceptKappa)
+      followsNasalGamma(next.letter, exceptKappa) &&
+      !(medialKappa && next.letter === "kappa" &&
+        token.diacritics.size === 0 && next.diacritics.size === 0 &&
+        (isWordInitial(tokens, i) || isWordFinal(tokens, i + 1)))
     ) {
       token.letter = "gamma";
     }

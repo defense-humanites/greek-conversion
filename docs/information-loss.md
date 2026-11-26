@@ -282,7 +282,7 @@ source can be reconstructed from the output: yes, no, or partly.
 | `lunateSigma: "c"` | Transliterates only a provenanced lunate sigma as `c` and recognizes `c/C` on input | Yes: marked `c̄/ĉ` remains stigma |
 | `nasalGamma: "nasal"` (default) | Converges nasal gamma and nu-before-velar transliteration spellings | No |
 | `nasalGamma: "nasal-except-kappa"` | As `"nasal"`, but writes `γκ` as `gk` (ISO 843 Type 2) | Partly: yes for `γκ`; as `"nasal"` otherwise |
-| `nasalGamma: "nasal-medial-kappa"` | Writes `γκ` as `nk` inside a word and `gk` at its edges (ALA-LC) | Yes |
+| `nasalGamma: "nasal-medial-kappa"` | Writes `γκ` as `nk` inside a word and `gk` at its edges (ALA-LC), where `nk` reads back as `νκ` (`Φρανκ` → `Phrank`) | Partly: yes for `γκ`; `νκ` inside a word reads back as `γκ` |
 | `coronis: "omit"` (default) | Omits coronis from transliteration | No |
 | `coronis: "apostrophe"` | Emits U+2019 as display punctuation; a letter right after it, as in `τοὔμπαλιν`, still counts as inside the word for the `μπ`, `ντ`, and `γκ` rules | No |
 | `coronis: "greek"` | Emits semantic U+1FBD after the affected vowel | Yes, in the implemented coronis contexts |
@@ -317,7 +317,7 @@ source can be reconstructed from the output: yes, no, or partly.
 | `capitalMarks: "omit"` (default) | Writes words in capitals in Greek output without accents, breathings, coronis, or quantity marks, with a diaeresis where a mark showed a hiatus, and keeps the accent of the disjunctive `ή`; `"preserve"` writes every mark | No: the marks are reported as removed (`removed-diacritic`), and a diaeresis written as added (`added-diacritic`) |
 | `dentalSigma: "assimilate"` | Deletes `τ`, `δ`, or `θ` before sigma in Greek output | No |
 | `elidedStop: "aspirate"` | Writes an elided final `π`, `τ`, or `κ` as `φ`, `θ`, or `χ` before a rough breathing in Greek output | No: the aspirate reads back as itself |
-| `accentuation: "monotonic"` | In every format, keeps diaeresis, maps every accent to acute, removes other polytonic marks, unaccents monosyllables except `ή`, `πού`, `πώς`, an accented weak pronoun (`μού`), an elided word (`δείξ’`), and abbreviations (`κ.ά.`), and keeps two accents on a proparoxytone only | No |
+| `accentuation: "monotonic"` | In every format, keeps diaeresis, maps every accent to acute, removes other polytonic marks, writes a diaeresis where a removed breathing or iota subscript showed a hiatus (`ἀυτμή` → `αϋτμή`), unaccents monosyllables except `ή`, `πού`, `πώς`, an accented weak pronoun (`μού`), an elided word (`δείξ’`), and abbreviations (`κ.ά.`), and keeps two accents on a proparoxytone only | No |
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | Partly: the accent is recoverable; its scalar preference is not |
 | `questionMark: "greek"`, `anoTeleia: "greek"` | Selects a canonically unstable punctuation scalar | Partly: the punctuation meaning is recoverable; its scalar preference is not |

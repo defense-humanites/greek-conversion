@@ -973,7 +973,7 @@ export function encodeTransliteration(
       } else if (!isBoundaryTransparent(token)) afterLetter = false;
       if (bnfKeraia) {
         if (token.value === DEXIA_KERAIA) {
-          return bnfRightKeraia(options, rendered[index - 1]);
+          return bnfRightKeraia(options, rendered, index);
         }
         if (token.value === ARISTERI_KERAIA) return ",";
       }
@@ -1472,16 +1472,20 @@ function transliterationBase(
 const ACCENTS: readonly Diacritic[] = ["acute", "grave", "circumflex"];
 
 /**
- * The BnF right keraia after `previous`: an acute on its letter, or the Greek
- * keraia, which the reader also reads as one, where the acute would not read
- * back as the keraia: when acute accents are removed, since it would then go
- * as an accent, and after anything but a letter without an accent, where it
- * would be a second accent (`ίʹ`, `í́`) or stand on no letter.
+ * The BnF right keraia at `index`: an acute on the letter before it, or the
+ * Greek keraia, which the reader also reads as one, where the acute would
+ * not read back as the keraia: when acute accents are removed, since it
+ * would then go as an accent, after anything but a letter without an accent,
+ * where it would be a second accent (`ίʹ`, `í́`) or stand on no letter, and,
+ * under monotonic accentuation, after the vowel of letters that read back as
+ * a word of one syllable, which loses its accent (`καʹ`, `kaʹ`).
  */
 function bnfRightKeraia(
   options: ConversionOptions,
-  previous: Token | undefined,
+  document: Document,
+  index: number,
 ): string {
+  const previous = document[index - 1];
   return preservesDiacritic("acute", options, "transliteration") &&
       previous?.kind === "grapheme" &&
       !ACCENTS.some((accent) => previous.diacritics.has(accent)) &&
@@ -1489,9 +1493,25 @@ function bnfRightKeraia(
       // the marks typed on it: the keraia is written as it is there.
       !(previous.diacritics.has("coronis") &&
         options.transliteration?.coronis === "greek" &&
-        preservesDiacritic("coronis", options, "transliteration"))
+        preservesDiacritic("coronis", options, "transliteration")) &&
+      !(options.greek?.accentuation === "monotonic" &&
+        isVowel(previous.letter) && isMonosyllable(document, index))
     ? "\u0301"
     : DEXIA_KERAIA;
+}
+
+/** Whether the letters right before `end` count one syllable. */
+function isMonosyllable(document: Document, end: number): boolean {
+  let start = end;
+  while (document[start - 1]?.kind === "grapheme") start--;
+  let syllables = 0;
+  for (let index = start; index < end; index++) {
+    const token = document[index] as Grapheme;
+    if (!isVowel(token.letter)) continue;
+    if (index > start && isDiphthongAt(document, index - 1)) continue;
+    syllables++;
+  }
+  return syllables === 1;
 }
 
 /**
@@ -1525,7 +1545,8 @@ function bnfNumeralReadsBack(
     }
     if (isBoundaryTransparent(token)) continue;
     readsBack = token.value === DEXIA_KERAIA && last?.kind === "grapheme" &&
-      (!isVowel(last.letter) || bnfRightKeraia(options, last) === DEXIA_KERAIA);
+      (!isVowel(last.letter) ||
+        bnfRightKeraia(options, document, end) === DEXIA_KERAIA);
     break;
   }
   run.start = index;

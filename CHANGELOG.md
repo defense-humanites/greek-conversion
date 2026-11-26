@@ -31,6 +31,24 @@ change.
   by their place, then joined spacing signs to the tokens around them,
   after which the places no longer named the omegas. `῎oyʹ` gave `῎ωυʹ`, and
   `῎῎oy` threw a `TypeError`; they give `῎οϋʹ` and `῎῎ωυ`.
+- **Monotonic accentuation shows a hiatus that a removed mark showed.**
+  Where a breathing or an iota subscript on the first of two vowels that
+  would form a diphthong was the only sign of their hiatus, the second
+  takes a diaeresis, as in words in capitals: `ἀυτμή` gives `αϋτμή`,
+  `ἀίδηλος` `αΐδηλος`, in every format. Transliteration wrote `ay` for
+  `ἁυ`, which read back as `aÿ`.
+- **A numeral next to a digit is not written as a number.** Under
+  `text.numerals: "decimal"`, as the ALA-LC presets select, `͵α͵β` gave
+  `1000͵β`, which converted again to `10002000`, and `1αʹ` gave `11`; such
+  a numeral now stays as written.
+- **The BnF keraia of a numeral of one syllable under monotonic
+  accentuation is written `ʹ`.** An acute after its vowel read back as the
+  accent of a monosyllable, which monotonic accentuation removes: `καʹ`
+  gave `ká`, then `ka`. It now gives `kaʹ`.
+- **Under `nasalGamma: "nasal-medial-kappa"` (`ala-lc-modern`), `nk` at the
+  beginning or end of a word reads back as `νκ`.** ALA-LC writes `γκ` as
+  `gk` there, so `Φρανκ`, written `Phrank`, read back as `Φραγκ` and
+  converted again to `Phragk`.
 
 ## [1.0.0-rc.14] - 2026-11-26
 

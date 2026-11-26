@@ -33,7 +33,10 @@ as does a comma before `c̄` or `s̄`, the stigma and sampi of numerals
 (`,c̄` → `͵ϛ`). When the accents are removed, the right keraia is written `ʹ`,
 since an acute would read back as an accent and be removed, and so it is
 after a letter with an accent, where an acute would be a second one (`ίʹ` →
-`íʹ`), or after anything but a letter; the reader takes `ʹ` for the keraia. The BnF table
+`íʹ`), after anything but a letter, and, under monotonic accentuation, after
+the vowel of a numeral of one syllable, which would read back as a
+monosyllable and lose its accent (`καʹ` → `kaʹ`); the reader takes `ʹ` for
+the keraia. The BnF table
 also uses both koppa forms with Latin `q`, which likewise cannot be inverted
 without source provenance.
 Marked uppercase stigma and sampi numerals render with lowercase Latin `c̄`

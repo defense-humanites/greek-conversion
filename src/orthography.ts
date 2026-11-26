@@ -111,7 +111,9 @@ export function applyOrthography(
  *
  * The monotonic policy is mechanical and lossy: it preserves diaeresis and
  * overline, collapses acute/grave/circumflex to one acute, removes
- * breathings, coronis, iota subscript, and explicit quantity, and applies
+ * breathings, coronis, iota subscript, and explicit quantity, writes a
+ * diaeresis where a breathing or an iota subscript it removes showed a
+ * hiatus (`ἀυτμή` → `αϋτμή`), and applies
  * the accent rules of monotonic orthography to each word (see
  * {@link accentWords}). It does not use lexical or morphological knowledge:
  * the accents it keeps on monosyllables are read from the marks of the
@@ -148,11 +150,15 @@ export function applyMonotonicOrthography(
   }
 
   let changed = false;
-  const monotonic = orthographic.map((token) => {
-    if (token.kind === "literal" || token.diacritics.size === 0) return token;
+  const monotonic = orthographic.map((token, index) => {
+    if (token.kind === "literal") return token;
+    const separated = monotonicHidesHiatus(orthographic, index);
+    if (token.diacritics.size === 0 && !separated) return token;
 
     const diacritics = new Set<Diacritic>();
-    if (token.diacritics.has("diaeresis")) diacritics.add("diaeresis");
+    if (separated || token.diacritics.has("diaeresis")) {
+      diacritics.add("diaeresis");
+    }
     // The overline of an abbreviation or a numeral is no accent.
     if (token.diacritics.has("overline")) diacritics.add("overline");
     if (
@@ -170,6 +176,26 @@ export function applyMonotonicOrthography(
 
   changed = accentWords(orthographic, monotonic) || changed;
   return changed ? monotonic : orthographic;
+}
+
+/**
+ * Whether the vowel at `index` follows one whose breathing or iota
+ * subscript alone showed that they form no diphthong (`ἀυτμή`, `ἀίδηλος`):
+ * monotonic Greek, which writes neither, shows it with a diaeresis
+ * (`αϋτμή`, `αΐδηλος`), as words in capitals do. An accent on the first
+ * vowel still shows it (`άυλος`), and a vowel that ends a diphthong begins
+ * none.
+ */
+function monotonicHidesHiatus(document: Document, index: number): boolean {
+  const token = document[index];
+  const previous = document[index - 1];
+  return token.kind === "grapheme" && previous?.kind === "grapheme" &&
+    (previous.diacritics.has("smooth") || previous.diacritics.has("rough") ||
+      previous.diacritics.has("iota-subscript")) &&
+    !previous.diacritics.has("acute") && !previous.diacritics.has("grave") &&
+    !previous.diacritics.has("circumflex") &&
+    mayFormDiphthong(previous.letter, token.letter) &&
+    !isDiphthongAt(document, index - 2);
 }
 
 /**
@@ -1226,7 +1252,11 @@ function readNumeral(
   const previousToken = document[start - 1];
   if (
     isWordLetter(previousToken) ||
-    isLiteral(previousToken, ARISTERI_KERAIA)
+    isLiteral(previousToken, ARISTERI_KERAIA) ||
+    // A numeral next to a digit would make one number with it once written
+    // as a number, which a second conversion would read otherwise: `͵α͵β`
+    // gives `1000͵β`, whose `͵β` follows a digit then.
+    isDigit(previousToken)
   ) {
     return undefined;
   }
@@ -1267,14 +1297,24 @@ function readNumeral(
 
   if (value === 0 || (digits === 0 && !hasThousands)) return undefined;
   if (isLiteral(document[index], DEXIA_KERAIA)) {
-    return { value, end: index + 1 };
+    return isDigit(document[index + 1]) ? undefined : { value, end: index + 1 };
   }
   // A leading thousands sign suffices in the ALA-LC tables. Do not convert
   // a prefix of a longer sequence that fails the numeral ordering rule.
-  if (hasThousands && !isWordLetter(document[index])) {
+  if (
+    hasThousands && !isWordLetter(document[index]) &&
+    !isDigit(document[index])
+  ) {
     return { value, end: index };
   }
   return undefined;
+}
+
+/** Whether a token is a literal that ends with an ASCII digit. */
+function isDigit(token: Token | undefined): boolean {
+  if (token?.kind !== "literal") return false;
+  const last = token.value.charCodeAt(token.value.length - 1);
+  return last >= 0x30 && last <= 0x39;
 }
 
 /** Whether a token is a keraia, which every numeral has. */
