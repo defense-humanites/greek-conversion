@@ -154,3 +154,127 @@ test("omits a quantity mark on epsilon and omicron in transliteration", () => {
     ],
   );
 });
+
+/** French academic usage: a grave on eta, a circumflex on omega. */
+const GRAVE_CIRCUMFLEX = {
+  transliteration: { longVowels: "grave-circumflex" },
+  diacritics: { accents: "remove" },
+} as const;
+
+test("writes eta with a grave and omega with a circumflex", () => {
+  const cases = [
+    ["ὕλη", "hylè"],
+    ["τέχνη", "technè"],
+    ["ἀλήθεια", "alètheia"],
+    ["χώρα", "chôra"],
+    ["θεωρία", "theôria"],
+    ["Σωκράτης", "Sôkratès"],
+    ["ΗΩ Ἡ", "ÈÔ HÈ"],
+    // An iota subscript, an explicit macron, stigma and sampi.
+    ["ᾠδῇ", "ô̧dȩ̀"],
+    ["η̄ ω̄", "è̄ ô̄"],
+    ["ϛ ϡ", "ĉ ŝ"],
+  ] as const;
+  for (const [greek, latin] of cases) {
+    const written = convert(
+      greek,
+      "greek",
+      "transliteration",
+      GRAVE_CIRCUMFLEX,
+    );
+    assertNfcEquals(written, latin);
+    assertEquals(
+      convert(written, "transliteration", "transliteration", GRAVE_CIRCUMFLEX),
+      written,
+    );
+  }
+  // The other spellings of the usage are options of their own.
+  assertNfcEquals(
+    convert("ψυχή φύσις", "greek", "transliteration", {
+      ...GRAVE_CIRCUMFLEX,
+      transliteration: {
+        longVowels: "grave-circumflex",
+        chi: "kh",
+        upsilon: "u",
+      },
+    }),
+    "psukhè phusis",
+  );
+  // Under `eta: "i"`, the grave is on the i.
+  const etaI = {
+    ...GRAVE_CIRCUMFLEX,
+    transliteration: { longVowels: "grave-circumflex", eta: "i" },
+  } as const;
+  assertNfcEquals(
+    convert("ἡμέρα ὥρα", "greek", "transliteration", etaI),
+    "hìmera hôra",
+  );
+  assertNfcEquals(convert("hìmera", "transliteration", "greek", etaI), "ἡμερα");
+});
+
+test("reads a grave or a circumflex on e as eta under the grave of eta", () => {
+  // French academic texts write `è` or `ê`; accents are not restored.
+  assertNfcEquals(
+    convert(
+      "hylè technê khôra Sôkratès ÈÔ",
+      "transliteration",
+      "greek",
+      {
+        ...GRAVE_CIRCUMFLEX,
+        transliteration: { longVowels: "grave-circumflex", chi: "kh" },
+      },
+    ),
+    "ὑλη τεχνη χωρα Σωκρατης ΗΩ",
+  );
+  // Elsewhere, a grave on e is an accent.
+  assertNfcEquals(convert("hylè", "transliteration", "greek"), "ὑλὲ");
+  // A conversion that loses only the accents reads back as written.
+  const result = convertDetailed(
+    "ὕλη χώρα",
+    "greek",
+    "transliteration",
+    GRAVE_CIRCUMFLEX,
+  );
+  assertNfcEquals(result.output, "hylè chôra");
+  assertEquals(
+    result.losses.map(({ code, diacritic }) => ({ code, diacritic })),
+    [
+      { code: "removed-diacritic", diacritic: "acute" },
+      { code: "removed-diacritic", diacritic: "acute" },
+    ],
+  );
+  assertNfcEquals(
+    convert(result.output, "transliteration", "greek", GRAVE_CIRCUMFLEX),
+    "ὑλη χωρα",
+  );
+});
+
+test("a length mark after a mark the reader does not know is no eta's", () => {
+  // Under `eta: "i"`, the mark of eta makes the i eta wherever it stands
+  // among the i's marks, but not after a mark that the reader does not
+  // know, after which marks are text: `ι⃝̄` stays an iota.
+  for (
+    const options of [
+      { preset: "iso-843-type-1" },
+      { transliteration: { eta: "i", longVowels: "circumflex" } },
+      {
+        transliteration: { eta: "i", longVowels: "grave-circumflex" },
+        diacritics: { accents: "remove" },
+      },
+    ] as const
+  ) {
+    for (const mark of ["̄", "̂", "̀"]) {
+      const written = convert(
+        `ι⃝${mark}`,
+        "greek",
+        "transliteration",
+        options,
+      );
+      assertEquals(written, `i⃝${mark}`.normalize("NFC"));
+      assertEquals(
+        convert(written, "transliteration", "transliteration", options),
+        written,
+      );
+    }
+  }
+});

@@ -219,6 +219,18 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       "Ἰησοῦς",
       "Iēsoũs",
     ),
+    {
+      title: "French academic usage",
+      note: "η takes a grave and ω a circumflex, without the accents",
+      text: "ὕλη καὶ ψυχή, χώρα",
+      from: "greek",
+      to: "transliteration",
+      options: {
+        transliteration: { longVowels: "grave-circumflex", chi: "kh" },
+        diacritics: { accents: "remove" },
+      },
+      output: "hylè kai psykhè, khôra",
+    },
   ],
   "ala-lc-ancient": [
     greek(

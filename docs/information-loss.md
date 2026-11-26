@@ -344,14 +344,18 @@ source can be reconstructed from the output: yes, no, or partly.
 | `all: "remove"` | Removes every semantic class, breathings included; a class named alongside is the exception, so `{ all: "remove", roughBreathing: "preserve" }` keeps the rough breathing and its `h` in transliteration | No |
 | `<class>: "remove"` | Removes only the selected semantic class during rendering | No, when that class occurs; unselected classes remain recoverable |
 
-`longVowels` chooses either a macron or a circumflex for structural eta and
-omega length, on the letter that `eta` selects (`ē`/`ê` or `ī`/`î`). A
+`longVowels` chooses a macron, a circumflex, or a grave on eta and a
+circumflex on omega for structural eta and omega length, on the letter that
+`eta` selects (`ē`/`ê`/`è` or `ī`/`î`/`ì`). A
 separately encoded macron remains a philological diacritic: it is retained
 beside a structural circumflex and follows the ordinary quantity diacritic
 policy. Under `eta: "i"`, the macron therefore distinguishes `ῑ` from eta only
 when the length mark is the circumflex. `longVowels: "circumflex"` cannot be
 combined with `circumflexAccent: "circumflex"`: `ῆ` would be written `ê̂` and
 read back without its accent, so `resolveConversionOptions()` rejects the pair.
+`longVowels: "grave-circumflex"` requires `diacritics.accents: "remove"`: `ὲ`
+would be written `è` and read back as eta. Under it, the reader reads `è` and
+`ê` as eta and `ô` as omega, and the removed accents are reported as such.
 
 The `diacritics` policy is applied during encoding, after contextual
 analysis. It therefore cannot manufacture a diphthong or enable a dental

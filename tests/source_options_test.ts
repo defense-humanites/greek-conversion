@@ -41,7 +41,16 @@ function profiles(): Array<[string, ConversionOptions]> {
     )
   ) {
     for (const value of values) {
-      all.push([`${key}: ${value}`, { transliteration: { [key]: value } }]);
+      all.push([
+        `${key}: ${value}`,
+        // The grave of eta requires transliteration without accents.
+        value === "grave-circumflex"
+          ? {
+            transliteration: { [key]: value },
+            diacritics: { accents: "remove" },
+          }
+          : { transliteration: { [key]: value } },
+      ]);
     }
   }
   for (const preset of PRESETS) all.push([`preset ${preset}`, { preset }]);

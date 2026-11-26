@@ -42,6 +42,30 @@ omega (`ē`, `ī`, `ō` or `ê`, `î`, `ô`). The circumflex cannot mark both le
 and accent: `longVowels: "circumflex"` with `circumflexAccent: "circumflex"`
 throws a `RangeError`, since `ῆ` would be written like `η`.
 
+French academic writing marks eta with a grave and omega with a circumflex,
+without the Greek accents: `longVowels: "grave-circumflex"`, which requires
+`diacritics.accents: "remove"`, since the grave of eta would otherwise be the
+accent of `ὲ`. Read under it, `è` and `ê` are eta, and `ô` omega; the accents
+that the usage leaves out are not restored.
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+const french = {
+  transliteration: {
+    longVowels: "grave-circumflex",
+    chi: "kh",
+    upsilon: "u",
+  },
+  diacritics: { accents: "remove" },
+} as const;
+
+convert("ὕλη, τέχνη, χώρα", "greek", "transliteration", french);
+// → hulè, tekhnè, khôra
+convert("hylè, technê", "transliteration", "greek", french);
+// → ὑλη, τεχνη
+```
+
 Further options cover nasal gamma, Modern Greek digraphs, systematic `rh`,
 double rho, the coronis, numerals, and more; every key and its accepted values
 are listed in the [option reference](/reference/options/#transliteration).

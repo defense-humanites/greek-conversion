@@ -37,6 +37,19 @@ change.
   then writes the ano teleia without loss. A bundle grows by 0.2 kB
   minified, under 0.1 kB with gzip.
 
+- **`transliteration.longVowels: "grave-circumflex"`** marks eta with a
+  grave and omega with a circumflex, as French academic writing does: `ὕλη`
+  gives `hylè`, and `χώρα` `chôra`, or `khôra` with `chi: "kh"`. Under
+  `eta: "i"`, eta is `ì`; stigma and sampi take the circumflex (`ĉ`, `ŝ`).
+  The value requires `diacritics.accents: "remove"`, since the usage writes
+  no Greek accent and `ὲ` would be written `è`; otherwise it throws an
+  `OptionError` that names `diacritics.accents`. Read under it, `è` and `ê`
+  are eta, and `ô` omega (`hylè, technê` gives `ὑλη, τεχνη`); the accents that
+  the usage leaves out are not restored. Elsewhere, a grave on `e` remains an
+  accent. A bundle that writes or reads transliteration grows by up to
+  0.2 kB minified, under 0.1 kB with gzip, and `prepareOptions()` by 0.4 kB,
+  0.1 kB with gzip.
+
 ### Changed
 
 - **A letter that a reader keeps as text is a letter of its word.** A
@@ -94,6 +107,14 @@ change.
   only, by 0.3 kB, 0.1 kB with gzip.
 
 ### Fixed
+
+- **Under `eta: "i"`, a length mark after a mark that the reader does not
+  know no longer makes the i eta.** The reader moved the mark of eta to the
+  front of the i's marks from anywhere among them, while marks after an
+  unknown one are text: under ISO 843 type 1, `ι⃝̄`, an iota followed by an
+  enclosing circle and a macron, gave `i⃝̄`, which read back as eta and gave
+  `ī⃝`. It gives `i⃝̄`, which converts again to itself. The same held under
+  `longVowels: "circumflex"`.
 
 - **A diphthong of two capitals keeps them before lowercase text** in
   transliteration (#182). `ΕἹα` gave `Heia`, which lost the capital of its

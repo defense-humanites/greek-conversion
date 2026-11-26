@@ -202,20 +202,27 @@ export type UpsilonTransliteration =
 
 /**
  * Selects the mark that shows the length of eta and omega in
- * transliteration: a macron (`ē`, `ō`), a circumflex (`ê`, `ô`), or none
- * (`e`, `o`, as in ISO 843 Type 2). The letter that carries it on eta is
- * chosen by {@link EtaTransliteration}. The same mark distinguishes stigma and
- * sampi from `c` and `s` (`c̄`, `ĉ`); under `"omit"`, they keep the macron.
- * Explicit philological macrons remain independent semantic marks.
+ * transliteration: a macron (`ē`, `ō`), a circumflex (`ê`, `ô`), a grave on
+ * eta and a circumflex on omega (`è`, `ô`, as French academic writing has
+ * it: `hylè`, `technè`, `khôra`), or none (`e`, `o`, as in ISO 843 Type 2).
+ * The letter that carries it on eta is chosen by {@link EtaTransliteration}.
+ * The same mark distinguishes stigma and sampi from `c` and `s` (`c̄`, `ĉ`);
+ * under `"grave-circumflex"`, they take the circumflex, and under `"omit"`,
+ * the macron. Explicit philological macrons remain independent semantic
+ * marks.
  *
  * `"omit"` writes eta and omega like epsilon (or iota) and omicron, so they
  * are read back as those letters. `"circumflex"` cannot be combined with
  * `circumflexAccent: "circumflex"`, which would write the length mark and the
- * accent alike.
+ * accent alike. `"grave-circumflex"` requires `diacritics.accents:
+ * "remove"`, as the usage writes no Greek accent: the grave of eta would be
+ * written as the grave accent of epsilon. Read under it, `è` and `ê` are eta,
+ * and `ô` is omega.
  */
 export type LongVowelTransliteration =
   | "macron"
   | "circumflex"
+  | "grave-circumflex"
   | "omit";
 
 /** Selects polytonic output or a mechanical, lossy monotonic transformation, in every format. */
@@ -269,7 +276,8 @@ export type BetaTransliteration = "b" | "v";
 /**
  * Selects the Latin letter for eta in transliteration: `e` or `i`. The letter
  * carries the length mark selected by {@link LongVowelTransliteration}: `ē` or
- * `ī` by default, `ê` or `î` under `longVowels: "circumflex"`.
+ * `ī` by default, `ê` or `î` under `longVowels: "circumflex"`, `è` or `ì`
+ * under `longVowels: "grave-circumflex"`.
  */
 export type EtaTransliteration = "e" | "i";
 
@@ -425,7 +433,7 @@ export interface TransliterationOptions {
   rho?: RhoTransliteration;
   /** Nasal gamma spelling. Defaults to `"nasal"`. */
   nasalGamma?: NasalGammaTransliteration;
-  /** Length mark of eta and omega in transliteration: `"macron"`, `"circumflex"`, or `"omit"`. Defaults to `"macron"`; `"circumflex"` cannot be combined with `circumflexAccent: "circumflex"`. */
+  /** Length mark of eta and omega in transliteration: `"macron"`, `"circumflex"`, `"grave-circumflex"` (`è`, `ô`), or `"omit"`. Defaults to `"macron"`; `"circumflex"` cannot be combined with `circumflexAccent: "circumflex"`, and `"grave-circumflex"` requires `diacritics.accents: "remove"`. */
   longVowels?: LongVowelTransliteration;
   /** Circumflex accent in transliteration. Defaults to `"tilde"` (U+0303); `"circumflex"` cannot be combined with `longVowels: "circumflex"`. */
   circumflexAccent?: CircumflexTransliteration;
@@ -740,7 +748,7 @@ export const CONVERSION_OPTION_VALUES: ConversionOptionValues =
         "nasal-medial-kappa",
         "literal",
       ],
-      longVowels: ["macron", "circumflex", "omit"],
+      longVowels: ["macron", "circumflex", "grave-circumflex", "omit"],
       circumflexAccent: ["tilde", "circumflex"],
       quantity: ["preserve", "omit"],
       smoothBreathing: ["omit", "greek", "apostrophe"],
