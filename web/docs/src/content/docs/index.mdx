@@ -19,16 +19,17 @@ import {
   reencode,
 } from "@humanities/greek-conversion";
 
-// Ancient Greek, from the TLG's Beta Code, with nothing lost
-const res = convertDetailed("*(/ELLHSIN E)GE/NETO", "beta-code", "greek");
-res.output; // → Ἕλλησιν ἐγένετο
-res.lossy; // → false
+// Ancient Greek, from Beta Code as the TLG writes it
+convert("*(/ELLHSIN E)GE/NETO", "beta-code", "greek");
+// → Ἕλλησιν ἐγένετο
 
 // Byzantine Greek, the καί symbol read with the manuscripts' accent
-convert("ϗ ἐπὶ γῆς εἰρήνη", "greek", "transliteration", {
+const res = convertDetailed("ϗ τὰ λοιπά", "greek", "transliteration", {
   greek: { kaiAccent: "byzantine" },
 });
-// → kaì epì gē̃s eirḗnē
+res.output; // → kaì tà loipá
+res.losses[0].glyphVariant; // → kai-symbol
+res.losses[1].diacritic; // → grave
 
 // Modern Greek, from polytonic to monotonic, as passports write it
 reencode("Hi ’Athína ’eînai hi protévousa", "transliteration", {
