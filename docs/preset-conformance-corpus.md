@@ -12,7 +12,7 @@ the reference's choice of letters or punctuation.
 This is a **selected, source-traceable corpus**, not a claim that either preset
 implements every rule. The BnF source describes both its main ISO-based
 transliteration (`β → v`, `η → ī`, `φ → f`) and optional ancient-Greek
-variants (`b`, `ē`, `ph`). `bnf-core` selects the latter. It cannot decide
+variants (`b`, `ē`, `ph`). `bnf-ancient` selects the latter. It cannot decide
 whether a catalogue record also needs the main form or an access-point
 variant. `iso-843-type-1` selects the main ISO forms. `iso-843-type-2` is a
 transcription, not reversible by design (§ 1 of the standard): most of its

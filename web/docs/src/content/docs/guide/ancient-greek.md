@@ -31,7 +31,7 @@ convert("ϝάναξ ϙόρινθος", "greek", "transliteration"); // → wána
 | A scholarly transliteration, with accents and length     | No preset (the default)     | `euchȩ̄̃`    |
 | The SBL Handbook's transliteration, without accents      | `sbl-general`               | `euchē`    |
 | Library catalogue records, after the Library of Congress | `ala-lc-ancient`            | `euchē`    |
-| Catalogue records of French libraries, after the BnF     | `bnf-core`                  | `eu̓chȩ̄̂`    |
+| Catalogue records of French libraries, after the BnF     | `bnf-ancient`                  | `eu̓chȩ̄̂`    |
 | The international transliteration, ISO 843               | `iso-843-type-1`            | `’euchī̧̂`   |
 | Beta Code as the TLG writes it                           | `tlg-core`                  | `EU)XH=\|` |
 | Beta Code for Perseus and Morpheus                       | `perseus`                   | `eu)xh=\|` |
@@ -63,7 +63,7 @@ the same text, the symbol forms apart. The transliterations differ:
 - the default writes no smooth breathing and reads one back
   on an initial vowel, so that it converts back but for the coronis and the
   few spellings listed under [Limits](#limits);
-- `bnf-core` writes the smooth breathing and the coronis as marks of their
+- `bnf-ancient` writes the smooth breathing and the coronis as marks of their
   own, which read back;
 - `iso-843-type-1` writes the smooth breathing as an apostrophe, which does
   not read back as a breathing;
@@ -124,7 +124,7 @@ convert("βιβλίον γʹ, ἔτος ͵αωκαʹ", "greek", "transliteration
   table expects `Hēsiodou`.
 - **A hiatus marked by a breathing alone.** `Ἀίδης` is transliterated
   `Aídēs`, which reads back as the diphthong of `Αἴδης`; the loss is reported
-  (`displaced-diacritic`), and `bnf-core` keeps the distinction.
+  (`displaced-diacritic`), and `bnf-ancient` keeps the distinction.
 - **Symbol forms in Beta Code.** Beta Code notes the lunate sigma, but not
   `ϐ` or `ϑ`, which convert back as `β` and `θ`.
 - **Greek mixed with another language.** `convert()` converts the whole

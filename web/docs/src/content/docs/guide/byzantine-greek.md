@@ -79,7 +79,7 @@ of an elision: `τ᾿ ἐστί` gives `t’ estí`.
 
 Editions of Byzantine texts and of papyri often print the lunate sigma.
 Greek output keeps it where the source has it, Beta Code writes it `s3`, and
-`bnf-core` writes it `c`, which reads back. The other transliterations write
+`bnf-ancient` writes it `c`, which reads back. The other transliterations write
 `s`, and `convertDetailed()` reports the form as lost
 (`removed-glyph-variant`). `greek.sigma` folds it, or writes every sigma
 lunate:
@@ -92,7 +92,7 @@ reencode("Χριϲτόϲ", "greek", { greek: { sigma: "standard" } }); // → Χ
 reencode("Χριστός", "greek", { greek: { sigma: "lunate" } }); // → Χριϲτόϲ
 
 convert("Χριϲτόϲ", "greek", "beta-code"); // → *xris3to/s3
-convert("Χριϲτόϲ", "greek", "transliteration", { preset: "bnf-core" });
+convert("Χριϲτόϲ", "greek", "transliteration", { preset: "bnf-ancient" });
 // → Chrictóc
 ```
 

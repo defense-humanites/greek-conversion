@@ -252,7 +252,7 @@ const CASES: readonly {
   {
     format: "greek",
     target: "transliteration",
-    options: { preset: "bnf-core" },
+    options: { preset: "bnf-ancient" },
     passage: BNF_NUMERAL_WORD,
     name: "capital stigmas and sampis in a long word",
   },

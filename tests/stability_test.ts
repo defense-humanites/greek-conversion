@@ -175,7 +175,7 @@ const PROFILES = [
   { name: "modern ALA-LC preset", options: { preset: "ala-lc-modern" } },
   { name: "general SBL preset", options: { preset: "sbl-general" } },
   { name: "TLG core preset", options: { preset: "tlg-core" } },
-  { name: "BnF core preset", options: { preset: "bnf-core" } },
+  { name: "BnF core preset", options: { preset: "bnf-ancient" } },
 ] as const satisfies readonly OptionProfile[];
 
 function assertStable(

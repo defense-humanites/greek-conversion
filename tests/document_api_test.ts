@@ -71,7 +71,7 @@ test("encoding and validation leave an edited document unchanged", () => {
 });
 
 test("document parsing and encoding share transliteration options", () => {
-  const options = { preset: "bnf-core" } as const;
+  const options = { preset: "bnf-ancient" } as const;
   const document = parse("Chará", "transliteration", options);
   assertNfcEquals(encode(document, "greek", options), "Χαρά");
 });
@@ -127,7 +127,7 @@ test("preset Greek views remain valid across source formats", () => {
   const presets = [
     "ala-lc-ancient",
     "ala-lc-modern",
-    "bnf-core",
+    "bnf-ancient",
     "iso-843-type-1",
     "iso-843-type-2",
     "perseus",

@@ -382,7 +382,9 @@ test("a character that normalization leaves unchanged keeps its own span", () =>
     ["b", "b"],
   ]);
   assertEquals(
-    pieces(detailed("ὀʹ", "greek", "transliteration", { preset: "bnf-core" })),
+    pieces(
+      detailed("ὀʹ", "greek", "transliteration", { preset: "bnf-ancient" }),
+    ),
     [["ὀ", "o\u{313}"], ["ʹ", "\u{301}"]],
   );
 });
@@ -1021,7 +1023,7 @@ test("span invariants hold for bound converters", () => {
     CUSTOM,
     createConverter({ characters: [SAN], exclude: ["san", "digamma"] }),
     createConverter({ preset: "iso-843-type-2" }),
-    createConverter({ preset: "bnf-core", exclude: ["stigma"] }),
+    createConverter({ preset: "bnf-ancient", exclude: ["stigma"] }),
   ];
   const inputs = [
     ...EDGE_CASES,

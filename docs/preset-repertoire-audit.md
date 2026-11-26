@@ -27,7 +27,7 @@ matrix records only the six additional entries.
 | --- | --- | --- | --- | --- | --- | --- |
 | `ala-lc-ancient` | Exact | Outside | Numeral-only | Numeral-only | Exact | Numeral-only |
 | `ala-lc-modern` | Numeral-only | Outside | Numeral-only | Numeral-only | Numeral-only | Numeral-only |
-| `bnf-core` | Exact | Exact | Exact | Exact | Exact | Exact |
+| `bnf-ancient` | Exact | Exact | Exact | Exact | Exact | Exact |
 | `iso-843-type-1` | Exact | Exact | Undefined | Undefined | Unresolved | Undefined |
 | `iso-843-type-2` | Exact | Exact | Undefined | Undefined | Unresolved | Undefined |
 | `perseus` | Outside | Outside | Outside | Outside | Outside | Outside |
@@ -124,7 +124,7 @@ Lunate sigma is not an independent `Letter`; the parser records it as
 `glyphVariant: "lunate-sigma"` on semantic sigma.
 
 - ISO 843 includes Byzantine/lunate sigma and transliterates it as `s`.
-- BnF deliberately distinguishes it as `c`; `bnf-core` selects that behavior.
+- BnF deliberately distinguishes it as `c`; `bnf-ancient` selects that behavior.
 - The Perseids mapping and TLG quick reference both encode it as `S3` (subject
   to the selected ASCII letter case).
 - The ALA-LC and SBL boundaries remain governed by their ordinary sigma rules;

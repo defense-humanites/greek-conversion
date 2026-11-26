@@ -27,7 +27,7 @@ const VALUES = {
 const PRESETS = [
   ["ala-lc-ancient", presets.alaLcAncient],
   ["ala-lc-modern", presets.alaLcModern],
-  ["bnf-core", presets.bnfCore],
+  ["bnf-ancient", presets.bnfAncient],
   ["iso-843-type-1", presets.iso843Type1],
   ["iso-843-type-2", presets.iso843Type2],
   ["perseus", presets.perseus],

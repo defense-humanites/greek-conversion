@@ -99,25 +99,28 @@ export const alaLcModern: PreparedOptions = /* @__PURE__ */ preset(
 );
 
 /**
- * `bnf-core`, BnF — Ancient Greek core, as prepared options: the options of `{
- * preset: "bnf-core" }`. Core mechanically expressible profile for the BnF
- * adaptation of ISO 843 for Ancient Greek.
+ * `bnf-ancient`, BnF — Ancient Greek, as prepared options: the options of `{
+ * preset: "bnf-ancient" }`. BnF adaptation of ISO 843 for Ancient Greek, with
+ * its variant letters.
  */
-export const bnfCore: PreparedOptions = /* @__PURE__ */ preset("bnf-core", {
-  transliteration: {
-    upsilon: "y-with-au-eu-ou",
-    rho: "marked",
-    circumflexAccent: "circumflex",
-    quantity: "omit",
-    smoothBreathing: "greek",
-    coronis: "greek",
-    hyphen: "typographic",
-    keraia: "bnf",
-    lunateSigma: "c",
-    archaicKoppa: "q",
+export const bnfAncient: PreparedOptions = /* @__PURE__ */ preset(
+  "bnf-ancient",
+  {
+    transliteration: {
+      upsilon: "y-with-au-eu-ou",
+      rho: "marked",
+      circumflexAccent: "circumflex",
+      quantity: "omit",
+      smoothBreathing: "greek",
+      coronis: "greek",
+      hyphen: "typographic",
+      keraia: "bnf",
+      lunateSigma: "c",
+      archaicKoppa: "q",
+    },
+    greek: { questionMark: "greek" },
   },
-  greek: { questionMark: "greek" },
-});
+);
 
 /**
  * `iso-843-type-1`, ISO 843:1997 — Type 1 (transliteration), as prepared
@@ -172,9 +175,9 @@ export const iso843Type2: PreparedOptions = /* @__PURE__ */ preset(
 );
 
 /**
- * `perseus`, Perseus Beta Code — Core subset, as prepared options: the options
- * of `{ preset: "perseus" }`. Lowercase-ASCII subset of TLG Beta Code used by
- * the Perseus Digital Library project.
+ * `perseus`, Perseus Beta Code — Letters and diacritics, as prepared options:
+ * the options of `{ preset: "perseus" }`. Lowercase-ASCII subset of TLG Beta
+ * Code used by the Perseus Digital Library project.
  */
 export const perseus: PreparedOptions = /* @__PURE__ */ preset("perseus", {});
 

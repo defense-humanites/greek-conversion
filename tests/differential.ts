@@ -76,11 +76,50 @@ function isMeant(
   );
 }
 
-/** `options`, with the groups of `more` merged into theirs. */
+/**
+ * The presets renamed since the reference, by their name there: this tree
+ * is given the current name. RELEASING.md empties it with `MEANT`, once the
+ * reference has the new names.
+ */
+const RENAMED_PRESETS: Readonly<Record<string, string>> = {
+  "bnf-core": "bnf-ancient",
+};
+
+/** A preset by its current name. */
+function currentPreset(preset: unknown): unknown {
+  return typeof preset === "string" && Object.hasOwn(RENAMED_PRESETS, preset)
+    ? RENAMED_PRESETS[preset]
+    : preset;
+}
+
+/** `options`, with the current names of the presets that they name. */
+function currentOptions(options: ConversionOptions): ConversionOptions {
+  const { preset, source } = options as {
+    preset?: unknown;
+    source?: { preset?: unknown };
+  };
+  const renamed: Record<string, unknown> = { ...options };
+  let changed = false;
+  if (currentPreset(preset) !== preset) {
+    renamed.preset = currentPreset(preset);
+    changed = true;
+  }
+  if (currentPreset(source?.preset) !== source?.preset) {
+    renamed.source = { ...source, preset: currentPreset(source?.preset) };
+    changed = true;
+  }
+  return changed ? renamed as ConversionOptions : options;
+}
+
+/**
+ * `options`, with the current names of their presets and the groups of
+ * `more` merged into theirs.
+ */
 function withOptions(
   options: ConversionOptions,
   more: ConversionOptions | undefined,
 ): ConversionOptions {
+  options = currentOptions(options);
   if (more === undefined) return options;
   const merged: Record<string, unknown> = { ...options };
   for (const [group, values] of Object.entries(more)) {
@@ -243,7 +282,7 @@ export function compareConversions(
     let prepared: core.PreparedOptions | undefined;
     let refused: unknown;
     try {
-      prepared = core.prepareOptions(options);
+      prepared = core.prepareOptions(currentOptions(options));
     } catch (error) {
       refused = error;
     }

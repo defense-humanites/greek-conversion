@@ -75,7 +75,7 @@ test("the presets entry point holds one prepared preset per preset", () => {
   assertEquals(Object.keys(presetsApi).sort(), [
     "alaLcAncient",
     "alaLcModern",
-    "bnfCore",
+    "bnfAncient",
     "iso843Type1",
     "iso843Type2",
     "perseus",

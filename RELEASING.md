@@ -60,7 +60,8 @@ Both registries use the same package name and version:
     new release, in a pull request:
     `npm install --save-dev --save-exact greek-conversion-previous@npm:@humanities/greek-conversion@<version>`,
     and empty `MEANT` in `tests/meant.ts`, whose changes the release
-    now holds.
+    now holds, and `RENAMED_PRESETS` in `tests/differential.ts`, whose names
+    it now has.
 
 ## A slow JSR step
 

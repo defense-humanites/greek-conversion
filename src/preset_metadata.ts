@@ -90,12 +90,12 @@ const PRESET_METADATA = {
       "Yot is not part of the cited ALA-LC inventory.",
     ],
   },
-  "bnf-core": {
-    id: "bnf-core",
-    name: "BnF — Ancient Greek core",
+  "bnf-ancient": {
+    id: "bnf-ancient",
+    name: "BnF — Ancient Greek",
     authority: "Bibliothèque nationale de France",
     description:
-      "Core mechanically expressible profile for the BnF adaptation of ISO 843 for Ancient Greek.",
+      "BnF adaptation of ISO 843 for Ancient Greek, with its variant letters.",
     scope: ["Ancient Greek", "French library cataloguing"],
     coverage: "partial",
     outOfScopeBehavior: "engine-default",
@@ -177,7 +177,7 @@ const PRESET_METADATA = {
   },
   "perseus": {
     id: "perseus",
-    name: "Perseus Beta Code — Core subset",
+    name: "Perseus Beta Code — Letters and diacritics",
     authority: "Perseus Digital Library",
     description:
       "Lowercase-ASCII subset of TLG Beta Code used by the Perseus Digital Library project.",

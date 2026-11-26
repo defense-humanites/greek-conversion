@@ -78,7 +78,7 @@ metadata or options.
 | --- | --- | --- | --- |
 | `ala-lc-ancient` | Romanization profile for Ancient and Medieval Greek before 1454. | Ancient Greek; Medieval Greek before 1454 | partial |
 | `ala-lc-modern` | Romanization profile for Modern Greek after 1453. | Modern Greek after 1453 | partial |
-| `bnf-core` | Core mechanically expressible profile for the BnF adaptation of ISO 843 for Ancient Greek. | Ancient Greek; French library cataloguing | partial |
+| `bnf-ancient` | BnF adaptation of ISO 843 for Ancient Greek, with its variant letters. | Ancient Greek; French library cataloguing | partial |
 | `iso-843-type-1` | Type 1 transliteration of Greek characters into Latin characters, also that of ELOT 743, the Greek national standard, since its 2001 edition. | Ancient Greek; Modern Greek | partial |
 | `iso-843-type-2` | Type 2 transcription of Greek characters into Latin characters, favouring pronunciation over reversibility: the transcription of ELOT 743, the Greek national standard, for identity documents, road signs, and maps, which the United Nations and BGN/PCGN adopted for geographical names. | Modern Greek; Ancient Greek | partial |
 | `perseus` | Lowercase-ASCII subset of TLG Beta Code used by the Perseus Digital Library project. | Polytonic Greek; Perseus and Morpheus interchange | complete |
@@ -178,14 +178,14 @@ Romanization profile for Modern Greek after 1453.
 - Digamma, stigma, both koppa forms, and sampi are documented only as marked numerals; their unmarked engine defaults are outside the ALA-LC table.
 - Yot is not part of the cited ALA-LC inventory.
 
-### `bnf-core` — BnF — Ancient Greek core
+### `bnf-ancient` — BnF — Ancient Greek
 
 - **Authority:** Bibliothèque nationale de France
 - **Scope:** Ancient Greek; French library cataloguing
 - **Coverage:** `partial`
 - **Out-of-scope behavior:** `engine-default`
 
-Core mechanically expressible profile for the BnF adaptation of ISO 843 for Ancient Greek.
+BnF adaptation of ISO 843 for Ancient Greek, with its variant letters.
 
 **References:**
 
@@ -310,7 +310,7 @@ Type 2 transcription of Greek characters into Latin characters, favouring pronun
 - ISO 843 names stigma, koppa, and sampi in its Greek repertoire but does not assign them Type 2 conversions; bound converters preserve or reject them for transliteration, while ordinary preset use retains engine defaults.
 - The standard's single named koppa cannot be identified unambiguously with the engine's separate archaic-koppa entry; bound transliteration reports this unresolved mapping.
 
-### `perseus` — Perseus Beta Code — Core subset
+### `perseus` — Perseus Beta Code — Letters and diacritics
 
 - **Authority:** Perseus Digital Library
 - **Scope:** Polytonic Greek; Perseus and Morpheus interchange
@@ -471,7 +471,7 @@ vowel carries the separation, as Greek writes a hiatus (`ay → ἀυ`,
 diaeresis carries it (`kay → kaÿ`), and the encoder writes that diaeresis at
 once so the output is canonical.
 
-`bnf-core` also selects `transliteration.keraia: "bnf"` for transliteration: the
+`bnf-ancient` also selects `transliteration.keraia: "bnf"` for transliteration: the
 right numeral mark becomes an acute accent and the left numeral mark becomes
 a comma. This matches BnF spelling, but a vowel with an acute accent can be
 indistinguishable from a vowel followed by the right keraia. Forward
@@ -484,7 +484,7 @@ monotonic accentuation after the vowel of a numeral of one syllable.
 Canonical NFC output may compose the acute with a preceding Latin vowel.
 Set `transliteration.keraia: "greek"` to keep the original numeral marks.
 
-`bnf-core` writes the smooth breathing as the combining comma above on its
+`bnf-ancient` writes the smooth breathing as the combining comma above on its
 vowel (`Eu̓dēmeíōn`), as example 27 of the BnF page does. Its table gives the
 spacing psili (U+1FBF), and most of its examples write the apostrophe of
 ISO 843 (`’Alkiviádīs`), which `smoothBreathing: "apostrophe"` writes.

@@ -117,7 +117,7 @@ Selects the transliterated spelling of upsilon.
 | `"u"` | <span class="conversion"><span lang="el">ὑπὲρ</span> <span class="to">→</span> hupèr</span> |  |
 | `"y"` | <span class="conversion"><span lang="el">εὐθύς</span> <span class="to">→</span> eythýs</span> |  |
 | `"y-with-diphthong-u"` (default) | <span class="conversion"><span lang="el">ὑπὲρ</span> <span class="to">→</span> hypèr</span><br><span class="conversion"><span lang="el">εὐθύς</span> <span class="to">→</span> euthýs</span><br><span class="conversion"><span lang="el">ηὑρέθη</span> <span class="to">→</span> hēuréthē</span> | `ala-lc-ancient`, `ala-lc-modern`, `sbl-general` |
-| `"y-with-au-eu-ou"` | <span class="conversion"><span lang="el">ηὑρέθη</span> <span class="to">→</span> hēyréthē</span> | `bnf-core`, `iso-843-type-1` |
+| `"y-with-au-eu-ou"` | <span class="conversion"><span lang="el">ηὑρέθη</span> <span class="to">→</span> hēyréthē</span> | `bnf-ancient`, `iso-843-type-1` |
 | `"y-with-ou-v-f"` | <span class="conversion"><span lang="el">εὐθύς</span> <span class="to">→</span> efthýs</span> | `iso-843-type-2` |
 
 ### `transliteration.muPi`
@@ -153,7 +153,7 @@ Selects how rho is written. `"contextual"` writes the `h` of a rough breathing, 
 | Value | Greek → transliteration | Presets |
 | --- | --- | --- |
 | `"contextual"` (default) | <span class="conversion"><span lang="el">ἄρρητος</span> <span class="to">→</span> árrhētos</span><br><span class="conversion"><span lang="el">μέρει</span> <span class="to">→</span> mérei</span> |  |
-| `"marked"` | <span class="conversion"><span lang="el">ἄρρητος</span> <span class="to">→</span> árrētos</span> | `ala-lc-modern`, `bnf-core`, `iso-843-type-1`, `iso-843-type-2` |
+| `"marked"` | <span class="conversion"><span lang="el">ἄρρητος</span> <span class="to">→</span> árrētos</span> | `ala-lc-modern`, `bnf-ancient`, `iso-843-type-1`, `iso-843-type-2` |
 | `"systematic"` | <span class="conversion"><span lang="el">μέρει</span> <span class="to">→</span> mérhei</span> |  |
 
 ### `transliteration.nasalGamma`
@@ -195,7 +195,7 @@ Selects the combining mark used for a transliterated circumflex accent.
 | Value | Greek → transliteration | Presets |
 | --- | --- | --- |
 | `"tilde"` (default) | <span class="conversion"><span lang="el">τῶν</span> <span class="to">→</span> tō̃n</span> |  |
-| `"circumflex"` | <span class="conversion"><span lang="el">τῶν</span> <span class="to">→</span> tō̂n</span> | `bnf-core`, `iso-843-type-1`, `iso-843-type-2` |
+| `"circumflex"` | <span class="conversion"><span lang="el">τῶν</span> <span class="to">→</span> tō̂n</span> | `bnf-ancient`, `iso-843-type-1`, `iso-843-type-2` |
 
 ### `transliteration.quantity`
 
@@ -206,7 +206,7 @@ Selects whether explicit source quantity marks appear in Latin output.
 | Value | Greek → transliteration | Presets |
 | --- | --- | --- |
 | `"preserve"` (default) | <span class="conversion"><span lang="el">ᾱ̓́</span> <span class="to">→</span> ā́</span> |  |
-| `"omit"` | <span class="conversion"><span lang="el">ᾱ̓́</span> <span class="to">→</span> á</span> | `bnf-core` |
+| `"omit"` | <span class="conversion"><span lang="el">ᾱ̓́</span> <span class="to">→</span> á</span> | `bnf-ancient` |
 
 ### `transliteration.smoothBreathing`
 
@@ -217,7 +217,7 @@ Selects whether a known smooth breathing is rendered on a Latin letter.
 | Value | Greek → transliteration | Presets |
 | --- | --- | --- |
 | `"omit"` (default) | <span class="conversion"><span lang="el">ἐγένετο</span> <span class="to">→</span> egéneto</span> |  |
-| `"greek"` | <span class="conversion"><span lang="el">ἐγένετο</span> <span class="to">→</span> e̓géneto</span> | `bnf-core` |
+| `"greek"` | <span class="conversion"><span lang="el">ἐγένετο</span> <span class="to">→</span> e̓géneto</span> | `bnf-ancient` |
 | `"apostrophe"` | <span class="conversion"><span lang="el">ἐγένετο</span> <span class="to">→</span> ’egéneto</span> | `iso-843-type-1`, `iso-843-type-2` |
 
 ### `transliteration.coronis`
@@ -230,7 +230,7 @@ Selects how a semantic coronis is represented in transliteration.
 | --- | --- | --- |
 | `"omit"` (default) | <span class="conversion"><span lang="el">κἀγώ</span> <span class="to">→</span> kagṓ</span> |  |
 | `"apostrophe"` | <span class="conversion"><span lang="el">κἀγώ</span> <span class="to">→</span> ka’gṓ</span> | `iso-843-type-1`, `iso-843-type-2` |
-| `"greek"` | <span class="conversion"><span lang="el">κἀγώ</span> <span class="to">→</span> ka᾽gṓ</span> | `bnf-core` |
+| `"greek"` | <span class="conversion"><span lang="el">κἀγώ</span> <span class="to">→</span> ka᾽gṓ</span> | `bnf-ancient` |
 
 ### `transliteration.hyphen`
 
@@ -241,7 +241,7 @@ Selects ASCII or typographic hyphen in transliteration output.
 | Value | Greek → transliteration | Presets |
 | --- | --- | --- |
 | `"ascii"` (default) | <span class="conversion"><span lang="el">πολυ-λογία</span> <span class="to">→</span> poly-logía</span> |  |
-| `"typographic"` | <span class="conversion"><span lang="el">πολυ-λογία</span> <span class="to">→</span> poly‐logía</span> | `bnf-core` |
+| `"typographic"` | <span class="conversion"><span lang="el">πολυ-λογία</span> <span class="to">→</span> poly‐logía</span> | `bnf-ancient` |
 
 ### `transliteration.keraia`
 
@@ -252,7 +252,7 @@ Selects Greek keraia marks or the BnF comma and combining acute in Latin output.
 | Value | Greek → transliteration | Presets |
 | --- | --- | --- |
 | `"greek"` (default) | <span class="conversion"><span lang="el">ϛʹ</span> <span class="to">→</span> c̄ʹ</span> |  |
-| `"bnf"` | <span class="conversion"><span lang="el">ϛʹ</span> <span class="to">→</span> c̄́</span> | `bnf-core` |
+| `"bnf"` | <span class="conversion"><span lang="el">ϛʹ</span> <span class="to">→</span> c̄́</span> | `bnf-ancient` |
 
 ### `transliteration.enotikon`
 
@@ -285,7 +285,7 @@ Selects `s` or `c` for a provenanced lunate sigma in transliteration.
 | Value | Greek → transliteration | Presets |
 | --- | --- | --- |
 | `"s"` (default) | <span class="conversion"><span lang="el">ϲοφία</span> <span class="to">→</span> sophía</span> |  |
-| `"c"` | <span class="conversion"><span lang="el">ϲοφία</span> <span class="to">→</span> cophía</span> | `bnf-core` |
+| `"c"` | <span class="conversion"><span lang="el">ϲοφία</span> <span class="to">→</span> cophía</span> | `bnf-ancient` |
 
 ### `transliteration.archaicKoppa`
 
@@ -296,7 +296,7 @@ Selects the transliteration emitted for archaic koppa.
 | Value | Greek → transliteration | Presets |
 | --- | --- | --- |
 | `"k-dot-below"` (default) | <span class="conversion"><span lang="el">ϙ</span> <span class="to">→</span> ḳ</span> |  |
-| `"q"` | <span class="conversion"><span lang="el">ϙ</span> <span class="to">→</span> q</span> | `bnf-core` |
+| `"q"` | <span class="conversion"><span lang="el">ϙ</span> <span class="to">→</span> q</span> | `bnf-ancient` |
 
 ## `greek`
 
@@ -485,7 +485,7 @@ Selects the Unicode scalar used for Greek question marks.
 | --- | --- | --- |
 | `"canonical"` (default) | <span class="conversion"><span lang="el">λέγεις;</span> <span class="to">→</span> <span lang="el">λέγεις;</span></span> (U+003B) |  |
 | `"semicolon"` |  |  |
-| `"greek"` | <span class="conversion"><span lang="el">λέγεις;</span> <span class="to">→</span> <span lang="el">λέγεις;</span></span> (U+037E) | `bnf-core` |
+| `"greek"` | <span class="conversion"><span lang="el">λέγεις;</span> <span class="to">→</span> <span lang="el">λέγεις;</span></span> (U+037E) | `bnf-ancient` |
 
 ### `greek.anoTeleia`
 

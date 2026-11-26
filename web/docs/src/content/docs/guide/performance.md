@@ -78,7 +78,7 @@ yours.
   [Converters, options, and errors](/guide/converters/#prepare-options-once)
   shows.
 - **Converters.** A converter from `createConverter()` with nothing to look
-  for converts as fast as `convert()`, and so does one bound to `bnf-core` or
+  for converts as fast as `convert()`, and so does one bound to `bnf-ancient` or
   `tlg-core`, whose repertoires hold every character. One bound to another
   preset checks each letter against the preset's repertoire, and one with
   aliases or characters of its own looks for their spellings: a long text

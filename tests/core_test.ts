@@ -71,7 +71,7 @@ const OPTION_SETS: readonly {
     { greek: { accentuation: "monotonic", composition: "decomposed" } },
     { text: { numerals: "decimal", whitespace: "collapse" } },
     { diacritics: { all: "remove" }, transliteration: { eta: "i" } },
-    { preset: "bnf-core", greek: { ligatures: "standard" }, source: {} },
+    { preset: "bnf-ancient", greek: { ligatures: "standard" }, source: {} },
   ] satisfies ConversionOptions[]).map((options) => ({
     name: JSON.stringify(options),
     options,

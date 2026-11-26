@@ -1319,10 +1319,14 @@ function restoreState(): void {
   if (known(to)) setTarget(to);
   if (state.has("text")) source.value = state.get("text") ?? "";
   // A preset the library no longer has falls back to the defaults, which
-  // write what `sbl-academic` wrote before 1.0.0.
-  const preset = presets.find(({ id }) => id === state.get("preset"))?.id;
+  // write what `sbl-academic` wrote before 1.0.0, and a renamed one is read
+  // by its new name.
+  const renamed = (id: string | null): string | null =>
+    id === "bnf-core" ? "bnf-ancient" : id;
+  const preset = presets.find(({ id }) => id === renamed(state.get("preset")))
+    ?.id;
   choosePreset(preset ?? "");
-  const written = state.get("written");
+  const written = renamed(state.get("written"));
   sourceStyle = written === "defaults" || written === "sbl-academic"
     ? "defaults"
     : presets.find(({ id }) =>
