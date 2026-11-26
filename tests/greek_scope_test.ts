@@ -184,6 +184,16 @@ test("the core entry point converts the Greek passages", () => {
     core.reencode(input, greekFormat, options),
     "Θ. Δημητριου ; λογος",
   );
+  // The question mark is copied, where a conversion of the whole text
+  // would read it as Greek.
+  assertEquals(
+    core.reencode(
+      "τί? τί;",
+      greekFormat,
+      prepareOptions({ text: { scope: "greek", letterCase: "uppercase" } }),
+    ),
+    "ΤΙ? ΤΙ;",
+  );
 });
 
 test("the Greek passages are read from Greek only, and not by a converter", () => {

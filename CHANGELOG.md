@@ -21,7 +21,7 @@ change.
   word, as an application had to, lost the period. `convert()`,
   `convertDetailed()`, and `reencode()` of both entry points take it, for a
   Greek source; another source format, and a converter, throw an
-  `OptionError`. A text takes about 1.6 times as long as its conversion as a
+  `OptionError`. A text takes 1.5 to 2 times as long as its conversion as a
   whole. A bundle grows by 2.2 kB minified, 0.9 kB with gzip, and by 3.5 kB,
   1.4 kB with gzip, with `convertDetailed()`; `OptionError` moves to a module
   of its own, so that the bundles of the `core` entry point keep none of the
