@@ -66,6 +66,7 @@ The package is ESM-only and ships its own type declarations.
 | Convert a string                                                         | `convert(input, from, to, options?)`                                  |
 | Normalize or restyle a string without changing its format                | `reencode(input, format, options?)`                                   |
 | Know whether the conversion loses information, and where each token went | `convertDetailed(input, from, to, options?)`                          |
+| Convert only the Greek of a text in another language                     | `convertGreekPassages(input, to, options?)`                           |
 | Bind a preset, add characters, or restrict the repertoire                | `createConverter(configuration)`                                      |
 | Inspect or edit the parsed text itself                                   | `parse()` and `encode()` from `@humanities/greek-conversion/document` |
 | Bundle only the formats and presets a web page uses                      | `convert()` from `@humanities/greek-conversion/core`                  |

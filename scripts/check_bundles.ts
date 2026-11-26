@@ -7,8 +7,9 @@
  * - A conversion with the `./core` entry point keeps no module of a format,
  *   a preset, or a function it does not import: no other reader or writer,
  *   no validation of options without `prepareOptions()`, no metadata of the
- *   presets, no loss analysis without `convertDetailed()`. A reader imported
- *   alone keeps no writer.
+ *   presets, no loss analysis without `convertDetailed()`, no conversion of
+ *   the Greek passages of a text without `convertGreekPassages()`. A reader
+ *   imported alone keeps no writer.
  * - Inside a module that a bundle keeps, what it does not import is left out
  *   too, which modules alone do not show: a bundle that imports every preset
  *   weighs what the guide says more than one that imports one, and
@@ -56,6 +57,7 @@ const NEVER = [
   "converter.js",
   "preset_metadata.js",
   "validation.js",
+  "passages.js",
 ];
 /** Modules that only `prepareOptions()` brings. */
 const VALIDATION = ["prepare_options.js", "presets.js", "options.js"];

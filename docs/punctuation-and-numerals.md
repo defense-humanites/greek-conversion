@@ -142,8 +142,8 @@ is lost, and `convertDetailed()` reports it (see
 - **The whole text is read as Greek.** In a text that mixes Greek with
   another language, the punctuation of that language is converted with the
   rest: a `?` becomes `;` in Greek output, and a `;` becomes `?` in
-  transliteration. `text.scope: "greek"` converts the Greek passages only,
-  with the signs that only Greek uses, and copies the shared punctuation
+  transliteration. `convertGreekPassages()` converts the Greek passages
+  only, with the signs that only Greek uses, and copies the shared punctuation
   (see
   [Guarantees and limits](guarantees.md#the-greek-passages-of-a-text)).
 - **A colon is a literal in Greek**, and is copied. Beta Code writes it

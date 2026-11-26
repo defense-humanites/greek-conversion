@@ -95,7 +95,7 @@ mixed.lossy; // → true
 ```
 
 Filter the losses by `code` to keep those about the Greek, or convert the
-Greek passages only. The same code reports the few literals of the Greek
+Greek passages only ([below](#the-greek-passages-of-a-text)). The same code reports the few literals of the Greek
 itself that a target cannot keep, such as a parenthesis before a digit in
 Beta Code (see
 [Information loss](information-loss.md#canonical-spelling-and-unicode)).
@@ -112,19 +112,20 @@ no letter of the Greek word that it touches.
 
 ### The Greek passages of a text
 
-`text.scope: "greek"` converts the Greek passages of a Greek source, and
-copies the rest of the text as it is, code unit by code unit. The rules of
-the conversion see the whole text, as they would in a conversion of the
-whole text: before the period of `Θ.`, the capital is an initial.
+`convertGreekPassages()` converts the Greek passages of a text, and copies
+the rest as it is, code unit by code unit. The source is Greek: in Beta Code
+and transliteration, Latin letters are the Greek text. The rules of the
+conversion see the whole text, as they would in a conversion of the whole
+text: before the period of `Θ.`, the capital is an initial.
+`convertGreekPassagesDetailed()` adds the losses and the spans of
+`convertDetailed()`.
 
 ```ts
-import { convertDetailed } from "@humanities/greek-conversion";
+import { convertGreekPassagesDetailed } from "@humanities/greek-conversion";
 
-const passages = convertDetailed(
+const passages = convertGreekPassagesDetailed(
   "Voir ϐίϐλος ; cf. ψυχή.",
-  "greek",
   "transliteration",
-  { text: { scope: "greek" } },
 );
 
 passages.output; // → Voir bíblos ; cf. psychḗ.
@@ -144,23 +145,22 @@ does without doubt:
   to a Greek word or not: `;`, `?`, the middle dot `·` (U+00B7), `:`, `'`, `’`,
   and `-`. In `see λόγος; also`, `;` is English; in `λογο·τέχνης`, the
   middle dot separates the elements of a word, as the Bailly writes them. A
-  Greek passage typed with the shared signs is converted as a whole, without
-  the option, by the application that knows it is Greek. Normalization
+  Greek passage typed with the shared signs is converted as a whole, with
+  `convert()`, by the application that knows it is Greek. Normalization
   turns the Greek question mark and ano teleia into the shared signs: in a
   text normalized before the conversion, they are copied, which leaves the
   output incomplete, not wrong.
 - **The options apply to the passages only**: letter case, the Unicode form
-  of Greek output, its Greek punctuation scalars. `text.whitespace` has
-  nothing to collapse, since whitespace is never Greek.
+  of Greek output, its Greek punctuation scalars. Whitespace is never Greek,
+  and is copied: `text.whitespace: "collapse"` has nothing to collapse.
 
 The passages are converted as their letters are, wherever they are: a Greek
 letter in another language (`β-carotène`, `π`, a siglum) is converted too.
-`convertDetailed()` reads back the Greek passages of the output, and reports
-no loss for the text copied, whose spans in the output are those in the
-input, moved. Only Greek is read so: in Beta Code and transliteration, Latin
-letters are the Greek text, and `text.scope: "greek"` throws an
-`OptionError` for another source format. A converter (`createConverter()`)
-does not convert the passages of a text, and throws one too.
+`convertGreekPassagesDetailed()` reads back the Greek passages of the
+output, and reports no loss for the text copied, whose spans in the output
+are those in the input, moved. Into Greek, the passages are normalized in
+the style of the options. A converter (`createConverter()`) has no
+conversion of the passages.
 
 ### Characters of another format
 

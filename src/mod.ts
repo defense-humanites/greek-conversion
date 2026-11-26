@@ -3,8 +3,10 @@
  * script, with standards-based presets and information-loss diagnostics.
  *
  * Use {@link convert} for ordinary conversions and {@link convertDetailed}
- * when information-loss diagnostics are required. Advanced access to the
- * canonical document is available from the `./document` entry point.
+ * when information-loss diagnostics are required, and
+ * {@link convertGreekPassages} for Greek quoted in a text in another
+ * language. Advanced access to the canonical document is available from the
+ * `./document` entry point.
  *
  * @module
  */
@@ -119,7 +121,6 @@ export type {
   StigmaReading,
   SymbolFormOrthography,
   TextOptions,
-  TextScope,
   TransliterationOptions,
   UnicodeComposition,
   UpsilonTransliteration,
@@ -234,17 +235,6 @@ export function convertDetailed(
   assertFormat(from);
   assertFormat(to);
   const { reading, writing: resolved } = conversionProfiles(options);
-  if (resolved.text.scope === "greek") {
-    return convertPassagesDetailed(
-      input,
-      readerFor(from),
-      writerFor(to),
-      readerFor(to),
-      writerFor(from).glyphForm,
-      reading,
-      resolved,
-    );
-  }
   const read: ReadPositions = { text: "", starts: [] };
   const source = parseResolved(input, from, reading, true, read);
   const inputSpans = readSpans(input, read);
@@ -277,6 +267,83 @@ export function convertDetailed(
   return { output, lossy: losses.length > 0, losses, spans };
 }
 
+/**
+ * Converts the Greek passages of a text, for Greek quoted in a text in
+ * another language, and copies the rest as it is, code unit by code unit.
+ *
+ * A Greek passage is a run of Greek letters with their combining marks, and
+ * of the signs that only Greek uses, by their code points: the Greek
+ * question mark (U+037E), the ano teleia (U+0387), the koronis (U+1FBD), the
+ * spacing breathings and accents, and the keraiai (U+0374, which
+ * normalization makes U+02B9, and U+0375). Everything else is copied: the
+ * punctuation that Greek shares with other scripts (`;`, `?`, `·`, `'`,
+ * `’`, `-`), whitespace, and the text around. The options apply to the
+ * passages; the rules of the conversion see the whole text, so that before
+ * `.`, `Θ` is an initial (`Th.`). The source is Greek: in Beta Code and
+ * transliteration, Latin letters are the Greek text. Into Greek, the
+ * passages are normalized in the style of the options.
+ *
+ * @example
+ * ```ts
+ * import { convertGreekPassages } from "@humanities/greek-conversion";
+ *
+ * convertGreekPassages("see λόγος; also ‘ἀπ᾽ αὐτοῦ’", "transliteration");
+ * // → see lógos; also ‘ap’ autoũ’
+ * ```
+ *
+ * @param to The format of the passages in the output.
+ * @throws {TypeError} If `input` is not a string.
+ * @throws {RangeError} If the format is unknown; an {@link OptionError} (a
+ * `RangeError`) if a preset, an option key, or an option value is.
+ */
+export function convertGreekPassages(
+  input: string,
+  to: Format,
+  options: ConversionOptions | PreparedOptions = {},
+): string {
+  assertTextInput(input);
+  assertFormat(to);
+  const { reading, writing } = conversionProfiles(options);
+  return convertPassages(input, writerFor(to), reading, writing);
+}
+
+/**
+ * {@link convertGreekPassages}, with the losses and the spans of
+ * {@link convertDetailed}. The text copied keeps what it has, and its spans
+ * in the output are those in the input, moved; the losses are those of the
+ * passages.
+ *
+ * @example
+ * ```ts
+ * import { convertGreekPassagesDetailed } from "@humanities/greek-conversion";
+ *
+ * const result = convertGreekPassagesDetailed("voir ϐίος ;", "beta-code");
+ * result.output; // → voir bi/os ;
+ * result.losses.map((loss) => loss.code); // → ["removed-glyph-variant"]
+ * ```
+ *
+ * @param to The format of the passages in the output.
+ * @throws {TypeError} If `input` is not a string.
+ * @throws {RangeError} If the format is unknown; an {@link OptionError} (a
+ * `RangeError`) if a preset, an option key, or an option value is.
+ */
+export function convertGreekPassagesDetailed(
+  input: string,
+  to: Format,
+  options: ConversionOptions | PreparedOptions = {},
+): ConversionResult {
+  assertTextInput(input);
+  assertFormat(to);
+  const { reading, writing } = conversionProfiles(options);
+  return convertPassagesDetailed(
+    input,
+    writerFor(to),
+    readerFor(to),
+    reading,
+    writing,
+  );
+}
+
 function runConversion(
   input: string,
   from: Format,
@@ -287,16 +354,6 @@ function runConversion(
   assertFormat(from);
   assertFormat(to);
   const { reading, writing: resolved } = conversionProfiles(options);
-  if (resolved.text.scope === "greek") {
-    const output = convertPassages(
-      input,
-      readerFor(from),
-      writerFor(to),
-      reading,
-      resolved,
-    );
-    return { source: [], output, resolved };
-  }
   const source = parseResolved(input, from, reading, true);
   return { source, output: encodeResolved(source, to, resolved), resolved };
 }

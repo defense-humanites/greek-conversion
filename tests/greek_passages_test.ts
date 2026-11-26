@@ -1,32 +1,21 @@
 import { test } from "node:test";
-import {
-  assert,
-  assertEquals,
-  assertNfcEquals,
-  assertThrows,
-} from "./assertions.ts";
+import { assert, assertEquals, assertThrows } from "./assertions.ts";
 import {
   type ConversionOptions,
   convert,
-  convertDetailed,
-  createConverter,
+  convertGreekPassages,
+  convertGreekPassagesDetailed,
   FORMATS,
   OptionError,
   prepareOptions,
 } from "../src/mod.ts";
 import * as core from "../src/core.ts";
-import { greekFormat, greekReader } from "../src/formats/greek.ts";
+import { betaCodeFormat } from "../src/formats/beta_code.ts";
+import { greekFormat, greekWriter } from "../src/formats/greek.ts";
 import {
   transliterationFormat,
   transliterationWriter,
 } from "../src/formats/transliteration.ts";
-
-const GREEK_SCOPE = { text: { scope: "greek" } } as const;
-
-/** The options, with the conversion of the Greek passages only. */
-function scoped(options: ConversionOptions): ConversionOptions {
-  return { ...options, text: { ...options.text, scope: "greek" } };
-}
 
 test("converts the Greek passages of a text and copies the rest", () => {
   const cases: [string, string][] = [
@@ -39,63 +28,61 @@ test("converts the Greek passages of a text and copies the rest", () => {
     ["λογο·τέχνης", "logo·téchnēs"],
     // The signs that only Greek uses are converted, by their code points:
     // the question mark, the ano teleia, and the koronis.
-    ["εἰς Πειραιᾶ;", "eis Peiraiã?"],
-    ["λόγος· ἔστι", "lógos; ésti"],
+    ["εἰς Πειραιᾶ\u037E", "eis Peiraiã?"],
+    ["λόγος\u0387 ἔστι", "lógos; ésti"],
     ["ἀπ᾽ αὐτοῦ", "ap’ autoũ"],
     // The rules see the text around a passage: before a period, a capital
     // is an initial.
     ["Θ. Δημητρίου, p. 3", "Th. Dēmētríou, p. 3"],
     // Nothing but the passages is normalized.
-    ["é : ὁ", "é : ho"],
+    ["é : ὁ", "é : ho"],
     ["no Greek; at all?", "no Greek; at all?"],
     ["", ""],
   ];
   for (const [input, output] of cases) {
-    const converted = convert(input, "greek", "transliteration", GREEK_SCOPE);
-    assertEquals(converted, output, input);
+    assertEquals(convertGreekPassages(input, "transliteration"), output, input);
   }
 });
 
 test("the keraia of a numeral goes with its passage", () => {
   // Normalization makes the Greek keraia U+02B9, which follows the letters
   // of the numeral; the lower keraia is Greek.
+  assertEquals(convertGreekPassages("αʹ et ͵α", "beta-code"), "a# et #22a");
   assertEquals(
-    convert("αʹ et ͵α", "greek", "beta-code", GREEK_SCOPE),
-    "a# et #22a",
-  );
-  assertEquals(
-    convert("αʹ et ͵α", "greek", "transliteration", {
-      text: { scope: "greek", numerals: "decimal" },
+    convertGreekPassages("αʹ et ͵α", "transliteration", {
+      text: { numerals: "decimal" },
     }),
     "1 et 1000",
   );
   // Elsewhere, U+02B9 is a letter of another language.
-  assertEquals(
-    convert("Gorʹkiĭ", "greek", "beta-code", GREEK_SCOPE),
-    "Gorʹkiĭ",
-  );
+  assertEquals(convertGreekPassages("Gorʹkiĭ", "beta-code"), "Gorʹkiĭ");
 });
 
 test("the options apply to the Greek passages only", () => {
+  // Whitespace is outside the passages, and copied as it is.
   assertEquals(
-    convert("Théâtre  décomposé é :  ὁ  λόγος", "greek", "greek", {
+    convertGreekPassages("Théâtre  décomposé é :  ὁ  λόγος", "greek", {
       greek: { composition: "decomposed" },
-      text: { scope: "greek", whitespace: "collapse", letterCase: "uppercase" },
+      text: { whitespace: "collapse", letterCase: "uppercase" },
     }),
-    "Théâtre  décomposé é :  Ο  ΛΟΓΟΣ",
+    "Théâtre  décomposé é :  Ο  ΛΟΓΟΣ",
   );
   // The Greek question mark and ano teleia, not the French signs.
   assertEquals(
-    convert("Πειραιᾶ; et ; λόγος· et ·", "greek", "greek", {
+    convertGreekPassages("Πειραιᾶ\u037E et ; λόγος\u0387 et ·", "greek", {
       greek: { questionMark: "greek", anoTeleia: "greek", acute: "tonos" },
-      text: { scope: "greek" },
     }),
-    "Πειραιᾶ; et ; λόγος· et ·",
+    "Πειραιᾶ\u037E et ; λόγος\u0387 et ·",
   );
   // Beta Code writes Latin letters in its own case; they are copied.
+  assertEquals(convertGreekPassages("ὁ Watson", "beta-code"), "o( Watson");
+  // Into Greek, the passages are normalized, and the rest is copied: the
+  // question mark of the text around is not read as Greek.
   assertEquals(
-    convert("ὁ Watson", "greek", "beta-code", GREEK_SCOPE),
-    "o( Watson",
+    convertGreekPassages("τί? τί;", "greek", {
+      text: { letterCase: "uppercase" },
+    }),
+    "ΤΙ? ΤΙ;",
   );
 });
 
@@ -120,7 +107,7 @@ test("a text without the punctuation that Greek shares converts as a whole", () 
     for (const options of optionSets) {
       for (const to of FORMATS) {
         assertEquals(
-          convert(text, "greek", to, scoped(options)),
+          convertGreekPassages(text, to, options),
           convert(text, "greek", to, options),
           `${text} → ${to} ${JSON.stringify(options)}`,
         );
@@ -129,11 +116,11 @@ test("a text without the punctuation that Greek shares converts as a whole", () 
   }
 });
 
-test("convertDetailed() reports the Greek passages and copies the rest", () => {
+test("the detailed conversion reports the Greek passages and copies the rest", () => {
   const input = "Voir ϐίϐλος ; cf. « ἀπ’ αὐτοῦ » (Θ.)";
   for (const to of FORMATS) {
-    const result = convertDetailed(input, "greek", to, GREEK_SCOPE);
-    assertEquals(result.output, convert(input, "greek", to, GREEK_SCOPE));
+    const result = convertGreekPassagesDetailed(input, to);
+    assertEquals(result.output, convertGreekPassages(input, to));
     // The text copied keeps its spans' text; the losses are the passages'.
     for (const span of result.spans) {
       const read = input.slice(span.inputStart, span.inputEnd);
@@ -152,68 +139,71 @@ test("convertDetailed() reports the Greek passages and copies the rest", () => {
       );
     }
   }
-  const transliterated = convertDetailed(
-    input,
-    "greek",
-    "transliteration",
-    GREEK_SCOPE,
-  );
   assertEquals(
-    transliterated.losses.map((loss) => loss.code),
+    convertGreekPassagesDetailed(input, "transliteration").losses.map((loss) =>
+      loss.code
+    ),
     ["removed-glyph-variant", "removed-glyph-variant"],
   );
 });
 
 test("the core entry point converts the Greek passages", () => {
-  const options = prepareOptions({ preset: "ala-lc-ancient", ...GREEK_SCOPE });
+  const options = prepareOptions({ preset: "ala-lc-ancient" });
   const input = "Θ. Δημητρίου ; λόγος";
   assertEquals(
-    core.convert(input, greekReader, transliterationWriter, options),
-    convert(input, "greek", "transliteration", options),
+    core.convertGreekPassages(input, transliterationWriter, options),
+    convertGreekPassages(input, "transliteration", options),
   );
   assertEquals(
-    core.convert(input, greekReader, transliterationWriter, options),
+    core.convertGreekPassages(input, transliterationWriter, options),
     "Th. Dēmētriou ; logos",
   );
   assertEquals(
-    core.convertDetailed(input, greekFormat, transliterationFormat, options)
+    core.convertGreekPassagesDetailed(input, transliterationFormat, options)
       .output,
     "Th. Dēmētriou ; logos",
   );
   assertEquals(
-    core.reencode(input, greekFormat, options),
+    core.convertGreekPassages(input, greekWriter, options),
     "Θ. Δημητριου ; λογος",
   );
-  // The question mark is copied, where a conversion of the whole text
-  // would read it as Greek.
   assertEquals(
-    core.reencode(
-      "τί? τί;",
-      greekFormat,
-      prepareOptions({ text: { scope: "greek", letterCase: "uppercase" } }),
-    ),
-    "ΤΙ? ΤΙ;",
+    core.convertGreekPassagesDetailed("voir ϐίϐλος ;", betaCodeFormat).losses
+      .map((loss) => loss.code),
+    ["removed-glyph-variant", "removed-glyph-variant"],
+  );
+  // The functions of the core entry point take a writer, or a format whole,
+  // and prepared options, as the others do.
+  assertThrows(
+    () =>
+      core.convertGreekPassages(
+        input,
+        greekFormat,
+        { preset: "perseus" } as never,
+      ),
+    TypeError,
+  );
+  assertThrows(
+    () =>
+      core.convertGreekPassagesDetailed(input, transliterationWriter as never),
+    TypeError,
   );
 });
 
-test("the Greek passages are read from Greek only, and not by a converter", () => {
-  for (const from of ["beta-code", "transliteration"] as const) {
-    const error = assertThrows(
-      () => convert("lo/gos", from, "greek", GREEK_SCOPE),
-      OptionError,
-    );
-    assertEquals(error.path, "text.scope");
-    assertEquals(error.received, "greek");
-    assertThrows(
-      () => convertDetailed("lo/gos", from, "greek", GREEK_SCOPE),
-      OptionError,
-    );
-  }
-  const converter = createConverter({ exclude: ["alpha"] });
+test("a conversion of the whole text converts it whole", () => {
+  // The other functions convert the whole text: the question mark of the
+  // text around is read as Greek.
+  assertEquals(
+    convert("see λόγος; also", "greek", "transliteration"),
+    "see lógos? also",
+  );
+  // There is no option for the passages.
   const error = assertThrows(
-    () => converter.convert("λόγος", "greek", "transliteration", GREEK_SCOPE),
+    () =>
+      convert("λόγος", "greek", "transliteration", {
+        text: { scope: "greek" },
+      } as ConversionOptions),
     OptionError,
   );
   assertEquals(error.path, "text.scope");
-  assertNfcEquals(convert("λόγος", "greek", "transliteration"), "lógos");
 });
