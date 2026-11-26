@@ -1903,13 +1903,16 @@ optionList.addEventListener("keydown", pickerKeydown);
 /**
  * A press on an empty part of a picker would move the focus out of it, to
  * the page, and close it, losing what was typed: the focus stays where it
- * is instead. Fields, buttons, and labels take the press as usual.
+ * is instead. So does a press on a button, which Safari, on macOS and iOS,
+ * does not focus: the focus would leave for the page, and the picker close
+ * before the button is clicked, as its back arrow did. Fields, labels, and
+ * links take the press as usual.
  */
 function keepFocusInside(panel: HTMLElement): void {
   panel.addEventListener("mousedown", (event) => {
     // Within the picker only: the tab panel around it takes the focus too.
     const hit = (event.target as Element).closest(
-      "input, textarea, select, button, label, a, [tabindex]",
+      "input, textarea, select, label, a, [tabindex]",
     );
     if (hit === null || !panel.contains(hit)) event.preventDefault();
   });
