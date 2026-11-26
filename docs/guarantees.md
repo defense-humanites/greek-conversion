@@ -170,12 +170,17 @@ conversion of the passages.
 ### Characters of another format
 
 Each reader reads its own format, and keeps the rest as literals: Greek
-characters in Beta Code or transliteration, and in Beta Code the Unicode
-combining marks, which are not Beta Code. A writer copies those literals,
-and a reader of the target format may then read them: `ϗ` in a Beta Code
-source is a literal, which Greek output copies, and which Greek reads as
-`και`, as it reads a middle dot as the ano teleia (see
-[Punctuation and numerals](punctuation-and-numerals.md#consequences)). Converting such output again may change it, and `convertDetailed()`
+characters in Beta Code or transliteration, Latin letters in Greek, the
+Latin letters that transliteration does not read (an `h` on its own, or `c`
+by default), and in Beta Code the Unicode combining marks, which are not
+Beta Code. A writer copies those literals, and a reader of the target format
+may then read them: `ϗ` in a Beta Code source is a literal, which Greek
+output copies, and which Greek reads as `και`, as it reads a middle dot as
+the ano teleia (see
+[Punctuation and numerals](punctuation-and-numerals.md#consequences)), and
+Beta Code reads a Latin letter as a Greek one: under ALA-LC, whose numerals
+are decimal, `hʹ` in transliteration gives `h#` in Beta Code, which reads
+back as the numeral 8. Converting such output again may change it, and `convertDetailed()`
 reports the loss of the literal (`unrepresented-literal`). Type `#1532` in
 Beta Code, and `kai` in transliteration, or the accent's own code (`a/`)
 rather than U+0301. A combining mark typed on a sign that a reader reads as

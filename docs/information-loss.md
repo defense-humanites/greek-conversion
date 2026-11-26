@@ -134,7 +134,9 @@ Default transliteration has these intrinsic ambiguities:
   under `phi: "f"`, where `ph` reads as pi and a rough breathing), or `r`, it
   forms `th`, `ph`, or `rh`, which read back as theta, phi, or a rough rho:
   `τἡ` → `thē` → `θη`, `ποὑ` → `phou` → `φου`, `ἀροἱ` → `arhoi` → `ἀῥοι`, and
-  `convertDetailed()` reports the loss. The same holds after `k` under
+  `convertDetailed()` reports the loss. The `h` takes the case of the
+  consonant, as the letter they form reads back, and a capital vowel keeps its
+  own: `ρἉ` → `rhA` → `ῥΑ`. The same holds after `k` under
   `chi: "kh"`, and after a lunate `c` under `lunateSigma: "c"` with the default
   `chi`. Such forms are rare (crasis in some editions and inscriptions), and no
   cited standard separates the consonant from the `h`;
@@ -148,7 +150,11 @@ Default transliteration has these intrinsic ambiguities:
   `μἁΐδης` → `mhaḯdēs`);
 - a macron or breve on epsilon or omicron is omitted, because `ē` and `ō`
   denote eta and omega; such a document is already invalid for
-  `validateDocument()`, and `convertDetailed()` reports the removed mark.
+  `validateDocument()`, and `convertDetailed()` reports the removed mark. So
+  is one on eta or omega where they are written as epsilon and omicron, under
+  `longVowels: "omit"` (eta unless `eta: "i"`). Elsewhere, a macron on eta or
+  omega follows the one that makes `ē` or `ō`, and reads back as the
+  letter's, as a breve does: `η̄` → `ē̄` → `η̄`.
 
 The `coronis: "apostrophe"` policy writes U+2019 after the vowel of the
 coronis. It reads back as the coronis between that vowel and a letter where the

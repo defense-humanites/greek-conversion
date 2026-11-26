@@ -39,6 +39,8 @@ const MARKED_RHO =
 
 const KEPT_LETTER =
   "A converter reports a letter kept out of its scope whose output does not convert back to its spelling in the source (unrepresented-literal).";
+const MARKED_MACRON =
+  "A second macron after the one that makes ē or ō is the letter's own, as a breve after them is: ē̄ reads as η̄, which takes no inferred smooth breathing, as η̆ does not.";
 const TITLE_AFTER_APOSTROPHE =
   "Title case finds the apostrophe before a letter, and the letter before the apostrophe, past combining marks, as it finds the start of a word: the letter stays small.";
 
@@ -79,4 +81,8 @@ export const MEANT: readonly MeantChange[] = [
     label: 'random 12: {"text":{"letterCase":"title"}}',
     reason: TITLE_AFTER_APOSTROPHE,
   })),
+  ...[
+    "\u2019 \u014D\u030439ph\u03048",
+    "\u0306w\u00F3\u014D\u012B64\u0112\u0304",
+  ].map((input) => ({ input, reason: MARKED_MACRON })),
 ];

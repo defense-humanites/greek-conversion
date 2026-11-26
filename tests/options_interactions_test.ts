@@ -498,6 +498,26 @@ test("keeps each rough breathing where the output reads it back", () => {
   assertNfcEquals(convert("hahi", "transliteration", "greek"), "ἁἱ");
   // The h of ἁ merges into θ, so the pair reads back as αι: it is written so.
   assertNfcEquals(t("τἁἱς"), "thais");
+  // Such an h takes the case of the consonant, which the letter they make
+  // reads back with, and a capital vowel keeps its own: `rHa` would read
+  // back as `rha`. A rho written with an h of its own leaves the vowel its h.
+  for (
+    const [greek, expected] of [
+      ["ρἉ", "rhA"],
+      ["τἉΙ", "thAI"],
+      ["ρΑἱ", "rhAi"],
+      ["ΡἉι", "RHAi"],
+      ["ῥἉ", "rhHa"],
+    ]
+  ) {
+    const output = t(greek);
+    assertNfcEquals(output, expected);
+    assertNfcEquals(
+      convert(output, "transliteration", "transliteration"),
+      output,
+    );
+  }
+  assertNfcEquals(convert("r#1521(", "beta-code", "transliteration"), "rhOu");
   // A coronis written as an apostrophe stands between ω and ὑ.
   assertNfcEquals(
     t("τὠὑτό", { transliteration: { coronis: "apostrophe" } }),

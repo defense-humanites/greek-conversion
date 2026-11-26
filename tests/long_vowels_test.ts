@@ -155,6 +155,52 @@ test("omits a quantity mark on epsilon and omicron in transliteration", () => {
   );
 });
 
+test("reads a second macron after ē or ō as the letter's own", () => {
+  // The macron of `ē` makes eta, and a quantity mark after it is the
+  // letter's, a macron as a breve: η̄ converts back and forth without loss.
+  const greek = "\u03B7\u0304\u0301 \u03A9\u0304";
+  for (const options of [{}, { preset: "iso-843-type-1" }] as const) {
+    const result = convertDetailed(greek, "greek", "transliteration", options);
+    assertEquals(result.lossy, false);
+    assertNfcEquals(
+      convert(result.output, "transliteration", "greek", options),
+      greek,
+    );
+  }
+  assertNfcEquals(
+    convert("h%26", "beta-code", "transliteration"),
+    "e\u0304\u0304",
+  );
+  assertNfcEquals(
+    convert("e\u0304\u0304", "transliteration", "transliteration"),
+    "e\u0304\u0304",
+  );
+});
+
+test("omits a quantity mark on eta and omega written e and o", () => {
+  // Without length marks, `ō` and `ē` would read back as omega and eta
+  // without the mark, and `ŏ` and `ĕ` as omicron and epsilon.
+  for (
+    const [greek, options, latin] of [
+      ["ω̄ ω̆", { preset: "iso-843-type-2" }, "o o"],
+      ["η̄ ω̆", { transliteration: { longVowels: "omit" } }, "e o"],
+    ] as const
+  ) {
+    const result = convertDetailed(greek, "greek", "transliteration", options);
+    assertNfcEquals(result.output, latin);
+    assertEquals(result.lossy, true);
+    assertEquals(
+      convert(result.output, "transliteration", "transliteration", options),
+      result.output,
+    );
+  }
+  // Written `i`, eta keeps it, as iota does.
+  assertNfcEquals(
+    convert("η̄", "greek", "transliteration", { preset: "iso-843-type-2" }),
+    "ī",
+  );
+});
+
 /** French academic usage: a grave on eta, a circumflex on omega. */
 const GRAVE_CIRCUMFLEX = {
   transliteration: { longVowels: "grave-circumflex" },
