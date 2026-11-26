@@ -18,10 +18,15 @@ The package is ESM-only.
 
 ## Updating from `1.0.0-rc.14`
 
-`iso-843-type-1`, `iso-843-type-2`, `ala-lc-modern`, and `bnf-core` write a
+The preset `bnf-core` is renamed `bnf-ancient`: write `preset: "bnf-ancient"`,
+in `source` too, and import `bnfAncient` from `./presets` where you imported
+`bnfCore`. The old name throws an `OptionError` whose `replacement` gives the
+new one.
+
+`iso-843-type-1`, `iso-843-type-2`, `ala-lc-modern`, and `bnf-ancient` write a
 double rho `rr` unless Greek writes a rough breathing on it, as their tables
 do: `Ερρίκος` gives `Erríkos` under `iso-843-type-2` (rc.14: `Errhíkos`), and
-`Πύρρος` gives `Pýrros` under `bnf-core` (rc.14: `Pýrrhos`). Add
+`Πύρρος` gives `Pýrros` under `bnf-ancient` (rc.14: `Pýrrhos`). Add
 `transliteration: { rho: "contextual" }` to keep the previous spelling.
 
 ## Updating from `1.0.0-rc.13`

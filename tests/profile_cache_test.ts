@@ -277,7 +277,7 @@ test("a profile keeps the marks of each format apart", () => {
       },
     ],
     [
-      { preset: "bnf-core" },
+      { preset: "bnf-ancient" },
       {
         "transliteration": "a̓́ ō̓̂ ē̂ a a poiȩ̄̂ há ï hý â̧ a̓́ kí th̅",
         "greek": "ἄ ὦ ῆ ᾱ ᾰ ποιῇ ἅ ϊ ὕ ᾷ ᾱ̓́ κῑ́ θ̅",

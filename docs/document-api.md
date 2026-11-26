@@ -105,7 +105,7 @@ intended:
 ```ts
 import { encode, parse } from "@humanities/greek-conversion/document";
 
-const options = { preset: "bnf-core" } as const;
+const options = { preset: "bnf-ancient" } as const;
 const document = parse("Chará", "transliteration", options);
 encode(document, "greek", options); // → Χαρά
 ```

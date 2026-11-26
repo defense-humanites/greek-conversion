@@ -17,7 +17,7 @@ Eight presets cover the common library, scholarly, and interchange conventions:
 | ---------------- | --------------- | --------------- | ------------------------------------------------------------------------ |
 | `ala-lc-ancient` | transliteration | Ancient         | Library romanization, Medieval Greek included (before 1454)              |
 | `ala-lc-modern`  | transliteration | Modern          | Library romanization after 1453, with its contextual digraphs            |
-| `bnf-core`       | transliteration | Ancient         | BnF/ISO-based romanization for cataloguing                               |
+| `bnf-ancient`       | transliteration | Ancient         | BnF/ISO-based romanization for cataloguing                               |
 | `iso-843-type-1` | transliteration | Ancient, Modern | Strict, reversible transliteration; also ELOT 743                        |
 | `iso-843-type-2` | transliteration | Modern          | Transcription by pronunciation, as ELOT 743: passports, road signs, maps |
 | `sbl-general`    | transliteration | Ancient         | Biblical studies, as the SBL Handbook writes Greek: no accent            |
@@ -77,7 +77,7 @@ same codes, `tlg-core` in capitals and `perseus` in lowercase, but for yot
 | No preset (the default) | `b` | `ē` | `y` | `ph` | `ch` | `ō` |
 | `ala-lc-ancient` | `b` | `ē` | `y` | `ph` | `ch` | `ō` |
 | `ala-lc-modern` | `v` | `ē` | `y` | `ph` | `ch` | `ō` |
-| `bnf-core` | `b` | `ē` | `y` | `ph` | `ch` | `ō` |
+| `bnf-ancient` | `b` | `ē` | `y` | `ph` | `ch` | `ō` |
 | `iso-843-type-1` | `v` | `ī` | `y` | `f` | `ch` | `ō` |
 | `iso-843-type-2` | `v` | `i` | `y` | `f` | `ch` | `o` |
 | `sbl-general` | `b` | `ē` | `y` | `ph` | `ch` | `ō` |
@@ -89,7 +89,7 @@ same codes, `tlg-core` in capitals and `perseus` in lowercase, but for yot
 | No preset (the default) | `autós` | `euchḗ` | `oúte` |
 | `ala-lc-ancient` | `autos` | `euchē` | `oute` |
 | `ala-lc-modern` | `autos` | `euchē` | `oute` |
-| `bnf-core` | `autós` | `euchḗ` | `oúte` |
+| `bnf-ancient` | `autós` | `euchḗ` | `oúte` |
 | `iso-843-type-1` | `autós` | `euchī́` | `oúte` |
 | `iso-843-type-2` | `aftós` | `efchí` | `oúte` |
 | `sbl-general` | `autos` | `euchē` | `oute` |
@@ -101,7 +101,7 @@ same codes, `tlg-core` in capitals and `perseus` in lowercase, but for yot
 | No preset (the default) | `ángelos` | `ankaliá` | `mpampás` | `ntomáta` |
 | `ala-lc-ancient` | `angelos` | `ankalia` | `mpampas` | `ntomata` |
 | `ala-lc-modern` | `angelos` | `ankalia` | `bampas` | `d̲omata` |
-| `bnf-core` | `ángelos` | `ankaliá` | `mpampás` | `ntomáta` |
+| `bnf-ancient` | `ángelos` | `ankaliá` | `mpampás` | `ntomáta` |
 | `iso-843-type-1` | `ággelos` | `agkaliá` | `mpampás` | `ntomáta` |
 | `iso-843-type-2` | `ángelos` | `agkaliá` | `bampás` | `ntomáta` |
 | `sbl-general` | `angelos` | `ankalia` | `mpampas` | `ntomata` |
@@ -113,7 +113,7 @@ same codes, `tlg-core` in capitals and `perseus` in lowercase, but for yot
 | No preset (the default) | `ha` | `a` | `a̧` | `á` | `ō̃` |
 | `ala-lc-ancient` | `ha` | `a` | `a` | `a` | `ō` |
 | `ala-lc-modern` | `ha` | `a` | `a` | `a` | `ō` |
-| `bnf-core` | `ha` | `a̓` | `a̧` | `á` | `ō̂` |
+| `bnf-ancient` | `ha` | `a̓` | `a̧` | `á` | `ō̂` |
 | `iso-843-type-1` | `ha` | `’a` | `a̧` | `á` | `ō̂` |
 | `iso-843-type-2` | `ha` | `’a` | `a̧` | `á` | `ô` |
 | `sbl-general` | `ha` | `a` | `a` | `a` | `ō` |
@@ -143,7 +143,7 @@ own (see [Knowing what a conversion loses](/guide/losses/)).
 | No preset (the default) | The absence of a breathing | Coronis |
 | `ala-lc-ancient` | Accents; diaeresis | Accents; smooth breathing; iota subscript; coronis |
 | `ala-lc-modern` | Accents; diaeresis | Accents; smooth breathing; iota subscript; coronis |
-| `bnf-core` | Nothing | Nothing |
+| `bnf-ancient` | Nothing | Nothing |
 | `iso-843-type-1` | Nothing | Nothing |
 | `iso-843-type-2` | The letters eta, omega, upsilon | The letters eta, omega |
 | `perseus` | Nothing | Nothing |
@@ -153,7 +153,7 @@ own (see [Knowing what a conversion loses](/guide/losses/)).
 <!-- END GENERATED LOSS PROFILE -->
 
 "Nothing" means that the output converts back to the same text under the same
-preset. Among the transliterations, `bnf-core` and `iso-843-type-1` convert
+preset. Among the transliterations, `bnf-ancient` and `iso-843-type-1` convert
 both texts back.
 
 ## Refine a preset
@@ -185,7 +185,7 @@ import {
   resolveConversionOptions,
 } from "@humanities/greek-conversion";
 
-getPresetMetadata("bnf-core").coverage; // → partial
+getPresetMetadata("bnf-ancient").coverage; // → partial
 DEFAULT_CONVERSION_OPTIONS.transliteration.longVowels; // → macron
 resolveConversionOptions({ preset: "sbl-general" }).diacritics.accents;
 // → remove

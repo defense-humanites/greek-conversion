@@ -607,7 +607,7 @@ test("BnF numerals stay as written under every letter case and mark removal", ()
   // An acute on a consonant cannot be an accent: it reads back as the right
   // keraia, and a comma before c̄ or s̄ as the left one. Removing the accents
   // writes the right keraia ʹ, which an acute would not survive.
-  const bnf = { preset: "bnf-core" } as const;
+  const bnf = { preset: "bnf-ancient" } as const;
   assertNfcEquals(
     convert("c̄́ s̄́ ,c̄", "transliteration", "greek", bnf),
     "ϛʹ ϡʹ ͵ϛ",
@@ -674,7 +674,7 @@ test("BnF numerals stay as written under every letter case and mark removal", ()
 test("a circumflex on a sigma is written as a tilde, which reads back", () => {
   // Under ISO 843 and BnF, the circumflex is U+0302, and `ŝ` and `ĉ` read
   // back as sampi and stigma.
-  for (const preset of ["iso-843-type-1", "bnf-core"] as const) {
+  for (const preset of ["iso-843-type-1", "bnf-ancient"] as const) {
     // After a vowel with a circumflex, whose marks are written the same way
     // for every letter but sigma.
     const latin = convert("a= s=", "beta-code", "transliteration", { preset })
@@ -809,7 +809,7 @@ test("a circumflex moved to epsilon does not read back as eta", () => {
   for (
     const [preset, expected] of [
       ["iso-843-type-1", "’ẽf"],
-      ["bnf-core", "ẽf̓"],
+      ["bnf-ancient", "ẽf̓"],
       ["iso-843-type-2", "’êf"],
     ] as const
   ) {

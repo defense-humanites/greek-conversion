@@ -769,7 +769,7 @@ test("reads the marks typed on a Greek koronis as the vowel's", () => {
     ["\u014D\u1FBD\u0304", { preset: "iso-843-type-2" }],
     // Under BnF, a keraia after the koronis is written as it is: an acute
     // there would be the vowel's.
-    ["i\u1FBD\u02B9", { preset: "bnf-core" }],
+    ["i\u1FBD\u02B9", { preset: "bnf-ancient" }],
   ];
   for (const [latin, options] of cases) {
     for (const target of ["greek", "transliteration", "beta-code"] as const) {
@@ -796,7 +796,7 @@ test("reads the marks typed on a Greek koronis as the vowel's", () => {
     convert("ka\u1FBD\u0313to", "transliteration", "beta-code"),
     "ka)to",
   );
-  const bnf = { preset: "bnf-core" } as const;
+  const bnf = { preset: "bnf-ancient" } as const;
   for (const greek of ["ψἀʹ", "Νἰʹ", "ΤἈʹ"]) {
     const result = convertDetailed(greek, "greek", "transliteration", bnf);
     assertEquals(result.lossy, false, greek);
@@ -969,7 +969,7 @@ test("places a lunate sigma written as a standard sigma by its position", () => 
   );
   assertNfcEquals(
     convert("logoc", "transliteration", "greek", {
-      preset: "bnf-core",
+      preset: "bnf-ancient",
       greek: { sigma: "standard", finalSigma: "preserve" },
     }),
     "λογος",

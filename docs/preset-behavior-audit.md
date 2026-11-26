@@ -14,7 +14,7 @@ modern Greek tables.
 | --- | --- | --- |
 | `ala-lc-ancient` | Published text examples; rough breathing when present; contextual `y/u`; nasal gamma; archaic koppa; marked numerals, including `στʹ` and prefix-only thousands, as decimal | Missing breathings and editorial capitalization cannot be inferred from spelling alone; an iota adscript after a marked capital is kept rather than omitted. |
 | `ala-lc-modern` | Published letter/notes rows for `μπ/ντ/γκ`, explicitly marked rho, omitted marks, and documented numeral variants | Supplying absent rough breathings or identifying uncertain polytonic/monotonic sources requires lexical or bibliographic context. |
-| `bnf-core` | Ancient-Greek variant letters; `αυ/ευ/ου`; known smooth breathing, circumflex, keraiai, and marked archaic numerals in Latin output; omission of explicit macron/breve | The upper Cypriot syndyazomeno shares U+0306 with breve; cataloguing variants and the Iliad/Odyssey numeral exception require external context. |
+| `bnf-ancient` | Ancient-Greek variant letters; `αυ/ευ/ου`; known smooth breathing, circumflex, keraiai, and marked archaic numerals in Latin output; omission of explicit macron/breve | The upper Cypriot syndyazomeno shares U+0306 with breve; cataloguing variants and the Iliad/Odyssey numeral exception require external context. |
 | `iso-843-type-1` | Type 1 letter choices; `αυ/ευ/ου`; capitals of multi-letter spellings; initial smooth breathing; perispomeni as circumflex; question mark, ano teleia, and enotikon; undefined and unresolved archaic mappings | Some reference provisions remain unimplemented; a Latin apostrophe or hyphen cannot by itself establish a smooth breathing or enotikon, and `s` before a hyphen is read as final sigma (note 2). |
 | `iso-843-type-2` | Table 2 transcription: `αυ/ευ/ηυ` as `v` or `f` by the next sound, accent moved to the vowel, nasal gamma except before kappa, `μπ` as `b` at word edges, unmarked eta and omega; Table 3 marks and punctuation as for Type 1; undefined and unresolved archaic mappings; every example of the BGN/PCGN table of the ELOT 743 transcription | Not reversible by design; before an archaic letter, upsilon follows that letter's sound; the same apostrophe, hyphen, and note 2 limits as Type 1. The stress that BGN/PCGN marks in unaccented capitals needs a dictionary. |
 | `perseus` | Lowercase ASCII Beta Code, letters, and supported diacritics | TLG escapes are outside the cited Perseus subset. |
@@ -26,7 +26,7 @@ modern Greek tables.
 BnF specifies the right keraia as an acute, the left keraia as a comma, a
 combining smooth breathing on the Latin letter, and a combining circumflex
 accent. The acute can coincide with a vowel's ordinary accent (`αʹ` and `ά`
-both render as `á` under `bnf-core`), so the inverse parser does not invent
+both render as `á` under `bnf-ancient`), so the inverse parser does not invent
 numeral provenance there, and `convertDetailed()` reports the loss. A
 consonant bears no accent: its acute reads back as the keraia (`c̄́` → `ϛʹ`),
 as does a comma before `c̄` or `s̄`, the stigma and sampi of numerals

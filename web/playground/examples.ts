@@ -304,7 +304,7 @@ export const EXAMPLES: Readonly<Record<Preset | "", readonly Example[]>> = {
       output: "tōn varvarōn",
     },
   ],
-  "bnf-core": [
+  "bnf-ancient": [
     greek(
       "Numerals and archaic letters",
       "Keraia, stigma, koppa, sampi, and digamma",

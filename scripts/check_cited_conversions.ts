@@ -106,7 +106,7 @@ const PRESET_NAMES: readonly (readonly [RegExp, Preset])[] = [
   [/\bType 2\b/, "iso-843-type-2"],
   [/\bISO 843\b/, "iso-843-type-1"],
   [/\bISO 843\b/, "iso-843-type-2"],
-  [/\bBnF\b/, "bnf-core"],
+  [/\bBnF\b/, "bnf-ancient"],
 ];
 
 interface Citation {

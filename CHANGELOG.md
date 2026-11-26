@@ -15,11 +15,21 @@ change.
 
 ### Changed
 
+- **The preset `bnf-core` is now `bnf-ancient`**, and its prepared options,
+  exported by `./presets`, `bnfAncient`. Its name came from a profile of the
+  BnF rules that apply mechanically; the preset now writes the whole BnF
+  transliteration of Ancient Greek, except the variants for access points
+  and the numerals of the *Iliad* and the *Odyssey*, which depend on the
+  item catalogued. `bnf-ancient` stands beside `ala-lc-ancient`. The old
+  name throws an `OptionError` whose `replacement` is the new one, until a
+  minor release after `1.0.0` removes it. The preset `perseus` is titled
+  "Perseus Beta Code — Letters and diacritics": it covers the whole Perseus
+  subset, which its former title, "Core subset", did not say.
 - **ISO 843, ALA-LC Modern, and BnF write a double rho `rr`.** The tables of
   ISO 843 (both types) and of ALA-LC for Modern Greek write `h` only for a
   rough breathing that Greek writes, and the BnF only for a rho that bears
   one (§ 4.3.5). `iso-843-type-1`, `iso-843-type-2`, `ala-lc-modern`, and
-  `bnf-core` wrote the second rho of every pair `rh`, as classical studies
+  `bnf-ancient` wrote the second rho of every pair `rh`, as classical studies
   do: `Ερρίκος` gave `Errhíkos` under `iso-843-type-2`, and now gives
   `Erríkos`. They select `transliteration.rho: "marked"`.
 - **`convertDetailed()` into transliteration under `longVowels: "omit"`
@@ -27,7 +37,7 @@ change.
   when the output's letters read back as others, as eta written `i` does in
   nearly every text: it now reads it once, with the positions of its
   tokens.
-- **A converter bound to `bnf-core` or `tlg-core` converts as fast as
+- **A converter bound to `bnf-ancient` or `tlg-core` converts as fast as
   `convert()`**, 12 to 18 % faster on a long text: their repertoires hold
   every character, and the converter no longer checks each letter.
 - **A bundle of the `core` entry point with a preset or the defaults is 4
@@ -52,7 +62,7 @@ change.
   - letters under one overline written into Beta Code, and `<…>` read from
     Beta Code;
   - omegas before `y`, read from transliteration under ISO 843 type 2;
-  - capital stigmas and sampis written under `bnf-core`;
+  - capital stigmas and sampis written under `bnf-ancient`;
   - signs `ϗ` written without spaces under `greek.kaiAccent: "modern"`;
   - in a converter bound to ALA-LC, its stigmas, sampis, and koppas, and in
     one bound to ISO 843, every letter under decimal numerals.

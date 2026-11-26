@@ -47,7 +47,7 @@ const ALA_LC_NUMERAL_ONLY = new Set<Letter>([
  * functions answer for these presets by this one.
  */
 export function presetChecksLetters(preset: Preset): boolean {
-  return preset !== "bnf-core" && preset !== "tlg-core";
+  return preset !== "bnf-ancient" && preset !== "tlg-core";
 }
 
 const OMIT_NON_ROUGH_DIACRITICS = {
@@ -79,7 +79,7 @@ const PRESET_OPTIONS = {
       numerals: "decimal",
     },
   },
-  "bnf-core": {
+  "bnf-ancient": {
     transliteration: {
       archaicKoppa: "q",
       coronis: "greek",
@@ -177,7 +177,7 @@ export function getPresetOptions(preset: Preset): PresetOptions {
  * length mark of eta and omega and the circumflex accent alike, and
  * `longVowels: "grave-circumflex"` without `diacritics.accents: "remove"`,
  * which would write the length mark of eta as the grave accent of epsilon. A
- * preset value counts, so `{ preset: "bnf-core", transliteration: {
+ * preset value counts, so `{ preset: "bnf-ancient", transliteration: {
  * longVowels: "circumflex" } }` is rejected too. The `source` profile is checked and
  * resolved as well, on its own, and left out of the result, which holds the
  * options that write the output. Prepared options give a copy of the options
@@ -500,6 +500,11 @@ const REMOVED_PRESETS: Readonly<Record<string, string>> = {
     "the SBL Handbook defines no academic style for Greek; the defaults write what it wrote, so omit the preset",
 };
 
+/** Presets renamed before 1.0.0, named in the error for the old name. */
+const RENAMED_PRESETS: Readonly<Record<string, string>> = {
+  "bnf-core": "bnf-ancient",
+};
+
 /** Values renamed before 1.0.0, named in the error for the old value. */
 const RENAMED_VALUES: Readonly<
   Record<string, Readonly<Record<string, string>>>
@@ -748,8 +753,8 @@ export function isCharacterInPresetScope(
     case "perseus":
     case "sbl-general":
       return false;
-    // `bnf-core` and `tlg-core` check no letter (presetChecksLetters()).
-    case "bnf-core":
+    // `bnf-ancient` and `tlg-core` check no letter (presetChecksLetters()).
+    case "bnf-ancient":
     case "iso-843-type-1":
     case "iso-843-type-2":
     case "tlg-core":
@@ -793,8 +798,8 @@ export function presetMappingIssue(
 }
 
 /**
- * The options of a bundled preset, or an `OptionError` that names the preset
- * if it was removed.
+ * The options of a bundled preset, or an `OptionError` that says what to do
+ * instead if it was removed, and names its new name if it was renamed.
  *
  * Internal: not exported by the package entry points.
  */
@@ -805,6 +810,9 @@ export function registeredOptions(
   if (!Object.hasOwn(PRESET_OPTIONS, preset)) {
     const removed = Object.hasOwn(REMOVED_PRESETS, preset)
       ? REMOVED_PRESETS[preset]
+      : undefined;
+    const renamed = Object.hasOwn(RENAMED_PRESETS, preset)
+      ? RENAMED_PRESETS[preset]
       : undefined;
     // A preset imported from `./presets`, given for its name.
     const named = typeof preset === "object" && preset !== null &&
@@ -822,11 +830,14 @@ export function registeredOptions(
               ? `: name it instead, as in { preset: ${JSON.stringify(named)} }`
               : ""
           }`
-      }${removed === undefined ? "" : ` (removed: ${removed})`}`,
+      }${removed === undefined ? "" : ` (removed: ${removed})`}${
+        renamed === undefined ? "" : ` (${preset} is now ${renamed})`
+      }`,
       {
         path: `${prefix}preset`,
         received: preset,
         accepted: Object.keys(PRESET_OPTIONS),
+        ...(renamed === undefined ? {} : { replacement: renamed }),
       },
     );
   }

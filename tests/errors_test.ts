@@ -131,6 +131,36 @@ test("option errors are OptionErrors that locate the option", () => {
     convert("α", "greek", "transliteration", { preset: "sbl-general" }),
     "a",
   );
+  // A preset renamed before 1.0.0 names its new name, as a source preset.
+  const renamed = assertThrows(
+    () =>
+      convert(
+        "α",
+        "greek",
+        "transliteration",
+        { preset: "bnf-core" } as never,
+      ),
+    OptionError,
+  );
+  assertEquals(renamed.path, "preset");
+  assertEquals(renamed.received, "bnf-core");
+  assertEquals(renamed.replacement, "bnf-ancient");
+  assertEquals(
+    renamed.message,
+    "Unknown conversion preset: bnf-core (bnf-core is now bnf-ancient)",
+  );
+  const renamedSource = assertThrows(
+    () =>
+      convert(
+        "α",
+        "greek",
+        "transliteration",
+        { source: { preset: "bnf-core" } } as never,
+      ),
+    OptionError,
+  );
+  assertEquals(renamedSource.path, "source.preset");
+  assertEquals(renamedSource.replacement, "bnf-ancient");
 
   const incompatible = assertThrows(
     () =>
@@ -394,7 +424,7 @@ test("rejects a circumflex for both length and accent", () => {
   );
   assertThrows(
     () =>
-      createConverter({ preset: "bnf-core" }).convert(
+      createConverter({ preset: "bnf-ancient" }).convert(
         "ῆ",
         "greek",
         "transliteration",
@@ -403,7 +433,7 @@ test("rejects a circumflex for both length and accent", () => {
     RangeError,
   );
   // A preset value counts as much as a custom one.
-  for (const preset of ["bnf-core", "iso-843-type-1"] as const) {
+  for (const preset of ["bnf-ancient", "iso-843-type-1"] as const) {
     assertEquals(
       assertThrows(
         () =>
@@ -436,7 +466,7 @@ test("rejects a circumflex for both length and accent", () => {
   // Either circumflex alone is accepted.
   resolveConversionOptions({ transliteration: { longVowels: "circumflex" } });
   resolveConversionOptions({
-    preset: "bnf-core",
+    preset: "bnf-ancient",
     transliteration: { longVowels: "circumflex", circumflexAccent: "tilde" },
   });
 });

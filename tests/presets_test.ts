@@ -15,7 +15,7 @@ test("exposes descriptive metadata for every preset", () => {
   assertEquals(listPresetMetadata().map(({ id }) => id), [
     "ala-lc-ancient",
     "ala-lc-modern",
-    "bnf-core",
+    "bnf-ancient",
     "iso-843-type-1",
     "iso-843-type-2",
     "perseus",
@@ -47,7 +47,7 @@ test("exposes descriptive metadata for every preset", () => {
 
   assertEquals(getPresetMetadata("perseus"), {
     id: "perseus",
-    name: "Perseus Beta Code — Core subset",
+    name: "Perseus Beta Code — Letters and diacritics",
     authority: "Perseus Digital Library",
     description:
       "Lowercase-ASCII subset of TLG Beta Code used by the Perseus Digital Library project.",
@@ -196,10 +196,10 @@ test("ISO and BnF restrict upsilon-u to au, eu, and ou", () => {
     "y au eu ou īy yi ōy aÿ áy",
   );
   assertNfcEquals(
-    convert(greek, "greek", "transliteration", { preset: "bnf-core" }),
+    convert(greek, "greek", "transliteration", { preset: "bnf-ancient" }),
     "y au eu ou ēy yi ōy aÿ áy",
   );
-  for (const preset of ["iso-843-type-1", "bnf-core"] as const) {
+  for (const preset of ["iso-843-type-1", "bnf-ancient"] as const) {
     assertNfcEquals(
       convert("au eu ou", "transliteration", "transliteration", { preset }),
       "au eu ou",
@@ -213,7 +213,7 @@ test("ISO and BnF restrict upsilon-u to au, eu, and ou", () => {
 
 test("BnF renders keraiai only in transliteration and reports their loss", () => {
   const greek = "βʹ ͵αʹ, βʹ";
-  const options = { preset: "bnf-core" } as const;
+  const options = { preset: "bnf-ancient" } as const;
   const result = convertDetailed(greek, "greek", "transliteration", options);
 
   assertNfcEquals(result.output, "b́ ,á, b́");
@@ -233,7 +233,7 @@ test("BnF renders keraiai only in transliteration and reports their loss", () =>
   );
   assertEquals(
     convert("αʹ", "greek", "transliteration", {
-      preset: "bnf-core",
+      preset: "bnf-ancient",
       text: { numerals: "decimal" },
     }),
     "1",
@@ -251,7 +251,7 @@ test("BnF renders keraiai only in transliteration and reports their loss", () =>
   );
   assertNfcEquals(
     convert(greek, "greek", "transliteration", {
-      preset: "bnf-core",
+      preset: "bnf-ancient",
       transliteration: { keraia: "greek" },
     }),
     "bʹ ͵aʹ, bʹ",
@@ -259,7 +259,7 @@ test("BnF renders keraiai only in transliteration and reports their loss", () =>
 });
 
 test("BnF distinguishes structural length from explicit quantity marks", () => {
-  const options = { preset: "bnf-core" } as const;
+  const options = { preset: "bnf-ancient" } as const;
 
   assertNfcEquals(
     convert("ἄ ὦ ῆ ᾱ ᾰ ποιῇ", "greek", "transliteration", options),
@@ -285,7 +285,7 @@ test("BnF distinguishes structural length from explicit quantity marks", () => {
   );
   assertNfcEquals(
     convert("ᾱ ᾰ", "greek", "transliteration", {
-      preset: "bnf-core",
+      preset: "bnf-ancient",
       transliteration: { quantity: "preserve" },
     }),
     "ā ă",
@@ -305,7 +305,7 @@ test("ISO Type 1 uses apostrophe and distinct punctuation for cited marks", () =
   );
   assertNfcEquals(
     convert("ἄ;·", "greek", "transliteration", {
-      preset: "bnf-core",
+      preset: "bnf-ancient",
     }),
     "a̓́?;",
   );
@@ -374,13 +374,13 @@ test("core presets remain conservative and mixable", () => {
   );
   assertNfcEquals(
     convert("κἀγώ", "greek", "transliteration", {
-      preset: "bnf-core",
+      preset: "bnf-ancient",
       transliteration: { coronis: "greek" },
     }),
     "ka᾽gṓ",
   );
   assertNfcEquals(
-    convert("ϟϙ", "greek", "transliteration", { preset: "bnf-core" }),
+    convert("ϟϙ", "greek", "transliteration", { preset: "bnf-ancient" }),
     "qq",
   );
   assertNfcEquals(
@@ -389,7 +389,7 @@ test("core presets remain conservative and mixable", () => {
   );
   assertNfcEquals(
     convert("ϙ", "greek", "transliteration", {
-      preset: "bnf-core",
+      preset: "bnf-ancient",
       transliteration: { archaicKoppa: "k-dot-below" },
     }),
     "ḳ",
@@ -431,7 +431,7 @@ test("convertDetailed reports losses introduced by presets", () => {
     "ϙ",
     "greek",
     "transliteration",
-    { preset: "bnf-core" },
+    { preset: "bnf-ancient" },
   );
   assertEquals(bnfKoppa.output, "q");
   assertEquals(bnfKoppa.losses.map((loss) => loss.code), [

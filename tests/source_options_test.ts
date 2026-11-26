@@ -24,7 +24,7 @@ const GREEK = "Θουκυδίδης Ἀθηναῖος ξυνέγραψε τὸ�
 const PRESETS = [
   "ala-lc-ancient",
   "ala-lc-modern",
-  "bnf-core",
+  "bnf-ancient",
   "iso-843-type-1",
   "iso-843-type-2",
   "perseus",

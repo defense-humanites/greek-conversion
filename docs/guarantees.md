@@ -20,7 +20,7 @@ protects these behaviors.
   [Information loss](information-loss.md#canonical-spelling-and-unicode)),
   the case of a capital spelled with several Latin letters, which follows
   the letters and words around it, when one of them reads back otherwise
-  after a loss (under `bnf-core`, an acute on a consonant reads back as a
+  after a loss (under `bnf-ancient`, an acute on a consonant reads back as a
   keraia: `Λ́Θ` gives `ĹTH`, then `ĹTh`),
   letters that a converter keeps out of its scope, in the cases that
   [Character extensions](character-extensions.md#restricting-the-repertoire)

@@ -7,77 +7,77 @@ import { parse } from "../src/document.ts";
 // engine. See docs/preset-conformance-corpus.md for scope and pending cases.
 const CASES = [
   {
-    preset: "bnf-core",
+    preset: "bnf-ancient",
     rule: "§ 2.3, example 6: uppercase two-letter romanization",
     greek: "Θάλασσα Χαρά Ψάρι",
     latin: "Thálassa Chará Psári",
     lossy: false,
   },
   {
-    preset: "bnf-core",
+    preset: "bnf-ancient",
     rule: "§ 2.1: ancient-Greek variant letters",
     greek: "βηφ",
     latin: "bēph",
     lossy: false,
   },
   {
-    preset: "bnf-core",
+    preset: "bnf-ancient",
     rule: "§ 3: exceptional vowel pairs",
     greek: "αυ ευ ου",
     latin: "au eu ou",
     lossy: false,
   },
   {
-    preset: "bnf-core",
+    preset: "bnf-ancient",
     rule: "§ 4.3.5: rough breathing on an initial vowel pair",
     greek: "εὑρετήρια",
     latin: "heuretḗria",
     lossy: false,
   },
   {
-    preset: "bnf-core",
+    preset: "bnf-ancient",
     rule: "§ 4.3.5, example 12: rh only for a rho with a rough breathing",
     greek: "Ῥητορικὴ Πύρρος ἄῤῥητος",
     latin: "Rhētorikḕ Pýrros a̓́r̓rhētos",
     lossy: false,
   },
   {
-    preset: "bnf-core",
+    preset: "bnf-ancient",
     rule: "§ 4.2: coronis retains a Greek sign",
     greek: "κἀγώ",
     latin: "ka᾽gṓ",
     lossy: false,
   },
   {
-    preset: "bnf-core",
+    preset: "bnf-ancient",
     rule: "§ 4.3: smooth breathing and circumflex",
     greek: "ἄ ὦ",
     latin: "a̓́ ō̓̂",
     lossy: false,
   },
   {
-    preset: "bnf-core",
+    preset: "bnf-ancient",
     rule: "§ 4.3: explicit quantity marks are omitted",
     greek: "ᾱ ᾰ",
     latin: "a a",
     lossy: true,
   },
   {
-    preset: "bnf-core",
+    preset: "bnf-ancient",
     rule: "§ 4.1.1: keraiai become comma and acute",
     greek: "͵αʹ",
     latin: ",á",
     lossy: true,
   },
   {
-    preset: "bnf-core",
+    preset: "bnf-ancient",
     rule: "§ 4.3.6: the Greek printed hyphen remains U+2010",
     greek: "α‐β",
     latin: "a‐b",
     lossy: false,
   },
   {
-    preset: "bnf-core",
+    preset: "bnf-ancient",
     rule: "§ 7.2: marked archaic numerals have prescribed letter case",
     greek: "Ϛʹ Ϟʹ Ϡʹ ͵Ϛ ͵Ϡ",
     latin: "c̄́ Q́ s̄́ ,c̄ ,s̄",
@@ -340,7 +340,7 @@ for (const { preset, rule, greek, latin, lossy } of CASES) {
 
 test("BnF unmarked uppercase archaic letters retain their case", () => {
   assertNfcEquals(
-    convert("Ϛ Ϡ", "greek", "transliteration", { preset: "bnf-core" }),
+    convert("Ϛ Ϡ", "greek", "transliteration", { preset: "bnf-ancient" }),
     "C̄ S̄",
   );
 });
@@ -359,16 +359,16 @@ test("enotikon transliteration only affects Latin output", () => {
 });
 
 test("BnF chi digram wins over standalone lunate sigma", () => {
-  const letters = parse("ch c c̄", "transliteration", { preset: "bnf-core" })
+  const letters = parse("ch c c̄", "transliteration", { preset: "bnf-ancient" })
     .filter((token) => token.kind === "grapheme")
     .map((token) => token.letter);
   assertEquals(letters, ["chi", "sigma", "stigma"]);
   assertNfcEquals(
-    convert("Chará", "transliteration", "greek", { preset: "bnf-core" }),
+    convert("Chará", "transliteration", "greek", { preset: "bnf-ancient" }),
     "Χαρά",
   );
   assertNfcEquals(
-    convert("c̄", "transliteration", "greek", { preset: "bnf-core" }),
+    convert("c̄", "transliteration", "greek", { preset: "bnf-ancient" }),
     "ϛ",
   );
 });

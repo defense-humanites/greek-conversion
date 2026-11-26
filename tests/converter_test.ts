@@ -373,7 +373,7 @@ test("bound preset scopes match the audited additional-letter matrix", () => {
       "ala-lc-modern",
       ["digamma", "yot", "stigma", "koppa", "archaic-koppa", "sampi"],
     ],
-    ["bnf-core", []],
+    ["bnf-ancient", []],
     ["iso-843-type-1", []],
     ["iso-843-type-2", []],
     [
@@ -401,12 +401,12 @@ test("bound preset scopes match the audited additional-letter matrix", () => {
   }
 });
 
-test("a converter bound to bnf-core or tlg-core converts as convert() does", () => {
+test("a converter bound to bnf-ancient or tlg-core converts as convert() does", () => {
   // Their scopes hold every character and they report no mapping, so that
   // the converter reads the source as convert() does, without checking its
   // letters.
   const greek = "ϝϳϛϟϙϡ ϜϚϞϘϠ ϛʹ ϟʹ ͵ϡ λόγος";
-  for (const preset of ["bnf-core", "tlg-core"] as const) {
+  for (const preset of ["bnf-ancient", "tlg-core"] as const) {
     const converter = createConverter({ preset });
     for (const from of FORMATS) {
       const input = from === "greek"
@@ -517,7 +517,7 @@ test("strict ISO Type 1 rejects missing mappings separately from exclusions", ()
 
 test("strict repertoire rejection does not promise lossless conversion", () => {
   const bnf = createConverter({
-    preset: "bnf-core",
+    preset: "bnf-ancient",
     outOfScopeBehavior: "reject",
   });
   const markedNumeral = bnf.convertDetailed(
@@ -532,7 +532,7 @@ test("strict repertoire rejection does not promise lossless conversion", () => {
 });
 
 test("bound preset options remain overridable but not replaceable", () => {
-  const converter = createConverter({ preset: "bnf-core" });
+  const converter = createConverter({ preset: "bnf-ancient" });
 
   assertEquals(converter.convert("ϙ", "greek", "transliteration"), "q");
   assertEquals(
@@ -552,7 +552,7 @@ test("bound preset options remain overridable but not replaceable", () => {
   }
   assertEquals(
     message,
-    "Converter is bound to preset bnf-core; received perseus.",
+    "Converter is bound to preset bnf-ancient; received perseus.",
   );
 });
 
@@ -736,7 +736,7 @@ test("an excluded letter of a transliteration is copied from the source", () => 
   const copy = (
     letter: string,
     input: string,
-    configuration: { preset?: "bnf-core" | "ala-lc-modern" } = {},
+    configuration: { preset?: "bnf-ancient" | "ala-lc-modern" } = {},
   ) =>
     createConverter({ ...configuration, exclude: [letter] }).convert(
       input,
@@ -744,9 +744,9 @@ test("an excluded letter of a transliteration is copied from the source", () => 
       "greek",
     );
 
-  // Marks that the transliteration options leave out stay: bnf-core omits
+  // Marks that the transliteration options leave out stay: bnf-ancient omits
   // the quantity, and the defaults the coronis and the smooth breathing.
-  assertNfcEquals(copy("alpha", "pā́n", { preset: "bnf-core" }), "πā́ν");
+  assertNfcEquals(copy("alpha", "pā́n", { preset: "bnf-ancient" }), "πā́ν");
   assertNfcEquals(copy("alpha", "ka᾽gṓ"), "κa᾽γώ");
   assertNfcEquals(copy("omicron", "o̓"), "o̓");
   // The spelling its neighbours give it stays.

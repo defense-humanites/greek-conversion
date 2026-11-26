@@ -43,7 +43,7 @@ convert("Θεσσαλονίκη", greekReader, transliterationWriter, iso843Type
 | `@humanities/greek-conversion/greek`           | `greekReader`, `greekWriter`, `greekFormat`                                                                                       |
 | `@humanities/greek-conversion/beta-code`       | `betaCodeReader`, `betaCodeWriter`, `betaCodeFormat`                                                                              |
 | `@humanities/greek-conversion/transliteration` | `transliterationReader`, `transliterationWriter`, `transliterationFormat`                                                         |
-| `@humanities/greek-conversion/presets`         | `alaLcAncient`, `alaLcModern`, `bnfCore`, `iso843Type1`, `iso843Type2`, `perseus`, `sblGeneral`, `tlgCore`                        |
+| `@humanities/greek-conversion/presets`         | `alaLcAncient`, `alaLcModern`, `bnfAncient`, `iso843Type1`, `iso843Type2`, `perseus`, `sblGeneral`, `tlgCore`                        |
 
 `convert()` takes a reader and a writer. `reencode()` and `convertDetailed()`
 take a format's reader and writer as one value, such as `greekFormat`:

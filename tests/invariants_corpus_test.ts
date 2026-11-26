@@ -51,7 +51,7 @@ const KNOWN_BOUNDARIES: readonly {
   reason: string;
 }[] = [
   {
-    preset: "bnf-core",
+    preset: "bnf-ancient",
     format: "transliteration",
     code: "invalid-accent",
     reason:

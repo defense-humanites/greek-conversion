@@ -62,7 +62,7 @@ latin.losses.map((loss) => loss.diacritic ?? loss.glyphVariant);
 // → ["coronis","smooth","beta-symbol","lunate-sigma"]
 ```
 
-The other conventions keep more or less: `bnf-core` writes the smooth
+The other conventions keep more or less: `bnf-ancient` writes the smooth
 breathing and the coronis as marks of their own, and the presets for Modern
 Greek read no breathing back. See [Each preset](#each-preset).
 
@@ -133,5 +133,5 @@ typed.lossy; // → false
 A preset combines options, and loses what they lose.
 [What each preset loses](/guide/presets/#what-each-preset-loses) compares the
 eight presets, and the default, on a monotonic and a polytonic text: the two Beta Code presets
-and `bnf-core` keep both texts, `iso-843-type-1` keeps the monotonic one, and
+and `bnf-ancient` keep both texts, `iso-843-type-1` keeps the monotonic one, and
 `sbl-general` and the ALA-LC presets drop the accents.

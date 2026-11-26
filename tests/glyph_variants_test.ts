@@ -243,7 +243,7 @@ test("a numeral keeps a lunate sigma the source notes", () => {
 test("Beta Code s3 and the BnF c give a lunate sigma", () => {
   assertNfcEquals(convert("s3w=ma", "beta-code", "greek"), "ϲῶμα");
   assertNfcEquals(
-    convert("cōma", "transliteration", "greek", { preset: "bnf-core" }),
+    convert("cōma", "transliteration", "greek", { preset: "bnf-ancient" }),
     "ϲωμα",
   );
   assertEquals(convert("s3w=ma", "beta-code", "beta-code"), "s3w=ma");
