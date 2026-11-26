@@ -19,14 +19,17 @@ import {
   reencode,
 } from "@humanities/greek-conversion";
 
-// Beta Code, as the TLG writes it
+// Ancient Greek, from Beta Code as the TLG writes it
 convert("*(/ELLHSIN E)GE/NETO", "beta-code", "greek");
 // → Ἕλλησιν ἐγένετο
 
-// Ancient Greek, with every accent and breathing, and nothing lost
-const res = convertDetailed("Ἕλλησιν ἐγένετο", "greek", "transliteration");
-res.output; // → Héllēsin egéneto
-res.lossy; // → false
+// Byzantine Greek: ϗ written kai, with the grave the manuscripts give it
+const kai = convertDetailed("ϗ τὰ λοιπά", "greek", "transliteration", {
+  greek: { kaiAccent: "byzantine" },
+});
+kai.output; // → kaì tà loipá
+kai.losses[0].code; // → removed-glyph-variant
+kai.losses[1].code; // → added-diacritic
 
 // Modern Greek, from polytonic to monotonic, as passports write it
 reencode("Hi ’Athína ’eînai hi protévousa", "transliteration", {
