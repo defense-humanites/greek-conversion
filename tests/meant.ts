@@ -39,6 +39,8 @@ const MARKED_RHO =
 
 const KEPT_LETTER =
   "A converter reports a letter kept out of its scope whose output does not convert back to its spelling in the source (unrepresented-literal).";
+const TITLE_AFTER_APOSTROPHE =
+  "Title case finds the apostrophe before a letter, and the letter before the apostrophe, past combining marks, as it finds the start of a word: the letter stays small.";
 
 /** The changes of output that are meant. */
 export const MEANT: readonly MeantChange[] = [
@@ -69,4 +71,12 @@ export const MEANT: readonly MeantChange[] = [
     call: "createConverter().convertDetailed(transliteration → beta-code)",
     reason: KEPT_LETTER,
   },
+  ...[
+    "\u03D7\u03E1\u03AD\u2019\u0345\u03D9\u02BC\u03999\u2009\u037E\u0323",
+    "\u0314\u00FB\u1FBF\u0304xvP\u00ED",
+  ].map((input) => ({
+    input,
+    label: 'random 12: {"text":{"letterCase":"title"}}',
+    reason: TITLE_AFTER_APOSTROPHE,
+  })),
 ];

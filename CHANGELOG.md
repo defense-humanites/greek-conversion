@@ -70,6 +70,16 @@ change.
     inside a word too, where the reader infers no breathing: `ke̓u`, in
     transliteration, gave `key`, then `keÿ`, and so did `ce̓u`, whose Latin
     `c` is a letter of the word. They give `keÿ` and `ceÿ` at once.
+- **Title case leaves small the letter after an apostrophe that follows a
+  Latin letter.** An apostrophe between two letters does not start a word,
+  but title case counted only the Greek letters before it, although a Latin
+  letter next to Greek ones is a letter of their word since `1.0.0-rc.14`:
+  `l’ἀνήρ` gave `l’Ἀνήρ` in Greek, and `l’Anḗr` in transliteration, which a
+  second conversion wrote `L’anḗr`. It gives `l’ἀνήρ`, and `l’anḗr`, whose
+  Latin `l` then reads as a lambda. So it does after a Latin letter with a
+  combining mark (`é’ἀνήρ`), and after a letter that a converter keeps out of
+  its scope. A letter kept after such an apostrophe is small too: with alpha
+  out of scope, `τ’ἀνήρ` gave `Τ’Ἀνήρ`, and gives `Τ’ἀνήρ`.
 - **A converter reports a letter kept out of its scope whose output does not
   convert back.** A kept letter is written as its source spells it, and the
   target may read that spelling as other characters:
