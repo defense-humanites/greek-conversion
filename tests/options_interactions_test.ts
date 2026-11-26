@@ -372,6 +372,31 @@ test("writes vowel pairs as they read back, under the ISO and SBL presets", () =
     }),
     "iy",
   );
+  // So is an eta written as iota after a vowel: with a rough breathing, it
+  // reads back as the second vowel of a rough diphthong, whose h goes before
+  // the pair. It went before the eta, and moved when converted again.
+  const type2 = { preset: "iso-843-type-2" } as const;
+  for (
+    const [greek, latin] of [["κεἡ", "khei"], ["κοἡ", "khoi"], ["κεἭ", "kHeí"]]
+  ) {
+    const output = convert(greek, "greek", "transliteration", type2);
+    assertNfcEquals(output, latin);
+    assertNfcEquals(
+      convert(output, "transliteration", "transliteration", type2),
+      output,
+    );
+  }
+  // A smooth breathing that marks a hiatus inside a word, where the reader
+  // infers none, leaves a diaeresis on the upsilon, as the reader reads a y
+  // after a vowel; after a Latin letter too, a letter of its word.
+  for (const input of ["ke\u0313u", "ce\u0313u"]) {
+    const output = convert(input, "transliteration", "transliteration");
+    assertNfcEquals(output, `${input[0]}eÿ`);
+    assertNfcEquals(
+      convert(output, "transliteration", "transliteration"),
+      output,
+    );
+  }
 });
 
 test("vowel spelling options keep vowel pairs idempotent", () => {
