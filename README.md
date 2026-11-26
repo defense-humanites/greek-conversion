@@ -42,10 +42,12 @@ between scripts:
   overline of the nomina sacra, and Byzantine punctuation, in Greek and in
   the TLG's Beta Code; write in the style of the uncial manuscripts; romanize
   for a library catalogue after ALA-LC, whose table runs to 1453.
-- **Modern Greek**: romanize names and texts after ELOT 743 and ISO 843,
-  whose transcription Greek passports, road signs, and the United Nations
-  use; write library records after ALA-LC; turn polytonic text into
-  monotonic; build search keys and URL slugs.
+- **Modern Greek**: transcribe names as Greek passports, road signs, and
+  maps write them, after ELOT 743 and ISO 843, which the United Nations
+  adopted (`μπ` at a word's edge as `b`, `ευ` as `ev` or `ef`); transliterate
+  after ISO 843 Type 1, which converts back, or ALA-LC for library records;
+  turn polytonic text into monotonic, after the monotonic accent rules; set
+  capitals without accents, as Greek does; build search keys and URL slugs.
 
 Each convention is a preset that states its references and how far it
 follows them. The ALA-LC, BnF, and ISO 843 presets are tested against
