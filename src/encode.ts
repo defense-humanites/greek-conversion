@@ -955,7 +955,12 @@ export function encodeTransliteration(
         afterLetter = true;
         return token.value;
       }
-      if (!isBoundaryTransparent(token)) afterLetter = false;
+      // A literal that writes a letter is a letter of its word, as for
+      // isWordInitial(): the vowel after it starts no word.
+      if (isWordLetter(token)) {
+        if (!afterLetter) wordStart = -1;
+        afterLetter = true;
+      } else if (!isBoundaryTransparent(token)) afterLetter = false;
       if (bnfKeraia) {
         if (token.value === DEXIA_KERAIA) {
           return bnfRightKeraia(options, rendered[index - 1]);

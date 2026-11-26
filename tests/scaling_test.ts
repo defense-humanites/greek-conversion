@@ -245,3 +245,33 @@ test("conversion cost grows linearly with the input", () => {
     }
   }
 });
+
+test("a long run of letters is in a numeral as a short one is", () => {
+  // isGreekNumeralContext() keeps what it reads of a run longer than 16
+  // tokens: the letters asked after the first get the same answer.
+  const contextual = { greek: { finalSigma: "contextual" } } as const;
+  const symbol = { greek: { medialBeta: "symbol" } } as const;
+  for (const length of [4, 20, 40]) {
+    assertEquals(
+      convert("σ".repeat(length), "greek", "greek", contextual),
+      "σ".repeat(length - 1) + "ς",
+    );
+    assertEquals(
+      convert("σ".repeat(length) + "ʹ", "greek", "greek", contextual),
+      "σ".repeat(length) + "ʹ",
+    );
+    assertEquals(
+      convert("β".repeat(length), "greek", "greek", symbol),
+      "β" + "ϐ".repeat(length - 1),
+    );
+    assertEquals(
+      convert("β".repeat(length) + "ʹ", "greek", "greek", symbol),
+      "β".repeat(length) + "ʹ",
+    );
+  }
+  // After a left keraia, a dental and the sigma after it are a numeral.
+  assertEquals(
+    convert("͵τσ", "greek", "greek", { greek: { dentalSigma: "assimilate" } }),
+    "͵τσ",
+  );
+});

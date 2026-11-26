@@ -168,3 +168,48 @@ test("a literal that writes a letter is a letter of its word, however made", () 
     "Kαζάρμα",
   );
 });
+
+test("transliteration starts no word after a letter that a reader keeps as text", () => {
+  // The writer finds where a word starts from the tokens before, as
+  // isWordInitial() does: a literal that writes a letter is a letter of
+  // its word, as a kept letter is, and a vowel after it starts no word.
+  const iso = { preset: "iso-843-type-2" } as const;
+  const title = { ...iso, text: { letterCase: "title" } } as const;
+  for (
+    const [converter, latin, options] of [
+      [undefined, "co̔᾽i", iso],
+      [noAlpha, "ao̔᾽i", iso],
+      [noAlpha, "aho᾽i", iso],
+      [undefined, "CE̓", title],
+      [undefined, "Ce̓", title],
+    ] as const
+  ) {
+    const convert_ = converter?.convert.bind(converter) ?? convert;
+    const detailed = converter?.convertDetailed.bind(converter) ??
+      convertDetailed;
+    // Beta Code reads every Latin letter as its own.
+    for (const target of ["greek", "transliteration"] as const) {
+      const result = detailed(latin, "transliteration", target, options);
+      assertEquals(
+        convert_(result.output, target, target, options),
+        result.output,
+        `${latin} → ${target}`,
+      );
+      if (!result.lossy) {
+        assertEquals(
+          convert_(result.output, target, "transliteration", options),
+          convert_(latin, "transliteration", "transliteration", options),
+          `${latin} → ${target} and back`,
+        );
+      }
+    }
+  }
+  assertNfcEquals(
+    noAlpha.convert("aὀἱ", "greek", "transliteration", iso),
+    "ao’hi",
+  );
+  assertNfcEquals(
+    convert("CE̓", "transliteration", "transliteration", title),
+    "Ce",
+  );
+});
