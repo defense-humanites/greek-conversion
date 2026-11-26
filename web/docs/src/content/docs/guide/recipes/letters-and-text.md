@@ -149,18 +149,16 @@ convert("ΘΕΟΣ Θ ΚΑΙ Ὁ ΛΟΓΟΣ", "greek", "transliteration");
 
 ## Convert the Greek of a text in another language
 
-`text.scope: "greek"` converts the Greek passages of a text and copies the
+`convertGreekPassages()` converts the Greek passages of a text and copies the
 rest as it is: a French or English text keeps its punctuation, where a
 conversion of the whole text would read `;` as the Greek question mark. The
 rules see the text around the passages: before a period, a capital is an
 initial.
 
 ```ts
-import { convert } from "@humanities/greek-conversion";
+import { convertGreekPassages } from "@humanities/greek-conversion";
 
-convert("Voir λόγος ; cf. Θ. Δημητρίου.", "greek", "transliteration", {
-  text: { scope: "greek" },
-});
+convertGreekPassages("Voir λόγος ; cf. Θ. Δημητρίου.", "transliteration");
 // → Voir lógos ; cf. Th. Dēmētríou.
 ```
 
@@ -168,7 +166,8 @@ The signs that only Greek uses are converted, by their code points, and the
 punctuation that it shares with other scripts is copied, even glued to a Greek
 word: the library cannot tell `see λόγος; also` from a Greek question. A Greek
 letter in another language is converted too (`β-carotène` gives `b-carotène`).
-The option reads Greek only; the
+The source is Greek; `convertGreekPassagesDetailed()` adds the losses and the
+spans, and the
 [guarantees](/reference/guarantees/#the-greek-passages-of-a-text) give the
 details.
 

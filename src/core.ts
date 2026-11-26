@@ -104,9 +104,6 @@ export function convert(
   const reader = readerOf(from, "from");
   const writer = writerOf(to, "to");
   const { reading, writing } = profilesOf(options);
-  if (writing.text.scope === "greek") {
-    return convertPassages(input, reader, writer, reading, writing);
-  }
   return writeWith(writer, readWith(reader, input, reading, true), writing);
 }
 
@@ -145,9 +142,6 @@ export function reencode(
   assertTextInput(input);
   const [reader, writer] = formatOf(format, "format");
   const { reading, writing } = profilesOf(options);
-  if (writing.text.scope === "greek") {
-    return convertPassages(input, reader, writer, reading, writing);
-  }
   return writeWith(writer, readWith(reader, input, reading, true), writing);
 }
 
@@ -186,17 +180,6 @@ export function convertDetailed(
   const [sourceReader, sourceWriter] = formatOf(from, "from");
   const [targetReader, targetWriter] = formatOf(to, "to");
   const { reading, writing } = profilesOf(options);
-  if (writing.text.scope === "greek") {
-    return convertPassagesDetailed(
-      input,
-      sourceReader,
-      targetWriter,
-      targetReader,
-      sourceWriter.glyphForm,
-      reading,
-      writing,
-    );
-  }
   const read: ReadPositions = { text: "", starts: [] };
   const source = readWith(sourceReader, input, reading, true, read);
   const inputSpans = readSpans(input, read);
@@ -231,6 +214,75 @@ export function convertDetailed(
   }
 
   return { output, lossy: losses.length > 0, losses, spans };
+}
+
+/**
+ * Converts the Greek passages of a text, read as Greek, and copies the rest
+ * as it is: `convertGreekPassages()` from the main entry point, with a
+ * writer. A bundle keeps it only if it imports it.
+ *
+ * @example
+ * ```ts
+ * import { convertGreekPassages } from "@humanities/greek-conversion/core";
+ * import { transliterationWriter } from "@humanities/greek-conversion/transliteration";
+ *
+ * convertGreekPassages("see λόγος; also", transliterationWriter);
+ * // → see lógos; also
+ * ```
+ *
+ * @param to The writer of the passages' format in the output.
+ * @param options A preset from `./presets`, or what {@link prepareOptions}
+ * returns; the defaults if omitted.
+ * @throws {TypeError} If `input` is not a string, `to` not a writer, or
+ * `options` not prepared options.
+ */
+export function convertGreekPassages(
+  input: string,
+  to: Writer,
+  options?: PreparedOptions,
+): string {
+  assertTextInput(input);
+  const writer = writerOf(to, "to");
+  const { reading, writing } = profilesOf(options);
+  return convertPassages(input, writer, reading, writing);
+}
+
+/**
+ * {@link convertGreekPassages}, with the losses and the spans of
+ * {@link convertDetailed}: `convertGreekPassagesDetailed()` from the main
+ * entry point. The format of the output is given whole, as
+ * `transliterationFormat`, since the output is read back.
+ *
+ * @example
+ * ```ts
+ * import { convertGreekPassagesDetailed } from "@humanities/greek-conversion/core";
+ * import { betaCodeFormat } from "@humanities/greek-conversion/beta-code";
+ *
+ * convertGreekPassagesDetailed("voir ϐίϐλος ;", betaCodeFormat).lossy;
+ * // → true
+ * ```
+ *
+ * @param to The reader and writer of the passages' format in the output.
+ * @param options A preset from `./presets`, or what {@link prepareOptions}
+ * returns; the defaults if omitted.
+ * @throws {TypeError} If `input` is not a string, `to` not a reader and
+ * writer, or `options` not prepared options.
+ */
+export function convertGreekPassagesDetailed(
+  input: string,
+  to: ReaderWriter,
+  options?: PreparedOptions,
+): ConversionResult {
+  assertTextInput(input);
+  const [targetReader, targetWriter] = formatOf(to, "to");
+  const { reading, writing } = profilesOf(options);
+  return convertPassagesDetailed(
+    input,
+    targetWriter,
+    targetReader,
+    reading,
+    writing,
+  );
 }
 
 const PACKAGE = "@humanities/greek-conversion";

@@ -9,23 +9,26 @@ change.
 
 ### Added
 
-- **`text.scope: "greek"` converts the Greek passages of a text** and copies
-  the rest as it is, code unit by code unit, for Greek quoted in a text in
-  another language. A passage is a run of Greek letters with their marks, and
-  of the signs that only Greek uses, by their code points (the Greek question
-  mark, the ano teleia, the koronis, the keraiai); the punctuation that Greek
-  shares with other scripts is copied, glued to a Greek word or not, and the
-  options apply to the passages only. The rules see the whole text: in
-  `Voir λόγος ; cf. Θ. Δημητρίου.`, the `;` stays, and `Θ` before the period
-  is an initial (`Voir lógos ; cf. Th. Dēmētríou.`), where converting word by
-  word, as an application had to, lost the period. `convert()`,
-  `convertDetailed()`, and `reencode()` of both entry points take it, for a
-  Greek source; another source format, and a converter, throw an
-  `OptionError`. A text takes 1.5 to 2 times as long as its conversion as a
-  whole. A bundle grows by 2.2 kB minified, 0.9 kB with gzip, and by 3.5 kB,
-  1.4 kB with gzip, with `convertDetailed()`; `OptionError` moves to a module
-  of its own, so that the bundles of the `core` entry point keep none of the
-  tables of option values.
+- **`convertGreekPassages()` converts the Greek passages of a text** and
+  copies the rest as it is, code unit by code unit, for Greek quoted in a
+  text in another language. A passage is a run of Greek letters with their
+  marks, and of the signs that only Greek uses, by their code points (the
+  Greek question mark, the ano teleia, the koronis, the keraiai); the
+  punctuation that Greek shares with other scripts is copied, glued to a
+  Greek word or not, whitespace too, and the options apply to the passages
+  only. The rules see the whole text: in `Voir λόγος ; cf. Θ. Δημητρίου.`,
+  the `;` stays, and `Θ` before the period is an initial
+  (`Voir lógos ; cf. Th. Dēmētríou.`), where converting word by word, as an
+  application had to, lost the period. `convertGreekPassagesDetailed()`
+  adds the losses and the spans of `convertDetailed()`. Both are in the main
+  and `core` entry points; they read Greek, the only source in which another
+  language can be told from the Greek, and take the format of the output (in
+  `core`, a writer, or a format whole for the losses). A text takes 1.5 to 2
+  times as long as its conversion as a whole. A bundle keeps them only if it
+  imports them: `convertGreekPassages()` adds 1.7 kB minified, 0.7 kB with
+  gzip, and `convertGreekPassagesDetailed()` 3.1 kB, 1.2 kB with gzip.
+  `OptionError` moves to a module of its own, so that the bundles of the
+  `core` entry point keep none of the tables of option values.
 
 - **`transliteration.anoTeleia`** writes the ano teleia as the romanization
   tables do, `;` (`"semicolon"`, the default), or as Greek does, `·`

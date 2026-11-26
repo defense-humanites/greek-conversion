@@ -1,18 +1,19 @@
 /**
- * The conversion of the Greek passages of a text (`text.scope: "greek"`):
+ * The conversion of the Greek passages of a text (`convertGreekPassages()`):
  * the passages are converted, the rest of the text is copied, and the rules
  * of the conversion see the whole text.
  *
  * Internal: not exported by the package entry points.
  */
 import type { ReaderHooks, WriterHooks } from "./codec.ts";
+import { greekGlyphForm } from "./encode.ts";
+import { GREEK_READING } from "./formats/greek_reader.ts";
 import {
   type ConversionResult,
   type ConversionSpan,
   findConversionLosses,
 } from "./losses.ts";
 import type { Document, Token } from "./model.ts";
-import { OptionError } from "./option_error.ts";
 import type { ResolvedConversionOptions } from "./options.ts";
 import {
   type ReadPositions,
@@ -67,16 +68,6 @@ export function passageBounds(input: string): number[] {
   return bounds;
 }
 
-/** Throws unless a conversion of the Greek passages reads Greek. */
-function assertReadsGreek(reader: ReaderHooks): void {
-  if (reader.format !== "greek") {
-    throw new OptionError(
-      `text.scope "greek" reads Greek only, not ${reader.format}: in Beta Code and transliteration, Latin letters are the Greek text`,
-      { path: "text.scope", received: "greek", accepted: ["all"] },
-    );
-  }
-}
-
 /**
  * The document of a text, read as a whole, and its passages: the reader sees
  * the whole text, as the rules will, and the tokens read from each passage
@@ -100,13 +91,11 @@ interface ReadPassages {
 
 function readPassages(
   input: string,
-  reader: ReaderHooks,
   reading: ResolvedConversionOptions,
 ): ReadPassages {
-  assertReadsGreek(reader);
   const greekBounds = passageBounds(input);
   const read: ReadPositions = { text: "", starts: [] };
-  const document = readWith(reader, input, reading, true, read);
+  const document = readWith(GREEK_READING, input, reading, true, read);
   // The reader reads the input decomposed, which is the passages decomposed
   // one after the other: a passage starts with a character that no mark
   // follows from the passage before, and decomposition moves only marks.
@@ -253,19 +242,16 @@ function writePassages(
 }
 
 /**
- * Converts the Greek passages of `input`, and copies the rest as it is
- * (`text.scope: "greek"`).
- *
- * @throws {OptionError} If `reader` does not read Greek.
+ * Converts the Greek passages of `input`, read as Greek, and copies the rest
+ * as it is (`convertGreekPassages()`).
  */
 export function convertPassages(
   input: string,
-  reader: ReaderHooks,
   writer: WriterHooks,
   reading: ResolvedConversionOptions,
   writing: ResolvedConversionOptions,
 ): string {
-  const passages = readPassages(input, reader, reading);
+  const passages = readPassages(input, reading);
   if (passages.bounds.length === 2) return input;
   return writePassages(input, passages, writer, writing).output;
 }
@@ -277,19 +263,15 @@ export function convertPassages(
  * whole, as the input was; in another format, the text copied would be read
  * as Greek, and each Greek passage of the output is read back apart, the
  * text copied keeping its own tokens.
- *
- * @throws {OptionError} If `reader` does not read Greek.
  */
 export function convertPassagesDetailed(
   input: string,
-  reader: ReaderHooks,
   writer: WriterHooks,
   targetReader: ReaderHooks,
-  glyphForm: WriterHooks["glyphForm"],
   reading: ResolvedConversionOptions,
   writing: ResolvedConversionOptions,
 ): ConversionResult {
-  const passages = readPassages(input, reader, reading);
+  const passages = readPassages(input, reading);
   const { bounds, document: source, firsts } = passages;
   const { starts: inputStarts, ends: inputEnds } = readSpans(
     input,
@@ -391,7 +373,7 @@ export function convertPassagesDetailed(
       written: { starts: outputStarts, ends: outputEnds },
       read: { starts: readStarts, ends: readEnds },
     }),
-    { glyphForm, options: reading },
+    { glyphForm: greekGlyphForm, options: reading },
   );
   const spans: ConversionSpan[] = new Array(source.length);
   for (let index = 0; index < source.length; index++) {

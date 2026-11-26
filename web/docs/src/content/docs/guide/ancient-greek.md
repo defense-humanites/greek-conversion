@@ -127,5 +127,6 @@ convert("βιβλίον γʹ, ἔτος ͵αωκαʹ", "greek", "transliteration
   (`displaced-diacritic`), and `bnf-core` keeps the distinction.
 - **Symbol forms in Beta Code.** Beta Code notes the lunate sigma, but not
   `ϐ` or `ϑ`, which convert back as `β` and `θ`.
-- **Greek mixed with another language.** The whole text is converted: see
+- **Greek mixed with another language.** `convert()` converts the whole
+  text, and `convertGreekPassages()` its Greek passages only: see
   [Text in another language](/guide/losses/#text-in-another-language).

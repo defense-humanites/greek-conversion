@@ -89,7 +89,6 @@ test("option errors are OptionErrors that locate the option", () => {
     "letterCase",
     "whitespace",
     "numerals",
-    "scope",
   ]);
   assertEquals(unknownKey.replacement, undefined);
 

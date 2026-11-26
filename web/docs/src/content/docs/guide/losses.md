@@ -73,6 +73,20 @@ const aboutGreek = mixed.losses.filter(
 aboutGreek.length; // → 0
 ```
 
+`convertGreekPassagesDetailed()` converts the Greek passages only, copies the
+rest, shared punctuation included, and reports no loss for it:
+
+```ts
+import { convertGreekPassagesDetailed } from "@humanities/greek-conversion";
+
+const passages = convertGreekPassagesDetailed(
+  "Voir λόγος ; cf. ψυχή.",
+  "transliteration",
+);
+passages.output; // → Voir lógos ; cf. psychḗ.
+passages.lossy; // → false
+```
+
 ## Round trips and loss codes
 
 When `lossy` is `false`, converting the output back with the same options gives
