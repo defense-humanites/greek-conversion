@@ -290,6 +290,24 @@ test("transliterates every rho with one final h per group", () => {
   );
 });
 
+test("writes the h of rho only for a written rough breathing on demand", () => {
+  const marked = { transliteration: { rho: "marked" } } as const;
+
+  assertNfcEquals(
+    convert("ρ αρ ρρ ρῥ ῥ ῤῥ Ρ ΡΡ", "greek", "transliteration", marked),
+    "r ar rr rrh rh rrh R RR",
+  );
+  // Every rh is a rho with a rough breathing, the second of a pair too.
+  assertNfcEquals(
+    convert("r rr rrh rh RR", "transliteration", "greek", marked),
+    "ρ ρρ ρῥ ῥ ΡΡ",
+  );
+  assertEquals(
+    convertDetailed("ῤῥ", "greek", "transliteration", marked).lossy,
+    true,
+  );
+});
+
 test("applies the beta symbol only to medial lowercase beta", () => {
   assertNfcEquals(
     convert("bárbaros", "transliteration", "greek"),

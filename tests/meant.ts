@@ -34,6 +34,8 @@ const NUMERAL_NEXT_TO_DIGIT =
 
 const EDGE_NU_KAPPA =
   "Under ALA-LC, nk at the beginning or end of a word reads back as νκ, since γκ is written gk there.";
+const MARKED_RHO =
+  'ISO 843, ALA-LC Modern, and BnF write the h of rho only for a rough breathing that Greek writes (rho: "marked"): Πύρρος gives Pýrros.';
 
 /** The changes of output that are meant. */
 export const MEANT: readonly MeantChange[] = [
@@ -46,4 +48,10 @@ export const MEANT: readonly MeantChange[] = [
   { input: "cóRt\u03421 ăk0ōʹ", reason: NUMERAL_NEXT_TO_DIGIT },
   { input: "[\u03BD\u0300\u03D7\u0306漢", reason: EDGE_NU_KAPPA },
   { input: "chhoi\u00A0nkhē", reason: EDGE_NU_KAPPA },
+  {
+    input: /ρρ|ῤρ|rr/iu,
+    label:
+      /^(?:ala-lc-modern|bnf-core|iso-843-type-[12]|source|random 9: \{"preset":"ala-lc-modern")/u,
+    reason: MARKED_RHO,
+  },
 ];

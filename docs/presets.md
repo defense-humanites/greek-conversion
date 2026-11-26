@@ -151,6 +151,7 @@ Romanization profile for Modern Greek after 1453.
     "muPi": "b-initial",
     "nasalGamma": "nasal-medial-kappa",
     "nuTau": "d-underline-initial",
+    "rho": "marked",
     "upsilon": "y-with-diphthong-u"
   },
   "text": {
@@ -202,6 +203,7 @@ Core mechanically expressible profile for the BnF adaptation of ISO 843 for Anci
     "keraia": "bnf",
     "lunateSigma": "c",
     "quantity": "omit",
+    "rho": "marked",
     "smoothBreathing": "greek",
     "upsilon": "y-with-au-eu-ou"
   },
@@ -246,6 +248,7 @@ Type 1 transliteration of Greek characters into Latin characters, also that of E
     "eta": "i",
     "nasalGamma": "literal",
     "phi": "f",
+    "rho": "marked",
     "smoothBreathing": "apostrophe",
     "upsilon": "y-with-au-eu-ou"
   }
@@ -289,6 +292,7 @@ Type 2 transcription of Greek characters into Latin characters, favouring pronun
     "muPi": "b-initial-final",
     "nasalGamma": "nasal-except-kappa",
     "phi": "f",
+    "rho": "marked",
     "smoothBreathing": "apostrophe",
     "upsilon": "y-with-ou-v-f"
   }
@@ -446,6 +450,10 @@ Presets never infer a missing rough breathing and do not perform transformations
 that intrinsically require lexical or morphological knowledge. Consequently,
 ALA-LC output can only render `h` when the source document actually carries a
 rough breathing. This is a deliberate scope boundary, not an implicit fallback.
+The second rho of a pair inside a word is the one convention: SBL and ALA-LC
+Ancient write it `rh`, as classical studies do, while ISO 843, ALA-LC Modern,
+and BnF, whose tables write `h` only for a rough breathing that Greek writes,
+select `transliteration.rho: "marked"` (`Πύρρος` → `Pýrros`).
 
 The ALA-LC policy omits diaeresis visually. Under contextual `y/u`, the parser
 nevertheless preserves its deterministic provenance: `y` is interpreted as a

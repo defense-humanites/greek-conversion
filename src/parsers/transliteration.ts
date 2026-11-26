@@ -211,6 +211,9 @@ function readTransliteration(
   // tokens, which readSpacingMarks() may move.
   const smoothedByApostrophe = new Set<Token>();
   const systematicRho = transliteration?.rho === "systematic";
+  // Under `rho: "marked"`, `h` is written only for a rough breathing, which
+  // the second rho of a pair then has too.
+  const markedRho = transliteration?.rho === "marked";
   const circumflexAccent = transliteration?.circumflexAccent === "circumflex";
   // Without a length mark, e and o are epsilon and omicron, and a circumflex
   // on them is an accent: one that only the long vowel can bear.
@@ -425,7 +428,8 @@ function readTransliteration(
 
       if (
         !systematicRho &&
-        (previous?.kind !== "grapheme" || previous.letter !== "rho")
+        (markedRho || previous?.kind !== "grapheme" ||
+          previous.letter !== "rho")
       ) {
         rough = true;
       }

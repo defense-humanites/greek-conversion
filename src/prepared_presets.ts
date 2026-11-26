@@ -82,6 +82,7 @@ export const alaLcModern: PreparedOptions = /* @__PURE__ */ preset(
       beta: "v",
       muPi: "b-initial",
       nuTau: "d-underline-initial",
+      rho: "marked",
       nasalGamma: "nasal-medial-kappa",
     },
     text: { numerals: "decimal" },
@@ -105,6 +106,7 @@ export const alaLcModern: PreparedOptions = /* @__PURE__ */ preset(
 export const bnfCore: PreparedOptions = /* @__PURE__ */ preset("bnf-core", {
   transliteration: {
     upsilon: "y-with-au-eu-ou",
+    rho: "marked",
     circumflexAccent: "circumflex",
     quantity: "omit",
     smoothBreathing: "greek",
@@ -131,6 +133,7 @@ export const iso843Type1: PreparedOptions = /* @__PURE__ */ preset(
       eta: "i",
       phi: "f",
       upsilon: "y-with-au-eu-ou",
+      rho: "marked",
       nasalGamma: "literal",
       circumflexAccent: "circumflex",
       smoothBreathing: "apostrophe",
@@ -157,6 +160,7 @@ export const iso843Type2: PreparedOptions = /* @__PURE__ */ preset(
       phi: "f",
       upsilon: "y-with-ou-v-f",
       muPi: "b-initial-final",
+      rho: "marked",
       nasalGamma: "nasal-except-kappa",
       longVowels: "omit",
       circumflexAccent: "circumflex",

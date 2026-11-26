@@ -7,6 +7,22 @@ change.
 
 ## [Unreleased]
 
+### Added
+
+- **`transliteration.rho: "marked"` writes the `h` of rho only for a rough
+  breathing that Greek writes**, the second rho of a pair included, and
+  reads every `rh` as one: `Πύρρος` gives `Pýrros`, `ῥήτωρ` `rhḗtōr`.
+
+### Changed
+
+- **ISO 843, ALA-LC Modern, and BnF write a double rho `rr`.** The tables of
+  ISO 843 (both types) and of ALA-LC for Modern Greek write `h` only for a
+  rough breathing that Greek writes, and the BnF only for a rho that bears
+  one (§ 4.3.5). `iso-843-type-1`, `iso-843-type-2`, `ala-lc-modern`, and
+  `bnf-core` wrote the second rho of every pair `rh`, as classical studies
+  do: `Ερρίκος` gave `Errhíkos` under `iso-843-type-2`, and now gives
+  `Erríkos`. They select `transliteration.rho: "marked"`.
+
 ### Fixed
 
 - **Five more inputs convert in a time proportional to their length.** In

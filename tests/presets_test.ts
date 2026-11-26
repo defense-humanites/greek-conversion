@@ -119,6 +119,7 @@ test("resolves custom options after nested preset options", () => {
       muPi: "b-initial",
       nasalGamma: "nasal-medial-kappa",
       nuTau: "d-underline-initial",
+      rho: "marked",
       upsilon: "y-with-diphthong-u",
     },
     text: {

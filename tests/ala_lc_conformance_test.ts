@@ -76,6 +76,13 @@ const CASES = [
   },
   {
     preset: "ala-lc-modern",
+    rule: "notes: a double rho takes h only with a source rough breathing",
+    greek: "Πύρρος Ερρίκος μεταρρύθμιση ἀρῥ",
+    latin: "Pyrros Errikos metarrythmisē arrh",
+    lossy: true,
+  },
+  {
+    preset: "ala-lc-modern",
     rule: "notes: monotonic text has no breathing, and none is supplied",
     greek: "Η Ελληνική ιστορία, οι Έλληνες",
     latin: "Ē Ellēnikē istoria, oi Ellēnes",

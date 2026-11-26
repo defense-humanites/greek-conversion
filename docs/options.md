@@ -148,11 +148,12 @@ Selects the transliteration of `ντ`: `nt` letter by letter, or, at the beginni
 
 Rho transliteration. Defaults to `"contextual"`.
 
-Selects contextual rho spelling or one final `h` per contiguous rho group.
+Selects how rho is written. `"contextual"` writes the `h` of a rough breathing, and after the second rho of a pair, as classical studies write it whether Greek marks it or not (`Πύρρος` → `Pýrrhos`); `"marked"` writes it only where Greek writes a rough breathing, as ISO 843, the ALA-LC table of Modern Greek, and the BnF do (`Πύρρος` → `Pýrros`, `ῥήτωρ` → `rhḗtōr`), and reads every `rh` as a rho with a rough breathing; `"systematic"` writes one final `h` per contiguous rho group.
 
 | Value | Greek → transliteration | Presets |
 | --- | --- | --- |
-| `"contextual"` (default) | <span class="conversion"><span lang="el">μέρει</span> <span class="to">→</span> mérei</span> |  |
+| `"contextual"` (default) | <span class="conversion"><span lang="el">ἄρρητος</span> <span class="to">→</span> árrhētos</span><br><span class="conversion"><span lang="el">μέρει</span> <span class="to">→</span> mérei</span> |  |
+| `"marked"` | <span class="conversion"><span lang="el">ἄρρητος</span> <span class="to">→</span> árrētos</span> | `ala-lc-modern`, `bnf-core`, `iso-843-type-1`, `iso-843-type-2` |
 | `"systematic"` | <span class="conversion"><span lang="el">μέρει</span> <span class="to">→</span> mérhei</span> |  |
 
 ### `transliteration.nasalGamma`

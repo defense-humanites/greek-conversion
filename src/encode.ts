@@ -924,6 +924,7 @@ export function encodeTransliteration(
   const bnfKeraia = options.transliteration?.keraia === "bnf";
   const lunateC = options.transliteration?.lunateSigma === "c";
   const systematicRho = options.transliteration?.rho === "systematic";
+  const markedRho = options.transliteration?.rho === "marked";
   const smoothApostrophe =
     options.transliteration?.smoothBreathing === "apostrophe";
   const coronisApostrophe = options.transliteration?.coronis === "apostrophe";
@@ -1151,7 +1152,7 @@ export function encodeTransliteration(
         hBefore = true;
       }
     } else if (
-      token.letter === "rho" &&
+      token.letter === "rho" && !markedRho &&
       previous?.kind === "grapheme" &&
       previous.letter === "rho"
     ) {
