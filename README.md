@@ -50,12 +50,16 @@ between scripts:
   turn polytonic text into monotonic, after the monotonic accent rules; set
   capitals without accents, as Greek does; build search keys and URL slugs.
 
-Each convention is a preset that states its references and how far it
-follows them. The ALA-LC, BnF, and ISO 843 presets are tested against
-examples from their published tables, and `iso-843-type-2` against every
-example of the BGN/PCGN table. When a conversion cannot be reversed, the
-library says what was lost instead of quietly guessing. It has no
-dependencies and uses no runtime-specific API.
+Each convention is a preset: a set of the library's 52 atomic options, which
+states its references and how far it follows them. The options also combine
+beyond the presets, among 126 values: `longVowels: "grave-circumflex"` marks
+eta and omega as `è` and `ô` (`technè`), `chi: "kh"` writes chi `kh`, and
+`kaiAccent: "byzantine"` gives the καί symbol the grave of the manuscripts.
+The ALA-LC, BnF, and ISO 843 presets are tested against examples from their
+published tables, and `iso-843-type-2` against every example of the BGN/PCGN
+table. When a conversion cannot be reversed, the library says what was lost
+instead of quietly guessing. It has no dependencies and uses no
+runtime-specific API.
 
 **Not a developer?** The
 [playground](https://greek-conversion.humanites.fr/playground/)

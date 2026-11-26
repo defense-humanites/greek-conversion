@@ -86,6 +86,49 @@ plain.losses[0].code; // → removed-diacritic
 plain.losses[0].diacritic; // → acute
 ```
 
+## Options and presets
+
+Every conversion is set by options. An option sets one thing, such as which
+marks are kept (`diacritics.all`) or how eta is written
+(`transliteration.eta`), and has a default. There are 52 of them, in five
+groups named after what they describe: `transliteration`, `greek`,
+`betaCode`, `text`, and `diacritics`. They combine freely: here eta and
+omega take a grave and a circumflex rather than a macron, and the accents
+are left out:
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+const thucydides = "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων";
+
+convert(thucydides, "greek", "transliteration", {
+  transliteration: { longVowels: "grave-circumflex" },
+  diacritics: { accents: "remove" },
+});
+// → Hellèsin egeneto kai merei tini tôn barbarôn
+```
+
+A preset is a set of these options that follows a published convention:
+`iso-843-type-1` sets ten of them. The defaults apply first, then the
+preset, then the options given with it, so that a preset can be adjusted,
+here to leave out the apostrophe that marks the smooth breathing:
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+const thucydides = "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων";
+
+convert(thucydides, "greek", "transliteration", {
+  preset: "iso-843-type-1",
+  transliteration: { smoothBreathing: "omit" },
+});
+// → Héllīsin egéneto kaì mérei tinì tō̂n varvárōn
+```
+
+[Conversion options](/reference/options/) gives each option with its values
+and what each writes, and [Choosing a preset](/guide/presets/) compares the
+conventions.
+
 ## Normalizing a text
 
 To normalize or restyle a text without changing its format, `reencode()`
