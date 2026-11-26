@@ -93,7 +93,7 @@ convert("χάος", greekReader, transliterationWriter, options); // → khaos
 ```
 
 `prepareOptions()` brings the validation of options and the table of the
-presets into the bundle, about 8.6 kB (2.6 kB with gzip): an application that
+presets into the bundle, about 9.0 kB (2.7 kB with gzip): an application that
 uses one preset as it is should import it instead. Prepared options cannot be
 changed; prepare them once, outside a loop, and use them for every call. The
 functions of `core` take no other options: an object of options, which they

@@ -1444,6 +1444,8 @@ function transliterationBase(
   switch (options.transliteration?.longVowels) {
     case "circumflex":
       return `${base}\u0302`;
+    case "grave-circumflex":
+      return `${base}${letter === "eta" ? "\u0300" : "\u0302"}`;
     case "omit":
       // Stigma and sampi keep the macron that tells them from c and s.
       return letter === "eta" || letter === "omega" ? base : `${base}\u0304`;
@@ -1594,8 +1596,8 @@ function trMark(mark: Diacritic, options: ConversionOptions) {
 function writtenAsEta(token: Grapheme, options: ConversionOptions): boolean {
   const longVowels = options.transliteration?.longVowels;
   return token.letter === "iota" && token.diacritics.has("macron") &&
-    options.transliteration?.eta === "i" && longVowels !== "omit" &&
-    longVowels !== "circumflex" &&
+    options.transliteration?.eta === "i" &&
+    (longVowels === undefined || longVowels === "macron") &&
     preservesDiacritic("macron", options, "transliteration");
 }
 

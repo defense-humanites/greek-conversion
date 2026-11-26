@@ -152,11 +152,13 @@ export function getPresetOptions(preset: Preset): PresetOptions {
  * set to `undefined` is treated as absent. `diacritics.all` is expanded where
  * it is written, in the preset or in the custom options, into the classes
  * not named alongside it, before the two are merged. The merged options are
- * then checked for the one incompatible pair of values: `longVowels:
+ * then checked for the two incompatible pairs of values: `longVowels:
  * "circumflex"` with `circumflexAccent: "circumflex"`, which would write the
- * length mark of eta and omega and the circumflex accent alike. A preset
- * value counts, so `{ preset: "bnf-core", transliteration: { longVowels:
- * "circumflex" } }` is rejected too. The `source` profile is checked and
+ * length mark of eta and omega and the circumflex accent alike, and
+ * `longVowels: "grave-circumflex"` without `diacritics.accents: "remove"`,
+ * which would write the length mark of eta as the grave accent of epsilon. A
+ * preset value counts, so `{ preset: "bnf-core", transliteration: {
+ * longVowels: "circumflex" } }` is rejected too. The `source` profile is checked and
  * resolved as well, on its own, and left out of the result, which holds the
  * options that write the output. Prepared options give a copy of the options
  * they write with.
@@ -353,7 +355,9 @@ function resolveProfile(
 /**
  * Rejects `longVowels: "circumflex"` with `circumflexAccent: "circumflex"`:
  * `ῆ` would be written `ê̂`, which reads back as `η` without its accent.
- * The message names the preset when one of the two values comes from it.
+ * Rejects `longVowels: "grave-circumflex"` unless accents are removed: `ὲ`
+ * would be written `è`, which reads back as `η`. The message of the first
+ * names the preset when one of its two values comes from it.
  */
 function assertCompatibleOptions(
   merged: ExpandedOptions,
@@ -362,6 +366,21 @@ function assertCompatibleOptions(
   prefix: string,
 ): void {
   const transliteration = merged.transliteration;
+  if (
+    transliteration?.longVowels === "grave-circumflex" &&
+    merged.diacritics?.accents !== "remove"
+  ) {
+    throw new OptionError(
+      `${prefix}transliteration.longVowels "grave-circumflex" requires ` +
+        `${prefix}diacritics.accents "remove": the length mark of eta ` +
+        "would be written as the grave accent of epsilon.",
+      {
+        path: `${prefix}diacritics.accents`,
+        received: merged.diacritics?.accents ?? "preserve",
+        accepted: ["remove"],
+      },
+    );
+  }
   if (
     transliteration?.longVowels !== "circumflex" ||
     transliteration.circumflexAccent !== "circumflex"
@@ -377,9 +396,10 @@ function assertCompatibleOptions(
     {
       path: `${prefix}transliteration.longVowels`,
       received: "circumflex",
+      // `"grave-circumflex"` marks omega with the circumflex too.
       accepted: CONVERSION_OPTION_VALUES.transliteration.longVowels.filter((
         value,
-      ) => value !== "circumflex"),
+      ) => value !== "circumflex" && value !== "grave-circumflex"),
     },
   );
 }

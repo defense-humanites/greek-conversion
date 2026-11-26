@@ -419,6 +419,11 @@ test("vowel spelling options keep vowel pairs idempotent", () => {
                 { accents: "remove", smoothBreathing: "remove" },
               ] as const
             ) {
+              // The grave of eta requires transliteration without accents.
+              if (
+                longVowels === "grave-circumflex" &&
+                !("accents" in diacritics)
+              ) continue;
               const transliteration: Transliteration = {
                 eta,
                 longVowels,
@@ -510,6 +515,10 @@ test("vowel pairs stay idempotent next to breathings, diphthongs, and capitals",
               { smoothBreathing: "remove" },
             ] as const
           ) {
+            // The grave of eta requires transliteration without accents.
+            if (
+              longVowels === "grave-circumflex" && !("accents" in diacritics)
+            ) continue;
             const transliteration: Transliteration = {
               eta,
               longVowels,

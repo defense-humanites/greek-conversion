@@ -148,6 +148,48 @@ test("option errors are OptionErrors that locate the option", () => {
   assertEquals(Object.isFrozen(incompatible.accepted), true);
 });
 
+test("the grave of eta requires transliteration without accents", () => {
+  // `ὲ` would be written `è`, the eta of `"grave-circumflex"`.
+  const graveEta = { longVowels: "grave-circumflex" } as const;
+  const error = assertThrows(
+    () => resolveConversionOptions({ transliteration: graveEta }),
+    OptionError,
+  );
+  assertEquals(error.path, "diacritics.accents");
+  assertEquals(error.received, "preserve");
+  assertEquals(error.accepted, ["remove"]);
+  assertEquals(
+    error.message,
+    'transliteration.longVowels "grave-circumflex" requires ' +
+      'diacritics.accents "remove": the length mark of eta would be written ' +
+      "as the grave accent of epsilon.",
+  );
+  assertEquals(
+    assertThrows(
+      () =>
+        convert("ὕλη", "greek", "transliteration", {
+          source: { transliteration: graveEta },
+        }),
+      OptionError,
+    ).path,
+    "source.diacritics.accents",
+  );
+  // Removed accents, by their class or with every diacritic, a preset's
+  // included.
+  for (
+    const options of [
+      { transliteration: graveEta, diacritics: { accents: "remove" } },
+      { transliteration: graveEta, diacritics: { all: "remove" } },
+      { preset: "sbl-general", transliteration: graveEta },
+    ] as const
+  ) {
+    assertEquals(
+      resolveConversionOptions(options).transliteration.longVowels,
+      "grave-circumflex",
+    );
+  }
+});
+
 test("the options of source are checked, with paths that start with source.", () => {
   const cases: Array<[unknown, string, unknown]> = [
     [{ source: { source: {} } }, "source.source", undefined],

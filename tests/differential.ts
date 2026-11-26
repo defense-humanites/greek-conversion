@@ -44,6 +44,12 @@ export interface OptionSet {
   options: ConversionOptions;
 }
 
+/**
+ * The options of a set, as the reference types them: the sets hold only
+ * values that it accepts, but this tree's types may know more.
+ */
+type ReferenceOptions = Parameters<typeof reference.convert>[3];
+
 /** A difference between this tree and the reference. */
 export interface Difference {
   label: string;
@@ -245,7 +251,7 @@ export function compareConversions(
     for (const input of inputs) {
       for (const to of DIFFERENTIAL_FORMATS) {
         const plain = outcome(() =>
-          reference.convert(input, from, to, options)
+          reference.convert(input, from, to, options as ReferenceOptions)
         );
         record(
           label,
@@ -276,7 +282,14 @@ export function compareConversions(
           label,
           `convertDetailed(${from} → ${to})`,
           input,
-          outcome(() => reference.convertDetailed(input, from, to, options)),
+          outcome(() =>
+            reference.convertDetailed(
+              input,
+              from,
+              to,
+              options as ReferenceOptions,
+            )
+          ),
           (more) =>
             current.convertDetailed(
               input,
@@ -290,7 +303,9 @@ export function compareConversions(
         label,
         `reencode(${from})`,
         input,
-        outcome(() => reference.reencode(input, from, options)),
+        outcome(() =>
+          reference.reencode(input, from, options as ReferenceOptions)
+        ),
         (more) => current.reencode(input, from, withOptions(options, more)),
       );
     }

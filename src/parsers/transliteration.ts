@@ -214,6 +214,10 @@ function readTransliteration(
   // Without a length mark, e and o are epsilon and omicron, and a circumflex
   // on them is an accent: one that only the long vowel can bear.
   const omitLength = transliteration?.longVowels === "omit";
+  // As French academic writing has it, a grave on e is the length of eta
+  // (`hylè`), under a style without Greek accents.
+  const graveEta = transliteration?.longVowels === "grave-circumflex" &&
+    transliteration.eta !== "i";
   // An eta written like an iota, with no length mark (ISO 843 Type 2).
   const etaAsIota = omitLength && transliteration?.eta === "i";
   const upsilon = transliteration?.upsilon;
@@ -431,7 +435,7 @@ function readTransliteration(
     let marks = (rough ? ROUGH : 0) | (smooth ? SMOOTH : 0);
     // Whether the breathing of the vowel before parts this one from it.
     let separated = false;
-    let structuralCircumflex = false;
+    let lengthMark = false;
     // Where an acute was read, for a BnF keraia.
     let acuteAt = -1;
 
@@ -442,7 +446,15 @@ function readTransliteration(
         (match.value === "epsilon" || match.value === "omicron") &&
         !((marks & MACRON) !== 0 && circumflexAccent)
       ) {
-        structuralCircumflex = true;
+        lengthMark = true;
+        i++;
+        continue;
+      }
+      if (
+        graveEta && chars[i] === "\u0300" && match.value === "epsilon" &&
+        !lengthMark
+      ) {
+        lengthMark = true;
         i++;
         continue;
       }
@@ -456,10 +468,10 @@ function readTransliteration(
     let letter = resolveLongVowel(
       match.value,
       (marks & MACRON) !== 0,
-      structuralCircumflex,
+      lengthMark,
     );
     // The macron of `ē` and `ō` makes the letter, not a mark.
-    if (letter !== match.value && !structuralCircumflex) marks &= ~MACRON;
+    if (letter !== match.value && !lengthMark) marks &= ~MACRON;
 
     if (omitLength && (marks & IOTA_SUBSCRIPT) !== 0) {
       // Only alpha, eta, and omega bear an iota subscript.
@@ -645,7 +657,8 @@ function readTransliteration(
 
 /**
  * Under `eta: "i"`, the length mark makes the letter: `ī` (or `î` under
- * `longVowels: "circumflex"`) is eta, not iota with a mark. The mark is moved
+ * `longVowels: "circumflex"`, `ì` under `"grave-circumflex"`) is eta, not
+ * iota with a mark. The mark is moved
  * to the front of the letter's marks so that the reader matches it with the
  * `i` as one letter, whatever the order of marks in the input.
  */
@@ -660,8 +673,10 @@ function prioritizeEtaMark(
   for (let start = 0; start < chars.length; start++) {
     if (lowercase(chars[start]) !== "i") continue;
 
+    // The marks that the reader reads with this letter: those before a mark
+    // that it does not know, after which marks are text (`i⃝̄` is not eta).
     let end = start + 1;
-    while (end < chars.length && /^\p{M}$/u.test(chars[end])) end++;
+    while (end < chars.length && markBit(chars[end]) !== 0) end++;
 
     // Look for the mark inside this letter's marks only: scanning the rest
     // of the text at every `i` made parsing quadratic.
@@ -684,7 +699,7 @@ function prioritizeEtaMark(
  * modern Greek), which a word read under such options would otherwise spend
  * most of its time building: kept for each sealed profile, and by the
  * spellings, which are all it depends on, for other options (`perKey()` in
- * `profile_cache.ts`). There are 72 keys at most, one for each combination
+ * `profile_cache.ts`). There are 96 keys at most, one for each combination
  * of `beta`, `eta` with its length mark, `xi`, `phi`, and `chi` with
  * `lunateSigma`.
  */
@@ -737,13 +752,15 @@ function spellingsOf(options: ConversionOptions): {
   return { variants, replaced };
 }
 
-/** The combining mark that shows the length of eta and omega, if any. */
+/** The combining mark that shows the length of eta, if any. */
 function etaMark(
   options: ConversionOptions,
-): "\u0302" | "\u0304" | undefined {
+): "\u0300" | "\u0302" | "\u0304" | undefined {
   switch (options.transliteration?.longVowels) {
     case "circumflex":
       return "\u0302";
+    case "grave-circumflex":
+      return "\u0300";
     case "omit":
       return undefined;
     default:
@@ -902,9 +919,9 @@ function capitalFollows(
 function resolveLongVowel(
   letter: Letter,
   macron: boolean,
-  structuralCircumflex: boolean,
+  lengthMark: boolean,
 ): Letter {
-  if (!macron && !structuralCircumflex) return letter;
+  if (!macron && !lengthMark) return letter;
   if (letter === "epsilon") return "eta";
   if (letter === "omicron") return "omega";
   return letter;
