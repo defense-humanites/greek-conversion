@@ -53,6 +53,16 @@ change.
 
 ### Changed
 
+- **The sentence that describes the project names Byzantine Greek**:
+  "Convert Ancient, Byzantine, and Modern Greek between Greek script, Beta
+  Code, and Latin script, with standards-based presets and information-loss
+  diagnostics." Standards count Byzantine Greek as Ancient, but a reader of
+  "Ancient and Modern Greek" could not tell that the texts of the period are
+  covered. The package's `description`, the README's tagline, the
+  documentation of the main module, the home page and the description of
+  the site, the abstract of `CITATION.cff`, the playground's description,
+  and the opening of Getting started follow. The social card and its text
+  alternative keep the earlier sentence until the card is drawn again.
 - **A letter that a reader keeps as text is a letter of its word.** A
   literal that writes a letter, with its case, is one: a Latin letter in
   Greek, a Greek one in Beta Code or transliteration, and a letter that

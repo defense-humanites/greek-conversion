@@ -326,7 +326,7 @@ export default defineConfig({
     starlight({
       title: "greek conversion",
       description:
-        "A TypeScript library that converts Ancient and Modern Greek between Greek script, Beta Code, and Latin script, with standards-based presets and information-loss diagnostics.",
+        "A TypeScript library that converts Ancient, Byzantine, and Modern Greek between Greek script, Beta Code, and Latin script, with standards-based presets and information-loss diagnostics.",
       favicon: "/favicon.svg",
       // English is the root locale, at the site's root. A translation is a
       // folder of the same pages (`fr/`) and one more entry here.
