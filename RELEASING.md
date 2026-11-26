@@ -63,6 +63,28 @@ Both registries use the same package name and version:
     now holds, and `RENAMED_PRESETS` in `tests/differential.ts`, whose names
     it now has.
 
+## The Python package
+
+The Python package (`python/`) is published to PyPI by
+`.github/workflows/python.yml`, from the same GitHub release, after its tests
+and its comparison with the library in Node. Its version is that of
+`package.json`, in the spelling of PEP 440 (`1.0.0-rc.14` → `1.0.0rc14`),
+generated when it is built: there is nothing to update for it.
+
+One-time setup:
+
+1. Create the project `greek-conversion` in the PyPI organization
+   `defense-humanites`, and configure its trusted publisher: repository
+   `defense-humanites/greek-conversion`, workflow `python.yml`, environment
+   `pypi`.
+2. Create the protected GitHub environment `pypi`, as `release`.
+3. Keep the repository variable `PYPI_PUBLISH_ENABLED` absent or set to
+   `false` until the first publication to PyPI is approved. It is separate
+   from `PUBLISH_ENABLED`, so that JSR and npm can publish without PyPI.
+
+At a release, set `PYPI_PUBLISH_ENABLED` as `PUBLISH_ENABLED` (steps 6 to 8)
+to publish it too, and check its PyPI page.
+
 ## A slow JSR step
 
 After `Publishing @humanities/greek-conversion@<version> ...`, `jsr publish`

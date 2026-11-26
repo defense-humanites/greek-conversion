@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "greek-conversion"
+dynamic = ["version"]
+description = "Convert Ancient, Byzantine, and Modern Greek between Greek script, Beta Code, and Latin script, with standards-based presets and information-loss diagnostics."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Antoine Boquet" }]
+requires-python = ">=3.10"
+keywords = ["greek", "polytonic", "betacode", "transliteration", "romanization", "humanities", "classics"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: Greek",
+  "Programming Language :: Python :: 3",
+  "Topic :: Text Processing :: Linguistic",
+]
+# QuickJS by default (quickjs-ng, the maintained fork of QuickJS): small
+# abi3 wheels for CPython 3.10+, a low cost per call. V8 on request, for long
+# texts and large batches; when installed, it is preferred.
+dependencies = ["quickjs-ng>=0.18"]
+
+[project.optional-dependencies]
+v8 = ["mini-racer>=0.12"]
+test = ["pytest>=8"]
+
+[project.urls]
+Homepage = "https://greek-conversion.humanites.fr/"
+Source = "https://github.com/defense-humanites/greek-conversion"
+
+[tool.setuptools.dynamic]
+version = { attr = "greek_conversion._version.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+greek_conversion = ["_bundle/*.js", "py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "src"]
+addopts = "--doctest-modules --import-mode=importlib"

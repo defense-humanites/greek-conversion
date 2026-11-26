@@ -8,3 +8,12 @@ coverage/
 _site/
 .node-test-runner.mjs
 __pycache__/
+# The Python package's built files (python/scripts/build_bundle.mjs)
+python/src/greek_conversion/_bundle/greek_conversion.js
+python/src/greek_conversion/_version.py
+python/LICENSE
+python/dist/
+python/build/
+*.egg-info/
+.pytest_cache/
+.venv/

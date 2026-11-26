@@ -1,7 +1,7 @@
 {
   // Type checks the sources, tests, scripts, and benches, which Node runs
-  // directly: only erasable TypeScript syntax, and imports with their `.ts`
-  // extension. `tsconfig.build.json` checks the library on its own, without
+  // directly, and the TypeScript of the Python package (`python/`): only
+  // erasable TypeScript syntax, and imports with their `.ts` extension. `tsconfig.build.json` checks the library on its own, without
   // the Node types, and emits the npm package; `web/playground/tsconfig.json`
   // checks the playground against the DOM.
   "compilerOptions": {
@@ -20,5 +20,5 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["src", "tests", "scripts", "bench"]
+  "include": ["src", "tests", "scripts", "bench", "python"]
 }
