@@ -111,6 +111,7 @@ test("writes a capital on its own in full capitals among words in capitals", () 
   // as a word of one letter does in Greek: in full capitals where they are in
   // capitals and none is in small letters, and with its first letter only
   // elsewhere, as a letter name (`Θ, θ`) or before a period, as an initial.
+  // Latin words are words too.
   const cases = [
     ["Θ Φ Χ Ψ Ῥ", "Th Ph Ch Ps Rh"],
     ["ΘΕΟΣ Θ", "THEOS TH"],
@@ -120,9 +121,13 @@ test("writes a capital on its own in full capitals among words in capitals", () 
     ["(Ψ) Θʹ Χ1", "(Ps) Thʹ Ch1"],
     ["Θ. Δημητρίου", "Th. Dēmētríou"],
     ["Ῥ.", "Rh."],
-    // A vowel with a rough breathing can be a word on its own, such as the
-    // article at the head of a sentence.
+    ["ABC Θ", "ABC TH"],
+    ["abc Θ ΛΟΓΟΣ", "abc Th LOGOS"],
+    // So does a vowel with a rough breathing on its own, such as the
+    // article.
     ["Ὁ δὲ", "Ho dè"],
+    ["ΚΑΙ Ὁ ΛΟΓΟΣ", "KAI HO LOGOS"],
+    ["Ὁ ΘΕΟΣ", "HO THEOS"],
   ] as const;
   for (const [greek, latin] of cases) {
     assertNfcEquals(convert(greek, "greek", "transliteration"), latin);
@@ -149,6 +154,29 @@ test("writes a capital on its own in full capitals among words in capitals", () 
       text: { letterCase: "title" },
     }),
     "Th Ps",
+  );
+});
+
+test("finds the case of a capital on its own as the output reads back", () => {
+  // A rough breathing on a consonant is written `H`, which reads back as a
+  // Latin capital, and a letter that a converter keeps as it was keeps its
+  // case: the capital on its own is decided alike both times.
+  for (
+    const greek of ["Θ Ζ̔Ε", "Ῥ Ζ̔Ε", 'Χ"ΕΘ̔', "ΚΑΙ Ὁ Ζ̔Ε"]
+  ) {
+    const latin = convert(greek, "greek", "transliteration");
+    assertNfcEquals(
+      convert(latin, "transliteration", "transliteration"),
+      latin,
+    );
+  }
+  const noOmicron = createConverter({ exclude: ["omicron"] });
+  const options = { preset: "iso-843-type-2" } as const;
+  const latin = noOmicron.convert("ΓΩ\nΘ", "greek", "transliteration", options);
+  assertNfcEquals(latin, "GO\nTH");
+  assertNfcEquals(
+    noOmicron.convert(latin, "transliteration", "transliteration", options),
+    latin,
   );
 });
 

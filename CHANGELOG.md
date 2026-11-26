@@ -49,6 +49,10 @@ change.
   - monotonic accentuation keeps the accent of a word whose syllables it
     cannot count (`ùc` gives `ύc`), a monosyllable included (`Kαί`, with a
     Latin `K`, where rc.13 gave `Kαι`);
+  - a word of one Greek capital takes its case from the Latin words around
+    it, as from Greek words: under the default `greek.capitalMarks:
+    "omit"`, `ABC Ἡ` gives `ABC Η`, and `abc Ἡ ΛΟΓΟΣ` keeps its breathing,
+    where rc.13 gave `ABC Ἡ` and `abc Η ΛΟΓΟΣ`;
   - Greek letters glued to such a letter are a word, not a numeral: `mτ΄`
     stays `mτ΄` under `text.numerals: "decimal"`, where rc.13 gave `m300`;
   - a breathing on a vowel after such a letter is a coronis (`Oἰκία`, with
@@ -76,11 +80,15 @@ change.
   `Th, th, th`, where rc.13 gave `TH, th, th`, and `ΘΕΟΣ Θ` still gives
   `THEOS TH`. This holds for every letter that transliteration writes with
   more than one Latin letter: `Φ` gives `Ph`, `Ῥ` `Rh`, and `Ξ`, with
-  `transliteration.xi: "ks"`, `Ks`. A siglum among words in small letters
-  takes its first letter only too (`η οργάνωση Χ και` gives
-  `i orgánosi Ch kai` under ISO 843 type 2). A bundle that writes
-  transliteration grows by 0.9 kB minified, 0.3 kB with gzip, and by 0.2 kB
-  if it writes Greek too.
+  `transliteration.xi: "ks"`, `Ks`. It holds too for a vowel with a rough
+  breathing on its own, which rc.13 wrote with its first letter only:
+  `ΚΑΙ Ὁ ΛΟΓΟΣ` gives `KAI HO LOGOS`, and `Ὁ δὲ` still `Ho dè`. Latin words
+  are words: `ABC Θ` gives `ABC TH`, and `abc Θ ΛΟΓΟΣ` `abc Th LOGOS`. A
+  siglum among words in small letters takes its first letter only too
+  (`η οργάνωση Χ και` gives `i orgánosi Ch kai` under ISO 843 type 2). A
+  bundle that writes transliteration grows by 1.3 kB minified, 0.4 kB with
+  gzip, and by 0.2 kB more if it writes Greek too; one that writes Greek
+  only, by 0.3 kB, 0.1 kB with gzip.
 
 ### Fixed
 

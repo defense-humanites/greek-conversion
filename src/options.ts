@@ -326,13 +326,13 @@ export type RhoTransliteration = "contextual" | "systematic";
  * `ΘΑΛΑΣΣΑ` → `THALASSA`, `Θάλασσα` → `Thálassa`. A diphthong of two capitals
  * with a rough breathing keeps both before lowercase text, its second letter
  * being a capital of its own (`ΕἹα` → `HEIa`). A capital on its own, such
- * as a letter name, takes the case of the nearest words on either side, as a
- * word of one letter does in Greek: in full capitals where they are in
- * capitals and none is in small letters (`ΘΕΟΣ Θ` → `THEOS TH`), and with its
- * first letter only elsewhere, before a period, as an initial, included
- * (`Θ, θ` → `Th, th`, `Θ.` → `Th.`). A vowel with a rough breathing on its
- * own, such as the article at the head of a sentence, keeps its first letter
- * only (`Ὁ` → `Ho`).
+ * as a letter name, takes the case of the nearest words on either side,
+ * Latin words included, as a word of one letter does in Greek: in full
+ * capitals where they are in capitals and none is in small letters (`ΘΕΟΣ
+ * Θ` → `THEOS TH`, `ABC Θ` → `ABC TH`), and with its first letter only
+ * elsewhere, before a period, as an initial, included (`Θ, θ` → `Th, th`,
+ * `Θ.` → `Th.`). So does a vowel with a rough breathing on its own, such as
+ * the article (`ΚΑΙ Ὁ ΛΟΓΟΣ` → `KAI HO LOGOS`, `Ὁ δὲ` → `Ho dè`).
  *
  * `"title"` capitalizes the first letter of each word; an apostrophe between
  * two letters, as a coronis written so (`Ka’gṓ`), does not start a word.
