@@ -274,6 +274,13 @@ const wordmark = drawing("name", name);
     color: var(--muted);
     text-wrap: balance;
   }
+  /* On a phone, a size between the text's and the buttons' keeps the
+     sentence to six lines, which Chrome balances, and no more. */
+  @media (max-width: 26rem) {
+    .description {
+      font-size: 1.0625rem;
+    }
+  }
   @media (min-width: 68.75rem) {
     .description .line {
       display: block;
