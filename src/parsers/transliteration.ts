@@ -368,11 +368,17 @@ function readTransliteration(
           // The marks typed on the koronis go with it, onto the vowel, where
           // Greek output writes them: kept as text, they would join the
           // vowel when read again, in another order (#183).
+          // A smooth breathing is the koronis again, which Greek writes
+          // alike, and a macron on eta or omega is the letter's own length.
           while (i < chars.length && markBit(chars[i]) !== 0) {
-            previous.diacritics = withDiacritic(
-              previous.diacritics,
-              GREEK_MARKS.get(chars[i]) ?? "iota-subscript",
-            );
+            const mark = GREEK_MARKS.get(chars[i]) ?? "iota-subscript";
+            if (
+              mark !== "smooth" &&
+              !(mark === "macron" &&
+                (previous.letter === "eta" || previous.letter === "omega"))
+            ) {
+              previous.diacritics = withDiacritic(previous.diacritics, mark);
+            }
             i++;
           }
           continue;
