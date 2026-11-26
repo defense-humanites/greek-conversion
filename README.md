@@ -30,9 +30,15 @@
 `greek-conversion` is a TypeScript library for everyone who moves Greek
 between scripts:
 
-- **Ancient and Byzantine Greek**: transliterate an edition after SBL, the
-  BnF, or ALA-LC; read and write the Beta Code of the TLG and Perseus; keep
-  the accents, breathings, and letter forms of polytonic text.
+- **Ancient Greek**: transliterate an edition after SBL, the BnF, or
+  ALA-LC; read and write the Beta Code of the TLG and Perseus; keep the
+  accents, breathings, and letter forms of polytonic text.
+- **Byzantine Greek**, under the same conventions: read the breathings that
+  older editions print before a capital, the καί symbol and the other signs
+  for several letters, and alphabetic numerals; keep the lunate sigma, the
+  overline of the nomina sacra, and Byzantine punctuation, in Greek and in
+  the TLG's Beta Code; write in the style of the uncial manuscripts; romanize
+  for a library catalogue after ALA-LC, whose table runs to 1453.
 - **Modern Greek**: romanize names and texts after ELOT 743 and ISO 843,
   whose transcription Greek passports, road signs, and the United Nations
   use; write library records after ALA-LC; turn polytonic text into
