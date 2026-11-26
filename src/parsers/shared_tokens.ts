@@ -39,7 +39,7 @@ import {
  */
 
 /** Letter indices, in the order the readers use. */
-export const LETTERS = Object.keys(ALPHABET) as Letter[];
+export const LETTERS = /* @__PURE__ */ Object.keys(ALPHABET) as Letter[];
 
 /** Glyph variants by index; a reader's flags hold the index in bits 1–4. */
 export const VARIANTS: readonly (GlyphVariant | undefined)[] = [

@@ -30,6 +30,20 @@ change.
 - **A converter bound to `bnf-core` or `tlg-core` converts as fast as
   `convert()`**, 12 to 18 % faster on a long text: their repertoires hold
   every character, and the converter no longer checks each letter.
+- **A bundle of the `core` entry point with a preset or the defaults is 4
+  to 12 % smaller with gzip**, the more so as it uses fewer formats. It
+  keeps only the code of the options it can take:
+  - the accent of καί, monotonic accentuation, and the stigma read as `στ`,
+    which no preset takes, come with the resolution of options, which links
+    them to the options that take them, and so with `prepareOptions()`;
+  - the tables of the formats a bundle does not use, which calls built
+    where esbuild kept them, are built in annotated functions.
+
+  Greek to transliteration with a preset weighs 45.4 kB, 15.1 kB with gzip,
+  where it weighed 51.3 kB and 17.0 kB. `prepareOptions()` adds 15.3 kB to
+  such a bundle, 4.7 kB with gzip, where it added 9.0 kB and 2.7 kB. The
+  main entry point takes 0.6 kB more, 0.2 kB with gzip. Outputs do not
+  change.
 
 ### Fixed
 

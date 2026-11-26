@@ -9,10 +9,14 @@ import {
   type ResolvedConversionOptions,
 } from "./options.ts";
 import { type DocumentContext, isGreekNumeralContext } from "./context.ts";
+import { supplyKaiAccents } from "./kai_accent.ts";
+import { readStigmaLigatures } from "./ligatures.ts";
 import type { Document, Format, Letter } from "./model.ts";
+import { applyMonotonicOrthography } from "./orthography.ts";
 import { hasPreparedMark, PREPARED } from "./prepared_mark.ts";
 import { type PreparedOptions, preparedProfiles } from "./prepared.ts";
 import { sealProfile } from "./profile_cache.ts";
+import { linkSteps, type Steps } from "./steps.ts";
 
 /** Partial option fields contributed by one registered preset. */
 export type PresetOptions = Omit<ConversionOptions, "preset" | "source">;
@@ -188,12 +192,18 @@ export function resolveConversionOptions(
   options: ConversionOptions | PreparedOptions = {},
 ): ResolvedConversionOptions {
   const prepared = preparedProfiles(options);
-  return prepared === undefined
-    ? resolveConversionProfiles(options as ConversionOptions).writing
-    : copyProfile(prepared.writing);
+  return copyProfile(
+    prepared === undefined
+      ? resolveConversionProfiles(options as ConversionOptions).writing
+      : prepared.writing,
+  );
 }
 
-/** A copy of resolved options that the caller may change. */
+/**
+ * A copy of resolved options that the caller may change, without the steps
+ * that the library links to them (see `steps.ts`): given back as options,
+ * they are resolved again.
+ */
 function copyProfile(
   profile: ResolvedConversionOptions,
 ): ResolvedConversionOptions {
@@ -205,6 +215,17 @@ function copyProfile(
     diacritics: { ...profile.diacritics },
   };
 }
+
+/**
+ * The steps that only options outside the presets take, which the options
+ * resolved here carry (see `steps.ts`): a bundle that resolves no options
+ * leaves them out.
+ */
+const STEPS: Steps = {
+  kaiAccents: supplyKaiAccents,
+  monotonic: applyMonotonicOrthography,
+  stigmaLigatures: readStigmaLigatures,
+};
 
 /**
  * The two profiles of a conversion: the options that write its output, and
@@ -334,7 +355,10 @@ function optionsOfKey(key: string): ConversionOptions {
   };
 }
 
-/** Resolves validated options, whose errors name their paths after `prefix`. */
+/**
+ * Resolves validated options, whose errors name their paths after `prefix`,
+ * with the steps that they take (see `steps.ts`).
+ */
 function resolveProfile(
   options: ConversionOptions,
   prefix: string,
@@ -344,7 +368,7 @@ function resolveProfile(
   const merged = mergeConversionOptions(base, custom);
   assertCompatibleOptions(merged, preset, custom, prefix);
 
-  return {
+  return linkSteps({
     transliteration: {
       ...DEFAULT_CONVERSION_OPTIONS.transliteration,
       ...merged.transliteration,
@@ -365,7 +389,7 @@ function resolveProfile(
       ...DEFAULT_CONVERSION_OPTIONS.diacritics,
       ...merged.diacritics,
     },
-  };
+  }, STEPS);
 }
 
 /**

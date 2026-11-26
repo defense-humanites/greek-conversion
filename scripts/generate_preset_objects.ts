@@ -8,6 +8,10 @@
  * the presets it imports. The module is formatted as `dprint` leaves it, so
  * that `--check` and `dprint check` agree.
  *
+ * The module prepares the presets without resolving them, which would link
+ * the steps that no preset takes (`src/steps.ts`): a preset that takes one
+ * is refused, until the module links them too.
+ *
  * Run with `npm run presets:generate`; `--check` fails if the module is
  * out of date.
  */
@@ -21,6 +25,7 @@ import {
   resolveConversionOptions,
   type ResolvedConversionOptions,
 } from "../src/mod.ts";
+import { needsSteps } from "../src/steps.ts";
 
 const ROOT = new URL("../", import.meta.url);
 const MODULE = new URL("src/prepared_presets.ts", ROOT);
@@ -39,6 +44,12 @@ function presetExportName(id: string): string {
 
 function changesOf(id: PresetMetadata["id"]): string {
   const resolved = resolveConversionOptions({ preset: id });
+  if (needsSteps(resolved)) {
+    throw new Error(
+      `The preset ${id} takes a step that src/steps.ts links when options ` +
+        "are resolved: link the steps in src/prepared_presets.ts.",
+    );
+  }
   const groups: string[] = [];
   for (const group of GROUPS) {
     const defaults = DEFAULT_CONVERSION_OPTIONS[group] as Record<

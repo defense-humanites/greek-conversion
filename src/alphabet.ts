@@ -46,24 +46,30 @@ const reverse = (key: keyof Forms) =>
     ) => [forms[key], letter as Letter]),
   );
 
-export const BY_GREEK = reverse("greek");
-export const BY_BETA = reverse("beta");
-
-BY_GREEK.set("ϐ", "beta");
-BY_GREEK.set("ϲ", "sigma");
-// The symbol forms of letters, which Unicode folds to them under NFKC, are
-// read as those letters, as ϐ is (U+03D2, a capital upsilon, through
-// greekLower). The capital theta symbol U+03F4 already lowercases to θ.
-for (
-  const [symbol, letter] of [
-    ["\u03D1", "theta"], // ϑ
-    ["\u03D5", "phi"], // ϕ
-    ["\u03D6", "pi"], // ϖ
-    ["\u03F0", "kappa"], // ϰ
-    ["\u03F1", "rho"], // ϱ
-    ["\u03F5", "epsilon"], // ϵ
-  ] as const
-) BY_GREEK.set(symbol, letter);
+// The tables below are built in annotated functions, whole: esbuild keeps a
+// call, or a table changed after it is made, in a bundle that does not use
+// the table (a reader of Greek and a writer of transliteration need no table
+// of Beta Code).
+export const BY_GREEK: Map<string, Letter> = /* @__PURE__ */ (() => {
+  const byGreek = reverse("greek");
+  byGreek.set("ϐ", "beta");
+  byGreek.set("ϲ", "sigma");
+  // The symbol forms of letters, which Unicode folds to them under NFKC, are
+  // read as those letters, as ϐ is (U+03D2, a capital upsilon, through
+  // greekLower). The capital theta symbol U+03F4 already lowercases to θ.
+  for (
+    const [symbol, letter] of [
+      ["\u03D1", "theta"], // ϑ
+      ["\u03D5", "phi"], // ϕ
+      ["\u03D6", "pi"], // ϖ
+      ["\u03F0", "kappa"], // ϰ
+      ["\u03F1", "rho"], // ϱ
+      ["\u03F5", "epsilon"], // ϵ
+    ] as const
+  ) byGreek.set(symbol, letter);
+  return byGreek;
+})();
+export const BY_BETA: Map<string, Letter> = /* @__PURE__ */ reverse("beta");
 
 export const GREEK_MARKS = new Map<string, Diacritic>([
   ["\u0313", "smooth"],
@@ -114,13 +120,15 @@ export const BETA_FOR: Record<Diacritic, string> = {
   overline: "",
 };
 
-export const BETA_MARKS = new Map(
-  Object.entries(BETA_FOR)
-    .filter(([, mark]) => mark !== "")
-    .map(([name, mark]) => [mark, name as Diacritic]),
-);
-
-BETA_MARKS.set(")", "smooth");
+export const BETA_MARKS: Map<string, Diacritic> = /* @__PURE__ */ (() => {
+  const marks = new Map(
+    Object.entries(BETA_FOR)
+      .filter(([, mark]) => mark !== "")
+      .map(([name, mark]) => [mark, name as Diacritic]),
+  );
+  marks.set(")", "smooth");
+  return marks;
+})();
 
 /**
  * Order of combining marks in Greek output: quantity first, then breathing,

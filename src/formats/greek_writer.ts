@@ -5,7 +5,7 @@
  */
 import { makeWriter, type Writer, type WriterHooks } from "../codec.ts";
 import { encodeGreek, greekGlyphForm } from "../encode.ts";
-import { supplyKaiAccents } from "../kai_accent.ts";
+import { kaiAccents } from "../steps.ts";
 import { applyCapitalOrthography, applyOrthography } from "../orthography.ts";
 import { applyGreekUnicode } from "../unicode.ts";
 
@@ -14,7 +14,7 @@ export const GREEK_WRITING: WriterHooks & { readonly format: "greek" } = {
   format: "greek",
   prepare: (document, options, targets) =>
     applyOrthography(
-      supplyKaiAccents(document, "greek", options),
+      kaiAccents(document, "greek", options),
       options,
       targets,
       "greek",

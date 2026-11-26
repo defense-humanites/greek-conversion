@@ -9,9 +9,9 @@
  * Internal: not exported by the package entry points.
  */
 import type { ReaderHooks, WriterHooks } from "./codec.ts";
-import { readStigmaLigatures } from "./ligatures.ts";
 import type { Document } from "./model.ts";
 import type { ResolvedConversionOptions } from "./options.ts";
+import { stigmaLigatures } from "./steps.ts";
 import {
   outputSpans,
   type ReadPositions,
@@ -34,10 +34,11 @@ export function readWith(
   share = false,
   read?: ReadPositions,
 ): Document {
-  const document = reader.read(input, options, share, read);
-  return options.greek.stigma === "ligature"
-    ? readStigmaLigatures(document, read?.starts)
-    : document;
+  return stigmaLigatures(
+    reader.read(input, options, share, read),
+    options,
+    read?.starts,
+  );
 }
 
 /** Writes a document with a writer. */

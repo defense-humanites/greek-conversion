@@ -44,8 +44,13 @@ import {
  * comparisons as the code-point indices of `Array.from()`; only a character
  * outside the BMP needs two units, and it is always a literal.
  */
-const LETTER_INDEX = new Map(LETTERS.map((letter, index) => [letter, index]));
-const SIGMA = LETTERS.indexOf("sigma");
+// The tables of the reader are built in annotated functions: the writers
+// import functions of this module, and a bundle that reads no Beta Code would
+// keep them otherwise.
+const LETTER_INDEX =
+  /* @__PURE__ */ (() =>
+    new Map(LETTERS.map((letter, index) => [letter, index])))();
+const SIGMA = /* @__PURE__ */ LETTERS.indexOf("sigma");
 /**
  * Variant flags of the sigma codes `s1` (medial), `s2` (final), and `s3`
  * (lunate): the index in VARIANTS, in bits 1–4.
@@ -56,7 +61,7 @@ const SIGMA_CODES: readonly (GlyphVariant | undefined)[] = [
   "final-sigma",
   "lunate-sigma",
 ];
-const SIGMA_FLAGS = SIGMA_CODES.map((variant) =>
+const SIGMA_FLAGS = /* @__PURE__ */ SIGMA_CODES.map((variant) =>
   variant === undefined ? 0 : VARIANTS.indexOf(variant) << 1
 );
 
@@ -74,7 +79,7 @@ function classify(unit: number): number {
  * units above ASCII, rare in Beta Code, are classified on the fly.
  * tests/reader_tables_test.ts checks every BMP unit.
  */
-const ASCII_LETTER_OF = Int8Array.from(
+const ASCII_LETTER_OF = /* @__PURE__ */ Int8Array.from(
   { length: 0x80 },
   (_, unit) => classify(unit),
 );
@@ -83,24 +88,26 @@ const letterOf = (unit: number): number =>
   unit < 0x80 ? ASCII_LETTER_OF[unit] : classify(unit);
 
 /** Marks of one ASCII unit: breathings, accents, diaeresis, iota subscript. */
-const MARK_BIT = codeUnitTable(
-  0,
-  0x80,
-  [...BETA_MARKS]
-    .filter(([mark]) => mark.length === 1)
-    .map(([mark, diacritic]) => [mark, diacriticBit(diacritic)]),
-);
+const MARK_BIT = /* @__PURE__ */ (() =>
+  codeUnitTable(
+    0,
+    0x80,
+    [...BETA_MARKS]
+      .filter(([mark]) => mark.length === 1)
+      .map(([mark, diacritic]) => [mark, diacriticBit(diacritic)]),
+  ))();
 
 /**
  * Marks written as a TLG percent code, by number: `%26`, the macron, and
  * `%27`, the breve. The number is every digit after `%`, so `%260` is not a
  * macron followed by `0`; other percent codes are not marks.
  */
-const PERCENT_MARK_BIT = new Map(
-  [...BETA_MARKS]
-    .filter(([mark]) => mark.startsWith("%"))
-    .map(([mark, diacritic]) => [mark.slice(1), diacriticBit(diacritic)]),
-);
+const PERCENT_MARK_BIT = /* @__PURE__ */ (() =>
+  new Map(
+    [...BETA_MARKS]
+      .filter(([mark]) => mark.startsWith("%"))
+      .map(([mark, diacritic]) => [mark.slice(1), diacriticBit(diacritic)]),
+  ))();
 
 /**
  * The letters of the TLG `#` codes. As for `%` and the brackets, the number
@@ -117,7 +124,7 @@ const HASH_LETTERS: ReadonlyMap<string, Letter> = new Map([
 ]);
 /** Where a `#` code ends, when none starts at the current unit. */
 const NO_CODE = -1;
-const SMOOTH_BIT = diacriticBit("smooth");
+const SMOOTH_BIT = /* @__PURE__ */ diacriticBit("smooth");
 
 const ASTERISK = 0x2a;
 const LESS = 0x3c;

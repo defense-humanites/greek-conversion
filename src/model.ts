@@ -10,7 +10,7 @@
 export type Format = "greek" | "beta-code" | "transliteration";
 
 /** Every supported format identifier, in documentation order. */
-export const FORMATS: readonly Format[] = Object.freeze([
+export const FORMATS: readonly Format[] = /* @__PURE__ */ Object.freeze([
   "greek",
   "beta-code",
   "transliteration",

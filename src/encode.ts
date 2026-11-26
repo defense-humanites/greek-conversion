@@ -64,9 +64,9 @@ import type {
 } from "./options.ts";
 import { greekUpper } from "./case.ts";
 import { perKey, perProfile } from "./profile_cache.ts";
+import { monotonic } from "./steps.ts";
 import {
   amongCapitalWords,
-  applyMonotonicOrthography,
   isNumeralUnits,
   type NearCases,
 } from "./orthography.ts";
@@ -146,9 +146,9 @@ function marksCache<T>(): (options: ConversionOptions) => T[] {
 }
 
 /** The marks that each format writes, by set of marks and profile. */
-const GREEK_MARKS = marksCache<string>();
-const LATIN_MARKS = marksCache<readonly Diacritic[]>();
-const BETA_MARKS = marksCache<readonly Diacritic[]>();
+const GREEK_MARKS = /* @__PURE__ */ marksCache<string>();
+const LATIN_MARKS = /* @__PURE__ */ marksCache<readonly Diacritic[]>();
+const BETA_MARKS = /* @__PURE__ */ marksCache<readonly Diacritic[]>();
 
 /**
  * The Beta Code of a set of marks after a small letter, and whether the set
@@ -161,8 +161,10 @@ interface BetaMarkCodes {
 }
 
 /** The Beta Code of a set of marks before a capital, and after it. */
-const BETA_CAPITAL_CODES = marksCache<readonly [string, string]>();
-const BETA_MARK_CODES = marksCache<BetaMarkCodes>();
+const BETA_CAPITAL_CODES = /* @__PURE__ */ marksCache<
+  readonly [string, string]
+>();
+const BETA_MARK_CODES = /* @__PURE__ */ marksCache<BetaMarkCodes>();
 
 /**
  * The letters of the Greek and Coptic block, U+0370–U+03FF, composed with
@@ -232,7 +234,7 @@ export function encodeGreek(
     GREEK_MARKS(options),
   );
   const rendered = prepareDiacriticsForRendering(
-    applyMonotonicOrthography(doc, options),
+    monotonic(doc, options),
     options,
     "greek",
   );
@@ -665,7 +667,7 @@ export function encodeBetaCode(
   written?: WrittenPositions,
 ) {
   const rendered = prepareDiacriticsForRendering(
-    applyMonotonicOrthography(doc, options),
+    monotonic(doc, options),
     options,
     "beta-code",
   );
@@ -800,7 +802,7 @@ export function encodeTransliteration(
   // The cases found past words of one capital, for those on their own.
   let near: [NearCases, NearCases] | undefined;
   const rendered = prepareDiacriticsForRendering(
-    applyMonotonicOrthography(doc, options),
+    monotonic(doc, options),
     options,
     "transliteration",
   );
@@ -1241,7 +1243,7 @@ function findRoughDiphthongs(
  * by key for other options (`perKey()`); the options are resolved, so there
  * are at most 36 keys.
  */
-const latinMarkStrings = perKey(
+const latinMarkStrings = /* @__PURE__ */ perKey(
   (options) => {
     const transliteration = options.transliteration;
     return transliteration?.circumflexAccent + " " +
@@ -1360,7 +1362,9 @@ function caseDigraph(
  * transliterationBase() writes from the options alone: filled as the letters
  * come, and kept across calls for a sealed profile.
  */
-const LATIN_BASES = perProfile(() => new Map<Grapheme["letter"], string>());
+const LATIN_BASES = /* @__PURE__ */ perProfile(() =>
+  new Map<Grapheme["letter"], string>()
+);
 
 /**
  * transliterationBase() for a letter but upsilon, kept in `bases`. The empty
