@@ -18,6 +18,10 @@ protects these behaviors.
   ([below](#characters-of-another-format)), a letter written as a TLG
   code before a digit in Beta Code (see
   [Information loss](information-loss.md#canonical-spelling-and-unicode)),
+  the case of a capital spelled with several Latin letters, which follows
+  the letters and words around it, when one of them reads back otherwise
+  after a loss (under `bnf-core`, an acute on a consonant reads back as a
+  keraia: `Λ́Θ` gives `ĹTH`, then `ĹTh`),
   and letters that a converter keeps out of its scope, in the cases that
   [Character extensions](character-extensions.md#restricting-the-repertoire)
   lists, frequent between Beta Code and transliteration.

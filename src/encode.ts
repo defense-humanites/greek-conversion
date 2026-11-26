@@ -1062,8 +1062,9 @@ export function encodeTransliteration(
     // period, or on its own elsewhere (`Θάλασσα` → `Thálassa`, `Θ.` →
     // `Th.`, `Θ, ϑ, θ` → `Th, th, th`). A rough-breathing group is
     // capitalized as a whole: every letter of it must be uppercase; on its
-    // own, it is a word, such as the article at the head of a sentence (`Ὁ
-    // δὲ` → `Ho dè`). A diphthong of two capitals is among capitals by
+    // own, such as the article, it takes the case of the words around it as
+    // any capital on its own does (`ΚΑΙ Ὁ ΛΟΓΟΣ` → `KAI HO LOGOS`, `Ὁ δὲ` →
+    // `Ho dè`). A diphthong of two capitals is among capitals by
     // itself, and keeps them before lowercase text (`ΕἹα` → `HEIa`): its
     // second letter is one, which the first letter only would lose, and
     // which the reader reads back. Title case asks for the first letter
@@ -1073,7 +1074,14 @@ export function encodeTransliteration(
         ? groupStart?.kind === "grapheme" && groupStart.uppercase &&
           breathingToken.uppercase &&
           (breathingIndex !== breathingStart ||
-            isAmongCapitals(doc, breathingIndex!))
+            isAmongCapitals(doc, breathingIndex!) ||
+            !titleCase && standsAlone(doc, breathingIndex!) &&
+              amongCapitalWords(
+                doc,
+                breathingIndex!,
+                decimal,
+                near ??= [new Map(), new Map()],
+              ))
         : token.uppercase &&
           (isAmongCapitals(doc, index) ||
             !titleCase && standsAlone(doc, index) &&

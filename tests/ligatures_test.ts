@@ -57,7 +57,7 @@ test("sets a lone capital sign in capitals between words in capitals", () => {
       ["ΛΟΓΟΣ, Ϗ ΤΟΥ.", "LOGOS, KAI TOU."],
       ["Ϗ ΤΟΥ", "KAI TOU"],
       ["ΚΑΙ Ȣ ΤΟ", "KAI OU TO"],
-      ["ΛΟΓΟΣ Ϗ Ὁ", "LOGOS KAI Ho"],
+      ["ΛΟΓΟΣ Ϗ Ὁ", "LOGOS KAI HO"],
       ["Ϗ τοῦ", "Kai toũ"],
       ["λόγος Ϗ ΤΟΥ", "lógos Kai TOU"],
       ["ΛΟΓΟΣ Ϗ τοῦ", "LOGOS Kai toũ"],

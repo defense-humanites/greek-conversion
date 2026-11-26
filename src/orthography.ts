@@ -647,8 +647,10 @@ function writesNoAdscript(): boolean {
 /**
  * The case of the nearest word from `start` in `direction`, across spaces
  * and punctuation, by its two letters nearest `start`, or `undefined` where
- * there is none before a literal with a letter or a digit, or a numeral,
- * either of which may be written as a number. A word of one capital tells
+ * there is none before a digit, a literal with a letter that is no letter of
+ * a word (`isWordLetter()`), or a numeral, which may be written as a number.
+ * A literal that writes a letter is read by the letters of its text, as it
+ * reads back. A word of one capital tells
  * nothing, and the search goes on past it (`Ἣ Δ’ ΑΕΚΟΥΣ’`), but for a
  * capital with an iota written on the line, which outside text set in
  * capitals is a capital and a small letter. Words are cut as the pass cuts
@@ -668,7 +670,14 @@ function caseNear(
   let found: NearCase;
   let index = start;
   search: for (;;) {
-    for (; document[index]?.kind === "literal"; index += direction) {
+    // A literal that writes a letter is a letter of its word, with its case
+    // (`isWordLetter()`); another literal with a letter or a digit ends the
+    // search.
+    for (
+      ;
+      document[index]?.kind === "literal" && !isWordLetter(document[index]);
+      index += direction
+    ) {
       if (/[\p{L}\p{N}]/u.test((document[index] as { value: string }).value)) {
         break search;
       }
@@ -677,13 +686,23 @@ function caseNear(
     // The letters of a numeral, which may be written as a number, are no
     // word either (`Ἠ ιβʹ`, `͵αβ Ἠ`).
     if (
-      first?.kind !== "grapheme" ||
-      (direction === 1
-        ? beginsNumeral(document, index)
-        : endsThousands(document, index))
+      first === undefined ||
+      first.kind === "grapheme" &&
+        (direction === 1
+          ? beginsNumeral(document, index)
+          : endsThousands(document, index))
     ) break;
-    if (!first.uppercase) {
+    // A literal is read by the letters of its text, as it reads back: a
+    // letter kept in its source format may be spelled with several.
+    const letters = first.kind === "literal"
+      ? literalCases(first, direction)
+      : undefined;
+    if (letters === undefined ? !(first as Grapheme).uppercase : !letters[0]) {
       found = "small";
+      break;
+    }
+    if (letters !== undefined && letters.length > 1) {
+      found = letters[1] ? "capitals" : "small";
       break;
     }
     if (passed.has(index)) {
@@ -697,16 +716,21 @@ function caseNear(
     while (isBoundaryTransparent(document[next])) next += direction;
     const second = document[next];
     if (
-      second?.kind === "grapheme" &&
-      !(decimal && next !== index + direction &&
-        (direction === 1
-          ? beginsNumeral(document, next)
-          : endsThousands(document, next)))
+      second?.kind === "grapheme"
+        ? !(decimal && next !== index + direction &&
+          (direction === 1
+            ? beginsNumeral(document, next)
+            : endsThousands(document, next)))
+        : isWordLetter(second)
     ) {
-      found = second.uppercase ? "capitals" : "small";
+      found = (second.kind === "literal"
+          ? literalCases(second, direction)[0]
+          : second.uppercase)
+        ? "capitals"
+        : "small";
       break;
     }
-    if (writesAdscript(first)) {
+    if (first.kind === "grapheme" && writesAdscript(first)) {
       found = "small";
       break;
     }
@@ -715,6 +739,17 @@ function caseNear(
   }
   for (const word of words) passed.set(word, found);
   return found;
+}
+
+/**
+ * Whether each letter of a literal is a capital, from the side that a search
+ * in `direction` reaches first.
+ */
+function literalCases(token: Token, direction: 1 | -1): boolean[] {
+  const cases = [...(token as { value: string }).value]
+    .filter((character) => /\p{L}/u.test(character))
+    .map((character) => /[\p{Lu}\p{Lt}]/u.test(character));
+  return direction === 1 ? cases : cases.reverse();
 }
 
 /**
