@@ -85,6 +85,17 @@ change.
   then `rhou`. The `h` now takes the case of the consonant, and the vowel
   keeps its own: `ρἉ` gives `rhA`, which reads back as `ῥΑ`. The loss of the
   breathing is reported as before.
+- **Beta Code writes a letter kept as text with the marks that compose
+  with it as the character they make.** The reader keeps a character such
+  as `é`, which is no Beta Code, as text. Greek and transliteration read
+  it as a letter and its mark, which Beta Code wrote apart: `é` in a Beta
+  Code source gave `é` in Greek, called lossless, which gave `e` and an
+  acute in Beta Code again, read back as an epsilon and a mark kept as
+  text. Beta Code now writes `é`, and `Valéry`, in Greek, gives `valéry`,
+  whose `é` reads back as itself; only the letters that Beta Code reads as
+  Greek are reported. A letter of another script with marks that compose
+  with no character is written with its marks in their canonical order, as
+  Greek writes them.
 - **A rough breathing on the second vowel of a pair in a numeral reads
   back in transliteration.** A numeral has no diphthong, and the reader
   leaves the breathing on the vowel that its `h` precedes. The writer put

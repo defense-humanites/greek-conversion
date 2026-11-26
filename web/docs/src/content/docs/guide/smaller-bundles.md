@@ -6,8 +6,8 @@ description: "Bundle only the formats and presets a web application uses, with t
 The functions of the main entry point take the names of formats and options
 as values, which they read when they are called. A bundler cannot tell which
 of them an application will use: a bundle that imports `convert()` keeps
-every format, every preset, and the validation of options, about 88 kB
-minified (28 kB with gzip). On a server, this costs nothing that matters,
+every format, every preset, and the validation of options, about 89 kB
+minified (29 kB with gzip). On a server, this costs nothing that matters,
 and the main entry point is the one to use. The functions of `core`, which
 check no options when they are called, convert a single word up to 10 %
 faster with the defaults or a preset, and two to three times as fast with
@@ -123,7 +123,7 @@ try {
 Bundles of the conversions below, made with esbuild for this release,
 minified, then with gzip. The percentage compares the size with gzip to that
 of the same conversion imported from the main entry point: `convert()`
-(87.6 kB, 28.4 kB with gzip), or `convertDetailed()` (96.3 kB, 31.3 kB).
+(89.4 kB, 29.0 kB with gzip), or `convertDetailed()` (98.4 kB, 31.9 kB).
 
 | Conversions                                   | With a preset or the defaults | With `prepareOptions()`       |
 | --------------------------------------------- | ----------------------------- | ----------------------------- |

@@ -84,7 +84,10 @@ converted as Greek (`;` becomes `?` in transliteration). The letters of the
 other language are kept as they are, but reported as `unrepresented-literal`
 losses when the target format would read them as Greek, and Beta Code, whose
 letters are Latin, writes them in the case of its own letters, as they read
-back:
+back. A letter with marks that compose with it is written in Beta Code as
+the character they make, which reads back as itself (`Valéry` gives `valéry`,
+whose `é` stays a letter of French, where `e` and an acute would read back as
+an epsilon and a mark):
 
 ```ts
 import { convertDetailed } from "@humanities/greek-conversion";
