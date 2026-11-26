@@ -28,8 +28,8 @@ const res = convertDetailed("ϗ τὰ λοιπά", "greek", "transliteration", {
   greek: { kaiAccent: "byzantine" },
 });
 res.output; // → kaì tà loipá
-res.losses[0].glyphVariant; // → kai-symbol
-res.losses[1].diacritic; // → grave
+res.losses[0].code; // → removed-glyph-variant
+res.losses[1].code; // → added-diacritic
 
 // Modern Greek, from polytonic to monotonic, as passports write it
 reencode("Hi ’Athína ’eînai hi protévousa", "transliteration", {
