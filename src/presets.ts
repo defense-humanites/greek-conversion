@@ -34,6 +34,18 @@ const ALA_LC_NUMERAL_ONLY = new Set<Letter>([
   "sampi",
 ]);
 
+/**
+ * Whether a converter bound to a preset checks the letters it reads: whether
+ * {@link isCharacterInPresetScope} may leave one out, or
+ * {@link presetMappingIssue} report one. The scopes of BnF and of the TLG
+ * hold every character, and neither preset reports a mapping: a converter
+ * bound to one keeps no letter, and reads as `convert()` does. Both
+ * functions answer for these presets by this one.
+ */
+export function presetChecksLetters(preset: Preset): boolean {
+  return preset !== "bnf-core" && preset !== "tlg-core";
+}
+
 const OMIT_NON_ROUGH_DIACRITICS = {
   all: "remove",
   roughBreathing: "preserve",
@@ -695,7 +707,10 @@ export function isCharacterInPresetScope(
   index: number,
   context?: DocumentContext,
 ): boolean {
-  if (!ADDITIONAL_LETTERS.has(character as Letter)) return true;
+  if (
+    !ADDITIONAL_LETTERS.has(character as Letter) ||
+    !presetChecksLetters(preset)
+  ) return true;
 
   const letter = character as Letter;
   switch (preset) {
@@ -709,6 +724,7 @@ export function isCharacterInPresetScope(
     case "perseus":
     case "sbl-general":
       return false;
+    // `bnf-core` and `tlg-core` check no letter (presetChecksLetters()).
     case "bnf-core":
     case "iso-843-type-1":
     case "iso-843-type-2":
@@ -731,6 +747,7 @@ export function presetMappingIssue(
   options: ResolvedConversionOptions,
   context?: DocumentContext,
 ): "undefined-preset-mapping" | "unresolved-preset-mapping" | undefined {
+  // Only ISO 843 reports mappings, as presetChecksLetters() counts on.
   if (
     (preset !== "iso-843-type-1" && preset !== "iso-843-type-2") ||
     target !== "transliteration"

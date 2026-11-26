@@ -22,6 +22,14 @@ change.
   `bnf-core` wrote the second rho of every pair `rh`, as classical studies
   do: `Ερρίκος` gave `Errhíkos` under `iso-843-type-2`, and now gives
   `Erríkos`. They select `transliteration.rho: "marked"`.
+- **`convertDetailed()` into transliteration under `longVowels: "omit"`
+  (ISO 843 type 2) takes about a fifth less time.** It read its output twice
+  when the output's letters read back as others, as eta written `i` does in
+  nearly every text: it now reads it once, with the positions of its
+  tokens.
+- **A converter bound to `bnf-core` or `tlg-core` converts as fast as
+  `convert()`**, 12 to 18 % faster on a long text: their repertoires hold
+  every character, and the converter no longer checks each letter.
 
 ### Fixed
 

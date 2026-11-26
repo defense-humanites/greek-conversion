@@ -78,10 +78,11 @@ yours.
   [Converters, options, and errors](/guide/converters/#prepare-options-once)
   shows.
 - **Converters.** A converter from `createConverter()` with nothing to look
-  for converts as fast as `convert()`. One bound to a preset checks each
-  letter against the preset's repertoire, and one with aliases or characters
-  of its own looks for their spellings: a long text takes about a third
-  longer. Create one for these, and not to bind a preset alone:
+  for converts as fast as `convert()`, and so does one bound to `bnf-core` or
+  `tlg-core`, whose repertoires hold every character. One bound to another
+  preset checks each letter against the preset's repertoire, and one with
+  aliases or characters of its own looks for their spellings: a long text
+  takes about a third longer. Create one for these, and not to bind a preset alone:
   `convert()` given the preset's name costs less.
 - **The first call.** Loading the package takes some tens of milliseconds
   in Node.js, and the first conversion one or two milliseconds more, while

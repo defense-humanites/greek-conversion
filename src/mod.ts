@@ -240,16 +240,26 @@ export function convertDetailed(
   const source = parseResolved(input, from, reading, true, read);
   const inputSpans = readSpans(input, read);
   const { output, spans: outputSpans } = encodeTracked(source, to, resolved);
-  const target = parseResolved(output, to, resolved, true);
   // Where the target tokens were read, only if the losses need it: reading
-  // the output again with positions costs less than recording them each time.
+  // the output again with positions costs less than recording them each
+  // time. Where the output writes letters that read back as others, as
+  // transliteration without length marks writes eta (ISO 843 Type 2), the
+  // losses need them for nearly every text: they are recorded as it is read.
+  const readTarget: ReadPositions | undefined = to === "transliteration" &&
+      resolved.transliteration.longVowels === "omit"
+    ? { text: "", starts: [] }
+    : undefined;
+  const target = parseResolved(output, to, resolved, true, readTarget);
   const losses = findConversionLosses(
     source,
     target,
     inputSpans,
     () => {
-      const reread: ReadPositions = { text: "", starts: [] };
-      parseResolved(output, to, resolved, true, reread);
+      let reread = readTarget;
+      if (reread === undefined) {
+        reread = { text: "", starts: [] };
+        parseResolved(output, to, resolved, true, reread);
+      }
       return { written: outputSpans, read: readSpans(output, reread) };
     },
     { glyphForm: writerFor(from).glyphForm, options: reading },

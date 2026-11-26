@@ -4,10 +4,13 @@ import {
   CharacterScopeError,
   type ConversionOptions,
   convert,
+  convertDetailed,
   createConverter,
   type Format,
   OptionError,
 } from "../src/mod.ts";
+
+const FORMATS: readonly Format[] = ["greek", "beta-code", "transliteration"];
 
 const SAN = {
   id: "san",
@@ -395,6 +398,35 @@ test("bound preset scopes match the audited additional-letter matrix", () => {
       [...expected],
       preset,
     );
+  }
+});
+
+test("a converter bound to bnf-core or tlg-core converts as convert() does", () => {
+  // Their scopes hold every character and they report no mapping, so that
+  // the converter reads the source as convert() does, without checking its
+  // letters.
+  const greek = "ϝϳϛϟϙϡ ϜϚϞϘϠ ϛʹ ϟʹ ͵ϡ λόγος";
+  for (const preset of ["bnf-core", "tlg-core"] as const) {
+    const converter = createConverter({ preset });
+    for (const from of FORMATS) {
+      const input = from === "greek"
+        ? greek
+        : convert(greek, "greek", from, { preset });
+      for (const to of FORMATS) {
+        const bound = converter.convertDetailed(input, from, to);
+        const unbound = convertDetailed(input, from, to, { preset });
+        assertEquals(bound.diagnostics, [], `${preset}: ${from} → ${to}`);
+        assertEquals(
+          { output: bound.output, lossy: bound.lossy, losses: bound.losses },
+          {
+            output: unbound.output,
+            lossy: unbound.lossy,
+            losses: unbound.losses,
+          },
+          `${preset}: ${from} → ${to}`,
+        );
+      }
+    }
   }
 });
 

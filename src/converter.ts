@@ -41,6 +41,7 @@ import {
   conversionProfiles,
   isCharacterInPresetScope,
   preparedOptionsError,
+  presetChecksLetters,
   presetMappingIssue,
   resolveConversionOptions,
 } from "./presets.ts";
@@ -350,7 +351,8 @@ export class Converter {
       validateCharacterIds(configuration.exclude ?? [], known, "exclude"),
     );
     this.#keepsLetters = this.#excluded.size > 0 ||
-      this.#repertoire !== undefined || this.#preset !== undefined;
+      this.#repertoire !== undefined ||
+      this.#preset !== undefined && presetChecksLetters(this.#preset);
 
     Object.freeze(this);
   }
@@ -390,14 +392,21 @@ export class Converter {
     const { output, map } = this.#postprocess(encoded.output, to, true);
 
     const targetInput = this.#preprocess(output, to, resolved);
-    const target = this.#prepareSource(
+    // The positions of the target, for the losses, recorded as it is read
+    // where its letters read back as others (`convertDetailed()` of the
+    // main entry point), and else read again only if the losses need them.
+    const targetRead = this.#prepareSource(
       targetInput,
       to,
       resolved,
       resolved,
       undefined,
-      "none",
-    ).document;
+      to === "transliteration" &&
+        resolved.transliteration.longVowels === "omit"
+        ? "spans"
+        : "none",
+    );
+    const target = targetRead.document;
     const inputSpans = prepared.spans!;
     const outputSpans = map === undefined ? encoded.spans : spansIn(
       encoded.spans.starts,
@@ -412,7 +421,7 @@ export class Converter {
       // Reading the output again with positions, only if the losses need it.
       () => ({
         written: outputSpans,
-        read: this.#prepareSource(
+        read: targetRead.spans ?? this.#prepareSource(
           targetInput,
           to,
           resolved,
