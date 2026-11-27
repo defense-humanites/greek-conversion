@@ -9,7 +9,9 @@
  *   no validation of options without `prepareOptions()`, no metadata of the
  *   presets, no loss analysis without `convertDetailed()`, no conversion of
  *   the Greek passages of a text without `convertGreekPassages()`. A reader
- *   imported alone keeps no writer.
+ *   imported alone keeps no writer. With a preset or the defaults, it keeps
+ *   no function of the steps that only other options take (`src/steps.ts`),
+ *   as the names of its source map show.
  * - Inside a module that a bundle keeps, what it does not import is left out
  *   too, which modules alone do not show: a bundle that imports every preset
  *   weighs what the guide says more than one that imports one, and
@@ -78,13 +80,28 @@ const NEVER = [
 /** Modules that only `prepareOptions()` brings. */
 const VALIDATION = ["prepare_options.js", "presets.js", "options.js"];
 /**
- * The module of the accent of καί, one of the steps that only options
- * outside the presets take, which their resolution links (see
- * `src/steps.ts`): a conversion with a preset keeps it only for the accents
- * that the loss analysis imports from it. The other steps are functions of
- * modules that every conversion keeps.
+ * The functions of the steps that only options outside the presets take,
+ * which their resolution links (see `src/steps.ts`): a conversion with a
+ * preset or the defaults keeps none, which the names of its source map
+ * show. Most are functions of modules that every conversion keeps.
  */
-const STEPS = ["kai_accent.js"];
+const STEPS = stepFunctions(
+  await readFile(new URL("src/presets.ts", ROOT), "utf8"),
+);
+/**
+ * The module of the accent of καί, a step whose module a conversion with a
+ * preset keeps only for the accents that the loss analysis imports from it.
+ */
+const STEP_MODULES = ["kai_accent.js"];
+/**
+ * The functions that `STEPS` names in `src/presets.ts`, one a line, or
+ * nothing when a line no longer reads so.
+ */
+function stepFunctions(source: string): string[] | undefined {
+  const names = /^const STEPS: Steps = \{\n([^}]*)\n\};$/m.exec(source)?.[1]
+    .split("\n").map((line) => /^ {2}\w+: (\w+),$/.exec(line)?.[1]);
+  return names?.every((name) => name !== undefined) ? names : undefined;
+}
 /** The most that `OptionError` imported alone may weigh, minified. */
 const OPTION_ERROR_BYTES = 1000;
 
@@ -333,22 +350,10 @@ function unreached(code: string): ts.Node[] {
 
 /**
  * What a bundle keeps that nothing in it reaches, by name, source, and
- * bytes: the bundle is built again with a source map, which gives the
- * module of `npm/esm/` and the line of each declaration.
+ * bytes: the source map of the bundle gives the module of `npm/esm/` and
+ * the line of each declaration.
  */
-async function located(contents: string, nodes: ts.Node[]): Promise<string[]> {
-  const result = await build({
-    stdin: { contents, resolveDir: directory, loader: "js" },
-    bundle: true,
-    minify: true,
-    format: "esm",
-    write: false,
-    sourcemap: "external",
-    outdir: directory,
-    logLevel: "error",
-  });
-  const output = result.outputFiles.find((file) => file.path.endsWith(".map"));
-  const map = new SourceMap(JSON.parse(output?.text ?? "{}"));
+function located(map: SourceMap, nodes: ts.Node[]): Promise<string[]> {
   return Promise.all(nodes.map(async (node) => {
     const source = node.getSourceFile();
     const text = node.getText(source);
@@ -377,13 +382,14 @@ async function located(contents: string, nodes: ts.Node[]): Promise<string[]> {
 }
 
 /**
- * A bundle's size, minified then compressed, and the modules it keeps;
- * records what it keeps that nothing in it reaches.
+ * A bundle's size, minified then compressed, the modules it keeps, and the
+ * names of the declarations it keeps, which its source map lists; records
+ * what it keeps that nothing in it reaches.
  */
 async function bundle(
   label: string,
   contents: string,
-): Promise<{ size: number; gzip: number; modules: string[] }> {
+): Promise<{ size: number; gzip: number; modules: string[]; names: string[] }> {
   const result = await build({
     stdin: { contents, resolveDir: directory, loader: "js" },
     bundle: true,
@@ -391,28 +397,37 @@ async function bundle(
     format: "esm",
     write: false,
     metafile: true,
+    // The source map changes nothing in the bundle, and costs little.
+    sourcemap: "external",
+    outdir: directory,
     logLevel: "error",
   });
   bundles += 1;
-  const output = result.outputFiles[0];
-  const nodes = unreached(output.text);
+  const output = (suffix: string) =>
+    result.outputFiles.find((file) => file.path.endsWith(suffix));
+  const code = output(".js");
+  const map = JSON.parse(output(".js.map")?.text ?? "{}");
+  if (code === undefined) throw new Error(`${label}: esbuild wrote no bundle.`);
+  const nodes = unreached(code.text);
   if (nodes.length > 0) {
-    for (const declaration of await located(contents, nodes)) {
+    for (const declaration of await located(new SourceMap(map), nodes)) {
       failures.push(
         `${label}: the bundle keeps ${declaration}, which nothing in it ` +
           "reaches: esbuild cannot prove its value pure.",
       );
     }
   }
-  const [meta] = Object.values(result.metafile.outputs);
+  const inputs = Object.entries(result.metafile.outputs)
+    .find(([path]) => path.endsWith(".js"))?.[1].inputs ?? {};
   return {
-    size: output.contents.length,
-    gzip: gzipSync(output.contents, { level: 9 }).length,
-    modules: Object.entries(meta.inputs)
+    size: code.contents.length,
+    gzip: gzipSync(code.contents, { level: 9 }).length,
+    modules: Object.entries(inputs)
       .filter(([, input]) => input.bytesInOutput > 0)
       // esbuild gives the paths from the working directory: `npm/esm/…`
       // from the root of the repository.
       .map(([path]) => path.replace(/^(?:.*\/)?npm\/esm\//, "")),
+    names: map.names ?? [],
   };
 }
 
@@ -569,15 +584,31 @@ try {
     figure("convert(), gzip, rounded", gzip, opening, 2, "whole");
   }
 
+  // What a bundle must not keep: modules of `npm/esm/`, and the functions
+  // of the steps.
   const kept = async (label: string, code: string[], absent: string[]) => {
     const result = await bundle(label, code.join("\n"));
-    for (const module of absent) {
-      if (result.modules.includes(module)) {
-        failures.push(`${label}: the bundle keeps ${module}.`);
+    for (const name of absent) {
+      if (!name.endsWith(".js")) {
+        if (result.names.includes(name)) {
+          failures.push(
+            `${label}: the bundle keeps ${name}(), a step that no preset ` +
+              "takes.",
+          );
+        }
+      } else if (result.modules.includes(name)) {
+        failures.push(`${label}: the bundle keeps ${name}.`);
       }
     }
     return result;
   };
+  if (STEPS === undefined) {
+    failures.push(
+      "src/presets.ts no longer names the functions of the steps in STEPS " +
+        "as this check reads them, one a line.",
+    );
+  }
+  const steps = STEPS ?? [];
 
   await kept("A reader alone", [
     `import { greekReader } from "${P}/greek";`,
@@ -614,12 +645,12 @@ try {
   const onePreset = await kept(
     "One preset",
     presetCode("{ iso843Type2 }", "iso843Type2"),
-    [...NEVER, ...VALIDATION],
+    [...NEVER, ...VALIDATION, ...steps, ...STEP_MODULES],
   );
   const everyPreset = await kept(
     "Every preset",
     presetCode("* as presets", "Object.values(presets)[Date.now() % 8]"),
-    [...NEVER, ...VALIDATION],
+    [...NEVER, ...VALIDATION, ...steps, ...STEP_MODULES],
   );
   const every = guide.match(
     /imports\s+them\s+all,\s+which\s+adds\s+(\d+\.\d) kB\s+\((\d+\.\d) kB\s+with\s+gzip\)/d,
@@ -686,7 +717,8 @@ try {
         absent: [
           ...NEVER,
           ...VALIDATION,
-          ...(scenario.function === "convert" ? STEPS : []),
+          ...steps,
+          ...(scenario.function === "convert" ? STEP_MODULES : []),
           ...scenario.absent,
         ],
       },

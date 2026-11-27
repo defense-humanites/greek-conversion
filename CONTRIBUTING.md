@@ -80,7 +80,8 @@ difference.
 
 `npm run npm:check` builds the npm package, and bundles with esbuild each
 conversion of the guide on smaller bundles (`scripts/check_bundles.ts`). It
-fails when a bundle keeps a module that it does not import, or a declaration
+fails when a bundle keeps a module that it does not import, a step that no
+preset takes when it converts with one (`src/steps.ts`), or a declaration
 that nothing in it reaches: esbuild keeps one when it cannot prove its value
 pure, as a table built by a call, which a function annotated
 `/* @__PURE__ */` lets it leave out. It also fails when a size that the

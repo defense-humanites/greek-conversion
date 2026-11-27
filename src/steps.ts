@@ -1,8 +1,10 @@
 /**
  * The steps of a conversion that only options outside every preset take:
  * the accent of καί (`greek.kaiAccent`), monotonic accentuation
- * (`greek.accentuation: "monotonic"`), and the stigma read as `στ`
- * (`greek.stigma: "ligature"`). Resolved options that take one carry the
+ * (`greek.accentuation: "monotonic"`), the stigma read as `στ`
+ * (`greek.stigma: "ligature"`), the letter case of the whole text
+ * (`text.letterCase`), and whitespace collapsed (`text.whitespace:
+ * "collapse"`). Resolved options that take one carry the
  * steps: the resolution of options (`presets.ts`), which every option
  * outside the presets goes through, links them to the options it returns
  * (`linkSteps()`), and the readers and writers reach them through the
@@ -22,6 +24,7 @@ import type {
   ConversionOptions,
   ResolvedConversionOptions,
 } from "./options.ts";
+import type { TokenTargets } from "./parsers/positions.ts";
 
 /** The steps, as `presets.ts` links them. */
 export interface Steps {
@@ -41,6 +44,17 @@ export interface Steps {
     document: Document,
     starts?: number[],
   ) => Document;
+  /** `applyLetterCaseOrthography()` of `orthography.ts`. */
+  readonly letterCase: (
+    document: Document,
+    options: ConversionOptions,
+  ) => Document;
+  /** `applyWhitespaceOrthography()` of `orthography.ts`. */
+  readonly whitespace: (
+    document: Document,
+    options: ConversionOptions,
+    targets?: TokenTargets,
+  ) => Document;
 }
 
 /**
@@ -59,7 +73,9 @@ type Linked = { [STEPS]?: Steps };
 export function needsSteps(options: ResolvedConversionOptions): boolean {
   return options.greek.kaiAccent !== "none" ||
     options.greek.accentuation === "monotonic" ||
-    options.greek.stigma === "ligature";
+    options.greek.stigma === "ligature" ||
+    options.text.letterCase !== "preserve" ||
+    options.text.whitespace !== "preserve";
 }
 
 /**
@@ -121,4 +137,25 @@ export function stigmaLigatures(
   return options.greek.stigma === "ligature"
     ? stepsOf(options).stigmaLigatures(document, starts)
     : document;
+}
+
+/** The letter case of the whole text, where the options change it. */
+export function letterCase(
+  document: Document,
+  options: ConversionOptions,
+): Document {
+  return (options.text?.letterCase ?? "preserve") === "preserve"
+    ? document
+    : stepsOf(options).letterCase(document, options);
+}
+
+/** Whitespace, where the options collapse it. */
+export function whitespace(
+  document: Document,
+  options: ConversionOptions,
+  targets?: TokenTargets,
+): Document {
+  return (options.text?.whitespace ?? "preserve") === "preserve"
+    ? document
+    : stepsOf(options).whitespace(document, options, targets);
 }

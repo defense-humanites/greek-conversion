@@ -38,6 +38,7 @@ import type {
 } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
 import { composeTargets, type TokenTargets } from "./parsers/positions.ts";
+import { letterCase, whitespace } from "./steps.ts";
 
 const NUMERAL_VALUES = new Map<Letter, number>([
   ["alpha", 1],
@@ -821,8 +822,8 @@ export function applyNumeralOrthography(
   format: Format = "greek",
   capitals?: CapitalOrthography,
 ): Document {
-  const spaced = applyWhitespaceOrthography(document, options, targets);
-  const lettered = applyLetterCaseOrthography(spaced, options);
+  const spaced = whitespace(document, options, targets);
+  const lettered = letterCase(spaced, options);
   const cased = capitals === undefined ? lettered : capitals(lettered, options);
   if (options.text?.numerals !== "decimal" || !cased.some(isKeraia)) {
     return cased;
@@ -878,7 +879,11 @@ export function decimalNumeralTokens(
   return marks;
 }
 
-function applyLetterCaseOrthography(
+/**
+ * Writes the letters in the case of `text.letterCase`. A step that no preset
+ * takes, which the options resolved with it carry (see `steps.ts`).
+ */
+export function applyLetterCaseOrthography(
   document: Document,
   options: ConversionOptions,
 ): Document {
@@ -910,7 +915,12 @@ function applyLetterCaseOrthography(
   return changed ? cased : document;
 }
 
-function applyWhitespaceOrthography(
+/**
+ * Collapses each run of whitespace into one space, and removes it at either
+ * end of the text, under `text.whitespace: "collapse"`. A step that no
+ * preset takes, which the options resolved with it carry (see `steps.ts`).
+ */
+export function applyWhitespaceOrthography(
   document: Document,
   options: ConversionOptions,
   targets?: TokenTargets,

@@ -17,7 +17,7 @@ unless they are prepared; the difference fades on longer texts.
 For a web page, the `core` entry point converts with the same functions,
 given readers, writers, and options that the application imports. A bundle
 then keeps only those: a page that writes Greek in transliteration with one
-preset weighs 47 kB (16 kB with gzip).
+preset weighs 46 kB (15 kB with gzip).
 
 ## Readers and writers
 
@@ -94,12 +94,13 @@ convert("χάος", greekReader, transliterationWriter, options); // → khaos
 
 `prepareOptions()` brings the validation of options, the table of the presets,
 and the code of the options that no preset takes (the accent of καί,
-monotonic accentuation, and the stigma read as `στ`) into the bundle, about
-15.5 kB (4.7 kB with gzip): an application that uses one preset as it is
-should import it instead. Prepared options cannot be changed; prepare them
-once, outside a loop, and use them for every call. The functions of `core`
-take no other options: an object of options, which they would have to
-validate, throws a `TypeError`.
+monotonic accentuation, the stigma read as `στ`, the letter case of the whole
+text, and collapsed whitespace) into the bundle, about 17.3 kB (5.1 kB with
+gzip): an application that uses one preset as it is should import it
+instead. Prepared options cannot be changed; prepare them once, outside a
+loop, and use them for every call. The functions of `core` take no other
+options: an object of options, which they would have to validate, throws a
+`TypeError`.
 
 A preset is changed by its name, as above. Spreading prepared options copies
 none of them: `{ ...sblGeneral, transliteration: { chi: "kh" } }` holds the
@@ -123,16 +124,16 @@ try {
 Bundles of the conversions below, made with esbuild for this release,
 minified, then with gzip. The percentage compares the size with gzip to that
 of the same conversion imported from the main entry point: `convert()`
-(90.0 kB, 29.2 kB with gzip), or `convertDetailed()` (99.0 kB, 32.1 kB).
+(90.3 kB, 29.3 kB with gzip), or `convertDetailed()` (99.2 kB, 32.1 kB).
 
 | Conversions                                   | With a preset or the defaults | With `prepareOptions()`       |
 | --------------------------------------------- | ----------------------------- | ----------------------------- |
-| Greek to Beta Code                            | 35.7 kB, 12.6 kB gzip (−57 %) | 50.9 kB, 17.2 kB gzip (−41 %) |
-| Beta Code to Greek                            | 38.8 kB, 13.5 kB gzip (−54 %) | 53.0 kB, 17.7 kB gzip (−39 %) |
-| Greek to transliteration                      | 47.2 kB, 15.6 kB gzip (−47 %) | 62.7 kB, 20.3 kB gzip (−30 %) |
-| Greek and transliteration both ways           | 67.7 kB, 22.0 kB gzip (−25 %) | 81.9 kB, 26.4 kB gzip (−9 %)  |
-| Every format both ways                        | 76.4 kB, 25.0 kB gzip (−14 %) | 90.6 kB, 29.5 kB gzip (+1 %)  |
-| `convertDetailed()`, Greek to transliteration | 76.9 kB, 25.1 kB gzip (−22 %) | 91.0 kB, 29.5 kB gzip (−8 %)  |
+| Greek to Beta Code                            | 34.2 kB, 12.2 kB gzip (−58 %) | 51.2 kB, 17.2 kB gzip (−41 %) |
+| Beta Code to Greek                            | 38.2 kB, 13.3 kB gzip (−55 %) | 53.3 kB, 17.8 kB gzip (−39 %) |
+| Greek to transliteration                      | 45.7 kB, 15.2 kB gzip (−48 %) | 63.0 kB, 20.4 kB gzip (−30 %) |
+| Greek and transliteration both ways           | 67.0 kB, 21.8 kB gzip (−26 %) | 82.2 kB, 26.5 kB gzip (−9 %)  |
+| Every format both ways                        | 75.7 kB, 24.8 kB gzip (−15 %) | 90.8 kB, 29.5 kB gzip (+1 %)  |
+| `convertDetailed()`, Greek to transliteration | 76.2 kB, 24.9 kB gzip (−23 %) | 91.3 kB, 29.6 kB gzip (−8 %)  |
 
 The `core` entry point is worth it with a preset or the defaults, the more so
 as the application reads and writes fewer formats. With `prepareOptions()`, it
