@@ -181,6 +181,9 @@ reencode("a)/ndra moi e)/nnepe, mou=sa", "beta-code", {
   and the [API](https://greek-conversion.humanites.fr/api/readme/).
 - [Contributing](https://github.com/defense-humanites/greek-conversion/blob/main/CONTRIBUTING.md).
 
+Every page of the site is also in Markdown, which
+[`llms.txt`](https://greek-conversion.humanites.fr/llms.txt) lists.
+
 ## Citing and license
 
 If you use `greek-conversion` in research or in a published resource, please

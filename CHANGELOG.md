@@ -12,6 +12,23 @@ change.
 - **`transliteration.rho: "marked"` writes the `h` of rho only for a rough
   breathing that Greek writes**, the second rho of a pair included, and
   reads every `rh` as one: `Πύρρος` gives `Pýrros`, `ῥήτωρ` `rhḗtōr`.
+- **The error for an unknown option, preset, or format says what was likely
+  meant.** A name written in another case or with other separators is named
+  as it is written: `transliteration.long_vowels` suggests
+  `transliteration.longVowels`, `ISO-843-type-2` suggests `iso-843-type-2`,
+  and `betacode` suggests `beta-code`. A key given in the wrong group, or
+  outside a group, names its group: `greek.eta` suggests `transliteration.eta`,
+  and `letterCase` `text.letterCase`. Otherwise, an unknown preset or format
+  lists the accepted ones. Only the message changes: `path`, `accepted`, and
+  `replacement` are as before.
+- **The documentation site gives every page in Markdown as well**, at its
+  address followed by `index.md`, and lists them in `llms.txt`, after the
+  llms.txt convention, for the coding agents that read documentation: the
+  build writes them from the pages and the sidebar. `context7.json` tells
+  Context7, an index of documentation that coding agents query, what to
+  read and what to leave out, such as the examples of the `0.x` API in the
+  migration guide. The API documentation of `convert()`,
+  `convertDetailed()`, and `createConverter()` gives examples.
 
 ### Changed
 
@@ -65,12 +82,13 @@ change.
   - the tables of the formats that a bundle does not use, which esbuild kept
     since calls built them, are built in functions annotated as pure.
 
-  Greek to transliteration with a preset weighs 45.7 kB, 15.2 kB with gzip,
-  where it weighed 51.3 kB and 17.0 kB. `prepareOptions()` adds 17.3 kB to
-  such a bundle, 5.1 kB with gzip, where it added 9.0 kB and 2.7 kB. The
+  Greek to transliteration with a preset weighs 45.8 kB, 15.3 kB with gzip,
+  where it weighed 51.3 kB and 17.0 kB. `prepareOptions()` adds 18.0 kB to
+  such a bundle, 5.4 kB with gzip, where it added 9.0 kB and 2.7 kB. The
   steps add 0.9 kB to the main entry point, 0.3 kB with gzip; with the
-  fixes below, `convert()` from the main entry point weighs 90.3 kB, 29.3 kB
-  with gzip, where it weighed 85.7 kB and 27.8 kB. Outputs do not change.
+  fixes below and the suggestions of its errors, `convert()` from the main
+  entry point weighs 91.3 kB, 29.7 kB with gzip, where it weighed 85.7 kB
+  and 27.8 kB. Outputs do not change.
 - **Documentation.** The API documentation of `greek.capitalMarks` and
   `text.letterCase` says what the code does: the search for the word nearest
   to a capital on its own stops at a number or a numeral, past which it

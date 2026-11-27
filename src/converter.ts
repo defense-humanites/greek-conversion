@@ -1017,6 +1017,19 @@ export class Converter {
  * The configuration is checked as conversion options are: a misspelled key
  * never falls back to a default.
  *
+ * @example
+ * ```ts
+ * import { createConverter } from "@humanities/greek-conversion";
+ *
+ * const iso = createConverter({
+ *   preset: "iso-843-type-1",
+ *   outOfScopeBehavior: "reject",
+ * });
+ * iso.convert("Αθήνα", "greek", "transliteration"); // → Athī́na
+ * iso.convert("ϟ", "greek", "transliteration");
+ * // throws CharacterScopeError: Conversion rejected: 1 unsupported character.
+ * ```
+ *
  * @throws {RangeError} An {@link OptionError} if a key of the configuration,
  * of an alias, or of a custom character is unknown (its `path` is the key,
  * such as `"exclude"` or `"aliases[0].spellings"`), if the preset or the

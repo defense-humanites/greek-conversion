@@ -9,9 +9,10 @@
  * {@link prepareOptions}, which brings their validation into the bundle. A
  * bundle that converts Greek into transliteration with a preset is then
  * about half the size of one that imports `convert()` from the main entry
- * point. The guide on smaller bundles compares the cases: an application
- * that reads and writes every format, or lets its users choose them, gains
- * little, and a server none.
+ * point. The
+ * [guide on smaller bundles](https://greek-conversion.humanites.fr/guide/smaller-bundles/)
+ * compares the cases: an application that reads and writes every format,
+ * or lets its users choose them, gains little, and a server none.
  *
  * @example
  * ```ts
