@@ -123,6 +123,10 @@ test("writes a capital on its own in full capitals among words in capitals", () 
     ["Ῥ.", "Rh."],
     ["ABC Θ", "ABC TH"],
     ["abc Θ ΛΟΓΟΣ", "abc Th LOGOS"],
+    // The search past capitals on their own keeps the case it finds on each
+    // side apart: a search to the right does not take, for the capitals it
+    // passes, what one to the left found beyond them.
+    ["λόγος Θ Θ Θ ΛΟΓΟΣ", "lógos Th Th Th LOGOS"],
     // A number or a numeral ends the search on its side: its case, or that
     // of its letters, says nothing of the words, and it may be written as a
     // number.

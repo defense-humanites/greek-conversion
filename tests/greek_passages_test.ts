@@ -147,6 +147,33 @@ test("the detailed conversion reports the Greek passages and copies the rest", (
   );
 });
 
+test("a combining mark continues the Greek passage it follows", () => {
+  // Beyond U+0483, as an enclosing circle, or beyond the BMP, as a mark of
+  // Greek musical notation: the keraia after it closes a numeral, which
+  // takes no inferred breathing, and Beta Code writes as `#`.
+  assertEquals(
+    convertGreekPassagesDetailed("see α\u20DDʹ", "transliteration").lossy,
+    false,
+  );
+  assertEquals(
+    convertGreekPassages("α\u{1D242}ʹ", "beta-code"),
+    "a\u{1D242}#",
+  );
+  // A mark beyond the BMP is never cut from its other code unit.
+  assertEquals(
+    convertGreekPassages("α\u{1D165}\u20E8", "greek"),
+    "α\u{1D165}\u20E8",
+  );
+});
+
+test("the detailed conversion reads Greek output back as a whole", () => {
+  // As the input was: the smooth breathing after a Latin letter is a coronis
+  // there, which a passage read apart would take for a breathing.
+  const result = convertGreekPassagesDetailed("see Aἀ", "greek");
+  assertEquals(result.output, "see Aἀ");
+  assertEquals(result.lossy, false);
+});
+
 test("the detailed conversion of a long text into Greek keeps every span", () => {
   // The spans of the Greek read back were spread into push(), which
   // overflowed the call stack past about 120,000 tokens.

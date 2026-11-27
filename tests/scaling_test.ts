@@ -17,12 +17,18 @@ import { parse } from "../src/document.ts";
  * fixed before 1.0 took about sixty times as long. The threshold sits far
  * from both.
  *
- * Noise still crosses it now and then on a loaded machine (a collection or a
- * recompilation during the long input's runs): about one run of this test in
- * forty under load, once in CI. A ratio over the threshold is therefore
- * measured again, up to three times, and the lowest one is kept: noise does
- * not repeat three times in a row, a superlinear cost does (a deliberately
- * quadratic path measures about 64 on every attempt).
+ * Each run is timed by the processor time of the process, not by the
+ * clock: on a machine busy with other processes, the clock counts the time
+ * they take, which falls more on the long runs than on the short ones, whose
+ * fastest fits between two of them. Timed by the clock, the test failed in
+ * about one run in six with three busy processes on two processors, and in
+ * none timed so.
+ *
+ * Noise still remains (a collection or a recompilation during the long
+ * input's runs). A ratio over the threshold is therefore measured again, up
+ * to three times, and the lowest one is kept: noise does not repeat three
+ * times in a row, a superlinear cost does (a deliberately quadratic path
+ * measures about 50 to 64 on every attempt).
  */
 const PASSAGE =
   "κίνησις γὰρ αὕτη δὴ μεγίστη τοῖς Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων, ὡς δὲ εἰπεῖν καὶ ἐπὶ πλεῖστον ἀνθρώπων. ἀυτμή ἄυλος ϛʹ Μπάλα ϲῶμα. ";
@@ -120,13 +126,15 @@ const BNF_NUMERAL_WORD = "ϚϠΑ".repeat(12);
  */
 const KAI_WORD = "ϗϗϗἀ".repeat(10);
 
+/** The lowest processor time of three runs, in milliseconds, after one more. */
 function fastest(run: () => unknown): number {
   run();
   let best = Infinity;
   for (let i = 0; i < 3; i++) {
-    const start = performance.now();
+    const start = process.cpuUsage();
     run();
-    best = Math.min(best, performance.now() - start);
+    const { user, system } = process.cpuUsage(start);
+    best = Math.min(best, (user + system) / 1000);
   }
   return Math.max(best, 0.05);
 }

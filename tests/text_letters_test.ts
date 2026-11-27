@@ -74,6 +74,12 @@ test("a letter that a reader keeps as text is a letter of its word", () => {
     convert("Kαζάρμα", "greek", "greek", { text: { letterCase: "title" } }),
     "Kαζάρμα",
   );
+  // `A`, the first of the Latin capitals, is one too: the breathing after it
+  // is a coronis, and title case leaves the alpha small.
+  assertNfcEquals(
+    convert("Aἀνήρ", "greek", "greek", { text: { letterCase: "title" } }),
+    "Aἀνήρ",
+  );
   // A letter that transliteration does not read: a sigma before it is
   // medial, and monotonic accentuation keeps the accent of its word.
   assertNfcEquals(convert("sc", "transliteration", "greek"), "σc");
