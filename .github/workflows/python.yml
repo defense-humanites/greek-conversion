@@ -1,33 +1,44 @@
 name: Python
 
 # The Python package (python/): the library's bundle run in an embedded
-# JavaScript engine. Its tests run on both engines, and its outputs are
-# compared with the library's in Node over the inputs of the differential
-# test. A published release publishes it to PyPI, once enabled.
+# JavaScript engine. The wheel is built and installed as users install it,
+# its tests run on both engines, and its outputs are compared with the
+# library's in Node over the inputs of the differential test. It is published
+# by publish.yml, after JSR and npm.
 
 on:
   push:
     branches: [main]
   pull_request:
-  release:
-    types: [published]
 
 permissions:
   contents: read
 
+concurrency:
+  group: python-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   test:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        # The oldest Python the package supports, and the latest.
-        python: ["3.10", "3.14"]
-    name: test (Python ${{ matrix.python }})
+        include:
+          # The oldest Python the package supports, and the latest, where
+          # the outputs are also compared with Node's.
+          - { os: ubuntu-latest, python: "3.11" }
+          - { os: ubuntu-latest, python: "3.14", differential: true }
+          - { os: macos-latest, python: "3.14" }
+          - { os: windows-latest, python: "3.14" }
+    name: test (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event.release.tag_name || github.ref }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
@@ -37,43 +48,20 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: npm ci --ignore-scripts
       - run: node python/scripts/build_bundle.mjs
-      - run: pip install -e "python[v8,test]"
-      - run: pytest python
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build python
+      - name: Install the wheel, as users do
+        run: |
+          wheel="$(ls python/dist/*.whl)"
+          python -m pip install "$wheel[v8]"
+          python -m pip install --group python/pyproject.toml:test
+      - run: ruff check python
+      - name: Test the installed wheel
+        # From outside the repository, so that the wheel is what is imported.
+        run: cd "$RUNNER_TEMP" && python -m pytest "$GITHUB_WORKSPACE/python/tests"
       - name: Compare with the library in Node
-        if: matrix.python == '3.14'
+        if: matrix.differential
         run: |
           node python/scripts/differential_dump.ts > "$RUNNER_TEMP/expected.jsonl"
           python python/scripts/differential.py "$RUNNER_TEMP/expected.jsonl" --engine quickjs
           python python/scripts/differential.py "$RUNNER_TEMP/expected.jsonl" --engine v8
-
-  publish:
-    needs: test
-    if: github.event_name == 'release' && vars.PYPI_PUBLISH_ENABLED == 'true'
-    environment: pypi
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      # Trusted Publishing: PyPI authenticates the workflow's OIDC token.
-      id-token: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event.release.tag_name }}
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 24
-          cache: npm
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: "3.14"
-      - run: npm ci --ignore-scripts
-      - run: node python/scripts/build_bundle.mjs
-      - name: Check that the tag is the version of package.json
-        run: |
-          version="$(node -p 'require("./package.json").version')"
-          test "v$version" = "${{ github.event.release.tag_name }}"
-      - run: pip install build
-      - run: python -m build python
-      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
-        with:
-          packages-dir: python/dist/

@@ -3,13 +3,13 @@
     node python/scripts/differential_dump.ts > /tmp/expected.jsonl
     python python/scripts/differential.py /tmp/expected.jsonl [--engine v8|quickjs]
 
-Every case of the dump is converted again through the package, with
-``convert()`` and ``convert_detailed()``: the outputs, the losses, the spans,
-and the errors must be the same. Positions are converted here, from the
-UTF-16 code units of Node to code points, independently of the bridge. The
-options of the dump are given in snake_case, as a Python user writes them,
-and the messages of Node's errors are compared with their option keys in
-snake_case.
+Every case of the dump is run again through the package: ``convert()`` and
+``convert_detailed()``, ``reencode()``, prepared options, Greek passages,
+and converters. The outputs, the losses, the spans, the diagnostics, and the
+errors must be the same. Positions are converted here, from the UTF-16 code
+units of Node to code points, independently of the bridge. The options of
+the dump are given in snake_case, as a Python user writes them, and the
+messages of Node's errors are compared with their option keys in snake_case.
 """
 
 from __future__ import annotations
@@ -18,12 +18,14 @@ import argparse
 import json
 import sys
 import time
+from collections.abc import Callable
+from typing import Any
 
 import greek_conversion as gc
 from greek_conversion._keys import from_js, text
 
 
-def code_points(string: str):
+def code_points(string: str) -> Callable[[int], int]:
     """A function from UTF-16 offsets in ``string`` to code point offsets."""
     table = []
     for index, char in enumerate(string):
@@ -34,63 +36,142 @@ def code_points(string: str):
     return lambda offset: table[offset]
 
 
-def expected_detailed(input: str, value: dict) -> dict:
-    inp, out = code_points(input), code_points(value["output"])
-    return {
+def located(items: list[dict[str, Any]], at: Callable[[int], int], fields: tuple[str, ...]):
+    return [
+        (
+            *(item.get(field) for field in fields),
+            at(item["offset"]),
+            at(item["offset"] + item["length"]) - at(item["offset"]),
+        )
+        for item in items
+    ]
+
+
+LOSS = ("code", "index", "message", "diacritic", "glyphVariant")
+DIAGNOSTIC = ("code", "index", "character", "message")
+
+
+def expected_detailed(input_: str, value: dict[str, Any]) -> dict[str, Any]:
+    at, out = code_points(input_), code_points(value["output"])
+    expected = {
         "output": value["output"],
         "lossy": value["lossy"],
-        "losses": [
-            {
-                "code": loss["code"],
-                "index": loss["index"],
-                "offset": inp(loss["offset"]),
-                "length": inp(loss["offset"] + loss["length"]) - inp(loss["offset"]),
-                "message": loss["message"],
-                "diacritic": loss.get("diacritic"),
-                "glyph_variant": loss.get("glyphVariant"),
-            }
-            for loss in value["losses"]
-        ],
+        "losses": located(value["losses"], at, LOSS),
         "spans": [
-            (
-                inp(span["inputStart"]),
-                inp(span["inputEnd"]),
-                out(span["outputStart"]),
-                out(span["outputEnd"]),
-            )
-            for span in value["spans"]
+            (at(s["inputStart"]), at(s["inputEnd"]), out(s["outputStart"]), out(s["outputEnd"]))
+            for s in value["spans"]
         ],
     }
+    if "diagnostics" in value:
+        expected["diagnostics"] = located(value["diagnostics"], at, DIAGNOSTIC)
+    return expected
 
 
-def actual_detailed(result: gc.ConversionResult) -> dict:
-    return {
+def actual_detailed(result: Any) -> dict[str, Any]:
+    actual = {
         "output": result.output,
         "lossy": result.lossy,
         "losses": [
-            {
-                "code": loss.code,
-                "index": loss.index,
-                "offset": loss.offset,
-                "length": loss.length,
-                "message": loss.message,
-                "diacritic": loss.diacritic,
-                "glyph_variant": loss.glyph_variant,
-            }
-            for loss in result.losses
+            (l.code, l.index, l.message, l.diacritic, l.glyph_variant, l.offset, l.length)
+            for l in result.losses
         ],
         "spans": [
-            (s.input_start, s.input_end, s.output_start, s.output_end)
-            for s in result.spans
+            (s.input_start, s.input_end, s.output_start, s.output_end) for s in result.spans
         ],
     }
+    if isinstance(result, gc.ConverterConversionResult):
+        actual["diagnostics"] = diagnostics(result.diagnostics)
+    return actual
 
 
-def attempt(run, transform=lambda value: value):
+def diagnostics(items: Any) -> list[tuple[Any, ...]]:
+    return [(d.code, d.index, d.character, d.message, d.offset, d.length) for d in items]
+
+
+def expected_error(input_: str, error: dict[str, Any]) -> dict[str, Any]:
+    expected: dict[str, Any] = {"error": text(error["message"])}
+    if "diagnostics" in error:
+        expected["diagnostics"] = located(error["diagnostics"], code_points(input_), DIAGNOSTIC)
+    return expected
+
+
+def expected_of(input_: str, value: dict[str, Any], detailed: bool) -> dict[str, Any]:
+    if "error" in value:
+        return expected_error(input_, value["error"])
+    return {"ok": expected_detailed(input_, value["ok"]) if detailed else value["ok"]}
+
+
+def attempt(run: Callable[[], Any], transform: Callable[[Any], Any] = lambda v: v):
     try:
         return {"ok": transform(run())}
-    except (gc.OptionError, gc.CharacterScopeError, ValueError, TypeError) as error:
+    except gc.CharacterScopeError as error:
+        return {"error": str(error), "diagnostics": diagnostics(error.diagnostics)}
+    except (ValueError, TypeError) as error:
         return {"error": str(error)}
+
+
+def checks(case: dict[str, Any]):
+    """The comparisons of one case: (name, expected, actual)."""
+    op, input_ = case["op"], case["input"]
+    options = from_js(case.get("options"))
+    if op == "convert":
+        source, target = case["from"], case["to"]
+        yield (
+            "convert",
+            expected_of(input_, case["convert"], False),
+            attempt(lambda: gc.convert(input_, source, target, options)),
+        )
+        yield (
+            "detailed",
+            expected_of(input_, case["detailed"], True),
+            attempt(
+                lambda: gc.convert_detailed(input_, source, target, options), actual_detailed
+            ),
+        )
+    elif op == "reencode":
+        yield (
+            "reencode",
+            expected_of(input_, case["result"], False),
+            attempt(lambda: gc.reencode(input_, case["format"], options)),
+        )
+    elif op == "prepared":
+        yield (
+            "prepared",
+            expected_of(input_, case["result"], False),
+            attempt(
+                lambda: gc.convert(
+                    input_, case["from"], case["to"], gc.prepare_options(options)
+                )
+            ),
+        )
+    elif op == "passages":
+        yield (
+            "passages",
+            expected_of(input_, case["result"], False),
+            attempt(lambda: gc.convert_greek_passages(input_, case["to"])),
+        )
+        yield (
+            "passages detailed",
+            expected_of(input_, case["detailed"], True),
+            attempt(
+                lambda: gc.convert_greek_passages_detailed(input_, case["to"]),
+                actual_detailed,
+            ),
+        )
+    elif op == "converter":
+        configuration = from_js(case["configuration"])
+        yield (
+            "converter",
+            expected_of(input_, case["detailed"], True),
+            attempt(
+                lambda: gc.create_converter(configuration).convert_detailed(
+                    input_, case["from"], case["to"]
+                ),
+                actual_detailed,
+            ),
+        )
+    else:
+        raise ValueError(f"Unknown operation in the dump: {op}")
 
 
 def main() -> int:
@@ -109,39 +190,14 @@ def main() -> int:
             if number % args.every:
                 continue
             case = json.loads(line)
-            # The options of the dump, in the library's spelling, as a Python
-            # user writes them.
-            source, target, options, input_ = (
-                case["from"], case["to"], from_js(case["options"]), case["input"],
-            )
-
-            expected = case["convert"]
-            if "error" in expected:
-                expected = {"error": text(expected["error"]["message"])}
-            actual = attempt(lambda: gc.convert(input_, source, target, options))
-
-            expected_d = case["detailed"]
-            expected_d = (
-                {"error": text(expected_d["error"]["message"])}
-                if "error" in expected_d
-                else {"ok": expected_detailed(input_, expected_d["ok"])}
-            )
-            actual_d = attempt(
-                lambda: gc.convert_detailed(input_, source, target, options),
-                actual_detailed,
-            )
-
-            compared += 2
-            for kind, want, got in (
-                ("convert", expected, actual),
-                ("detailed", expected_d, actual_d),
-            ):
+            for name, want, got in checks(case):
+                compared += 1
                 if want != got:
                     differences += 1
                     if differences <= 10:
                         print(
-                            f"DIFFERENCE {kind} {source} → {target} [{case['set']}]\n"
-                            f"  input:    {input_[:120]!r}\n"
+                            f"DIFFERENCE {name} [{case.get('set', '')}]\n"
+                            f"  input:    {case['input'][:120]!r}\n"
                             f"  node:     {json.dumps(want, ensure_ascii=False)[:400]}\n"
                             f"  python:   {json.dumps(got, ensure_ascii=False)[:400]}"
                         )

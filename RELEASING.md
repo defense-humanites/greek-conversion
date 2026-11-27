@@ -65,17 +65,22 @@ Both registries use the same package name and version:
 
 ## The Python package
 
-The Python package (`python/`) is published to PyPI by
-`.github/workflows/python.yml`, from the same GitHub release, after its tests
-and its comparison with the library in Node. Its version is that of
-`package.json`, in the spelling of PEP 440 (`1.0.0-rc.14` → `1.0.0rc14`),
-generated when it is built: there is nothing to update for it.
+The Python package (`python/`) is published to PyPI by the same workflow,
+`publish.yml`: the job `python-build` builds the sdist and the wheel from the
+release's tag and tests the wheel installed, and the job `pypi` publishes
+them once JSR and npm have the release. If JSR or npm fails, PyPI receives
+nothing, and its version, which cannot be uploaded twice, stays available.
+The package's version is that of `package.json`, in the spelling of PEP 440
+(`1.0.0-rc.15` → `1.0.0rc15`), generated when it is built: there is nothing
+to update for it.
 
 One-time setup:
 
-1. Create the project `greek-conversion` in the PyPI organization
-   `defense-humanites`, and configure its trusted publisher: repository
-   `defense-humanites/greek-conversion`, workflow `python.yml`, environment
+1. Add a trusted publisher for the project `greek-conversion` of the PyPI
+   organization `defense-humanites`, on the project's page if it exists, or
+   otherwise as a pending publisher of the organization, which creates the
+   project at the first upload: repository
+   `defense-humanites/greek-conversion`, workflow `publish.yml`, environment
    `pypi`.
 2. Create the protected GitHub environment `pypi`, as `release`.
 3. Keep the repository variable `PYPI_PUBLISH_ENABLED` absent or set to
@@ -83,7 +88,16 @@ One-time setup:
    from `PUBLISH_ENABLED`, so that JSR and npm can publish without PyPI.
 
 At a release, set `PYPI_PUBLISH_ENABLED` as `PUBLISH_ENABLED` (steps 6 to 8)
-to publish it too, and check its PyPI page.
+to publish the package too. Before, check the archives that `python-build`
+leaves as the artifact `python-dist`, as the npm archive (step 3): the wheel
+holds the package, its bundle, `py.typed`, and the license. After, check the
+PyPI page and `pip install greek-conversion` in a new environment.
+
+A fix of the Python package alone, between two releases, is a post-release:
+a branch from the release's tag with the fix, from which the workflow is run
+by hand (*Run workflow*), with the number of the post-release (`1` publishes
+`1.0.0rc15.post1`). Only `python-build` and `pypi` run; the version must be
+one already released.
 
 ## A slow JSR step
 

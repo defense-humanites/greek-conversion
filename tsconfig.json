@@ -1,9 +1,10 @@
 {
   // Type checks the sources, tests, scripts, and benches, which Node runs
   // directly, and the TypeScript of the Python package (`python/`): only
-  // erasable TypeScript syntax, and imports with their `.ts` extension. `tsconfig.build.json` checks the library on its own, without
-  // the Node types, and emits the npm package; `web/playground/tsconfig.json`
-  // checks the playground against the DOM.
+  // erasable TypeScript syntax, and imports with their `.ts` extension.
+  // `tsconfig.build.json` checks the library on its own, without the Node
+  // types, and emits the npm package; `web/playground/tsconfig.json` checks
+  // the playground against the DOM.
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2024"],

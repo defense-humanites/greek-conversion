@@ -1,5 +1,6 @@
 [build-system]
-requires = ["setuptools>=69"]
+# 77: `license` as an SPDX expression, and `license-files`.
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,27 +11,41 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Antoine Boquet" }]
-requires-python = ">=3.10"
-keywords = ["greek", "polytonic", "betacode", "transliteration", "romanization", "humanities", "classics"]
+requires-python = ">=3.11"
+keywords = ["greek", "ancient greek", "polytonic", "beta code", "transliteration", "romanization", "digital humanities", "classics", "TLG"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
   "Natural Language :: Greek",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Text Processing :: Linguistic",
+  "Typing :: Typed",
 ]
 # QuickJS by default (quickjs-ng, the maintained fork of QuickJS): small
-# abi3 wheels for CPython 3.10+, a low cost per call. V8 on request, for long
-# texts and large batches; when installed, it is preferred.
-dependencies = ["quickjs-ng>=0.18"]
+# abi3 wheels, a low cost per call. Its binding is a 0.x release: below 1, so
+# that a breaking release does not reach users unchecked. V8 on request, for
+# long texts and large batches; when installed, it is preferred.
+dependencies = ["quickjs-ng>=0.18,<1"]
 
 [project.optional-dependencies]
-v8 = ["mini-racer>=0.12"]
-test = ["pytest>=8"]
+# 0.12.2: the first with `MiniRacer.close()`.
+v8 = ["mini-racer>=0.12.2"]
+
+[dependency-groups]
+# ruff within a minor release: its default rules change between them.
+test = ["pytest>=8", "ruff>=0.17,<0.18"]
 
 [project.urls]
 Homepage = "https://greek-conversion.humanites.fr/"
+Documentation = "https://greek-conversion.humanites.fr/"
 Source = "https://github.com/defense-humanites/greek-conversion"
+Issues = "https://github.com/defense-humanites/greek-conversion/issues"
+Changelog = "https://github.com/defense-humanites/greek-conversion/blob/main/CHANGELOG.md"
 
 [tool.setuptools.dynamic]
 version = { attr = "greek_conversion._version.__version__" }
@@ -44,3 +59,6 @@ greek_conversion = ["_bundle/*.js", "py.typed"]
 [tool.pytest.ini_options]
 testpaths = ["tests", "src"]
 addopts = "--doctest-modules --import-mode=importlib"
+
+[tool.ruff]
+target-version = "py311"
