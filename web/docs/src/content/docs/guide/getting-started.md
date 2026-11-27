@@ -1,12 +1,14 @@
 ---
 title: "Getting started"
-description: "Install greek-conversion and convert a first text."
+description: "Install greek-conversion, convert a first text, and set a conversion with options and presets."
 ---
 
 The library converts Ancient, Byzantine, and Modern Greek between Greek
-script, Beta Code, and Latin script, in any direction, and implements
-published conventions as presets. This page installs the package and converts a first
-text.
+script, Beta Code, and Latin script, in any direction, with atomic options
+composed into presets that follow published conventions. This page installs
+the package and converts a first text, then presents the options and the
+presets, normalizing a text within its format, Modern Greek, and what counts
+for the size of a bundle and the speed of a call.
 
 ## Installation
 
