@@ -50,6 +50,10 @@ export const FUNCTIONS = new Set([
   "getPresetOptions",
   "getPresetMetadata",
   "listPresetMetadata",
+  // Python's alone, for the examples that Python adds to its pages.
+  "convertMany",
+  "reencodeMany",
+  "convertDetailedMany",
 ]);
 
 /** The constants and classes of the main entry point, in Python too. */

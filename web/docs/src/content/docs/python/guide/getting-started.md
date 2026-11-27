@@ -261,7 +261,7 @@ costs, and how to choose the engine.
 ## Next steps
 
 - To see why every format converts to every other with the same rules,
-  read [How it works](/guide/how-it-works/), in the TypeScript guide: it
+  read [How it works](/python/guide/how-it-works/), in the TypeScript guide: it
   holds for Python.
 - To find out what a conversion cannot keep, see
   [What formats and options lose](/python/guide/format-and-option-losses/);
@@ -274,4 +274,4 @@ costs, and how to choose the engine.
 - Every function is described in the [API reference](/python/reference/api/).
 - Before you rely on it, read
   [Guarantees and limits](/python/reference/guarantees/); for a word of this
-  documentation, see the [Glossary](/guide/glossary/).
+  documentation, see the [Glossary](/python/guide/glossary/).

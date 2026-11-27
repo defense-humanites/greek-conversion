@@ -189,7 +189,7 @@ installation:
 - **The same versions.** The package's version is the library's (`1.0.0rc15`
   for `1.0.0-rc.15`), followed by `.postN` for a fix of the Python package
   alone, and the
-  [stability policy](https://greek-conversion.humanites.fr/reference/stability/#the-python-package)
+  [stability policy](https://greek-conversion.humanites.fr/python/reference/stability/#the-python-package)
   applies to it as to the library.
 - **The same documentation.** The
   [Python documentation](https://greek-conversion.humanites.fr/python/) is
@@ -246,7 +246,8 @@ Node, and 20 to 100 times faster than one call per string.
   describes how to build and test it.
 
 Every page of the site is also in Markdown, which
-[`llms.txt`](https://greek-conversion.humanites.fr/llms.txt) lists.
+[`python/llms.txt`](https://greek-conversion.humanites.fr/python/llms.txt)
+lists for the Python documentation.
 
 ## Citing and license
 

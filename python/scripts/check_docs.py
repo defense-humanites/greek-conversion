@@ -17,7 +17,7 @@ a one-line statement or on the lines that follow a statement:
     # → Hellēsin egeneto …
 
 Text is compared code point for code point; other results are read as a
-Python literal and compared by value. `# raises OptionError: message`
+Python literal and compared by value, or else compared with their repr. `# raises OptionError: message`
 expects an exception instead.
 """
 
@@ -26,11 +26,13 @@ from __future__ import annotations
 import ast
 import re
 import sys
+import textwrap
 import unicodedata
 from pathlib import Path
 
 PAGES = Path(__file__).resolve().parents[2] / "web/docs/src/content/docs/python"
-BLOCK = re.compile(r"^```python\n(.*?)^```$", re.MULTILINE | re.DOTALL)
+# At the margin, or indented in a list item.
+BLOCK = re.compile(r"^( *)```python\n(.*?)^\1```$", re.MULTILINE | re.DOTALL)
 ARROW = re.compile(r"#\s*→ (.*)$")
 RAISES = re.compile(r"#\s*raises (\w+)(?:: (.*))?$")
 
@@ -99,7 +101,8 @@ def check_block(code: str, where: str) -> list[str]:
             # A tuple and a list of the same items read the same.
             if isinstance(value, tuple) and isinstance(literal, list):
                 value = list(value)
-            ok = value == literal
+            # A dataclass reads as Python prints it.
+            ok = value == literal or repr(value) == expected
         if not ok:
             failures.append(
                 f"{line}: expected {visible(expected)!s}, got {visible(repr(value))}"
@@ -128,7 +131,8 @@ def main() -> int:
             failures += [
                 failure.replace(":", f":{start - 1}+", 1)
                 for failure in check_block(
-                    match.group(1), str(page.relative_to(PAGES.parents[3]))
+                    textwrap.dedent(match.group(2)),
+                    str(page.relative_to(PAGES.parents[3])),
                 )
             ]
     for failure in failures:

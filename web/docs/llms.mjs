@@ -44,7 +44,10 @@ const ESSENTIALS = ["Installation", "Main functions"];
  *   title: string,
  *   sidebar: any[],
  *   apiGroup: unknown,
- *   python: readonly { items: readonly (readonly [string, string])[] }[],
+ *   python: readonly {
+ *     label: string,
+ *     items: readonly (readonly [string, string])[],
+ *   }[],
  * }} options
  * @returns {import("astro").AstroIntegration}
  */

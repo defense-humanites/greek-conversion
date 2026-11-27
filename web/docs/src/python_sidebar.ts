@@ -7,10 +7,14 @@
  */
 import { languageOf } from "./documentations.ts";
 
-/** A group of pages: a title and a path from the site's root, by page. */
+/** A page: its title and its path from the site's root. */
+type Page = readonly [string, string];
+
+/** A group of pages, or of pages and a collapsed group of them. */
 interface Group {
   label: string;
-  items: readonly (readonly [string, string])[];
+  collapsed?: boolean;
+  items: readonly (Page | Group)[];
 }
 
 export const PYTHON_SIDEBAR: readonly Group[] = [
@@ -18,6 +22,8 @@ export const PYTHON_SIDEBAR: readonly Group[] = [
     label: "Start here",
     items: [
       ["Getting started", "/python/guide/getting-started/"],
+      ["How it works", "/python/guide/how-it-works/"],
+      ["Glossary", "/python/guide/glossary/"],
       ["How the package works", "/python/package/"],
     ],
   },
@@ -34,6 +40,28 @@ export const PYTHON_SIDEBAR: readonly Group[] = [
     items: [
       ["Choosing a preset", "/python/guide/presets/"],
       ["Preset reference", "/python/reference/presets/"],
+      {
+        label: "Conformance",
+        collapsed: true,
+        items: [
+          [
+            "Preset behavior audit",
+            "/python/reference/preset-behavior-audit/",
+          ],
+          [
+            "Preset character repertoire audit",
+            "/python/reference/preset-repertoire-audit/",
+          ],
+          [
+            "ALA-LC conformance corpus",
+            "/python/reference/ala-lc-conformance-corpus/",
+          ],
+          [
+            "BnF, ISO 843, and BGN/PCGN conformance corpus",
+            "/python/reference/preset-conformance-corpus/",
+          ],
+        ],
+      },
     ],
   },
   {
@@ -70,11 +98,43 @@ export const PYTHON_SIDEBAR: readonly Group[] = [
       ["Guarantees and limits", "/python/reference/guarantees/"],
       ["Conversion options", "/python/reference/options/"],
       ["Greek output", "/python/reference/greek-unicode/"],
+      [
+        "Punctuation and numerals",
+        "/python/reference/punctuation-and-numerals/",
+      ],
       ["Information-loss contract", "/python/reference/information-loss/"],
+      [
+        "Conversion-analysis contract",
+        "/python/reference/conversion-analysis/",
+      ],
+      [
+        "Character extensions and repertoires",
+        "/python/reference/character-extensions/",
+      ],
+      ["Stability policy", "/python/reference/stability/"],
       ["API reference", "/python/reference/api/"],
     ],
   },
 ];
+
+/** The pages of the sidebar, in its order, collapsed groups included. */
+export function pythonPages(groups: readonly Group[] = PYTHON_SIDEBAR): Page[] {
+  return groups.flatMap((group) =>
+    group.items.flatMap((item) => isPage(item) ? [item] : pythonPages([item]))
+  );
+}
+
+function isPage(item: Page | Group): item is Page {
+  return Array.isArray(item);
+}
+
+interface GroupEntry {
+  type: "group";
+  label: string;
+  collapsed: boolean;
+  badge: undefined;
+  entries: (Link | GroupEntry)[];
+}
 
 interface Link {
   type: "link";
@@ -97,24 +157,29 @@ export function isPythonPage(pathname: string, base: string): boolean {
  */
 export function pythonNavigation(pathname: string, base: string) {
   const links: Link[] = [];
-  const sidebar = PYTHON_SIDEBAR.map((group) => ({
-    type: "group" as const,
-    label: group.label,
-    collapsed: false,
-    badge: undefined,
-    entries: group.items.map(([label, path]): Link => {
-      const link: Link = {
-        type: "link",
-        label,
-        href: `${base}${path}`,
-        isCurrent: pathname === `${base}${path}`,
+  const entry = (item: Page | Group): Link | GroupEntry => {
+    if (!isPage(item)) {
+      return {
+        type: "group",
+        label: item.label,
+        collapsed: item.collapsed ?? false,
         badge: undefined,
-        attrs: {},
+        entries: item.items.map(entry),
       };
-      if (path.startsWith("/python/")) links.push(link);
-      return link;
-    }),
-  }));
+    }
+    const [label, path] = item;
+    const link: Link = {
+      type: "link",
+      label,
+      href: `${base}${path}`,
+      isCurrent: pathname === `${base}${path}`,
+      badge: undefined,
+      attrs: {},
+    };
+    links.push(link);
+    return link;
+  };
+  const sidebar = PYTHON_SIDEBAR.map(entry);
   const index = links.findIndex((link) => link.isCurrent);
   return {
     sidebar,

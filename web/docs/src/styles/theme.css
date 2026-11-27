@@ -1329,3 +1329,12 @@ mobile-starlight-toc nav {
     min-width: 22.5rem;
   }
 }
+
+/* The Python documentation: its header, which stays at the top of the
+   screen, on a tint of the orange of its selector and of its pages' mark
+   (`SiteTitle.astro`, `PageTitle.astro`), above a line of that orange, so
+   that the reader knows at every moment which documentation they read. */
+.page[data-documentation="python"] > .header {
+  background-color: color-mix(in oklab, var(--to) 7%, var(--surface));
+  border-bottom: 2px solid color-mix(in oklab, var(--to) 55%, var(--line));
+}

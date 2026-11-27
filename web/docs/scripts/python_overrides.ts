@@ -13,6 +13,96 @@
  * each is replaced before the page is translated, and must be found.
  */
 export const PROSE: Record<string, [string, string][]> = {
+  // What only holds in TypeScript, in the pages added after the first.
+  "docs/conversion-analysis.md": [
+    [
+      `\`lossy\` is equivalent to \`losses.length > 0\``,
+      `\`lossy\` is equivalent to \`len(losses) > 0\``,
+    ],
+    [
+      `in UTF-16 code
+units (see [Positions](#positions)); \`input.slice(offset, offset + length)\` is
+the text`,
+      `in characters
+(see [Positions](#positions)); \`text[offset : offset + length]\` is
+the text`,
+    ],
+    [
+      `All four are offsets in
+UTF-16 code units, the unit of \`String.length\`, \`slice()\`, and editor
+selections,`,
+      `All four are offsets in
+characters as Python counts them, code points, the unit of \`len()\` and of
+slices,`,
+    ],
+    [
+      `a precomposed \`ἄ\` is one unit and the same letter written as \`α\` plus two
+combining marks is three. A character outside the Basic Multilingual Plane
+is two units.`,
+      `a precomposed \`ἄ\` is one character and the same letter written as \`α\` plus
+two combining marks is three. A character outside the Basic Multilingual
+Plane is one, as Python counts it.`,
+    ],
+    [
+      `code unit keeps its own position`,
+      `code point keeps its own position`,
+    ],
+  ],
+  "docs/character-extensions.md": [
+    [
+      `// In UTF-16 code units of the input.`,
+      `// In characters of the input.`,
+    ],
+    [
+      `(\`THSHA\`): the \`toUpperCase()\` of the declared uppercase form, with the Greek
+locale for Greek forms,`,
+      `(\`THSHA\`): the capitals of the declared uppercase form, in the Greek locale
+for Greek forms,`,
+    ],
+  ],
+  "guide/how-it-works.md": [
+    [
+      `\`convert(input, from, to, options?)\``,
+      `\`convert(text, source, target, options)\` |
+| Convert many strings at once, the lines of a corpus | \`convert_many(texts, source, target, options)\``,
+    ],
+    [
+      `\`reencode(input, format, options?)\``,
+      `\`reencode(text, format, options)\``,
+    ],
+    [
+      `\`convertDetailed(input, from, to, options?)\``,
+      `\`convertDetailed(text, source, target, options)\``,
+    ],
+    [
+      `| [Inspect or edit the parsed text itself](/guide/document/)                                 | \`parse()\` and \`encode()\` from \`@humanities/greek-conversion/document\` |
+`,
+      ``,
+    ],
+    [
+      `| [Bundle only the formats and presets a web page uses](/guide/smaller-bundles/)             | \`convert()\` from \`@humanities/greek-conversion/core\`                  |
+`,
+      ``,
+    ],
+  ],
+  "guide/glossary.md": [
+    [
+      `See [The canonical document](/guide/document/).`,
+      `The Python package does not expose it: see
+[The canonical document](/guide/document/), in the TypeScript documentation.`,
+    ],
+  ],
+  "docs/stability.md": [
+    [
+      `The library follows [Semantic Versioning]`,
+      `:::note
+This policy is the library's, and names its TypeScript API. How it applies
+to the Python package is in [The Python package](#the-python-package).
+:::
+
+The library follows [Semantic Versioning]`,
+    ],
+  ],
   // What the TypeScript library alone has (the canonical document, its
   // entry points, its methods of strings), as it is in Python.
   "docs/presets.md": [
@@ -99,6 +189,20 @@ metadata or options.`,
     ["description: A TypeScript library", "description: A Python library"],
     ["../../components/HomeHero.astro", "../../../components/HomeHero.astro"],
     ["<HomeHero>", '<HomeHero language="python">'],
+    // A corpus, which Python converts in one call.
+    [
+      "  convertDetailed,\n  reencode,",
+      "  convertDetailed,\n  convertMany,\n  reencode,",
+    ],
+    [
+      "// → I Athína eínai i protévousa\n",
+      `// → I Athína eínai i protévousa
+
+// A corpus in one call, from Beta Code
+convertMany(["lo/gos", "yuxh/", "a)lh/qeia"], "beta-code", "greek");
+// → ["λόγος","ψυχή","ἀλήθεια"]
+`,
+    ],
   ],
   // The library suggests the camelCase key for a snake_case one; Python
   // refuses the camelCase key and gives its snake_case spelling.
@@ -277,6 +381,54 @@ exact = reencode(
     },
 )
 [f"{ord(char):x}" for char in exact]  # → ['1f71', '37e', '387']
+\`\`\``,
+  },
+  // A result's fields, and its spans as dataclasses.
+  "docs/conversion-analysis.md#0": {
+    source: "6104790d8e12",
+    markdown: `\`\`\`python
+from greek_conversion import convert_detailed
+
+result = convert_detailed(
+    "ἄνθρωπος", "greek", "greek", greek={"accentuation": "monotonic"}
+)
+
+result.output  # → άνθρωπος
+result.lossy  # → True
+
+loss = result.losses[0]
+loss.code  # → removed-diacritic
+loss.diacritic  # → smooth
+loss.index  # → 0
+loss.offset  # → 0
+loss.length  # → 1
+loss.message
+# → The target representation does not retain the smooth breathing.
+
+# One span per source token.
+len(result.spans)  # → 8
+result.spans[0]
+# → ConversionSpan(input_start=0, input_end=1, output_start=0, output_end=1)
+result.spans[1]
+# → ConversionSpan(input_start=1, input_end=2, output_start=1, output_end=2)
+\`\`\``,
+  },
+  // An exception caught.
+  "docs/character-extensions.md#5": {
+    source: "4eda047063ad",
+    markdown: `\`\`\`python
+from greek_conversion import CharacterScopeError, create_converter
+
+strict = create_converter(preset="perseus", out_of_scope_behavior="reject")
+
+try:
+    strict.convert("αϝ", "greek", "beta-code")
+except CharacterScopeError as error:
+    problem = error
+
+str(problem)  # → Conversion rejected: 1 out-of-scope character.
+[(item.code, item.index) for item in problem.diagnostics]
+# → [("out-of-scope-character", 1)]
 \`\`\``,
   },
 };

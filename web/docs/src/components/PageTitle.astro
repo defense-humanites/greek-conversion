@@ -4,6 +4,9 @@
  * documentation, with the name of the documentation, in the orange of the
  * header's selector (`SiteTitle.astro`): a reader who arrives from a search
  * engine or a link knows at once which documentation the page belongs to.
+ *
+ * The documentation is also the page's filter in the search index, which
+ * searches the documentation of the page it is opened from (`Search.astro`).
  */
 import { languageOf } from "../documentations.ts";
 
@@ -12,7 +15,13 @@ const python =
   languageOf(Astro.url.pathname.slice(root.length) || "/") === "python";
 ---
 
-{python && <p class="documentation-mark">Python</p>}
+{
+  python ? (
+    <p class="documentation-mark" data-pagefind-filter="Documentation:Python">
+      Python
+    </p>
+  ) : <span hidden data-pagefind-filter="Documentation:TypeScript" />
+}
 <h1 id="_top">{Astro.locals.starlightRoute.entry.data.title}</h1>
 
 <style>

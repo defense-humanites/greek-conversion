@@ -6,8 +6,11 @@
  * it has one, and otherwise to its home.
  *
  * Most Python pages are written from TypeScript ones
- * (`scripts/sync_python.ts`); the others are written by hand, and some
- * stand for a TypeScript page all the same.
+ * (`scripts/sync_python.ts`): every page but those of what Python does not
+ * have (the canonical document, bundles, and the speed of the library in
+ * JavaScript), so that a reader of the Python documentation stays in it.
+ * The others are written by hand, and some stand for a TypeScript page all
+ * the same.
  */
 
 export type Language = "typescript" | "python";
@@ -24,6 +27,8 @@ export const LANGUAGES: readonly { id: Language; label: string }[] = [
  */
 export const PYTHON_PAGES: readonly (readonly [string, string])[] = [
   ["index.mdx", ""],
+  ["guide/how-it-works.md", "guide/how-it-works"],
+  ["guide/glossary.md", "guide/glossary"],
   ["guide/ancient-greek.md", "guide/ancient-greek"],
   ["guide/byzantine-greek.md", "guide/byzantine-greek"],
   ["guide/modern-greek.md", "guide/modern-greek"],
@@ -45,6 +50,20 @@ export const PYTHON_PAGES: readonly (readonly [string, string])[] = [
   ["docs/guarantees.md", "reference/guarantees"],
   ["docs/information-loss.md", "reference/information-loss"],
   ["docs/greek-unicode.md", "reference/greek-unicode"],
+  ["docs/punctuation-and-numerals.md", "reference/punctuation-and-numerals"],
+  ["docs/conversion-analysis.md", "reference/conversion-analysis"],
+  ["docs/character-extensions.md", "reference/character-extensions"],
+  ["docs/stability.md", "reference/stability"],
+  ["docs/preset-behavior-audit.md", "reference/preset-behavior-audit"],
+  ["docs/preset-repertoire-audit.md", "reference/preset-repertoire-audit"],
+  [
+    "docs/ala-lc-conformance-corpus.md",
+    "reference/ala-lc-conformance-corpus",
+  ],
+  [
+    "docs/preset-conformance-corpus.md",
+    "reference/preset-conformance-corpus",
+  ],
 ];
 
 /** The path of a TypeScript page from its source: `/guide/losses/`. */

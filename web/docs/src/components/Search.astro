@@ -14,6 +14,41 @@ import Default from "@astrojs/starlight/components/Search.astro";
 <Default><slot /></Default>
 
 <script>
+  /*
+   * The search looks in the documentation of the page, TypeScript or
+   * Python, which each page gives as a filter of the index
+   * (`PageTitle.astro`); the filters of the dialog can widen it to both.
+   * Starlight makes the search's interface without handing it out: the
+   * filter is set as it is made, when it takes its component, before its
+   * first search. This script loads the interface before Starlight does,
+   * which waits for the browser to be idle, and so runs first.
+   */
+  const DOCUMENTATION =
+    document.querySelector<HTMLElement>("[data-documentation]")?.dataset
+        .documentation === "python"
+      ? "Python"
+      : "TypeScript";
+  if (!import.meta.env.DEV) {
+    // @ts-expect-error — Missing types for @pagefind/default-ui package.
+    import("@pagefind/default-ui").then(({ PagefindUI }) => {
+      const components = new WeakMap<object, { $$set(props: object): void }>();
+      Object.defineProperty(PagefindUI.prototype, "_pfs", {
+        configurable: true,
+        get(this: object) {
+          return components.get(this) ?? null;
+        },
+        set(
+          this: { triggerFilters(filters: object): void },
+          component: { $$set(props: object): void } | null,
+        ) {
+          if (component === null) return;
+          components.set(this, component);
+          this.triggerFilters({ Documentation: DOCUMENTATION });
+        },
+      });
+    });
+  }
+
   const body = document.body;
   const root = document.documentElement;
   const OPEN = "site-search button[data-open-modal]";

@@ -163,7 +163,8 @@ installs it, and runs both on every change.
 The Python documentation is a section of the site, `/python/`, with a home
 and a sidebar of its own (`web/docs/src/python_sidebar.ts`); the header's
 selector leads from a page to the same page in the other documentation
-(`web/docs/src/documentations.ts`, which lists the pages that have one). Its
+(`web/docs/src/documentations.ts`, which lists the pages that have one), and
+the search looks in the documentation of the page it is opened from. Its
 getting started and its page on the package are written by hand, in
 `web/docs/src/content/docs/python/`. Its other pages, the home, the guide,
 and the reference, are generated at each build from their TypeScript pages

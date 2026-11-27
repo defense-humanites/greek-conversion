@@ -5,7 +5,7 @@ import { defineConfig } from "astro/config";
 import starlightTypeDoc, { typeDocSidebarGroup } from "starlight-typedoc";
 import llmsTxt from "./llms.mjs";
 import { languageOf } from "./src/documentations.ts";
-import { PYTHON_SIDEBAR } from "./src/python_sidebar.ts";
+import { PYTHON_SIDEBAR, pythonPages } from "./src/python_sidebar.ts";
 
 /**
  * The site's own domain, which it holds alone: it is served from the
@@ -518,7 +518,11 @@ export default defineConfig({
       title: "greek conversion",
       sidebar: SIDEBAR,
       apiGroup: typeDocSidebarGroup,
-      python: PYTHON_SIDEBAR,
+      // Each group with its pages, those of a collapsed group among them.
+      python: PYTHON_SIDEBAR.map((group) => ({
+        label: group.label,
+        items: pythonPages([group]),
+      })),
     }),
   ],
 });

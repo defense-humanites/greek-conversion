@@ -8,9 +8,12 @@
  * tessera's halves part and join once the page has loaded, once a session.
  *
  * The home of the Python documentation (`/python/`) is the same page, with
- * `language="python"`: the package for the library, and its own guide.
+ * `language="python"`, set apart from the first screen: the logo is "for
+ * Python", in the orange of the Python pages (`SiteTitle.astro`), the
+ * command that installs the package follows the description, and three
+ * points say what the package is in Python, before the example.
  */
-import { LinkButton } from "@astrojs/starlight/components";
+import { Icon, LinkButton } from "@astrojs/starlight/components";
 import logoSource from "../../public/logo-light.svg?raw";
 
 interface Props {
@@ -58,6 +61,7 @@ const wordmark = drawing("name", name);
         <span class="tessera" set:html={halves} />
         <Fragment set:html={wordmark} />
       </span>
+      {python && <span class="flavor">for Python</span>}
     </h1>
     <script is:inline>
       // The tessera moves once the page has loaded and drawn a frame or two:
@@ -106,6 +110,40 @@ const wordmark = drawing("name", name);
         information‑loss&nbsp;diagnostics.</span
       >
     </p>
+    {
+      python && (
+        <button
+          class="install"
+          type="button"
+          data-copy="pip install greek-conversion"
+          aria-label="Copy the command: pip install greek-conversion"
+        >
+          <code>
+            <span class="prompt" aria-hidden="true">$</span> pip install
+            greek-conversion
+          </code>
+          <span class="copy" aria-hidden="true">
+            <svg
+              class="idle"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="14" height="14" x="8" y="8" rx="2" />
+              <path
+                d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
+              />
+            </svg>
+            <Icon name="approve-check" class="done" size="18px" />
+          </span>
+        </button>
+      )
+    }
     <div class="actions">
       <LinkButton href={guide} icon="right-arrow">
         Get started
@@ -124,10 +162,135 @@ const wordmark = drawing("name", name);
       </LinkButton>
     </div>
   </div>
+  {
+    python && (
+      <ul class="points">
+        <li>
+          <b>Nothing else to install.</b> The library runs in a JavaScript
+          engine embedded in Python, with the results of its TypeScript
+          original.
+        </li>
+        <li>
+          <b>Typed.</b> Editors and type checkers know every option and its
+          values, in snake_case.
+        </li>
+        <li>
+          <b>A corpus in one call.</b> <code>convert_many()</code> converts a
+          list of strings at once, and pays for a call into the engine once.
+        </li>
+      </ul>
+    )
+  }
   <div class="example"><slot /></div>
 </section>
 
+<script>
+  // The installation command, copied; the icon says so for 1.5s.
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    ".home-hero .install",
+  )) {
+    button.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(button.dataset.copy ?? "");
+      } catch {
+        return;
+      }
+      button.classList.add("copied");
+      setTimeout(() => button.classList.remove("copied"), 1500);
+    });
+  }
+</script>
+
 <style>
+  /* "for Python", under the name, in the orange of the Python pages. */
+  .flavor {
+    display: block;
+    margin-top: 0.75rem;
+    color: var(--to-strong);
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  /* The command, as a raised panel of code with its copy icon. */
+  .install {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0;
+    padding: 0.625rem 0.75rem 0.625rem 1rem;
+    border: 1.5px solid color-mix(in oklab, var(--to) 45%, var(--line));
+    border-radius: var(--radius);
+    background: var(--raised);
+    color: var(--ink);
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+  @media (hover: hover) {
+    .install:hover {
+      border-color: var(--to);
+    }
+  }
+  .install code {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: var(--face-code);
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+  .install .prompt {
+    color: var(--muted);
+    user-select: none;
+  }
+  .install .copy {
+    display: grid;
+    color: var(--muted);
+  }
+  .install .copy > :global(*) {
+    grid-area: 1 / 1;
+  }
+  .install :global(.done),
+  .install.copied :global(.idle) {
+    visibility: hidden;
+  }
+  .install.copied :global(.done) {
+    visibility: visible;
+    color: var(--to-strong);
+  }
+  /* Three points, in a row from 800px, one under another before. */
+  .points {
+    display: grid;
+    gap: 1rem;
+    max-width: 58rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--muted);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    text-align: start;
+  }
+  .points li {
+    margin: 0;
+    padding: 1rem 1.125rem;
+    border: 1px solid var(--line);
+    border-top: 3px solid color-mix(in oklab, var(--to) 70%, var(--line));
+    border-radius: var(--radius);
+    background: var(--raised);
+  }
+  .points b {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--ink);
+  }
+  @media (min-width: 50rem) {
+    .points {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
   .home-hero {
     display: flex;
     flex-direction: column;

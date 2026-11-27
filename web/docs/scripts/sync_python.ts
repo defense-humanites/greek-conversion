@@ -66,6 +66,13 @@ const NAMES = new Set<string>([
   "outputEnd",
 ].filter((name) => snake(name) !== name));
 
+/**
+ * The pages whose prose names the TypeScript API on purpose, as the
+ * stability policy does, which says how it applies to Python in a section
+ * of its own: only their links change.
+ */
+const VERBATIM = new Set(["docs/stability.md"]);
+
 /** A key of options in camelCase or not: `eta`, `longVowels`. */
 const NAMES_OR_KEYS = /^[a-z][A-Za-z]*$/;
 
@@ -146,14 +153,21 @@ function transform(text: string, source: string): string {
   const edit = source.startsWith("docs/")
     ? `${REPOSITORY}edit/main/${source}`
     : `${REPOSITORY}edit/main/web/docs/src/content/docs/${source}`;
-  const parts = body.split(/^(```[^\n]*\n[\s\S]*?^```)$/m);
+  // Code blocks, at the margin or indented in a list item.
+  const parts = body.split(/^( *```[^\n]*\n[\s\S]*?^ *```)$/m);
   let block = 0;
   const converted = parts.map((part, index) => {
     if (index % 2 === 1) {
-      if (!part.startsWith("```ts")) return part;
-      return python(part.slice(6, -3), `${source}#${block++}`);
+      const indent = part.match(/^ */)![0];
+      const code = part.split("\n").map((line) =>
+        line.startsWith(indent) ? line.slice(indent.length) : line
+      ).join("\n");
+      if (!code.startsWith("```ts")) return part;
+      return python(code.slice(6, -3), `${source}#${block++}`)
+        .split("\n").map((line) => line === "" ? line : indent + line)
+        .join("\n");
     }
-    return prose(part, source);
+    return VERBATIM.has(source) ? links(part, source) : prose(part, source);
   }).join("");
   const headings = source === "docs/options.md";
   if (headings) {
@@ -200,6 +214,14 @@ function python(code: string, where: string): string {
     untranslated.push(`${where} (${error.message}; source ${hash})`);
     return "";
   }
+}
+
+/** Links to the Python pages. */
+function links(text: string, source: string): string {
+  return text.replace(
+    /\]\((\/[^)\s#]*)(#[^)\s]*)?\)/g,
+    (_, path: string, anchor) => `](${link(path, anchor ?? "", source)})`,
+  );
 }
 
 /** Prose: its inline code in Python, its links to the Python pages. */
