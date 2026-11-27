@@ -194,10 +194,19 @@ change.
   accentuation is written `ʹ`.** An acute after its vowel read back as the
   accent of a monosyllable, which monotonic accentuation removes: `καʹ`
   gave `ká`, then `ka`. It now gives `kaʹ`.
+- **`convertDetailed()` reports the breathings that `greek.doubleRho` adds
+  to a double rho read from transliteration, where the source writes them.**
+  Under `rho: "marked"`, `rr` is a double rho without breathings, and
+  `greek.doubleRho: "smooth-rough"` wrote `ῤῥ`, called lossless, which
+  converts back to `rrh`; under `bnf-ancient`, which writes the smooth
+  breathing on rho, to `r̓rh`. They are reported as added
+  (`added-diacritic`).
 - **Under `nasalGamma: "nasal-medial-kappa"` (`ala-lc-modern`), `nk` at the
   beginning or end of a word reads back as `νκ`.** ALA-LC writes `γκ` as
   `gk` there, so `Φρανκ`, written `Phrank`, read back as `Φραγκ` and
-  converted again to `Phragk`.
+  converted again to `Phragk`. Before a keraia, `γκ` is now written `gk`
+  too: it was written `nk`, which now reads back as `νκ`, the numeral 70.
+  `γκʹ` gives `gkʹ`, where it gave `nkʹ`.
 - **Two tables no longer stay in bundles that do not use them.** esbuild
   kept the table of glyph variants in a bundle that imports a reader alone
   (0.8 kB), and the set of elided enclitics in a bundle of

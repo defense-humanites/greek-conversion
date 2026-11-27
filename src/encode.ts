@@ -1213,7 +1213,7 @@ export function encodeTransliteration(
       )
       : token.letter === "gamma" && writesNasalGamma &&
           isNasalGamma(doc, index, nasalExceptKappa) &&
-          !(nasalMedialKappa && isEdgeGammaKappa(doc, index, context))
+          !(nasalMedialKappa && isEdgeGammaKappa(doc, index))
       ? "n"
       : latinBase(bases, token.letter, options);
     const bnfLowercaseNumeral = bnfKeraia &&
@@ -1442,19 +1442,19 @@ function modernDigraphAt(
 
 /**
  * Under `nasalGamma: "nasal-medial-kappa"` (ALA-LC), `γκ` at the beginning or
- * end of a word keeps a literal `g`: `gk`, and `nk` inside the word.
+ * end of a word keeps a literal `g`: `gk`, and `nk` inside the word. So it
+ * does before a keraia, as the reader reads `nk` there as nu and kappa
+ * (`νκʹ`, the numeral 70): `γκʹ` gives `gkʹ`, and `͵γκʹ` `͵gkʹ`.
  */
 function isEdgeGammaKappa(
   document: Document,
   index: number,
-  context: DocumentContext,
 ): boolean {
   const first = document[index];
   const second = document[index + 1];
   return first?.kind === "grapheme" && first.letter === "gamma" &&
     second?.kind === "grapheme" && second.letter === "kappa" &&
     first.diacritics.size === 0 && second.diacritics.size === 0 &&
-    !isGreekNumeralContext(document, index, context) &&
     (isWordInitial(document, index) &&
         !followsCoronisApostrophe(document, index) ||
       isWordFinal(document, index + 1));

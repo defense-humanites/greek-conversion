@@ -460,7 +460,11 @@ export class Converter {
               "spans",
             ).spans!,
           },
-        { glyphForm: writerFor(from).glyphForm, options: reading },
+        {
+          glyphForm: writerFor(from).glyphForm,
+          options: reading,
+          format: from,
+        },
         unreadKept,
       );
     // The letters kept as text, which may not read back (see
