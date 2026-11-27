@@ -27,7 +27,32 @@ new one.
 double rho `rr` unless Greek writes a rough breathing on it, as their tables
 do: `Ερρίκος` gives `Erríkos` under `iso-843-type-2` (rc.14: `Errhíkos`), and
 `Πύρρος` gives `Pýrros` under `bnf-ancient` (rc.14: `Pýrrhos`). Add
-`transliteration: { rho: "contextual" }` to keep the previous spelling.
+`transliteration: { rho: "contextual" }` to keep the previous spelling. They
+read every `rh` as a rho with a rough breathing, so that a text written by
+rc.14 reads back otherwise: `Errhíkos` gives `Ερῥίκος` under
+`iso-843-type-2` (rc.14: `Ερρίκος`). Read such a text with
+`rho: "contextual"` too, in `source` for a restyle.
+
+Monotonic accentuation writes a diaeresis where a breathing or an iota
+subscript that it removes showed a hiatus, in every format: `ἀυτμή` gives
+`αϋτμή` (rc.14: `αυτμή`), and `ἐὺ` gives `εΰ` (rc.14: `ευ`).
+
+Under `text.numerals: "decimal"`, which the ALA-LC presets select, a numeral
+next to a digit stays as written: `1αʹ` gives `1aʹ` under `ala-lc-ancient`
+(rc.14: `11`). Transliteration writes as a number a numeral whose marks it
+leaves out: `ἀʹ` gives `1` (rc.14: `aʹ`). Under `ala-lc-modern`, `nk` at the
+beginning or end of a word reads back as `νκ`: `Phrank` gives `Φρανκ`
+(rc.14: `Φραγκ`).
+
+Beta Code writes a letter that it keeps as text, with the marks that compose
+with it, as the character they make: `Valéry`, from Greek, gives `valéry`
+with `é` (U+00E9), where rc.14 wrote `e` and a combining acute. The
+`convertDetailed()` of a converter reports a letter kept out of its scope
+whose output does not convert back (`unrepresented-literal`): with alpha out
+of scope, `a)` from Beta Code into Greek is lossy (rc.14: lossless).
+
+The other changes correct outputs that did not convert again to themselves;
+the changelog lists them.
 
 ## Updating from `1.0.0-rc.13`
 

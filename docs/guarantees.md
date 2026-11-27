@@ -14,24 +14,38 @@ protects these behaviors.
   pair, in either direction.
 - **Output is canonical and idempotent.** For fixed formats and options,
   converting the output again with the same options, without `source`,
-  changes nothing, but for the text of another format that a source may hold
-  ([below](#characters-of-another-format)), a letter written as a TLG
-  code before a digit in Beta Code (see
-  [Information loss](information-loss.md#canonical-spelling-and-unicode)),
-  the case of a capital spelled with several Latin letters, which follows
-  the letters and words around it, when one of them reads back otherwise
-  after a loss (under `bnf-ancient`, an acute on a consonant reads back as a
-  keraia: `Λ́Θ` gives `ĹTH`, then `ĹTh`),
-  letters that a converter keeps out of its scope, in the cases that
-  [Character extensions](character-extensions.md#restricting-the-repertoire)
-  lists, frequent between Beta Code and transliteration, a vowel with both
-  a coronis and a breathing or an upsilon with an iota subscript, which
-  `validateDocument()` rejects (under `iso-843-type-2`, `KA᾽̔to` gives
-  `KHa’to`, then `KHA’to`), and monotonic
-  accentuation with a transliteration that writes eta and omega without a
-  length mark (`longVowels: "omit"`, as `iso-843-type-2` does), where a
-  word read back with an iota or an omicron may be a monosyllable, whose
-  accent goes (`ή` gives `í`, then `i`).
+  changes nothing, but in these cases:
+  - the text of another format that a source may hold
+    ([below](#characters-of-another-format));
+  - a letter written as a TLG code before a digit in Beta Code (see
+    [Information loss](information-loss.md#canonical-spelling-and-unicode));
+  - the case of a capital spelled with several Latin letters, which follows
+    the letters and words around it, when one of them reads back otherwise
+    after a loss (under `bnf-ancient`, an acute on a consonant reads back as
+    a keraia: `Λ́Θ` gives `ĹTH`, then `ĹTh`);
+  - letters that a converter keeps out of its scope, in the cases that
+    [Character extensions](character-extensions.md#restricting-the-repertoire)
+    lists, frequent between Beta Code and transliteration;
+  - a vowel with both a coronis and a breathing or an upsilon with an iota
+    subscript, which `validateDocument()` rejects (under `iso-843-type-2`,
+    `KA᾽̔to` gives `KHa’to`, then `KHA’to`);
+  - monotonic accentuation with a transliteration that writes eta and omega
+    without a length mark (`longVowels: "omit"`, as `iso-843-type-2` does),
+    where a word read back with an iota or an omicron may be a monosyllable,
+    whose accent goes (`ή` gives `í`, then `i`);
+  - the BnF keraia after a word with an accent, under monotonic
+    accentuation: its acute reads back as a second accent, which monotonic
+    accentuation removes (under `bnf-ancient` with
+    `accentuation: "monotonic"`, `λόγοιʹ` gives `lógoí`, then `lógoi`);
+  - a coronis written as an apostrophe in a numeral, under decimal
+    numerals: it reads back as punctuation, after which the letters before
+    it are a number (under `iso-843-type-2` with `numerals: "decimal"`,
+    `͵αἀʹ` gives `͵aa’ʹ`, then `1001’ʹ`);
+  - a combining mark that no reader knows, on a vowel whose coronis
+    transliteration writes as an apostrophe: the mark follows the
+    apostrophe, and an elision after it then reads back as the start of a
+    word, which title case capitalizes (under `iso-843-type-1` with
+    `letterCase: "title"`, `κἀ̇’ψ` gives `Ka’̇’ps`, then `Ka’̇’Ps`).
 - **A lossless conversion is reversible.** When `convertDetailed()` reports
   `lossy: false`, converting the output back with the same options gives the
   same canonical text, a letter that a converter keeps out of its scope
@@ -215,8 +229,8 @@ at the start of a word (`῾Ρωμαῖοι` is `Ῥωμαῖοι`, `΄Ελλη�
 - **It does not bound normalization.** Every conversion normalizes the text
   (`String.prototype.normalize()`), whose time grows with the square of the
   number of combining marks on one letter: thousands of them, which no text
-  has, take seconds, `convertDetailed()` from Beta Code most of all, since it
-  pairs each mark with the output. Limit the length of untrusted input
+  has, take seconds, `convertDetailed()` from or into Beta Code most of all,
+  since it pairs each mark with the output. Limit the length of untrusted input
   accordingly.
 
 ## What the engine covers

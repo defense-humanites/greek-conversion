@@ -8,7 +8,7 @@
  * `./presets`, as prepared options. Other options are prepared once with
  * {@link prepareOptions}, which brings their validation into the bundle. A
  * bundle that converts Greek into transliteration with a preset is then
- * about 40 % smaller than one that imports `convert()` from the main entry
+ * about half the size of one that imports `convert()` from the main entry
  * point. The guide on smaller bundles compares the cases: an application
  * that reads and writes every format, or lets its users choose them, gains
  * little, and a server none.

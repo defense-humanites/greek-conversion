@@ -38,15 +38,23 @@ change.
   one (§ 4.3.5). `iso-843-type-1`, `iso-843-type-2`, `ala-lc-modern`, and
   `bnf-ancient` wrote the second rho of every pair `rh`, as classical studies
   do: `Ερρίκος` gave `Errhíkos` under `iso-843-type-2`, and now gives
-  `Erríkos`. They select `transliteration.rho: "marked"`.
+  `Erríkos`. They select `transliteration.rho: "marked"`, and so read every
+  `rh` as a rho with a rough breathing: `Errhíkos` reads back as `Ερῥίκος`,
+  where it read back as `Ερρίκος`.
 - **`convertDetailed()` into transliteration under `longVowels: "omit"`
-  (ISO 843 type 2) takes about a fifth less time.** It read its output twice
+  (ISO 843 Type 2) takes 15 to 20 % less time.** It read its output twice
   when the output's letters read back as others, as eta written `i` does in
   nearly every text: it now reads it once, with the positions of its
   tokens.
-- **A converter bound to `bnf-ancient` or `tlg-core` converts as fast as
-  `convert()`**, 12 to 18 % faster on a long text: their repertoires hold
-  every character, and the converter no longer checks each letter.
+- **A converter bound to `bnf-ancient` or `tlg-core` converts nearly as
+  fast as `convert()`**, 10 to 17 % faster on a long text: their
+  repertoires hold every character, and the converter no longer checks
+  each letter.
+- **Greek converts into transliteration 3 to 5 % more slowly, and with
+  monotonic accentuation about 6 % more slowly**, for the fixes below: the
+  transliteration writer checks more cases for each letter (rough
+  breathings in numerals, merged `h`, quantity marks), and monotonic
+  accentuation looks for a hiatus that a removed mark showed.
 - **A bundle of the `core` entry point with a preset or the defaults is 2
   to 13 % smaller with gzip**, the more so as it uses fewer formats. It
   keeps only the code of the options it can take:
@@ -54,14 +62,36 @@ change.
     letter case of the whole text, and collapsed whitespace, which no preset
     takes, come with the resolution of options, which links them to the
     options that take them, and so with `prepareOptions()`;
-  - the tables of the formats a bundle does not use, which calls built
-    where esbuild kept them, are built in annotated functions.
+  - the tables of the formats that a bundle does not use, which esbuild kept
+    since calls built them, are built in functions annotated as pure.
 
   Greek to transliteration with a preset weighs 45.7 kB, 15.2 kB with gzip,
   where it weighed 51.3 kB and 17.0 kB. `prepareOptions()` adds 17.3 kB to
   such a bundle, 5.1 kB with gzip, where it added 9.0 kB and 2.7 kB. The
-  main entry point takes 0.9 kB more, 0.3 kB with gzip. Outputs do not
-  change.
+  steps add 0.9 kB to the main entry point, 0.3 kB with gzip; with the
+  fixes below, `convert()` from the main entry point weighs 90.3 kB, 29.3 kB
+  with gzip, where it weighed 85.7 kB and 27.8 kB. Outputs do not change.
+- **Documentation.** The API documentation of `greek.capitalMarks` and
+  `text.letterCase` says what the code does: the search for the word nearest
+  to a capital on its own stops at a number or a numeral, past which it
+  finds none (`ΘΕΟΣ ιβʹ Θ` gives `THEOS ibʹ Th`), where it said that the
+  search passed numerals. The guarantees name the cases that a second
+  conversion still changes: a vowel with both a coronis and a breathing, or
+  an upsilon with an iota subscript, which `validateDocument()` rejects;
+  monotonic accentuation under `longVowels: "omit"`, where `ή` gives `í`
+  under `iso-843-type-2`, then `i`; the Latin letters of a Greek source,
+  which Beta Code reads as Greek (`hʹ` gives `h#` under ALA-LC, which reads
+  back as 8); the BnF keraia after a word with an accent, under monotonic
+  accentuation; a coronis written as an apostrophe in a numeral, under
+  decimal numerals; and a combining mark that no reader knows after a
+  coronis written as an apostrophe, in title case. They and the performance
+  guide say that `convertDetailed()` from or into Beta Code takes seconds on
+  thousands of combining marks on one letter. The limitations of the presets add the monotonic accentuation of
+  `iso-843-type-2`, the dot below (`?`) that `tlg-core` and `perseus` do not
+  read, the en dash `%19` of the TLG, and the `j` that the Perseids mapping
+  reads as a final sigma. The README gives each period a point of its own,
+  and with Getting started presents the atomic options of which the presets
+  are made.
 
 ### Fixed
 
@@ -185,11 +215,13 @@ change.
   would form a diphthong was the only sign of their hiatus, the second
   takes a diaeresis, as in words in capitals: `ἀυτμή` gives `αϋτμή`,
   `ἀίδηλος` `αΐδηλος`, in every format. Transliteration wrote `ay` for
-  `ἁυ`, which read back as `aÿ`.
+  `ἁυ`, which read back as `aÿ`. A word that the hiatus makes two syllables
+  keeps its accent: `ἐὺ` gave `ευ`, as a monosyllable, and gives `εΰ`.
 - **A numeral next to a digit is not written as a number.** Under
   `text.numerals: "decimal"`, as the ALA-LC presets select, `͵α͵β` gave
-  `1000͵β`, which converted again to `10002000`, and `1αʹ` gave `11`; such
-  a numeral now stays as written.
+  `1000͵β`, which converted again to `10002000`, and `1αʹ` gave `11`. Such
+  a numeral now stays as written: `1αʹ` gives `1αʹ`, and `1000͵β` converts
+  again to itself.
 - **The BnF keraia of a numeral of one syllable under monotonic
   accentuation is written `ʹ`.** An acute after its vowel read back as the
   accent of a monosyllable, which monotonic accentuation removes: `καʹ`

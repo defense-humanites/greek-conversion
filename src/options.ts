@@ -317,9 +317,8 @@ export type NuTauTransliteration = "nt" | "d-initial" | "d-underline-initial";
  * it whether Greek marks it or not (`Πύρρος` → `Pýrrhos`); `"marked"` writes
  * it only where Greek writes a rough breathing, as ISO 843, the ALA-LC table
  * of Modern Greek, and the BnF do (`Πύρρος` → `Pýrros`, `ῥήτωρ` → `rhḗtōr`),
- * and
- * reads every `rh` as a rho with a rough breathing; `"systematic"` writes one
- * final `h` per contiguous rho group.
+ * and reads every `rh` as a rho with a rough breathing; `"systematic"` writes
+ * one final `h` per contiguous rho group.
  */
 export type RhoTransliteration = "contextual" | "marked" | "systematic";
 
