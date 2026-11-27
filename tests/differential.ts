@@ -81,9 +81,7 @@ function isMeant(
  * is given the current name. RELEASING.md empties it with `MEANT`, once the
  * reference has the new names.
  */
-const RENAMED_PRESETS: Readonly<Record<string, string>> = {
-  "bnf-core": "bnf-ancient",
-};
+const RENAMED_PRESETS: Readonly<Record<string, string>> = {};
 
 /** A preset by its current name. */
 function currentPreset(preset: unknown): unknown {
