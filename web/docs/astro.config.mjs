@@ -4,6 +4,7 @@ import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 import starlightTypeDoc, { typeDocSidebarGroup } from "starlight-typedoc";
 import llmsTxt from "./llms.mjs";
+import { PYTHON_SIDEBAR } from "./src/python_sidebar.ts";
 
 /**
  * The site's own domain, which it holds alone: it is served from the
@@ -500,6 +501,7 @@ export default defineConfig({
       title: "greek conversion",
       sidebar: SIDEBAR,
       apiGroup: typeDocSidebarGroup,
+      python: PYTHON_SIDEBAR,
     }),
   ],
 });

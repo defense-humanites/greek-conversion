@@ -5,8 +5,9 @@
  *
  * - `llms.txt`, an index: the site's description, the essentials of the
  *   README (installation and main functions), then every page of the
- *   sidebar, in its order, with its description, and the collapsed groups
- *   (conformance, API, project) under "Optional";
+ *   sidebar, in its order, with its description, the pages of the Python
+ *   package's documentation, in the order of their own sidebar, and the
+ *   collapsed groups (conformance, API, project) under "Optional";
  * - `<page>/index.md`, each page in Markdown, from its source, with its title
  *   and description, and links to other pages as links to their Markdown.
  *
@@ -39,6 +40,7 @@ const ESSENTIALS = ["Installation", "Main functions"];
  *   title: string,
  *   sidebar: any[],
  *   apiGroup: unknown,
+ *   python: readonly { items: readonly (readonly [string, string])[] }[],
  * }} options
  * @returns {import("astro").AstroIntegration}
  */
@@ -89,6 +91,19 @@ export default function llmsTxt(options) {
             sections.push(`## ${group.label}\n\n${list(entries)}`);
             listed += entries.length;
           }
+        }
+        // The Python documentation: its own pages, under their sidebar's
+        // order; the pages it shares are those of the TypeScript one.
+        const python = options.python.flatMap((group) => group.items)
+          .filter(([, path]) => path.startsWith("/python/"))
+          .map(([, path]) => {
+            const page = pages.get(path);
+            if (page === undefined) throw new Error(`llms.txt: no page ${path}`);
+            return entry(page, markdownUrl, "");
+          });
+        if (python.length > 0) {
+          sections.push(`## Python\n\n${list(python)}`);
+          listed += python.length;
         }
         if (optional.length > 0) {
           sections.push(`## Optional\n\n${list(optional)}`);

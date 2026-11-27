@@ -242,7 +242,8 @@ def convert(
     'a)/ndra moi e)/nnepe'
     >>> convert("a)/ndra", "beta-code", "greek")
     'ἄνδρα'
-    >>> convert("Θεσσαλονίκη", "greek", "transliteration", preset="iso-843-type-2")
+    >>> convert("Θεσσαλονίκη", "greek", "transliteration",
+    ...         preset="iso-843-type-2")
     'Thessaloníki'
     >>> convert("ψυχή", "greek", "transliteration",
     ...         transliteration={"chi": "kh", "upsilon": "u"})
@@ -282,8 +283,8 @@ def convert_detailed(
     """Converts text and reports what the target cannot retain, and where each
     source token was read and written.
 
-    >>> result = convert_detailed("Θεσσαλονίκη", "greek", "transliteration",
-    ...                           preset="iso-843-type-2")
+    >>> result = convert_detailed("Θεσσαλονίκη", "greek",
+    ...                           "transliteration", preset="iso-843-type-2")
     >>> result.output, result.lossy, result.losses[0].offset
     ('Thessaloníki', True, 10)
     """
@@ -381,8 +382,8 @@ def convert_detailed_many(
     what :func:`convert_detailed` reports: the losses, and where each token
     went. The positions of each result are in its own string.
 
-    >>> results = convert_detailed_many(["Θεσσαλονίκη", "Αθήνα"], "greek",
-    ...                                 "transliteration", preset="iso-843-type-2")
+    >>> results = convert_detailed_many(["Θεσσαλονίκη", "Αθήνα"],
+    ...     "greek", "transliteration", preset="iso-843-type-2")
     >>> [(result.output, result.lossy) for result in results]
     [('Thessaloníki', True), ('Athína', True)]
 
@@ -480,7 +481,8 @@ class Converter(Handle):
         diagnostics.
 
         >>> no_digamma = create_converter(exclude=["digamma"])
-        >>> result = no_digamma.convert_detailed("ϝάναξ", "greek", "transliteration")
+        >>> result = no_digamma.convert_detailed("ϝάναξ", "greek",
+        ...                                      "transliteration")
         >>> result.output, result.diagnostics[0].character
         ('ϝánax', 'digamma')
         """
@@ -507,11 +509,13 @@ def create_converter(
     """Creates a converter that binds a preset, adds characters or spellings,
     or restricts the repertoire.
 
-    >>> strict = create_converter(exclude=["digamma"], out_of_scope_behavior="reject")
-    >>> strict.convert("ϝάναξ", "greek", "transliteration")
-    Traceback (most recent call last):
-    ...
-    greek_conversion._errors.CharacterScopeError: Conversion rejected: 1 out-of-scope character.
+    >>> strict = create_converter(exclude=["digamma"],
+    ...                           out_of_scope_behavior="reject")
+    >>> try:
+    ...     strict.convert("ϝάναξ", "greek", "transliteration")
+    ... except CharacterScopeError as error:
+    ...     print(error)
+    Conversion rejected: 1 out-of-scope character.
 
     :raises OptionError: or :class:`TypeError`, for an invalid configuration,
         at once.
@@ -536,7 +540,8 @@ def resolve_conversion_options(
     """The complete options that the given ones resolve to, as a fresh
     mapping, which can be given back as options.
 
-    >>> resolve_conversion_options(preset="sbl-general")["transliteration"]["long_vowels"]
+    >>> options = resolve_conversion_options(preset="sbl-general")
+    >>> options["transliteration"]["long_vowels"]
     'macron'
     """
     return from_js(

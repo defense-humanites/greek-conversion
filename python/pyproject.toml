@@ -42,7 +42,7 @@ test = ["pytest>=8", "ruff>=0.17,<0.18", "mypy>=1.13", "typing_extensions>=4.12"
 
 [project.urls]
 Homepage = "https://greek-conversion.humanites.fr/"
-Documentation = "https://greek-conversion.humanites.fr/"
+Documentation = "https://greek-conversion.humanites.fr/python/"
 Source = "https://github.com/defense-humanites/greek-conversion"
 Issues = "https://github.com/defense-humanites/greek-conversion/issues"
 Changelog = "https://github.com/defense-humanites/greek-conversion/blob/main/CHANGELOG.md"

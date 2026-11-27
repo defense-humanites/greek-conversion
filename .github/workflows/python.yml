@@ -2,8 +2,9 @@ name: Python
 
 # The Python package (python/): the library's bundle run in an embedded
 # JavaScript engine. The wheel is built and installed as users install it,
-# its tests run on both engines, and its outputs are compared with the
-# library's in Node over the inputs of the differential test. It is published
+# its tests run on both engines, its outputs are compared with the
+# library's in Node over the inputs of the differential test, and the
+# examples of its documentation run. It is published
 # by publish.yml, after JSR and npm.
 
 on:
@@ -60,6 +61,12 @@ jobs:
       - name: Test the installed wheel
         # From outside the repository, so that the wheel is what is imported.
         run: cd "$RUNNER_TEMP" && python -m pytest "$GITHUB_WORKSPACE/python/tests"
+      - name: Check the Python documentation
+        if: matrix.differential
+        run: |
+          node web/docs/scripts/sync_python.ts
+          python python/scripts/check_docs.py
+          python python/scripts/api_reference.py --check
       - name: Compare with the library in Node
         if: matrix.differential
         run: |
