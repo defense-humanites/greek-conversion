@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://greek-conversion.humanites.fr/"><b>Documentation</b></a> ·
+  <a href="https://greek-conversion.humanites.fr/python/"><b>Documentation</b></a> ·
   <a href="https://greek-conversion.humanites.fr/playground/"><b>Playground</b></a>
 </p>
 
@@ -188,11 +188,12 @@ installation:
   library's own over more than a hundred thousand conversions.
 - **The same versions.** The package's version is the library's (`1.0.0rc15`
   for `1.0.0-rc.15`), followed by `.postN` for a fix of the Python package
-  alone.
+  alone, and the
+  [stability policy](https://greek-conversion.humanites.fr/python/reference/stability/#the-python-package)
+  applies to it as to the library.
 - **The same documentation.** The
-  [documentation](https://greek-conversion.humanites.fr/) describes the
-  library in TypeScript; its presets, options, losses, and guarantees are
-  the package's too. In Python:
+  [Python documentation](https://greek-conversion.humanites.fr/python/) is
+  the library's, written in Python. In Python:
   - functions and option keys are written in snake_case (`convert_detailed`,
     `long_vowels`, `beta_code`, `out_of_scope_behavior`), as are the keys of
     the options and metadata returned, and the option names in errors;
@@ -228,23 +229,25 @@ Node, and 20 to 100 times faster than one call per string.
 
 ## Documentation
 
-- [Getting started](https://greek-conversion.humanites.fr/guide/getting-started/),
+- [Getting started](https://greek-conversion.humanites.fr/python/guide/getting-started/),
   then the pages on
-  [Ancient](https://greek-conversion.humanites.fr/guide/ancient-greek/),
-  [Byzantine and Medieval](https://greek-conversion.humanites.fr/guide/byzantine-greek/),
-  and [Modern Greek](https://greek-conversion.humanites.fr/guide/modern-greek/).
-- [Choosing a preset](https://greek-conversion.humanites.fr/guide/presets/):
+  [Ancient](https://greek-conversion.humanites.fr/python/guide/ancient-greek/),
+  [Byzantine and Medieval](https://greek-conversion.humanites.fr/python/guide/byzantine-greek/),
+  and [Modern Greek](https://greek-conversion.humanites.fr/python/guide/modern-greek/).
+- [Choosing a preset](https://greek-conversion.humanites.fr/python/guide/presets/):
   what each convention writes, and what it loses.
-- [Guarantees and limits](https://greek-conversion.humanites.fr/reference/guarantees/),
+- [Guarantees and limits](https://greek-conversion.humanites.fr/python/reference/guarantees/),
   then the rest of the reference: the
-  [options](https://greek-conversion.humanites.fr/reference/options/) and
-  [information loss](https://greek-conversion.humanites.fr/reference/information-loss/).
+  [options](https://greek-conversion.humanites.fr/python/reference/options/),
+  [information loss](https://greek-conversion.humanites.fr/python/reference/information-loss/),
+  and the [API](https://greek-conversion.humanites.fr/python/reference/api/).
 - [Contributing](https://github.com/defense-humanites/greek-conversion/blob/main/CONTRIBUTING.md):
   the package lives in the `python/` folder of the repository, which
   describes how to build and test it.
 
 Every page of the site is also in Markdown, which
-[`llms.txt`](https://greek-conversion.humanites.fr/llms.txt) lists.
+[`python/llms.txt`](https://greek-conversion.humanites.fr/python/llms.txt)
+lists for the Python documentation.
 
 ## Citing and license
 

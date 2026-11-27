@@ -5,8 +5,12 @@
  *
  * - `llms.txt`, an index: the site's description, the essentials of the
  *   README (installation and main functions), then every page of the
- *   sidebar, in its order, with its description, and the collapsed groups
- *   (conformance, API, project) under "Optional";
+ *   sidebar, in its order, with its description, the pages of the Python
+ *   package's documentation, in the order of their own sidebar, and the
+ *   collapsed groups (conformance, API, project) under "Optional";
+ * - `python/llms.txt`, the index of the Python documentation, for an agent
+ *   that writes Python: the same, from the Python package's README and the
+ *   Python sidebar;
  * - `<page>/index.md`, each page in Markdown, from its source, with its title
  *   and description, and links to other pages as links to their Markdown.
  *
@@ -24,6 +28,7 @@ import { fileURLToPath } from "node:url";
 
 const CONTENT = new URL("./src/content/docs/", import.meta.url);
 const README = new URL("../../README.md", import.meta.url);
+const PYTHON_README = new URL("../../python/README.md", import.meta.url);
 /** The README's sections that an agent needs before any page. */
 const ESSENTIALS = ["Installation", "Main functions"];
 
@@ -39,6 +44,10 @@ const ESSENTIALS = ["Installation", "Main functions"];
  *   title: string,
  *   sidebar: any[],
  *   apiGroup: unknown,
+ *   python: readonly {
+ *     label: string,
+ *     items: readonly (readonly [string, string])[],
+ *   }[],
  * }} options
  * @returns {import("astro").AstroIntegration}
  */
@@ -90,21 +99,58 @@ export default function llmsTxt(options) {
             listed += entries.length;
           }
         }
+        // The Python documentation: its index, then its pages, in their
+        // sidebar's order.
+        /** @param {readonly (readonly [string, string])[]} items */
+        const pythonEntries = (items) =>
+          items.map(([, path]) => {
+            const page = pages.get(path);
+            if (page === undefined) throw new Error(`llms.txt: no page ${path}`);
+            return entry(page, markdownUrl, "");
+          });
+        const python = pythonEntries(
+          options.python.flatMap((group) => group.items),
+        );
+        if (python.length > 0) {
+          sections.push(
+            `## Python\n\nThe Python package, \`greek-conversion\` on PyPI, runs the library in Python, with its functions and option keys in snake_case. Its documentation has an index of its own: [python/llms.txt](${root}/python/llms.txt).\n\n${
+              list(python)
+            }`,
+          );
+          listed += python.length;
+        }
         if (optional.length > 0) {
           sections.push(`## Optional\n\n${list(optional)}`);
         }
 
         const head = [
           `# ${options.title}`,
-          ...(await essentials()).map(rewrite),
+          ...(await essentials(README)).map(rewrite),
           `Every page of this site is also in Markdown: add \`index.md\` to its address, as the links below do.`,
         ].join("\n\n");
         await writeFile(
           new URL("llms.txt", dir),
           `${head}\n\n${sections.join("\n\n")}\n`,
         );
+
+        const pythonHead = [
+          `# ${options.title} for Python`,
+          ...(await essentials(PYTHON_README)).map(rewrite),
+          `Every page of this site is also in Markdown: add \`index.md\` to its address, as the links below do.`,
+        ].join("\n\n");
+        const pythonSections = [
+          ...options.python.map((group) =>
+            `## ${group.label}\n\n${list(pythonEntries(group.items))}`
+          ),
+          `## TypeScript\n\nThe library itself, in TypeScript, the reference implementation, has its own documentation: [llms.txt](${root}/llms.txt).`,
+        ];
+        await mkdir(new URL("python/", dir), { recursive: true });
+        await writeFile(
+          new URL("python/llms.txt", dir),
+          `${pythonHead}\n\n${pythonSections.join("\n\n")}\n`,
+        );
         logger.info(
-          `llms.txt (${listed} pages, ${optional.length} optional), and ${pages.size} pages in Markdown.`,
+          `llms.txt (${listed} pages, ${optional.length} optional), python/llms.txt, and ${pages.size} pages in Markdown.`,
         );
       },
     },
@@ -220,8 +266,9 @@ function render(page, rewrite) {
  * without their headings, which llms.txt keeps for its lists of files: each
  * starts with its name, in bold.
  */
-async function essentials() {
-  const text = await readFile(README, "utf8");
+/** @param {URL} readme */
+async function essentials(readme) {
+  const text = await readFile(readme, "utf8");
   // The tagline, which `scripts/check_metadata.ts` keeps in agreement with
   // the description of the package and of the site.
   const tagline = text.match(/<b>([^<]*)<\/b>/)?.[1].replace(/\s+/g, " ");

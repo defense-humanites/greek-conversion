@@ -15,7 +15,8 @@
  * Context7 what to index for coding agents, starts with the sentence too.
  * The Python package (`python/`) repeats it as the description of its
  * `pyproject.toml` and in the documentation of its module, and its README's
- * tagline after "A Python library that converts".
+ * tagline, after "A Python library that converts", and its home page, under
+ * "for Python", after "A library that converts".
  *
  * It checks, last, that the site has one address, the `homepage` of
  * `package.json`: the one it is built for, and the one every file that
@@ -82,10 +83,20 @@ expect(
   plain(readme.match(/<b>([^<]*)<\/b>/)?.[1]),
   library,
 );
+// The hero opens the homes of both documentations, each with its subject.
+const heroDescription = hero.match(/<p class="description">([\s\S]*?)<\/p>/)
+  ?.[1];
+const subject = /\{python \? "([^"]+)" : "([^"]+)"\}/;
 expect(
   "the description of the home page",
-  plain(hero.match(/<p class="description">([\s\S]*?)<\/p>/)?.[1]),
+  plain(heroDescription?.replace(subject, "$2")),
   library,
+);
+// The Python home says "for Python" under its logo, and "A library" after.
+expect(
+  "the description of the Python home page",
+  plain(heroDescription?.replace(subject, "$1")),
+  sentence.replace(/^Convert /, "A library that converts "),
 );
 expect(
   "the documentation of src/mod.ts",

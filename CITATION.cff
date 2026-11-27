@@ -9,7 +9,9 @@ abstract: >-
   between Greek script, Beta Code, and Latin script, with atomic options
   composed into standards-based presets, and information-loss diagnostics.
   Each preset implements a published convention (ALA-LC, BnF, ISO 843 and ELOT
-  743, SBL, TLG, Perseus) as a set of atomic conversion options.
+  743, SBL, TLG, Perseus) as a set of atomic conversion options. It is
+  published on npm and JSR (@humanities/greek-conversion), and for Python on
+  PyPI (greek-conversion).
 authors:
   - family-names: Boquet
     given-names: Antoine

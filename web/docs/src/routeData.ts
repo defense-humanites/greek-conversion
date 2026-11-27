@@ -1,4 +1,5 @@
 import { defineRouteMiddleware } from "@astrojs/starlight/route-data";
+import { isPythonPage, pythonNavigation } from "./python_sidebar.ts";
 import { otherVersionHref, VERSIONS } from "./versions.ts";
 
 export const onRequest = defineRouteMiddleware((context) => {
@@ -12,12 +13,26 @@ export const onRequest = defineRouteMiddleware((context) => {
    */
   if (route.entry.data.template === "splash") route.hasSidebar = true;
   /*
-   * The home page's title is the site's: its tab reads "greek conversion",
-   * not Starlight's "greek conversion | greek conversion".
+   * The Python documentation (`/python/…`) has a sidebar of its own, and
+   * its pages lead from one to the next in its order.
+   */
+  const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+  if (isPythonPage(context.url.pathname, base)) {
+    const { sidebar, pagination } = pythonNavigation(
+      context.url.pathname,
+      base,
+    );
+    route.sidebar = sidebar;
+    route.pagination = pagination;
+  }
+  /*
+   * A home page's title is its own: the tab reads "greek conversion", not
+   * Starlight's "greek conversion | greek conversion", or "greek
+   * conversion for Python".
    */
   if (route.entry.data.template === "splash") {
     const title = route.head.find((entry) => entry.tag === "title");
-    if (title) title.content = route.siteTitle;
+    if (title) title.content = route.entry.data.title;
   }
   /*
    * Every page of the next release's documentation says so, and leads to

@@ -6,11 +6,22 @@
  * from the header.
  * The logo follows the system's appearance, as the whole site does; its
  * tessera's halves part and join once the page has loaded, once a session.
+ *
+ * The home of the Python documentation (`/python/`) is the same page, with
+ * `language="python"`: the logo is "for Python", in the orange of the
+ * Python pages (`SiteTitle.astro`), which the description then leaves out,
+ * and the example is in Python.
  */
 import { LinkButton } from "@astrojs/starlight/components";
 import logoSource from "../../public/logo-light.svg?raw";
 
+interface Props {
+  language?: "typescript" | "python";
+}
+const { language = "typescript" } = Astro.props;
+const python = language === "python";
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const guide = `${base}${python ? "python/" : ""}guide/getting-started/`;
 
 /*
  * The logo, drawn in the page rather than as an image, so that the two
@@ -49,6 +60,7 @@ const wordmark = drawing("name", name);
         <span class="tessera" set:html={halves} />
         <Fragment set:html={wordmark} />
       </span>
+      {python && <span class="flavor">for Python</span>}
     </h1>
     <script is:inline>
       // The tessera moves once the page has loaded and drawn a frame or two:
@@ -85,7 +97,8 @@ const wordmark = drawing("name", name);
     </script>
     <p class="description">
       <span class="line"
-        >A TypeScript library that converts Ancient, Byzantine, and Modern&nbsp;Greek</span
+        >{python ? "A library" : "A TypeScript library"} that converts
+        Ancient, Byzantine, and Modern&nbsp;Greek</span
       >{" "}
       <span class="line"
         >between Greek&nbsp;script, Beta&nbsp;Code, and Latin&nbsp;script, with
@@ -97,7 +110,7 @@ const wordmark = drawing("name", name);
       >
     </p>
     <div class="actions">
-      <LinkButton href={`${base}guide/getting-started/`} icon="right-arrow">
+      <LinkButton href={guide} icon="right-arrow">
         Get started
       </LinkButton>
       <LinkButton
@@ -118,6 +131,17 @@ const wordmark = drawing("name", name);
 </section>
 
 <style>
+  /* "for Python", under the name, in the orange of the Python pages. */
+  .flavor {
+    display: block;
+    margin-top: 0.75rem;
+    color: var(--to-strong);
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
   .home-hero {
     display: flex;
     flex-direction: column;

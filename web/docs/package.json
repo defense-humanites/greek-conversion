@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "sync": "node scripts/sync_reference.ts",
+    "sync": "node scripts/sync_reference.ts && node scripts/sync_python.ts",
     "dev": "npm run sync && astro dev --force",
     "build": "npm run sync && astro build --force",
     "preview": "astro preview"
