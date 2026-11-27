@@ -32,8 +32,9 @@ Both registries use the same package name and version:
    `CITATION.cff`, and replace `Unreleased` in `CHANGELOG.md` with the release
    date. `npm run check` fails while the four versions differ, and the publish
    workflow refuses a release whose tag differs from `package.json`.
-2. Run `npm run check`, `npm test`, `npm run jsr:check`, and
-   `npm run npm:check`.
+2. Run `npm run docs:bundles`, which writes the sizes of the release's
+   bundles into the guide on smaller bundles, then `npm run check`,
+   `npm test`, `npm run jsr:check`, and `npm run npm:check`.
 3. Verify the generated npm archive, especially its ESM exports, declarations,
    license, README, migration guide, and documentation directory. This file is
    deliberately excluded from both packages.

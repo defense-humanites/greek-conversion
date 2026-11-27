@@ -66,11 +66,13 @@ const ENCLITIC_FORMS = "mou moi me sou soi se ou( e( sfisi sfisin meu seu " +
  * The elided enclitics, in Beta Code: `με` or `μοι`, `σε`, `τε` (`θ’` before
  * a rough breathing), `γε`, `ῥα`, `κε` (`χ’`), `σφε`, `ποτε`, `κοτε`. `σ’`
  * may also be the emphatic `σέ`, which is rarer; `τιν’`, as often
- * interrogative as not, keeps the grave.
+ * interrogative as not, keeps the grave. Built in an annotated function, as
+ * `HASH_CODE_LETTERS` in `encode.ts`: the loss analysis imports only
+ * `ACCENTS` from this module, and esbuild would keep the set in its bundles.
  */
-const ELIDED_ENCLITICS: ReadonlySet<string> = new Set(
-  "m s t q g r( k x sf pot poq kot".split(" "),
-);
+const ELIDED_ENCLITICS: ReadonlySet<string> =
+  /* @__PURE__ */ (() =>
+    new Set("m s t q g r( k x sf pot poq kot".split(" ")))();
 
 /**
  * The marks that only polytonic Greek writes, as `greek.acute: "system"`
