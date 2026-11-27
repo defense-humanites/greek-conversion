@@ -7,8 +7,8 @@ The library converts Ancient, Byzantine, and Modern Greek between Greek
 script, Beta Code, and Latin script, in any direction, with atomic options
 composed into presets that follow published conventions. This page installs
 the package and converts a first text, then presents the options and the
-presets, normalizing a text within its format, Modern Greek, and what counts
-for the size of a bundle and the speed of a call.
+presets, the conventions of each period, normalizing a text within its
+format, and what counts for the size of a bundle and the speed of a call.
 
 ## Installation
 
@@ -34,8 +34,8 @@ next one under `/next/`.
 
 ## A first conversion
 
-Let's transliterate some Thucydides (_History_ 1.1.2), then write the same
-passage without diacritics, in Beta Code, and following the ISO 843 standard:
+To begin, transliterate a passage of Thucydides (_History_ 1.1.2), then
+write it without diacritics and in Beta Code:
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
@@ -52,11 +52,6 @@ convert(thucydides, "greek", "transliteration", {
 
 convert(thucydides, "greek", "beta-code");
 // → *(/ellhsin e)ge/neto kai\ me/rei tini\ tw=n barba/rwn
-
-convert(thucydides, "greek", "transliteration", {
-  preset: "iso-843-type-1",
-});
-// → Héllīsin ’egéneto kaì mérei tinì tō̂n varvárōn
 ```
 
 Without a preset, the transliteration is the library's own: the letters of the
@@ -108,14 +103,20 @@ convert("ψυχὴ καὶ σῶμα", "greek", "transliteration", {
 ```
 
 A preset is a set of these options that follows a published convention:
-`iso-843-type-1` sets ten of them. The defaults apply first, then the
-preset, then the options given with it, so that a preset can be adjusted,
-here to leave out the apostrophe that marks the smooth breathing:
+`iso-843-type-1`, the transliteration of the ISO 843 standard, sets ten of
+them. The defaults apply first, then the preset, then the options given
+with it, so that a preset can be adjusted, here to leave out the apostrophe
+that marks the smooth breathing:
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
 
 const thucydides = "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων";
+
+convert(thucydides, "greek", "transliteration", {
+  preset: "iso-843-type-1",
+});
+// → Héllīsin ’egéneto kaì mérei tinì tō̂n varvárōn
 
 convert(thucydides, "greek", "transliteration", {
   preset: "iso-843-type-1",
@@ -127,6 +128,32 @@ convert(thucydides, "greek", "transliteration", {
 [Conversion options](/reference/options/) gives each option with its values
 and what each writes, and [Choosing a preset](/guide/presets/) compares the
 conventions.
+
+## Your Greek
+
+Byzantine and Modern Greek convert the same way, with the options and the
+presets of their period: the καί symbol takes the accent that manuscripts
+give it, and Modern Greek the ISO 843 transcription that passports and maps
+use:
+
+```ts
+import { convert } from "@humanities/greek-conversion";
+
+convert("ϗ τὰ λοιπά", "greek", "transliteration", {
+  greek: { kaiAccent: "byzantine" },
+});
+// → kaì tà loipá
+
+convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliteration", {
+  preset: "iso-843-type-2",
+});
+// → I Athína eínai i protévousa
+```
+
+[Ancient Greek](/guide/ancient-greek/),
+[Byzantine and Medieval Greek](/guide/byzantine-greek/), and
+[Modern Greek](/guide/modern-greek/) give the conventions that apply to each
+period, what each keeps, and the tasks proper to it.
 
 ## Normalizing a text
 
@@ -150,31 +177,18 @@ reencode("*(/ELLHSIN E)GE/NETO KAI\\ ME/REI", "beta-code");
 const transliterated = "Héllēsin egéneto kaì mérei tinì tō̃n barbárōn";
 
 reencode(transliterated, "transliteration", {
-  preset: "iso-843-type-1",
+  preset: "bnf-ancient",
   source: {},
 });
-// → Héllīsin ’egéneto kaì mérei tinì tō̂n varvárōn
+// → Héllēsin e̓géneto kaì mérei tinì tō̂n barbárōn
 ```
 
 The options describe the text you give as well as the one you get back.
 Greek and Beta Code read the same whatever the options, but a
 transliteration is read according to its style: `source` names the style it
 is written in, here `{}`, the library's own, which `convert()` wrote above.
-Read as ISO 843, which marks the smooth breathing, `egéneto` would have none.
-
-## Modern Greek
-
-Monotonic Greek converts the same way. Choose a preset made for Modern Greek,
-such as the ISO 843 transcription that passports and maps use:
-
-```ts
-import { convert } from "@humanities/greek-conversion";
-
-convert("Η Αθήνα είναι η πρωτεύουσα", "greek", "transliteration", {
-  preset: "iso-843-type-2",
-});
-// → I Athína eínai i protévousa
-```
+Read as the BnF's, which marks the smooth breathing, `egéneto` would have
+none.
 
 ## Size and speed
 
@@ -200,12 +214,6 @@ does.
   [What formats and options lose](/guide/format-and-option-losses/); to find
   where a given text loses it, as `lossy` hinted above, see
   [Knowing what a conversion loses](/guide/losses/).
-- For the conventions that apply to your Greek, what each keeps, and the
-  tasks proper to it, see [Ancient Greek](/guide/ancient-greek/),
-  [Byzantine and Medieval Greek](/guide/byzantine-greek/), or
-  [Modern Greek](/guide/modern-greek/).
-- To compare the published conventions, as `iso-843-type-1` above, and to
-  refine one, see [Choosing a preset](/guide/presets/).
 - For a precise task, the recipes cover
   [diacritics and Unicode output](/guide/recipes/diacritics-and-unicode/),
   [transliteration and Beta Code](/guide/recipes/transliteration-and-beta-code/),
