@@ -6,7 +6,10 @@
 Every case of the dump is converted again through the package, with
 ``convert()`` and ``convert_detailed()``: the outputs, the losses, the spans,
 and the errors must be the same. Positions are converted here, from the
-UTF-16 code units of Node to code points, independently of the bridge.
+UTF-16 code units of Node to code points, independently of the bridge. The
+options of the dump are given in snake_case, as a Python user writes them,
+and the messages of Node's errors are compared with their option keys in
+snake_case.
 """
 
 from __future__ import annotations
@@ -17,16 +20,17 @@ import sys
 import time
 
 import greek_conversion as gc
+from greek_conversion._keys import from_js, text
 
 
-def code_points(text: str):
-    """A function from UTF-16 offsets in ``text`` to code point offsets."""
+def code_points(string: str):
+    """A function from UTF-16 offsets in ``string`` to code point offsets."""
     table = []
-    for index, char in enumerate(text):
+    for index, char in enumerate(string):
         table.append(index)
         if ord(char) > 0xFFFF:
             table.append(index)
-    table.append(len(text))
+    table.append(len(string))
     return lambda offset: table[offset]
 
 
@@ -105,23 +109,25 @@ def main() -> int:
             if number % args.every:
                 continue
             case = json.loads(line)
-            source, target, options, text = (
-                case["from"], case["to"], case["options"], case["input"],
+            # The options of the dump, in the library's spelling, as a Python
+            # user writes them.
+            source, target, options, input_ = (
+                case["from"], case["to"], from_js(case["options"]), case["input"],
             )
 
             expected = case["convert"]
             if "error" in expected:
-                expected = {"error": expected["error"]["message"]}
-            actual = attempt(lambda: gc.convert(text, source, target, options))
+                expected = {"error": text(expected["error"]["message"])}
+            actual = attempt(lambda: gc.convert(input_, source, target, options))
 
             expected_d = case["detailed"]
             expected_d = (
-                {"error": expected_d["error"]["message"]}
+                {"error": text(expected_d["error"]["message"])}
                 if "error" in expected_d
-                else {"ok": expected_detailed(text, expected_d["ok"])}
+                else {"ok": expected_detailed(input_, expected_d["ok"])}
             )
             actual_d = attempt(
-                lambda: gc.convert_detailed(text, source, target, options),
+                lambda: gc.convert_detailed(input_, source, target, options),
                 actual_detailed,
             )
 
@@ -135,7 +141,7 @@ def main() -> int:
                     if differences <= 10:
                         print(
                             f"DIFFERENCE {kind} {source} → {target} [{case['set']}]\n"
-                            f"  input:    {text[:120]!r}\n"
+                            f"  input:    {input_[:120]!r}\n"
                             f"  node:     {json.dumps(want, ensure_ascii=False)[:400]}\n"
                             f"  python:   {json.dumps(got, ensure_ascii=False)[:400]}"
                         )

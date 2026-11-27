@@ -13,9 +13,11 @@ of the JavaScript library, by construction.
 'Nikos Kazantzakēs'
 
 Options are those of the JavaScript library, given as a mapping, as keyword
-arguments, or both. Their keys may be written in camelCase, as the reference
-documents them (``longVowels``), or in snake_case (``long_vowels``); their
-values are unchanged (``"iso-843-type-2"``).
+arguments, or both. Their keys are written in snake_case (``long_vowels``,
+``beta_code``) where the library writes them in camelCase (``longVowels``,
+``betaCode``), and so are the keys of the options and metadata returned, and
+the option names of errors. Their values are unchanged
+(``"iso-843-type-2"``).
 
 Positions (``offset``, ``length``, spans) are in code points, as Python
 indexes strings, and not in the UTF-16 code units of JavaScript.
@@ -33,6 +35,7 @@ from typing import Any, Literal, Optional
 from . import _engine
 from ._engine import JavaScriptError, engine_name, set_engine
 from ._errors import CharacterScopeDiagnostic, CharacterScopeError, OptionError
+from ._keys import from_js, to_js
 from ._version import __js_version__, __version__
 
 __all__ = [
@@ -69,25 +72,6 @@ Format = Literal["greek", "beta-code", "transliteration"]
 
 
 # --- Options -----------------------------------------------------------------
-
-
-def _camel(key: str) -> str:
-    if "_" not in key:
-        return key
-    head, *rest = key.split("_")
-    return head + "".join(part[:1].upper() + part[1:] for part in rest)
-
-
-def _keys(value: Any) -> Any:
-    """The keys of every mapping in camelCase, the values unchanged."""
-    if isinstance(value, Mapping):
-        return {
-            (_camel(key) if isinstance(key, str) else key): _keys(item)
-            for key, item in value.items()
-        }
-    if isinstance(value, (list, tuple)):
-        return [_keys(item) for item in value]
-    return value
 
 
 class _Handle:
@@ -134,7 +118,7 @@ def _options(options: Any, keywords: dict[str, Any]) -> Any:
         return None
     merged: dict[str, Any] = dict(options) if options is not None else {}
     merged.update(keywords)
-    return _keys(merged)
+    return to_js(merged)
 
 
 # --- Results -----------------------------------------------------------------
@@ -420,28 +404,35 @@ def resolve_conversion_options(
     options: Mapping[str, Any] | None = None, /, **keywords: Any
 ) -> dict[str, Any]:
     """The complete options that the given ones resolve to, as a fresh
-    mapping with the library's keys (camelCase)."""
-    return _engine.call("resolveConversionOptions", _options(options, keywords))
+    mapping, which can be given back as options."""
+    return from_js(
+        _engine.call("resolveConversionOptions", _options(options, keywords))
+    )
 
 
 def get_preset_options(preset: str) -> dict[str, Any]:
-    """The options a preset sets, with the library's keys (camelCase)."""
-    return _engine.call("getPresetOptions", preset)
+    """The options a preset sets."""
+    return from_js(_engine.call("getPresetOptions", preset))
 
 
 def get_preset_metadata(preset: str) -> dict[str, Any]:
     """What a preset follows, its references, and its coverage."""
-    return _engine.call("getPresetMetadata", preset)
+    return from_js(_engine.call("getPresetMetadata", preset))
 
 
 def list_preset_metadata() -> list[dict[str, Any]]:
     """The metadata of every preset."""
-    return _engine.call("listPresetMetadata")
+    return from_js(_engine.call("listPresetMetadata"))
 
 
 @functools.cache
 def _constants() -> dict[str, Any]:
-    return _engine.call("constants")
+    constants = _engine.call("constants")
+    return {
+        "formats": constants["formats"],
+        "defaultConversionOptions": from_js(constants["defaultConversionOptions"]),
+        "conversionOptionValues": from_js(constants["conversionOptionValues"]),
+    }
 
 
 _CONSTANTS = {

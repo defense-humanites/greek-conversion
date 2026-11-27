@@ -32,24 +32,16 @@ def test_readme_examples():
     )
 
 
-def test_options_mapping_keywords_and_snake_case():
+def test_options_mapping_and_keywords():
     expected = "aristoteles"
-    camel = {
+    options = {
         "diacritics": {"all": "remove"},
-        "transliteration": {"longVowels": "omit"},
-        "text": {"letterCase": "lowercase"},
+        "transliteration": {"long_vowels": "omit"},
+        "text": {"letter_case": "lowercase"},
     }
-    assert gc.convert("Ἀριστοτέλης", "greek", "transliteration", camel) == expected
+    assert gc.convert("Ἀριστοτέλης", "greek", "transliteration", options) == expected
     assert (
-        gc.convert(
-            "Ἀριστοτέλης",
-            "greek",
-            "transliteration",
-            diacritics={"all": "remove"},
-            transliteration={"long_vowels": "omit"},
-            text={"letter_case": "lowercase"},
-        )
-        == expected
+        gc.convert("Ἀριστοτέλης", "greek", "transliteration", **options) == expected
     )
     # Keywords override the mapping's keys.
     assert (
@@ -57,6 +49,7 @@ def test_options_mapping_keywords_and_snake_case():
                    transliteration={"phi": "f"})
         == "f"
     )
+    assert gc.reencode("a)/ndra", "beta-code", beta_code={"case": "uppercase"}) == "A)/NDRA"
 
 
 def test_convert_detailed():
@@ -149,6 +142,11 @@ def test_errors():
         gc.convert("λόγος", "greek", "transliteration", transliteration={"eta": "x"})
     assert caught.value.path == "transliteration.eta"
     with pytest.raises(gc.OptionError) as caught:
+        gc.convert("λόγος", "greek", "transliteration", transliteration={"long_vowels": "x"})
+    assert caught.value.path == "transliteration.long_vowels"
+    assert str(caught.value).startswith("Invalid value for transliteration.long_vowels:")
+    assert "grave-circumflex" in caught.value.accepted
+    with pytest.raises(gc.OptionError) as caught:
         gc.convert("λόγος", "greek", "transliteration", nonsense=True)
     assert caught.value.received is None
 
@@ -185,7 +183,9 @@ def test_presets_and_constants():
     assert gc.get_preset_metadata("sbl-general")["id"] == "sbl-general"
     assert "transliteration" in gc.get_preset_options("sbl-general")
     resolved = gc.resolve_conversion_options(preset="sbl-general")
-    assert set(resolved) >= {"greek", "transliteration", "diacritics"}
+    assert set(resolved) >= {"greek", "transliteration", "diacritics", "beta_code"}
+    assert "long_vowels" in resolved["transliteration"]
+    assert gc.get_preset_metadata("iso-843-type-2")["out_of_scope_behavior"]
     defaults = gc.DEFAULT_CONVERSION_OPTIONS
     defaults["greek"] = None  # a copy: the module's value is unchanged
     assert gc.DEFAULT_CONVERSION_OPTIONS["greek"] is not None

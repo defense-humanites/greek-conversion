@@ -58,18 +58,22 @@ reencode("ϲοφίαϲ", "greek", greek={"sigma": "standard"})
 
 - **Options** are those of the
   [reference](https://greek-conversion.humanites.fr/reference/options/),
-  as a mapping, as keyword arguments, or both. Their keys can be written in
-  camelCase (`longVowels`) or in snake_case (`long_vowels`). Their values do
-  not change (`"iso-843-type-2"`).
+  as a mapping, as keyword arguments, or both, with their keys in snake_case
+  where the reference writes them in camelCase: `long_vowels` for
+  `longVowels`, `beta_code` for `betaCode`, `out_of_scope_behavior` for
+  `outOfScopeBehavior`. A key in camelCase is refused. Values do not change
+  (`"grave-circumflex"`, `"iso-843-type-2"`).
 - **Positions** (`offset`, `length`, spans) are in code points, as Python
   indexes strings, not in the UTF-16 code units of JavaScript:
   `text[loss.offset : loss.offset + loss.length]` is the token.
 - **Results** are frozen dataclasses with snake_case fields
-  (`glyph_variant`, `input_start`). The mappings of options and presets keep
-  the library's keys.
+  (`glyph_variant`, `input_start`). The options and metadata returned have
+  their keys in snake_case too, and can be given back as options.
 - **Errors**: a JavaScript `RangeError` raises `ValueError`, and a
   `TypeError` raises `TypeError`. `OptionError` keeps `path`, `received`,
-  `accepted`, and `replacement`. `CharacterScopeError` keeps `diagnostics`.
+  `accepted`, and `replacement`, and `CharacterScopeError` keeps
+  `diagnostics`. Messages and paths name options in snake_case
+  (`transliteration.long_vowels`).
 
 ## Engines
 

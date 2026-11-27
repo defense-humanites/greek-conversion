@@ -42,7 +42,8 @@ class OptionError(ValueError):
     """An option that cannot be resolved: an unknown key or preset, a value
     outside the accepted ones, or two values that cannot be combined.
 
-    ``path`` names the option (``"transliteration.eta"``, ``"preset"``),
+    ``path`` names the option (``"transliteration.long_vowels"``,
+    ``"preset"``),
     ``received`` is the value given (``None`` for an unknown key),
     ``accepted`` the accepted values or keys, and ``replacement`` the current
     name of a key or value that a release candidate knew, if there is one.
@@ -75,15 +76,21 @@ class CharacterScopeError(ValueError):
 
 
 def from_javascript(error: dict[str, Any]) -> Exception:
+    """The Python counterpart of a JavaScript error, with its option keys
+    in snake_case."""
+    from ._keys import text
+
     name = error.get("name")
-    message = error.get("message", "")
+    message = text(error.get("message", ""))
     if name == "OptionError":
+        replacement = error.get("replacement")
         return OptionError(
             message,
-            path=error.get("path", ""),
+            path=text(error.get("path", "")),
             received=error.get("received"),
-            accepted=tuple(error.get("accepted") or ()),
-            replacement=error.get("replacement"),
+            # Keys or values: the values have no camelCase to convert.
+            accepted=tuple(text(item) for item in error.get("accepted") or ()),
+            replacement=None if replacement is None else text(replacement),
         )
     if name == "CharacterScopeError":
         return CharacterScopeError(
