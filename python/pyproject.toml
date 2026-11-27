@@ -12,7 +12,28 @@ license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Antoine Boquet" }]
 requires-python = ">=3.11"
-keywords = ["greek", "ancient greek", "polytonic", "beta code", "transliteration", "romanization", "digital humanities", "classics", "TLG"]
+keywords = [
+  "greek",
+  "ancient greek",
+  "byzantine greek",
+  "medieval greek",
+  "modern greek",
+  "polytonic",
+  "monotonic",
+  "beta code",
+  "betacode",
+  "transliteration",
+  "romanization",
+  "unicode",
+  "digital humanities",
+  "classics",
+  "ala-lc",
+  "bnf",
+  "iso843",
+  "elot743",
+  "sbl",
+  "tlg",
+]
 classifiers = [
   "Intended Audience :: Science/Research",
   "Intended Audience :: Developers",
