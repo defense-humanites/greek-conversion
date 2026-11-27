@@ -333,7 +333,7 @@ source can be reconstructed from the output: yes, no, or partly.
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | Partly: the accent is recoverable; its scalar preference is not |
 | `questionMark: "greek"`, `anoTeleia: "greek"` | Selects a canonically unstable punctuation scalar | Partly: the punctuation meaning is recoverable; its scalar preference is not |
-| `doubleRho` | Selects a canonical output spelling | Yes: the canonical letters remain recoverable |
+| `doubleRho` | Selects a canonical output spelling | Yes: the canonical letters remain recoverable. From a transliteration that writes the breathings of rho (`rho: "marked"`, `smoothBreathing: "greek"`), the breathings that `doubleRho: "smooth-rough"` adds are reported (`added-diacritic`): `rr` gives `ῤῥ`, which converts back to `rrh` |
 
 ### `betaCode`
 

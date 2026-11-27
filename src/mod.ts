@@ -262,7 +262,7 @@ export function convertDetailed(
       }
       return { written: outputSpans, read: readSpans(output, reread) };
     },
-    { glyphForm: writerFor(from).glyphForm, options: reading },
+    { glyphForm: writerFor(from).glyphForm, options: reading, format: from },
   );
 
   const spans: ConversionSpan[] = new Array(source.length);
