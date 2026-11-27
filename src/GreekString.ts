@@ -11,7 +11,7 @@ import { handleOptions, handleTLGInput, notImplementedError } from './utils';
  *
  * @deprecated `greek-conversion` 0.x is no longer maintained. Its successor
  * is `@humanities/greek-conversion`, a rewrite with a new API; see
- * https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md
+ * https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md#from-014x
  */
 export class GreekString {
   readonly #fromType: KeyType;

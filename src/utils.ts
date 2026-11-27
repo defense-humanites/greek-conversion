@@ -82,7 +82,7 @@ export const applyGammaNasals = (
  *
  * @deprecated `greek-conversion` 0.x is no longer maintained. Its successor
  * is `@humanities/greek-conversion`, a rewrite with a new API; see
- * https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md
+ * https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md#from-014x
  */
 export const applyGreekVariants = (
   greekStr: string,
@@ -362,7 +362,7 @@ export const normalizeTransliteration = (
  *
  * @deprecated `greek-conversion` 0.x is no longer maintained. Its successor
  * is `@humanities/greek-conversion`, a rewrite with a new API; see
- * https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md
+ * https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md#from-014x
  */
 export const removeDiacritics = (
   str: string,
@@ -409,7 +409,7 @@ export const removeDiacritics = (
  *
  * @deprecated `greek-conversion` 0.x is no longer maintained. Its successor
  * is `@humanities/greek-conversion`, a rewrite with a new API; see
- * https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md
+ * https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md#from-014x
  */
 export const removeGreekVariants = (
   greekStr: string, options: {

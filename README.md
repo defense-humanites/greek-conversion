@@ -1,7 +1,7 @@
 # greek-conversion
 
 > [!WARNING]
-> **This package is no longer maintained.** `greek-conversion` 0.x still works, but its successor is [`@humanities/greek-conversion`](https://www.npmjs.com/package/@humanities/greek-conversion) 1.0, a rewrite with a new API (ESM-only, Node.js ≥ 24). Migrating is optional; see the [migration guide](https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md#from-014x).
+> **This package is no longer maintained.** `greek-conversion` 0.x still works, but its successor is [`@humanities/greek-conversion`](https://www.npmjs.com/package/@humanities/greek-conversion), a rewrite with a new API (ESM-only, Node.js ≥ 24), documented on [greek-conversion.humanites.fr](https://greek-conversion.humanites.fr/). Migrating is optional; see the [migration guide](https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md#from-014x).
 
 A small, yet powerful, JavaScript library for converting both polytonic and monotonic Greek from/into many representations.
 
@@ -11,7 +11,7 @@ A small, yet powerful, JavaScript library for converting both polytonic and mono
 
 - **No further development is planned** for `greek-conversion` 0.x: no new features and no bug fixes. The library has no runtime dependencies.
 - **Your code keeps working.** The published versions stay on npm and the `latest` tag stays on `0.14.5`. npm, pnpm, Yarn and Bun now print a deprecation notice when installing the package; it is informational.
-- **When to migrate:** [`@humanities/greek-conversion`](https://github.com/defense-humanites/greek-conversion) 1.0 brings stricter and more complete conversion presets and loss diagnostics. It is ESM-only and requires Node.js ≥ 24; if your project needs CommonJS or an older Node.js, you can stay on `0.14.5`.
+- **When to migrate:** [`@humanities/greek-conversion`](https://github.com/defense-humanites/greek-conversion) brings stricter and more complete conversion presets and loss diagnostics. It requires Node.js ≥ 24 and is ESM-only, so CommonJS code loads it with `import()`; if your project runs on an older Node.js, you can stay on `0.14.5`.
 - The `0.x` source code lives on the [`legacy`](https://github.com/defense-humanites/greek-conversion/tree/legacy) branch.
 
 ## Summary
