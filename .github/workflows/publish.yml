@@ -3,18 +3,27 @@ name: Publish
 on:
   release:
     types: [published]
+  # A fix of the Python package alone, published between two releases of the
+  # library as a post-release (`1.0.0.post1`), from the ref chosen: the tag
+  # of the release, with the fix on top.
+  workflow_dispatch:
+    inputs:
+      python_post_release:
+        description: Number of the Python post-release (1 for `.post1`)
+        required: true
+        type: number
 
 permissions:
   contents: read
   id-token: write
 
 concurrency:
-  group: publish-${{ github.event.release.tag_name }}
+  group: publish-${{ github.event.release.tag_name || github.ref }}
   cancel-in-progress: false
 
 jobs:
   publish:
-    if: vars.PUBLISH_ENABLED == 'true'
+    if: github.event_name == 'release' && vars.PUBLISH_ENABLED == 'true'
     environment: release
     runs-on: ubuntu-latest
     steps:
@@ -44,3 +53,76 @@ jobs:
           --tag "${{ steps.release.outputs.npm_tag }}"
           --access public
           --provenance
+
+  # The Python package: built and tested here, beside the publication of the
+  # library, and published to PyPI only once JSR and npm have the release.
+  python-build:
+    if: vars.PYPI_PUBLISH_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.14"
+      - run: npm ci --ignore-scripts
+      - name: Check the version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="$(node -p 'require("./package.json").version')"
+          if [ -n "$TAG" ]; then
+            # A release: its tag is the version of package.json.
+            test "v$version" = "$TAG"
+          else
+            # A post-release: of a version already released.
+            git ls-remote --exit-code --tags origin "refs/tags/v$version"
+          fi
+      - name: Build the bundle
+        env:
+          PYTHON_POST_RELEASE: ${{ inputs.python_post_release }}
+        run: node python/scripts/build_bundle.mjs
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build python
+      - name: Test the wheel to publish
+        run: |
+          python -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install "$(ls python/dist/*.whl)[v8]"
+          "$RUNNER_TEMP/venv/bin/pip" install --group python/pyproject.toml:test
+          cd "$RUNNER_TEMP" && "$RUNNER_TEMP/venv/bin/python" -m pytest "$GITHUB_WORKSPACE/python/tests"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: python-dist
+          path: python/dist/
+          if-no-files-found: error
+
+  pypi:
+    needs: [publish, python-build]
+    # After JSR and npm for a release; alone for a post-release.
+    if: >-
+      always() && needs.python-build.result == 'success' &&
+      (needs.publish.result == 'success' || github.event_name == 'workflow_dispatch')
+    environment: pypi
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      # Trusted Publishing: PyPI authenticates the workflow's OIDC token.
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: python-dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          # A rerun after a failure past the upload does not fail on the files
+          # already there.
+          skip-existing: true

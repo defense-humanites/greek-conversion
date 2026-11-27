@@ -127,3 +127,37 @@ with Python and [fontTools](https://github.com/fonttools/fonttools)
 pip install "fonttools[woff]==4.67.0"
 python3 scripts/build_fonts.py # downloads the sources, writes web/shared/fonts/
 ```
+
+## The Python package
+
+The Python package, `greek-conversion` on PyPI, is in `python/`. It runs the
+library's bundle in an embedded JavaScript engine, QuickJS (`quickjs-ng`) or
+V8 (`mini-racer`); `python/js/entry.ts` is the bridge between them. The
+bundle, the package's version, which is the library's, and its copy of the
+license are built from the working tree, not committed:
+
+```sh
+npm ci
+node python/scripts/build_bundle.mjs      # the bundle and the generated files
+python -m pip install -e "python[v8]"
+python -m pip install --group python/pyproject.toml:test
+ruff check python
+mypy python/src/greek_conversion
+pytest python                             # on both engines
+```
+
+Its outputs, losses, positions, and errors must be the library's: the
+comparison runs every case of `tests/differential.ts`, inputs with
+characters outside the BMP, `reencode()`, prepared options, Greek passages,
+and converters, through the package.
+
+```sh
+node python/scripts/differential_dump.ts > /tmp/expected.jsonl
+python python/scripts/differential.py /tmp/expected.jsonl --engine quickjs
+python python/scripts/differential.py /tmp/expected.jsonl --engine v8
+```
+
+The Python workflow (`.github/workflows/python.yml`) builds the wheel,
+installs it, and runs both on every change. A change to the library's
+exports, options, or errors may need one to `python/js/entry.ts`, whose list
+of option keys the type check keeps complete.

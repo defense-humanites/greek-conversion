@@ -12,6 +12,7 @@
     "scripts/**/*.{ts,mjs}",
     "web/**/*.ts",
     "bench/**/*.ts",
+    "python/**/*.{ts,mjs}",
     ".github/**/*.yml",
     "*.json"
   ],

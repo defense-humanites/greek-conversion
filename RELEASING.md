@@ -18,12 +18,15 @@ For the canonical `defense-humanites/greek-conversion` repository:
 4. Keep the repository variable `PUBLISH_ENABLED` absent or set to `false`
    until the first publication is explicitly approved.
 
-Both registries use the same package name and version:
+Both registries use the same package name and version; PyPI receives the
+Python package, under the same version in the spelling of PEP 440
+(see [The Python package](#the-python-package)):
 
 | Registry | Package |
 | --- | --- |
 | JSR | `@humanities/greek-conversion` |
 | npm | `@humanities/greek-conversion` |
+| PyPI | `greek-conversion` |
 
 ## Release checklist
 
@@ -70,6 +73,42 @@ Both registries use the same package name and version:
     now holds, and `RENAMED_PRESETS` in `tests/differential.ts`, whose names
     it now has.
 
+## The Python package
+
+The Python package (`python/`) is published to PyPI by the same workflow,
+`publish.yml`: the job `python-build` builds the sdist and the wheel from the
+release's tag and tests the wheel installed, and the job `pypi` publishes
+them once JSR and npm have the release. If JSR or npm fails, PyPI receives
+nothing, and its version, which cannot be uploaded twice, stays available.
+The package's version is that of `package.json`, in the spelling of PEP 440
+(`1.0.0-rc.15` → `1.0.0rc15`), generated when it is built: there is nothing
+to update for it.
+
+One-time setup:
+
+1. Add a trusted publisher for the project `greek-conversion` of the PyPI
+   organization `defense-humanites`, on the project's page if it exists, or
+   otherwise as a pending publisher of the organization, which creates the
+   project at the first upload: repository
+   `defense-humanites/greek-conversion`, workflow `publish.yml`, environment
+   `pypi`.
+2. Create the protected GitHub environment `pypi`, as `release`.
+3. Keep the repository variable `PYPI_PUBLISH_ENABLED` absent or set to
+   `false` until the first publication to PyPI is approved. It is separate
+   from `PUBLISH_ENABLED`, so that JSR and npm can publish without PyPI.
+
+At a release, set `PYPI_PUBLISH_ENABLED` as `PUBLISH_ENABLED` (steps 6 to 8)
+to publish the package too. Before, check the archives that `python-build`
+leaves as the artifact `python-dist`, as the npm archive (step 3): the wheel
+holds the package, its bundle, `py.typed`, and the license. After, check the
+PyPI page and `pip install greek-conversion` in a new environment.
+
+A fix of the Python package alone, between two releases, is a post-release:
+a branch from the release's tag with the fix, from which the workflow is run
+by hand (*Run workflow*), with the number of the post-release (`1` publishes
+`1.0.0rc15.post1`). Only `python-build` and `pypi` run; the version must be
+one already released.
+
 ## A slow JSR step
 
 After `Publishing @humanities/greek-conversion@<version> ...`, `jsr publish`
@@ -89,5 +128,11 @@ the npm configuration or build and rerun the workflow for the same GitHub
 release. JSR will recognize the already-published version, while npm can finish
 the coordinated release.
 
-Do not reuse a version after either registry has accepted it. If package
+If JSR and npm succeed and PyPI fails, correct the cause and rerun the
+failed jobs of the same run: `python-build` rebuilds the archives from the
+release's tag, and `pypi` skips any file PyPI already has. A Python package
+that must change after PyPI has accepted it is a post-release
+([The Python package](#the-python-package)).
+
+Do not reuse a version after any registry has accepted it. If package
 contents must change, prepare a new version instead.

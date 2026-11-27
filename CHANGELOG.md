@@ -9,6 +9,13 @@ change.
 
 ### Added
 
+- **A Python package, `greek-conversion` on PyPI**, runs the library in a
+  JavaScript engine embedded in Python, with the same results, losses, and
+  positions. Its functions and option keys are written in snake_case
+  (`convert_detailed`, `long_vowels`), its positions count characters as
+  Python does, and `convert_many()`, `reencode_many()`, and
+  `convert_detailed_many()` take a list of strings in one call.
+  It lives in `python/` and is published with each release.
 - **`transliteration.rho: "marked"` writes the `h` of rho only for a rough
   breathing that Greek writes**, the second rho of a pair included, and
   reads every `rh` as one: `Πύρρος` gives `Pýrros`, `ῥήτωρ` `rhḗtōr`.
