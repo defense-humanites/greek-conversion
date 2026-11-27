@@ -1325,11 +1325,14 @@ function findRoughDiphthongs(
       ) starts[index] = 0;
     }
   }
-  // A numeral has no diphthong (roughInNumeral()).
+  // A numeral has no diphthong (roughInNumeral()). The context keeps what
+  // the numerals of a long word read, for each pair of it that asks.
+  const context: DocumentContext = {};
   for (let index = 0; index < starts.length; index++) {
-    if (starts[index] === 1 && roughInNumeral(readBack, index, options)) {
-      starts[index] = 0;
-    }
+    if (
+      starts[index] === 1 &&
+      roughInNumeral(readBack, index, options, readBack, context)
+    ) starts[index] = 0;
   }
   // A coronis written as an apostrophe after the first vowel splits the pair
   // (splitByCoronis): the second vowel keeps its own `h`.
@@ -1954,11 +1957,9 @@ function roughInNumeral(
     options.transliteration?.coronis === "apostrophe" &&
     (first.diacritics.has("coronis") || second.diacritics.has("coronis"))
   ) return false;
-  if (
-    options.transliteration?.keraia === "bnf" &&
-    !bnfKeraiaReadsBack(document, start, options)
-  ) return false;
-  return isGreekNumeralContext(numerals, start, context);
+  if (!isGreekNumeralContext(numerals, start, context)) return false;
+  return options.transliteration?.keraia !== "bnf" ||
+    bnfKeraiaReadsBack(document, start, options, context);
 }
 
 /**
@@ -1972,15 +1973,23 @@ function bnfKeraiaReadsBack(
   document: Document,
   start: number,
   options: ConversionOptions,
+  context?: DocumentContext,
 ): boolean {
+  // The letters of the run read last get its answer: read from each pair of
+  // a long run, the run would take a time that grows with its square.
+  const run = context?.bnfKeraia;
+  if (run !== undefined && start >= run.start && start < run.end) {
+    return run.readsBack;
+  }
   let end = start;
   while (document[end]?.kind === "grapheme") end++;
   const keraia = document[end];
-  if (keraia?.kind !== "literal" || keraia.value !== DEXIA_KERAIA) {
-    return false;
-  }
-  return bnfRightKeraia(options, document, end) === DEXIA_KERAIA ||
-    !isVowel((document[end - 1] as Grapheme).letter);
+  const readsBack = keraia?.kind === "literal" &&
+    keraia.value === DEXIA_KERAIA &&
+    (bnfRightKeraia(options, document, end) === DEXIA_KERAIA ||
+      !isVowel((document[end - 1] as Grapheme).letter));
+  if (context !== undefined) context.bnfKeraia = { start, end, readsBack };
+  return readsBack;
 }
 
 /**

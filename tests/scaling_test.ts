@@ -348,6 +348,57 @@ test("a converter checks the scope of a long word in linear time", () => {
   }
 });
 
+test("a long run of tokens that a conversion reads as one is linear", () => {
+  // Each pair of vowels with a rough breathing on the second asked whether
+  // it stood in a numeral, which reading the rest of the word answered, and
+  // under BnF whether the keraia of the word read back; each space of a run
+  // collapsed to one read the rest of the run, to pair it with the space
+  // written. The run grows with the input: none of the passages above, each
+  // repeated, makes one.
+  const bnf = { preset: "bnf-ancient" } as const;
+  const collapse = { text: { whitespace: "collapse" } } as const;
+  for (
+    const [name, unit, run] of [
+      [
+        "rough pairs in a long word",
+        "αἱ".repeat(24),
+        (text: string) => convert(text, "greek", "transliteration"),
+      ],
+      [
+        "rough pairs in a long word, BnF",
+        "αἱ".repeat(24),
+        (text: string) => convert(text, "greek", "transliteration", bnf),
+      ],
+      [
+        "rough pairs in a long numeral, BnF",
+        "αἱ".repeat(24),
+        (text: string) => convert(text + "ʹ", "greek", "transliteration", bnf),
+      ],
+      [
+        "a long run of whitespace collapsed",
+        " ".repeat(16),
+        (text: string) =>
+          convertDetailed(`α${text}β`, "greek", "greek", collapse),
+      ],
+    ] as const
+  ) {
+    const small = unit.repeat(SMALL);
+    const large = unit.repeat(LARGE);
+    let ratio = Infinity;
+    for (let attempt = 0; attempt < ATTEMPTS && ratio >= MAX_RATIO; attempt++) {
+      ratio = Math.min(
+        ratio,
+        fastest(() => run(large)) / fastest(() => run(small)),
+      );
+    }
+    assertEquals(
+      ratio < MAX_RATIO,
+      true,
+      `${name}: an 8× longer input took ${ratio.toFixed(1)}× as long`,
+    );
+  }
+});
+
 test("a long run of letters is in a numeral as a short one is", () => {
   // isGreekNumeralContext() keeps what it reads of a run longer than 16
   // tokens: the letters asked after the first get the same answer.
