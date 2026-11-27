@@ -102,9 +102,18 @@ change.
   the `h` before the pair, as for a diphthong: `αἱʹ` gave `haiʹ`, read back
   as `ἁιʹ`, and `εὑʹ` gave `heuʹ`, then `heyʹ`. The `h` now precedes its
   vowel, and an upsilon is written as outside a diphthong: `αἱʹ` gives
-  `ahiʹ` and `εὑʹ` `ehyʹ`, both without loss. Under the BnF keraiai, and
-  where a coronis is written as an apostrophe on the pair, which may read
-  back as no numeral, the pair is written as before.
+  `ahiʹ` and `εὑʹ` `ehyʹ`, both without loss. Under the BnF keraiai, the
+  rule holds where the right keraia reads back as one, written `ʹ` after an
+  accent (`αὗʹ` gives `ahŷʹ`, where `haûʹ` read back as `ἁῦʹ`). Where the
+  keraia, or a coronis written as an apostrophe on the pair, may read back
+  as no numeral, the pair is written as before.
+- **Under decimal numerals, transliteration writes as a number a numeral
+  whose marks it leaves out.** The letters of a numeral are written as a
+  number when they carry no mark that the output keeps. Transliteration
+  does not write the smooth breathing by default, nor the coronis, nor a
+  quantity mark on epsilon or omicron, and the reader infers no breathing
+  in a numeral: `ἀʹ` gave `aʹ`, read back as `1`, and `͵αἰ` gave `͵ai`,
+  read back as `1010`. They give `1` and `1010` at once.
 - **A macron on eta or omega reads back in transliteration.**
   - By default, eta with a macron is written `ē̄`, as eta with a breve is
     written `ē̆`, but the reader dropped the second macron: `η̄` gave `ē̄`,

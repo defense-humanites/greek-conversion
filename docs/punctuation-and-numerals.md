@@ -260,7 +260,12 @@ The numeral is read on its letters as the output would write them, so that
 converting the output again gives the same text. A letter whose marks the
 options all remove counts as bare: the ALA-LC presets remove the accents and
 the smooth breathing, so that `ἰβʹ` gives `12` there, as `ιβʹ` does, and
-monotonic accentuation removes the breathings too, in every format. A final sigma before the
+monotonic accentuation removes the breathings too, in every format.
+Transliteration counts as bare a letter whose marks it does not write: the
+smooth breathing under `smoothBreathing: "omit"`, the default, or before a
+consonant, the coronis under `coronis: "omit"`, and a quantity mark on a
+letter written as epsilon or omicron (`ἀʹ` gives `1`, whose letters, `aʹ`,
+would read back as that number). A final sigma before the
 keraia is a stigma where the output writes it `ς`, in Greek and Beta Code
 under `greek.finalSigma: "preserve"`.
 
@@ -277,8 +282,8 @@ const decimal = { text: { numerals: "decimal" } } as const;
 
 // Values that do not go down, a letter with a mark, a tonos for an
 // apostrophe.
-convert("αιʹ ἀʹ σ΄ αγαπώ", "greek", "transliteration", decimal);
-// → aiʹ aʹ s΄ agapṓ
+convert("αιʹ ἁʹ σ΄ αγαπώ", "greek", "transliteration", decimal);
+// → aiʹ haʹ s΄ agapṓ
 ```
 
 A final sigma that is not the units before the keraia is a sigma: `ςαʹ` is

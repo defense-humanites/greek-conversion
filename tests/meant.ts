@@ -43,6 +43,8 @@ const MARKED_MACRON =
   "A second macron after the one that makes ē or ō is the letter's own, as a breve after them is: ē̄ reads as η̄, which takes no inferred smooth breathing, as η̆ does not.";
 const COMPOSED_LITERAL =
   "Beta Code writes a letter kept as text and the marks that compose with it as the character they make (é), which reads back as text, where the letter would read back as a letter of Beta Code.";
+const NUMERAL_SMOOTH_BREATHING =
+  "Under decimal numerals, transliteration writes as a number a numeral whose letters bear a smooth breathing or a coronis only, which it leaves out: the letters would read back as that number.";
 const TITLE_AFTER_APOSTROPHE =
   "Title case finds the apostrophe before a letter, and the letter before the apostrophe, past combining marks, as it finds the start of a word: the letter stays small.";
 
@@ -93,4 +95,10 @@ export const MEANT: readonly MeantChange[] = [
     "\u0391\u0395\u0313a\u0306\u03F537;\u03AF\u03AE",
     "vw\u00FBdD\u0101\u00FC\u0301v\u0303d",
   ].map((input) => ({ input, reason: COMPOSED_LITERAL })),
+  {
+    input:
+      "\u0301\u0323\u03C3\u0300\u039F\u03F5\u03C4[\u1FE4\u02B9\u0314\u20DD",
+    label: /^(?:decimal numerals, collapsed whitespace|random 3: )/u,
+    reason: NUMERAL_SMOOTH_BREATHING,
+  },
 ];
