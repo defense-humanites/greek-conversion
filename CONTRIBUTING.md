@@ -138,10 +138,11 @@ license are built from the working tree, not committed:
 
 ```sh
 npm ci
-node python/scripts/build_bundle.mjs      # the bundle, _version.py, LICENSE
+node python/scripts/build_bundle.mjs      # the bundle and the generated files
 python -m pip install -e "python[v8]"
 python -m pip install --group python/pyproject.toml:test
 ruff check python
+mypy python/src/greek_conversion
 pytest python                             # on both engines
 ```
 

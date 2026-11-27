@@ -55,7 +55,11 @@ def test_other_keys_reach_the_library_unchanged():
         with pytest.raises(gc.OptionError) as caught:
             gc.convert("λόγος", "greek", "transliteration", transliteration={key: "omit"})
         assert caught.value.path == f"transliteration.{key}"
-        assert str(caught.value) == f"Unknown conversion option: transliteration.{key}"
+        message = str(caught.value)
+        assert message.startswith(f"Unknown conversion option: transliteration.{key}")
+        # The library's suggestion, in Python's spelling.
+        if key != "fooBar":
+            assert message.endswith("did you mean transliteration.long_vowels?")
 
 
 def test_unknown_keys_are_reported_in_snake_case():

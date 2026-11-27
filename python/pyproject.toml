@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "greek-conversion"
 dynamic = ["version"]
-description = "Convert Ancient, Byzantine, and Modern Greek between Greek script, Beta Code, and Latin script, with standards-based presets and information-loss diagnostics."
+description = "Convert Ancient, Byzantine, and Modern Greek between Greek script, Beta Code, and Latin script, with atomic options composed into standards-based presets, and information-loss diagnostics."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -38,7 +38,7 @@ v8 = ["mini-racer>=0.12.2"]
 
 [dependency-groups]
 # ruff within a minor release: its default rules change between them.
-test = ["pytest>=8", "ruff>=0.17,<0.18"]
+test = ["pytest>=8", "ruff>=0.17,<0.18", "mypy>=1.13", "typing_extensions>=4.12"]
 
 [project.urls]
 Homepage = "https://greek-conversion.humanites.fr/"

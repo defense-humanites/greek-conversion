@@ -56,6 +56,7 @@ jobs:
           python -m pip install "$wheel[v8]"
           python -m pip install --group python/pyproject.toml:test
       - run: ruff check python
+      - run: mypy python/src/greek_conversion
       - name: Test the installed wheel
         # From outside the repository, so that the wheel is what is imported.
         run: cd "$RUNNER_TEMP" && python -m pytest "$GITHUB_WORKSPACE/python/tests"

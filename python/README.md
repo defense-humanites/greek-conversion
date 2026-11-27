@@ -6,8 +6,9 @@
 
 <p align="center">
   <b>A Python library that converts Ancient, Byzantine, and Modern Greek
-  between Greek script, Beta Code, and Latin script, with standards-based
-  presets and information-loss diagnostics.</b>
+  between Greek script, Beta Code, and Latin script, with atomic options
+  composed into standards-based presets, and information-loss
+  diagnostics.</b>
 </p>
 
 <p align="center">
@@ -39,10 +40,13 @@ scripts:
   transliterate after ISO 843 Type 1, which converts back, or ALA-LC; turn
   polytonic text into monotonic; build search keys and URL slugs.
 
-Each convention is a preset that states its references and how far it
-follows them. The ALA-LC, BnF, and ISO 843 presets are tested against
-examples from their published tables, and `iso-843-type-2` against every
-example of the BGN/PCGN table. When a conversion cannot be reversed, the
+Each convention is a preset: a set of the library's 52 atomic options, which
+states its references and how far it follows them. The options also combine
+beyond the presets, among 126 values: `transliteration={"chi": "kh",
+"upsilon": "u"}` writes `ψυχή` as `psukhḗ`, and
+`greek={"iota_subscript": "adscript"}` writes `τῷ` as `τῶι`. The ALA-LC,
+BnF, and ISO 843 presets are tested against examples from their published
+tables, and `iso-843-type-2` against every example of the BGN/PCGN table. When a conversion cannot be reversed, the
 library says what was lost instead of quietly guessing. It converts whole
 corpora in one call.
 
@@ -60,8 +64,9 @@ conversion loses.
 pip install greek-conversion
 ```
 
-The package requires Python 3.11 or later, and ships its own type
-annotations.
+The package requires Python 3.11 or later. It is typed: every option key
+and value is known to editors and type checkers, which complete and check
+them (`ConversionOptions`, `Preset`, `Format`).
 
 ## Main functions
 
@@ -231,6 +236,9 @@ once for the whole list: with V8, it converts within twice the time of Node.
 - [Contributing](https://github.com/defense-humanites/greek-conversion/blob/main/CONTRIBUTING.md):
   the package lives in the `python/` folder of the repository, which
   describes how to build and test it.
+
+Every page of the site is also in Markdown, which
+[`llms.txt`](https://greek-conversion.humanites.fr/llms.txt) lists.
 
 ## Citing and license
 

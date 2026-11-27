@@ -1,10 +1,10 @@
 """Convert Ancient, Byzantine, and Modern Greek between Greek script, Beta
-Code, and Latin script, with standards-based presets and information-loss
-diagnostics.
+Code, and Latin script, with atomic options composed into standards-based
+presets, and information-loss diagnostics.
 
-A Python binding of the JavaScript library ``@humanities/greek-conversion``:
-the library's own bundle runs in an embedded engine, so the outputs are those
-of the JavaScript library, by construction.
+The Python distribution of the TypeScript library
+``@humanities/greek-conversion``, whose bundle it runs in an embedded
+JavaScript engine: its results are the library's.
 
 >>> from greek_conversion import convert
 >>> convert("ἄνδρα μοι ἔννεπε, μοῦσα", "greek", "beta-code")
@@ -28,7 +28,7 @@ from __future__ import annotations
 import copy
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 from . import _engine
 from ._engine import Handle, JavaScriptError, engine_name, set_engine
@@ -36,6 +36,20 @@ from ._errors import CharacterScopeDiagnostic, CharacterScopeError, OptionError
 from ._keys import constants, from_js, to_js
 
 try:
+    from ._options import (
+        BetaCodeOptions,
+        CharacterAlias,
+        ConversionOptions,
+        ConverterConfiguration,
+        CustomCharacter,
+        DiacriticsOptions,
+        Format,
+        GreekOptions,
+        Preset,
+        SourceOptions,
+        TextOptions,
+        TransliterationOptions,
+    )
     from ._version import __js_version__ as __js_version__
     from ._version import __version__ as __version__
 except ImportError as error:  # pragma: no cover
@@ -45,21 +59,35 @@ except ImportError as error:  # pragma: no cover
         "from PyPI."
     ) from error
 
+if TYPE_CHECKING:
+    from typing_extensions import Unpack
+
 __all__ = [
     "CONVERSION_OPTION_VALUES",
     "DEFAULT_CONVERSION_OPTIONS",
     "FORMATS",
+    "BetaCodeOptions",
+    "CharacterAlias",
     "CharacterScopeDiagnostic",
     "CharacterScopeError",
     "ConversionLoss",
+    "ConversionOptions",
     "ConversionResult",
     "ConversionSpan",
     "Converter",
+    "ConverterConfiguration",
     "ConverterConversionResult",
+    "CustomCharacter",
+    "DiacriticsOptions",
     "Format",
+    "GreekOptions",
     "JavaScriptError",
     "OptionError",
     "PreparedOptions",
+    "Preset",
+    "SourceOptions",
+    "TextOptions",
+    "TransliterationOptions",
     "convert",
     "convert_detailed",
     "convert_greek_passages",
@@ -76,9 +104,6 @@ __all__ = [
     "set_engine",
 ]
 
-Format = Literal["greek", "beta-code", "transliteration"]
-
-
 # --- Options -----------------------------------------------------------------
 
 
@@ -91,11 +116,9 @@ class PreparedOptions(Handle):
     _operation = "prepareOptions"
 
 
-Options = Mapping[str, Any]
-
 
 def _options(
-    options: Options | PreparedOptions | None, keywords: dict[str, Any]
+    options: Mapping[str, Any] | PreparedOptions | None, keywords: Mapping[str, Any]
 ) -> tuple[dict[str, Any] | None, PreparedOptions | None]:
     """The options of a call, as the library reads them, and the prepared
     options given instead, if any."""
@@ -114,7 +137,7 @@ def _options(
     return to_js(merged), None
 
 
-def _call(operation: str, *args: Any, options: Any, keywords: dict[str, Any]) -> Any:
+def _call(operation: str, *args: Any, options: Any, keywords: Mapping[str, Any]) -> Any:
     mapping, prepared = _options(options, keywords)
     return _engine.call(operation, *args, mapping, handles=(prepared,))
 
@@ -203,15 +226,25 @@ def convert(
     text: str,
     source: Format,
     target: Format,
-    options: Mapping[str, Any] | PreparedOptions | None = None,
+    options: ConversionOptions | PreparedOptions | None = None,
     /,
-    **keywords: Any,
+    **keywords: Unpack[ConversionOptions],
 ) -> str:
     """Converts text between Greek, Beta Code, and transliteration.
 
     Unknown characters are kept. The output is canonical; a reverse
     conversion is not necessarily lossless: use :func:`convert_detailed` when
     that matters.
+
+    >>> convert("ἄνδρα μοι ἔννεπε", "greek", "beta-code")
+    'a)/ndra moi e)/nnepe'
+    >>> convert("a)/ndra", "beta-code", "greek")
+    'ἄνδρα'
+    >>> convert("Θεσσαλονίκη", "greek", "transliteration", preset="iso-843-type-2")
+    'Thessaloníki'
+    >>> convert("ψυχή", "greek", "transliteration",
+    ...         transliteration={"chi": "kh", "upsilon": "u"})
+    'psukhḗ'
 
     :raises TypeError: if ``text`` is not a string.
     :raises ValueError: if a format is unknown; :class:`OptionError` if a
@@ -223,9 +256,9 @@ def convert(
 def reencode(
     text: str,
     format: Format,
-    options: Mapping[str, Any] | PreparedOptions | None = None,
+    options: ConversionOptions | PreparedOptions | None = None,
     /,
-    **keywords: Any,
+    **keywords: Unpack[ConversionOptions],
 ) -> str:
     """Parses and writes text again in the same format: normalizes it, or
     restyles it after other options.
@@ -240,9 +273,9 @@ def convert_detailed(
     text: str,
     source: Format,
     target: Format,
-    options: Mapping[str, Any] | PreparedOptions | None = None,
+    options: ConversionOptions | PreparedOptions | None = None,
     /,
-    **keywords: Any,
+    **keywords: Unpack[ConversionOptions],
 ) -> ConversionResult:
     """Converts text and reports what the target cannot retain, and where each
     source token was read and written.
@@ -260,9 +293,9 @@ def convert_detailed(
 def convert_greek_passages(
     text: str,
     target: Format,
-    options: Mapping[str, Any] | PreparedOptions | None = None,
+    options: ConversionOptions | PreparedOptions | None = None,
     /,
-    **keywords: Any,
+    **keywords: Unpack[ConversionOptions],
 ) -> str:
     """Converts the Greek passages of a text in another language, and copies
     the rest as it is.
@@ -276,12 +309,17 @@ def convert_greek_passages(
 def convert_greek_passages_detailed(
     text: str,
     target: Format,
-    options: Mapping[str, Any] | PreparedOptions | None = None,
+    options: ConversionOptions | PreparedOptions | None = None,
     /,
-    **keywords: Any,
+    **keywords: Unpack[ConversionOptions],
 ) -> ConversionResult:
     """:func:`convert_greek_passages`, with the losses and spans of
-    :func:`convert_detailed`."""
+    :func:`convert_detailed`.
+
+    >>> result = convert_greek_passages_detailed("voir ϐίος", "beta-code")
+    >>> result.output, [loss.code for loss in result.losses]
+    ('voir bi/os', ['removed-glyph-variant'])
+    """
     return _result(
         _call(
             "convertGreekPassagesDetailed", text, target, options=options, keywords=keywords
@@ -293,13 +331,16 @@ def convert_many(
     texts: Iterable[str],
     source: Format,
     target: Format,
-    options: Mapping[str, Any] | PreparedOptions | None = None,
+    options: ConversionOptions | PreparedOptions | None = None,
     /,
-    **keywords: Any,
+    **keywords: Unpack[ConversionOptions],
 ) -> list[str]:
     """Converts many strings in one call into the engine, as :func:`convert`
     converts each: the fixed cost of a call is paid once. The fastest way to
     convert the lines of a corpus or the cells of a column.
+
+    >>> convert_many(["λόγος", "ψυχή"], "greek", "beta-code", preset="tlg-core")
+    ['LO/GOS', 'YUXH/']
 
     :raises TypeError: if ``texts`` is a string rather than strings.
     """
@@ -311,11 +352,18 @@ def convert_many(
 
 
 def prepare_options(
-    options: Options | PreparedOptions | None = None, /, **keywords: Any
+    options: ConversionOptions | PreparedOptions | None = None,
+    /,
+    **keywords: Unpack[ConversionOptions],
 ) -> PreparedOptions:
     """Checks and resolves options once, for many conversions. The defaults
     and the presets alone are already resolved once; this serves custom
     options in a loop. Prepared options are returned as they are.
+
+    >>> scheme = prepare_options(transliteration={"phi": "f", "chi": "kh"})
+    >>> [convert(word, "greek", "transliteration", scheme)
+    ...  for word in ["φύσις", "χάος"]]
+    ['fýsis', 'kháos']
 
     :raises OptionError: as :func:`convert` would, at once.
     """
@@ -342,7 +390,7 @@ class Converter(Handle):
         return (self._payload, None)
 
     def _call(
-        self, operation: str, args: tuple[Any, ...], options: Any, keywords: dict[str, Any]
+        self, operation: str, args: tuple[Any, ...], options: Any, keywords: Mapping[str, Any]
     ) -> Any:
         mapping, prepared = _options(options, keywords)
         return _engine.call(operation, *args, mapping, handles=(prepared, self))
@@ -352,12 +400,16 @@ class Converter(Handle):
         text: str,
         source: Format,
         target: Format,
-        options: Options | None = None,
+        options: ConversionOptions | None = None,
         /,
-        **keywords: Any,
+        **keywords: Unpack[ConversionOptions],
     ) -> str:
         """Converts text with this converter's characters and scope. Options
         add to its preset; prepared options are refused, as by the library.
+
+        >>> sbl = create_converter(preset="sbl-general")
+        >>> sbl.convert("ἐν ἀρχῇ", "greek", "transliteration")
+        'en archē'
 
         :raises CharacterScopeError: if the converter rejects characters
             outside its scope.
@@ -371,12 +423,18 @@ class Converter(Handle):
         text: str,
         source: Format,
         target: Format,
-        options: Options | None = None,
+        options: ConversionOptions | None = None,
         /,
-        **keywords: Any,
+        **keywords: Unpack[ConversionOptions],
     ) -> ConverterConversionResult:
         """Converts text and reports the losses and the repertoire's
-        diagnostics."""
+        diagnostics.
+
+        >>> no_digamma = create_converter(exclude=["digamma"])
+        >>> result = no_digamma.convert_detailed("ϝάναξ", "greek", "transliteration")
+        >>> result.output, result.diagnostics[0].character
+        ('ϝánax', 'digamma')
+        """
         value = self._call(
             "converterConvertDetailed", (text, source, target), options, keywords
         )
@@ -393,13 +451,18 @@ class Converter(Handle):
 
 
 def create_converter(
-    configuration: Options | None = None, /, **keywords: Any
+    configuration: ConverterConfiguration | None = None,
+    /,
+    **keywords: Unpack[ConverterConfiguration],
 ) -> Converter:
     """Creates a converter that binds a preset, adds characters or spellings,
     or restricts the repertoire.
 
-    >>> strict = create_converter(preset="iso-843-type-2",
-    ...                           out_of_scope_behavior="reject")
+    >>> strict = create_converter(exclude=["digamma"], out_of_scope_behavior="reject")
+    >>> strict.convert("ϝάναξ", "greek", "transliteration")
+    Traceback (most recent call last):
+    ...
+    greek_conversion._errors.CharacterScopeError: Conversion rejected: 1 out-of-scope character.
 
     :raises OptionError: or :class:`TypeError`, for an invalid configuration,
         at once.
@@ -417,27 +480,45 @@ def create_converter(
 
 
 def resolve_conversion_options(
-    options: Options | PreparedOptions | None = None, /, **keywords: Any
-) -> dict[str, Any]:
+    options: ConversionOptions | PreparedOptions | None = None,
+    /,
+    **keywords: Unpack[ConversionOptions],
+) -> ConversionOptions:
     """The complete options that the given ones resolve to, as a fresh
-    mapping, which can be given back as options."""
+    mapping, which can be given back as options.
+
+    >>> resolve_conversion_options(preset="sbl-general")["transliteration"]["long_vowels"]
+    'macron'
+    """
     return from_js(
         _call("resolveConversionOptions", options=options, keywords=keywords)
     )
 
 
-def get_preset_options(preset: str) -> dict[str, Any]:
-    """The options a preset sets."""
+def get_preset_options(preset: Preset) -> ConversionOptions:
+    """The options a preset sets.
+
+    >>> get_preset_options("tlg-core")
+    {'beta_code': {'case': 'uppercase', 'yot': '#401'}}
+    """
     return from_js(_engine.call("getPresetOptions", preset))
 
 
-def get_preset_metadata(preset: str) -> dict[str, Any]:
-    """What a preset follows, its references, and its coverage."""
+def get_preset_metadata(preset: Preset) -> dict[str, Any]:
+    """What a preset follows, its references, and its coverage.
+
+    >>> get_preset_metadata("iso-843-type-2")["name"]
+    'ISO 843:1997 — Type 2 (transcription)'
+    """
     return from_js(_engine.call("getPresetMetadata", preset))
 
 
 def list_preset_metadata() -> list[dict[str, Any]]:
-    """The metadata of every preset."""
+    """The metadata of every preset.
+
+    >>> [metadata["id"] for metadata in list_preset_metadata()][:3]
+    ['ala-lc-ancient', 'ala-lc-modern', 'bnf-ancient']
+    """
     return from_js(_engine.call("listPresetMetadata"))
 
 

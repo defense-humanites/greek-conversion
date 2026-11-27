@@ -8,6 +8,7 @@
 //   (`1.0.0-rc.14` → `1.0.0rc14`), so that the two distributions share it,
 //   followed by `.postN` when `PYTHON_POST_RELEASE` is N: a fix of the
 //   Python package alone, published between two releases of the library;
+// - `_options.py`, the types of the options (`option_types.ts`);
 // - a copy of the LICENSE, which the wheel must carry from its own folder.
 //
 //   node python/scripts/build_bundle.mjs
@@ -17,6 +18,7 @@
 import { build } from "esbuild";
 import { copyFile, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import { optionTypes } from "./option_types.ts";
 
 const here = (path) => fileURLToPath(new URL(path, import.meta.url));
 const { version } = JSON.parse(
@@ -63,6 +65,7 @@ await writeFile(
     `__version__ = "${pythonVersion}"\n` +
     `__js_version__ = "${version}"\n`,
 );
+await writeFile(here("../src/greek_conversion/_options.py"), optionTypes());
 await copyFile(here("../../LICENSE"), here("../LICENSE"));
 
 console.log(`Built the Python package's files for ${pythonVersion}.`);

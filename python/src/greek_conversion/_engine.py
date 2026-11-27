@@ -27,7 +27,7 @@ import threading
 import weakref
 from collections.abc import Callable, Sequence
 from importlib import resources
-from typing import Any, ClassVar, Protocol
+from typing import Any, ClassVar, Protocol, cast
 
 ENGINES = ("v8", "quickjs")
 
@@ -54,8 +54,8 @@ class _V8Backend:
 
         self._context = MiniRacer()
         self._context.eval(_read("greek_conversion.js"))
-        self._call: Callable[[str, str], str] = self._context.eval(
-            "__greekConversion.call"
+        self._call = cast(
+            "Callable[[str, str], str]", self._context.eval("__greekConversion.call")
         )
 
     def call(self, operation: str, args_json: str) -> str:
@@ -70,7 +70,7 @@ class _QuickJSBackend:
     name = "quickjs"
 
     def __init__(self) -> None:
-        import quickjs
+        import quickjs  # type: ignore[import-untyped]
 
         self._context = quickjs.Context()
         self._context.eval(_read("polyfills.js"))
@@ -114,7 +114,13 @@ def _owner() -> tuple[int, int]:
 def set_engine(name: str | None) -> None:
     """Chooses the engine, ``"v8"`` or ``"quickjs"``, or ``None`` for the
     default. The current engine, if any, is closed; prepared options and
-    converters are made again in the next one when they are next used."""
+    converters are made again in the next one when they are next used.
+
+    >>> set_engine("quickjs")
+    >>> engine_name()
+    'quickjs'
+    >>> set_engine(None)
+    """
     global _backend, _requested, generation
     if name is not None and name not in ENGINES:
         raise ValueError(f"Unknown engine: {name!r}; expected one of {ENGINES}.")
@@ -127,7 +133,12 @@ def set_engine(name: str | None) -> None:
 
 
 def engine_name() -> str:
-    """The name of the engine in use, starting it if needed."""
+    """The name of the engine in use, ``"v8"`` or ``"quickjs"``, starting it
+    if needed.
+
+    >>> engine_name() in ("v8", "quickjs")
+    True
+    """
     with _lock:
         return _get().name
 

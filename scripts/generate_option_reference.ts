@@ -86,8 +86,8 @@ const documentation = readDocumentation(await readFile(SOURCE, "utf8"));
 const page = await readFile(PAGE, "utf8");
 const expected = replaceGeneratedSection(page, render());
 
-// The README and Getting started give the number of options, and the README
-// that of their values: they follow the library.
+// The READMEs and Getting started give the number of options, and the
+// READMEs that of their values: they follow the library.
 const counts = Object.values(CONVERSION_OPTION_VALUES).flatMap((group) =>
   Object.values(group as Record<string, readonly unknown[]>)
 );
@@ -96,6 +96,8 @@ const valueCount = counts.reduce((sum, values) => sum + values.length, 0);
 const stated: readonly [string, RegExp, number][] = [
   ["README.md", /\b(\d+) atomic options\b/, optionCount],
   ["README.md", /\bamong (\d+) values\b/, valueCount],
+  ["python/README.md", /\b(\d+) atomic options\b/, optionCount],
+  ["python/README.md", /\bamong (\d+) values\b/, valueCount],
   [
     "web/docs/src/content/docs/guide/getting-started.md",
     /\bThere are (\d+) of them\b/,

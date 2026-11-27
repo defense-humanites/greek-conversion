@@ -18,12 +18,15 @@ For the canonical `defense-humanites/greek-conversion` repository:
 4. Keep the repository variable `PUBLISH_ENABLED` absent or set to `false`
    until the first publication is explicitly approved.
 
-Both registries use the same package name and version:
+Both registries use the same package name and version; PyPI receives the
+Python package, under the same version in the spelling of PEP 440
+(see [The Python package](#the-python-package)):
 
 | Registry | Package |
 | --- | --- |
 | JSR | `@humanities/greek-conversion` |
 | npm | `@humanities/greek-conversion` |
+| PyPI | `greek-conversion` |
 
 ## Release checklist
 
@@ -125,5 +128,11 @@ the npm configuration or build and rerun the workflow for the same GitHub
 release. JSR will recognize the already-published version, while npm can finish
 the coordinated release.
 
-Do not reuse a version after either registry has accepted it. If package
+If JSR and npm succeed and PyPI fails, correct the cause and rerun the
+failed jobs of the same run: `python-build` rebuilds the archives from the
+release's tag, and `pypi` skips any file PyPI already has. A Python package
+that must change after PyPI has accepted it is a post-release
+([The Python package](#the-python-package)).
+
+Do not reuse a version after any registry has accepted it. If package
 contents must change, prepare a new version instead.
