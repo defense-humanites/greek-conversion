@@ -55,6 +55,7 @@ import {
   presetChecksLetters,
   presetMappingIssue,
   resolveConversionOptions,
+  withSteps,
 } from "./presets.ts";
 import { hasPreparedMark } from "./prepared_mark.ts";
 import {
@@ -1682,15 +1683,15 @@ function writtenWord(
  * options the conversion has, since no reader needs them), the sigma shapes
  * of the source (`greek.sigma` and `greek.finalSigma` set to `"preserve"`),
  * and, of the conversion's options, only the letter case, which `text`
- * applies to the whole text. A sign that stands for several letters (`ϗ`) is
- * written as its letters, each in a span of its own, so that a letter kept
- * from it is written alone.
+ * applies to the whole text, with its step (`withSteps()`). A sign that
+ * stands for several letters (`ϗ`) is written as its letters, each in a
+ * span of its own, so that a letter kept from it is written alone.
  */
 function keptOptions(
   letterCase: ResolvedConversionOptions["text"]["letterCase"],
 ): ResolvedConversionOptions {
   const defaults = DEFAULT_CONVERSION_OPTIONS;
-  return {
+  return withSteps({
     transliteration: { ...defaults.transliteration },
     greek: {
       ...defaults.greek,
@@ -1701,7 +1702,7 @@ function keptOptions(
     betaCode: { ...defaults.betaCode },
     text: { ...defaults.text, letterCase },
     diacritics: { ...defaults.diacritics },
-  };
+  });
 }
 
 /**

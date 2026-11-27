@@ -12,7 +12,11 @@ import { type DocumentContext, isGreekNumeralContext } from "./context.ts";
 import { supplyKaiAccents } from "./kai_accent.ts";
 import { readStigmaLigatures } from "./ligatures.ts";
 import type { Document, Format, Letter } from "./model.ts";
-import { applyMonotonicOrthography } from "./orthography.ts";
+import {
+  applyLetterCaseOrthography,
+  applyMonotonicOrthography,
+  applyWhitespaceOrthography,
+} from "./orthography.ts";
 import { hasPreparedMark, PREPARED } from "./prepared_mark.ts";
 import { type PreparedOptions, preparedProfiles } from "./prepared.ts";
 import { sealProfile } from "./profile_cache.ts";
@@ -225,7 +229,22 @@ const STEPS: Steps = {
   kaiAccents: supplyKaiAccents,
   monotonic: applyMonotonicOrthography,
   stigmaLigatures: readStigmaLigatures,
+  letterCase: applyLetterCaseOrthography,
+  whitespace: applyWhitespaceOrthography,
 };
+
+/**
+ * Resolved options that the library makes itself, linked to the steps they
+ * take (see `steps.ts`): those that write the letters a converter keeps, in
+ * the letter case of the conversion.
+ *
+ * Internal: not exported by an entry point.
+ */
+export function withSteps(
+  options: ResolvedConversionOptions,
+): ResolvedConversionOptions {
+  return linkSteps(options, STEPS);
+}
 
 /**
  * The two profiles of a conversion: the options that write its output, and

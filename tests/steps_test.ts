@@ -1,8 +1,9 @@
 // The steps that only options outside the presets take (the accent of καί,
-// monotonic accentuation, the stigma read as `στ`) are carried by the options
-// that their resolution returns (src/steps.ts). The presets as prepared
-// options, made without it, take none, and options resolved by any entry
-// point take theirs.
+// monotonic accentuation, the stigma read as `στ`, the letter case of the
+// whole text, and whitespace collapsed) are carried by the options that
+// their resolution returns (src/steps.ts). The presets as prepared options,
+// made without it, take none, and options resolved by any entry point take
+// theirs.
 import { test } from "node:test";
 import { assert, assertEquals } from "./assertions.ts";
 import * as core from "../src/core.ts";
@@ -15,9 +16,10 @@ import * as presets from "../src/prepared_presets.ts";
 import * as main from "../src/mod.ts";
 import { applyGreekOrthography, encode, parse } from "../src/document.ts";
 
-// The sign of καί, which takes the accent of `greek.kaiAccent`, and a
-// stigma in a word, read as `στ` under `greek.stigma: "ligature"`.
-const TEXT = "Ὁ δὲ ϗ τοῦ λόγου ἐϛὶ ιϛʹ, ἀλλʼ ΑΛΗΘΕΙΑ ἐστί.";
+// The sign of καί, which takes the accent of `greek.kaiAccent`, a stigma in
+// a word, read as `στ` under `greek.stigma: "ligature"`, and two spaces,
+// which `text.whitespace: "collapse"` writes as one.
+const TEXT = "Ὁ δὲ ϗ τοῦ λόγου ἐϛὶ ιϛʹ, ἀλλʼ  ΑΛΗΘΕΙΑ ἐστί.";
 const FORMATS = ["greek", "beta-code", "transliteration"] as const;
 const VALUES = {
   greek: greek.greekFormat,
@@ -40,6 +42,9 @@ const CASES = [
   { greek: { accentuation: "monotonic" } },
   { greek: { stigma: "ligature" } },
   { source: { greek: { stigma: "ligature" } } },
+  { text: { letterCase: "title" } },
+  { text: { letterCase: "uppercase" } },
+  { text: { whitespace: "collapse" } },
 ] as const satisfies main.ConversionOptions[];
 
 test("the presets and the defaults of the core take none of the steps", () => {
@@ -119,8 +124,46 @@ test("resolved options given back take the steps", () => {
     main.convert(TEXT, "greek", "greek", resolved),
     main.convert(TEXT, "greek", "greek", options),
   );
+  for (
+    const other of [options, ...CASES.filter((each) => "text" in each)]
+  ) {
+    const label = JSON.stringify(other);
+    const document = parse(TEXT, "greek");
+    assertEquals(
+      applyGreekOrthography(document, core.prepareOptions(other)),
+      applyGreekOrthography(document, other),
+      label,
+    );
+    assert(
+      encode(applyGreekOrthography(document, other), "greek") !==
+        encode(document, "greek"),
+      label,
+    );
+  }
+});
+
+test("a converter writes the letters it keeps in the letter case", () => {
+  // The alpha, left out of the converter's repertoire, is kept as it was
+  // written, in the letter case of the conversion: the options that write it
+  // take the step of the letter case.
+  const converter = main.createConverter({ exclude: ["alpha"] });
+  const text = "ἀνὴρ  Ἀθηναῖος ";
   assertEquals(
-    applyGreekOrthography(parse(TEXT, "greek"), core.prepareOptions(options)),
-    applyGreekOrthography(parse(TEXT, "greek"), options),
+    converter.convert(text, "greek", "greek", {
+      text: { letterCase: "title" },
+    }),
+    "Ἀνὴρ  Ἀθηναῖος ",
+  );
+  assertEquals(
+    converter.convert(text, "greek", "beta-code", {
+      text: { letterCase: "uppercase" },
+    }),
+    "Α*n*\\h*r  Α*q*h*nΑ*=i*o*s ",
+  );
+  assertEquals(
+    converter.convert(text, "greek", "transliteration", {
+      text: { letterCase: "lowercase", whitespace: "collapse" },
+    }),
+    "ἀnḕr ἀthēnαĩos",
   );
 });
