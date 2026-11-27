@@ -318,6 +318,52 @@ test("writes the h of rho only for a written rough breathing on demand", () => {
   );
 });
 
+test("reports the breathings that doubleRho adds where transliteration writes them", () => {
+  // Under rho: "marked", rr is a double rho without breathings: the rough
+  // breathing that greek.doubleRho writes on the second rho reads back as
+  // rrh, so the conversion is not lossless.
+  for (
+    const options of [
+      { transliteration: { rho: "marked" } },
+      { preset: "iso-843-type-1" },
+      { preset: "ala-lc-modern" },
+    ] as const
+  ) {
+    const doubled = {
+      ...options,
+      greek: { doubleRho: "smooth-rough" },
+    } as const;
+    for (const to of ["greek", "beta-code"] as const) {
+      const result = convertDetailed("rr", "transliteration", to, doubled);
+      assertEquals(
+        result.losses.map((loss) => [loss.code, loss.diacritic]),
+        [["added-diacritic", "rough"]],
+      );
+    }
+    // A rough breathing that the source writes is no loss.
+    assertEquals(
+      convertDetailed("rrh", "transliteration", "greek", doubled).lossy,
+      false,
+    );
+  }
+  // BnF writes the smooth breathing on rho too (r̓).
+  assertEquals(
+    convertDetailed("rr", "transliteration", "greek", {
+      preset: "bnf-ancient",
+      greek: { doubleRho: "smooth-rough" },
+    }).losses.map((loss) => loss.diacritic),
+    ["smooth", "rough"],
+  );
+  // The default writes rrh for every double rho: the breathings change
+  // nothing there.
+  assertEquals(
+    convertDetailed("rr", "transliteration", "greek", {
+      greek: { doubleRho: "smooth-rough" },
+    }).lossy,
+    false,
+  );
+});
+
 test("applies the beta symbol only to medial lowercase beta", () => {
   assertNfcEquals(
     convert("bárbaros", "transliteration", "greek"),
@@ -670,6 +716,26 @@ test("reads nk at the edge of a word as nu and kappa under ALA-LC", () => {
   assertNfcEquals(
     convert("Phrank", "transliteration", "transliteration", modern),
     "Phrank",
+  );
+  // Before a keraia too: γκ there is gk, and nk νκ, the numeral 70.
+  assertNfcEquals(
+    convert("γκʹ Γκʹ", "greek", "transliteration", modern),
+    "gkʹ Gkʹ",
+  );
+  assertNfcEquals(
+    convert("gkʹ Gkʹ", "transliteration", "transliteration", modern),
+    "gkʹ Gkʹ",
+  );
+  const medial = {
+    transliteration: { nasalGamma: "nasal-medial-kappa" },
+  } as const;
+  assertNfcEquals(
+    convert("͵γκʹ νκʹ", "greek", "transliteration", medial),
+    "͵gkʹ nkʹ",
+  );
+  assertNfcEquals(
+    convert("͵gkʹ nkʹ", "transliteration", "greek", medial),
+    "͵γκʹ νκʹ",
   );
 });
 

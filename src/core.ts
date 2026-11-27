@@ -211,7 +211,11 @@ export function convertDetailed(
       }
       return { written: outputSpans, read: readSpans(output, reread) };
     },
-    { glyphForm: sourceWriter.glyphForm, options: reading },
+    {
+      glyphForm: sourceWriter.glyphForm,
+      options: reading,
+      format: sourceWriter.format,
+    },
   );
 
   const spans: ConversionSpan[] = new Array(source.length);

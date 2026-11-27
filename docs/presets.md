@@ -450,10 +450,12 @@ Presets never infer a missing rough breathing and do not perform transformations
 that intrinsically require lexical or morphological knowledge. Consequently,
 ALA-LC output can only render `h` when the source document actually carries a
 rough breathing. This is a deliberate scope boundary, not an implicit fallback.
-The second rho of a pair inside a word is the one convention: SBL and ALA-LC
-Ancient write it `rh`, as classical studies do, while ISO 843, ALA-LC Modern,
-and BnF, whose tables write `h` only for a rough breathing that Greek writes,
-select `transliteration.rho: "marked"` (`Πύρρος` → `Pýrros`).
+The one `h` written without a breathing is that of the second rho of a pair
+inside a word, a convention on which the presets differ: SBL and ALA-LC
+Ancient write it `rh`, as classical studies do (`Πύρρος` → `Pyrrhos`), while
+ISO 843, ALA-LC Modern, and BnF, whose tables write `h` only for a rough
+breathing that Greek writes, select `transliteration.rho: "marked"`
+(`Πύρρος` → `Pýrros`).
 
 The ALA-LC policy omits diaeresis visually. Under contextual `y/u`, the parser
 nevertheless preserves its deterministic provenance: `y` is interpreted as a

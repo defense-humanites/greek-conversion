@@ -1,10 +1,12 @@
 import type { WriterHooks } from "./codec.ts";
 import { type DocumentContext, isTonosKeraia, isVowel } from "./context.ts";
+import { preservesDiacritic } from "./diacritics.ts";
 import { ACCENTS } from "./kai_accent.ts";
 import { sharedMask } from "./model.ts";
 import type {
   Diacritic,
   Document,
+  Format,
   GlyphVariant,
   Grapheme,
   Token,
@@ -44,7 +46,9 @@ export interface ConversionLoss {
    * `"added-diacritic"`, `"displaced-diacritic"`, or `"inferred-breathing"`.
    * An added diacritic is the diaeresis that transliteration writes on a
    * contextual `y`, or Greek output in capitals under `greek.capitalMarks`,
-   * or the accent of `καί` that `greek.kaiAccent` writes for `ϗ`.
+   * the accent of `καί` that `greek.kaiAccent` writes for `ϗ`, or a
+   * breathing that `greek.doubleRho` writes on a double rho read from a
+   * transliteration that writes it (`rho: "marked"`).
    */
   diacritic?: Diacritic;
   /**
@@ -163,6 +167,10 @@ export function findConversionLosses(
   const kaiSymbols = source.some((token) =>
     token.kind === "grapheme" && token.glyphVariant === "kai-symbol"
   );
+  // The breathings of rho that a transliterated source would write.
+  const rhoBreathings = glyphs.format === "transliteration"
+    ? writtenRhoBreathings(glyphs.options)
+    : undefined;
 
   for (let index = 0; index < source.length; index++) {
     if (unreadKept?.has(index)) {
@@ -190,9 +198,71 @@ export function findConversionLosses(
     if (kaiSymbols && counterpart !== undefined) {
       addKaiAccent(losses, source, target, index, counterpart);
     }
+    if (rhoBreathings !== undefined && counterpart !== undefined) {
+      addRhoBreathing(
+        losses,
+        source,
+        target,
+        index,
+        counterpart,
+        rhoBreathings,
+      );
+    }
   }
 
   return losses.all;
+}
+
+/**
+ * The breathings that transliteration writes on a rho under the options of
+ * the source: the rough one under `rho: "marked"`, where the second rho of a
+ * pair takes no `h` of its own, and the smooth one under
+ * `smoothBreathing: "greek"` (`r̓`). Undefined if neither.
+ */
+function writtenRhoBreathings(
+  options: ConversionOptions,
+): readonly Diacritic[] | undefined {
+  const marks = BREATHINGS.filter((mark) =>
+    preservesDiacritic(mark, options, "transliteration") &&
+    (mark === "rough"
+      ? options.transliteration?.rho === "marked"
+      : options.transliteration?.smoothBreathing === "greek")
+  );
+  return marks.length > 0 ? marks : undefined;
+}
+
+/**
+ * Reports a breathing that the target writes on a rho of a transliterated
+ * source, which the source format would write (`marks`): those that
+ * `greek.doubleRho: "smooth-rough"` writes on a double rho. Under
+ * `rho: "marked"`, `rr` is a double rho without them, and `ῤῥ` converts back
+ * to `rrh`.
+ */
+function addRhoBreathing(
+  losses: Losses,
+  sourceDocument: Document,
+  targetDocument: Document,
+  index: number,
+  targetIndex: number,
+  marks: readonly Diacritic[],
+): void {
+  const source = sourceDocument[index];
+  const target = targetDocument[targetIndex];
+  if (
+    source.kind !== "grapheme" || source.letter !== "rho" ||
+    target?.kind !== "grapheme" || target.letter !== "rho"
+  ) return;
+  for (const mark of marks) {
+    if (!target.diacritics.has(mark) || source.diacritics.has(mark)) continue;
+    losses.add(
+      "added-diacritic",
+      index,
+      `The target representation writes a ${
+        DIACRITIC_NAMES[mark]
+      } on rho that the source does not have, as greek.doubleRho writes it on a double rho; the source format writes it, and the breathing is read back.`,
+      mark,
+    );
+  }
 }
 
 /**
@@ -233,6 +303,11 @@ function addKaiAccent(
 export interface SourceGlyphs {
   readonly glyphForm: WriterHooks["glyphForm"];
   readonly options: ConversionOptions;
+  /**
+   * The source format, for the breathings of rho that a transliterated
+   * source writes (addRhoBreathing()).
+   */
+  readonly format?: Format;
 }
 
 /**
@@ -333,7 +408,13 @@ function pairByPosition(
       // A writer may also write several literals as one character, which
       // the reader reads as one (`é`, a letter and a mark kept as text, in
       // Beta Code): the literals after this one that share its output, as
-      // an empty piece does (joinPieces()), belong to its text.
+      // an empty piece does (joinPieces()), belong to its text. A run of
+      // more than twice the code units of the text's NFD cannot spell it
+      // (sameLiteral()), and is not read on: read to its end from each of
+      // its literals, a long run with one output (whitespace collapsed to one
+      // space) would take a time that grows with its square. The bound is
+      // computed only for a run, which few literals start.
+      let longest = Infinity;
       let run = token.value;
       let next = index + 1;
       for (
@@ -341,8 +422,14 @@ function pairByPosition(
         following?.kind === "literal" && written.starts[next] === start &&
         written.ends[next] === end;
         following = source[++next]
-      ) run += following.value;
-      if (sameLiteral(run, text)) spelled.fill(1, index, next);
+      ) {
+        if (longest === Infinity) longest = 2 * text.normalize("NFD").length;
+        if (run.length > longest) break;
+        run += following.value;
+      }
+      if (run.length <= longest && sameLiteral(run, text)) {
+        spelled.fill(1, index, next);
+      }
     }
   }
   return { counterparts, spelled };
