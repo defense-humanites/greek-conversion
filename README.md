@@ -9,8 +9,9 @@
 
 <p align="center">
   <b>A TypeScript library that converts Ancient, Byzantine, and Modern Greek
-  between Greek script, Beta Code, and Latin script, with standards-based
-  presets and information-loss diagnostics.</b>
+  between Greek script, Beta Code, and Latin script, with atomic options
+  composed into standards-based presets, and information-loss
+  diagnostics.</b>
 </p>
 
 <p align="center">
@@ -43,12 +44,16 @@ between scripts:
   transliterate after ISO 843 Type 1, which converts back, or ALA-LC; turn
   polytonic text into monotonic; build search keys and URL slugs.
 
-Each convention is a preset that states its references and how far it
-follows them. The ALA-LC, BnF, and ISO 843 presets are tested against
-examples from their published tables, and `iso-843-type-2` against every
-example of the BGN/PCGN table. When a conversion cannot be reversed, the
-library says what was lost instead of quietly guessing. It has no
-dependencies and uses no runtime-specific API.
+Each convention is a preset: a set of the library's 52 atomic options, which
+states its references and how far it follows them. The options also combine
+beyond the presets, among 126 values: `chi: "kh"` and `upsilon: "u"` write
+`ψυχή` as `psukhḗ`, `iotaSubscript: "adscript"` writes `τῷ` as `τῶι`, and
+`kaiAccent: "byzantine"` gives the καί symbol the grave of the manuscripts.
+The ALA-LC, BnF, and ISO 843 presets are tested against examples from their
+published tables, and `iso-843-type-2` against every example of the BGN/PCGN
+table. When a conversion cannot be reversed, the library says what was lost
+instead of quietly guessing. It has no dependencies and uses no
+runtime-specific API.
 
 **Not a developer?** The
 [playground](https://greek-conversion.humanites.fr/playground/)
@@ -175,6 +180,9 @@ reencode("a)/ndra moi e)/nnepe, mou=sa", "beta-code", {
   [information loss](https://greek-conversion.humanites.fr/reference/information-loss/),
   and the [API](https://greek-conversion.humanites.fr/api/readme/).
 - [Contributing](https://github.com/defense-humanites/greek-conversion/blob/main/CONTRIBUTING.md).
+
+Every page of the site is also in Markdown, which
+[`llms.txt`](https://greek-conversion.humanites.fr/llms.txt) lists.
 
 ## Citing and license
 

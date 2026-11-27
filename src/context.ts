@@ -190,13 +190,16 @@ export function isWordFinal(document: Document, index: number): boolean {
 /**
  * What a writer finds in a document once for all the letters that need it,
  * for one conversion: the apostrophes that close a quotation (see
- * `sigmaEndsWord()`), and whether the tokens of a long run of letters are in
- * a numeral (see `isGreekNumeralContext()`), which each letter would
- * otherwise find by reading the rest of its word.
+ * `sigmaEndsWord()`), whether the tokens of a long run of letters are in
+ * a numeral (see `isGreekNumeralContext()`), and whether the BnF keraia of
+ * the run of letters read last reads back as one (see `bnfKeraiaReadsBack()`
+ * in `encode.ts`), which each letter would otherwise find by reading the
+ * rest of its word.
  */
 export interface DocumentContext {
   closingQuotes?: Uint8Array;
   numerals?: Uint8Array;
+  bnfKeraia?: { start: number; end: number; readsBack: boolean };
 }
 
 /**

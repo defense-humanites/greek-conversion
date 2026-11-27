@@ -17,7 +17,7 @@ Eight presets cover the common library, scholarly, and interchange conventions:
 | ---------------- | --------------- | --------------- | ------------------------------------------------------------------------ |
 | `ala-lc-ancient` | transliteration | Ancient         | Library romanization, Medieval Greek included (before 1454)              |
 | `ala-lc-modern`  | transliteration | Modern          | Library romanization after 1453, with its contextual digraphs            |
-| `bnf-ancient`       | transliteration | Ancient         | BnF/ISO-based romanization for cataloguing                               |
+| `bnf-ancient`    | transliteration | Ancient         | BnF/ISO-based romanization for cataloguing                               |
 | `iso-843-type-1` | transliteration | Ancient, Modern | Strict, reversible transliteration; also ELOT 743                        |
 | `iso-843-type-2` | transliteration | Modern          | Transcription by pronunciation, as ELOT 743: passports, road signs, maps |
 | `sbl-general`    | transliteration | Ancient         | Biblical studies, as the SBL Handbook writes Greek: no accent            |

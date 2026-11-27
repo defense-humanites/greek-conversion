@@ -55,6 +55,7 @@ import {
   presetChecksLetters,
   presetMappingIssue,
   resolveConversionOptions,
+  withSteps,
 } from "./presets.ts";
 import { hasPreparedMark } from "./prepared_mark.ts";
 import {
@@ -459,7 +460,11 @@ export class Converter {
               "spans",
             ).spans!,
           },
-        { glyphForm: writerFor(from).glyphForm, options: reading },
+        {
+          glyphForm: writerFor(from).glyphForm,
+          options: reading,
+          format: from,
+        },
         unreadKept,
       );
     // The letters kept as text, which may not read back (see
@@ -1011,6 +1016,19 @@ export class Converter {
  *
  * The configuration is checked as conversion options are: a misspelled key
  * never falls back to a default.
+ *
+ * @example
+ * ```ts
+ * import { createConverter } from "@humanities/greek-conversion";
+ *
+ * const iso = createConverter({
+ *   preset: "iso-843-type-1",
+ *   outOfScopeBehavior: "reject",
+ * });
+ * iso.convert("Αθήνα", "greek", "transliteration"); // → Athī́na
+ * iso.convert("ϟ", "greek", "transliteration");
+ * // throws CharacterScopeError: Conversion rejected: 1 unsupported character.
+ * ```
  *
  * @throws {RangeError} An {@link OptionError} if a key of the configuration,
  * of an alias, or of a custom character is unknown (its `path` is the key,
@@ -1682,15 +1700,15 @@ function writtenWord(
  * options the conversion has, since no reader needs them), the sigma shapes
  * of the source (`greek.sigma` and `greek.finalSigma` set to `"preserve"`),
  * and, of the conversion's options, only the letter case, which `text`
- * applies to the whole text. A sign that stands for several letters (`ϗ`) is
- * written as its letters, each in a span of its own, so that a letter kept
- * from it is written alone.
+ * applies to the whole text, with its step (`withSteps()`). A sign that
+ * stands for several letters (`ϗ`) is written as its letters, each in a
+ * span of its own, so that a letter kept from it is written alone.
  */
 function keptOptions(
   letterCase: ResolvedConversionOptions["text"]["letterCase"],
 ): ResolvedConversionOptions {
   const defaults = DEFAULT_CONVERSION_OPTIONS;
-  return {
+  return withSteps({
     transliteration: { ...defaults.transliteration },
     greek: {
       ...defaults.greek,
@@ -1701,7 +1719,7 @@ function keptOptions(
     betaCode: { ...defaults.betaCode },
     text: { ...defaults.text, letterCase },
     diacritics: { ...defaults.diacritics },
-  };
+  });
 }
 
 /**

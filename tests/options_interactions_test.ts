@@ -518,6 +518,42 @@ test("keeps each rough breathing where the output reads it back", () => {
     );
   }
   assertNfcEquals(convert("r#1521(", "beta-code", "transliteration"), "rhOu");
+  // A numeral has no diphthong: the h goes right before the vowel that bears
+  // the breathing, where the reader leaves it, and the upsilon is written as
+  // outside a diphthong. Under ISO 843 Type 2, the u of ου reads back so.
+  for (
+    const [greek, latin, options] of [
+      ["αἱʹ", "ahiʹ", {}],
+      ["εὑʹ", "ehyʹ", {}],
+      ["͵αἱ", "͵ahi", {}],
+      ["οὑʹ", "ohuʹ", { preset: "iso-843-type-2" }],
+    ] as const
+  ) {
+    const result = convertDetailed(greek, "greek", "transliteration", options);
+    assertNfcEquals(result.output, latin);
+    assertEquals(result.lossy, false);
+    assertNfcEquals(
+      convert(latin, "transliteration", "greek", options),
+      greek,
+    );
+  }
+  // Under the BnF keraiai, the rule holds where the keraia reads back as one:
+  // `ʹ` after an accent. An acute on a vowel reads back as an accent, and
+  // the pair is written as elsewhere.
+  const bnf = { preset: "bnf-ancient" } as const;
+  const bnfNumeral = convertDetailed("αὗʹ", "greek", "transliteration", bnf);
+  assertNfcEquals(bnfNumeral.output, "ahŷʹ");
+  assertEquals(bnfNumeral.lossy, false);
+  assertNfcEquals(t("αὑʹ", bnf), "haú");
+  // The output reads back as the letters it was written from, whose upsilon
+  // a diphthong would write otherwise once ALA-LC leaves out the accent.
+  const alaModern = { preset: "ala-lc-modern" } as const;
+  const numeral = t("κῶὑʹ", alaModern);
+  assertNfcEquals(numeral, "kōhyʹ");
+  assertNfcEquals(
+    convert(numeral, "transliteration", "transliteration", alaModern),
+    numeral,
+  );
   // A coronis written as an apostrophe stands between ω and ὑ.
   assertNfcEquals(
     t("τὠὑτό", { transliteration: { coronis: "apostrophe" } }),

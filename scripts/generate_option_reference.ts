@@ -11,6 +11,9 @@
  * Beta Code the signs before a letter are part of the word, in one
  * conversion for the whole table; the default writes the same words.
  *
+ * It also checks that the README and Getting started give the number of
+ * options, and the README that of their values, as the library has them.
+ *
  * Run with `npm run docs:options`; `--check` fails when the page is out of
  * date, as `npm run check` does.
  */
@@ -82,6 +85,35 @@ const defaults = DEFAULT_CONVERSION_OPTIONS as unknown as Record<
 const documentation = readDocumentation(await readFile(SOURCE, "utf8"));
 const page = await readFile(PAGE, "utf8");
 const expected = replaceGeneratedSection(page, render());
+
+// The README and Getting started give the number of options, and the README
+// that of their values: they follow the library.
+const counts = Object.values(CONVERSION_OPTION_VALUES).flatMap((group) =>
+  Object.values(group as Record<string, readonly unknown[]>)
+);
+const optionCount = counts.length;
+const valueCount = counts.reduce((sum, values) => sum + values.length, 0);
+const stated: readonly [string, RegExp, number][] = [
+  ["README.md", /\b(\d+) atomic options\b/, optionCount],
+  ["README.md", /\bamong (\d+) values\b/, valueCount],
+  [
+    "web/docs/src/content/docs/guide/getting-started.md",
+    /\bThere are (\d+) of them\b/,
+    optionCount,
+  ],
+];
+for (const [path, pattern, count] of stated) {
+  const text = await readFile(new URL(`../${path}`, import.meta.url), "utf8");
+  const found = text.match(pattern)?.[1];
+  if (Number(found) !== count) {
+    console.error(
+      `${path} gives ${
+        found ?? "no"
+      } where the library has ${count} (${pattern}).`,
+    );
+    process.exit(1);
+  }
+}
 
 if (process.argv.includes("--check")) {
   if (page !== expected) {

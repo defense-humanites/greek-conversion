@@ -18,9 +18,33 @@ change.
 - **`transliteration.rho: "marked"` writes the `h` of rho only for a rough
   breathing that Greek writes**, the second rho of a pair included, and
   reads every `rh` as one: `Πύρρος` gives `Pýrros`, `ῥήτωρ` `rhḗtōr`.
+- **The error for an unknown option, preset, or format says what was likely
+  meant.** A name written in another case or with other separators is named
+  as it is written: `transliteration.long_vowels` suggests
+  `transliteration.longVowels`, `ISO-843-type-2` suggests `iso-843-type-2`,
+  and `betacode` suggests `beta-code`. A key given in the wrong group, or
+  outside a group, names its group: `greek.eta` suggests `transliteration.eta`,
+  and `letterCase` `text.letterCase`. Otherwise, an unknown preset or format
+  lists the accepted ones. Only the message changes: `path`, `accepted`, and
+  `replacement` are as before.
+- **The documentation site gives every page in Markdown as well**, at its
+  address followed by `index.md`, and lists them in `llms.txt`, after the
+  llms.txt convention, for the coding agents that read documentation: the
+  build writes them from the pages and the sidebar. `context7.json` tells
+  Context7, an index of documentation that coding agents query, what to
+  read and what to leave out, such as the examples of the `0.x` API in the
+  migration guide. The API documentation of `convert()`,
+  `convertDetailed()`, and `createConverter()` gives examples.
 
 ### Changed
 
+- **The sentence that describes the project names the atomic options**:
+  "Convert Ancient, Byzantine, and Modern Greek between Greek script, Beta
+  Code, and Latin script, with atomic options composed into standards-based
+  presets, and information-loss diagnostics." The presets are sets of the
+  options, which also combine beyond them. Every copy of the sentence
+  follows, but for the social card and its text alternative, which wait for
+  the card to be drawn again.
 - **The preset `bnf-core` is now `bnf-ancient`**, and its prepared options,
   exported by `./presets`, `bnfAncient`. Its name came from a profile of the
   BnF rules that apply mechanically; the preset now writes the whole BnF
@@ -37,35 +61,67 @@ change.
   one (§ 4.3.5). `iso-843-type-1`, `iso-843-type-2`, `ala-lc-modern`, and
   `bnf-ancient` wrote the second rho of every pair `rh`, as classical studies
   do: `Ερρίκος` gave `Errhíkos` under `iso-843-type-2`, and now gives
-  `Erríkos`. They select `transliteration.rho: "marked"`.
+  `Erríkos`. They select `transliteration.rho: "marked"`, and so read every
+  `rh` as a rho with a rough breathing: `Errhíkos` reads back as `Ερῥίκος`,
+  where it read back as `Ερρίκος`.
 - **`convertDetailed()` into transliteration under `longVowels: "omit"`
-  (ISO 843 type 2) takes about a fifth less time.** It read its output twice
+  (ISO 843 Type 2) takes 15 to 20 % less time.** It read its output twice
   when the output's letters read back as others, as eta written `i` does in
   nearly every text: it now reads it once, with the positions of its
   tokens.
-- **A converter bound to `bnf-ancient` or `tlg-core` converts as fast as
-  `convert()`**, 12 to 18 % faster on a long text: their repertoires hold
-  every character, and the converter no longer checks each letter.
-- **A bundle of the `core` entry point with a preset or the defaults is 4
-  to 12 % smaller with gzip**, the more so as it uses fewer formats. It
+- **A converter bound to `bnf-ancient` or `tlg-core` converts nearly as
+  fast as `convert()`**, 10 to 17 % faster on a long text: their
+  repertoires hold every character, and the converter no longer checks
+  each letter.
+- **Greek converts into transliteration 3 to 5 % more slowly, and with
+  monotonic accentuation about 6 % more slowly**, for the fixes below: the
+  transliteration writer checks more cases for each letter (rough
+  breathings in numerals, merged `h`, quantity marks), and monotonic
+  accentuation looks for a hiatus that a removed mark showed.
+- **A bundle of the `core` entry point with a preset or the defaults is 2
+  to 13 % smaller with gzip**, the more so as it uses fewer formats. It
   keeps only the code of the options it can take:
-  - the accent of καί, monotonic accentuation, and the stigma read as `στ`,
-    which no preset takes, come with the resolution of options, which links
-    them to the options that take them, and so with `prepareOptions()`;
-  - the tables of the formats a bundle does not use, which calls built
-    where esbuild kept them, are built in annotated functions.
+  - the accent of καί, monotonic accentuation, the stigma read as `στ`, the
+    letter case of the whole text, and collapsed whitespace, which no preset
+    takes, come with the resolution of options, which links them to the
+    options that take them, and so with `prepareOptions()`;
+  - the tables of the formats that a bundle does not use, which esbuild kept
+    since calls built them, are built in functions annotated as pure.
 
-  Greek to transliteration with a preset weighs 45.4 kB, 15.1 kB with gzip,
-  where it weighed 51.3 kB and 17.0 kB. `prepareOptions()` adds 15.3 kB to
-  such a bundle, 4.7 kB with gzip, where it added 9.0 kB and 2.7 kB. The
-  main entry point takes 0.6 kB more, 0.2 kB with gzip. Outputs do not
-  change.
+  Greek to transliteration with a preset weighs 45.8 kB, 15.3 kB with gzip,
+  where it weighed 51.3 kB and 17.0 kB. `prepareOptions()` adds 18.0 kB to
+  such a bundle, 5.4 kB with gzip, where it added 9.0 kB and 2.7 kB. The
+  steps add 0.9 kB to the main entry point, 0.3 kB with gzip; with the
+  fixes below and the suggestions of its errors, `convert()` from the main
+  entry point weighs 91.3 kB, 29.7 kB with gzip, where it weighed 85.7 kB
+  and 27.8 kB. Outputs do not change.
+- **Documentation.** The API documentation of `greek.capitalMarks` and
+  `text.letterCase` says what the code does: the search for the word nearest
+  to a capital on its own stops at a number or a numeral, past which it
+  finds none (`ΘΕΟΣ ιβʹ Θ` gives `THEOS ibʹ Th`), where it said that the
+  search passed numerals. The guarantees name the cases that a second
+  conversion still changes: a vowel with both a coronis and a breathing, or
+  an upsilon with an iota subscript, which `validateDocument()` rejects;
+  monotonic accentuation under `longVowels: "omit"`, where `ή` gives `í`
+  under `iso-843-type-2`, then `i`; the Latin letters of a Greek source,
+  which Beta Code reads as Greek (`hʹ` gives `h#` under ALA-LC, which reads
+  back as 8); the BnF keraia after a word with an accent, under monotonic
+  accentuation; a coronis written as an apostrophe in a numeral, under
+  decimal numerals; and a combining mark that no reader knows after a
+  coronis written as an apostrophe, in title case. They and the performance
+  guide say that `convertDetailed()` from or into Beta Code takes seconds on
+  thousands of combining marks on one letter. The limitations of the presets add the monotonic accentuation of
+  `iso-843-type-2`, the dot below (`?`) that `tlg-core` and `perseus` do not
+  read, the en dash `%19` of the TLG, and the `j` that the Perseids mapping
+  reads as a final sigma. The README gives each period a point of its own,
+  and with Getting started presents the atomic options of which the presets
+  are made.
 
 ### Fixed
 
 - **Two outputs of the transliteration writer convert again to
   themselves.**
-  - Under ISO 843 type 2, eta is written `i` and reads back as iota: with a
+  - Under ISO 843 Type 2, eta is written `i` and reads back as iota: with a
     rough breathing after a vowel, it is the second vowel of a rough
     diphthong, whose `h` goes before the pair. The writer put the `h` before
     the eta, where a second conversion moved it: `κεἡ` gave `kehi`, then
@@ -84,11 +140,40 @@ change.
   then `rhou`. The `h` now takes the case of the consonant, and the vowel
   keeps its own: `ρἉ` gives `rhA`, which reads back as `ῥΑ`. The loss of the
   breathing is reported as before.
+- **Beta Code writes a letter kept as text with the marks that compose
+  with it as the character they make.** The reader keeps a character such
+  as `é`, which is no Beta Code, as text. Greek and transliteration read
+  it as a letter and its mark, which Beta Code wrote apart: `é` in a Beta
+  Code source gave `é` in Greek, called lossless, which gave `e` and an
+  acute in Beta Code again, read back as an epsilon and a mark kept as
+  text. Beta Code now writes `é`, and `Valéry`, in Greek, gives `valéry`,
+  whose `é` reads back as itself; only the letters that Beta Code reads as
+  Greek are reported. A letter of another script with marks that compose
+  with no character is written with its marks in their canonical order, as
+  Greek writes them.
+- **A rough breathing on the second vowel of a pair in a numeral reads
+  back in transliteration.** A numeral has no diphthong, and the reader
+  leaves the breathing on the vowel that its `h` precedes. The writer put
+  the `h` before the pair, as for a diphthong: `αἱʹ` gave `haiʹ`, read back
+  as `ἁιʹ`, and `εὑʹ` gave `heuʹ`, then `heyʹ`. The `h` now precedes its
+  vowel, and an upsilon is written as outside a diphthong: `αἱʹ` gives
+  `ahiʹ` and `εὑʹ` `ehyʹ`, both without loss. Under the BnF keraiai, the
+  rule holds where the right keraia reads back as one, written `ʹ` after an
+  accent (`αὗʹ` gives `ahŷʹ`, where `haûʹ` read back as `ἁῦʹ`). Where the
+  keraia, or a coronis written as an apostrophe on the pair, may read back
+  as no numeral, the pair is written as before.
+- **Under decimal numerals, transliteration writes as a number a numeral
+  whose marks it leaves out.** The letters of a numeral are written as a
+  number when they carry no mark that the output keeps. Transliteration
+  does not write the smooth breathing by default, nor the coronis, nor a
+  quantity mark on epsilon or omicron, and the reader infers no breathing
+  in a numeral: `ἀʹ` gave `aʹ`, read back as `1`, and `͵αἰ` gave `͵ai`,
+  read back as `1010`. They give `1` and `1010` at once.
 - **A macron on eta or omega reads back in transliteration.**
   - By default, eta with a macron is written `ē̄`, as eta with a breve is
     written `ē̆`, but the reader dropped the second macron: `η̄` gave `ē̄`,
     then `ē`. It reads it as the letter's, and `η̄` converts back and forth
-    without loss, as `ω̄` does under ISO 843 type 1, whose `ō̄` the reader
+    without loss, as `ω̄` does under ISO 843 Type 1, whose `ō̄` the reader
     dropped too. As on `ē̆`, no smooth breathing is inferred on a vowel with
     a quantity mark: `ē̄` gave `ἠ`, and gives `η̄`.
   - Under `longVowels: "omit"`, omega is written `o`, and eta `e` unless
@@ -131,7 +216,7 @@ change.
   each, every letter of a long run read the rest of the run again:
   - letters under one overline written into Beta Code, and `<…>` read from
     Beta Code;
-  - omegas before `y`, read from transliteration under ISO 843 type 2;
+  - omegas before `y`, read from transliteration under ISO 843 Type 2;
   - capital stigmas and sampis written under `bnf-ancient`;
   - signs `ϗ` written without spaces under `greek.kaiAccent: "modern"`;
   - in a converter bound to ALA-LC, its stigmas, sampis, and koppas, and in
@@ -144,7 +229,7 @@ change.
   threw a `RangeError` past about 120,000 tokens, because it passed the
   spans of the Greek read back as the arguments of one call.
 - **The transliteration reader finds its omegas after spacing signs** under
-  ISO 843 type 2. The reader marks an `o` before `y` as an omega, and turns it
+  ISO 843 Type 2. The reader marks an `o` before `y` as an omega, and turns it
   back into an omicron in a numeral (`oyʹ` gives `οϋʹ`). It noted the omegas
   by their place, then joined spacing signs to the tokens around them,
   after which the places no longer named the omegas. `῎oyʹ` gave `῎ωυʹ`, and
@@ -154,19 +239,38 @@ change.
   would form a diphthong was the only sign of their hiatus, the second
   takes a diaeresis, as in words in capitals: `ἀυτμή` gives `αϋτμή`,
   `ἀίδηλος` `αΐδηλος`, in every format. Transliteration wrote `ay` for
-  `ἁυ`, which read back as `aÿ`.
+  `ἁυ`, which read back as `aÿ`. A word that the hiatus makes two syllables
+  keeps its accent: `ἐὺ` gave `ευ`, as a monosyllable, and gives `εΰ`.
 - **A numeral next to a digit is not written as a number.** Under
   `text.numerals: "decimal"`, as the ALA-LC presets select, `͵α͵β` gave
-  `1000͵β`, which converted again to `10002000`, and `1αʹ` gave `11`; such
-  a numeral now stays as written.
+  `1000͵β`, which converted again to `10002000`, and `1αʹ` gave `11`. Such
+  a numeral now stays as written: `1αʹ` gives `1αʹ`, and `1000͵β` converts
+  again to itself.
 - **The BnF keraia of a numeral of one syllable under monotonic
   accentuation is written `ʹ`.** An acute after its vowel read back as the
   accent of a monosyllable, which monotonic accentuation removes: `καʹ`
   gave `ká`, then `ka`. It now gives `kaʹ`.
+- **`convertDetailed()` reports the breathings that `greek.doubleRho` adds
+  to a double rho read from transliteration, where the source writes them.**
+  Under `rho: "marked"`, `rr` is a double rho without breathings, and
+  `greek.doubleRho: "smooth-rough"` wrote `ῤῥ`, called lossless, which
+  converts back to `rrh`; under `bnf-ancient`, which writes the smooth
+  breathing on rho, to `r̓rh`. They are reported as added
+  (`added-diacritic`).
 - **Under `nasalGamma: "nasal-medial-kappa"` (`ala-lc-modern`), `nk` at the
   beginning or end of a word reads back as `νκ`.** ALA-LC writes `γκ` as
   `gk` there, so `Φρανκ`, written `Phrank`, read back as `Φραγκ` and
-  converted again to `Phragk`.
+  converted again to `Phragk`. Before a keraia, `γκ` is now written `gk`
+  too: it was written `nk`, which now reads back as `νκ`, the numeral 70.
+  `γκʹ` gives `gkʹ`, where it gave `nkʹ`.
+- **Two tables no longer stay in bundles that do not use them.** esbuild
+  kept the table of glyph variants in a bundle that imports a reader alone
+  (0.8 kB), and the set of elided enclitics in a bundle of
+  `convertDetailed()` (56 bytes), since it could not prove their values
+  pure. `npm run npm:check` now fails when a bundle keeps a declaration
+  that nothing in it reaches, which its tolerance on the sizes of the guide
+  on smaller bundles did not see; `npm run docs:bundles` writes these sizes
+  into the guide.
 
 ## [1.0.0-rc.14] - 2026-11-26
 

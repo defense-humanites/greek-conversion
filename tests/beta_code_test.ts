@@ -297,3 +297,36 @@ test("writes a sign as itself before a digit where it reads back", () => {
     );
   }
 });
+
+test("writes a letter kept as text with the marks that compose with it", () => {
+  // `é` is no Beta Code: the reader keeps it as text. Written as `e` and an
+  // acute, it would read back as an epsilon and a mark kept as text.
+  for (
+    const [source, from, beta] of [
+      ["Valéry λόγος", "greek", "valéry lo/gos"],
+      ["ç", "transliteration", "ç"],
+      ["ǽ", "greek", "ǽ"],
+      // A letter of another script that no mark composes with takes its
+      // marks in their canonical order, as Greek output writes them.
+      ["\u0438\u0301\u0323", "beta-code", "\u0438\u0323\u0301"],
+    ] as const
+  ) {
+    const result = convertDetailed(source, from, "beta-code");
+    assertEquals(result.output, beta.normalize("NFC"));
+    assertEquals(
+      convert(result.output, "beta-code", "beta-code"),
+      result.output,
+    );
+  }
+  // A precomposed letter in a Beta Code source converts back as itself.
+  const greek = convertDetailed("\u00E9", "beta-code", "greek");
+  assertEquals(greek.lossy, false);
+  assertEquals(convert(greek.output, "greek", "beta-code"), "\u00E9");
+  // So the letter is retained: only the Latin letters of `Valéry` that Beta
+  // Code reads as Greek are reported.
+  const mixed = convertDetailed("Valéry", "greek", "beta-code");
+  assertEquals(
+    mixed.losses.map((loss) => [loss.code, loss.offset]),
+    [0, 1, 2, 4, 5].map((offset) => ["unrepresented-literal", offset]),
+  );
+});

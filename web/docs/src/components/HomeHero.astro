@@ -89,9 +89,12 @@ const wordmark = drawing("name", name);
       >{" "}
       <span class="line"
         >between Greek&nbsp;script, Beta&nbsp;Code, and Latin&nbsp;script, with
-        standards‑based&nbsp;presets</span
+        atomic&nbsp;options</span
       >{" "}
-      <span class="line">and information‑loss&nbsp;diagnostics.</span>
+      <span class="line"
+        >composed into standards‑based presets, and
+        information‑loss&nbsp;diagnostics.</span
+      >
     </p>
     <div class="actions">
       <LinkButton href={`${base}guide/getting-started/`} icon="right-arrow">
@@ -270,6 +273,13 @@ const wordmark = drawing("name", name);
     line-height: 1.5;
     color: var(--muted);
     text-wrap: balance;
+  }
+  /* On a phone, a size between the text's and the buttons' keeps the
+     sentence to six lines, which Chrome balances, and no more. */
+  @media (max-width: 26rem) {
+    .description {
+      font-size: 1.0625rem;
+    }
   }
   @media (min-width: 68.75rem) {
     .description .line {

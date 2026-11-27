@@ -11,7 +11,8 @@
  * card, which must hold its text on three lines, gives a shorter form of it
  * and says in its foot that the package is a TypeScript library; its text
  * alternative, in the site and the playground, reads the card in order. The
- * card itself, an image, is checked by eye.
+ * card itself, an image, is checked by eye. `context7.json`, which tells
+ * Context7 what to index for coding agents, starts with the sentence too.
  *
  * It checks, last, that the site has one address, the `homepage` of
  * `package.json`: the one it is built for, and the one every file that
@@ -117,6 +118,14 @@ expect(
     playground.match(/property="og:image:alt"\s+content="([^"]*)"/)?.[1],
   ),
   card,
+);
+expect(
+  "the description of context7.json, the index that coding agents query",
+  JSON.parse(await read("context7.json")).description.slice(
+    0,
+    sentence.length,
+  ),
+  sentence,
 );
 expect(
   "the first sentence of the CITATION.cff abstract",

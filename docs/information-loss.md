@@ -130,7 +130,10 @@ Default transliteration has these intrinsic ambiguities:
 - with the default `nasalGamma: "nasal"`, Greek gamma and nu before a velar can
   both be read as nasal gamma after transliteration;
 - the `h` of a rough breathing precedes its vowel or diphthong inside a word as
-  at its start (`χοἱ` → `chhoi`, like `οἱ` → `hoi`). After `t`, `p` (except
+  at its start (`χοἱ` → `chhoi`, like `οἱ` → `hoi`). A numeral has no
+  diphthong: there it precedes the vowel that bears the breathing, where the
+  reader leaves it, and an upsilon is written as outside a diphthong
+  (`αἱʹ` → `ahiʹ`, `εὑʹ` → `ehyʹ`). After `t`, `p` (except
   under `phi: "f"`, where `ph` reads as pi and a rough breathing), or `r`, it
   forms `th`, `ph`, or `rh`, which read back as theta, phi, or a rough rho:
   `τἡ` → `thē` → `θη`, `ποὑ` → `phou` → `φου`, `ἀροἱ` → `arhoi` → `ἀῥοι`, and
@@ -299,7 +302,7 @@ source can be reconstructed from the output: yes, no, or partly.
 | `nuTau: "d-underline-initial"` | Writes word-initial `ντ` as `d̲` (ALA-LC) | Yes: `d̲` remains distinct from delta |
 | `upsilon: "y-with-ou-v-f"` | Writes the upsilon of `αυ/ευ/ηυ` as `v` or `f` and moves its accent to the vowel (ISO 843 Type 2) | Partly: yes alone; no with `beta: "v"` or `phi: "f"`, as in ISO 843 Type 2, under which `v` and `f` read back as beta and phi, and the accent stays on the vowel. A circumflex moved to epsilon is written as a tilde where `ê` is eta (`εὖ` → `’ẽf` under ISO 843 Type 1), and a `v` or `f` after an eta written `i` without a length mark reads back as the upsilon of `ηυ`. Under `longVowels: "omit"`, `ωυ` is written letter by letter (`oy`) and reads back as omega and upsilon, except in a numeral, written as it reads back (`ωυʹ` → `ouʹ`) |
 | `longVowels: "omit"` | Writes eta and omega without a length mark (ISO 843 Type 2); a vowel pair is written as it reads back, so `ωυ` is written like `ου` (but `oy` under `upsilon: "y-with-ou-v-f"`, outside a numeral), and `ηἱ` like `εἱ` (or like `ιἱ` under `eta: "i"`) | No: they read back as epsilon (or iota) and omicron, except where a circumflex or an iota subscript only fits the long vowel, and a bare `o` before `y` under `upsilon: "y-with-ou-v-f"` |
-| `rho: "marked"` | Writes the `h` of rho only for a rough breathing that Greek writes, the second rho of a pair included (ISO 843, ALA-LC Modern, BnF), and reads every `rh` as one | Yes, but for a smooth breathing on rho |
+| `rho: "marked"` | Writes the `h` of rho only for a rough breathing that Greek writes, the second rho of a pair included (ISO 843, ALA-LC Modern, BnF), and reads every `rh` as one | Yes, but for a smooth breathing on rho, and a `ρ` before a rough breathing inside a word, which merges with its `h`, as under any value (see [the matrix](#pairwise-matrix-with-default-options)) |
 | `rho: "systematic"` | Adds one final `h` to every contiguous rho group | Partly: the rho letters are recoverable; an explicit rough breathing is not |
 | Letter spellings (`beta`, `eta`, …), `upsilon`, `longVowels` | Selects a canonical output spelling | Partly: the canonical letters normally remain recoverable, but `eta: "i"` with `longVowels: "macron"` writes eta like iota with a macron |
 
@@ -330,7 +333,7 @@ source can be reconstructed from the output: yes, no, or partly.
 | `composition: "decomposed"` | Emits Greek letters and marks as canonical decomposed sequences | Yes, unless combined with another lossy policy |
 | `acute: "tonos"` or `"oxia"` | Selects an eligible composed acute scalar | Partly: the accent is recoverable; its scalar preference is not |
 | `questionMark: "greek"`, `anoTeleia: "greek"` | Selects a canonically unstable punctuation scalar | Partly: the punctuation meaning is recoverable; its scalar preference is not |
-| `doubleRho` | Selects a canonical output spelling | Yes: the canonical letters remain recoverable |
+| `doubleRho` | Selects a canonical output spelling | Yes: the canonical letters remain recoverable. From a transliteration that writes the breathings of rho (`rho: "marked"`, `smoothBreathing: "greek"`), the breathings that `doubleRho: "smooth-rough"` adds are reported (`added-diacritic`): `rr` gives `ῤῥ`, which converts back to `rrh` |
 
 ### `betaCode`
 

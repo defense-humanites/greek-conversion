@@ -123,6 +123,10 @@ test("writes a capital on its own in full capitals among words in capitals", () 
     ["Ῥ.", "Rh."],
     ["ABC Θ", "ABC TH"],
     ["abc Θ ΛΟΓΟΣ", "abc Th LOGOS"],
+    // The search past capitals on their own keeps the case it finds on each
+    // side apart: a search to the right does not take, for the capitals it
+    // passes, what one to the left found beyond them.
+    ["λόγος Θ Θ Θ ΛΟΓΟΣ", "lógos Th Th Th LOGOS"],
     // A number or a numeral ends the search on its side: its case, or that
     // of its letters, says nothing of the words, and it may be written as a
     // number.
@@ -311,6 +315,52 @@ test("writes the h of rho only for a written rough breathing on demand", () => {
   assertEquals(
     convertDetailed("ῤῥ", "greek", "transliteration", marked).lossy,
     true,
+  );
+});
+
+test("reports the breathings that doubleRho adds where transliteration writes them", () => {
+  // Under rho: "marked", rr is a double rho without breathings: the rough
+  // breathing that greek.doubleRho writes on the second rho reads back as
+  // rrh, so the conversion is not lossless.
+  for (
+    const options of [
+      { transliteration: { rho: "marked" } },
+      { preset: "iso-843-type-1" },
+      { preset: "ala-lc-modern" },
+    ] as const
+  ) {
+    const doubled = {
+      ...options,
+      greek: { doubleRho: "smooth-rough" },
+    } as const;
+    for (const to of ["greek", "beta-code"] as const) {
+      const result = convertDetailed("rr", "transliteration", to, doubled);
+      assertEquals(
+        result.losses.map((loss) => [loss.code, loss.diacritic]),
+        [["added-diacritic", "rough"]],
+      );
+    }
+    // A rough breathing that the source writes is no loss.
+    assertEquals(
+      convertDetailed("rrh", "transliteration", "greek", doubled).lossy,
+      false,
+    );
+  }
+  // BnF writes the smooth breathing on rho too (r̓).
+  assertEquals(
+    convertDetailed("rr", "transliteration", "greek", {
+      preset: "bnf-ancient",
+      greek: { doubleRho: "smooth-rough" },
+    }).losses.map((loss) => loss.diacritic),
+    ["smooth", "rough"],
+  );
+  // The default writes rrh for every double rho: the breathings change
+  // nothing there.
+  assertEquals(
+    convertDetailed("rr", "transliteration", "greek", {
+      greek: { doubleRho: "smooth-rough" },
+    }).lossy,
+    false,
   );
 });
 
@@ -666,6 +716,26 @@ test("reads nk at the edge of a word as nu and kappa under ALA-LC", () => {
   assertNfcEquals(
     convert("Phrank", "transliteration", "transliteration", modern),
     "Phrank",
+  );
+  // Before a keraia too: γκ there is gk, and nk νκ, the numeral 70.
+  assertNfcEquals(
+    convert("γκʹ Γκʹ", "greek", "transliteration", modern),
+    "gkʹ Gkʹ",
+  );
+  assertNfcEquals(
+    convert("gkʹ Gkʹ", "transliteration", "transliteration", modern),
+    "gkʹ Gkʹ",
+  );
+  const medial = {
+    transliteration: { nasalGamma: "nasal-medial-kappa" },
+  } as const;
+  assertNfcEquals(
+    convert("͵γκʹ νκʹ", "greek", "transliteration", medial),
+    "͵gkʹ nkʹ",
+  );
+  assertNfcEquals(
+    convert("͵gkʹ nkʹ", "transliteration", "greek", medial),
+    "͵γκʹ νκʹ",
   );
 });
 
@@ -1143,6 +1213,36 @@ test("converts marked alphabetic numerals to decimal on demand", () => {
     convert("στʹ ͵α ͵αα ͵αβ", "greek", "greek", decimal),
     "6 1000 1001 1002",
   );
+});
+
+test("writes as a number a numeral whose marks transliteration leaves out", () => {
+  // The reader infers no breathing in a numeral, and the smooth breathing,
+  // the coronis, and a quantity mark on omicron are not written: the letters
+  // would read back as the number.
+  const decimal = { text: { numerals: "decimal" } } as const;
+  for (
+    const [greek, number, options] of [
+      ["ἀʹ", "1", decimal],
+      ["͵αἰ", "1010", decimal],
+      ["ο̄ιʹ", "80", decimal],
+      ["ῤκγʹ", "123", {
+        ...decimal,
+        transliteration: { smoothBreathing: "apostrophe" },
+      }],
+    ] as const
+  ) {
+    assertEquals(convert(greek, "greek", "transliteration", options), number);
+  }
+  // Written in place or as an apostrophe before a vowel, the breathing
+  // keeps the letters, which read back with it.
+  for (const smoothBreathing of ["greek", "apostrophe"] as const) {
+    const options = { ...decimal, transliteration: { smoothBreathing } };
+    const output = convert("ἀʹ", "greek", "transliteration", options);
+    assertNfcEquals(
+      convert(output, "transliteration", "greek", options),
+      "ἀʹ",
+    );
+  }
 });
 
 test("writes no numeral as a number next to a digit", () => {

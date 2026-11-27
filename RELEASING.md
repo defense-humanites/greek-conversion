@@ -31,9 +31,13 @@ Both registries use the same package name and version:
    <version>`, which updates `package-lock.json` too), `jsr.json`, and
    `CITATION.cff`, and replace `Unreleased` in `CHANGELOG.md` with the release
    date. `npm run check` fails while the four versions differ, and the publish
-   workflow refuses a release whose tag differs from `package.json`.
-2. Run `npm run check`, `npm test`, `npm run jsr:check`, and
-   `npm run npm:check`.
+   workflow refuses a release whose tag differs from `package.json`. In
+   `CHANGELOG.md`, open the release's section with a paragraph that sums it
+   up, and add its comparison link at the end; in `MIGRATION.md`, name the
+   new version in the installation section, which no check reads.
+2. Run `npm run docs:bundles`, which writes the sizes of the release's
+   bundles into the guide on smaller bundles, then `npm run check`,
+   `npm test`, `npm run jsr:check`, and `npm run npm:check`.
 3. Verify the generated npm archive, especially its ESM exports, declarations,
    license, README, migration guide, and documentation directory. This file is
    deliberately excluded from both packages.
@@ -49,7 +53,10 @@ Both registries use the same package name and version:
    the scoped npm package is explicitly published with public access.
 8. Verify both registry pages, provenance, documentation, and installation
    commands, then reset `PUBLISH_ENABLED` to `false` if releases should require
-   a fresh manual authorization.
+   a fresh manual authorization. Until `1.0.0`, npm's `latest` tag has
+   followed each release candidate, which the README's `npm install` and its
+   npm badge then give: move it by hand
+   (`npm dist-tag add @humanities/greek-conversion@<version> latest`).
 9. Publishing the release also redeploys the site (`.github/workflows/
    pages.yml`): its root then shows this release's documentation and
    playground, and `/next/` those of `main`, for a stable version; a release

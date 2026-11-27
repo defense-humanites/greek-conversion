@@ -12,6 +12,10 @@ import {
 } from "../src/mod.ts";
 import { encode, parse } from "../src/document.ts";
 
+/** The end of the message for a preset that nothing resembles. */
+const PRESETS =
+  'expected one of "ala-lc-ancient", "ala-lc-modern", "bnf-ancient", "iso-843-type-1", "iso-843-type-2", "perseus", "sbl-general", "tlg-core".';
+
 test("rejects an unknown format with a RangeError", () => {
   const unknown = "latin" as never;
   for (
@@ -26,7 +30,10 @@ test("rejects an unknown format with a RangeError", () => {
     ]
   ) {
     const error = assertThrows(run, RangeError);
-    assertEquals(error.message, "Unknown format: latin");
+    assertEquals(
+      error.message,
+      'Unknown format: latin; expected one of "greek", "beta-code", "transliteration".',
+    );
   }
   assertEquals([...FORMATS], ["greek", "beta-code", "transliteration"]);
 });
@@ -284,7 +291,7 @@ test("the options of source are checked, with paths that start with source.", ()
       () => resolveConversionOptions({ source: { preset: "nope" } } as never),
       OptionError,
     ).message,
-    "Unknown conversion preset for source.preset: nope",
+    `Unknown conversion preset for source.preset: nope; ${PRESETS}`,
   );
   for (const source of ["sbl-general", null, []]) {
     assertThrows(
@@ -573,4 +580,58 @@ test("the option value table matches the defaults", () => {
     }
   }
   assertEquals(Object.isFrozen(CONVERSION_OPTION_VALUES), true);
+});
+
+test("an unknown name spelled otherwise is named as it is written", () => {
+  for (
+    const [options, message] of [
+      [
+        { transliteration: { long_vowels: "omit" } },
+        "Unknown conversion option: transliteration.long_vowels; did you mean transliteration.longVowels?",
+      ],
+      [
+        { greek: { eta: "i" } },
+        "Unknown conversion option: greek.eta; did you mean transliteration.eta?",
+      ],
+      [
+        { letterCase: "lowercase" },
+        "Unknown conversion option: letterCase; did you mean text.letterCase?",
+      ],
+      [
+        { beta_code: { case: "uppercase" } },
+        "Unknown conversion option: beta_code; did you mean betaCode?",
+      ],
+      [
+        { source: { diacritics: { rough_breathing: "preserve" } } },
+        "Unknown conversion option: source.diacritics.rough_breathing; did you mean source.diacritics.roughBreathing?",
+      ],
+      [
+        { preset: "ISO-843-type-2" },
+        'Unknown conversion preset: ISO-843-type-2; did you mean "iso-843-type-2"?',
+      ],
+      [{ preset: "iso843" }, `Unknown conversion preset: iso843; ${PRESETS}`],
+    ] as const
+  ) {
+    const error = assertThrows(
+      () => resolveConversionOptions(options as never),
+      OptionError,
+    );
+    assertEquals(error.message, message);
+    assertEquals(error.replacement, undefined);
+  }
+  // A key that two groups have is not guessed.
+  assertEquals(
+    assertThrows(
+      () => resolveConversionOptions({ iotaSubscript: "adscript" } as never),
+      OptionError,
+    ).message,
+    "Unknown conversion option: iotaSubscript",
+  );
+  assertEquals(
+    assertThrows(
+      () => convert("λόγος", "greek", "beta_code" as never),
+      RangeError,
+    ).message,
+    'Unknown format: beta_code; did you mean "beta-code"?',
+  );
 });

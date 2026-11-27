@@ -12,7 +12,11 @@ import { type DocumentContext, isGreekNumeralContext } from "./context.ts";
 import { supplyKaiAccents } from "./kai_accent.ts";
 import { readStigmaLigatures } from "./ligatures.ts";
 import type { Document, Format, Letter } from "./model.ts";
-import { applyMonotonicOrthography } from "./orthography.ts";
+import {
+  applyLetterCaseOrthography,
+  applyMonotonicOrthography,
+  applyWhitespaceOrthography,
+} from "./orthography.ts";
 import { hasPreparedMark, PREPARED } from "./prepared_mark.ts";
 import { type PreparedOptions, preparedProfiles } from "./prepared.ts";
 import { sealProfile } from "./profile_cache.ts";
@@ -225,7 +229,22 @@ const STEPS: Steps = {
   kaiAccents: supplyKaiAccents,
   monotonic: applyMonotonicOrthography,
   stigmaLigatures: readStigmaLigatures,
+  letterCase: applyLetterCaseOrthography,
+  whitespace: applyWhitespaceOrthography,
 };
+
+/**
+ * Resolved options that the library makes itself, linked to the steps they
+ * take (see `steps.ts`): those that write the letters a converter keeps, in
+ * the letter case of the conversion.
+ *
+ * Internal: not exported by an entry point.
+ */
+export function withSteps(
+  options: ResolvedConversionOptions,
+): ResolvedConversionOptions {
+  return linkSteps(options, STEPS);
+}
 
 /**
  * The two profiles of a conversion: the options that write its output, and
@@ -601,7 +620,9 @@ function validateConversionOptions(options: unknown, prefix: string): void {
       const accepted = Object.hasOwn(table, key) ? table[key] : undefined;
       if (accepted === undefined) {
         throw new OptionError(
-          `Unknown conversion option: ${prefix}${group}.${key}`,
+          `Unknown conversion option: ${prefix}${group}.${key}${
+            didYouMean(prefix, suggestKey(key, group))
+          }`,
           {
             path: `${prefix}${group}.${key}`,
             received: undefined,
@@ -691,7 +712,12 @@ function unknownKey(key: string, prefix: string): OptionError {
   const replacement = prefix === "" ? replaced : undefined;
   return new OptionError(
     `Unknown conversion option: ${path}${
-      replacement === undefined ? "" : ` (${path} is now ${replacement})`
+      replacement === undefined
+        ? didYouMean(
+          prefix,
+          replaced === undefined ? suggestKey(key) : undefined,
+        )
+        : ` (${path} is now ${replacement})`
     }`,
     {
       path,
@@ -700,6 +726,43 @@ function unknownKey(key: string, prefix: string): OptionError {
       ...(replacement === undefined ? {} : { replacement }),
     },
   );
+}
+
+/**
+ * A name as written with any case and separator, so that `long_vowels`,
+ * `LongVowels`, and `longVowels` compare equal, as do `iso843Type2` and
+ * `iso-843-type-2`.
+ */
+function loose(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * The option that an unknown key was likely meant for, as a path from the
+ * options: a key of `group` spelled otherwise (`long_vowels` for
+ * `longVowels`), a group spelled otherwise (`beta_code`), or the key of
+ * another group, or of a group when it was given at the top level
+ * (`letterCase` for `text.letterCase`). Undefined when no name matches, or
+ * when several groups have it.
+ */
+function suggestKey(key: string, group?: string): string | undefined {
+  const wanted = loose(key);
+  if (group === undefined) {
+    const named = PROFILE_KEYS.find((name) => loose(name) === wanted);
+    if (named !== undefined) return named;
+  }
+  const found = OPTION_GROUPS.flatMap((candidate) =>
+    Object.keys(CONVERSION_OPTION_VALUES[candidate]).filter((name) =>
+      loose(name) === wanted && (candidate !== group || name !== key)
+    ).map((name) => `${candidate}.${name}`)
+  );
+  const own = found.find((path) => path.startsWith(`${group}.`));
+  return own ?? (found.length === 1 ? found[0] : undefined);
+}
+
+/** The end of a message that suggests an option, if there is one. */
+function didYouMean(prefix: string, path: string | undefined): string {
+  return path === undefined ? "" : `; did you mean ${prefix}${path}?`;
 }
 
 /**
@@ -832,6 +895,10 @@ export function registeredOptions(
           }`
       }${removed === undefined ? "" : ` (removed: ${removed})`}${
         renamed === undefined ? "" : ` (${preset} is now ${renamed})`
+      }${
+        named !== undefined || removed !== undefined || renamed !== undefined
+          ? ""
+          : presetHint(preset)
       }`,
       {
         path: `${prefix}preset`,
@@ -842,6 +909,21 @@ export function registeredOptions(
     );
   }
   return PRESET_OPTIONS[preset];
+}
+
+/**
+ * The end of the message for an unknown preset: the preset spelled
+ * otherwise (`ISO-843-type-2`, `iso843Type2`), or the presets accepted.
+ */
+function presetHint(preset: unknown): string {
+  const names = Object.keys(PRESET_OPTIONS);
+  const wanted = typeof preset === "string" ? loose(preset) : undefined;
+  const spelled = names.find((name) => loose(name) === wanted);
+  return spelled !== undefined
+    ? `; did you mean ${JSON.stringify(spelled)}?`
+    : `; expected one of ${
+      names.map((name) => JSON.stringify(name)).join(", ")
+    }.`;
 }
 
 /**

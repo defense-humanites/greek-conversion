@@ -704,8 +704,10 @@ export function encodeBetaCode(
   const uppercaseCodes = options.betaCode?.case === "uppercase";
   const yotCode = options.betaCode?.yot === "#401";
   const context: DocumentContext = {};
-  // The letters after the first of a ligature, which its code writes.
-  let ligatureEnd = 0;
+  // The tokens that an earlier one writes: the letters after the first of a
+  // ligature, which its code writes, or the marks that compose with a letter
+  // kept as text.
+  let writtenEnd = 0;
 
   // The letter right before `index` in the output, where nothing comes
   // between them: `>` ends the overline of a letter that has one.
@@ -718,15 +720,24 @@ export function encodeBetaCode(
   };
 
   const pieces = rendered.map((token, index) => {
-    if (index < ligatureEnd) return "";
+    if (index < writtenEnd) return "";
     if (token.kind === "literal") {
       // A space, the most frequent literal, is written as itself.
       if (token.value === " ") return " ";
       if (isKeptLetter(token)) return token.value;
-      // A Latin letter reads back as the letter of Beta Code it spells, which
-      // convertDetailed() reports: written in the case of the letters, it
-      // converts to itself again.
       if (token.value.length === 1 && BY_BETA.has(token.value.toLowerCase())) {
+        // A Latin letter with marks that compose with it is written as the
+        // character they make (`é`), which the reader keeps as text, where
+        // the letter and the marks would read back as a letter of Beta Code
+        // and marks kept as text.
+        const composed = composedLiteral(rendered, index, true);
+        if (composed !== undefined) {
+          writtenEnd = composed.end;
+          return composed.text;
+        }
+        // A Latin letter reads back as the letter of Beta Code it spells,
+        // which convertDetailed() reports: written in the case of the
+        // letters, it converts to itself again.
         return uppercaseCodes
           ? token.value.toUpperCase()
           : token.value.toLowerCase();
@@ -735,6 +746,22 @@ export function encodeBetaCode(
       // A spacing breathing kept apart from a capital stays apart.
       const apart = standsApart(rendered, index) ? ZWNJ : "";
       if (code === undefined) {
+        // So is a letter of a third script (`ǽ`), its marks in their
+        // canonical order: it reads back as the same text either way, but
+        // Greek and transliteration write it so, and a conversion back to
+        // Beta Code gives it as Beta Code does. A Greek letter is text of
+        // another format, which Greek output writes in its own forms (with
+        // the oxia), and which Beta Code copies.
+        if (
+          token.value.charCodeAt(0) >= 0xC0 &&
+          LETTER_CHARACTER.test(token.value)
+        ) {
+          const composed = composedLiteral(rendered, index, false);
+          if (composed !== undefined) {
+            writtenEnd = composed.end;
+            return composed.text + apart;
+          }
+        }
         // A code kept as text that reads as a mark after a letter (`%26`,
         // the macron) is written with the code of `%`, as the text it is.
         if (isMarkCode(token.value) && letterBefore(index) !== undefined) {
@@ -759,8 +786,8 @@ export function encodeBetaCode(
       : betaLigature(doc, index, options);
     if (ligature !== undefined) {
       // The code for the letters, with the marks of the last one.
-      ligatureEnd = index + ligature.length;
-      const codes = markCodes(rendered[ligatureEnd - 1] as Grapheme);
+      writtenEnd = index + ligature.length;
+      const codes = markCodes(rendered[writtenEnd - 1] as Grapheme);
       if (codes.overline) overline = true;
       return ligature.code + codes.codes;
     }
@@ -786,6 +813,36 @@ export function encodeBetaCode(
   if (overline) writeOverlines(pieces, rendered, doc, options, betaMarks);
   return written === undefined ? pieces.join("") : joinPieces(pieces, written);
 }
+
+/**
+ * The literal letter at `index` and the combining marks after it, kept as
+ * text, in NFC, with the end of those marks: none where NFC leaves them as
+ * they are, or, for a letter of Beta Code (`latin`), where the marks do not
+ * compose with it, since it would read back as a letter of Beta Code anyway.
+ */
+function composedLiteral(
+  document: Document,
+  index: number,
+  latin: boolean,
+): { text: string; end: number } | undefined {
+  let end = index + 1;
+  let text = (document[index] as { value: string }).value;
+  while (end < document.length) {
+    const token = document[end];
+    if (token.kind !== "literal" || !COMBINING_MARK.test(token.value)) break;
+    text += token.value;
+    end++;
+  }
+  if (end === index + 1) return undefined;
+  const composed = text.normalize("NFC");
+  return composed === text ||
+      latin && composed.codePointAt(0) === text.codePointAt(0)
+    ? undefined
+    : { text: composed, end };
+}
+
+const COMBINING_MARK = /^\p{M}+$/u;
+const LETTER_CHARACTER = /^(?![\u0370-\u03FF\u1F00-\u1FFF])\p{L}$/u;
 
 /**
  * Writes transliteration. With `written`, records the range of each token's
@@ -1056,7 +1113,8 @@ export function encodeTransliteration(
             index - 1,
             options,
             vowelUpsilonVF,
-          ) === index
+          ) === index &&
+          !roughInNumeral(rendered, index - 1, options, doc, context)
       ? index - 1
       : undefined;
     // The h of a rough breathing is written only when the breathing is kept.
@@ -1076,7 +1134,8 @@ export function encodeTransliteration(
         )
         : undefined);
     // The breathing of a rough diphthong inside a word is on its second vowel.
-    const breathingIndex = breathingStart === undefined
+    // A numeral has no diphthong at its start either (roughInNumeral()).
+    let breathingIndex = breathingStart === undefined
       ? undefined
       : initialStart === undefined
       ? breathingStart + 1
@@ -1087,6 +1146,10 @@ export function encodeTransliteration(
         options,
         vowelUpsilonVF,
       );
+    if (
+      initialStart !== undefined && breathingIndex !== breathingStart &&
+      roughInNumeral(rendered, breathingStart!, options, doc, context)
+    ) breathingIndex = breathingStart;
     const breathingToken = breathingIndex === undefined
       ? undefined
       : rendered[breathingIndex];
@@ -1140,10 +1203,17 @@ export function encodeTransliteration(
               )));
     const h = capitals ? "H" : "h";
     let base = token.letter === "upsilon"
-      ? transliterationBase(doc, index, token.letter, options, context)
+      ? transliterationBase(
+        doc,
+        index,
+        token.letter,
+        options,
+        context,
+        rendered,
+      )
       : token.letter === "gamma" && writesNasalGamma &&
           isNasalGamma(doc, index, nasalExceptKappa) &&
-          !(nasalMedialKappa && isEdgeGammaKappa(doc, index, context))
+          !(nasalMedialKappa && isEdgeGammaKappa(doc, index))
       ? "n"
       : latinBase(bases, token.letter, options);
     const bnfLowercaseNumeral = bnfKeraia &&
@@ -1254,6 +1324,15 @@ function findRoughDiphthongs(
         next.letter === "upsilon"
       ) starts[index] = 0;
     }
+  }
+  // A numeral has no diphthong (roughInNumeral()). The context keeps what
+  // the numerals of a long word read, for each pair of it that asks.
+  const context: DocumentContext = {};
+  for (let index = 0; index < starts.length; index++) {
+    if (
+      starts[index] === 1 &&
+      roughInNumeral(readBack, index, options, readBack, context)
+    ) starts[index] = 0;
   }
   // A coronis written as an apostrophe after the first vowel splits the pair
   // (splitByCoronis): the second vowel keeps its own `h`.
@@ -1366,19 +1445,19 @@ function modernDigraphAt(
 
 /**
  * Under `nasalGamma: "nasal-medial-kappa"` (ALA-LC), `γκ` at the beginning or
- * end of a word keeps a literal `g`: `gk`, and `nk` inside the word.
+ * end of a word keeps a literal `g`: `gk`, and `nk` inside the word. So it
+ * does before a keraia, as the reader reads `nk` there as nu and kappa
+ * (`νκʹ`, the numeral 70): `γκʹ` gives `gkʹ`, and `͵γκʹ` `͵gkʹ`.
  */
 function isEdgeGammaKappa(
   document: Document,
   index: number,
-  context: DocumentContext,
 ): boolean {
   const first = document[index];
   const second = document[index + 1];
   return first?.kind === "grapheme" && first.letter === "gamma" &&
     second?.kind === "grapheme" && second.letter === "kappa" &&
     first.diacritics.size === 0 && second.diacritics.size === 0 &&
-    !isGreekNumeralContext(document, index, context) &&
     (isWordInitial(document, index) &&
         !followsCoronisApostrophe(document, index) ||
       isWordFinal(document, index + 1));
@@ -1428,6 +1507,7 @@ function transliterationBase(
   letter: Grapheme["letter"],
   options: ConversionOptions,
   context?: DocumentContext,
+  rendered: Document = document,
 ): string {
   switch (letter) {
     case "archaic-koppa":
@@ -1445,11 +1525,18 @@ function transliterationBase(
   }
 
   if (letter === "upsilon") {
+    // A numeral has no diphthong whose second vowel bears a rough breathing,
+    // which the reader leaves there (roughInNumeral()): its upsilon is
+    // written as outside a diphthong, but the `u` of `ου` under ISO 843
+    // Type 2, which reads back after an `h` (`οὑʹ` → `ohuʹ`).
     switch (options.transliteration?.upsilon) {
       case "y":
         return "y";
       case "y-with-ou-v-f": {
-        if (isVowelUpsilonAt(document, index - 1)) {
+        if (
+          isVowelUpsilonAt(document, index - 1) &&
+          !roughInNumeral(rendered, index - 1, options, document, context)
+        ) {
           return precedesVoicedSound(document, index) ? "v" : "f";
         }
         // Table 2 lists `ου` but not `ωυ`, which note 8 converts letter by
@@ -1467,14 +1554,23 @@ function transliterationBase(
       }
       case "y-with-au-eu-ou":
         return isDiphthongAt(document, index - 1) &&
-            readsBack(document, index - 1, options, isAuEuOuAt)
+            readsBack(document, index - 1, options, isAuEuOuAt) &&
+            !roughInNumeral(rendered, index - 1, options, document, context)
           ? "u"
           : "y";
       case "y-with-diphthong-u":
         return isDiphthongAt(document, index - 1) &&
-              readsBack(document, index - 1, options, isDiphthongAt) ||
+              readsBack(document, index - 1, options, isDiphthongAt) &&
+              !roughInNumeral(
+                rendered,
+                index - 1,
+                options,
+                document,
+                context,
+              ) ||
             isDiphthongAt(document, index) &&
-              readsBack(document, index, options, isDiphthongAt)
+              readsBack(document, index, options, isDiphthongAt) &&
+              !roughInNumeral(rendered, index, options, document, context)
           ? "u"
           : "y";
       default:
@@ -1831,6 +1927,69 @@ function meetsRoughIotaOrUpsilon(
   const next = document[index + 1];
   return next !== undefined && next.kind === "grapheme" &&
     isRoughIotaOrUpsilon(next, etaAsIota);
+}
+
+/**
+ * Whether the pair at `start` is two vowels of a numeral, the second with a
+ * rough breathing. A numeral has no diphthong, and the reader leaves that
+ * breathing on the second vowel: its `h` goes right before it (`αἱʹ` →
+ * `ahiʹ`, where `haiʹ` reads back as ἁιʹ). A coronis written as an apostrophe
+ * on the pair may read back as punctuation, which ends the numeral, and so
+ * may the keraiai of the BnF (bnfKeraiaReadsBack()): the pair is then
+ * written as elsewhere. The numeral is found in `numerals`, the document
+ * that `document` was rendered from.
+ */
+function roughInNumeral(
+  document: Document,
+  start: number,
+  options: ConversionOptions,
+  numerals: Document = document,
+  context?: DocumentContext,
+): boolean {
+  const first = document[start];
+  const second = document[start + 1];
+  if (
+    first?.kind !== "grapheme" || second?.kind !== "grapheme" ||
+    !second.diacritics.has("rough") ||
+    !preservesDiacritic("rough", options, "transliteration")
+  ) return false;
+  if (
+    options.transliteration?.coronis === "apostrophe" &&
+    (first.diacritics.has("coronis") || second.diacritics.has("coronis"))
+  ) return false;
+  if (!isGreekNumeralContext(numerals, start, context)) return false;
+  return options.transliteration?.keraia !== "bnf" ||
+    bnfKeraiaReadsBack(document, start, options, context);
+}
+
+/**
+ * Whether the numeral of the letter at `start`, under the BnF keraiai, ends
+ * with a right keraia that reads back as one: written `ʹ` after an accent,
+ * or as an acute on a consonant. An acute on a vowel reads back as an
+ * accent, and the comma of the left keraia as a comma, but before `c̄` and
+ * `s̄`: the reader then finds no numeral to leave a breathing in.
+ */
+function bnfKeraiaReadsBack(
+  document: Document,
+  start: number,
+  options: ConversionOptions,
+  context?: DocumentContext,
+): boolean {
+  // The letters of the run read last get its answer: read from each pair of
+  // a long run, the run would take a time that grows with its square.
+  const run = context?.bnfKeraia;
+  if (run !== undefined && start >= run.start && start < run.end) {
+    return run.readsBack;
+  }
+  let end = start;
+  while (document[end]?.kind === "grapheme") end++;
+  const keraia = document[end];
+  const readsBack = keraia?.kind === "literal" &&
+    keraia.value === DEXIA_KERAIA &&
+    (bnfRightKeraia(options, document, end) === DEXIA_KERAIA ||
+      !isVowel((document[end - 1] as Grapheme).letter));
+  if (context !== undefined) context.bnfKeraia = { start, end, readsBack };
+  return readsBack;
 }
 
 /**

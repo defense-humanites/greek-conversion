@@ -3,6 +3,7 @@ import { unified } from "@astrojs/markdown-remark";
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 import starlightTypeDoc, { typeDocSidebarGroup } from "starlight-typedoc";
+import llmsTxt from "./llms.mjs";
 
 /**
  * The site's own domain, which it holds alone: it is served from the
@@ -297,6 +298,95 @@ function external(label, link) {
   };
 }
 
+/**
+ * The reader comes with a Greek (ancient, Byzantine, or modern), looks
+ * for the convention that applies to it, and asks what a conversion
+ * loses: the groups after "Start here" answer in that order. The guide
+ * introduces; the Reference group holds the documents of docs/, the
+ * preset reference apart, beside the guide to presets. A page is listed
+ * under its own title, so that the menu and the page agree: to rename
+ * an entry, rename the page.
+ *
+ * `llms.mjs` lists the pages for AI agents in the same order.
+ */
+const SIDEBAR = [
+  {
+    label: "Start here",
+    items: [
+      "guide/getting-started",
+      "guide/how-it-works",
+      "guide/glossary",
+    ],
+  },
+  {
+    label: "Your Greek",
+    items: [
+      "guide/ancient-greek",
+      "guide/byzantine-greek",
+      "guide/modern-greek",
+    ],
+  },
+  {
+    label: "Standards and presets",
+    items: [
+      "guide/presets",
+      "reference/presets",
+      {
+        label: "Conformance",
+        collapsed: true,
+        items: [
+          "reference/preset-behavior-audit",
+          "reference/preset-repertoire-audit",
+          "reference/ala-lc-conformance-corpus",
+          "reference/preset-conformance-corpus",
+        ],
+      },
+    ],
+  },
+  {
+    label: "Information loss",
+    items: ["guide/format-and-option-losses", "guide/losses"],
+  },
+  {
+    label: "Recipes",
+    items: [{ autogenerate: { directory: "guide/recipes" } }],
+  },
+  {
+    label: "Going further",
+    items: [
+      "guide/converters",
+      "guide/document",
+      "guide/smaller-bundles",
+      "guide/performance",
+    ],
+  },
+  {
+    label: "Reference",
+    items: [
+      "reference/guarantees",
+      "reference/options",
+      "reference/greek-unicode",
+      "reference/punctuation-and-numerals",
+      "reference/information-loss",
+      "reference/conversion-analysis",
+      "reference/character-extensions",
+      "reference/document-api",
+      "reference/validation",
+      "reference/stability",
+    ],
+  },
+  typeDocSidebarGroup,
+  {
+    label: "Project",
+    collapsed: true,
+    items: [
+      external("Changelog", `${REPOSITORY}/blob/main/CHANGELOG.md`),
+      external("Migration guide", `${REPOSITORY}/blob/main/MIGRATION.md`),
+      external("Contributing", `${REPOSITORY}/blob/main/CONTRIBUTING.md`),
+    ],
+  },
+];
+
 export default defineConfig({
   site: SITE,
   base: BASE || "/",
@@ -326,7 +416,7 @@ export default defineConfig({
     starlight({
       title: "greek conversion",
       description:
-        "A TypeScript library that converts Ancient, Byzantine, and Modern Greek between Greek script, Beta Code, and Latin script, with standards-based presets and information-loss diagnostics.",
+        "A TypeScript library that converts Ancient, Byzantine, and Modern Greek between Greek script, Beta Code, and Latin script, with atomic options composed into standards-based presets, and information-loss diagnostics.",
       favicon: "/favicon.svg",
       // English is the root locale, at the site's root. A translation is a
       // folder of the same pages (`fr/`) and one more entry here.
@@ -402,90 +492,14 @@ export default defineConfig({
           },
         }),
       ],
-      // The reader comes with a Greek (ancient, Byzantine, or modern), looks
-      // for the convention that applies to it, and asks what a conversion
-      // loses: the groups after "Start here" answer in that order. The guide
-      // introduces; the Reference group holds the documents of docs/, the
-      // preset reference apart, beside the guide to presets. A page is listed
-      // under its own title, so that the menu and the page agree: to rename
-      // an entry, rename the page.
-      sidebar: [
-        {
-          label: "Start here",
-          items: [
-            "guide/getting-started",
-            "guide/how-it-works",
-            "guide/glossary",
-          ],
-        },
-        {
-          label: "Your Greek",
-          items: [
-            "guide/ancient-greek",
-            "guide/byzantine-greek",
-            "guide/modern-greek",
-          ],
-        },
-        {
-          label: "Standards and presets",
-          items: [
-            "guide/presets",
-            "reference/presets",
-            {
-              label: "Conformance",
-              collapsed: true,
-              items: [
-                "reference/preset-behavior-audit",
-                "reference/preset-repertoire-audit",
-                "reference/ala-lc-conformance-corpus",
-                "reference/preset-conformance-corpus",
-              ],
-            },
-          ],
-        },
-        {
-          label: "Information loss",
-          items: ["guide/format-and-option-losses", "guide/losses"],
-        },
-        {
-          label: "Recipes",
-          items: [{ autogenerate: { directory: "guide/recipes" } }],
-        },
-        {
-          label: "Going further",
-          items: [
-            "guide/converters",
-            "guide/document",
-            "guide/smaller-bundles",
-            "guide/performance",
-          ],
-        },
-        {
-          label: "Reference",
-          items: [
-            "reference/guarantees",
-            "reference/options",
-            "reference/greek-unicode",
-            "reference/punctuation-and-numerals",
-            "reference/information-loss",
-            "reference/conversion-analysis",
-            "reference/character-extensions",
-            "reference/document-api",
-            "reference/validation",
-            "reference/stability",
-          ],
-        },
-        typeDocSidebarGroup,
-        {
-          label: "Project",
-          collapsed: true,
-          items: [
-            external("Changelog", `${REPOSITORY}/blob/main/CHANGELOG.md`),
-            external("Migration guide", `${REPOSITORY}/blob/main/MIGRATION.md`),
-            external("Contributing", `${REPOSITORY}/blob/main/CONTRIBUTING.md`),
-          ],
-        },
-      ],
+      sidebar: SIDEBAR,
+    }),
+    llmsTxt({
+      site: SITE,
+      base: BASE,
+      title: "greek conversion",
+      sidebar: SIDEBAR,
+      apiGroup: typeDocSidebarGroup,
     }),
   ],
 });

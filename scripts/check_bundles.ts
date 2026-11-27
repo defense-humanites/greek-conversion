@@ -9,27 +9,43 @@
  *   no validation of options without `prepareOptions()`, no metadata of the
  *   presets, no loss analysis without `convertDetailed()`, no conversion of
  *   the Greek passages of a text without `convertGreekPassages()`. A reader
- *   imported alone keeps no writer.
+ *   imported alone keeps no writer. With a preset or the defaults, it keeps
+ *   no function of the steps that only other options take (`src/steps.ts`),
+ *   as the names of its source map show.
  * - Inside a module that a bundle keeps, what it does not import is left out
  *   too, which modules alone do not show: a bundle that imports every preset
  *   weighs what the guide says more than one that imports one, and
  *   `OptionError` alone weighs less than 1 kB, without the table of option
  *   values beside it in `options.js`.
- * - The sizes that the guide gives are those of the bundles, within 3 %, or
- *   0.05 kB for the smallest, and so are its percentages, within 2 points;
- *   the sizes it gives in whole kB, within 3 % or half a kB. A size that
- *   moves further is a module kept by mistake, more often than a change to
- *   write in the guide.
+ * - No bundle keeps a top-level declaration that nothing in it reaches,
+ *   which esbuild keeps when it cannot prove its value pure: a table built
+ *   by a call, which a function annotated `@__PURE__` lets it leave out.
+ *   Such a table weighs from a few bytes to a kilobyte, less than the sizes
+ *   of the guide change from one release to the next.
+ * - The sizes that the guide gives are those of the bundles, within 3 % plus
+ *   half the unit they are written in, and so are its percentages, within 2
+ *   points. The checks above keep out what a bundle does not use; the guide
+ *   follows the bundles, and `--write` writes their sizes into it.
  *
  * Run with `node scripts/check_bundles.ts` after `npm run npm:build`;
- * `npm run npm:check` does both.
+ * `npm run npm:check` does both. `npm run docs:bundles` builds the package
+ * and writes the sizes of its bundles into the guide, as before a release.
  */
-import { mkdir, mkdtemp, readFile, rm, symlink } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
+import { SourceMap } from "node:module";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 import { build } from "esbuild";
+import ts from "typescript";
 
 const ROOT = new URL("../", import.meta.url);
 const GUIDE = new URL(
@@ -37,6 +53,8 @@ const GUIDE = new URL(
   ROOT,
 );
 const P = "@humanities/greek-conversion";
+/** Whether to write the sizes of the bundles into the guide. */
+const WRITE = process.argv.includes("--write");
 
 interface Scenario {
   /** The row of the guide's table. */
@@ -62,13 +80,28 @@ const NEVER = [
 /** Modules that only `prepareOptions()` brings. */
 const VALIDATION = ["prepare_options.js", "presets.js", "options.js"];
 /**
- * The module of the accent of καί, one of the steps that only options
- * outside the presets take, which their resolution links (see
- * `src/steps.ts`): a conversion with a preset keeps it only for the accents
- * that the loss analysis imports from it. The other steps are functions of
- * modules that every conversion keeps.
+ * The functions of the steps that only options outside the presets take,
+ * which their resolution links (see `src/steps.ts`): a conversion with a
+ * preset or the defaults keeps none, which the names of its source map
+ * show. Most are functions of modules that every conversion keeps.
  */
-const STEPS = ["kai_accent.js"];
+const STEPS = stepFunctions(
+  await readFile(new URL("src/presets.ts", ROOT), "utf8"),
+);
+/**
+ * The module of the accent of καί, a step whose module a conversion with a
+ * preset keeps only for the accents that the loss analysis imports from it.
+ */
+const STEP_MODULES = ["kai_accent.js"];
+/**
+ * The functions that `STEPS` names in `src/presets.ts`, one a line, or
+ * nothing when a line no longer reads so.
+ */
+function stepFunctions(source: string): string[] | undefined {
+  const names = /^const STEPS: Steps = \{\n([^}]*)\n\};$/m.exec(source)?.[1]
+    .split("\n").map((line) => /^ {2}\w+: (\w+),$/.exec(line)?.[1]);
+  return names?.every((name) => name !== undefined) ? names : undefined;
+}
 /** The most that `OptionError` imported alone may weigh, minified. */
 const OPTION_ERROR_BYTES = 1000;
 
@@ -177,12 +210,186 @@ const SCENARIOS: Scenario[] = [
 ];
 
 const directory = await mkdtemp(join(tmpdir(), "greek-conversion-bundles-"));
+const PACKAGE = fileURLToPath(new URL("npm/", ROOT));
 const failures: string[] = [];
+let bundles = 0;
 
-/** A bundle's size, minified then compressed, and the modules it keeps. */
+/** A top-level statement of a bundle, which may declare names. */
+interface Unit {
+  node: ts.Node;
+  names: string[];
+  /** The units whose names it reads, and those whose names it assigns. */
+  reads: Set<Unit>;
+  writes: Set<Unit>;
+}
+
+/** Whether an identifier is assigned, as `x = …` or `x ||= …`. */
+function isAssigned(node: ts.Identifier): boolean {
+  const parent = node.parent;
+  return ts.isBinaryExpression(parent) && parent.left === node &&
+    parent.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
+    parent.operatorToken.kind <= ts.SyntaxKind.LastAssignment;
+}
+
+/**
+ * The top-level declarations of a minified bundle that nothing it runs
+ * reaches. What runs is the call of the bundle, which logs a result, and a
+ * statement that names no declaration. A declaration is reached when a
+ * statement reached reads or assigns it; a statement that declares nothing,
+ * such as one that freezes a class, is reached with a declaration it reads;
+ * and a statement that assigns a declaration reached is reached too, as the
+ * static fields of `Codec` and `Prepared`, which assign the functions that
+ * read their private fields. The checker of TypeScript resolves the names,
+ * which the minifier gives to locals as well.
+ */
+function unreached(code: string): ts.Node[] {
+  const name = "/bundle.js";
+  const source = ts.createSourceFile(
+    name,
+    code,
+    ts.ScriptTarget.ESNext,
+    true,
+    ts.ScriptKind.JS,
+  );
+  const host: ts.CompilerHost = {
+    getSourceFile: (file) => file === name ? source : undefined,
+    fileExists: (file) => file === name,
+    readFile: () => undefined,
+    writeFile: () => {},
+    getDefaultLibFileName: () => "/lib.d.ts",
+    getCurrentDirectory: () => "/",
+    getCanonicalFileName: (file) => file,
+    useCaseSensitiveFileNames: () => true,
+    getNewLine: () => "\n",
+  };
+  const checker = ts.createProgram([name], {
+    allowJs: true,
+    noLib: true,
+    noResolve: true,
+    types: [],
+  }, host).getTypeChecker();
+
+  const units: Unit[] = [];
+  const bySymbol = new Map<ts.Symbol, Unit>();
+  const unit = (node: ts.Node): Unit => {
+    const made: Unit = { node, names: [], reads: new Set(), writes: new Set() };
+    units.push(made);
+    return made;
+  };
+  const declare = (binding: ts.BindingName, declaring: Unit): void => {
+    if (ts.isIdentifier(binding)) {
+      declaring.names.push(binding.text);
+      const symbol = checker.getSymbolAtLocation(binding);
+      if (symbol !== undefined) bySymbol.set(symbol, declaring);
+      return;
+    }
+    for (const element of binding.elements) {
+      if (!ts.isOmittedExpression(element)) declare(element.name, declaring);
+    }
+  };
+  for (const statement of source.statements) {
+    if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        declare(declaration.name, unit(declaration));
+      }
+    } else if (
+      (ts.isFunctionDeclaration(statement) ||
+        ts.isClassDeclaration(statement)) && statement.name !== undefined
+    ) {
+      declare(statement.name, unit(statement));
+    } else {
+      unit(statement);
+    }
+  }
+
+  const names = new Set(units.flatMap((each) => each.names));
+  for (const each of units) {
+    const visit = (node: ts.Node): void => {
+      if (ts.isIdentifier(node) && names.has(node.text)) {
+        const parent = node.parent;
+        const symbol =
+          ts.isShorthandPropertyAssignment(parent) && parent.name === node
+            ? checker.getShorthandAssignmentValueSymbol(parent)
+            : checker.getSymbolAtLocation(node);
+        const target = symbol === undefined ? undefined : bySymbol.get(symbol);
+        if (target !== undefined && target !== each) {
+          (isAssigned(node) ? each.writes : each.reads).add(target);
+        }
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(each.node);
+  }
+
+  // The call of the bundle, and the statements that name no declaration.
+  const reached = new Set(units.filter((each) =>
+    each.names.length === 0 &&
+    ((each.reads.size === 0 && each.writes.size === 0) ||
+      (ts.isExpressionStatement(each.node) &&
+        each.node.expression.getText(source).startsWith("console.log(")))
+  ));
+  const some = (targets: Set<Unit>) =>
+    [...targets].some((target) => reached.has(target));
+  for (let grown = true; grown;) {
+    grown = false;
+    for (const each of units) {
+      const reaches = reached.has(each) || some(each.writes) ||
+        (each.names.length === 0 && some(each.reads));
+      if (!reaches) continue;
+      for (const target of [each, ...each.reads, ...each.writes]) {
+        if (!reached.has(target)) {
+          reached.add(target);
+          grown = true;
+        }
+      }
+    }
+  }
+  return units.filter((each) => each.names.length > 0 && !reached.has(each))
+    .map((each) => each.node);
+}
+
+/**
+ * What a bundle keeps that nothing in it reaches, by name, source, and
+ * bytes: the source map of the bundle gives the module of `npm/esm/` and
+ * the line of each declaration.
+ */
+function located(map: SourceMap, nodes: ts.Node[]): Promise<string[]> {
+  return Promise.all(nodes.map(async (node) => {
+    const source = node.getSourceFile();
+    const text = node.getText(source);
+    const bytes = `${Buffer.byteLength(text)} bytes`;
+    const { line, character } = source.getLineAndCharacterOfPosition(
+      node.getStart(source),
+    );
+    const entry = map.findEntry(line, character);
+    if (!("originalSource" in entry)) {
+      return `\`${text.slice(0, 40)}…\` (${bytes})`;
+    }
+    const path = resolve(directory, entry.originalSource);
+    const declaration = (await readFile(path, "utf8")).split("\n")[
+      entry.originalLine
+    ];
+    const name = /\b(?:const|let|var|function|class)\s+([\w$]+)/.exec(
+      declaration ?? "",
+    )?.[1] ?? `\`${text.slice(0, 40)}…\``;
+    // The modules of `npm/esm/` are those of `src/`, compiled.
+    const module = relative(join(PACKAGE, "esm"), path);
+    const where = module.startsWith("..")
+      ? relative(PACKAGE, path)
+      : `src/${module.replace(/\.js$/, ".ts")}`;
+    return `${name}, in ${where} (${bytes})`;
+  }));
+}
+
+/**
+ * A bundle's size, minified then compressed, the modules it keeps, and the
+ * names of the declarations it keeps, which its source map lists; records
+ * what it keeps that nothing in it reaches.
+ */
 async function bundle(
+  label: string,
   contents: string,
-): Promise<{ size: number; gzip: number; modules: string[] }> {
+): Promise<{ size: number; gzip: number; modules: string[]; names: string[] }> {
   const result = await build({
     stdin: { contents, resolveDir: directory, loader: "js" },
     bundle: true,
@@ -190,86 +397,152 @@ async function bundle(
     format: "esm",
     write: false,
     metafile: true,
+    // The source map changes nothing in the bundle, and costs little.
+    sourcemap: "external",
+    outdir: directory,
     logLevel: "error",
   });
-  const output = result.outputFiles[0].contents;
-  const [meta] = Object.values(result.metafile.outputs);
+  bundles += 1;
+  const output = (suffix: string) =>
+    result.outputFiles.find((file) => file.path.endsWith(suffix));
+  const code = output(".js");
+  const map = JSON.parse(output(".js.map")?.text ?? "{}");
+  if (code === undefined) throw new Error(`${label}: esbuild wrote no bundle.`);
+  const nodes = unreached(code.text);
+  if (nodes.length > 0) {
+    for (const declaration of await located(new SourceMap(map), nodes)) {
+      failures.push(
+        `${label}: the bundle keeps ${declaration}, which nothing in it ` +
+          "reaches: esbuild cannot prove its value pure.",
+      );
+    }
+  }
+  const inputs = Object.entries(result.metafile.outputs)
+    .find(([path]) => path.endsWith(".js"))?.[1].inputs ?? {};
   return {
-    size: output.length,
-    gzip: gzipSync(output, { level: 9 }).length,
-    modules: Object.entries(meta.inputs)
+    size: code.contents.length,
+    gzip: gzipSync(code.contents, { level: 9 }).length,
+    modules: Object.entries(inputs)
       .filter(([, input]) => input.bytesInOutput > 0)
       // esbuild gives the paths from the working directory: `npm/esm/…`
       // from the root of the repository.
       .map(([path]) => path.replace(/^(?:.*\/)?npm\/esm\//, "")),
+    names: map.names ?? [],
   };
 }
 
-/** A cell of the guide's table, as `39.7 kB, 13.0 kB gzip (−42 %)`. */
-const CELL = /^(\d+\.\d) kB, (\d+\.\d) kB gzip \(([−+])(\d+) %\)$/;
+/**
+ * A size or a percentage that the guide gives: what the bundles measure,
+ * in bytes or in percent, how and where the guide writes it.
+ */
+interface Figure {
+  label: string;
+  measured: number;
+  /** kB with a decimal, whole kB, or a percentage with its sign. */
+  kind: "tenths" | "whole" | "percent";
+  start: number;
+  end: number;
+}
+
+const figures: Figure[] = [];
 
 /**
- * The sizes of a row of the guide's table, for a preset and for
- * `prepareOptions()`: in kB, minified and with gzip, and the percentage.
+ * Records the figure that the group `group` of `match` holds, a match of a
+ * regular expression with the flag `d`.
  */
-function documented(guide: string, row: string): number[][] {
-  const line = guide.split("\n").find((text) => text.startsWith(`| ${row} `));
-  if (line === undefined) {
-    failures.push(`The guide has no row "${row}".`);
-    return [];
+function figure(
+  label: string,
+  measured: number,
+  match: RegExpMatchArray,
+  group: number,
+  kind: Figure["kind"],
+): void {
+  const [start, end] = match.indices?.[group] ?? [0, 0];
+  figures.push({ label, measured, kind, start, end });
+}
+
+/** A figure as the guide writes it, from what the bundles measure. */
+function written(figure: Figure): string {
+  switch (figure.kind) {
+    case "tenths":
+      return (Math.round(figure.measured / 100) / 10).toFixed(1);
+    case "whole":
+      return String(Math.round(figure.measured / 1000));
+    case "percent":
+      return `${figure.measured < 0 ? "−" : "+"}${Math.abs(figure.measured)}`;
   }
-  return line.split("|").slice(2, 4).map((cell) => {
-    const match = CELL.exec(cell.trim());
-    if (match === null) {
-      failures.push(
-        `The guide's row "${row}" has a cell that does not read ` +
-          `"39.7 kB, 13.0 kB gzip (−42 %)", with a minus sign: ${cell.trim()}`,
-      );
-      return [];
-    }
-    return [
-      Number(match[1]),
-      Number(match[2]),
-      (match[3] === "−" ? -1 : 1) * Number(match[4]),
-    ];
-  });
 }
 
 /**
- * Records a failure when a size the guide gives, `written`, differs from
- * the size of the bundle by more than 3 %, or than `rounding`, the half of
- * the unit it is written in.
+ * Whether a figure of the guide, `text`, is further from the bundles than
+ * 3 % plus half its unit, or 2 points for a percentage.
  */
-function compare(
-  label: string,
-  measured: number,
-  written: number,
-  rounding = 0.05,
-): void {
-  if (Math.abs(measured - written) > Math.max(0.03 * written, rounding)) {
-    failures.push(
-      `${label}: the guide gives ${written} kB, the bundle is ${measured} kB.`,
-    );
+function drifts(figure: Figure, text: string): boolean {
+  if (figure.kind === "percent") {
+    const percent = (text.startsWith("−") ? -1 : 1) * Number(text.slice(1));
+    return Math.abs(figure.measured - percent) > 2;
   }
+  const size = Number(text);
+  const unit = figure.kind === "whole" ? 1 : 0.1;
+  return Math.abs(figure.measured / 1000 - size) > 0.03 * size + unit / 2;
+}
+
+/** A row of the guide's table, as `| Greek to Beta Code | 35.7 kB, … |`. */
+const ROW =
+  /^\| (.+?) +\| (\d+\.\d) kB, (\d+\.\d) kB gzip \(([−+]\d+) %\) +\| (\d+\.\d) kB, (\d+\.\d) kB gzip \(([−+]\d+) %\) +\|$/dgm;
+
+/**
+ * The guide with its table of bundles aligned again, once its sizes are
+ * written: each cell padded to the widest of its column.
+ */
+function aligned(guide: string): string {
+  const lines = guide.split("\n");
+  const row = lines.findIndex((line) =>
+    line.startsWith(`| ${SCENARIOS[0].row} `)
+  );
+  if (row === -1) return guide;
+  let first = row;
+  while (lines[first - 1]?.startsWith("|")) first -= 1;
+  let last = row;
+  while (lines[last + 1]?.startsWith("|")) last += 1;
+  const cells = lines.slice(first, last + 1).map((line) =>
+    line.slice(1, -1).split("|").map((cell) => cell.trim())
+  );
+  const rule = (cell: string) => /^-+$/.test(cell);
+  const widths = cells[0].map((_, column) =>
+    Math.max(
+      ...cells.map((each) => rule(each[column]) ? 3 : each[column].length),
+    )
+  );
+  lines.splice(
+    first,
+    cells.length,
+    ...cells.map((each) =>
+      `| ${
+        each.map((cell, column) =>
+          rule(cell) ? "-".repeat(widths[column]) : cell.padEnd(widths[column])
+        ).join(" | ")
+      } |`
+    ),
+  );
+  return lines.join("\n");
 }
 
 try {
   await mkdir(join(directory, "node_modules", "@humanities"), {
     recursive: true,
   });
-  await symlink(
-    fileURLToPath(new URL("npm/", ROOT)),
-    join(directory, "node_modules", P),
-    "dir",
-  );
+  await symlink(PACKAGE, join(directory, "node_modules", P), "dir");
   const guide = await readFile(GUIDE, "utf8");
 
   const references = {
     convert: await bundle(
+      "convert()",
       `import { convert } from "${P}";\n` +
         `console.log(convert("λόγος", "greek", "transliteration", { preset: "iso-843-type-2" }));`,
     ),
     convertDetailed: await bundle(
+      "convertDetailed()",
       `import { convertDetailed } from "${P}";\n` +
         `console.log(convertDetailed("λόγος", "greek", "transliteration", { preset: "iso-843-type-2" }));`,
     ),
@@ -286,57 +559,56 @@ try {
       );
     }
   }
-  const kB = (bytes: number) => Math.round(bytes / 100) / 10;
   const intro = guide.match(
-    /`convert\(\)`\s+\((\d+\.\d) kB, (\d+\.\d) kB with gzip\), or\s+`convertDetailed\(\)` \((\d+\.\d) kB, (\d+\.\d) kB\)/,
+    /`convert\(\)`\s+\((\d+\.\d) kB, (\d+\.\d) kB with gzip\), or\s+`convertDetailed\(\)` \((\d+\.\d) kB, (\d+\.\d) kB\)/d,
   );
   if (intro === null) {
     failures.push(
       "The guide no longer gives the sizes of the main entry point.",
     );
   } else {
-    compare("convert()", kB(references.convert.size), Number(intro[1]));
-    compare("convert(), gzip", kB(references.convert.gzip), Number(intro[2]));
-    compare(
-      "convertDetailed()",
-      kB(references.convertDetailed.size),
-      Number(intro[3]),
-    );
-    compare(
-      "convertDetailed(), gzip",
-      kB(references.convertDetailed.gzip),
-      Number(intro[4]),
-    );
+    figure("convert()", references.convert.size, intro, 1, "tenths");
+    figure("convert(), gzip", references.convert.gzip, intro, 2, "tenths");
+    const detailed = references.convertDetailed;
+    figure("convertDetailed()", detailed.size, intro, 3, "tenths");
+    figure("convertDetailed(), gzip", detailed.gzip, intro, 4, "tenths");
   }
   const opening = guide.match(
-    /about\s+(\d+) kB\s+minified\s+\((\d+) kB\s+with\s+gzip\)/,
+    /about\s+(\d+) kB\s+minified\s+\((\d+) kB\s+with\s+gzip\)/d,
   );
   if (opening === null) {
     failures.push("The guide no longer opens with the size of convert().");
   } else {
-    compare(
-      "convert(), rounded",
-      kB(references.convert.size),
-      +opening[1],
-      0.5,
-    );
-    compare(
-      "convert(), gzip, rounded",
-      kB(references.convert.gzip),
-      +opening[2],
-      0.5,
-    );
+    const { size, gzip } = references.convert;
+    figure("convert(), rounded", size, opening, 1, "whole");
+    figure("convert(), gzip, rounded", gzip, opening, 2, "whole");
   }
 
+  // What a bundle must not keep: modules of `npm/esm/`, and the functions
+  // of the steps.
   const kept = async (label: string, code: string[], absent: string[]) => {
-    const result = await bundle(code.join("\n"));
-    for (const module of absent) {
-      if (result.modules.includes(module)) {
-        failures.push(`${label}: the bundle keeps ${module}.`);
+    const result = await bundle(label, code.join("\n"));
+    for (const name of absent) {
+      if (!name.endsWith(".js")) {
+        if (result.names.includes(name)) {
+          failures.push(
+            `${label}: the bundle keeps ${name}(), a step that no preset ` +
+              "takes.",
+          );
+        }
+      } else if (result.modules.includes(name)) {
+        failures.push(`${label}: the bundle keeps ${name}.`);
       }
     }
     return result;
   };
+  if (STEPS === undefined) {
+    failures.push(
+      "src/presets.ts no longer names the functions of the steps in STEPS " +
+        "as this check reads them, one a line.",
+    );
+  }
+  const steps = STEPS ?? [];
 
   await kept("A reader alone", [
     `import { greekReader } from "${P}/greek";`,
@@ -373,35 +645,30 @@ try {
   const onePreset = await kept(
     "One preset",
     presetCode("{ iso843Type2 }", "iso843Type2"),
-    [...NEVER, ...VALIDATION],
+    [...NEVER, ...VALIDATION, ...steps, ...STEP_MODULES],
   );
   const everyPreset = await kept(
     "Every preset",
     presetCode("* as presets", "Object.values(presets)[Date.now() % 8]"),
-    [...NEVER, ...VALIDATION],
+    [...NEVER, ...VALIDATION, ...steps, ...STEP_MODULES],
   );
   const every = guide.match(
-    /imports\s+them\s+all,\s+which\s+adds\s+(\d+\.\d) kB\s+\((\d+\.\d) kB\s+with\s+gzip\)/,
+    /imports\s+them\s+all,\s+which\s+adds\s+(\d+\.\d) kB\s+\((\d+\.\d) kB\s+with\s+gzip\)/d,
   );
   if (every === null) {
     failures.push(
       "The guide no longer gives what every preset adds to one.",
     );
   } else {
-    compare(
-      "Every preset against one",
-      kB(everyPreset.size - onePreset.size),
-      Number(every[1]),
-    );
-    compare(
-      "Every preset against one, gzip",
-      kB(everyPreset.gzip - onePreset.gzip),
-      Number(every[2]),
-    );
+    const label = "Every preset against one";
+    figure(label, everyPreset.size - onePreset.size, every, 1, "tenths");
+    const gzip = everyPreset.gzip - onePreset.gzip;
+    figure(`${label}, gzip`, gzip, every, 2, "tenths");
   }
 
   // What the metadata of the presets adds to a bundle with one preset.
   const metadata = await bundle(
+    "The metadata of the presets",
     [
       ...presetCode("{ iso843Type2 }", "iso843Type2"),
       `import { listPresetMetadata } from "${P}";`,
@@ -410,26 +677,34 @@ try {
   );
   const metadataSizes = [
     ...guide.matchAll(
-      /metadata\s+of\s+(?:every\s+preset|the\s+presets),\s+about\s+(\d+) kB/g,
+      /metadata\s+of\s+(?:every\s+preset|the\s+presets),\s+about\s+(\d+) kB/dg,
     ),
   ];
   if (metadataSizes.length === 0) {
     failures.push("The guide no longer gives the size of the metadata.");
   }
-  for (const [, size] of metadataSizes) {
-    compare(
-      "The metadata of the presets",
-      kB(metadata.size - onePreset.size),
-      Number(size),
-      0.5,
-    );
+  for (const match of metadataSizes) {
+    const label = "The metadata of the presets";
+    figure(label, metadata.size - onePreset.size, match, 1, "whole");
   }
 
+  /** The rows of the guide's table, by name. */
+  const rows = new Map(
+    [...guide.matchAll(ROW)].map((match) => [match[1], match]),
+  );
   /** The bundles of the table, by row and variant. */
   const measured = new Map<string, { size: number; gzip: number }>();
   for (const scenario of SCENARIOS) {
     const reference = references[scenario.function];
-    const written = documented(guide, scenario.row);
+    const row = rows.get(scenario.row);
+    if (row === undefined) {
+      failures.push(
+        guide.includes(`\n| ${scenario.row} `)
+          ? `The guide's row "${scenario.row}" has a cell that does not ` +
+            `read "39.7 kB, 13.0 kB gzip (−42 %)", with a minus sign.`
+          : `The guide has no row "${scenario.row}".`,
+      );
+    }
     const variants = [
       {
         name: "a preset",
@@ -442,7 +717,8 @@ try {
         absent: [
           ...NEVER,
           ...VALIDATION,
-          ...(scenario.function === "convert" ? STEPS : []),
+          ...steps,
+          ...(scenario.function === "convert" ? STEP_MODULES : []),
           ...scenario.absent,
         ],
       },
@@ -461,16 +737,18 @@ try {
       const label = `${scenario.row}, with ${variant.name}`;
       const result = await kept(label, variant.code, variant.absent);
       measured.set(label, result);
-      const [size, gzip, percent] = written[index] ?? [];
-      if (percent === undefined) continue;
-      compare(label, kB(result.size), size);
-      compare(`${label}, gzip`, kB(result.gzip), gzip);
+      if (row === undefined) continue;
+      const group = 2 + 3 * index;
       const gain = Math.round((result.gzip / reference.gzip - 1) * 100);
-      if (Math.abs(gain - percent) > 2) {
-        failures.push(
-          `${label}: the guide gives ${percent} %, the bundle ${gain} %.`,
-        );
-      }
+      figure(label, result.size, row, group, "tenths");
+      figure(`${label}, gzip`, result.gzip, row, group + 1, "tenths");
+      figure(
+        `${label}, gzip against the main entry point`,
+        gain,
+        row,
+        group + 2,
+        "percent",
+      );
     }
   }
 
@@ -480,10 +758,10 @@ try {
     "Greek to transliteration, with prepareOptions()",
   );
   const pageSizes = guide.match(
-    /one\s+preset\s+weighs\s+(\d+) kB\s+\((\d+) kB\s+with\s+gzip\)/,
+    /one\s+preset\s+weighs\s+(\d+) kB\s+\((\d+) kB\s+with\s+gzip\)/d,
   );
   const validation = guide.match(
-    /into\s+the\s+bundle,\s+about\s+(\d+\.\d) kB\s+\((\d+\.\d) kB\s+with\s+gzip\)/,
+    /into\s+the\s+bundle,\s+about\s+(\d+\.\d) kB\s+\((\d+\.\d) kB\s+with\s+gzip\)/d,
   );
   if (page === undefined || prepared === undefined) {
     failures.push("The table has no row of Greek to transliteration.");
@@ -493,23 +771,37 @@ try {
         "or what prepareOptions() adds to it.",
     );
   } else {
-    compare("The page with one preset", kB(page.size), +pageSizes[1], 0.5);
-    compare(
-      "The page with one preset, gzip",
-      kB(page.gzip),
-      +pageSizes[2],
-      0.5,
+    const label = "The page with one preset";
+    figure(label, page.size, pageSizes, 1, "whole");
+    figure(`${label}, gzip`, page.gzip, pageSizes, 2, "whole");
+    const adds = "What prepareOptions() adds";
+    figure(adds, prepared.size - page.size, validation, 1, "tenths");
+    figure(`${adds}, gzip`, prepared.gzip - page.gzip, validation, 2, "tenths");
+  }
+
+  if (WRITE) {
+    let text = guide;
+    for (const each of [...figures].sort((a, b) => b.start - a.start)) {
+      text = text.slice(0, each.start) + written(each) + text.slice(each.end);
+    }
+    text = aligned(text);
+    if (text !== guide) await writeFile(GUIDE, text);
+    console.log(
+      text === guide
+        ? "The guide on smaller bundles gives the sizes of the bundles."
+        : "The guide on smaller bundles now gives the sizes of the bundles.",
     );
-    compare(
-      "What prepareOptions() adds",
-      kB(prepared.size - page.size),
-      +validation[1],
-    );
-    compare(
-      "What prepareOptions() adds, gzip",
-      kB(prepared.gzip - page.gzip),
-      +validation[2],
-    );
+  } else {
+    for (const each of figures) {
+      const text = guide.slice(each.start, each.end);
+      if (!drifts(each, text)) continue;
+      const unit = each.kind === "percent" ? "%" : "kB";
+      const is = each.kind === "percent" ? "" : " is";
+      failures.push(
+        `${each.label}: the guide gives ${text} ${unit}, the bundle${is} ` +
+          `${written(each)} ${unit}.`,
+      );
+    }
   }
 } finally {
   await rm(directory, { recursive: true, force: true });
@@ -518,13 +810,15 @@ try {
 if (failures.length > 0) {
   for (const failure of failures) console.error(failure);
   console.error(
-    "\nKeep out of these bundles what they do not import; update the guide " +
-      "on smaller bundles only for a change of size that is meant.",
+    "\nKeep out of these bundles what they do not use: a table that a " +
+      "bundle keeps for nothing is built in a function annotated " +
+      "`/* @__PURE__ */`. A change of size that is meant is written into " +
+      "the guide on smaller bundles by `npm run docs:bundles`.",
   );
   process.exit(1);
 }
-console.log(
-  `${
-    SCENARIOS.length * 2 + 4
-  } bundles keep only what they import, at the sizes the guide gives.`,
-);
+if (!WRITE) {
+  console.log(
+    `${bundles} bundles keep only what they use, at the sizes the guide gives.`,
+  );
+}

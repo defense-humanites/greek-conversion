@@ -26,7 +26,7 @@ import type { Document } from "./model.ts";
 import type { ConversionOptions } from "./options.ts";
 import type { PreparedOptions } from "./prepared.ts";
 import { applyGreekOrthography as applyResolvedGreekOrthography } from "./orthography.ts";
-import { resolveConversionOptions } from "./presets.ts";
+import { conversionProfiles } from "./presets.ts";
 
 /**
  * Returns a Greek-output orthographic view after resolving preset options.
@@ -40,9 +40,11 @@ export function applyGreekOrthography(
   document: Document,
   options: ConversionOptions | PreparedOptions = {},
 ): Document {
+  // The profile that writes, with the steps it takes (see `steps.ts`),
+  // which a copy of the options would not carry.
   const transformed = applyResolvedGreekOrthography(
     document,
-    resolveConversionOptions(options),
+    conversionProfiles(options).writing,
   );
   return transformed.map((token) =>
     token.kind === "literal"
