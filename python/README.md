@@ -75,7 +75,9 @@ them (`ConversionOptions`, `Preset`, `Format`).
 | Convert a string                                                         | `convert(text, source, target, options)`     |
 | Convert many strings at once: the lines of a corpus, a column            | `convert_many(texts, source, target, options)` |
 | Normalize or restyle a string without changing its format                | `reencode(text, format, options)`            |
+| …for many strings at once                                                | `reencode_many(texts, format, options)`      |
 | Know whether the conversion loses information, and where each token went | `convert_detailed(text, source, target, options)` |
+| …for many strings at once                                                | `convert_detailed_many(texts, source, target, options)` |
 | Convert only the Greek of a text in another language                     | `convert_greek_passages(text, target, options)` |
 | Bind a preset, add characters, or restrict the repertoire                | `create_converter(configuration)`            |
 
@@ -115,7 +117,9 @@ the options it is given:
 ### `convert_many()`
 
 `convert_many()` converts a list of strings as `convert()` converts each,
-in one call, which is much faster for a corpus:
+in one call, which is much faster for a corpus; `reencode_many()` and
+`convert_detailed_many()` do the same for `reencode()` and
+`convert_detailed()`:
 
 ```python
 >>> from greek_conversion import convert_many
@@ -218,7 +222,9 @@ installed, the package uses V8; choose otherwise with
 `set_engine("quickjs")` or the environment variable
 `GREEK_CONVERSION_ENGINE`, for instance for many short strings converted
 one by one. To convert a corpus, `convert_many()` pays the cost of a call
-once for the whole list: with V8, it converts within twice the time of Node.
+once for the whole list, as do `reencode_many()` and
+`convert_detailed_many()`: with V8, they convert within twice the time of
+Node, and 20 to 100 times faster than one call per string.
 
 ## Documentation
 

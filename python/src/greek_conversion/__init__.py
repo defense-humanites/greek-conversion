@@ -90,6 +90,7 @@ __all__ = [
     "TransliterationOptions",
     "convert",
     "convert_detailed",
+    "convert_detailed_many",
     "convert_greek_passages",
     "convert_greek_passages_detailed",
     "convert_many",
@@ -100,6 +101,7 @@ __all__ = [
     "list_preset_metadata",
     "prepare_options",
     "reencode",
+    "reencode_many",
     "resolve_conversion_options",
     "set_engine",
 ]
@@ -344,11 +346,58 @@ def convert_many(
 
     :raises TypeError: if ``texts`` is a string rather than strings.
     """
+    return _call(
+        "convertMany", _texts(texts), source, target, options=options, keywords=keywords
+    )
+
+
+def reencode_many(
+    texts: Iterable[str],
+    format: Format,
+    options: ConversionOptions | PreparedOptions | None = None,
+    /,
+    **keywords: Unpack[ConversionOptions],
+) -> list[str]:
+    """Parses and writes many strings again, in one call into the engine, as
+    :func:`reencode` does each.
+
+    >>> reencode_many(["ϲοφίαϲ", "λόγοϲ"], "greek", greek={"sigma": "standard"})
+    ['σοφίας', 'λόγος']
+
+    :raises TypeError: if ``texts`` is a string rather than strings.
+    """
+    return _call("reencodeMany", _texts(texts), format, options=options, keywords=keywords)
+
+
+def convert_detailed_many(
+    texts: Iterable[str],
+    source: Format,
+    target: Format,
+    options: ConversionOptions | PreparedOptions | None = None,
+    /,
+    **keywords: Unpack[ConversionOptions],
+) -> list[ConversionResult]:
+    """Converts many strings in one call into the engine, and reports for each
+    what :func:`convert_detailed` reports: the losses, and where each token
+    went. The positions of each result are in its own string.
+
+    >>> results = convert_detailed_many(["Θεσσαλονίκη", "Αθήνα"], "greek",
+    ...                                 "transliteration", preset="iso-843-type-2")
+    >>> [(result.output, result.lossy) for result in results]
+    [('Thessaloníki', True), ('Athína', True)]
+
+    :raises TypeError: if ``texts`` is a string rather than strings.
+    """
+    values = _call(
+        "convertDetailedMany", _texts(texts), source, target, options=options, keywords=keywords
+    )
+    return [_result(value) for value in values]
+
+
+def _texts(texts: Iterable[str]) -> list[str]:
     if isinstance(texts, str):
         raise TypeError("Expected strings to convert, received one string.")
-    return _call(
-        "convertMany", list(texts), source, target, options=options, keywords=keywords
-    )
+    return list(texts)
 
 
 def prepare_options(

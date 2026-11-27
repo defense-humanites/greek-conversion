@@ -112,6 +112,39 @@ def test_convert_many():
     ]
 
 
+SAMPLE = [
+    "ἄνδρα μοι ἔννεπε, μοῦσα",
+    "Θεσσαλονίκη",
+    "τȣ̃ θεȣ̃",
+    "\U00010140 ϐίος",
+    "",
+    "ἐν ἀρχῇ ἦν ὁ λόγος",
+]
+
+
+def test_many_variants_match_single_calls():
+    for options in ({}, {"preset": "iso-843-type-2"}, {"preset": "tlg-core"}):
+        assert gc.convert_many(SAMPLE, "greek", "beta-code", **options) == [
+            gc.convert(text, "greek", "beta-code", **options) for text in SAMPLE
+        ]
+        assert gc.reencode_many(SAMPLE, "greek", **options) == [
+            gc.reencode(text, "greek", **options) for text in SAMPLE
+        ]
+        assert gc.convert_detailed_many(
+            SAMPLE, "greek", "transliteration", **options
+        ) == [
+            gc.convert_detailed(text, "greek", "transliteration", **options)
+            for text in SAMPLE
+        ]
+    prepared = gc.prepare_options(transliteration={"phi": "f"})
+    assert gc.convert_detailed_many(["φως"], "greek", "transliteration", prepared)[
+        0
+    ].output == "fōs"
+    for many in (gc.reencode_many, gc.convert_detailed_many):
+        with pytest.raises(TypeError):
+            many("λόγος", "greek", "greek")
+
+
 def test_prepared_options():
     prepared = gc.prepare_options(transliteration={"phi": "f"})
     assert gc.convert("φίλος", "greek", "transliteration", prepared) == "fílos"

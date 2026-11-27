@@ -287,6 +287,27 @@ const OPERATIONS: Record<string, Operation> = {
     const resolved = options(opts, prepared);
     return inputs.map((input) => convert(input, from, to, resolved));
   },
+  reencodeMany: (
+    inputs: string[],
+    format: Format,
+    opts: Options | null,
+    prepared: number | null,
+  ) => {
+    const resolved = options(opts, prepared);
+    return inputs.map((input) => reencode(input, format, resolved));
+  },
+  convertDetailedMany: (
+    inputs: string[],
+    from: Format,
+    to: Format,
+    opts: Options | null,
+    prepared: number | null,
+  ) => {
+    const resolved = options(opts, prepared);
+    return inputs.map((input) =>
+      detailed(input, convertDetailed(input, from, to, resolved))
+    );
+  },
   prepareOptions: (opts: ConversionOptions | null) =>
     store(prepareOptions(opts ?? {})),
   createConverter: (
