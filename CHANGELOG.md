@@ -197,6 +197,14 @@ change.
   beginning or end of a word reads back as `νκ`.** ALA-LC writes `γκ` as
   `gk` there, so `Φρανκ`, written `Phrank`, read back as `Φραγκ` and
   converted again to `Phragk`.
+- **Two tables no longer stay in bundles that do not use them.** esbuild
+  kept the table of glyph variants in a bundle that imports a reader alone
+  (0.8 kB), and the set of elided enclitics in a bundle of
+  `convertDetailed()` (56 bytes), since it could not prove their values
+  pure. `npm run npm:check` now fails when a bundle keeps a declaration
+  that nothing in it reaches, which its tolerance on the sizes of the guide
+  on smaller bundles did not see; `npm run docs:bundles` writes these sizes
+  into the guide.
 
 ## [1.0.0-rc.14] - 2026-11-26
 

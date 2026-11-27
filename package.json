@@ -49,6 +49,7 @@
     "docs:losses": "node scripts/generate_loss_profile.ts",
     "docs:comparison": "node scripts/generate_preset_comparison.ts",
     "docs:options": "node scripts/generate_option_reference.ts",
+    "docs:bundles": "npm run npm:build && node scripts/check_bundles.ts --write",
     "npm:build": "node scripts/build_npm.ts",
     "npm:check": "npm run npm:build && node scripts/npm_smoke.mjs && node scripts/npm_types_smoke.mjs && node scripts/check_bundles.ts && npm pack ./npm --dry-run",
     "jsr:check": "jsr publish --dry-run",

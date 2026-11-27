@@ -15,6 +15,7 @@ which runs its TypeScript sources directly:
 npm ci               # installs the development tools
 npm run check        # formatting, lint, types, API docs, examples and links
 npm test             # unit, conformance, and property tests
+npm run npm:check    # the npm package, and what its bundles keep
 npm run bench        # throughput baseline
 ```
 
@@ -76,6 +77,15 @@ The modes are `long` (Thucydides 1.1–10), `short` (its first clause),
 noise of the measure, which `--aa` shows, is about 2 % on the long text and
 up to 5 % on a word or a clause: repeat a measure before trusting a smaller
 difference.
+
+`npm run npm:check` builds the npm package, and bundles with esbuild each
+conversion of the guide on smaller bundles (`scripts/check_bundles.ts`). It
+fails when a bundle keeps a module that it does not import, or a declaration
+that nothing in it reaches: esbuild keeps one when it cannot prove its value
+pure, as a table built by a call, which a function annotated
+`/* @__PURE__ */` lets it leave out. It also fails when a size that the
+guide gives is more than 3 % from the bundle's, beyond its rounding:
+`npm run docs:bundles` writes the sizes of the bundles into the guide.
 
 ## The documentation site and the playground
 
