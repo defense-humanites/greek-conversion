@@ -262,8 +262,9 @@ options all remove counts as bare: the ALA-LC presets remove the accents and
 the smooth breathing, so that `ἰβʹ` gives `12` there, as `ιβʹ` does, and
 monotonic accentuation removes the breathings too, in every format.
 Transliteration counts as bare a letter whose marks it does not write: the
-smooth breathing under `smoothBreathing: "omit"`, the default, or before a
-consonant, the coronis under `coronis: "omit"`, and a quantity mark on a
+smooth breathing under `smoothBreathing: "omit"`, the default, or on a rho
+under `"apostrophe"`, which writes it before a vowel only, the coronis under
+`coronis: "omit"`, and a quantity mark on a
 letter written as epsilon or omicron (`ἀʹ` gives `1`, whose letters, `aʹ`,
 would read back as that number). A final sigma before the
 keraia is a stigma where the output writes it `ς`, in Greek and Beta Code

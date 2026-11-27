@@ -31,7 +31,7 @@ convert("ϝάναξ ϙόρινθος", "greek", "transliteration"); // → wána
 | A scholarly transliteration, with accents and length     | No preset (the default)     | `euchȩ̄̃`    |
 | The SBL Handbook's transliteration, without accents      | `sbl-general`               | `euchē`    |
 | Library catalogue records, after the Library of Congress | `ala-lc-ancient`            | `euchē`    |
-| Catalogue records of French libraries, after the BnF     | `bnf-ancient`                  | `eu̓chȩ̄̂`    |
+| Catalogue records of French libraries, after the BnF     | `bnf-ancient`               | `eu̓chȩ̄̂`    |
 | The international transliteration, ISO 843               | `iso-843-type-1`            | `’euchī̧̂`   |
 | Beta Code as the TLG writes it                           | `tlg-core`                  | `EU)XH=\|` |
 | Beta Code for Perseus and Morpheus                       | `perseus`                   | `eu)xh=\|` |
