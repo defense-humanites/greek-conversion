@@ -492,19 +492,6 @@ header.header > .header {
     display: block;
   }
 }
-/* Below 480px, where the documentation and its version take the header's
-   room, the field keeps its frame and its icon, a square at the height of
-   the field, named by its label. */
-@media (max-width: 29.99rem) {
-  site-search button[data-open-modal] {
-    width: 2.75rem;
-    padding-inline: 0;
-    justify-content: center;
-  }
-  site-search button[data-open-modal] > span {
-    display: none;
-  }
-}
 /* Below 1100px, where the sidebar is a menu, the header and the "On this page"
    bar sit 4px closer to the edges than the text (12px rather than 16px):
    the break in alignment sets them off, and the floating panel stands out

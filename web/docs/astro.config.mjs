@@ -4,6 +4,7 @@ import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 import starlightTypeDoc, { typeDocSidebarGroup } from "starlight-typedoc";
 import llmsTxt from "./llms.mjs";
+import { languageOf } from "./src/documentations.ts";
 import { PYTHON_SIDEBAR } from "./src/python_sidebar.ts";
 
 /**
@@ -167,14 +168,22 @@ function breakTableCode() {
 
 /**
  * Links that leave the documentation open in a new tab and say so, as the
- * header's do: links to other sites, and to the playground, a tool of its
- * own. The last word and the mark stay on one line (`.external-tail`), and
+ * header's do: links to other sites, to the playground, a tool of its own,
+ * and to the other documentation, TypeScript or Python
+ * (`src/documentations.ts`), so that the reader keeps the one they read.
+ * The last word and the mark stay on one line (`.external-tail`), and
  * screen readers hear "opens in a new tab". Runs after `prefixBase`.
  */
 function markExternal() {
-  /** @param {string} href */
-  const leaves = (href) =>
-    /^https?:\/\//.test(href) || href.startsWith(`${BASE}/playground/`);
+  /** @param {string} href @param {boolean} python */
+  const leaves = (href, python) => {
+    if (/^https?:\/\//.test(href) || href.startsWith(`${BASE}/playground/`)) {
+      return true;
+    }
+    if (!href.startsWith(`${BASE}/`)) return false;
+    const path = href.slice(BASE.length).split("#")[0];
+    return (languageOf(path) === "python") !== python;
+  };
   /** @param {string} tagName @param {string[]} className @param {any[]} children */
   const span = (tagName, className, children) => ({
     type: "element",
@@ -182,11 +191,11 @@ function markExternal() {
     properties: { className },
     children,
   });
-  /** @param {any} node */
-  const visit = (node) => {
+  /** @param {any} node @param {boolean} python */
+  const visit = (node, python) => {
     if (node.type === "element" && node.tagName === "a") {
       const href = node.properties?.href;
-      if (typeof href === "string" && leaves(href)) {
+      if (typeof href === "string" && leaves(href, python)) {
         node.properties.target = "_blank";
         node.properties.rel = ["noopener"];
         const children = node.children ?? [];
@@ -219,9 +228,16 @@ function markExternal() {
       }
       return;
     }
-    for (const child of node.children ?? []) visit(child);
+    for (const child of node.children ?? []) visit(child, python);
   };
-  return () => visit;
+  // The documentation of the page, from its source's place.
+  return () => (/** @type {any} */ tree, /** @type {any} */ file) =>
+    visit(
+      tree,
+      String(file?.path ?? "").replaceAll("\\", "/").includes(
+        "/src/content/docs/python/",
+      ),
+    );
 }
 
 /**

@@ -3,45 +3,68 @@
  * The project's identity, as the playground's masthead writes it: the
  * tessera, "greek" in cobalt and "conversion" in orange; on a phone, the
  * tessera alone. The symbol follows the system's appearance, as the whole
- * site does.
+ * site does. It leads to the home of the documentation the page belongs
+ * to.
  *
- * Then the documentation the page belongs to, TypeScript or Python
- * (`documentations.ts`), a selector that leads to the same page in the
- * other, or to its home; on a Python page, it takes the orange of the
- * written, as the page's mark does (`PageTitle.astro`), so that it reads
- * at once.
+ * Then one selector for the documentation the page belongs to, TypeScript
+ * or Python (`documentations.ts`), and its version (`versions.ts`): the
+ * series of the latest release (1.x) or "next", as main is before 1.0.0. It
+ * reads "Python · 1.x" (on a phone, "Python" alone, to leave the search
+ * field its room), and opens on the documentations, each with its versions
+ * where both are deployed. A choice leads to the same page there, or to
+ * the home of the other documentation when the page has no counterpart.
+ * On a Python page, it takes the orange of the written, as the page's mark
+ * does (`PageTitle.astro`), so that it reads at once.
  *
- * Then the version this documentation describes (`versions.ts`): the
- * series of the latest release (1.x) or "next", as main is before 1.0.0.
- * Where both are deployed, a selector leads to the same page in the other.
+ * The select itself is laid over the label, transparent: the browser's own
+ * list, at the keyboard and on a phone, with a label that can be shorter
+ * than its options.
  */
 import { counterpart, languageOf, LANGUAGES } from "../documentations.ts";
-import { otherVersionHref, series, VERSIONS } from "../versions.ts";
+import { series, VERSIONS } from "../versions.ts";
 
-const { siteTitleHref } = Astro.locals.starlightRoute;
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
-const other = otherVersionHref(Astro.url.pathname);
 const here = Astro.url.pathname;
-const root = import.meta.env.BASE_URL.replace(/\/$/, "");
+const root = base.slice(0, -1);
 const path = here.slice(root.length) || "/";
 const language = languageOf(path);
-const languages = LANGUAGES.map(({ id, label }) => ({
-  label,
-  current: id === language,
-  href: id === language ? here : `${root}${counterpart(path)}`,
-}));
 const released = VERSIONS.release === null ? null : series(VERSIONS.release);
 // Before 1.0.0, the root serves main alone: the next release.
 const label = VERSIONS.channel === "next" || released === null
   ? "next"
   : released;
-const versions = released === null || other === null ? [] : [
-  { label: released, current: VERSIONS.channel === "release" },
-  { label: "next", current: VERSIONS.channel === "next" },
-].map((version) => ({ ...version, href: version.current ? here : other }));
+// The versions deployed, by the base each is served under.
+const versions = released === null || VERSIONS.nextBase === null
+  ? [{ label, root, current: true }]
+  : [
+    {
+      label: released,
+      root: VERSIONS.releaseBase,
+      current: VERSIONS.channel === "release",
+    },
+    { label: "next", root: VERSIONS.nextBase, current: VERSIONS.channel === "next" },
+  ];
+const documentations = LANGUAGES.map(({ id, label: name }) => {
+  const page = id === language ? path : counterpart(path);
+  return {
+    id,
+    name,
+    options: versions.map((version) => ({
+      label: versions.length > 1 ? version.label : name,
+      href: `${version.root}${page}`,
+      current: id === language && version.current,
+      // The same page in another version keeps its place; in the other
+      // documentation, whose headings are not all written the same, the
+      // page opens at its top.
+      anchor: id === language,
+    })),
+  };
+});
+const current = LANGUAGES.find(({ id }) => id === language)!.label;
+const home = `${root}${language === "python" ? "/python/" : "/"}`;
 ---
 
-<a href={siteTitleHref} class="identity">
+<a href={home} class="identity">
   <picture>
     <source
       media="(prefers-color-scheme: dark)"
@@ -51,43 +74,47 @@ const versions = released === null || other === null ? [] : [
   </picture>
   <span class="name" translate="no">greek <span>conversion</span></span>
 </a>
-<label class:list={["picker", "language", language]}>
-  <span class="sr-only">Documentation for</span>
-  <select data-follow="page">
-    {languages.map(({ label, href, current }) => (
-      <option value={href} selected={current}>
-        {label}
-      </option>
-    ))}
+<label class:list={["picker", language]}>
+  <span class="shown" aria-hidden="true">
+    {current}<span class="version"> · {label}</span>
+  </span>
+  <select aria-label="Documentation and version">
+    {
+      versions.length > 1
+        ? documentations.map(({ name, options }) => (
+          <optgroup label={name}>
+            {options.map(({ label, href, current, anchor }) => (
+              <option
+                value={href}
+                selected={current}
+                data-anchor={anchor ? "" : undefined}
+              >
+                {name} {label}
+              </option>
+            ))}
+          </optgroup>
+        ))
+        : documentations.map(({ options: [option] }) => (
+          <option
+            value={option.href}
+            selected={option.current}
+            data-anchor={option.anchor ? "" : undefined}
+          >
+            {option.label}
+          </option>
+        ))
+    }
   </select>
 </label>
-{
-  versions.length > 0 ? (
-    <label class="picker version version-select">
-      <span class="sr-only">Documentation version</span>
-      <select data-follow="anchor">
-        {versions.map(({ label, href, current }) => (
-          <option value={href} selected={current}>
-            {label}
-          </option>
-        ))}
-      </select>
-    </label>
-  ) : label !== null ? (
-    <span class="version version-chip">{label}</span>
-  ) : null
-}
 
 <script>
-  // The same page in another version keeps its place; in the other
-  // language, whose headings are not all written the same, the page opens
-  // at its top.
   for (const select of document.querySelectorAll<HTMLSelectElement>(
     ".picker select",
   )) {
     select.addEventListener("change", () => {
+      const option = select.selectedOptions[0];
       location.href = select.value +
-        (select.dataset.follow === "anchor" ? location.hash : "");
+        (option?.dataset.anchor === undefined ? "" : location.hash);
     });
   }
 </script>
@@ -125,94 +152,77 @@ const versions = released === null || other === null ? [] : [
   .name span {
     color: var(--to);
   }
-  /* The version, in the muted ink: on its own, a chip, as the system's
-     labels (12px capitals, spaced); where both versions are deployed, a
-     select, with a chevron. */
-  .version {
-    flex: none;
-    align-self: center;
-    margin-inline-start: 12px;
-    color: var(--muted);
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1;
-    white-space: nowrap;
-  }
-  .version-chip {
-    padding: 5px 7px;
-    border: 1.5px solid var(--line);
-    border-radius: var(--radius);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
+  /* The selector: a bordered label with a chevron, the documentation in
+     ink, its version after it in the muted ink; on a Python page, in
+     orange, on a tint of it. The select covers it, transparent, and its
+     focus is drawn on the label. */
   .picker {
     position: relative;
+    flex: none;
     display: flex;
     align-items: center;
-  }
-  .picker select {
-    appearance: none;
-    margin: 0;
-    padding: 5px 22px 5px 7px;
+    margin-inline-start: 14px;
+    padding: 6px 24px 6px 8px;
     border: 1.5px solid var(--line);
     border-radius: var(--radius);
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
     transition: border-color 0.15s ease;
   }
+  .picker .version {
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .picker select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    font: inherit;
+    cursor: pointer;
+  }
+  .picker:has(select:focus-visible) {
+    outline: 2px solid var(--link);
+    outline-offset: 2px;
+  }
   @media (hover: hover) {
-    .picker select:hover {
+    .picker:hover {
       border-color: var(--muted);
     }
   }
   .picker::after {
     content: "";
     position: absolute;
-    inset-inline-end: 6px;
+    inset-inline-end: 7px;
     width: 12px;
     height: 12px;
     background: currentColor;
     mask: var(--icon-chevron-down) center / contain no-repeat;
     pointer-events: none;
   }
-  /* The documentation: in ink, a step above the version, which qualifies
-     it; on a Python page, in orange, on a tint of it. */
-  .language {
-    flex: none;
-    margin-inline-start: 14px;
-    color: var(--ink);
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1;
-    white-space: nowrap;
-  }
-  .language select {
-    padding-block: 6px;
-  }
-  .language.python {
-    color: var(--to-strong);
-  }
-  .language.python select {
+  .picker.python {
     border-color: color-mix(in oklab, var(--to) 55%, var(--line));
     background: color-mix(in oklab, var(--to) 10%, transparent);
+    color: var(--to-strong);
+  }
+  .picker.python .version {
+    color: color-mix(in oklab, var(--to-strong) 70%, var(--muted));
   }
   @media (hover: hover) {
-    .language.python select:hover {
+    .picker.python:hover {
       border-color: var(--to);
     }
   }
-  .language + .version {
-    margin-inline-start: 8px;
-  }
-  /* On a phone, the symbol and the version, to leave the search field its
-     room; the name stays for screen readers. */
+  /* On a phone, the symbol, then the documentation without its version,
+     which its list gives, to leave the search field its room; the name
+     stays for screen readers. */
   @media (max-width: 49.99rem) {
-    .version,
-    .language {
+    .picker {
       margin-inline-start: 8px;
     }
     .name {
@@ -222,6 +232,11 @@ const versions = released === null || other === null ? [] : [
       overflow: hidden;
       clip-path: inset(50%);
       white-space: nowrap;
+    }
+  }
+  @media (max-width: 29.99rem) {
+    .picker .version {
+      display: none;
     }
   }
 </style>
