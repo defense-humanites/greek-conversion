@@ -25,11 +25,20 @@ export function assertFormat(format: unknown): asserts format is Format {
   if (!FORMATS.includes(format as Format)) {
     // A reader or a writer is an object: one is given to the functions of
     // the `./core` entry point, here by mistake.
+    const spelled = typeof format === "string"
+      ? FORMATS.find((name) =>
+        name.replace("-", "") === format.toLowerCase().replace(/[^a-z]/g, "")
+      )
+      : undefined;
     throw new RangeError(
       `Unknown format: ${String(format)}` +
         (typeof format === "object" && format !== null
           ? '; readers and writers go to "@humanities/greek-conversion/core"'
-          : ""),
+          : spelled !== undefined
+          ? `; did you mean "${spelled}"?`
+          : `; expected one of ${
+            FORMATS.map((name) => `"${name}"`).join(", ")
+          }.`),
     );
   }
 }

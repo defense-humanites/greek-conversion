@@ -4,7 +4,8 @@
  * and `betaCodeFormat` does both, for `convertDetailed()` and `reencode()`.
  *
  * A bundle keeps only what it imports: the reader without the writer, or
- * the other way round. See the guide on smaller bundles.
+ * the other way round. See the
+ * [guide on smaller bundles](https://greek-conversion.humanites.fr/guide/smaller-bundles/).
  *
  * @module
  */

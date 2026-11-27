@@ -160,6 +160,17 @@ export type { PresetOptions } from "./presets.ts";
  * The defaults and each preset are checked and resolved once; other options,
  * at each call, unless they are prepared once with {@link prepareOptions}.
  *
+ * @example
+ * ```ts
+ * import { convert } from "@humanities/greek-conversion";
+ *
+ * convert("λόγος", "greek", "beta-code"); // → lo/gos
+ * convert("Θεσσαλονίκη", "greek", "transliteration", {
+ *   preset: "iso-843-type-2",
+ * });
+ * // → Thessaloníki
+ * ```
+ *
  * @throws {TypeError} If `input` is not a string.
  * @throws {RangeError} If a format is unknown; an {@link OptionError} (a
  * `RangeError`) if a preset, an option key, or an option value is.
@@ -221,6 +232,19 @@ export function reencode(
  * are offsets in UTF-16 code units in the input as supplied and in the
  * output as returned: the readers and writers normalize the text, but the
  * positions are mapped back to the caller's strings.
+ *
+ * @example
+ * ```ts
+ * import { convertDetailed } from "@humanities/greek-conversion";
+ *
+ * const result = convertDetailed("ἐν ἀρχῇ", "greek", "transliteration", {
+ *   preset: "sbl-general",
+ * });
+ * result.output; // → en archē
+ * result.lossy; // → true
+ * result.losses.map((loss) => loss.diacritic);
+ * // → ["smooth","smooth","circumflex","iota-subscript"]
+ * ```
  *
  * @throws {TypeError} If `input` is not a string.
  * @throws {RangeError} If a format is unknown; an {@link OptionError} (a

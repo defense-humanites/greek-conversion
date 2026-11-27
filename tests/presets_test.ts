@@ -167,7 +167,10 @@ test("rejects unknown preset names at runtime", () => {
   }
 
   assertEquals(error instanceof RangeError, true);
-  assertEquals((error as Error).message, "Unknown conversion preset: unknown");
+  assertEquals(
+    (error as Error).message,
+    'Unknown conversion preset: unknown; expected one of "ala-lc-ancient", "ala-lc-modern", "bnf-ancient", "iso-843-type-1", "iso-843-type-2", "perseus", "sbl-general", "tlg-core".',
+  );
 
   error = undefined;
   try {

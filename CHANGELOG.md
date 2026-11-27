@@ -12,6 +12,23 @@ change.
 - **`transliteration.rho: "marked"` writes the `h` of rho only for a rough
   breathing that Greek writes**, the second rho of a pair included, and
   reads every `rh` as one: `Πύρρος` gives `Pýrros`, `ῥήτωρ` `rhḗtōr`.
+- **The error for an unknown option, preset, or format says what was likely
+  meant.** A name written in another case or with other separators is named
+  as it is written: `transliteration.long_vowels` suggests
+  `transliteration.longVowels`, `ISO-843-type-2` suggests `iso-843-type-2`,
+  and `betacode` suggests `beta-code`. A key given in the wrong group, or
+  outside a group, names its group: `greek.eta` suggests `transliteration.eta`,
+  and `letterCase` `text.letterCase`. Otherwise, an unknown preset or format
+  lists the accepted ones. Only the message changes: `path`, `accepted`, and
+  `replacement` are as before.
+- **The documentation site gives every page in Markdown as well**, at its
+  address followed by `index.md`, and lists them in `llms.txt`, after the
+  llms.txt convention, for the coding agents that read documentation: the
+  build writes them from the pages and the sidebar. `context7.json` tells
+  Context7, an index of documentation that coding agents query, what to
+  read and what to leave out, such as the examples of the `0.x` API in the
+  migration guide. The API documentation of `convert()`,
+  `convertDetailed()`, and `createConverter()` gives examples.
 
 ### Changed
 

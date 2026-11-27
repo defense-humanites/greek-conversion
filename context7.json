@@ -1,0 +1,15 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "greek-conversion",
+  "description": "Convert Ancient, Byzantine, and Modern Greek between Greek script, Beta Code, and Latin script, with atomic options composed into standards-based presets, and information-loss diagnostics. npm and JSR package: @humanities/greek-conversion.",
+  "folders": ["docs", "web/docs/src/content/docs/guide"],
+  "excludeFiles": ["CHANGELOG.md", "MIGRATION.md"],
+  "rules": [
+    "Install @humanities/greek-conversion. The unscoped greek-conversion package on npm is the 0.x series, whose API is different.",
+    "Pass options as groups with camelCase keys: preset, transliteration, greek, betaCode, text, diacritics, and source. An unknown key, value, or preset throws an OptionError.",
+    "Import convert() from the main entry point. Use @humanities/greek-conversion/core only to make a browser bundle smaller, with readers, writers, and presets imported from their entry points.",
+    "Use convertDetailed() to know whether a conversion loses information: it returns lossy and the losses with their positions.",
+    "Use convertGreekPassages() for Greek quoted in a text in another language: it keeps the punctuation of that language.",
+    "To convert many short strings with options other than a preset, prepare the options once with prepareOptions()."
+  ]
+}
