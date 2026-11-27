@@ -97,7 +97,7 @@ change.
 
 - **Two outputs of the transliteration writer convert again to
   themselves.**
-  - Under ISO 843 type 2, eta is written `i` and reads back as iota: with a
+  - Under ISO 843 Type 2, eta is written `i` and reads back as iota: with a
     rough breathing after a vowel, it is the second vowel of a rough
     diphthong, whose `h` goes before the pair. The writer put the `h` before
     the eta, where a second conversion moved it: `κεἡ` gave `kehi`, then
@@ -149,7 +149,7 @@ change.
   - By default, eta with a macron is written `ē̄`, as eta with a breve is
     written `ē̆`, but the reader dropped the second macron: `η̄` gave `ē̄`,
     then `ē`. It reads it as the letter's, and `η̄` converts back and forth
-    without loss, as `ω̄` does under ISO 843 type 1, whose `ō̄` the reader
+    without loss, as `ω̄` does under ISO 843 Type 1, whose `ō̄` the reader
     dropped too. As on `ē̆`, no smooth breathing is inferred on a vowel with
     a quantity mark: `ē̄` gave `ἠ`, and gives `η̄`.
   - Under `longVowels: "omit"`, omega is written `o`, and eta `e` unless
@@ -192,7 +192,7 @@ change.
   each, every letter of a long run read the rest of the run again:
   - letters under one overline written into Beta Code, and `<…>` read from
     Beta Code;
-  - omegas before `y`, read from transliteration under ISO 843 type 2;
+  - omegas before `y`, read from transliteration under ISO 843 Type 2;
   - capital stigmas and sampis written under `bnf-ancient`;
   - signs `ϗ` written without spaces under `greek.kaiAccent: "modern"`;
   - in a converter bound to ALA-LC, its stigmas, sampis, and koppas, and in
@@ -205,7 +205,7 @@ change.
   threw a `RangeError` past about 120,000 tokens, because it passed the
   spans of the Greek read back as the arguments of one call.
 - **The transliteration reader finds its omegas after spacing signs** under
-  ISO 843 type 2. The reader marks an `o` before `y` as an omega, and turns it
+  ISO 843 Type 2. The reader marks an `o` before `y` as an omega, and turns it
   back into an omicron in a numeral (`oyʹ` gives `οϋʹ`). It noted the omegas
   by their place, then joined spacing signs to the tokens around them,
   after which the places no longer named the omegas. `῎oyʹ` gave `῎ωυʹ`, and
