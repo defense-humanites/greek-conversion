@@ -333,7 +333,13 @@ function pairByPosition(
       // A writer may also write several literals as one character, which
       // the reader reads as one (`é`, a letter and a mark kept as text, in
       // Beta Code): the literals after this one that share its output, as
-      // an empty piece does (joinPieces()), belong to its text.
+      // an empty piece does (joinPieces()), belong to its text. A run of
+      // more than twice the code units of the text's NFD cannot spell it
+      // (sameLiteral()), and is not read on: read to its end from each of
+      // its literals, a long run with one output (whitespace collapsed to one
+      // space) would take a time that grows with its square. The bound is
+      // computed only for a run, which few literals start.
+      let longest = Infinity;
       let run = token.value;
       let next = index + 1;
       for (
@@ -341,8 +347,14 @@ function pairByPosition(
         following?.kind === "literal" && written.starts[next] === start &&
         written.ends[next] === end;
         following = source[++next]
-      ) run += following.value;
-      if (sameLiteral(run, text)) spelled.fill(1, index, next);
+      ) {
+        if (longest === Infinity) longest = 2 * text.normalize("NFD").length;
+        if (run.length > longest) break;
+        run += following.value;
+      }
+      if (run.length <= longest && sameLiteral(run, text)) {
+        spelled.fill(1, index, next);
+      }
     }
   }
   return { counterparts, spelled };
