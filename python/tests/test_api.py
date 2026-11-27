@@ -116,20 +116,62 @@ def test_prepared_options():
     prepared = gc.prepare_options(transliteration={"phi": "f"})
     assert gc.convert("φίλος", "greek", "transliteration", prepared) == "fílos"
     assert gc.convert_many(["φως"], "greek", "transliteration", prepared) == ["fōs"]
+    assert gc.prepare_options(prepared) is prepared
+    assert gc.resolve_conversion_options(prepared)["transliteration"]["phi"] == "f"
     with pytest.raises(TypeError):
         gc.convert("φ", "greek", "transliteration", prepared, preset="sbl-general")
+    # Checked at once.
+    with pytest.raises(gc.OptionError):
+        gc.prepare_options(transliteration={"phi": "x"})
 
 
-def test_handles_do_not_survive_their_engine(engine):
+def test_handles_follow_the_engine(engine):
+    prepared = gc.prepare_options(preset="iso-843-type-2")
+    converter = gc.create_converter(preset="iso-843-type-2")
+    gc.set_engine("quickjs" if engine == "v8" else "v8")
+    assert gc.convert("Θεσσαλονίκη", "greek", "transliteration", prepared) == "Thessaloníki"
+    assert converter.convert("Θεσσαλονίκη", "greek", "transliteration") == "Thessaloníki"
+
+
+def test_handles_copy_and_pickle():
+    import copy
+    import pickle
+
+    prepared = gc.prepare_options(preset="iso-843-type-2")
+    converter = gc.create_converter(preset="iso-843-type-2")
+    assert copy.copy(prepared) is prepared
+    assert copy.deepcopy(converter) is converter
+    word = "Θεσσαλονίκη"
+    restored = pickle.loads(pickle.dumps(prepared))
+    assert gc.convert(word, "greek", "transliteration", restored) == "Thessaloníki"
+    restored = pickle.loads(pickle.dumps(converter))
+    assert restored.convert(word, "greek", "transliteration") == "Thessaloníki"
+
+
+def test_prepared_options_in_a_converter_are_refused():
     prepared = gc.prepare_options(preset="sbl-general")
-    gc.set_engine(engine)
-    with pytest.raises(RuntimeError, match="closed"):
-        gc.convert("λόγος", "greek", "transliteration", prepared)
+    converter = gc.create_converter()
+    with pytest.raises(TypeError):
+        converter.convert("λόγος", "greek", "transliteration", prepared)
+    with pytest.raises(TypeError):
+        gc.create_converter(prepared)
+
+
+def test_a_mapping_is_never_a_handle():
+    with pytest.raises(gc.OptionError) as caught:
+        gc.convert("λόγος", "greek", "transliteration", {"__handle": 1})
+    assert caught.value.path == "__handle"
 
 
 def test_errors():
     with pytest.raises(TypeError):
         gc.convert(42, "greek", "beta-code")
+    with pytest.raises(TypeError):
+        gc.convert("λόγος", "greek", "beta-code", [("preset", "tlg-core")])
+    with pytest.raises(TypeError):
+        gc.convert_many("λόγος", "greek", "beta-code")
+    with pytest.raises(ValueError, match="JSON"):
+        gc.convert("λόγος", "greek", "beta-code", text={"numerals": float("nan")})
     with pytest.raises(ValueError, match="Unknown format"):
         gc.convert("λόγος", "greek", "klingon")
     with pytest.raises(gc.OptionError) as caught:
@@ -190,6 +232,14 @@ def test_presets_and_constants():
     defaults["greek"] = None  # a copy: the module's value is unchanged
     assert gc.DEFAULT_CONVERSION_OPTIONS["greek"] is not None
     assert "transliteration" in gc.CONVERSION_OPTION_VALUES
+
+
+def test_lone_surrogates_are_kept():
+    text = "λ\ud800ος \udc00ἄ"
+    assert gc.convert(text, "greek", "beta-code") == "l\ud800os \udc00a)/"
+    result = gc.convert_detailed(text, "greek", "beta-code")
+    assert result.output == "l\ud800os \udc00a)/"
+    assert [text[s.input_start : s.input_end] for s in result.spans][:2] == ["λ", "\ud800"]
 
 
 def test_threads():

@@ -8,11 +8,17 @@
  * `{"error": {...}}`. Everything crosses the boundary as one JSON string each
  * way, which every engine binding passes cheaply and identically.
  *
+ * Prepared options and converters stay here, under a number. They travel as
+ * arguments of their own, never inside options, so that no mapping of the
+ * caller can be taken for one. The Python side keeps what they were made
+ * from, and makes them again in another engine or process.
+ *
  * Positions are converted here from UTF-16 code units, the unit of
  * JavaScript strings, to code points, the unit of Python strings.
  */
 
 import {
+  type CharacterAliasDefinition,
   CharacterScopeError,
   CONVERSION_OPTION_VALUES,
   type ConversionOptions,
@@ -26,6 +32,8 @@ import {
   convertGreekPassages,
   convertGreekPassagesDetailed,
   createConverter,
+  type CustomCharacterDefinition,
+  type CustomCharacterForms,
   DEFAULT_CONVERSION_OPTIONS,
   type Format,
   FORMATS,
@@ -42,43 +50,29 @@ import {
 
 declare const __VERSION__: string;
 
-/** An object kept here for Python, which holds its number. */
-interface Handle {
-  readonly __handle: number;
-}
-
 const handles = new Map<number, Converter | PreparedOptions>();
 let nextHandle = 1;
 
-function store(value: Converter | PreparedOptions): Handle {
+function store(value: Converter | PreparedOptions): number {
   const id = nextHandle++;
   handles.set(id, value);
-  return { __handle: id };
+  return id;
 }
 
-function isHandle(value: unknown): value is Handle {
-  return typeof value === "object" && value !== null && "__handle" in value;
-}
-
-function load(handle: unknown, kind: string): Converter | PreparedOptions {
-  const value = isHandle(handle) ? handles.get(handle.__handle) : undefined;
+function load(id: number, kind: string): Converter | PreparedOptions {
+  const value = handles.get(id);
   if (value === undefined) throw new Error(`Unknown or released ${kind}.`);
   return value;
 }
 
-function converter(handle: unknown): Converter {
-  return load(handle, "converter") as Converter;
-}
-
 type Options = ConversionOptions | PreparedOptions;
 
-/** Options as received: a plain object, or the handle of prepared options. */
-function options(value: Options | Handle | null): Options {
-  if (value === null) return {};
-  if (isHandle(value)) {
-    return load(value, "prepared options") as PreparedOptions;
+/** The options of a call: the prepared options given, or the mapping. */
+function options(opts: Options | null, prepared: number | null): Options {
+  if (prepared !== null) {
+    return load(prepared, "prepared options") as PreparedOptions;
   }
-  return value;
+  return opts ?? {};
 }
 
 const SURROGATE = /[\uD800-\uDFFF]/;
@@ -183,68 +177,161 @@ function scoped<T>(input: string, run: () => T): T {
   }
 }
 
+// Every key that options, a converter's configuration, or preset metadata
+// can have, which the Python side writes in snake_case. A record of each
+// type's keys makes the compiler check that none is missing; the keys of the
+// option groups are those of CONVERSION_OPTION_VALUES, which its type checks.
+function keysOf<T>(record: Record<keyof T, true>): string[] {
+  return Object.keys(record);
+}
+
+const DECLARED_KEYS = [
+  ...keysOf<ConversionOptions>({
+    preset: true,
+    transliteration: true,
+    greek: true,
+    betaCode: true,
+    text: true,
+    diacritics: true,
+    source: true,
+  }),
+  ...Object.values(CONVERSION_OPTION_VALUES).flatMap((group) =>
+    Object.keys(group)
+  ),
+  ...keysOf<ConverterConfiguration>({
+    preset: true,
+    outOfScopeBehavior: true,
+    aliases: true,
+    characters: true,
+    repertoire: true,
+    exclude: true,
+  }),
+  ...keysOf<CharacterAliasDefinition>({
+    letter: true,
+    format: true,
+    spellings: true,
+    uppercase: true,
+    override: true,
+  }),
+  ...keysOf<CustomCharacterDefinition>({
+    id: true,
+    forms: true,
+    override: true,
+  }),
+  ...keysOf<CustomCharacterForms>({ lowercase: true, uppercase: true }),
+];
+
+function collectKeys(value: unknown, keys: Set<string>): Set<string> {
+  if (Array.isArray(value)) {
+    for (const item of value) collectKeys(item, keys);
+  } else if (typeof value === "object" && value !== null) {
+    for (const [key, item] of Object.entries(value)) {
+      keys.add(key);
+      collectKeys(item, keys);
+    }
+  }
+  return keys;
+}
+
 // The arguments come from JSON, as the Python side sends them; the library
-// checks the types and values it is given.
+// checks the types and values it is given. `prepared` and `converter` are
+// handles, or null.
 type Operation = (...args: never[]) => unknown;
 
 const OPERATIONS: Record<string, Operation> = {
-  convert: (input: string, from: Format, to: Format, opts: Options | null) =>
-    convert(input, from, to, options(opts)),
-  reencode: (input: string, format: Format, opts: Options | null) =>
-    reencode(input, format, options(opts)),
+  convert: (
+    input: string,
+    from: Format,
+    to: Format,
+    opts: Options | null,
+    prepared: number | null,
+  ) => convert(input, from, to, options(opts, prepared)),
+  reencode: (
+    input: string,
+    format: Format,
+    opts: Options | null,
+    prepared: number | null,
+  ) => reencode(input, format, options(opts, prepared)),
   convertDetailed: (
     input: string,
     from: Format,
     to: Format,
     opts: Options | null,
-  ) => detailed(input, convertDetailed(input, from, to, options(opts))),
-  convertGreekPassages: (input: string, to: Format, opts: Options | null) =>
-    convertGreekPassages(input, to, options(opts)),
+    prepared: number | null,
+  ) =>
+    detailed(input, convertDetailed(input, from, to, options(opts, prepared))),
+  convertGreekPassages: (
+    input: string,
+    to: Format,
+    opts: Options | null,
+    prepared: number | null,
+  ) => convertGreekPassages(input, to, options(opts, prepared)),
   convertGreekPassagesDetailed: (
     input: string,
     to: Format,
     opts: Options | null,
-  ) => detailed(input, convertGreekPassagesDetailed(input, to, options(opts))),
+    prepared: number | null,
+  ) =>
+    detailed(
+      input,
+      convertGreekPassagesDetailed(input, to, options(opts, prepared)),
+    ),
   // Many strings in one crossing: the fixed cost of a call is paid once.
   convertMany: (
     inputs: string[],
     from: Format,
     to: Format,
     opts: Options | null,
+    prepared: number | null,
   ) => {
-    const resolved = options(opts);
+    const resolved = options(opts, prepared);
     return inputs.map((input) => convert(input, from, to, resolved));
   },
   prepareOptions: (opts: ConversionOptions | null) =>
     store(prepareOptions(opts ?? {})),
-  createConverter: (configuration: ConverterConfiguration | null) =>
-    store(createConverter(configuration ?? {})),
+  createConverter: (
+    configuration: ConverterConfiguration | null,
+    prepared: number | null,
+  ) =>
+    store(
+      createConverter(
+        // Prepared options are refused by the library, with its message.
+        options(configuration, prepared) as ConverterConfiguration,
+      ),
+    ),
   converterConvert: (
-    handle: Handle,
     input: string,
     from: Format,
     to: Format,
-    opts: ConversionOptions | null,
+    opts: Options | null,
+    prepared: number | null,
+    converter: number,
   ) =>
-    scoped(input, () => converter(handle).convert(input, from, to, opts ?? {})),
+    scoped(input, () => {
+      const instance = load(converter, "converter") as Converter;
+      // Prepared options are refused by the library, with its message.
+      const given = options(opts, prepared) as ConversionOptions;
+      return instance.convert(input, from, to, given);
+    }),
   converterConvertDetailed: (
-    handle: Handle,
     input: string,
     from: Format,
     to: Format,
-    opts: ConversionOptions | null,
+    opts: Options | null,
+    prepared: number | null,
+    converter: number,
   ) =>
-    scoped(input, () =>
-      detailed(
-        input,
-        converter(handle).convertDetailed(input, from, to, opts ?? {}),
-      )),
-  release: (handle: Handle) => {
-    handles.delete(handle.__handle);
+    scoped(input, () => {
+      const instance = load(converter, "converter") as Converter;
+      const given = options(opts, prepared) as ConversionOptions;
+      return detailed(input, instance.convertDetailed(input, from, to, given));
+    }),
+  release: (ids: number[]) => {
+    for (const id of ids) handles.delete(id);
     return null;
   },
-  resolveConversionOptions: (opts: ConversionOptions | null) =>
-    resolveConversionOptions(opts ?? {}),
+  resolveConversionOptions: (opts: Options | null, prepared: number | null) =>
+    resolveConversionOptions(options(opts, prepared)),
   getPresetOptions: (preset: Preset) => getPresetOptions(preset),
   getPresetMetadata: (preset: Preset) => getPresetMetadata(preset),
   listPresetMetadata: () => listPresetMetadata(),
@@ -253,6 +340,12 @@ const OPERATIONS: Record<string, Operation> = {
     formats: FORMATS,
     defaultConversionOptions: DEFAULT_CONVERSION_OPTIONS,
     conversionOptionValues: CONVERSION_OPTION_VALUES,
+    keys: [
+      ...collectKeys(
+        listPresetMetadata(),
+        collectKeys(DEFAULT_CONVERSION_OPTIONS, new Set(DECLARED_KEYS)),
+      ),
+    ],
   }),
 };
 

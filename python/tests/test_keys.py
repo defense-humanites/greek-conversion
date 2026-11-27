@@ -6,36 +6,34 @@ import re
 import pytest
 
 import greek_conversion as gc
-from greek_conversion import _engine
-from greek_conversion._keys import camel, snake, text
+from greek_conversion._keys import constants, snake, text
 
 
-def _keys(value, found):
+def camel(key):
+    head, *rest = key.split("_")
+    return head + "".join(part.capitalize() for part in rest)
+
+
+def keys_of(value, found):
     if isinstance(value, dict):
         for key, item in value.items():
             found.add(key)
-            _keys(item, found)
+            keys_of(item, found)
     elif isinstance(value, list):
         for item in value:
-            _keys(item, found)
+            keys_of(item, found)
     return found
 
 
 def test_every_key_of_the_library_converts_both_ways():
-    # The keys as the library writes them, read past the conversion.
-    raw = _engine.call("constants")
-    keys = _keys(raw["defaultConversionOptions"], set())
-    keys = _keys(raw["conversionOptionValues"], keys)
-    keys = _keys(_engine.call("listPresetMetadata"), keys)
-    keys |= {"preset", "source", "outOfScopeBehavior", "aliases", "characters",
-             "include", "exclude", "spellings", "letter", "id", "forms",
-             "lowercase", "uppercase", "override"}
-    assert len(keys) > 50
+    keys = constants()["keys"]
+    assert {"longVowels", "betaCode", "outOfScopeBehavior", "repertoire"} <= set(keys)
     for key in keys:
         # A new key with an acronym or a digit (`useTLG`, `iso843`) would
         # have no unambiguous snake_case: it fails here first.
         assert re.fullmatch(r"[a-z]+(?:[A-Z][a-z]+)*", key), key
         assert camel(snake(key)) == key, key
+    assert len({snake(key) for key in keys}) == len(set(keys))
 
 
 def test_camel_case_keys_are_refused():
@@ -52,11 +50,12 @@ def test_camel_case_keys_are_refused():
     assert caught.value.replacement == "out_of_scope_behavior"
 
 
-def test_keys_that_are_not_snake_case_reach_the_library_unchanged():
-    for key in ("long__vowels", "_long_vowels", "LongVowels"):
+def test_other_keys_reach_the_library_unchanged():
+    for key in ("long__vowels", "_long_vowels", "LongVowels", "fooBar"):
         with pytest.raises(gc.OptionError) as caught:
             gc.convert("λόγος", "greek", "transliteration", transliteration={key: "omit"})
         assert caught.value.path == f"transliteration.{key}"
+        assert str(caught.value) == f"Unknown conversion option: transliteration.{key}"
 
 
 def test_unknown_keys_are_reported_in_snake_case():
@@ -81,26 +80,32 @@ def test_combined_values_are_reported_in_snake_case():
     assert "Vowels" not in message
 
 
-def test_messages_keep_quoted_values():
+def test_values_are_never_rewritten():
     assert (
         text('Invalid value for transliteration.longVowels: "muPi"; expected "omit".')
         == 'Invalid value for transliteration.long_vowels: "muPi"; expected "omit".'
     )
+    with pytest.raises(gc.OptionError) as caught:
+        gc.convert("λόγος", "greek", "transliteration", preset="myPreset")
+    assert "myPreset" in str(caught.value)
+    assert caught.value.received == "myPreset"
+    with pytest.raises(ValueError) as caught:
+        gc.convert("λόγος", "greek", "greekScript")
+    assert "greekScript" in str(caught.value)
 
 
 def test_returned_options_can_be_given_back():
     resolved = gc.resolve_conversion_options(preset="iso-843-type-2")
     assert "beta_code" in resolved
-    assert all(
-        not any(char.isupper() for char in key) for key in _keys(resolved, set())
+    assert all(not any(c.isupper() for c in key) for key in keys_of(resolved, set()))
+    word = "Θεσσαλονίκη"
+    assert gc.convert(word, "greek", "transliteration", resolved) == gc.convert(
+        word, "greek", "transliteration", preset="iso-843-type-2"
     )
-    text_ = "Θεσσαλονίκη"
-    assert gc.convert(text_, "greek", "transliteration", resolved) == gc.convert(
-        text_, "greek", "transliteration", preset="iso-843-type-2"
-    )
-    defaults = gc.DEFAULT_CONVERSION_OPTIONS
-    assert "long_vowels" in defaults["transliteration"]
+    assert "long_vowels" in gc.DEFAULT_CONVERSION_OPTIONS["transliteration"]
     assert "letter_case" in gc.CONVERSION_OPTION_VALUES["text"]
+    metadata = gc.get_preset_metadata("iso-843-type-2")
+    assert "out_of_scope_behavior" in metadata
 
 
 def test_converter_configuration():

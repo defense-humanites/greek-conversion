@@ -26,17 +26,24 @@ indexes strings, and not in the UTF-16 code units of JavaScript.
 from __future__ import annotations
 
 import copy
-import functools
-import weakref
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Any, Literal, Optional
+from typing import TYPE_CHECKING, Any, Literal
 
 from . import _engine
-from ._engine import JavaScriptError, engine_name, set_engine
+from ._engine import Handle, JavaScriptError, engine_name, set_engine
 from ._errors import CharacterScopeDiagnostic, CharacterScopeError, OptionError
-from ._keys import from_js, to_js
-from ._version import __js_version__, __version__
+from ._keys import constants, from_js, to_js
+
+try:
+    from ._version import __js_version__ as __js_version__
+    from ._version import __version__ as __version__
+except ImportError as error:  # pragma: no cover
+    raise ImportError(
+        "greek_conversion is not built: run `node python/scripts/build_bundle.mjs` "
+        "at the root of the repository, after `npm ci`, or install the package "
+        "from PyPI."
+    ) from error
 
 __all__ = [
     "CONVERSION_OPTION_VALUES",
@@ -49,6 +56,7 @@ __all__ = [
     "ConversionSpan",
     "Converter",
     "ConverterConversionResult",
+    "Format",
     "JavaScriptError",
     "OptionError",
     "PreparedOptions",
@@ -74,51 +82,41 @@ Format = Literal["greek", "beta-code", "transliteration"]
 # --- Options -----------------------------------------------------------------
 
 
-class _Handle:
-    """An object kept in the engine, released when its Python owner is
-    collected."""
-
-    __slots__ = ("__weakref__", "_generation", "_ref")
-
-    def __init__(self, ref: dict[str, int]) -> None:
-        self._ref = ref
-        self._generation = _engine.generation
-        weakref.finalize(self, _Handle._release, ref, self._generation)
-
-    @staticmethod
-    def _release(ref: dict[str, int], generation: int) -> None:
-        if generation == _engine.generation:
-            try:
-                _engine.call("release", ref)
-            except Exception:
-                pass
-
-    def _checked(self) -> dict[str, int]:
-        if self._generation != _engine.generation:
-            raise RuntimeError(
-                f"This {type(self).__name__} belongs to an engine that was "
-                "closed; create it again."
-            )
-        return self._ref
-
-
-class PreparedOptions(_Handle):
+class PreparedOptions(Handle):
     """Options checked and resolved once, for many conversions: see
-    :func:`prepare_options`."""
+    :func:`prepare_options`. They can be pickled, copied, and used in
+    another process or after :func:`set_engine`."""
 
     __slots__ = ()
+    _operation = "prepareOptions"
 
 
-def _options(options: Any, keywords: dict[str, Any]) -> Any:
+Options = Mapping[str, Any]
+
+
+def _options(
+    options: Options | PreparedOptions | None, keywords: dict[str, Any]
+) -> tuple[dict[str, Any] | None, PreparedOptions | None]:
+    """The options of a call, as the library reads them, and the prepared
+    options given instead, if any."""
     if isinstance(options, PreparedOptions):
         if keywords:
             raise TypeError("Prepared options cannot be combined with keywords.")
-        return options._checked()
+        return None, options
+    if options is not None and not isinstance(options, Mapping):
+        raise TypeError(
+            f"Expected options to be a mapping, received {type(options).__name__}."
+        )
     if options is None and not keywords:
-        return None
+        return None, None
     merged: dict[str, Any] = dict(options) if options is not None else {}
     merged.update(keywords)
-    return to_js(merged)
+    return to_js(merged), None
+
+
+def _call(operation: str, *args: Any, options: Any, keywords: dict[str, Any]) -> Any:
+    mapping, prepared = _options(options, keywords)
+    return _engine.call(operation, *args, mapping, handles=(prepared,))
 
 
 # --- Results -----------------------------------------------------------------
@@ -149,8 +147,8 @@ class ConversionLoss:
     offset: int
     length: int
     message: str
-    diacritic: Optional[str] = None
-    glyph_variant: Optional[str] = None
+    diacritic: str | None = None
+    glyph_variant: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -219,7 +217,7 @@ def convert(
     :raises ValueError: if a format is unknown; :class:`OptionError` if a
         preset, an option key, or an option value is.
     """
-    return _engine.call("convert", text, source, target, _options(options, keywords))
+    return _call("convert", text, source, target, options=options, keywords=keywords)
 
 
 def reencode(
@@ -235,7 +233,7 @@ def reencode(
     >>> reencode("ϲοφίαϲ", "greek", greek={"sigma": "standard"})
     'σοφίας'
     """
-    return _engine.call("reencode", text, format, _options(options, keywords))
+    return _call("reencode", text, format, options=options, keywords=keywords)
 
 
 def convert_detailed(
@@ -255,9 +253,7 @@ def convert_detailed(
     ('Thessaloníki', True, 10)
     """
     return _result(
-        _engine.call(
-            "convertDetailed", text, source, target, _options(options, keywords)
-        )
+        _call("convertDetailed", text, source, target, options=options, keywords=keywords)
     )
 
 
@@ -274,9 +270,7 @@ def convert_greek_passages(
     >>> convert_greek_passages("see λόγος; also ‘ἀπ᾽ αὐτοῦ’", "transliteration")
     'see lógos; also ‘ap’ autoũ’'
     """
-    return _engine.call(
-        "convertGreekPassages", text, target, _options(options, keywords)
-    )
+    return _call("convertGreekPassages", text, target, options=options, keywords=keywords)
 
 
 def convert_greek_passages_detailed(
@@ -289,8 +283,8 @@ def convert_greek_passages_detailed(
     """:func:`convert_greek_passages`, with the losses and spans of
     :func:`convert_detailed`."""
     return _result(
-        _engine.call(
-            "convertGreekPassagesDetailed", text, target, _options(options, keywords)
+        _call(
+            "convertGreekPassagesDetailed", text, target, options=options, keywords=keywords
         )
     )
 
@@ -305,53 +299,71 @@ def convert_many(
 ) -> list[str]:
     """Converts many strings in one call into the engine, as :func:`convert`
     converts each: the fixed cost of a call is paid once. The fastest way to
-    convert the lines of a corpus or the cells of a column."""
-    return _engine.call(
-        "convertMany", list(texts), source, target, _options(options, keywords)
+    convert the lines of a corpus or the cells of a column.
+
+    :raises TypeError: if ``texts`` is a string rather than strings.
+    """
+    if isinstance(texts, str):
+        raise TypeError("Expected strings to convert, received one string.")
+    return _call(
+        "convertMany", list(texts), source, target, options=options, keywords=keywords
     )
 
 
 def prepare_options(
-    options: Mapping[str, Any] | None = None, /, **keywords: Any
+    options: Options | PreparedOptions | None = None, /, **keywords: Any
 ) -> PreparedOptions:
     """Checks and resolves options once, for many conversions. The defaults
     and the presets alone are already resolved once; this serves custom
-    options in a loop."""
-    return PreparedOptions(
-        _engine.call("prepareOptions", _options(options, keywords))
-    )
+    options in a loop. Prepared options are returned as they are.
+
+    :raises OptionError: as :func:`convert` would, at once.
+    """
+    mapping, prepared = _options(options, keywords)
+    if prepared is not None:
+        return prepared
+    created = PreparedOptions(mapping or {})
+    _engine.make(created)  # Checked now, rather than at the first conversion.
+    return created
 
 
 # --- Converters --------------------------------------------------------------
 
 
-class Converter(_Handle):
+class Converter(Handle):
     """A converter with its own preset, repertoire, and characters: see
-    :func:`create_converter`."""
+    :func:`create_converter`. It can be pickled, copied, and used in another
+    process or after :func:`set_engine`."""
 
     __slots__ = ()
+    _operation = "createConverter"
+
+    def _arguments(self) -> tuple[Any, ...]:
+        return (self._payload, None)
+
+    def _call(
+        self, operation: str, args: tuple[Any, ...], options: Any, keywords: dict[str, Any]
+    ) -> Any:
+        mapping, prepared = _options(options, keywords)
+        return _engine.call(operation, *args, mapping, handles=(prepared, self))
 
     def convert(
         self,
         text: str,
         source: Format,
         target: Format,
-        options: Mapping[str, Any] | None = None,
+        options: Options | None = None,
         /,
         **keywords: Any,
     ) -> str:
-        """Converts text with this converter's characters and scope.
+        """Converts text with this converter's characters and scope. Options
+        add to its preset; prepared options are refused, as by the library.
 
         :raises CharacterScopeError: if the converter rejects characters
             outside its scope.
         """
-        return _engine.call(
-            "converterConvert",
-            self._checked(),
-            text,
-            source,
-            target,
-            _options(options, keywords),
+        return self._call(
+            "converterConvert", (text, source, target), options, keywords
         )
 
     def convert_detailed(
@@ -359,19 +371,14 @@ class Converter(_Handle):
         text: str,
         source: Format,
         target: Format,
-        options: Mapping[str, Any] | None = None,
+        options: Options | None = None,
         /,
         **keywords: Any,
     ) -> ConverterConversionResult:
         """Converts text and reports the losses and the repertoire's
         diagnostics."""
-        value = _engine.call(
-            "converterConvertDetailed",
-            self._checked(),
-            text,
-            source,
-            target,
-            _options(options, keywords),
+        value = self._call(
+            "converterConvertDetailed", (text, source, target), options, keywords
         )
         base = _result(value)
         return ConverterConversionResult(
@@ -386,27 +393,36 @@ class Converter(_Handle):
 
 
 def create_converter(
-    configuration: Mapping[str, Any] | None = None, /, **keywords: Any
+    configuration: Options | None = None, /, **keywords: Any
 ) -> Converter:
     """Creates a converter that binds a preset, adds characters or spellings,
     or restricts the repertoire.
 
     >>> strict = create_converter(preset="iso-843-type-2",
     ...                           out_of_scope_behavior="reject")
+
+    :raises OptionError: or :class:`TypeError`, for an invalid configuration,
+        at once.
     """
-    return Converter(_engine.call("createConverter", _options(configuration, keywords)))
+    mapping, prepared = _options(configuration, keywords)
+    if prepared is not None:
+        # Refused by the library, with its message.
+        _engine.call("createConverter", None, handles=(prepared,))
+    created = Converter(mapping or {})
+    _engine.make(created)
+    return created
 
 
 # --- Presets and options -----------------------------------------------------
 
 
 def resolve_conversion_options(
-    options: Mapping[str, Any] | None = None, /, **keywords: Any
+    options: Options | PreparedOptions | None = None, /, **keywords: Any
 ) -> dict[str, Any]:
     """The complete options that the given ones resolve to, as a fresh
     mapping, which can be given back as options."""
     return from_js(
-        _engine.call("resolveConversionOptions", _options(options, keywords))
+        _call("resolveConversionOptions", options=options, keywords=keywords)
     )
 
 
@@ -425,26 +441,27 @@ def list_preset_metadata() -> list[dict[str, Any]]:
     return from_js(_engine.call("listPresetMetadata"))
 
 
-@functools.cache
-def _constants() -> dict[str, Any]:
-    constants = _engine.call("constants")
-    return {
-        "formats": constants["formats"],
-        "defaultConversionOptions": from_js(constants["defaultConversionOptions"]),
-        "conversionOptionValues": from_js(constants["conversionOptionValues"]),
-    }
-
-
 _CONSTANTS = {
     "FORMATS": "formats",
     "DEFAULT_CONVERSION_OPTIONS": "defaultConversionOptions",
     "CONVERSION_OPTION_VALUES": "conversionOptionValues",
 }
 
+if TYPE_CHECKING:
+    FORMATS: tuple[Format, ...]
+    DEFAULT_CONVERSION_OPTIONS: dict[str, Any]
+    CONVERSION_OPTION_VALUES: dict[str, dict[str, list[str]]]
+
 
 def __getattr__(name: str) -> Any:
     # Read from the engine on first use, so that importing starts nothing.
     if name in _CONSTANTS:
-        value = _constants()[_CONSTANTS[name]]
-        return tuple(value) if name == "FORMATS" else copy.deepcopy(value)
+        value = constants()[_CONSTANTS[name]]
+        if name == "FORMATS":
+            return tuple(value)
+        return copy.deepcopy(from_js(value))
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | set(_CONSTANTS))
