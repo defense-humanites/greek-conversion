@@ -537,6 +537,14 @@ test("keeps each rough breathing where the output reads it back", () => {
       greek,
     );
   }
+  // Under the BnF keraiai, the rule holds where the keraia reads back as one:
+  // `ʹ` after an accent. An acute on a vowel reads back as an accent, and
+  // the pair is written as elsewhere.
+  const bnf = { preset: "bnf-ancient" } as const;
+  const bnfNumeral = convertDetailed("αὗʹ", "greek", "transliteration", bnf);
+  assertNfcEquals(bnfNumeral.output, "ahŷʹ");
+  assertEquals(bnfNumeral.lossy, false);
+  assertNfcEquals(t("αὑʹ", bnf), "haú");
   // The output reads back as the letters it was written from, whose upsilon
   // a diphthong would write otherwise once ALA-LC leaves out the accent.
   const alaModern = { preset: "ala-lc-modern" } as const;

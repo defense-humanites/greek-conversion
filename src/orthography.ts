@@ -1206,9 +1206,12 @@ const MONOTONIC_MARKS: ReadonlySet<Diacritic> = new Set([
  * The reading of a document as `format` writes it under these options, so
  * that a numeral is the one the output reads back as. A letter is bare when
  * it has no mark, or when the options remove each of its marks, monotonic
- * accentuation those that are not an accent or a diaeresis. A final sigma is
- * written `ς`, a stigma before the keraia, under `greek.finalSigma:
- * "preserve"` in Greek and Beta Code; transliteration has no final sigma.
+ * accentuation those that are not an accent or a diaeresis, and
+ * transliteration the marks that it leaves out (transliterationOmits()):
+ * `ἀʹ` gives `1` under decimal numerals, where `aʹ` would read back as `1`. A
+ * final sigma is written `ς`, a stigma before the keraia, under
+ * `greek.finalSigma: "preserve"` in Greek and Beta Code; transliteration has
+ * no final sigma.
  */
 function writtenReading(
   options: ConversionOptions,
@@ -1223,21 +1226,65 @@ function writtenReading(
   );
   const finalSigma = format !== "transliteration" &&
     (options.greek?.finalSigma ?? "preserve") === "preserve";
-  if (removed.size === 0) return { bare: AS_READ.bare, finalSigma };
   let removedMask = 0;
   for (const mark of removed) removedMask |= diacriticBit(mark);
+  const omitted = format === "transliteration"
+    ? transliterationOmits(options, removedMask)
+    : undefined;
+  if (removed.size === 0 && omitted === undefined) {
+    return { bare: AS_READ.bare, finalSigma };
+  }
   return {
     bare: (token) => {
       if (token.diacritics.size === 0) return true;
+      const letterMask = omitted?.(token.letter) ?? removedMask;
       // Marks read from text share a set that carries their mask.
       const mask = sharedMask(token.diacritics);
-      if (mask !== undefined) return (mask & ~removedMask) === 0;
+      if (mask !== undefined) return (mask & ~letterMask) === 0;
       for (const mark of token.diacritics) {
-        if (!removed.has(mark)) return false;
+        if ((diacriticBit(mark) & letterMask) === 0) return false;
       }
       return true;
     },
     finalSigma,
+  };
+}
+
+/**
+ * The marks that transliteration leaves out of a letter, as a mask, beside
+ * those that the options remove (`removed`), for the letters of a numeral,
+ * which the reader reads back without them, since it infers no breathing in
+ * a numeral:
+ * - the smooth breathing, unless written in place (`smoothBreathing:
+ *   "greek"`), or as an apostrophe before a vowel;
+ * - the coronis, under `coronis: "omit"`;
+ * - a quantity mark on a letter written as epsilon or omicron are, which
+ *   would make `ē` or `ō` (see `writeLatinMarks()`): epsilon, omicron, and,
+ *   without length marks, omega, and eta unless written `i`.
+ */
+function transliterationOmits(
+  options: ConversionOptions,
+  removed: number,
+): (letter: Letter) => number {
+  const transliteration = options.transliteration;
+  const smooth = transliteration?.smoothBreathing ?? "omit";
+  const coronis = (transliteration?.coronis ?? "omit") === "omit"
+    ? diacriticBit("coronis")
+    : 0;
+  const omitsLength = transliteration?.longVowels === "omit";
+  const etaAsI = transliteration?.eta === "i";
+  const quantity = diacriticBit("macron") | diacriticBit("breve");
+  const smoothBit = diacriticBit("smooth");
+  return (letter) => {
+    let mask = removed | coronis;
+    if (smooth === "omit" || smooth === "apostrophe" && !isVowel(letter)) {
+      mask |= smoothBit;
+    }
+    if (
+      letter === "epsilon" || letter === "omicron" ||
+      omitsLength && (letter === "omega" || letter === "eta" && !etaAsI)
+    ) mask |= quantity;
+    return mask;
   };
 }
 

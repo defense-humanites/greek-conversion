@@ -1932,9 +1932,9 @@ function meetsRoughIotaOrUpsilon(
  * breathing on the second vowel: its `h` goes right before it (`αἱʹ` →
  * `ahiʹ`, where `haiʹ` reads back as ἁιʹ). A coronis written as an apostrophe
  * on the pair may read back as punctuation, which ends the numeral, and so
- * may the keraiai of the BnF: the pair is then written as elsewhere. The
- * numeral is found in `numerals`, the document that `document` was rendered
- * from.
+ * may the keraiai of the BnF (bnfKeraiaReadsBack()): the pair is then
+ * written as elsewhere. The numeral is found in `numerals`, the document
+ * that `document` was rendered from.
  */
 function roughInNumeral(
   document: Document,
@@ -1954,10 +1954,33 @@ function roughInNumeral(
     options.transliteration?.coronis === "apostrophe" &&
     (first.diacritics.has("coronis") || second.diacritics.has("coronis"))
   ) return false;
-  // The keraiai of the BnF, an acute and a comma, read back as such where
-  // they may: the reader finds no numeral to leave the breathing in.
-  if (options.transliteration?.keraia === "bnf") return false;
+  if (
+    options.transliteration?.keraia === "bnf" &&
+    !bnfKeraiaReadsBack(document, start, options)
+  ) return false;
   return isGreekNumeralContext(numerals, start, context);
+}
+
+/**
+ * Whether the numeral of the letter at `start`, under the BnF keraiai, ends
+ * with a right keraia that reads back as one: written `ʹ` after an accent,
+ * or as an acute on a consonant. An acute on a vowel reads back as an
+ * accent, and the comma of the left keraia as a comma, but before `c̄` and
+ * `s̄`: the reader then finds no numeral to leave a breathing in.
+ */
+function bnfKeraiaReadsBack(
+  document: Document,
+  start: number,
+  options: ConversionOptions,
+): boolean {
+  let end = start;
+  while (document[end]?.kind === "grapheme") end++;
+  const keraia = document[end];
+  if (keraia?.kind !== "literal" || keraia.value !== DEXIA_KERAIA) {
+    return false;
+  }
+  return bnfRightKeraia(options, document, end) === DEXIA_KERAIA ||
+    !isVowel((document[end - 1] as Grapheme).letter);
 }
 
 /**

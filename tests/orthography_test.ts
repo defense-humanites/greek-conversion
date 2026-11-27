@@ -1145,6 +1145,36 @@ test("converts marked alphabetic numerals to decimal on demand", () => {
   );
 });
 
+test("writes as a number a numeral whose marks transliteration leaves out", () => {
+  // The reader infers no breathing in a numeral, and the smooth breathing,
+  // the coronis, and a quantity mark on omicron are not written: the letters
+  // would read back as the number.
+  const decimal = { text: { numerals: "decimal" } } as const;
+  for (
+    const [greek, number, options] of [
+      ["ἀʹ", "1", decimal],
+      ["͵αἰ", "1010", decimal],
+      ["ο̄ιʹ", "80", decimal],
+      ["ῤκγʹ", "123", {
+        ...decimal,
+        transliteration: { smoothBreathing: "apostrophe" },
+      }],
+    ] as const
+  ) {
+    assertEquals(convert(greek, "greek", "transliteration", options), number);
+  }
+  // Written in place or as an apostrophe before a vowel, the breathing
+  // keeps the letters, which read back with it.
+  for (const smoothBreathing of ["greek", "apostrophe"] as const) {
+    const options = { ...decimal, transliteration: { smoothBreathing } };
+    const output = convert("ἀʹ", "greek", "transliteration", options);
+    assertNfcEquals(
+      convert(output, "transliteration", "greek", options),
+      "ἀʹ",
+    );
+  }
+});
+
 test("writes no numeral as a number next to a digit", () => {
   const decimal = { text: { numerals: "decimal" } } as const;
   // The second thousands sign follows a letter, then a digit: either way,
