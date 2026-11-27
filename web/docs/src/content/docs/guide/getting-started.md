@@ -88,24 +88,21 @@ plain.losses[0].diacritic; // → acute
 
 ## Options and presets
 
-Every conversion is set by options. An option sets one thing, such as which
-marks are kept (`diacritics.all`) or how eta is written
+Every conversion is set by options. An option sets one thing, such as
+whether the accents are kept (`diacritics.accents`) or how eta is written
 (`transliteration.eta`), and has a default. There are 52 of them, in five
 groups named after what they describe: `transliteration`, `greek`,
-`betaCode`, `text`, and `diacritics`. They combine freely: here eta and
-omega take a grave and a circumflex rather than a macron, and the accents
-are left out:
+`betaCode`, `text`, and `diacritics`. They combine freely: here chi is
+written `kh` and upsilon `u`, and the accents are left out:
 
 ```ts
 import { convert } from "@humanities/greek-conversion";
 
-const thucydides = "Ἕλλησιν ἐγένετο καὶ μέρει τινὶ τῶν βαρβάρων";
-
-convert(thucydides, "greek", "transliteration", {
-  transliteration: { longVowels: "grave-circumflex" },
+convert("ψυχὴ καὶ σῶμα", "greek", "transliteration", {
+  transliteration: { chi: "kh", upsilon: "u" },
   diacritics: { accents: "remove" },
 });
-// → Hellèsin egeneto kai merei tini tôn barbarôn
+// → psukhē kai sōma
 ```
 
 A preset is a set of these options that follows a published convention:
