@@ -1,7 +1,9 @@
-# Migrating from 0.14.x
+# Migrating to 1.0
 
 The `1.0.0` release is a rewrite. It does not provide compatibility aliases for
-the `0.14.x` API.
+the `0.14.x` API. Coming from `0.14.x`, read [Installation](#installation) and
+[From 0.14.x](#from-014x); the later sections only concern code written against
+a 1.0 prerelease.
 
 ## Installation
 
@@ -16,7 +18,172 @@ npx jsr add @humanities/greek-conversion@1.0.0-rc.15
 
 The package is ESM-only.
 
-## Updating from `1.0.0-rc.14`
+## From 0.14.x
+
+The npm package is now `@humanities/greek-conversion`. The `greek-conversion`
+package stays on `0.14.5`, its last release, and is deprecated; its source is on
+the
+[`legacy`](https://github.com/defense-humanites/greek-conversion/tree/legacy)
+branch. Unlike `0.14.x`, the 1.0 package has no CommonJS build, so CommonJS
+code loads it with `import()`, and it requires Node.js 24 or later.
+
+### Formats and conversion functions
+
+Replace the `KeyType` runtime enum with literal format names:
+
+```ts
+// 0.14.x
+toTransliteration(input, KeyType.GREEK);
+
+// 1.0
+convert(input, "greek", "transliteration");
+```
+
+| 0.14.x                    | 1.0                                     |
+| ------------------------- | --------------------------------------- |
+| `KeyType.GREEK`           | `"greek"`                               |
+| `KeyType.BETA_CODE`       | `"beta-code"`                           |
+| `KeyType.TLG_BETA_CODE`   | `"beta-code"` with `preset: "tlg-core"` |
+| `KeyType.TRANSLITERATION` | `"transliteration"`                     |
+| `toGreek()`               | `convert(..., ..., "greek")`            |
+| `toBetaCode()`            | `convert(..., ..., "beta-code")`        |
+| `toTransliteration()`     | `convert(..., ..., "transliteration")`  |
+
+### Helper functions
+
+The three helpers of `0.14.x` worked on the string as written, and 1.0 has no
+direct counterpart. To remove diacritics while converting, set
+`diacritics: { all: "remove" }`
+([Remove all or some diacritics](https://greek-conversion.humanites.fr/guide/recipes/diacritics-and-unicode/#remove-all-or-some-diacritics)).
+These forms give the same results as the helpers:
+
+```ts
+// removeDiacritics(input, KeyType.GREEK) or (input, KeyType.TRANSLITERATION)
+input.normalize("NFD").replace(/[\u{300}-\u{36f}]/gu, "").normalize("NFC");
+
+// removeDiacritics(input, KeyType.BETA_CODE)
+input.replace(/[()\\/+=|?]|%26|%27/g, "");
+```
+
+`removeGreekVariants()` and `applyGreekVariants()` correspond to `reencode()`
+with options on the shape of the letters:
+
+```ts
+// removeGreekVariants(input, { preserveAccents: true, preserveLunateSigma })
+reencode(input, "greek", {
+  greek: {
+    medialBeta: "standard",
+    sigma: preserveLunateSigma ? "preserve" : "standard",
+    finalSigma: "medial",
+    capitalMarks: "preserve",
+  },
+});
+
+// removeGreekVariants(input) also turned grave accents into acute ones,
+// which no option does: the same call, then
+output.normalize("NFD").replaceAll("\u{300}", "\u{301}").normalize("NFC");
+
+// applyGreekVariants(input, { useBetaVariant, useLunateSigma })
+reencode(input, "greek", {
+  greek: {
+    medialBeta: useBetaVariant ? "symbol" : "standard",
+    sigma: useLunateSigma ? "lunate" : "preserve",
+    finalSigma: "contextual",
+    capitalMarks: "preserve",
+  },
+});
+```
+
+`reencode()` reads the text, where the helpers replaced characters, so its
+output differs from theirs in a few cases:
+
+- The letters of a numeral marked with a keraia (`στʹ`, `αβʹ`) keep their
+  shape.
+- A koronis written as an elision apostrophe is written as one (`παρ᾽` →
+  `παρ’`), and a sigma before the apostrophe stays medial (`ἀγγέλλουσ’`, which
+  `applyGreekVariants()` made `ἀγγέλλους’`).
+- A breathing or an accent written as a spacing character before a capital is
+  set on it (`῾Ρωμαῖοι` → `Ῥωμαῖοι`, `΄Ελληνας` → `Έλληνας`).
+- `applyGreekVariants()` also replaced `πσ` with `ψ`, which 1.0 does not do.
+
+### Presets and custom options
+
+Preset identifiers are string literals. A preset and custom overrides now share
+one options object instead of an array:
+
+```ts
+// 0.14.x
+toTransliteration(input, KeyType.GREEK, [
+  Preset.ALA_LC,
+  { removeDiacritics: false },
+]);
+
+// 1.0
+convert(input, "greek", "transliteration", {
+  preset: "ala-lc-ancient",
+  diacritics: { all: "preserve" },
+});
+```
+
+Custom fields override corresponding preset fields while unrelated preset fields
+remain active: here `diacritics.all` keeps every class the preset removes, while
+its other options (upsilon, decimal numerals) still apply. See
+[docs/presets.md](docs/presets.md) for the exact configuration table.
+
+### Reusable parsed documents
+
+`GreekString` has no stateful replacement. Use the functional API for ordinary
+conversions. When several representations must share one analysis, parse once
+through the advanced entry point and encode the resulting document:
+
+```ts
+import { encode, parse } from "@humanities/greek-conversion/document";
+
+const document = parse(input, "greek", options);
+const betaCode = encode(document, "beta-code", options);
+const transliteration = encode(document, "transliteration", options);
+```
+
+### Canonical-document API
+
+Advanced parsing, validation, transformation, and encoding are isolated in the
+supported `./document` entry point:
+
+```ts
+import {
+  encode,
+  parse,
+  validateDocument,
+} from "@humanities/greek-conversion/document";
+```
+
+Its ownership, validation, and option boundaries are documented in
+[docs/document-api.md](docs/document-api.md).
+
+### Behavioral differences
+
+- Unknown characters are preserved instead of being removed by sanitization.
+- Beta Code letter case no longer represents Greek letter case: only a preceding
+  `*` marks an uppercase letter, in input and output. `A)/i+da` gave `Ἄϊδα` with
+  `KeyType.BETA_CODE`; it now gives `ἄϊδα`, and `*)/ai+da` gives `Ἄϊδα`.
+  `KeyType.TLG_BETA_CODE` input already used this convention.
+- Without a preset, transliteration writes the letters of the SBL Handbook of
+  Style, with the marks that the Handbook leaves out. It differs from the
+  `0.14.x` default in two frequent cases: upsilon is `y` outside a diphthong
+  (`ψυχή` → `psychḗ`, was `psuchḗ`), and gamma before a velar is `n`
+  (`ἄγγελος` → `ángelos`, was `ággelos`).
+  `transliteration: { upsilon: "u", nasalGamma: "literal" }` restores both.
+- Output is canonical and idempotent for fixed formats and options.
+- `convertDetailed()` reports losses from the actual input.
+- Monotonic conversion is explicit and mechanical.
+- Missing rough breathings and transformations requiring lexical or
+  morphological knowledge are not inferred.
+- TLG and BnF presets cover only the rules and characters implemented by the
+  current engine.
+
+## From a 1.0 prerelease
+
+### Updating from `1.0.0-rc.14`
 
 The preset `bnf-core` is renamed `bnf-ancient`: write `preset: "bnf-ancient"`,
 in `source` too, and import `bnfAncient` from `./presets` where you imported
@@ -54,7 +221,7 @@ of scope, `a)` from Beta Code into Greek is lossy (rc.14: lossless).
 The other changes correct outputs that did not convert again to themselves;
 the changelog lists them.
 
-## Updating from `1.0.0-rc.13`
+### Updating from `1.0.0-rc.13`
 
 In transliteration, a capital on its own, such as a letter name, takes the
 case of the nearest words on either side: in full capitals among words in
@@ -89,7 +256,7 @@ by word, to keep the punctuation of that language, can call
 `convertGreekPassages()`, which converts the Greek passages of the whole
 text and copies the rest: the rules then see the text around each passage.
 
-## Updating from `1.0.0-rc.12`
+### Updating from `1.0.0-rc.12`
 
 `greek.accentuation: "monotonic"` applies to every format: Beta Code and
 transliteration output are monotonic too, where they kept the polytonic marks:
@@ -118,7 +285,7 @@ source there as U+2019 (`’Αθήνα` gave `’Athī́na`), which now reads ba
 `Ἀθήνα`: convert such a text from its source again, which writes the
 apostrophe U+02BC (`ʼAthī́na`), or replace it with U+02BC before reading it.
 
-## Updating from `1.0.0-rc.11`
+### Updating from `1.0.0-rc.11`
 
 Nothing changes for code that uses rc.11: the API and the output stay the
 same, losses and positions included. The new entry points, `/core`, the
@@ -127,7 +294,7 @@ reader and the writer of each format (`/greek`, `/beta-code`,
 for a web page that bundles a few formats and presets; the guide's page on
 smaller bundles says when they are worth it.
 
-## Updating from `1.0.0-rc.10`
+### Updating from `1.0.0-rc.10`
 
 The `sbl-academic` preset is removed: the SBL Handbook of Style defines no
 academic transliteration of Greek. The defaults write what it wrote, so
@@ -181,7 +348,7 @@ spelled as something that now has a meaning, unless it sets
 `override: true`: in Greek, `ϗ`, `Ϗ`, `ȣ`, `Ȣ`, `〈`, or `〉`; in Beta Code, a
 code or a sign that is now read, such as `%`, `_`, `%3`, `[2`, or `#532`.
 
-## Updating from `1.0.0-rc.9`
+### Updating from `1.0.0-rc.9`
 
 Six kinds of input convert differently. The first two concern every
 conversion to Greek:
@@ -220,7 +387,7 @@ an `OptionError` too, a `RangeError`, where rc.9 threw a `TypeError`: code
 that tells a misconfigured converter by `instanceof TypeError` should test
 `instanceof OptionError`.
 
-## Updating from `1.0.0-rc.8`
+### Updating from `1.0.0-rc.8`
 
 Greek output keeps the letter forms the source writes, by default: the lunate
 sigma `ϲ`, a sigma whose shape contradicts its place (`λόγοσ`), `ϐ`, and the
@@ -326,7 +493,7 @@ what the Greek step dropped, such as a lunate sigma that the source writes
   a tilde where `ê` is eta (`εὖ` gives `’ẽf` under ISO 843 Type 1; rc.8:
   `’êf`).
 
-## Updating from `1.0.0-rc.7`
+### Updating from `1.0.0-rc.7`
 
 The API does not change. Two kinds of input convert differently, and the
 document of a capital sigma changes:
@@ -348,14 +515,14 @@ document of a capital sigma changes:
   `greek.finalSigma: "preserve"`, a word in capitals lowercased by
   `text.letterCase` now ends with `ς`.
 
-## Updating from `1.0.0-rc.6`
+### Updating from `1.0.0-rc.6`
 
 The API does not change. Some output and some readings do: text that rc.6
 wrote and stored may convert differently, and a few conversions that were
 reported lossless now report a loss, or the reverse. The
 [changelog](CHANGELOG.md) gives every case with its before and after.
 
-### Transliteration output
+#### Transliteration output
 
 - The `h` of a rough breathing on the second vowel of a diphthong goes before
   the whole diphthong inside a word too: `χοἱ` gives `chhoi` (rc.6: `chohi`).
@@ -370,7 +537,7 @@ reported lossless now report a loss, or the reverse. The
 
 Transliteration that rc.6 wrote still reads back as it did, except as below.
 
-### Reading transliteration
+#### Reading transliteration
 
 - An `h` inside a word before two vowels that can form a diphthong gives the
   breathing to the diphthong, as at the start of a word: `chhoi` reads as
@@ -384,7 +551,7 @@ Transliteration that rc.6 wrote still reads back as it did, except as below.
   and a rough breathing. Text that mixes conventions should be rewritten in the
   convention of its options before it is read.
 
-### Losses
+#### Losses
 
 `convertDetailed()` locates each loss at the token that lost something, and
 some codes are more precise: under the ISO 843 presets, `ἄλφα` reports a
@@ -392,7 +559,7 @@ removed smooth breathing (`removed-diacritic`) where rc.6 reported an
 unrepresented `ἄ`. Code that reads `losses` by position or by code may see
 different values for the same input.
 
-### Beta Code parentheses
+#### Beta Code parentheses
 
 Beta Code writes and reads parentheses with the TLG codes `[1` and `]1`:
 `δῆσε(ν)` gives `dh=se[1n]1`, where it gave `dh=se(n)`. Earlier releases wrote
@@ -404,7 +571,7 @@ TLG, the number after a bracket is read whole, so a parenthesis or square
 bracket followed by a digit does not read back (`(1)` is written `[11]1`,
 which reads as `[11)`); the loss is reported.
 
-## Updating from `1.0.0-rc.5`
+### Updating from `1.0.0-rc.5`
 
 `1.0.0-rc.6` settles the public API for `1.0.0`. It removes the convenience
 functions, regroups the options by what they describe, replaces the
@@ -413,7 +580,7 @@ style, and types option errors. Every old key, value, and flag throws an
 `OptionError` whose message and `replacement` name the new form. It also writes
 Beta Code quantity marks with the TLG codes.
 
-### Convenience functions
+#### Convenience functions
 
 Ten functions are removed; each was one call to `convert()` or `reencode()` with
 fixed arguments. `convert`, `convertDetailed`, `reencode`, and `createConverter`
@@ -433,7 +600,7 @@ remain.
 | `formatGreekUnicode(input, unicode)`                           | `reencode(input, "greek", { greek: unicode })`                                                                                                   |
 | `toUnicodeCodePoints(input)`                                   | `Array.from(input, (c) => "U+" + c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0"))`                                                 |
 
-### Option groups
+#### Option groups
 
 The `orthography` and `unicode` groups are replaced by four groups named after
 what they describe; `diacritics` is unchanged. Each key keeps its name and
@@ -455,7 +622,7 @@ values, except the two Beta Code keys, which lose their prefix.
 `BetaCodeOptions`, and `TextOptions`. Output is unchanged for every regrouped
 option.
 
-### `removeDiacritics`
+#### `removeDiacritics`
 
 The flag is replaced by `diacritics.all`, which sets every class and yields to a
 class named alongside it. The flag did three things at once; the new form does
@@ -497,7 +664,7 @@ So `removeDiacritics: false` is migrated by dropping the key, not by writing
 `all: "preserve"`, which would also cancel the classes a preset removes. The
 `removeDiacritics` field of `ResolvedConversionOptions` is gone.
 
-### Default transliteration
+#### Default transliteration
 
 Without a preset, transliteration now follows the SBL academic style: the
 default of `transliteration.upsilon` is `"y-with-diphthong-u"` (`y`, but `u` in
@@ -510,7 +677,7 @@ before, but a `y` after a vowel is now read as a hiatus, as under `sbl-academic`
 (`ay` → `ἀυ` rather than `αὐ`). To keep the old spelling and reading, set
 `transliteration: { upsilon: "u" }`.
 
-### Errors
+#### Errors
 
 Option errors are instances of `OptionError`, a `RangeError` with `path`,
 `received`, `accepted`, and, for a key or value of an earlier release candidate,
@@ -518,7 +685,7 @@ Option errors are instances of `OptionError`, a `RangeError` with `path`,
 still throws a plain `RangeError`, and an option group of the wrong type a
 `TypeError`.
 
-### Types and classes
+#### Types and classes
 
 | Before                                                   | After                                                                                                                 |
 | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -537,7 +704,7 @@ reported at its first literal, and the indices of the diagnostics that follow it
 grow by the number of extra literals. Use the new `offset` and `length` to
 locate a diagnostic in the input.
 
-### Beta Code quantity marks
+#### Beta Code quantity marks
 
 Beta Code writes and reads the macron and breve with the TLG percent codes:
 
@@ -553,7 +720,7 @@ reads differently. In such text, every `&` is a macron, and a `'` after `a`,
 `i`, or `u` and their marks, or between `*` and one of these capitals, is a
 breve; replace them with `%26` and `%27`, or convert the Greek again.
 
-## Updating from `1.0.0-rc.4`
+### Updating from `1.0.0-rc.4`
 
 The sections from here to
 [Formats and conversion functions](#formats-and-conversion-functions) name
@@ -595,7 +762,7 @@ changes: `γκ` under `ala-lc-modern` follows `nasalGamma`, so overriding
 `nasalGamma` with `"literal"` now writes `γκ` as `gk` everywhere, where
 `modernDigraphs: "ala-lc"` kept its own rule.
 
-## Updating from `1.0.0-rc.1`
+### Updating from `1.0.0-rc.1`
 
 `Grapheme.diacritics` in the `./document` entry point is now a
 `ReadonlySet<Diacritic>`, shared between graphemes and read-only at run time.
@@ -616,7 +783,7 @@ Copying the sets when deriving two versions of one document is no longer
 necessary. Code that only reads the sets, or that only uses the string
 conversion functions, is unaffected.
 
-## Updating from `1.0.0-beta.9`
+### Updating from `1.0.0-beta.9`
 
 Three option identifiers and seven exported type names change in `1.0.0-rc.1`,
 and therefore in `1.0.0`; the behavior behind them does not:
@@ -643,7 +810,7 @@ candidate uses the npm `next` distribution tag; the stable release will use
 and _Changed_. The published preset scopes and the documented limits of the
 advanced `./document` API still apply.
 
-## Updating from `1.0.0-beta.8`
+### Updating from `1.0.0-beta.8`
 
 No API rename is required. The `./document` entry point now has a documented
 supported contract for ownership, validation, and option reuse. Keep the
@@ -661,7 +828,7 @@ can be used to inspect presets, conversion losses, scope diagnostics, and
 canonical documents in a browser. Its site files are not part of either
 published package.
 
-## Updating from `1.0.0-beta.7`
+### Updating from `1.0.0-beta.7`
 
 Both ALA-LC presets now render the documented `στʹ` as decimal `6` and
 prefix-marked thousands such as `͵α` and `͵αα` as `1000` and `1001`. This
@@ -681,7 +848,7 @@ The [ALA-LC corpus](docs/ala-lc-conformance-corpus.md) and
 [BnF/ISO corpus](docs/preset-conformance-corpus.md) describe the covered
 examples and remaining limits.
 
-## Updating from `1.0.0-beta.6`
+### Updating from `1.0.0-beta.6`
 
 The `1.0.0-beta.7` package uses the MIT License. Earlier published releases
 retain their original AGPL-3.0-or-later license.
@@ -699,7 +866,7 @@ undefined or unresolved preset mappings; inspect `convertDetailed().losses` for
 in-scope distinctions lost during conversion. See the
 [behavior audit](docs/preset-behavior-audit.md).
 
-## Updating from `1.0.0-beta.4`
+### Updating from `1.0.0-beta.4`
 
 The optional `GreekText` facade has been removed. Use `convert()` or
 `convertDetailed()` for ordinary calls. To reuse one analysis across several
@@ -707,7 +874,7 @@ representations, use `parse()` and `encode()` from the advanced
 `@humanities/greek-conversion/document` entry point, as shown under
 [reusable parsed documents](#reusable-parsed-documents).
 
-## Updating from `1.0.0-beta.3`
+### Updating from `1.0.0-beta.3`
 
 This release is additive: the ordinary conversion functions retain their
 `beta.3` behavior. Use `createConverter()` only when an application needs to
@@ -724,7 +891,7 @@ instead of being discarded. `converter.convertDetailed()` reports them through
 the separate `diagnostics` array without setting `lossy` solely because of
 literal preservation.
 
-## Updating from `1.0.0-beta.2`
+### Updating from `1.0.0-beta.2`
 
 Beta Code ASCII letter case no longer represents Greek letter case. Only a
 preceding `*` marks an uppercase Greek grapheme, so uppercase ASCII input such
@@ -735,90 +902,3 @@ letter, following TLG ordering.
 Use `orthography.betaCodeCase: "uppercase"` when an integration requires
 uppercase ASCII without changing the represented Greek case. The `tlg-core` and
 `perseus` presets select uppercase and lowercase ASCII respectively.
-
-## Formats and conversion functions
-
-Replace the `KeyType` runtime enum with literal format names:
-
-```ts
-// 0.14.x
-toTransliteration(input, KeyType.GREEK);
-
-// 1.0
-convert(input, "greek", "transliteration");
-```
-
-| 0.14.x                    | 1.0                                     |
-| ------------------------- | --------------------------------------- |
-| `KeyType.GREEK`           | `"greek"`                               |
-| `KeyType.BETA_CODE`       | `"beta-code"`                           |
-| `KeyType.TLG_BETA_CODE`   | `"beta-code"` with `preset: "tlg-core"` |
-| `KeyType.TRANSLITERATION` | `"transliteration"`                     |
-| `toGreek()`               | `convert(..., ..., "greek")`            |
-| `toBetaCode()`            | `convert(..., ..., "beta-code")`        |
-| `toTransliteration()`     | `convert(..., ..., "transliteration")`  |
-
-## Presets and custom options
-
-Preset identifiers are string literals. A preset and custom overrides now share
-one options object instead of an array:
-
-```ts
-// 0.14.x
-toTransliteration(input, KeyType.GREEK, [
-  Preset.ALA_LC,
-  { removeDiacritics: false },
-]);
-
-// 1.0
-convert(input, "greek", "transliteration", {
-  preset: "ala-lc-ancient",
-  diacritics: { all: "preserve" },
-});
-```
-
-Custom fields override corresponding preset fields while unrelated preset fields
-remain active: here `diacritics.all` keeps every class the preset removes, while
-its other options (upsilon, decimal numerals) still apply. See
-[docs/presets.md](docs/presets.md) for the exact configuration table.
-
-## Reusable parsed documents
-
-`GreekString` has no stateful replacement. Use the functional API for ordinary
-conversions. When several representations must share one analysis, parse once
-through the advanced entry point and encode the resulting document:
-
-```ts
-import { encode, parse } from "@humanities/greek-conversion/document";
-
-const document = parse(input, "greek", options);
-const betaCode = encode(document, "beta-code", options);
-const transliteration = encode(document, "transliteration", options);
-```
-
-## Canonical-document API
-
-Advanced parsing, validation, transformation, and encoding are isolated in the
-supported `./document` entry point:
-
-```ts
-import {
-  encode,
-  parse,
-  validateDocument,
-} from "@humanities/greek-conversion/document";
-```
-
-Its ownership, validation, and option boundaries are documented in
-[docs/document-api.md](docs/document-api.md).
-
-## Behavioral differences
-
-- Unknown characters are preserved instead of being removed by sanitization.
-- Output is canonical and idempotent for fixed formats and options.
-- `convertDetailed()` reports losses from the actual input.
-- Monotonic conversion is explicit and mechanical.
-- Missing rough breathings and transformations requiring lexical or
-  morphological knowledge are not inferred.
-- TLG and BnF presets cover only the rules and characters implemented by the
-  current engine.

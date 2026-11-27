@@ -7,6 +7,15 @@ change.
 
 ## [Unreleased]
 
+### Changed
+
+- **Documentation.** The migration guide opens with the path from `0.14.x`,
+  before the notes on each prerelease: the package's new name, `import()` for
+  CommonJS code, and the counterparts of the helpers `removeDiacritics()`,
+  `removeGreekVariants()`, and `applyGreekVariants()`, with the cases where
+  they differ. The README and the getting-started page point the users of the
+  unscoped `greek-conversion` package, the `0.14.x` series, to it.
+
 ## [1.0.0-rc.15] - 2026-11-27
 
 Fifteenth release candidate for `1.0.0`. A Python package, `greek-conversion`

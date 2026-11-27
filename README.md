@@ -69,6 +69,13 @@ npx jsr add @humanities/greek-conversion   # JSR, which gives the command for ea
 
 The package is ESM-only and ships its own type declarations.
 
+The unscoped npm package `greek-conversion` is the `0.14.x` series, which is
+deprecated; its source is on the
+[`legacy`](https://github.com/defense-humanites/greek-conversion/tree/legacy)
+branch, and the
+[migration guide](https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md#from-014x)
+shows how to move from it.
+
 ## Main functions
 
 | You want to…                                                             | Use                                                                   |
@@ -192,8 +199,8 @@ cite it; GitHub's “Cite this repository” button uses the metadata in
 
 Copyright (C) 2021–2026 Antoine Boquet. Released under the
 [MIT License](https://github.com/defense-humanites/greek-conversion/blob/main/LICENSE)
-since `1.0.0-beta.7`; earlier versions remain under AGPL-3.0-or-later. The
-benchmark text,
+since `1.0.0-beta.7`, as is `0.14.5`, the last release of the `0.x` series;
+earlier versions remain under AGPL-3.0-or-later. The benchmark text,
 [`bench/thucydides.ts`](https://github.com/defense-humanites/greek-conversion/blob/main/bench/thucydides.ts)
 (Thucydides 1.1–1.10, from the Perseus Digital Library), is under
 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) and is not
