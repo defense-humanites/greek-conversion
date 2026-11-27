@@ -1,15 +1,22 @@
 {
   "$schema": "https://context7.com/schema/context7.json",
   "projectTitle": "greek-conversion",
-  "description": "Convert Ancient, Byzantine, and Modern Greek between Greek script, Beta Code, and Latin script, with atomic options composed into standards-based presets, and information-loss diagnostics. npm and JSR package: @humanities/greek-conversion.",
-  "folders": ["docs", "web/docs/src/content/docs/guide"],
+  "description": "Convert Ancient, Byzantine, and Modern Greek between Greek script, Beta Code, and Latin script, with atomic options composed into standards-based presets, and information-loss diagnostics. npm and JSR package: @humanities/greek-conversion. Python package, on PyPI: greek-conversion.",
+  "folders": [
+    "docs",
+    "web/docs/src/content/docs/guide",
+    "python",
+    "web/docs/src/content/docs/python"
+  ],
+  "excludeFolders": ["python/tests", "python/scripts", "python/js"],
   "excludeFiles": ["CHANGELOG.md", "MIGRATION.md"],
   "rules": [
-    "Install @humanities/greek-conversion. The unscoped greek-conversion package on npm is the 0.x series, whose API is different.",
+    "In JavaScript and TypeScript, install @humanities/greek-conversion. The unscoped greek-conversion package on npm is the 0.x series, whose API is different.",
     "Pass options as groups with camelCase keys: preset, transliteration, greek, betaCode, text, diacritics, and source. An unknown key, value, or preset throws an OptionError.",
     "Import convert() from the main entry point. Use @humanities/greek-conversion/core only to make a browser bundle smaller, with readers, writers, and presets imported from their entry points.",
     "Use convertDetailed() to know whether a conversion loses information: it returns lossy and the losses with their positions.",
     "Use convertGreekPassages() for Greek quoted in a text in another language: it keeps the punctuation of that language.",
-    "To convert many short strings with options other than a preset, prepare the options once with prepareOptions()."
+    "To convert many short strings with options other than a preset, prepare the options once with prepareOptions().",
+    "In Python, install greek-conversion from PyPI, which runs this library: functions, option keys, and the fields of results are written in snake_case (convert_detailed(), long_vowels, beta_code), option values as in TypeScript; a camelCase key raises an OptionError that gives its snake_case spelling. Convert a corpus with convert_many(), reencode_many(), or convert_detailed_many(), in one call."
   ]
 }
