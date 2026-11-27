@@ -18,11 +18,13 @@ follows from that, and what is proper to Python.
 - **The same versions.** The package's version is the library's, in Python's
   spelling (`1.0.0rc15` for `1.0.0-rc.15`), followed by `.postN` for a fix of
   the Python package alone, published between two releases of the library.
-- **The same documentation.** These pages give the guide in Python. The
-  others, such as [How it works](/guide/how-it-works/),
-  [Guarantees and limits](/reference/guarantees/), and the
-  [preset reference](/reference/presets/), describe the library, and hold for
-  the package as they are written, in the spelling of the next section.
+  The [stability policy](/reference/stability/#the-python-package) applies
+  to it as to the library.
+- **The same documentation.** These pages give the guide and the reference
+  in Python. The pages of the TypeScript documentation that they link to,
+  such as [How it works](/guide/how-it-works/), describe the library, and
+  hold for the package as they are written, in the spelling of the next
+  section.
 
 ## Writing it in Python
 

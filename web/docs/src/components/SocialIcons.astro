@@ -1,16 +1,26 @@
 ---
 /*
  * The project's links, as the playground's masthead gives them: the
- * playground, set off by its weight, the source, and the two registries, in
- * words. Each opens in a new tab and says so, as the playground's links to
+ * playground, set off by its weight, the source, and the registries of the
+ * documentation, in words: npm and JSR, or PyPI on a Python page. Each opens in a new tab and says so, as the playground's links to
  * other sites do: the playground is a tool of its own, beside the reading.
  */
+import { languageOf } from "../documentations.ts";
+
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const root = base.slice(0, -1);
+// The registries of the documentation the page belongs to.
+const python =
+  languageOf(Astro.url.pathname.slice(root.length) || "/") === "python";
 const links = [
   { label: "Playground", href: `${base}playground/`, lead: true },
   { label: "Source", href: "https://github.com/defense-humanites/greek-conversion" },
-  { label: "npm", href: "https://www.npmjs.com/package/@humanities/greek-conversion" },
-  { label: "JSR", href: "https://jsr.io/@humanities/greek-conversion" },
+  ...(python
+    ? [{ label: "PyPI", href: "https://pypi.org/project/greek-conversion/" }]
+    : [
+      { label: "npm", href: "https://www.npmjs.com/package/@humanities/greek-conversion" },
+      { label: "JSR", href: "https://jsr.io/@humanities/greek-conversion" },
+    ]),
 ];
 ---
 

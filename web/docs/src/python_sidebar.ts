@@ -1,11 +1,11 @@
 /**
  * The sidebar of the Python documentation (`/python/…`), which
- * `routeData.ts` gives its pages in place of the TypeScript one: its own
- * entry point, in the order of the guide. The pages that describe the
- * library rather than its use, the reference above all, are those of the
- * TypeScript documentation, and hold for Python as they are written. A
- * page is listed under its own title, as in the TypeScript sidebar.
+ * `routeData.ts` gives its pages in place of the TypeScript one, in the
+ * order of the TypeScript sidebar: the pages that have a Python version
+ * (`documentations.ts`), and those written for Python. A page is listed
+ * under its own title, as in the TypeScript sidebar.
  */
+import { languageOf } from "./documentations.ts";
 
 /** A group of pages: a title and a path from the site's root, by page. */
 interface Group {
@@ -17,7 +17,7 @@ export const PYTHON_SIDEBAR: readonly Group[] = [
   {
     label: "Start here",
     items: [
-      ["Getting started in Python", "/python/"],
+      ["Getting started", "/python/guide/getting-started/"],
       ["How the package works", "/python/package/"],
     ],
   },
@@ -33,7 +33,7 @@ export const PYTHON_SIDEBAR: readonly Group[] = [
     label: "Standards and presets",
     items: [
       ["Choosing a preset", "/python/guide/presets/"],
-      ["Preset reference", "/reference/presets/"],
+      ["Preset reference", "/python/reference/presets/"],
     ],
   },
   {
@@ -53,11 +53,11 @@ export const PYTHON_SIDEBAR: readonly Group[] = [
         "Diacritics and Unicode output",
         "/python/guide/recipes/diacritics-and-unicode/",
       ],
-      ["Letters and text", "/python/guide/recipes/letters-and-text/"],
       [
         "Transliteration and Beta Code",
         "/python/guide/recipes/transliteration-and-beta-code/",
       ],
+      ["Letters and text", "/python/guide/recipes/letters-and-text/"],
     ],
   },
   {
@@ -67,16 +67,12 @@ export const PYTHON_SIDEBAR: readonly Group[] = [
   {
     label: "Reference",
     items: [
-      ["API reference", "/python/reference/api/"],
+      ["Guarantees and limits", "/python/reference/guarantees/"],
       ["Conversion options", "/python/reference/options/"],
-      ["Guarantees and limits", "/reference/guarantees/"],
-      ["Information-loss contract", "/reference/information-loss/"],
-      ["Greek output", "/reference/greek-unicode/"],
+      ["Greek output", "/python/reference/greek-unicode/"],
+      ["Information-loss contract", "/python/reference/information-loss/"],
+      ["API reference", "/python/reference/api/"],
     ],
-  },
-  {
-    label: "TypeScript",
-    items: [["The TypeScript documentation", "/guide/getting-started/"]],
   },
 ];
 
@@ -91,8 +87,8 @@ interface Link {
 
 /** Whether a page is one of the Python documentation. */
 export function isPythonPage(pathname: string, base: string): boolean {
-  return pathname === `${base}/python/` ||
-    pathname.startsWith(`${base}/python/`);
+  return pathname.startsWith(`${base}/`) &&
+    languageOf(pathname.slice(base.length)) === "python";
 }
 
 /**

@@ -6,11 +6,20 @@
  * from the header.
  * The logo follows the system's appearance, as the whole site does; its
  * tessera's halves part and join once the page has loaded, once a session.
+ *
+ * The home of the Python documentation (`/python/`) is the same page, with
+ * `language="python"`: the package for the library, and its own guide.
  */
 import { LinkButton } from "@astrojs/starlight/components";
 import logoSource from "../../public/logo-light.svg?raw";
 
+interface Props {
+  language?: "typescript" | "python";
+}
+const { language = "typescript" } = Astro.props;
+const python = language === "python";
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const guide = `${base}${python ? "python/" : ""}guide/getting-started/`;
 
 /*
  * The logo, drawn in the page rather than as an image, so that the two
@@ -85,7 +94,8 @@ const wordmark = drawing("name", name);
     </script>
     <p class="description">
       <span class="line"
-        >A TypeScript library that converts Ancient, Byzantine, and Modern&nbsp;Greek</span
+        >{python ? "A Python library" : "A TypeScript library"} that converts
+        Ancient, Byzantine, and Modern&nbsp;Greek</span
       >{" "}
       <span class="line"
         >between Greek&nbsp;script, Beta&nbsp;Code, and Latin&nbsp;script, with
@@ -97,7 +107,7 @@ const wordmark = drawing("name", name);
       >
     </p>
     <div class="actions">
-      <LinkButton href={`${base}guide/getting-started/`} icon="right-arrow">
+      <LinkButton href={guide} icon="right-arrow">
         Get started
       </LinkButton>
       <LinkButton

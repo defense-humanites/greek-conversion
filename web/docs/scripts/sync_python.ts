@@ -1,9 +1,10 @@
 /**
  * Writes the pages of the Python package's documentation that follow pages
- * of the guide and the reference, under `src/content/docs/python/`, served
- * at `/python/…` (and `/next/python/…`). The others, the getting started and
- * the page on the package, are written by hand, and the API reference is
- * written from the docstrings (`python/scripts/api_reference.py`).
+ * of the TypeScript one (`src/documentations.ts`), its home, its guide, and
+ * its reference, under `src/content/docs/python/`, served at `/python/…`
+ * (and `/next/python/…`). The others, the getting started and the page on
+ * the package, are written by hand, and the API reference is written from
+ * the docstrings (`python/scripts/api_reference.py`).
  *
  * Each page keeps the text of its source, with:
  *
@@ -33,6 +34,7 @@ import {
   Untranslatable,
 } from "./python_examples.ts";
 import { OVERRIDES, PROSE } from "./python_overrides.ts";
+import { COUNTERPARTS, PYTHON_PAGES } from "../src/documentations.ts";
 
 const ROOT = new URL("../../../", import.meta.url);
 const CONTENT = new URL("../src/content/docs/", import.meta.url);
@@ -40,36 +42,14 @@ const OUTPUT = new URL("python/", CONTENT);
 const REPOSITORY = "https://github.com/defense-humanites/greek-conversion/";
 
 /** The pages that have a Python version: their source, and their path. */
-const PAGES: readonly [string, string][] = [
-  ["guide/ancient-greek.md", "guide/ancient-greek"],
-  ["guide/byzantine-greek.md", "guide/byzantine-greek"],
-  ["guide/modern-greek.md", "guide/modern-greek"],
-  ["guide/presets.md", "guide/presets"],
-  ["guide/format-and-option-losses.md", "guide/format-and-option-losses"],
-  ["guide/losses.md", "guide/losses"],
-  ["guide/converters.md", "guide/converters"],
-  [
-    "guide/recipes/transliteration-and-beta-code.md",
-    "guide/recipes/transliteration-and-beta-code",
-  ],
-  [
-    "guide/recipes/diacritics-and-unicode.md",
-    "guide/recipes/diacritics-and-unicode",
-  ],
-  ["guide/recipes/letters-and-text.md", "guide/recipes/letters-and-text"],
-  ["docs/options.md", "reference/options"],
-];
+const PAGES = PYTHON_PAGES;
 
 /** Pages of the TypeScript documentation, by the page that stands for them. */
-const LINKED = new Map<string, string>([
-  ...PAGES.map(([source, path]): [string, string] => [
-    source.startsWith("docs/")
-      ? `/reference/${source.slice(5, -3)}/`
-      : `/${source.slice(0, -3)}/`,
-    `/python/${path}/`,
-  ]),
-  ["/guide/getting-started/", "/python/"],
-]);
+const LINKED = new Map<string, string>(COUNTERPARTS);
+
+/** The file of a generated page: the home is in MDX, as its source. */
+const file = (path: string) =>
+  new URL(path === "" ? "index.mdx" : `${path}.md`, OUTPUT);
 
 /** The camelCase names of the library that Python writes in snake_case. */
 const NAMES = new Set<string>([
@@ -101,8 +81,7 @@ const optionAnchors = new Map<string, string>();
 
 // Only what this script writes is removed: the handwritten pages and the
 // API reference stay.
-await rm(new URL("guide/", OUTPUT), { recursive: true, force: true });
-await rm(new URL("reference/options.md", OUTPUT), { force: true });
+for (const [, path] of PAGES) await rm(file(path), { force: true });
 
 // The options reference first: the other pages link to its anchors.
 const sources = [...PAGES].sort(([a], [b]) =>
@@ -121,7 +100,7 @@ for (const [source, path] of sources) {
     }
     page = page.replace(from, to);
   }
-  const output = new URL(`${path}.md`, OUTPUT);
+  const output = file(path);
   await mkdir(new URL(".", output), { recursive: true });
   await writeFile(output, transform(page, source));
 }
@@ -188,7 +167,9 @@ function transform(text: string, source: string): string {
     `editUrl: ${JSON.stringify(edit)}`,
     "---",
     "",
-    `<!-- Generated from ${source} by web/docs/scripts/sync_python.ts. -->`,
+    source.endsWith(".mdx")
+      ? `{/* Generated from ${source} by web/docs/scripts/sync_python.ts. */}`
+      : `<!-- Generated from ${source} by web/docs/scripts/sync_python.ts. -->`,
     "",
     converted.replace(/^\n+/, ""),
   ].join("\n");

@@ -434,6 +434,7 @@ export default defineConfig({
         MobileMenuToggle: "./src/components/MobileMenuToggle.astro",
         PageFrame: "./src/components/PageFrame.astro",
         PageSidebar: "./src/components/PageSidebar.astro",
+        PageTitle: "./src/components/PageTitle.astro",
         Search: "./src/components/Search.astro",
         TwoColumnContent: "./src/components/TwoColumnContent.astro",
         Footer: "./src/components/Footer.astro",

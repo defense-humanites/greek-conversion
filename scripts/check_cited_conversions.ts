@@ -43,6 +43,7 @@ import {
   listPresetMetadata,
   type Preset,
 } from "../src/mod.ts";
+import { PYTHON_PAGES } from "../web/docs/src/documentations.ts";
 
 const ROOT = new URL("../", import.meta.url);
 const FOLDERS = [
@@ -51,6 +52,15 @@ const FOLDERS = [
 ];
 /** Folders of the site generated from elsewhere. */
 const SKIPPED = new Set(["api", "reference"]);
+/**
+ * The Python pages written from TypeScript ones, whose sources this checks
+ * (`web/docs/src/documentations.ts`).
+ */
+const PYTHON_GENERATED = new Set(
+  PYTHON_PAGES.map(([, path]) =>
+    path === "" ? "python/index.mdx" : `python/${path}.md`
+  ),
+);
 
 /**
  * Citations that are not conversions of the library, by page and source
@@ -168,8 +178,11 @@ async function pages(): Promise<string[]> {
     for (const entry of entries) {
       if (!entry.isFile() || !/\.mdx?$/.test(entry.name)) continue;
       const path = `${entry.parentPath}/${entry.name}`.replaceAll("\\", "/");
-      const first = relative(root, path).replaceAll("\\", "/").split("/")[0];
-      if (folder !== FOLDERS[0] && SKIPPED.has(first)) continue;
+      const file = relative(root, path).replaceAll("\\", "/");
+      if (
+        folder !== FOLDERS[0] &&
+        (SKIPPED.has(file.split("/")[0]) || PYTHON_GENERATED.has(file))
+      ) continue;
       files.push(path);
     }
   }

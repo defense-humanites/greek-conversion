@@ -1,5 +1,5 @@
 ---
-title: "Getting started in Python"
+title: "Getting started"
 description: "Install greek-conversion for Python, convert a first text, set a conversion with options and presets, and convert a corpus in one call."
 ---
 
@@ -273,5 +273,5 @@ costs, and how to choose the engine.
   and [letters and text](/python/guide/recipes/letters-and-text/).
 - Every function is described in the [API reference](/python/reference/api/).
 - Before you rely on it, read
-  [Guarantees and limits](/reference/guarantees/); for a word of this
+  [Guarantees and limits](/python/reference/guarantees/); for a word of this
   documentation, see the [Glossary](/guide/glossary/).

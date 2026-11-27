@@ -5,16 +5,31 @@
  * tessera alone. The symbol follows the system's appearance, as the whole
  * site does.
  *
+ * Then the documentation the page belongs to, TypeScript or Python
+ * (`documentations.ts`), a selector that leads to the same page in the
+ * other, or to its home; on a Python page, it takes the orange of the
+ * written, as the page's mark does (`PageTitle.astro`), so that it reads
+ * at once.
+ *
  * Then the version this documentation describes (`versions.ts`): the
  * series of the latest release (1.x) or "next", as main is before 1.0.0.
  * Where both are deployed, a selector leads to the same page in the other.
  */
+import { counterpart, languageOf, LANGUAGES } from "../documentations.ts";
 import { otherVersionHref, series, VERSIONS } from "../versions.ts";
 
 const { siteTitleHref } = Astro.locals.starlightRoute;
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 const other = otherVersionHref(Astro.url.pathname);
 const here = Astro.url.pathname;
+const root = import.meta.env.BASE_URL.replace(/\/$/, "");
+const path = here.slice(root.length) || "/";
+const language = languageOf(path);
+const languages = LANGUAGES.map(({ id, label }) => ({
+  label,
+  current: id === language,
+  href: id === language ? here : `${root}${counterpart(path)}`,
+}));
 const released = VERSIONS.release === null ? null : series(VERSIONS.release);
 // Before 1.0.0, the root serves main alone: the next release.
 const label = VERSIONS.channel === "next" || released === null
@@ -36,11 +51,21 @@ const versions = released === null || other === null ? [] : [
   </picture>
   <span class="name" translate="no">greek <span>conversion</span></span>
 </a>
+<label class:list={["picker", "language", language]}>
+  <span class="sr-only">Documentation for</span>
+  <select data-follow="page">
+    {languages.map(({ label, href, current }) => (
+      <option value={href} selected={current}>
+        {label}
+      </option>
+    ))}
+  </select>
+</label>
 {
   versions.length > 0 ? (
-    <label class="version version-select">
+    <label class="picker version version-select">
       <span class="sr-only">Documentation version</span>
-      <select>
+      <select data-follow="anchor">
         {versions.map(({ label, href, current }) => (
           <option value={href} selected={current}>
             {label}
@@ -54,11 +79,15 @@ const versions = released === null || other === null ? [] : [
 }
 
 <script>
+  // The same page in another version keeps its place; in the other
+  // language, whose headings are not all written the same, the page opens
+  // at its top.
   for (const select of document.querySelectorAll<HTMLSelectElement>(
-    ".version-select select",
+    ".picker select",
   )) {
     select.addEventListener("change", () => {
-      location.href = select.value + location.hash;
+      location.href = select.value +
+        (select.dataset.follow === "anchor" ? location.hash : "");
     });
   }
 </script>
@@ -118,12 +147,12 @@ const versions = released === null || other === null ? [] : [
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
-  .version-select {
+  .picker {
     position: relative;
     display: flex;
     align-items: center;
   }
-  .version-select select {
+  .picker select {
     appearance: none;
     margin: 0;
     padding: 5px 22px 5px 7px;
@@ -136,11 +165,11 @@ const versions = released === null || other === null ? [] : [
     transition: border-color 0.15s ease;
   }
   @media (hover: hover) {
-    .version-select select:hover {
+    .picker select:hover {
       border-color: var(--muted);
     }
   }
-  .version-select::after {
+  .picker::after {
     content: "";
     position: absolute;
     inset-inline-end: 6px;
@@ -150,10 +179,40 @@ const versions = released === null || other === null ? [] : [
     mask: var(--icon-chevron-down) center / contain no-repeat;
     pointer-events: none;
   }
+  /* The documentation: in ink, a step above the version, which qualifies
+     it; on a Python page, in orange, on a tint of it. */
+  .language {
+    flex: none;
+    margin-inline-start: 14px;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .language select {
+    padding-block: 6px;
+  }
+  .language.python {
+    color: var(--to-strong);
+  }
+  .language.python select {
+    border-color: color-mix(in oklab, var(--to) 55%, var(--line));
+    background: color-mix(in oklab, var(--to) 10%, transparent);
+  }
+  @media (hover: hover) {
+    .language.python select:hover {
+      border-color: var(--to);
+    }
+  }
+  .language + .version {
+    margin-inline-start: 8px;
+  }
   /* On a phone, the symbol and the version, to leave the search field its
      room; the name stays for screen readers. */
   @media (max-width: 49.99rem) {
-    .version {
+    .version,
+    .language {
       margin-inline-start: 8px;
     }
     .name {

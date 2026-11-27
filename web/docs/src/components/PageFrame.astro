@@ -9,11 +9,15 @@
  * that makes the sidebar a popover.
  */
 import MobileMenuToggle from "virtual:starlight/components/MobileMenuToggle";
+import { languageOf } from "../documentations.ts";
 
 const { hasSidebar } = Astro.locals.starlightRoute;
+// The documentation the page belongs to, which `theme.css` marks.
+const root = import.meta.env.BASE_URL.replace(/\/$/, "");
+const language = languageOf(Astro.url.pathname.slice(root.length) || "/");
 ---
 
-<div class="page sl-flex">
+<div class="page sl-flex" data-documentation={language}>
   <header class="header"><slot name="header" /></header>
   {
     hasSidebar && (

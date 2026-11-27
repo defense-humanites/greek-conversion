@@ -15,7 +15,9 @@ change.
   (`convert_detailed`, `long_vowels`), its positions count characters as
   Python does, and `convert_many()`, `reencode_many()`, and
   `convert_detailed_many()` take a list of strings in one call.
-  It lives in `python/` and is published with each release.
+  It lives in `python/` and is published with each release; the stability
+  policy covers it, and the documentation site has a Python documentation,
+  from `/python/`, which the header's selector leads to.
 - **`transliteration.rho: "marked"` writes the `h` of rho only for a rough
   breathing that Greek writes**, the second rho of a pair included, and
   reads every `rh` as one: `Πύρρος` gives `Pýrros`, `ῥήτωρ` `rhḗtōr`.

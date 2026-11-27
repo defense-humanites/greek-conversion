@@ -160,20 +160,25 @@ python python/scripts/differential.py /tmp/expected.jsonl --engine v8
 The Python workflow (`.github/workflows/python.yml`) builds the wheel,
 installs it, and runs both on every change.
 
-The Python documentation is a section of the site, `/python/`, with a
-sidebar of its own (`web/docs/src/python_sidebar.ts`). Its getting started
-and its page on the package are written by hand, in
-`web/docs/src/content/docs/python/`. The pages that follow the guide and the
-options reference are generated at each build from their TypeScript pages
+The Python documentation is a section of the site, `/python/`, with a home
+and a sidebar of its own (`web/docs/src/python_sidebar.ts`); the header's
+selector leads from a page to the same page in the other documentation
+(`web/docs/src/documentations.ts`, which lists the pages that have one). Its
+getting started and its page on the package are written by hand, in
+`web/docs/src/content/docs/python/`. Its other pages, the home, the guide,
+and the reference, are generated at each build from their TypeScript pages
 (`web/docs/scripts/sync_python.ts`), whose examples are translated into
-Python (`python_examples.ts`), or given by hand where they do not translate
-(`python_overrides.ts`, which fails when its TypeScript changes). The API
-reference is written from the docstrings, and committed:
+Python (`python_examples.ts`), or given by hand where they do not translate,
+as are the passages that only hold in TypeScript (`python_overrides.ts`,
+which fails when its TypeScript changes). The API reference is written from
+the docstrings, and committed:
 
 ```sh
 node web/docs/scripts/sync_python.ts      # the generated pages
 python python/scripts/check_docs.py       # runs every Python example
 python python/scripts/api_reference.py    # the API reference (--check)
-``` A change to the library's
-exports, options, or errors may need one to `python/js/entry.ts`, whose list
-of option keys the type check keeps complete.
+```
+
+A change to the library's exports, options, or errors may need one to
+`python/js/entry.ts`, whose list of option keys the type check keeps
+complete.

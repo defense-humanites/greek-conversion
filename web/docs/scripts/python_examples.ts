@@ -275,10 +275,22 @@ function layout(
   node: ts.Expression,
   names: Map<string, Name>,
   indent: number,
+  tail = 0,
 ): string {
   const line = expression(node, names);
-  if (indent + line.length <= WIDTH) return line;
+  if (indent + line.length + tail <= WIDTH) return line;
   const inner = strip(node);
+  // A field or an item of a result: the call broken, then its subscripts.
+  if (
+    ts.isElementAccessExpression(inner) || ts.isPropertyAccessExpression(inner)
+  ) {
+    const base = expression(inner.expression, names);
+    if (line.startsWith(base) && line.length > base.length) {
+      const suffix = line.slice(base.length);
+      return layout(inner.expression, names, indent, tail + suffix.length) +
+        suffix;
+    }
+  }
   const comprehension = ts.isCallExpression(inner) &&
     comprehensionParts(inner, names);
   if (comprehension) {

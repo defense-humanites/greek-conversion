@@ -26,12 +26,13 @@ export const onRequest = defineRouteMiddleware((context) => {
     route.pagination = pagination;
   }
   /*
-   * The home page's title is the site's: its tab reads "greek conversion",
-   * not Starlight's "greek conversion | greek conversion".
+   * A home page's title is its own: the tab reads "greek conversion", not
+   * Starlight's "greek conversion | greek conversion", or "greek
+   * conversion for Python".
    */
   if (route.entry.data.template === "splash") {
     const title = route.head.find((entry) => entry.tag === "title");
-    if (title) title.content = route.siteTitle;
+    if (title) title.content = route.entry.data.title;
   }
   /*
    * Every page of the next release's documentation says so, and leads to

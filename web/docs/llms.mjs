@@ -92,8 +92,7 @@ export default function llmsTxt(options) {
             listed += entries.length;
           }
         }
-        // The Python documentation: its own pages, under their sidebar's
-        // order; the pages it shares are those of the TypeScript one.
+        // The Python documentation: its pages, in their sidebar's order.
         const python = options.python.flatMap((group) => group.items)
           .filter(([, path]) => path.startsWith("/python/"))
           .map(([, path]) => {

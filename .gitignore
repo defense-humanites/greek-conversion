@@ -18,6 +18,10 @@ python/build/
 *.egg-info/
 .pytest_cache/
 .venv/
-# The Python pages of the site generated from the guide (web/docs/scripts/sync_python.ts)
-web/docs/src/content/docs/python/guide/
-web/docs/src/content/docs/python/reference/options.md
+# The Python pages of the site written from TypeScript ones
+# (web/docs/scripts/sync_python.ts): all but those written by hand.
+web/docs/src/content/docs/python/index.mdx
+web/docs/src/content/docs/python/guide/*
+!web/docs/src/content/docs/python/guide/getting-started.md
+web/docs/src/content/docs/python/reference/*
+!web/docs/src/content/docs/python/reference/api.md

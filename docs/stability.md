@@ -258,6 +258,31 @@ which its test suite runs. The library relies on the runtime's
 `String.prototype.normalize`, so recognition of characters introduced by a newer
 Unicode version depends on the runtime.
 
+## The Python package
+
+The [`greek-conversion`](https://pypi.org/project/greek-conversion/) package
+on PyPI is the library's distribution for Python: it runs the library of the
+same version in a JavaScript engine embedded in Python. Its version is the
+library's, written as Python writes versions (`1.0.0rc15` for
+`1.0.0-rc.15`), and this policy applies to it as it does to the library,
+with:
+
+- as its public API, what the `greek_conversion` module exports: its
+  functions, classes, constants, and error classes, with their documented
+  fields, and the option keys, written in snake_case
+  (`out_of_scope_behavior`), with the library's values;
+- the same output, losses, positions, and diagnostics as the library of the
+  same version, positions counted in characters as Python counts them;
+- as its runtimes, the Python versions that `requires-python` declares and
+  on which its test suite runs.
+
+A post-release (`1.0.0.post1`) corrects the Python package alone: it
+changes neither the library it runs nor what a conversion gives.
+
+Not covered: the JavaScript engine that runs the library (QuickJS or V8)
+and its version, the modules whose names begin with an underscore, and the
+speed of a call.
+
 ## Pre-releases
 
 Versions with a pre-release tag (`1.0.0-rc.1`, `1.1.0-beta.1`) may contain any

@@ -13,6 +13,93 @@
  * each is replaced before the page is translated, and must be found.
  */
 export const PROSE: Record<string, [string, string][]> = {
+  // What the TypeScript library alone has (the canonical document, its
+  // entry points, its methods of strings), as it is in Python.
+  "docs/presets.md": [
+    [
+      `runtime configurations. Run \`npm run docs:presets\` after changing preset
+metadata or options.`,
+      `runtime configurations.`,
+    ],
+  ],
+  "docs/guarantees.md": [
+    [
+      `subscript, which \`validateDocument()\` rejects`,
+      `subscript, which are invalid in a canonical document`,
+    ],
+    [
+      `  unknown format throws a plain \`RangeError\`, an option
+  group of the wrong type or an input that is not a string a \`TypeError\`. The
+  functions of the \`core\` entry point take readers, writers, and prepared
+  options, which the presets entry point exports and \`prepareOptions()\`
+  returns: given anything else, the name of a format or an object of options
+  included, they throw a \`TypeError\`. The functions of the main and document
+  entry points take prepared options in place of options. A copy made by
+  spreading them, or prepared options given as \`source\`, as a group, or to a
+  converter, throw a \`TypeError\`, which names the preset to write instead.
+`,
+      `  unknown format raises a plain \`ValueError\`, an option
+  group of the wrong type or an input that is not a string a \`TypeError\`. The
+  functions take prepared options (\`prepare_options()\`) in place of options;
+  given to a converter, which takes options, they raise a \`TypeError\`.
+`,
+    ],
+    [
+      `code unit by code unit`,
+      `character by character`,
+    ],
+    [
+      `(\`String.prototype.normalize()\`)`,
+      `(Unicode normalization, in the library)`,
+    ],
+    [
+      `The API documentation (TSDoc of the exported declarations)`,
+      `[API reference](/python/reference/api/)`,
+    ],
+    [
+      `| The canonical document and its validation          | [Document API](/reference/document-api/) and [Validation](/reference/validation/)                                       |
+`,
+      ``,
+    ],
+    [
+      `[Stability policy](/reference/stability/)`,
+      `[Stability policy](/reference/stability/#the-python-package)`,
+    ],
+  ],
+  "docs/information-loss.md": [
+    [
+      `excludes invalid or ambiguous combinations. Use
+\`validateDocument()\` when that distinction matters.`,
+      `excludes invalid or ambiguous combinations.`,
+    ],
+    [
+      `such a document is already invalid for
+  \`validateDocument()\`, and`,
+      `such a document is already invalid, and`,
+    ],
+    [
+      `as \`toUpperCase()\`
+  writes it`,
+      `as \`str.upper()\`
+  writes it`,
+    ],
+  ],
+  "docs/greek-unicode.md": [
+    [
+      `as
+\`toUpperCase()\` does`,
+      `as
+\`str.upper()\` does`,
+    ],
+  ],
+  // The home page, one level deeper, says what it presents, and its hero
+  // what it is.
+  "index.mdx": [
+    ["title: greek conversion\n", "title: greek conversion for Python\n"],
+    ["description: A TypeScript library", "description: A Python library"],
+    ["../../components/HomeHero.astro", "../../../components/HomeHero.astro"],
+    ["<HomeHero>", '<HomeHero language="python">'],
+  ],
   // The library suggests the camelCase key for a snake_case one; Python
   // refuses the camelCase key and gives its snake_case spelling.
   "guide/converters.md": [[
@@ -114,6 +201,82 @@ styled = reencode(
     greek={"acute": "oxia", "question_mark": "greek"},
 )
 [f"{ord(char):x}" for char in styled]  # → ['1f71', '37e']
+\`\`\``,
+  },
+  // A function of the reader's.
+  "docs/information-loss.md#0": {
+    source: "0c480b0b34da",
+    markdown: `\`\`\`python
+from greek_conversion import ConversionOptions, Format, convert
+
+
+def is_stable(
+    text: str, source: Format, target: Format, options: ConversionOptions
+) -> bool:
+    once = convert(text, source, target, options)
+    twice = convert(once, target, target, options)
+    return once == twice
+
+
+is_stable(
+    "Ἡ τοῦ Ὁμήρου Ἰλιάς",
+    "greek",
+    "transliteration",
+    {"preset": "ala-lc-ancient"},
+)
+# → True
+\`\`\``,
+  },
+  // Code points.
+  "docs/greek-unicode.md#3": {
+    source: "36256589b9ba",
+    markdown: `\`\`\`python
+from greek_conversion import convert
+
+decomposed = convert(
+    "ἄ", "greek", "greek", greek={"composition": "decomposed"}
+)
+[f"{ord(char):x}" for char in decomposed]  # → ['3b1', '313', '301']
+\`\`\``,
+  },
+  "docs/greek-unicode.md#4": {
+    source: "766d95a67917",
+    markdown: `\`\`\`python
+from greek_conversion import convert, reencode
+
+
+def scalar(text: str, at: int) -> str:
+    return f"U+{ord(text[at]):04X}"
+
+
+# No polytonic mark: GREEK SMALL LETTER OMICRON WITH TONOS.
+scalar(reencode("λόγος", "greek"), 1)  # → U+03CC
+
+# A breathing in the output: GREEK SMALL LETTER OMICRON WITH OXIA.
+scalar(reencode("ὁ λόγος", "greek"), 3)  # → U+1F79
+
+monotonic = convert(
+    "ὁ λόγος", "greek", "greek", greek={"accentuation": "monotonic"}
+)
+monotonic  # → ο λόγος
+scalar(monotonic, 3)  # → U+03CC
+\`\`\``,
+  },
+  "docs/greek-unicode.md#5": {
+    source: "3f42fbca3e9f",
+    markdown: `\`\`\`python
+from greek_conversion import reencode
+
+exact = reencode(
+    "ά;·",
+    "greek",
+    greek={
+        "acute": "oxia",
+        "question_mark": "greek",
+        "ano_teleia": "greek",
+    },
+)
+[f"{ord(char):x}" for char in exact]  # → ['1f71', '37e', '387']
 \`\`\``,
   },
 };
