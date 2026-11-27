@@ -7,6 +7,20 @@ change.
 
 ## [Unreleased]
 
+## [1.0.0-rc.15] - 2026-11-27
+
+Fifteenth release candidate for `1.0.0`. A Python package, `greek-conversion`
+on PyPI, runs the library with the same results, its functions and options
+written in snake_case. ISO 843, ALA-LC Modern, and BnF write a double rho
+without breathings `rr`, as their tables do (`transliteration.rho:
+"marked"`), and `bnf-core` is now `bnf-ancient`. A bundle of the `core` entry
+point with a preset is 2 to 13 % smaller with gzip, the error for an unknown
+option, preset, or format suggests the name that was likely meant, and every
+page of the documentation site is also in Markdown, listed in `llms.txt`.
+Fixes make more outputs convert again to themselves, in numerals, rough
+breathings, Beta Code, and title case, and `convertDetailed()` reports more
+of what does not convert back. Outputs change: the migration guide says how.
+
 ### Added
 
 - **A Python package, `greek-conversion` on PyPI**, runs the library in a
@@ -2255,7 +2269,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.14...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.15...HEAD
+[1.0.0-rc.15]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.14...v1.0.0-rc.15
 [1.0.0-rc.14]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.13...v1.0.0-rc.14
 [1.0.0-rc.13]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.12...v1.0.0-rc.13
 [1.0.0-rc.12]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.11...v1.0.0-rc.12
