@@ -68,9 +68,11 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           # The newest stable version (no pre-release suffix) that holds the
-          # site.
+          # site. The 0.x tags belong to the legacy branch, which has no site:
+          # they are left out, even if one is set on a commit of main by
+          # mistake, as v0.14.5 once was.
           tag=""
-          for candidate in $(git tag --list 'v*' --sort=-v:refname); do
+          for candidate in $(git tag --list 'v[1-9]*' --sort=-v:refname); do
             case "$candidate" in *-*) continue ;; esac
             if git cat-file -e "$candidate:web/docs/package.json" 2>/dev/null; then
               tag="$candidate"
