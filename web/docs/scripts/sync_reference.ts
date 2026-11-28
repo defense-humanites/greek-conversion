@@ -10,8 +10,8 @@
  *
  * The project's marks (`docs/assets/`) are copied too, into `public/`: the
  * symbol of the header and the vertical logo of the home page, light and
- * dark, the favicon, and the social card that pages give as their sharing
- * image (`social.png`).
+ * dark, the favicon, and the social cards that pages give as their sharing
+ * image (`social.png`, and `social-python.png` under `/python/`).
  *
  * Run with `npm run sync`, which `npm run dev` and `npm run build` do first.
  */
@@ -68,11 +68,18 @@ for (
   );
 }
 
-// The sharing image (Open Graph), the design system's social card.
-await cp(
-  new URL("assets/greek-conversion-social-clair.png", DOCS),
-  new URL("social.png", PUBLIC),
-);
+// The sharing images (Open Graph), the design system's social cards: the
+// TypeScript library's, and the Python package's for the pages under
+// /python/.
+for (const [name, copy] of [
+  ["social-clair", "social"],
+  ["social-python-clair", "social-python"],
+]) {
+  await cp(
+    new URL(`assets/greek-conversion-${name}.png`, DOCS),
+    new URL(`${copy}.png`, PUBLIC),
+  );
+}
 
 console.log(`${names.length} reference documents synced from docs/.`);
 

@@ -116,11 +116,15 @@ expect(
 );
 /** The text of `docs/assets/greek-conversion-social-clair.png`. */
 const CARD =
-  "Convert Ancient and Modern Greek to and from Beta Code or Latin script, with standards-based presets and information-loss diagnostics.";
+  "Convert Ancient, Byzantine, and Modern Greek to and from Beta Code or Latin script, with atomic options composed into standards-based presets, and information-loss diagnostics.";
 /** Its foot: the package, and what and where it is. */
 const FOOT = "@humanities/greek-conversion, TypeScript library on npm and JSR.";
 const card = "greek conversion: " + CARD[0].toLowerCase() + CARD.slice(1) +
   " " + FOOT;
+/** The foot of `docs/assets/greek-conversion-social-python-clair.png`, the
+ * Python package's card, which has the same description: the logo's "For
+ * Python", and the command that installs it. */
+const PYTHON_FOOT = "For Python: pip install greek-conversion.";
 const playground = await read("web/playground/index.html");
 expect(
   "the text alternative of the site's social card",
@@ -135,6 +139,14 @@ expect(
   card,
 );
 const context7 = JSON.parse(await read("context7.json"));
+expect(
+  "the text alternative of the Python documentation's social card",
+  plain(
+    (await read("web/docs/src/routeData.ts")).match(/\balt:\s*"([^"]*)"/)
+      ?.[1],
+  ),
+  card.replace(FOOT, PYTHON_FOOT),
+);
 expect(
   "the description of context7.json, the index that coding agents query",
   context7.description.slice(0, sentence.length),

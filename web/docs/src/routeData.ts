@@ -2,6 +2,18 @@ import { defineRouteMiddleware } from "@astrojs/starlight/route-data";
 import { isPythonPage, pythonNavigation } from "./python_sidebar.ts";
 import { otherVersionHref, VERSIONS } from "./versions.ts";
 
+/**
+ * The Python package's social card, which the pages under `/python/` give
+ * as their sharing image in place of the TypeScript library's
+ * (`astro.config.mjs`); `scripts/check_metadata.ts` checks its text
+ * alternative against the card.
+ */
+const PYTHON_CARD = {
+  image: "social-python.png",
+  alt:
+    "greek conversion: convert Ancient, Byzantine, and Modern Greek to and from Beta Code or Latin script, with atomic options composed into standards-based presets, and information-loss diagnostics. For Python: pip install greek-conversion.",
+};
+
 export const onRequest = defineRouteMiddleware((context) => {
   const route = context.locals.starlightRoute;
   /*
@@ -17,7 +29,7 @@ export const onRequest = defineRouteMiddleware((context) => {
    * its pages lead from one to the next in its order. It is "greek
    * conversion for Python", as its home says under the logo: in the tab
    * ("Performance | greek conversion for Python"), and as the site's name
-   * where a link to the page is shared.
+   * where a link to the page is shared, with the package's social card.
    */
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   if (isPythonPage(context.url.pathname, base)) {
@@ -35,9 +47,15 @@ export const onRequest = defineRouteMiddleware((context) => {
           ` | ${name}`,
         );
       }
-      if (entry.tag === "meta" && entry.attrs?.property === "og:site_name") {
-        entry.attrs.content = name;
-      }
+      const attrs = entry.attrs;
+      const meta = attrs?.property ?? attrs?.name;
+      if (meta === "og:site_name") attrs!.content = name;
+      else if (meta === "og:image" || meta === "twitter:image") {
+        attrs!.content = String(attrs!.content).replace(
+          /social\.png$/,
+          PYTHON_CARD.image,
+        );
+      } else if (meta === "og:image:alt") attrs!.content = PYTHON_CARD.alt;
     }
   }
   /*
