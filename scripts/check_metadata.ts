@@ -121,8 +121,9 @@ const FOOT = "@humanities/greek-conversion, TypeScript library on npm and JSR.";
 const card = "greek conversion: " + CARD[0].toLowerCase() + CARD.slice(1) +
   " " + FOOT;
 /** The foot of `docs/assets/greek-conversion-social-python-clair.png`, the
- * Python package's card, which has the same description. */
-const PYTHON_FOOT = "greek-conversion, Python library on PyPI.";
+ * Python package's card, which has the same description: the logo's "For
+ * Python", and the command that installs it. */
+const PYTHON_FOOT = "For Python: pip install greek-conversion.";
 const playground = await read("web/playground/index.html");
 expect(
   "the text alternative of the site's social card",

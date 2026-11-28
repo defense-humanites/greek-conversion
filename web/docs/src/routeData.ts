@@ -11,7 +11,7 @@ import { otherVersionHref, VERSIONS } from "./versions.ts";
 const PYTHON_CARD = {
   image: "social-python.png",
   alt:
-    "greek conversion: convert Ancient, Byzantine, and Modern Greek to and from Beta Code or Latin script, with atomic options composed into standards-based presets, and information-loss diagnostics. greek-conversion, Python library on PyPI.",
+    "greek conversion: convert Ancient, Byzantine, and Modern Greek to and from Beta Code or Latin script, with atomic options composed into standards-based presets, and information-loss diagnostics. For Python: pip install greek-conversion.",
 };
 
 export const onRequest = defineRouteMiddleware((context) => {
