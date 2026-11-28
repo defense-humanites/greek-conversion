@@ -1,5 +1,7 @@
 {
   "$schema": "https://context7.com/schema/context7.json",
+  "url": "https://context7.com/defense-humanites/greek-conversion",
+  "public_key": "pk_xmNS5j49kUH1NIRluts62",
   "projectTitle": "greek-conversion",
   "description": "Convert Ancient, Byzantine, and Modern Greek between Greek script, Beta Code, and Latin script, with atomic options composed into standards-based presets, and information-loss diagnostics. npm and JSR package: @humanities/greek-conversion. Python package, on PyPI: greek-conversion.",
   "folders": [
