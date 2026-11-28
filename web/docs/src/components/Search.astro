@@ -21,7 +21,10 @@ import Default from "@astrojs/starlight/components/Search.astro";
    * Starlight makes the search's interface without handing it out: the
    * filter is set as it is made, when it takes its component, before its
    * first search. This script loads the interface before Starlight does,
-   * which waits for the browser to be idle, and so runs first.
+   * which waits for the browser to be idle, and so runs first. The site
+   * depends on `@pagefind/default-ui` itself, at the version Starlight
+   * resolves, for the import to resolve where packages are not hoisted
+   * (pnpm), and to be the module Starlight loads.
    */
   const DOCUMENTATION =
     document.querySelector<HTMLElement>("[data-documentation]")?.dataset

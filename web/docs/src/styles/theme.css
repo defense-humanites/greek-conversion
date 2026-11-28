@@ -323,6 +323,17 @@ h1#_top {
   content: "—" / "none";
   color: var(--muted);
 }
+/* A column of figures (`alignNumbers`, in astro.config.mjs): aligned to
+   the right, in figures of one width, so that units line up and the
+   larger numbers stand out by their length. A figure stays on one line
+   with its unit; the column of text beside it wraps instead. */
+.sl-markdown-content :is(th, td).numeric {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.sl-markdown-content td.numeric {
+  white-space: nowrap;
+}
 /* Capitals would change Greek in a heading's code. */
 .sl-markdown-content th code {
   letter-spacing: normal;

@@ -12,11 +12,12 @@
  * and says in its foot that the package is a TypeScript library; its text
  * alternative, in the site and the playground, reads the card in order. The
  * card itself, an image, is checked by eye. `context7.json`, which tells
- * Context7 what to index for coding agents, starts with the sentence too.
+ * Context7 what to index for coding agents, starts with the sentence too, and
+ * its fields stay within the lengths that Context7 accepts.
  * The Python package (`python/`) repeats it as the description of its
  * `pyproject.toml` and in the documentation of its module, and its README's
- * tagline, after "A Python library that converts", and its home page, under
- * "for Python", after "A library that converts".
+ * tagline and its home page, under the logo "for Python", after "A library
+ * that converts".
  *
  * It checks, last, that the site has one address, the `homepage` of
  * `package.json`: the one it is built for, and the one every file that
@@ -137,6 +138,7 @@ expect(
   ),
   card,
 );
+const context7 = JSON.parse(await read("context7.json"));
 expect(
   "the text alternative of the Python documentation's social card",
   plain(
@@ -147,12 +149,27 @@ expect(
 );
 expect(
   "the description of context7.json, the index that coding agents query",
-  JSON.parse(await read("context7.json")).description.slice(
-    0,
-    sentence.length,
-  ),
+  context7.description.slice(0, sentence.length),
   sentence,
 );
+// Context7 refuses the whole file, and with it the claim of the library,
+// when a field is longer than it accepts.
+const context7Limits: [string, string, number][] = [
+  ["projectTitle", context7.projectTitle, 100],
+  ["description", context7.description, 500],
+  ...context7.rules.map((rule: string, index: number): [
+    string,
+    string,
+    number,
+  ] => [`rules.${index}`, rule, 255]),
+];
+for (const [field, text, limit] of context7Limits) {
+  if (text.length > limit) {
+    problems.push(
+      `context7.json: ${field} has ${text.length} characters, and Context7 accepts ${limit}`,
+    );
+  }
+}
 expect(
   "the description of python/pyproject.toml",
   (await read("python/pyproject.toml")).match(/^description = "([^"]*)"$/m)
@@ -171,7 +188,7 @@ expect(
 expect(
   "the tagline of the Python package's README",
   plain((await read("python/README.md")).match(/<b>([^<]*)<\/b>/)?.[1]),
-  sentence.replace(/^Convert /, "A Python library that converts "),
+  sentence.replace(/^Convert /, "A library that converts "),
 );
 expect(
   "the first sentence of the CITATION.cff abstract",

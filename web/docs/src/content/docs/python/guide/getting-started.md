@@ -23,7 +23,7 @@ pip install greek-conversion
 
 It is the Python distribution of the TypeScript library of the same name,
 which it runs in a JavaScript engine embedded in Python, with the same
-results: [How the package works](/python/package/) says what this means for
+results: [The Python package](/python/package/) says what this means for
 you. The [playground](/playground/) converts in the browser, with every
 preset and option, without installing anything.
 
@@ -244,19 +244,24 @@ library's engine has a fixed cost that they pay once:
 ```python
 from greek_conversion import convert_detailed_many, convert_many
 
-words = ["μῆνιν", "ἄειδε", "θεὰ"]
+words = ["ἄνδρα", "μοι", "ἔννεπε"]
 
 convert_many(words, "greek", "beta-code", preset="tlg-core")
-# → ['MH=NIN', 'A)/EIDE', 'QEA\\']
+# → ['A)/NDRA', 'MOI', 'E)/NNEPE']
 
 results = convert_detailed_many(
     words, "greek", "transliteration", preset="sbl-general"
 )
-[result.lossy for result in results]  # → [True, True, True]
+[(result.output, result.lossy) for result in results]
+# → [('andra', True), ('moi', False), ('ennepe', True)]
 ```
 
-[How the package works](/python/package/#engines-and-speed) gives what a call
-costs, and how to choose the engine.
+Each result is the one `convert_detailed()` gives for its string: the SBL's
+general style leaves out the breathing and the accent of the two words that
+have them, and loses nothing of `μοι`, which has none.
+
+[Performance](/python/guide/performance/) gives what a call costs, and how
+to choose the engine.
 
 ## Next steps
 

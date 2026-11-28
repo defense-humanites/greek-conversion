@@ -26,7 +26,10 @@ export const onRequest = defineRouteMiddleware((context) => {
   if (route.entry.data.template === "splash") route.hasSidebar = true;
   /*
    * The Python documentation (`/python/…`) has a sidebar of its own, and
-   * its pages lead from one to the next in its order.
+   * its pages lead from one to the next in its order. It is "greek
+   * conversion for Python", as its home says under the logo: in the tab
+   * ("Performance | greek conversion for Python"), and as the site's name
+   * where a link to the page is shared, with the package's social card.
    */
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   if (isPythonPage(context.url.pathname, base)) {
@@ -36,14 +39,23 @@ export const onRequest = defineRouteMiddleware((context) => {
     );
     route.sidebar = sidebar;
     route.pagination = pagination;
-    for (const { attrs } of route.head) {
-      const name = attrs?.property ?? attrs?.name;
-      if (name === "og:image" || name === "twitter:image") {
+    const name = `${route.siteTitle} for Python`;
+    for (const entry of route.head) {
+      if (entry.tag === "title" && typeof entry.content === "string") {
+        entry.content = entry.content.replace(
+          ` | ${route.siteTitle}`,
+          ` | ${name}`,
+        );
+      }
+      const attrs = entry.attrs;
+      const meta = attrs?.property ?? attrs?.name;
+      if (meta === "og:site_name") attrs!.content = name;
+      else if (meta === "og:image" || meta === "twitter:image") {
         attrs!.content = String(attrs!.content).replace(
           /social\.png$/,
           PYTHON_CARD.image,
         );
-      } else if (name === "og:image:alt") attrs!.content = PYTHON_CARD.alt;
+      } else if (meta === "og:image:alt") attrs!.content = PYTHON_CARD.alt;
     }
   }
   /*

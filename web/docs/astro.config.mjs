@@ -105,6 +105,71 @@ function markGreek() {
 }
 
 /**
+ * A column of figures reads down its units: each cell of a column whose
+ * body holds figures alone, as times, sizes, counts, or ratios do ("2.8
+ * ms", "~40 µs a word", "10–20× Node", "1,671"), is aligned to the right,
+ * its header with it, in figures of one width (`.numeric`, theme.css). A
+ * cell may be empty, or a dash for none; a column with any other cell, as
+ * a column of names or of examples, keeps its alignment. A column aligned
+ * in its Markdown keeps it.
+ */
+function alignNumbers() {
+  /** @param {any} node @returns {string} */
+  const text = (node) =>
+    node.type === "text"
+      ? node.value
+      : (node.children ?? []).map(text).join("");
+  const FIGURE = /^[~≈<>±]?\s*[+−-]?\d/;
+  const NONE = /^(|—|-)$/;
+  /** @param {any} row */
+  const cells = (row) =>
+    (row.children ?? []).filter((/** @type {any} */ cell) =>
+      cell.type === "element" && (cell.tagName === "td" || cell.tagName === "th")
+    );
+  /** @param {any} node @param {string} tag @returns {any[]} */
+  const find = (node, tag) =>
+    node.type === "element" && node.tagName === tag
+      ? [node]
+      : (node.children ?? []).flatMap((/** @type {any} */ child) =>
+        find(child, tag)
+      );
+  /** @param {any} table */
+  const align = (table) => {
+    const head = find(table, "thead").flatMap((part) => find(part, "tr"));
+    const body = find(table, "tbody").flatMap((part) => find(part, "tr"));
+    if (body.length === 0) return;
+    const width = Math.max(...body.map((row) => cells(row).length));
+    for (let column = 0; column < width; column++) {
+      const values = body.map((row) =>
+        text(cells(row)[column] ?? { type: "text", value: "" }).trim()
+      );
+      const figures = values.every((value) =>
+        FIGURE.test(value) || NONE.test(value)
+      ) && values.some((value) => FIGURE.test(value));
+      if (!figures) continue;
+      for (const row of [...head, ...body]) {
+        const cell = cells(row)[column];
+        if (cell === undefined || cell.properties?.align) continue;
+        const className = cell.properties?.className ?? [];
+        cell.properties = {
+          ...cell.properties,
+          className: [...className, "numeric"],
+        };
+      }
+    }
+  };
+  /** @param {any} node */
+  const visit = (node) => {
+    if (node.type === "element" && node.tagName === "table") {
+      align(node);
+      return;
+    }
+    for (const child of node.children ?? []) visit(child);
+  };
+  return () => (/** @type {any} */ tree) => visit(tree);
+}
+
+/**
  * Each table in a box of its own (`.table-frame`), which scrolls when the
  * table is wider than the column and draws the panel: the table itself
  * then takes the column's whole width, its rows' lines with it.
@@ -419,6 +484,7 @@ export default defineConfig({
         markExternal(),
         markGreek(),
         breakTableCode(),
+        alignNumbers(),
         frameTables(),
       ],
     }),
