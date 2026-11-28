@@ -14,7 +14,10 @@ export const onRequest = defineRouteMiddleware((context) => {
   if (route.entry.data.template === "splash") route.hasSidebar = true;
   /*
    * The Python documentation (`/python/…`) has a sidebar of its own, and
-   * its pages lead from one to the next in its order.
+   * its pages lead from one to the next in its order. It is "greek
+   * conversion for Python", as its home says under the logo: in the tab
+   * ("Performance | greek conversion for Python"), and as the site's name
+   * where a link to the page is shared.
    */
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   if (isPythonPage(context.url.pathname, base)) {
@@ -24,6 +27,18 @@ export const onRequest = defineRouteMiddleware((context) => {
     );
     route.sidebar = sidebar;
     route.pagination = pagination;
+    const name = `${route.siteTitle} for Python`;
+    for (const entry of route.head) {
+      if (entry.tag === "title" && typeof entry.content === "string") {
+        entry.content = entry.content.replace(
+          ` | ${route.siteTitle}`,
+          ` | ${name}`,
+        );
+      }
+      if (entry.tag === "meta" && entry.attrs?.property === "og:site_name") {
+        entry.attrs.content = name;
+      }
+    }
   }
   /*
    * A home page's title is its own: the tab reads "greek conversion", not

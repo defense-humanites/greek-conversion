@@ -211,21 +211,22 @@ installation:
 
 The package runs the library in one of two engines:
 
-| Engine    | Installed with                           | Startup | Cost per call | Long text      |
-| --------- | ---------------------------------------- | ------- | ------------- | -------------- |
-| QuickJS   | the package: `quickjs-ng`, a 2 MB wheel  | ~25 ms  | ~40 µs        | 10 to 20× Node |
-| V8        | `pip install "greek-conversion[v8]"`: `mini-racer`, 22 MB | ~80 ms | 0.1 to 0.5 ms | ~1.7× Node |
+| Engine    | Installed with                           | Start   | One word | A long text | Many strings at once |
+| --------- | ---------------------------------------- | ------- | -------- | ----------- | -------------------- |
+| QuickJS   | the package: `quickjs-ng`, a 2 MB wheel  | ~70 ms  | ~50 µs   | 10–20× Node | ~40 µs a word        |
+| V8        | `pip install "greek-conversion[v8]"`: `mini-racer`, 22 MB | ~130 ms | ~0.4 ms | 1.4–3× Node | ~4 µs a word |
 
 [quickjs-ng](https://github.com/quickjs-ng/quickjs) is the maintained fork of
-QuickJS: quick to start, and quick for many small calls. V8 is the engine of
-Chrome and Node: quicker on long texts, slower to call. When `mini-racer` is
-installed, the package uses V8; choose otherwise with
+QuickJS: quick to start, and quick to call, so that it converts a word or a
+sentence at a time several times faster than V8. V8 is the engine of Chrome
+and Node: it converts almost as fast as Node, but each call waits for it,
+so that it is the quicker for long texts, and for lists of strings given at
+once to `convert_many()`, `reencode_many()`, or `convert_detailed_many()`.
+When `mini-racer` is installed, the package uses V8; choose otherwise with
 `set_engine("quickjs")` or the environment variable
-`GREEK_CONVERSION_ENGINE`, for instance for many short strings converted
-one by one. To convert a corpus, `convert_many()` pays the cost of a call
-once for the whole list, as do `reencode_many()` and
-`convert_detailed_many()`: with V8, they convert within twice the time of
-Node, and 20 to 100 times faster than one call per string.
+`GREEK_CONVERSION_ENGINE`.
+[Performance](https://greek-conversion.humanites.fr/python/guide/performance/)
+gives the measures, and how to keep conversions fast.
 
 ## Documentation
 

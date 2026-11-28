@@ -79,43 +79,21 @@ both are `ValueError`s, and keep their details (`path`, `received`,
 
 The package runs the library in one of two engines:
 
-| Engine  | Installed with                                            | Start  | One call      | A long text    |
-| ------- | --------------------------------------------------------- | ------ | ------------- | -------------- |
-| QuickJS | the package: `quickjs-ng`, a 2 MB wheel                   | ~25 ms | ~40 µs        | 10 to 20× Node |
-| V8      | `pip install "greek-conversion[v8]"`: `mini-racer`, 22 MB | ~80 ms | 0.1 to 0.5 ms | ~1.7× Node     |
+| Engine  | Installed with                                            | Start   | One word | A long text | Many strings at once |
+| ------- | --------------------------------------------------------- | ------- | -------- | ----------- | -------------------- |
+| QuickJS | the package: `quickjs-ng`, a 2 MB wheel                   | ~70 ms  | ~50 µs   | 10–20× Node | ~40 µs a word        |
+| V8      | `pip install "greek-conversion[v8]"`: `mini-racer`, 22 MB | ~130 ms | ~0.4 ms  | 1.4–3× Node | ~4 µs a word         |
 
 [quickjs-ng](https://github.com/quickjs-ng/quickjs), the maintained fork of
-QuickJS, is quick to start and quick for many small calls. V8, the engine of
-Chrome and Node, is quicker on long texts, and slower to call. When
-`mini-racer` is installed, the package uses V8; `set_engine()` or the
-environment variable `GREEK_CONVERSION_ENGINE` chooses otherwise:
-
-```python
-from greek_conversion import engine_name, set_engine
-
-set_engine("quickjs")
-engine_name()  # → quickjs
-set_engine(None)
-```
-
-**Convert many strings in one call.** Each call into the engine has a fixed
-cost, which `convert_many()`, `reencode_many()`, and
-`convert_detailed_many()` pay once for a whole list. With V8, they convert
-the words of a text within twice the time of Node, and 20 to 100 times
-faster than one call a word; with QuickJS, whose cost lies more in the
-conversion itself, `reencode_many()` and `convert_many()` gain about a third.
-
-**Prepare options used in a loop.** The defaults and the presets are already
-resolved once; options of your own can be, with `prepare_options()`, and
-then given in their place:
-
-```python
-from greek_conversion import convert_many, prepare_options
-
-scheme = prepare_options(transliteration={"chi": "kh", "upsilon": "u"})
-convert_many(["ψυχή", "χάος"], "greek", "transliteration", scheme)
-# → ['psukhḗ', 'kháos']
-```
+QuickJS, starts quickly and calls quickly: for a word or a sentence at a
+time, it is the quicker. V8, the engine of Chrome and Node, converts almost
+as fast as Node, but each call waits for it: for long texts, and for lists
+of strings given at once to `convert_many()`, `reencode_many()`, or
+`convert_detailed_many()`, it is the quicker. When `mini-racer` is
+installed, the package uses V8; `set_engine()` or the environment variable
+`GREEK_CONVERSION_ENGINE` chooses otherwise.
+[Performance](/python/guide/performance/) gives the measures, and how to
+keep conversions fast.
 
 ## Processes and threads
 

@@ -23,5 +23,6 @@ python/build/
 web/docs/src/content/docs/python/index.mdx
 web/docs/src/content/docs/python/guide/*
 !web/docs/src/content/docs/python/guide/getting-started.md
+!web/docs/src/content/docs/python/guide/performance.md
 web/docs/src/content/docs/python/reference/*
 !web/docs/src/content/docs/python/reference/api.md

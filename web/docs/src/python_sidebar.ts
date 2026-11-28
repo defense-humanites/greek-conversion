@@ -90,7 +90,10 @@ export const PYTHON_SIDEBAR: readonly Group[] = [
   },
   {
     label: "Going further",
-    items: [["Converters, options, and errors", "/python/guide/converters/"]],
+    items: [
+      ["Converters, options, and errors", "/python/guide/converters/"],
+      ["Performance", "/python/guide/performance/"],
+    ],
   },
   {
     label: "Reference",
