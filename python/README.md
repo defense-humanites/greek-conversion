@@ -212,7 +212,7 @@ installation:
 The package runs the library in one of two engines:
 
 | Engine  | Installed with                                            | Start     | One word  | A long text     | Many strings at once |
-| ------- | --------------------------------------------------------- | --------- | --------- | --------------- | -------------------- |
+| ------- | --------------------------------------------------------- | --------: | --------: | --------------: | -------------------: |
 | QuickJS | the package: `quickjs-ng`, a 2 MB wheel                   | **70 ms** | **50 µs** | 10–20× Node     | 40 µs a word         |
 | V8      | `pip install "greek-conversion[v8]"`: `mini-racer`, 22 MB | 130 ms    | 400 µs    | **1.4–3× Node** | **4 µs a word**      |
 
