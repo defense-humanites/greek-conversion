@@ -4,7 +4,7 @@ description: "How fast the Python package converts on each engine, what a call c
 ---
 
 A conversion runs in the JavaScript engine that the package embeds
-([How the package works](/python/package/)). Its time is that of the
+([The Python package](/python/package/)). Its time is that of the
 conversion in the engine, and a cost that every call pays to cross into it,
 with the text and the options, and back, with the result. The two engines
 share this time out differently: QuickJS converts more slowly than Node.js,

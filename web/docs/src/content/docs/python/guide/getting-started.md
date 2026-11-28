@@ -23,7 +23,7 @@ pip install greek-conversion
 
 It is the Python distribution of the TypeScript library of the same name,
 which it runs in a JavaScript engine embedded in Python, with the same
-results: [How the package works](/python/package/) says what this means for
+results: [The Python package](/python/package/) says what this means for
 you. The [playground](/playground/) converts in the browser, with every
 preset and option, without installing anything.
 
@@ -260,8 +260,8 @@ Each result is the one `convert_detailed()` gives for its string: the SBL's
 general style leaves out the breathing and the accent of the two words that
 have them, and loses nothing of `μοι`, which has none.
 
-[How the package works](/python/package/#engines-and-speed) gives what a call
-costs, and how to choose the engine.
+[Performance](/python/guide/performance/) gives what a call costs, and how
+to choose the engine.
 
 ## Next steps
 

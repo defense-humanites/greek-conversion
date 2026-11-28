@@ -24,7 +24,6 @@ export const PYTHON_SIDEBAR: readonly Group[] = [
       ["Getting started", "/python/guide/getting-started/"],
       ["How it works", "/python/guide/how-it-works/"],
       ["Glossary", "/python/guide/glossary/"],
-      ["How the package works", "/python/package/"],
     ],
   },
   {
@@ -91,6 +90,7 @@ export const PYTHON_SIDEBAR: readonly Group[] = [
   {
     label: "Going further",
     items: [
+      ["The Python package", "/python/package/"],
       ["Converters, options, and errors", "/python/guide/converters/"],
       ["Performance", "/python/guide/performance/"],
     ],

@@ -1,5 +1,5 @@
 ---
-title: "How the package works"
+title: "The Python package"
 description: "The Python package runs the TypeScript library in an embedded engine: the same results and versions, Python's names and positions, the engines and their speed, processes, threads, and types."
 ---
 
