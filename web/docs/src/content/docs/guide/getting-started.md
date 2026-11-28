@@ -17,7 +17,10 @@ The package is published as `@humanities/greek-conversion` on
 [JSR](https://jsr.io/@humanities/greek-conversion), with the same named
 exports in both. It is ESM-only and ships its own type declarations. It
 has no dependencies and uses no runtime-specific API: it runs in Node.js,
-from version 24, and in browsers, as the playground does.
+from version 24, and in browsers, as the playground does. The unscoped
+package `greek-conversion` is the deprecated `0.14.x` series: the
+[migration guide](https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md#from-014x)
+shows how to move from it.
 
 ```sh
 # npm
