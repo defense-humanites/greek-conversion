@@ -6,11 +6,45 @@ name: Python
 # library's in Node over the inputs of the differential test, and the
 # examples of its documentation run. It is published
 # by publish.yml, after JSR and npm.
+#
+# It runs when the package, the library, or the documentation that the
+# Python pages are made from changes, and every Monday, or by hand. A pull
+# request compares one case in ten with Node; a push to main, the weekly
+# run, and a manual one compare them all.
 
 on:
   push:
     branches: [main]
+    paths:
+      - .github/workflows/python.yml
+      - LICENSE
+      - docs/**
+      - package.json
+      - package-lock.json
+      - python/**
+      - src/**
+      - tests/differential.ts
+      - tests/differential_inputs.ts
+      - web/docs/scripts/**
+      - web/docs/src/content/docs/**
+      - web/docs/src/documentations.ts
   pull_request:
+    paths:
+      - .github/workflows/python.yml
+      - LICENSE
+      - docs/**
+      - package.json
+      - package-lock.json
+      - python/**
+      - src/**
+      - tests/differential.ts
+      - tests/differential_inputs.ts
+      - web/docs/scripts/**
+      - web/docs/src/content/docs/**
+      - web/docs/src/documentations.ts
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -69,7 +103,11 @@ jobs:
           python python/scripts/api_reference.py --check
       - name: Compare with the library in Node
         if: matrix.differential
+        env:
+          # One case in ten for a pull request: about 21,000 comparisons on
+          # each engine, instead of 214,000.
+          EVERY: ${{ github.event_name == 'pull_request' && '10' || '1' }}
         run: |
           node python/scripts/differential_dump.ts > "$RUNNER_TEMP/expected.jsonl"
-          python python/scripts/differential.py "$RUNNER_TEMP/expected.jsonl" --engine quickjs
-          python python/scripts/differential.py "$RUNNER_TEMP/expected.jsonl" --engine v8
+          python python/scripts/differential.py "$RUNNER_TEMP/expected.jsonl" --engine quickjs --every "$EVERY"
+          python python/scripts/differential.py "$RUNNER_TEMP/expected.jsonl" --engine v8 --every "$EVERY"
