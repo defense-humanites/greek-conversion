@@ -7,6 +7,15 @@ change.
 
 ## [Unreleased]
 
+## [1.0.0-rc.16] - 2026-11-28
+
+Sixteenth release candidate for `1.0.0`. It changes no output and no API.
+CommonJS code loads the npm package with `require()`, and the package asks for
+Node.js 22.13 or later instead of 24; the stability policy now promises the
+Node.js versions that are maintained. The migration guide opens with the path
+from `0.14.x`, the Python documentation has a page on performance, and the
+social cards give the sentence that describes the project.
+
 ### Added
 
 - **`require()`.** CommonJS code loads the npm package with `require()`, as
@@ -41,7 +50,11 @@ change.
   counterparts of the helpers `removeDiacritics()`,
   `removeGreekVariants()`, and `applyGreekVariants()`, with the cases where
   they differ. The README and the getting-started page point the users of the
-  unscoped `greek-conversion` package, the `0.14.x` series, to it.
+  unscoped `greek-conversion` package, the `0.14.x` series, to it. The Python
+  documentation has a page on performance: the times of both engines beside
+  Node.js, where they cross (from about 150 characters a call into
+  transliteration, and 300 into Beta Code, V8 is the quicker), many strings in
+  one call, and what each part of a call costs.
 
 ## [1.0.0-rc.15] - 2026-11-27
 
@@ -2305,7 +2318,8 @@ This prerelease is a complete rewrite of the `0.14.x` conversion engine.
   legacy API.
 - Parcel, Jest, and the legacy prebuilt distribution pipeline.
 
-[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.15...HEAD
+[Unreleased]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.16...HEAD
+[1.0.0-rc.16]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.15...v1.0.0-rc.16
 [1.0.0-rc.15]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.14...v1.0.0-rc.15
 [1.0.0-rc.14]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.13...v1.0.0-rc.14
 [1.0.0-rc.13]: https://github.com/defense-humanites/greek-conversion/compare/v1.0.0-rc.12...v1.0.0-rc.13
