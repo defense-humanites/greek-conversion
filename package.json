@@ -1,6 +1,6 @@
 {
   "name": "@humanities/greek-conversion",
-  "version": "1.0.0-rc.15",
+  "version": "1.0.0-rc.16",
   "private": true,
   "description": "Convert Ancient, Byzantine, and Modern Greek between Greek script, Beta Code, and Latin script, with atomic options composed into standards-based presets, and information-loss diagnostics.",
   "keywords": [

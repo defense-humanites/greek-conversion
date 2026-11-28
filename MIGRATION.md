@@ -7,13 +7,13 @@ a 1.0 prerelease.
 
 ## Installation
 
-The release candidate `1.0.0-rc.15` is published on JSR, and on npm under the
+The release candidate `1.0.0-rc.16` is published on JSR, and on npm under the
 `next` distribution tag; the stable `1.0.0` will follow with the same content
 unless a problem is found:
 
 ```sh
 npm install @humanities/greek-conversion@next
-npx jsr add @humanities/greek-conversion@1.0.0-rc.15
+npx jsr add @humanities/greek-conversion@1.0.0-rc.16
 ```
 
 The package is ESM-only. CommonJS code loads it with `require()`, as Node.js
@@ -185,6 +185,12 @@ Its ownership, validation, and option boundaries are documented in
   current engine.
 
 ## From a 1.0 prerelease
+
+### Updating from `1.0.0-rc.15`
+
+Nothing changes in the output or in the API. The npm package asks for Node.js
+22.13 or later, instead of 24, and CommonJS code can load it with `require()`
+(see [Installation](#installation)).
 
 ### Updating from `1.0.0-rc.14`
 
