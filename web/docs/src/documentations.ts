@@ -10,7 +10,7 @@
  * have (the canonical document, bundles, and the speed of the library in
  * JavaScript), so that a reader of the Python documentation stays in it.
  * The others are written by hand, and some stand for a TypeScript page all
- * the same.
+ * the same: the getting started, and the performance of the package.
  */
 
 export type Language = "typescript" | "python";
@@ -89,6 +89,7 @@ export const COUNTERPARTS: readonly (readonly [string, string])[] = [
     [typescriptPath(source), pythonPath(path)] as const
   ),
   ["/guide/getting-started/", "/python/guide/getting-started/"],
+  ["/guide/performance/", "/python/guide/performance/"],
   [API, "/python/reference/api/"],
 ];
 

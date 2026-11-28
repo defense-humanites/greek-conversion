@@ -189,20 +189,6 @@ metadata or options.`,
     ["description: A TypeScript library", "description: A Python library"],
     ["../../components/HomeHero.astro", "../../../components/HomeHero.astro"],
     ["<HomeHero>", '<HomeHero language="python">'],
-    // A corpus, which Python converts in one call.
-    [
-      "  convertDetailed,\n  reencode,",
-      "  convertDetailed,\n  convertMany,\n  reencode,",
-    ],
-    [
-      "// → I Athína eínai i protévousa\n",
-      `// → I Athína eínai i protévousa
-
-// A corpus in one call, from Beta Code
-convertMany(["lo/gos", "yuxh/", "a)lh/qeia"], "beta-code", "greek");
-// → ["λόγος","ψυχή","ἀλήθεια"]
-`,
-    ],
   ],
   // The library suggests the camelCase key for a snake_case one; Python
   // refuses the camelCase key and gives its snake_case spelling.

@@ -16,8 +16,8 @@
  * its fields stay within the lengths that Context7 accepts.
  * The Python package (`python/`) repeats it as the description of its
  * `pyproject.toml` and in the documentation of its module, and its README's
- * tagline, after "A Python library that converts", and its home page, under
- * "for Python", after "A library that converts".
+ * tagline and its home page, under the logo "for Python", after "A library
+ * that converts".
  *
  * It checks, last, that the site has one address, the `homepage` of
  * `package.json`: the one it is built for, and the one every file that
@@ -176,7 +176,7 @@ expect(
 expect(
   "the tagline of the Python package's README",
   plain((await read("python/README.md")).match(/<b>([^<]*)<\/b>/)?.[1]),
-  sentence.replace(/^Convert /, "A Python library that converts "),
+  sentence.replace(/^Convert /, "A library that converts "),
 );
 expect(
   "the first sentence of the CITATION.cff abstract",

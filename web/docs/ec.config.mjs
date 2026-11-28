@@ -98,8 +98,16 @@ function theme(type, c) {
         scope: ["string", "constant.character"],
         settings: { foreground: c.string },
       },
+      // The name of a function, defined or called, and not its arguments:
+      // Python's grammar puts a whole call, arguments included, in
+      // `meta.function-call`, and only its name in
+      // `meta.function-call.generic`.
       {
-        scope: ["entity.name.function", "support.function", "meta.function-call"],
+        scope: [
+          "entity.name.function",
+          "support.function",
+          "meta.function-call.generic",
+        ],
         settings: { foreground: c.function, fontStyle: "bold" },
       },
       {

@@ -1,11 +1,11 @@
 <br>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/defense-humanites/greek-conversion/main/docs/assets/greek-conversion-logo-clair.svg" alt="greek conversion" width="240">
+  <img src="https://raw.githubusercontent.com/defense-humanites/greek-conversion/main/docs/assets/greek-conversion-logo-python-clair.svg" alt="greek conversion for Python" width="240">
 </p>
 
 <p align="center">
-  <b>A Python library that converts Ancient, Byzantine, and Modern Greek
+  <b>A library that converts Ancient, Byzantine, and Modern Greek
   between Greek script, Beta Code, and Latin script, with atomic options
   composed into standards-based presets, and information-loss
   diagnostics.</b>
@@ -85,7 +85,7 @@ Options are given as a mapping, as keyword arguments, or both.
 
 ## Examples
 
-### `convert()`
+### `convert()` / `convert_many()`
 
 `convert()` takes a string from one format to another, after a preset or
 the options it is given:
@@ -114,12 +114,9 @@ the options it is given:
 
 ```
 
-### `convert_many()`
-
 `convert_many()` converts a list of strings as `convert()` converts each,
-in one call, which is much faster for a corpus; `reencode_many()` and
-`convert_detailed_many()` do the same for `reencode()` and
-`convert_detailed()`:
+in one call, which is much faster for the lines of a corpus or the cells of
+a column:
 
 ```python
 >>> from greek_conversion import convert_many
@@ -130,7 +127,7 @@ in one call, which is much faster for a corpus; `reencode_many()` and
 
 ```
 
-### `convert_detailed()`
+### `convert_detailed()` / `convert_detailed_many()`
 
 `convert_detailed()` converts as `convert()` does, and says what the output
 cannot carry back, and where:
@@ -154,7 +151,22 @@ cannot carry back, and where:
 
 ```
 
-### `reencode()`
+`convert_detailed_many()` gives, in one call, the result that
+`convert_detailed()` gives for each string of a list, and so tells which
+lose something:
+
+```python
+>>> from greek_conversion import convert_detailed_many
+
+>>> # Πάτρα has no eta to lose
+>>> cities = convert_detailed_many(["Αθήνα", "Πάτρα", "Θεσσαλονίκη"], "greek",
+...                                "transliteration", preset="iso-843-type-2")
+>>> [(city.output, city.lossy) for city in cities]
+[('Athína', True), ('Pátra', False), ('Thessaloníki', True)]
+
+```
+
+### `reencode()` / `reencode_many()`
 
 `reencode()` keeps the format and changes the spelling: it normalizes a
 text, or writes it after other conventions:
@@ -173,6 +185,19 @@ text, or writes it after other conventions:
 >>> # The Beta Code of Perseus, in the capitals of the TLG
 >>> reencode("a)/ndra moi e)/nnepe, mou=sa", "beta-code", preset="tlg-core")
 'A)/NDRA MOI E)/NNEPE, MOU=SA'
+
+```
+
+`reencode_many()` reencodes a list of strings as `reencode()` reencodes
+each, in one call:
+
+```python
+>>> from greek_conversion import reencode_many
+
+>>> # The lines of an edition, with standard sigmas
+>>> reencode_many(["ἀρχὴ ϲοφίαϲ", "φόβοϲ θεοῦ"], "greek",
+...               greek={"sigma": "standard"})
+['ἀρχὴ σοφίας', 'φόβος θεοῦ']
 
 ```
 
@@ -211,21 +236,22 @@ installation:
 
 The package runs the library in one of two engines:
 
-| Engine    | Installed with                           | Startup | Cost per call | Long text      |
-| --------- | ---------------------------------------- | ------- | ------------- | -------------- |
-| QuickJS   | the package: `quickjs-ng`, a 2 MB wheel  | ~25 ms  | ~40 µs        | 10 to 20× Node |
-| V8        | `pip install "greek-conversion[v8]"`: `mini-racer`, 22 MB | ~80 ms | 0.1 to 0.5 ms | ~1.7× Node |
+| Engine  | Installed with                                            | Start     | One word  | A long text     | Many strings at once |
+| ------- | --------------------------------------------------------- | --------: | --------: | --------------: | -------------------: |
+| QuickJS | the package: `quickjs-ng`, a 2 MB wheel                   | **70 ms** | **50 µs** | 10–20× Node     | 40 µs a word         |
+| V8      | `pip install "greek-conversion[v8]"`: `mini-racer`, 22 MB | 130 ms    | 400 µs    | **1.4–3× Node** | **4 µs a word**      |
 
 [quickjs-ng](https://github.com/quickjs-ng/quickjs) is the maintained fork of
-QuickJS: quick to start, and quick for many small calls. V8 is the engine of
-Chrome and Node: quicker on long texts, slower to call. When `mini-racer` is
-installed, the package uses V8; choose otherwise with
+QuickJS: quick to start, and quick to call, so that it converts a word or a
+sentence at a time several times faster than V8. V8 is the engine of Chrome
+and Node: it converts almost as fast as Node, but each call waits for it,
+so that it is the quicker for long texts, and for lists of strings given at
+once to `convert_many()`, `reencode_many()`, or `convert_detailed_many()`.
+When `mini-racer` is installed, the package uses V8; choose otherwise with
 `set_engine("quickjs")` or the environment variable
-`GREEK_CONVERSION_ENGINE`, for instance for many short strings converted
-one by one. To convert a corpus, `convert_many()` pays the cost of a call
-once for the whole list, as do `reencode_many()` and
-`convert_detailed_many()`: with V8, they convert within twice the time of
-Node, and 20 to 100 times faster than one call per string.
+`GREEK_CONVERSION_ENGINE`.
+[Performance](https://greek-conversion.humanites.fr/python/guide/performance/)
+gives the measures, and how to keep conversions fast.
 
 ## Documentation
 

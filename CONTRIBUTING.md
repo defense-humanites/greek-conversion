@@ -159,6 +159,10 @@ python python/scripts/differential.py /tmp/expected.jsonl --engine quickjs
 python python/scripts/differential.py /tmp/expected.jsonl --engine v8
 ```
 
+Its speed on each engine, which the Python page on performance gives, is
+measured by `python python/scripts/bench.py`; update the page's figures
+when a change moves them.
+
 The Python workflow (`.github/workflows/python.yml`) builds the wheel,
 installs it, and runs both on every change.
 
