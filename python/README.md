@@ -85,7 +85,7 @@ Options are given as a mapping, as keyword arguments, or both.
 
 ## Examples
 
-### `convert()`
+### `convert()` / `convert_many()`
 
 `convert()` takes a string from one format to another, after a preset or
 the options it is given:
@@ -114,12 +114,9 @@ the options it is given:
 
 ```
 
-### `convert_many()`
-
 `convert_many()` converts a list of strings as `convert()` converts each,
-in one call, which is much faster for a corpus; `reencode_many()` and
-`convert_detailed_many()` do the same for `reencode()` and
-`convert_detailed()`:
+in one call, which is much faster for the lines of a corpus or the cells of
+a column:
 
 ```python
 >>> from greek_conversion import convert_many
@@ -130,7 +127,7 @@ in one call, which is much faster for a corpus; `reencode_many()` and
 
 ```
 
-### `convert_detailed()`
+### `convert_detailed()` / `convert_detailed_many()`
 
 `convert_detailed()` converts as `convert()` does, and says what the output
 cannot carry back, and where:
@@ -154,7 +151,22 @@ cannot carry back, and where:
 
 ```
 
-### `reencode()`
+`convert_detailed_many()` gives, in one call, the result that
+`convert_detailed()` gives for each string of a list, and so tells which
+lose something:
+
+```python
+>>> from greek_conversion import convert_detailed_many
+
+>>> # Πάτρα has no eta to lose
+>>> cities = convert_detailed_many(["Αθήνα", "Πάτρα", "Θεσσαλονίκη"], "greek",
+...                                "transliteration", preset="iso-843-type-2")
+>>> [(city.output, city.lossy) for city in cities]
+[('Athína', True), ('Pátra', False), ('Thessaloníki', True)]
+
+```
+
+### `reencode()` / `reencode_many()`
 
 `reencode()` keeps the format and changes the spelling: it normalizes a
 text, or writes it after other conventions:
@@ -173,6 +185,19 @@ text, or writes it after other conventions:
 >>> # The Beta Code of Perseus, in the capitals of the TLG
 >>> reencode("a)/ndra moi e)/nnepe, mou=sa", "beta-code", preset="tlg-core")
 'A)/NDRA MOI E)/NNEPE, MOU=SA'
+
+```
+
+`reencode_many()` reencodes a list of strings as `reencode()` reencodes
+each, in one call:
+
+```python
+>>> from greek_conversion import reencode_many
+
+>>> # The lines of an edition, with standard sigmas
+>>> reencode_many(["ἀρχὴ ϲοφίαϲ", "φόβοϲ θεοῦ"], "greek",
+...               greek={"sigma": "standard"})
+['ἀρχὴ σοφίας', 'φόβος θεοῦ']
 
 ```
 
