@@ -1,43 +1,62 @@
 name: CI
+
+# The tests and the checks of the npm package, when the code changes:
+# - a pull request runs them under Node.js 22.13.0, the minimum that the
+#   package declares, and under 24, which the library is developed with;
+# - a push to main runs them under 24 alone, on the merge of what a pull
+#   request has just tested;
+# - every Monday, or by hand, they run under both, and under the latest
+#   release of Node.js, as an early warning that does not fail the run.
+# The repository's other checks are in check.yml, which runs on every change.
 on:
   push:
     branches: [main]
+    paths:
+      - .github/workflows/ci.yml
+      - package.json
+      - package-lock.json
+      - scripts/**
+      - src/**
+      - tests/**
+      - tsconfig*.json
+      # The sizes of the bundles, which npm:check compares.
+      - web/docs/src/content/docs/guide/smaller-bundles.md
+      # The playground's modules, which tests import.
+      - web/playground/**
   pull_request:
+    paths:
+      - .github/workflows/ci.yml
+      - package.json
+      - package-lock.json
+      - scripts/**
+      - src/**
+      - tests/**
+      - tsconfig*.json
+      - web/docs/src/content/docs/guide/smaller-bundles.md
+      - web/playground/**
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci --ignore-scripts
-      - run: npm run check
-      - run: npm run jsr:check
   test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # The supported baseline, declared in the npm engines field. The
-          # tests are TypeScript, which Node.js runs without a flag from 22.18.
-          - node: "22.13.0"
-            experimental: false
-            node-options: --experimental-strip-types
-          # The version the library is developed with.
-          - node: "24"
-            experimental: false
-          # The latest release, as an early warning; it does not block CI.
-          - node: current
-            experimental: true
-    continue-on-error: ${{ matrix.experimental }}
+        node: >-
+          ${{ fromJSON(github.event_name == 'push' && '["24"]'
+          || github.event_name == 'pull_request' && '["22.13.0", "24"]'
+          || '["22.13.0", "24", "current"]') }}
+    continue-on-error: ${{ matrix.node == 'current' }}
     name: test (Node ${{ matrix.node }})
     env:
-      NODE_OPTIONS: ${{ matrix.node-options }}
+      # Node.js runs TypeScript without a flag from 22.18.
+      NODE_OPTIONS: ${{ matrix.node == '22.13.0' && '--experimental-strip-types' || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0

@@ -9,9 +9,7 @@ playground's Share button gives a link with all of them.
 ## The library
 
 The library is developed with [Node.js](https://nodejs.org/) 24 or later,
-which runs its TypeScript sources directly. The CI also runs the tests and the
-npm checks under Node.js 22.13, the minimum that the package declares, with
-`NODE_OPTIONS=--experimental-strip-types`:
+which runs its TypeScript sources directly:
 
 ```sh
 npm ci               # installs the development tools
@@ -20,6 +18,15 @@ npm test             # unit, conformance, and property tests
 npm run npm:check    # the npm package, and what its bundles keep
 npm run bench        # throughput baseline
 ```
+
+`.github/workflows/check.yml` runs `npm run check` on every pull request and
+every push to `main`. `.github/workflows/ci.yml` runs the tests and the npm
+checks when the code changes (`src/`, `tests/`, `scripts/`, the playground,
+the package's manifests): for a pull request, under Node.js 24 and under
+22.13, the minimum that the package declares, with
+`NODE_OPTIONS=--experimental-strip-types`; for a push to `main`, under 24
+alone. Every Monday, or by hand (*Run workflow*), it runs them under both, and
+under the latest release of Node.js, which may fail without failing the run.
 
 `npm run check` type-checks and runs every TypeScript example of the README,
 of the reference (`docs/`), of the guide pages of the documentation site, and
@@ -164,7 +171,10 @@ measured by `python python/scripts/bench.py`; update the page's figures
 when a change moves them.
 
 The Python workflow (`.github/workflows/python.yml`) builds the wheel,
-installs it, and runs both on every change.
+installs it, and runs both when the package, the library, or the pages that
+the Python documentation is made from change, and every Monday. A pull
+request compares one case in ten of the differential dump with Node; a push
+to `main`, the weekly run, and a manual one compare them all.
 
 The Python documentation is a section of the site, `/python/`, with a home
 and a sidebar of its own (`web/docs/src/python_sidebar.ts`); the header's
