@@ -1,11 +1,11 @@
 <br>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/defense-humanites/greek-conversion/main/docs/assets/greek-conversion-logo-clair.svg" alt="greek conversion" width="240">
+  <img src="https://raw.githubusercontent.com/defense-humanites/greek-conversion/main/docs/assets/greek-conversion-logo-python-clair.svg" alt="greek conversion for Python" width="240">
 </p>
 
 <p align="center">
-  <b>A Python library that converts Ancient, Byzantine, and Modern Greek
+  <b>A library that converts Ancient, Byzantine, and Modern Greek
   between Greek script, Beta Code, and Latin script, with atomic options
   composed into standards-based presets, and information-loss
   diagnostics.</b>
