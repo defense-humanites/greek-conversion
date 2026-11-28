@@ -67,7 +67,9 @@ npm install @humanities/greek-conversion   # npm
 npx jsr add @humanities/greek-conversion   # JSR, which gives the command for each runtime
 ```
 
-The package is ESM-only and ships its own type declarations.
+The package is ESM-only and ships its own type declarations. CommonJS code
+loads it with `require()`, as Node.js loads ES modules; TypeScript resolves its
+types there from version 5.8, under `module: "nodenext"`.
 
 The unscoped npm package `greek-conversion` is the `0.14.x` series, which is
 deprecated; its source is on the

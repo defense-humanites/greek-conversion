@@ -15,8 +15,10 @@ format, and what counts for the size of a bundle and the speed of a call.
 The package is published as `@humanities/greek-conversion` on
 [npm](https://www.npmjs.com/package/@humanities/greek-conversion) and
 [JSR](https://jsr.io/@humanities/greek-conversion), with the same named
-exports in both. It is ESM-only and ships its own type declarations. It
-has no dependencies and uses no runtime-specific API: it runs in Node.js,
+exports in both. It is ESM-only and ships its own type declarations;
+CommonJS code loads it with `require()`, as Node.js loads ES modules, and
+TypeScript resolves its types there from version 5.8, under
+`module: "nodenext"`. It has no dependencies and uses no runtime-specific API: it runs in Node.js,
 from version 24, and in browsers, as the playground does. The unscoped
 package `greek-conversion` is the deprecated `0.14.x` series: the
 [migration guide](https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md#from-014x)

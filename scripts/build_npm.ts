@@ -97,48 +97,37 @@ const published = {
   type: "module",
   module: "./esm/mod.js",
   types: "./types/mod.d.ts",
+  // Each entry point has one target, without an `import` condition: `import`
+  // and `require()` load the same ES module (Node.js loads ES modules with
+  // `require()` since 22.12), so CommonJS code gets no second copy.
   exports: {
     ".": {
-      import: {
-        types: "./types/mod.d.ts",
-        default: "./esm/mod.js",
-      },
+      types: "./types/mod.d.ts",
+      default: "./esm/mod.js",
     },
     "./document": {
-      import: {
-        types: "./types/document.d.ts",
-        default: "./esm/document.js",
-      },
+      types: "./types/document.d.ts",
+      default: "./esm/document.js",
     },
     "./core": {
-      import: {
-        types: "./types/core.d.ts",
-        default: "./esm/core.js",
-      },
+      types: "./types/core.d.ts",
+      default: "./esm/core.js",
     },
     "./greek": {
-      import: {
-        types: "./types/formats/greek.d.ts",
-        default: "./esm/formats/greek.js",
-      },
+      types: "./types/formats/greek.d.ts",
+      default: "./esm/formats/greek.js",
     },
     "./beta-code": {
-      import: {
-        types: "./types/formats/beta_code.d.ts",
-        default: "./esm/formats/beta_code.js",
-      },
+      types: "./types/formats/beta_code.d.ts",
+      default: "./esm/formats/beta_code.js",
     },
     "./transliteration": {
-      import: {
-        types: "./types/formats/transliteration.d.ts",
-        default: "./esm/formats/transliteration.js",
-      },
+      types: "./types/formats/transliteration.d.ts",
+      default: "./esm/formats/transliteration.js",
     },
     "./presets": {
-      import: {
-        types: "./types/prepared_presets.d.ts",
-        default: "./esm/prepared_presets.js",
-      },
+      types: "./types/prepared_presets.d.ts",
+      default: "./esm/prepared_presets.js",
     },
   },
   engines: repository.engines,

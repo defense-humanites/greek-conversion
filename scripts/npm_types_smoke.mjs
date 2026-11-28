@@ -85,6 +85,21 @@ convert("ἄ", reader, greekReader);
 convertDetailed("ἄ", greekReader, both);
 `,
   );
+  // CommonJS code: TypeScript, from 5.8, resolves the types of the ES modules
+  // that require() loads.
+  await writeFile(
+    join(directory, "consumer.cts"),
+    `
+import { convert } from "@humanities/greek-conversion";
+import { prepareOptions } from "@humanities/greek-conversion/core";
+import type { Document } from "@humanities/greek-conversion/document";
+
+const output: string = convert("a)/nqrwpos", "beta-code", "greek", prepareOptions({}));
+let document: Document | undefined;
+void output;
+void document;
+`,
+  );
   await writeFile(
     join(directory, "tsconfig.json"),
     JSON.stringify({
@@ -96,7 +111,7 @@ convertDetailed("ἄ", greekReader, both);
         noEmit: true,
         skipLibCheck: false,
       },
-      files: ["consumer.mts"],
+      files: ["consumer.mts", "consumer.cts"],
     }),
   );
 
@@ -106,6 +121,37 @@ convertDetailed("ἄ", greekReader, both);
     join(directory, "tsconfig.json"),
   ], { stdio: "inherit" });
   console.log("npm TypeScript consumer smoke test passed");
+
+  // CommonJS code loads every entry point with require(), and gets the same
+  // module as import(): there is one copy of the library.
+  await writeFile(
+    join(directory, "consumer.cjs"),
+    `
+const assert = require("node:assert/strict");
+const main = require("@humanities/greek-conversion");
+const { encode, parse } = require("@humanities/greek-conversion/document");
+const core = require("@humanities/greek-conversion/core");
+const { greekWriter } = require("@humanities/greek-conversion/greek");
+const { betaCodeReader } = require("@humanities/greek-conversion/beta-code");
+const { transliterationWriter } = require("@humanities/greek-conversion/transliteration");
+const { alaLcModern } = require("@humanities/greek-conversion/presets");
+
+assert.equal(main.convert("a)/nqrwpos", "beta-code", "greek"), "ἄνθρωπος");
+assert.equal(encode(parse("a)/nqrwpos", "beta-code"), "greek"), "ἄνθρωπος");
+assert.equal(core.convert("a)/nqrwpos", betaCodeReader, greekWriter), "ἄνθρωπος");
+assert.equal(
+  core.convert("Βίος Μπάλα", require("@humanities/greek-conversion/greek").greekReader, transliterationWriter, alaLcModern),
+  "Vios Bala",
+);
+import("@humanities/greek-conversion").then((imported) => {
+  assert.equal(imported, main);
+  console.log("npm CommonJS smoke test passed");
+});
+`,
+  );
+  execFileSync(process.execPath, [join(directory, "consumer.cjs")], {
+    stdio: "inherit",
+  });
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

@@ -16,7 +16,9 @@ npm install @humanities/greek-conversion@next
 npx jsr add @humanities/greek-conversion@1.0.0-rc.15
 ```
 
-The package is ESM-only.
+The package is ESM-only. CommonJS code loads it with `require()`, as Node.js
+loads ES modules; TypeScript resolves its types there from version 5.8, under
+`module: "nodenext"`.
 
 ## From 0.14.x
 
@@ -24,8 +26,9 @@ The npm package is now `@humanities/greek-conversion`. The `greek-conversion`
 package stays on `0.14.5`, its last release, and is deprecated; its source is on
 the
 [`legacy`](https://github.com/defense-humanites/greek-conversion/tree/legacy)
-branch. Unlike `0.14.x`, the 1.0 package has no CommonJS build, so CommonJS
-code loads it with `import()`, and it requires Node.js 24 or later.
+branch. Unlike `0.14.x`, the 1.0 package has no CommonJS build: CommonJS code
+loads its ES modules with `require()` (see [Installation](#installation)). It
+requires Node.js 24 or later.
 
 ### Formats and conversion functions
 
