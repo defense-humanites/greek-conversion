@@ -79,7 +79,8 @@ Not covered, and free to change in any release:
   a promise that the input stays unrecognized.
 - Changes to a preset's option contents that extend its coverage of the cited
   reference without changing output for input the preset already handled.
-- Raising the minimum Node.js version declared in the npm `engines` field.
+- Raising the minimum Node.js version declared in the npm `engines` field,
+  once the versions below the new minimum are no longer maintained.
 
 ### Corrections (patch)
 
@@ -253,8 +254,11 @@ with a migration note.
 ## Runtimes and Unicode
 
 The library is standard ECMAScript 2022, with no dependencies and no
-runtime-specific API. The npm `engines` field declares the Node.js versions on
-which its test suite runs. The library relies on the runtime's
+runtime-specific API. The npm package supports the Node.js versions that the
+[Node.js project](https://nodejs.org/en/about/previous-releases) maintains;
+when one reaches its end of life, a minor release may raise the minimum. The
+npm `engines` field declares that minimum, on which the test suite runs. The
+library relies on the runtime's
 `String.prototype.normalize`, so recognition of characters introduced by a newer
 Unicode version depends on the runtime.
 
