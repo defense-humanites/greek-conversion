@@ -298,6 +298,6 @@ This is what you should know before using this library:
 
 ## License
 
-Copyright (c) 2021-2026 Antoine Boquet
+Copyright (C) 2021-2026 Antoine Boquet
 
 Released under the [MIT License](LICENSE) since `0.14.5`. Earlier versions were released under the GNU Affero General Public License, version 3 or later.
