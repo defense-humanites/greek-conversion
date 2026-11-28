@@ -23,7 +23,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # The supported baseline, declared in the npm engines field.
+          # The supported baseline, declared in the npm engines field. The
+          # tests are TypeScript, which Node.js runs without a flag from 22.18.
+          - node: "22.13.0"
+            experimental: false
+            node-options: --experimental-strip-types
+          # The version the library is developed with.
           - node: "24"
             experimental: false
           # The latest release, as an early warning; it does not block CI.
@@ -31,6 +36,8 @@ jobs:
             experimental: true
     continue-on-error: ${{ matrix.experimental }}
     name: test (Node ${{ matrix.node }})
+    env:
+      NODE_OPTIONS: ${{ matrix.node-options }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0

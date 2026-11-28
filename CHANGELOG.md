@@ -18,6 +18,11 @@ change.
 
 ### Changed
 
+- **Node.js 22.13.** The npm package asks for Node.js 22.13 or later in its
+  `engines` field, instead of 24. The test suite runs there too, and the
+  library gives the same output as under Node.js 24, also under the releases
+  of Node.js 22 that ship Unicode 16 instead of 17. Node.js 22 is maintained
+  until April 2027.
 - **Documentation.** The migration guide opens with the path from `0.14.x`,
   before the notes on each prerelease: the package's new name, and the
   counterparts of the helpers `removeDiacritics()`,

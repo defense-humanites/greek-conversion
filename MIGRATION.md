@@ -28,7 +28,7 @@ the
 [`legacy`](https://github.com/defense-humanites/greek-conversion/tree/legacy)
 branch. Unlike `0.14.x`, the 1.0 package has no CommonJS build: CommonJS code
 loads its ES modules with `require()` (see [Installation](#installation)). It
-requires Node.js 24 or later.
+requires Node.js 22.13 or later.
 
 ### Formats and conversion functions
 

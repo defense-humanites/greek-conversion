@@ -19,7 +19,7 @@ exports in both. It is ESM-only and ships its own type declarations;
 CommonJS code loads it with `require()`, as Node.js loads ES modules, and
 TypeScript resolves its types there from version 5.8, under
 `module: "nodenext"`. It has no dependencies and uses no runtime-specific API: it runs in Node.js,
-from version 24, and in browsers, as the playground does. The unscoped
+from version 22.13, and in browsers, as the playground does. The unscoped
 package `greek-conversion` is the deprecated `0.14.x` series: the
 [migration guide](https://github.com/defense-humanites/greek-conversion/blob/main/MIGRATION.md#from-014x)
 shows how to move from it.
