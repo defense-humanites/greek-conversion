@@ -2,6 +2,18 @@ import { defineRouteMiddleware } from "@astrojs/starlight/route-data";
 import { isPythonPage, pythonNavigation } from "./python_sidebar.ts";
 import { otherVersionHref, VERSIONS } from "./versions.ts";
 
+/**
+ * The Python package's social card, which the pages under `/python/` give
+ * as their sharing image in place of the TypeScript library's
+ * (`astro.config.mjs`); `scripts/check_metadata.ts` checks its text
+ * alternative against the card.
+ */
+const PYTHON_CARD = {
+  image: "social-python.png",
+  alt:
+    "greek conversion: convert Ancient, Byzantine, and Modern Greek to and from Beta Code or Latin script, with atomic options composed into standards-based presets, and information-loss diagnostics. greek-conversion, Python library on PyPI.",
+};
+
 export const onRequest = defineRouteMiddleware((context) => {
   const route = context.locals.starlightRoute;
   /*
@@ -24,6 +36,15 @@ export const onRequest = defineRouteMiddleware((context) => {
     );
     route.sidebar = sidebar;
     route.pagination = pagination;
+    for (const { attrs } of route.head) {
+      const name = attrs?.property ?? attrs?.name;
+      if (name === "og:image" || name === "twitter:image") {
+        attrs!.content = String(attrs!.content).replace(
+          /social\.png$/,
+          PYTHON_CARD.image,
+        );
+      } else if (name === "og:image:alt") attrs!.content = PYTHON_CARD.alt;
+    }
   }
   /*
    * A home page's title is its own: the tab reads "greek conversion", not

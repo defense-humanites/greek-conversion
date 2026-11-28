@@ -46,7 +46,7 @@ const SHARING_IMAGE = [
   ["og:image:height", "640"],
   [
     "og:image:alt",
-    "greek conversion: convert Ancient and Modern Greek to and from Beta Code or Latin script, with standards-based presets and information-loss diagnostics. @humanities/greek-conversion, TypeScript library on npm and JSR.",
+    "greek conversion: convert Ancient, Byzantine, and Modern Greek to and from Beta Code or Latin script, with atomic options composed into standards-based presets, and information-loss diagnostics. @humanities/greek-conversion, TypeScript library on npm and JSR.",
   ],
 ].map(([property, content]) => ({ tag: "meta", attrs: { property, content } }))
   .concat({

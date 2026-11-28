@@ -18,6 +18,15 @@ change.
 
 ### Changed
 
+- **The social card gives the sentence that describes the project**, in its
+  short form: "Convert Ancient, Byzantine, and Modern Greek to and from Beta
+  Code or Latin script, with atomic options composed into standards-based
+  presets, and information-loss diagnostics." It takes four lines, still
+  clear of the bands that GitHub and the networks crop. The pages of the
+  Python documentation give a card of their own, with the same text and the
+  Python package in its foot: `greek-conversion`, "Python library on PyPI".
+  `scripts/check_metadata.ts` checks both text alternatives against the
+  cards.
 - **Node.js 22.13.** The npm package asks for Node.js 22.13 or later in its
   `engines` field, instead of 24. The test suite runs there too, and the
   library gives the same output as under Node.js 24, also under the releases
