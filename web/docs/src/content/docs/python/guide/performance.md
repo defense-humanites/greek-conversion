@@ -10,15 +10,16 @@ with the text and the options, and back, with the result. The two engines
 share this time out differently: QuickJS converts more slowly than Node.js,
 and calls quickly; V8 converts almost as fast as Node.js, and calls slowly.
 
-|                                       | QuickJS       | V8           |
-| ------------------------------------- | ------------- | ------------ |
-| Start: the package and a first call   | ~70 ms        | ~130 ms      |
-| One word, one call                    | ~50 µs        | ~0.4 ms      |
-| A text of 10,000 characters           | 15 to 50 ms   | 3 to 4 ms    |
-| The 1,671 words of that text, at once | ~40 µs a word | ~4 µs a word |
+|                                       | QuickJS      | V8              |
+| ------------------------------------- | ------------ | --------------- |
+| Start: the package and a first call   | **70 ms**    | 130 ms          |
+| One word, one call                    | **50 µs**    | 400 µs          |
+| A text of 10,000 characters           | 15 to 50 ms  | **3 to 4 ms**   |
+| The 1,671 words of that text, at once | 40 µs a word | **4 µs a word** |
 
 QuickJS is the quicker for a word or a sentence at a time, V8 for anything
-longer, and for lists of strings given at once.
+longer, and for lists of strings given at once. Here and below, each row
+gives its times in one unit, and the quicker engine's in bold.
 
 ## Measures
 
@@ -27,32 +28,32 @@ characters, 1,671 words), with `convert()` unless the row says otherwise.
 Node.js, the library itself, is measured on the same machine by its own
 benchmark:
 
-| Conversion                                    | QuickJS | V8      | Node.js |
-| --------------------------------------------- | ------- | ------- | ------- |
-| Greek → Beta Code                             | 15 ms   | 2.8 ms  | 1.6 ms  |
-| Beta Code → Greek                             | 37 ms   | 3.0 ms  | 1.5 ms  |
-| Greek → transliteration                       | 29 ms   | 3.7 ms  | 2.4 ms  |
-| Transliteration → Greek                       | 47 ms   | 3.8 ms  | 2.8 ms  |
-| Greek → transliteration, `convert_detailed()` | 111 ms  | 19 ms   | 6.2 ms  |
+| Conversion                                    | QuickJS | V8         | Node.js |
+| --------------------------------------------- | ------- | ---------- | ------- |
+| Greek → Beta Code                             | 15 ms   | **2.8 ms** | 1.6 ms  |
+| Beta Code → Greek                             | 37 ms   | **3.0 ms** | 1.5 ms  |
+| Greek → transliteration                       | 29 ms   | **3.7 ms** | 2.4 ms  |
+| Transliteration → Greek                       | 47 ms   | **3.8 ms** | 2.8 ms  |
+| Greek → transliteration, `convert_detailed()` | 111 ms  | **19 ms**  | 6.2 ms  |
 
 One word, `Ἕλλησιν`, a call, where Node.js takes 1 to 5 µs:
 
-| Call                                                     | QuickJS | V8      |
-| -------------------------------------------------------- | ------- | ------- |
-| `convert()` into Beta Code                               | 45 µs   | 0.41 ms |
-| `convert()` into transliteration                         | 65 µs   | 0.38 ms |
-| `convert()` into transliteration, with other options     | 99 µs   | 0.42 ms |
-| `convert()` into transliteration, with prepared options  | 65 µs   | 0.41 ms |
-| `convert_detailed()` into transliteration                | 200 µs  | 0.43 ms |
-| `convert()` of a converter from `create_converter()`     | 80 µs   | 0.40 ms |
+| Call                                                    | QuickJS    | V8     |
+| ------------------------------------------------------- | ---------- | ------ |
+| `convert()` into Beta Code                              | **45 µs**  | 410 µs |
+| `convert()` into transliteration                        | **65 µs**  | 380 µs |
+| `convert()` into transliteration, with other options    | **99 µs**  | 420 µs |
+| `convert()` into transliteration, with prepared options | **65 µs**  | 410 µs |
+| `convert_detailed()` into transliteration               | **200 µs** | 430 µs |
+| `convert()` of a converter from `create_converter()`    | **80 µs**  | 400 µs |
 
 The 1,671 words of the text, Greek → transliteration:
 
-| Call                                  | QuickJS | V8     |
-| ------------------------------------- | ------- | ------ |
-| `convert()`, one call a word          | 107 ms  | 636 ms |
-| `convert_many()`, one call            | 67 ms   | 6.7 ms |
-| `convert_detailed_many()`, one call   | 241 ms  | 32 ms  |
+| Call                                | QuickJS    | V8         |
+| ----------------------------------- | ---------- | ---------- |
+| `convert()`, one call a word        | **107 ms** | 636 ms     |
+| `convert_many()`, one call          | 67 ms      | **6.7 ms** |
+| `convert_detailed_many()`, one call | 241 ms     | **32 ms**  |
 
 These times were measured with Python 3.13, quickjs-ng 0.18, and
 mini-racer 0.14, on one core of a cloud server (Intel Xeon), during the
