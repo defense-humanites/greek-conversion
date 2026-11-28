@@ -9,7 +9,9 @@ playground's Share button gives a link with all of them.
 ## The library
 
 The library is developed with [Node.js](https://nodejs.org/) 24 or later,
-which runs its TypeScript sources directly:
+which runs its TypeScript sources directly. The CI also runs the tests and the
+npm checks under Node.js 22.13, the minimum that the package declares, with
+`NODE_OPTIONS=--experimental-strip-types`:
 
 ```sh
 npm ci               # installs the development tools

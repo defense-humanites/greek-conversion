@@ -7,11 +7,25 @@ change.
 
 ## [Unreleased]
 
+### Added
+
+- **`require()`.** CommonJS code loads the npm package with `require()`, as
+  Node.js loads ES modules, and gets the same module as `import()`.
+  TypeScript resolves its types there from version 5.8, under
+  `module: "nodenext"`. Each entry point of the package's `exports` now has
+  one target, without the `import` condition, which made `require()` fail with
+  `ERR_PACKAGE_PATH_NOT_EXPORTED`. The package is still ESM-only.
+
 ### Changed
 
+- **Node.js 22.13.** The npm package asks for Node.js 22.13 or later in its
+  `engines` field, instead of 24. The test suite runs there too, and the
+  library gives the same output as under Node.js 24, also under the releases
+  of Node.js 22 that ship Unicode 16 instead of 17. Node.js 22 is maintained
+  until April 2027.
 - **Documentation.** The migration guide opens with the path from `0.14.x`,
-  before the notes on each prerelease: the package's new name, `import()` for
-  CommonJS code, and the counterparts of the helpers `removeDiacritics()`,
+  before the notes on each prerelease: the package's new name, and the
+  counterparts of the helpers `removeDiacritics()`,
   `removeGreekVariants()`, and `applyGreekVariants()`, with the cases where
   they differ. The README and the getting-started page point the users of the
   unscoped `greek-conversion` package, the `0.14.x` series, to it.
