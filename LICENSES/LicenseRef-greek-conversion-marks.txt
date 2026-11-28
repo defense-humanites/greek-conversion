@@ -1,6 +1,6 @@
 greek-conversion marks
 
-Copyright (c) 2026 Antoine Boquet. All rights reserved.
+Copyright (C) 2026 Antoine Boquet. All rights reserved.
 
 This notice covers the greek-conversion logos and the tessera symbol they
 contain, including the files under docs/assets/ that name
